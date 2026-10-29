@@ -1,0 +1,289 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfeff','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+classDiagram
+    direction TB
+
+    class BaseEntity {
+        «abstract · 领域基类»
+        # Long id
+        # LocalDateTime createTime
+        # LocalDateTime updateTime
+        # Integer lockVersion
+        # Integer deleted
+        + isDeleted() boolean
+        + markAsDeleted()
+        + isNew() boolean
+    }
+
+    class TenantEntity {
+        «aggregate root · 租户»
+        - String tenantCode
+        - String tenantName
+        - String adminUserId
+        - String packageCode
+        - LocalDateTime expireTime
+        - TenantStatus status
+        - TenantQuota quota
+        - String remark
+        + create(code, name, admin, quota)$
+        + activate() / disable()
+        + freeze() / unfreeze()
+        + deactivate() / archive()
+        + assertQuotaAvailable(current, increment)
+    }
+    note for TenantEntity "status: ACTIVE/DISABLED/FROZEN/DEACTIVATED/ARCHIVED\n归档为终态，非正常状态拒绝创建业务数据\ntenantCode 全局唯一 = TenantContext tenantId"
+
+    class TenantQuota {
+        «value object · 配额»
+        - Integer maxUsers
+        - Integer maxStorageMb
+        + of(maxUsers, maxStorageMb)$
+        + unlimited()$
+        + assertUsers(current, increment)
+        + assertStorage(current, increment)
+    }
+
+    class UserEntity {
+        «aggregate root · 用户 @AggregateRoot(User)»
+        - String openId
+        - String username
+        - Long deptId
+        - String tenantId
+        - String nickname
+        - String avatar
+        - String phone
+        - Integer gender
+        - LocalDate birthday
+        - Integer status
+        - LocalDateTime lastLoginAt
+        - String unionId
+        + updateToken(accessToken, refreshToken)
+        + recordLogin(ip, clientType)
+    }
+    note for UserEntity "聚合边界: UserEntity/UserProfile/UserRole/UserConsent\nstatus: 0=禁用 1=正常\nopenId 微信身份, unionId 跨应用\nusername 全局唯一(uk_username)"
+
+    class UserProfileEntity {
+        «entity · 用户资料»
+        - Long userId
+        - String realName
+        - String idCard
+        - String email
+        - String address
+        - Integer educationLevel
+    }
+
+    class UserRoleEntity {
+        «entity · 用户-角色关联»
+        - String tenantId
+        - Long userId
+        - Long roleId
+    }
+
+    class RoleEntity {
+        «aggregate root · 角色»
+        - String name
+        - String code
+        - String description
+        - DataScopeType dataScope
+        - Integer sortOrder
+        - Integer status
+    }
+    note for RoleEntity "dataScope: ALL/DEPT_AND_SUB/DEPT/SELF/CUSTOM\ncode 大写下划线: ADMIN/SUPER_ADMIN"
+
+    class RolePermissionEntity {
+        «entity · 角色-权限关联»
+        - Long roleId
+        - Long permissionId
+    }
+
+    class PermissionEntity {
+        «aggregate root · 权限»
+        - String name
+        - String code
+        - String description
+        - String resourceType
+        - String resourceIdentifier
+        - String action
+        - Integer status
+    }
+    note for PermissionEntity "code 格式: {资源}:{操作} 如 user:read\nresourceType: API/MENU/BUTTON/DATA"
+
+    class DeptEntity {
+        «entity · 部门»
+        - String tenantId
+        - Long parentId
+        - String ancestors
+        - String name
+        - Integer orderNum
+        - String leader
+        - String phone
+        - String email
+        - Integer status
+    }
+    note for DeptEntity "树形结构 parentId=0 为根\nancestors 逗号分隔如 0,100\n支撑 @DataScope 部门级数据权限"
+
+    class MenuEntity {
+        «aggregate root · 菜单»
+        - Long parentId
+        - String menuName
+        - Integer menuType
+        - String path
+        - String component
+        - String perms
+        - String icon
+        - Integer orderNum
+        - Integer status
+        - Integer visible
+    }
+    note for MenuEntity "menuType: 0=目录 1=菜单 2=按钮\n按钮类型必须携带 perms\nparentId=0 为顶级菜单"
+
+    class DictTypeEntity {
+        «aggregate root · 字典类型»
+        - String dictName
+        - String dictType
+        - Integer status
+        - String remark
+        + create(name, type, remark)$
+        + enable() / disable()
+        + isEnabled() boolean
+    }
+
+    class DictDataEntity {
+        «entity · 字典数据»
+        - Integer dictSort
+        - String dictLabel
+        - String dictValue
+        - String dictType
+        - Integer isDefault
+        - Integer status
+        - String remark
+        + create(sort, label, value, type)$
+        + markAsDefault() / unmarkDefault()
+    }
+
+    class ConfigEntity {
+        «aggregate root · 参数配置»
+        - String configName
+        - String configKey
+        - String configValue
+        - Integer configType
+        - Integer status
+        - String remark
+        + create(name, key, value)$
+        + isBuiltin() boolean
+        + isEnabled() boolean
+    }
+    note for ConfigEntity "configType: 0=自定义 1=系统内置\n支持热更新"
+
+    class JobEntity {
+        «aggregate root · 定时任务»
+        - String tenantId
+        - String jobName
+        - String jobGroup
+        - String invokeTarget
+        - String cronExpression
+        - Integer misfirePolicy
+        - Integer concurrent
+        - Integer status
+        + create(name, group, target, cron)$
+        + isConcurrentAllowed() boolean
+    }
+    note for JobEntity "misfirePolicy: 立即执行/放弃/下次执行\nconcurrent: 允许/禁止\ncronExpression Quartz 格式"
+
+    class OperationLogEntity {
+        «entity · 操作日志»
+        - String module
+        - String operationType
+        - String description
+        - String requestMethod
+        - String requestUri
+        - String requestParams
+        - String responseResult
+        - Integer status
+        - String errorMsg
+        - Long executionTime
+        - String ip / location
+        - Long userId / userName
+        - String traceId
+        - LocalDateTime operationTime
+    }
+    note for OperationLogEntity "@OperationLog AOP 切面记录\ntraceId 全链路追踪\n异步批量落库"
+
+    class LoginLogEntity {
+        «entity · 登录日志»
+        - String username
+        - String ip
+        - String browser / os
+        - Integer status
+        - String message
+        - LocalDateTime loginTime
+        - String clientType
+        - String platform
+        + isSuccess() boolean
+    }
+
+    class ApiCallLogEntity {
+        «entity · API调用日志»
+        - String traceId
+        - String method
+        - String uri
+        - Long executionTime
+        - Integer httpStatus
+        - String clientId
+    }
+
+    class SysSecurityPolicyEntity {
+        «entity · 安全策略»
+        - String tenantId
+        - String policyKey
+        - String policyValue
+        - Integer status
+    }
+
+    class BlacklistEntity {
+        «entity · 黑名单»
+        - String tokenJti
+        - String userId
+        - String reason
+        - LocalDateTime expiresAt
+    }
+
+    %% ---- 继承 ----
+    TenantEntity --|> BaseEntity
+    UserEntity --|> BaseEntity
+    RoleEntity --|> BaseEntity
+    PermissionEntity --|> BaseEntity
+    DeptEntity --|> BaseEntity
+    MenuEntity --|> BaseEntity
+    DictTypeEntity --|> BaseEntity
+    DictDataEntity --|> BaseEntity
+    ConfigEntity --|> BaseEntity
+    JobEntity --|> BaseEntity
+    OperationLogEntity --|> BaseEntity
+    LoginLogEntity --|> BaseEntity
+    ApiCallLogEntity --|> BaseEntity
+    SysSecurityPolicyEntity --|> BaseEntity
+    BlacklistEntity --|> BaseEntity
+    UserRoleEntity --|> BaseEntity
+    RolePermissionEntity --|> BaseEntity
+
+    %% ---- 租户聚合 ----
+    TenantEntity "1" *-- "1" TenantQuota : 配额
+
+    %% ---- 用户聚合 ----
+    UserEntity "1" o-- "0..1" UserProfileEntity : 资料
+    UserEntity "1" --> "*" UserRoleEntity : 角色
+    UserEntity "1" --> "1" DeptEntity : 部门
+    UserRoleEntity "*" --> "1" RoleEntity : 角色
+
+    %% ---- 角色权限 ----
+    RoleEntity "1" --> "*" RolePermissionEntity : 权限
+    RolePermissionEntity "*" --> "1" PermissionEntity : 权限
+
+    %% ---- 字典 ----
+    DictTypeEntity "1" --> "*" DictDataEntity : "dictType"
+
+    %% ---- 租户隔离 ----
+    TenantEntity "1" --> "*" UserEntity : "tenantId"
+    TenantEntity "1" --> "*" DeptEntity : "tenantId"
+    TenantEntity "1" --> "*" JobEntity : "tenantId"
+    TenantEntity "1" --> "*" SysSecurityPolicyEntity : "tenantId"

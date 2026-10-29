@@ -6,7 +6,7 @@
 
 - 适用范围：Apex Scaffold 后端核心模块
 
-- 项目基线：根 POM `1.2.0`
+- 项目基线：根 POM `1.3.1`
 
 ![Apex Scaffold DDD 四层逻辑架构图](../diagrams/01_logical_architecture.svg)
 
@@ -73,12 +73,12 @@ Interfaces -> Application -> Domain <- Infrastructure
 
 选择方案 B，并保留未来按稳定业务边界拆分微服务的可能性。
 
-当前项目是模块化单体优先：通过 Maven 模块和领域端口获得清晰边界，同时避免过早引入分布式系统成本。Nacos、RocketMQ、Sentinel 和链路追踪等能力可用于企业档位或后续演进，但其存在不改变当前逻辑分层原则。
+当前项目是模块化单体优先：通过 Maven 模块和领域端口获得清晰边界，同时避免过早引入分布式系统成本。Nacos、RocketMQ、Resilience4j 和链路追踪等能力可用于企业档位或后续演进，但其存在不改变当前逻辑分层原则。
 
 ## 6. 关键约束
 
 1. `apex-domain` 不依赖 `interfaces`、`infrastructure` 或 MyBatis-Plus。
-2. `apex-application` 生产代码不导入 `interfaces` 或 `infrastructure` 包。
+2. `apex-system` 生产代码不导入 `interfaces` 或 `infrastructure` 包。
 3. `apex-infrastructure` 不依赖 `interfaces`。
 4. Repository 和技术能力契约优先定义在领域层，实现位于基础设施层。
 5. Handler 保持薄层，业务用例进入应用服务。
@@ -116,7 +116,7 @@ Interfaces -> Application -> Domain <- Infrastructure
 
 ## 8. 已知偏差与技术债
 
-- `apex-application/pom.xml` 当前声明 `apex-infrastructure` 依赖，但 ArchUnit 禁止应用源码导入基础设施包。应检查该依赖是否仅为历史或测试/装配需要，并在可行时移除或调整作用域。
+- `apex-system/pom.xml` 当前声明 `apex-infrastructure` 依赖，但 ArchUnit 禁止应用源码导入基础设施包。应检查该依赖是否仅为历史或测试/装配需要，并在可行时移除或调整作用域。
 
 - 图中的 GraphQL、gRPC、WebSocket 等入口属于能力或扩展方向，不能仅凭图表认定生产环境已开放。
 

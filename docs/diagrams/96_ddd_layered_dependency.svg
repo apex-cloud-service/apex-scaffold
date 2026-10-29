@@ -28,7 +28,7 @@
   <rect x="200" y="92" width="1000" height="96" rx="10" fill="#6366f1" opacity="0.09" stroke="#6366f1" stroke-width="2"/>
   <text x="230" y="128" class="layer-title" fill="#6366f1">用户接口层</text>
   <text x="230" y="148" class="layer-sub" fill="#6366f1" opacity="1">Interfaces</text>
-  <text x="230" y="166" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-interfaces</text>
+  <text x="230" y="166" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-system</text>
   <rect x="470" y="108" width="220" height="64" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
   <text x="483" y="130" class="box-title">Handler / Router</text>
   <text x="483" y="148" class="box-desc">REST 路由 · DTO 转换 · 参数校验</text>
@@ -48,7 +48,7 @@
   <rect x="200" y="212" width="1000" height="96" rx="10" fill="#0891b2" opacity="0.08" stroke="#0891b2" stroke-width="2"/>
   <text x="230" y="248" class="layer-title" fill="#0891b2">应用层</text>
   <text x="230" y="268" class="layer-sub" fill="#0891b2" opacity="1">Application</text>
-  <text x="230" y="286" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-application</text>
+  <text x="230" y="286" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-system</text>
   <rect x="470" y="228" width="220" height="64" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
   <text x="483" y="250" class="box-title">应用服务 Service</text>
   <text x="483" y="268" class="box-desc">用例编排 · 事务边界</text>

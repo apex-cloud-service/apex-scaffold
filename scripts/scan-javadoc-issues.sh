@@ -22,10 +22,14 @@ source "${SCRIPT_DIR}/lib/common.sh"
 PROJECT_ROOT=$(get_project_root) || exit 1
 cd "$PROJECT_ROOT"
 
+# 扫描结果输出到 _tmp/（工作区管理规范 4.1：中间产物不入项目根目录）
+OUTPUT_DIR="$PROJECT_ROOT/_tmp"
+mkdir -p "$OUTPUT_DIR" || exit 1
+
 print_header "扫描 JavaDoc 注释问题"
 
 # 清理旧的扫描结果
-rm -f javadoc-issues-*.txt
+rm -f "$OUTPUT_DIR"/javadoc-issues-*.txt
 
 ###############################################################################
 # 判定顶层 public 类型声明是否缺少紧邻的类级 JavaDoc
@@ -100,8 +104,8 @@ strip_comments() {
 log_info "==> [1/4] 查找缺少类级 JavaDoc 的 public 类..."
 safe_find "apex-*/src/main/java" "*.java" | while read -r file; do
     [ "$(has_class_javadoc "$file"; echo $?)" -eq 1 ] && echo "$file"
-done > javadoc-issues-class.txt
-CLASS_COUNT=$(wc -l < javadoc-issues-class.txt | tr -d ' ')
+done > "$OUTPUT_DIR/javadoc-issues-class.txt"
+CLASS_COUNT=$(wc -l < "$OUTPUT_DIR/javadoc-issues-class.txt" | tr -d ' ')
 log_info "    发现 ${CLASS_COUNT} 个类缺少类级 JavaDoc"
 
 # 2. 查找 JavaDoc 缺少 @author 的
@@ -110,8 +114,8 @@ safe_find "apex-*/src/main/java" "*.java" | while read -r file; do
     if grep -q "/\*\*" "$file" 2>/dev/null && ! grep -q "@author" "$file" 2>/dev/null; then
         echo "$file"
     fi
-done > javadoc-issues-author.txt
-AUTHOR_COUNT=$(wc -l < javadoc-issues-author.txt | tr -d ' ')
+done > "$OUTPUT_DIR/javadoc-issues-author.txt"
+AUTHOR_COUNT=$(wc -l < "$OUTPUT_DIR/javadoc-issues-author.txt" | tr -d ' ')
 log_info "    发现 ${AUTHOR_COUNT} 个文件缺少 @author"
 
 # 3. 查找类级 JavaDoc 缺少 @since 的
@@ -120,8 +124,8 @@ safe_find "apex-*/src/main/java" "*.java" | while read -r file; do
     if grep -q "/\*\*" "$file" 2>/dev/null && ! grep -q "@since" "$file" 2>/dev/null; then
         echo "$file"
     fi
-done > javadoc-issues-since.txt
-SINCE_COUNT=$(wc -l < javadoc-issues-since.txt | tr -d ' ')
+done > "$OUTPUT_DIR/javadoc-issues-since.txt"
+SINCE_COUNT=$(wc -l < "$OUTPUT_DIR/javadoc-issues-since.txt" | tr -d ' ')
 log_info "    发现 ${SINCE_COUNT} 个文件缺少 @since"
 
 ###############################################################################
@@ -162,8 +166,8 @@ safe_find "apex-*/src/main/java" "*.java" | while read -r file; do
     if safe_gt "$PUBLIC_METHOD_COUNT" 3 && safe_lt "$PARAM_COUNT" 3; then
         echo "$file"
     fi
-done > javadoc-issues-method.txt
-METHOD_COUNT=$(wc -l < javadoc-issues-method.txt | tr -d ' ')
+done > "$OUTPUT_DIR/javadoc-issues-method.txt"
+METHOD_COUNT=$(wc -l < "$OUTPUT_DIR/javadoc-issues-method.txt" | tr -d ' ')
 log_info "    发现 ${METHOD_COUNT} 个文件可能缺少方法级 JavaDoc"
 
 echo ""
@@ -178,7 +182,7 @@ TOTAL=$((CLASS_COUNT + AUTHOR_COUNT + SINCE_COUNT + METHOD_COUNT))
 log_info "  总计: ${TOTAL} 个问题项（文件可能重复计数）"
 log_info ""
 log_info "详细结果已保存到："
-log_info "  - javadoc-issues-class.txt"
-log_info "  - javadoc-issues-author.txt"
-log_info "  - javadoc-issues-since.txt"
-log_info "  - javadoc-issues-method.txt"
+log_info "  - $OUTPUT_DIR/javadoc-issues-class.txt"
+log_info "  - $OUTPUT_DIR/javadoc-issues-author.txt"
+log_info "  - $OUTPUT_DIR/javadoc-issues-since.txt"
+log_info "  - $OUTPUT_DIR/javadoc-issues-method.txt"

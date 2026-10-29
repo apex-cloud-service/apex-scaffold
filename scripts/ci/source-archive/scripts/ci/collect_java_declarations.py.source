@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Collect JDK17 javac Tree/DocTrees declarations; parse-only, not coverage acceptance.
+
+First source scripts/build/init-build-env.sh in the repository shell. Compilation
+uses a temporary directory; no application dependencies or annotation processors.
+"""
+
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import xml.etree.ElementTree as ET
+
+from collect_upgrade_baseline import collect, metadata
+
+
+LIMITATIONS = [
+    "Parse-only: no semantic validation, classpath resolution or Javadoc coverage acceptance.",
+    "Signatures use source type spellings, not resolved binary signatures; overloads are syntactic.",
+    "Javadoc text and block tag names are collected; tag completeness, references, inheritance and malformed doc validation are unresolved.",
+    "Only explicit top-level/member declarations and package-info are collected; local/anonymous classes and body locals are excluded.",
+    "Generated Lombok/processor members, default constructors and record implicit members are unresolved and not enumerated.",
+    "Record components are represented by javac parse-stage backing variable trees; component Javadoc links via record @param remain unresolved.",
+    "Visibility includes Java implicit member visibility and enclosing access restrictions, not module exports or semantic accessibility.",
+    "Offsets are zero-based UTF-16 code units with exclusive end; lines/columns are one-based javac positions.",
+]
+
+
+def collect_declarations(root):
+    java_home = Path(os.environ.get("JAVA_HOME", ""))
+    expected = Path.home() / ".sdkman/candidates/java/17.0.12-oracle"
+    if java_home != expected:
+        raise ValueError("source scripts/build/init-build-env.sh; fixed SDKMAN JDK 17.0.12-oracle required")
+    version = subprocess.run([str(java_home / "bin/java"), "-version"],
+                             capture_output=True, text=True, check=True)
+    if 'version "17.0.12"' not in version.stderr:
+        raise ValueError("JDK version must be 17.0.12")
+    baseline = collect(root)
+    files = baseline["java"]
+    rows = []
+    if files:
+        with tempfile.TemporaryDirectory(prefix="apex-java-declarations-") as temporary:
+            temp = Path(temporary)
+            manifest = temp / "sources.txt"
+            manifest.write_text("".join(str(root / row["path"]) + "\n" for row in files), encoding="utf-8")
+            helper = Path(__file__).with_name("JavaDeclarationCollector.java")
+            subprocess.run([str(java_home / "bin/javac"), "--release", "17", "-encoding", "UTF-8",
+                            "-d", str(temp), str(helper)], check=True, capture_output=True, text=True)
+            result = subprocess.run([str(java_home / "bin/java"), "-cp", str(temp),
+                                     "JavaDeclarationCollector", str(manifest)],
+                                    check=False, capture_output=True, text=True)
+            if result.returncode:
+                raise ValueError(result.stderr.strip() or "javac parse failed")
+            rows = json.loads(result.stdout)
+    parsed = {Path(row["path"]): row["declarations"] for row in rows}
+    for row in files:
+        if metadata(root, root / row["path"])["sha256"] != row["sha256"]:
+            raise ValueError("source changed during parse; rerun collection")
+        row["declarations"] = parsed[root / row["path"]]
+    kinds = {}
+    for file in files:
+        for row in file["declarations"]:
+            kinds[row["kind"]] = kinds.get(row["kind"], 0) + 1
+    return {"schema_version": 1, "mode": "javac-parse-only", "jdk": "17.0.12-oracle",
+            "semantic_validation": False, "javadoc_coverage_acceptance": False,
+            "limitations": LIMITATIONS, "modules": baseline["modules"],
+            "summary": {"files": len(files), "declarations": sum(kinds.values()),
+                        "by_kind": dict(sorted(kinds.items()))}, "files": files}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    try:
+        data = collect_declarations(args.root.resolve())
+        text = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
+        if args.output:
+            args.output.write_text(text, encoding="utf-8")
+        else:
+            sys.stdout.write(text)
+    except (OSError, ValueError, ET.ParseError, subprocess.SubprocessError) as error:
+        print(f"declaration collection failed: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

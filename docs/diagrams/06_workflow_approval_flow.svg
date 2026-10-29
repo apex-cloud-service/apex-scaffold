@@ -8,7 +8,7 @@
         <dc:creator>Apex Team</dc:creator>
         <dc:date>2026-09-10</dc:date>
         <dc:version>3.0</dc:version>
-        <dc:description>展示BPMN轻量工作流引擎的三级审批流程:发起→部门主管→分管领导→总经理</dc:description>
+        <dc:description>展示DAG JSON 轻量工作流引擎的三级审批流程:发起→部门主管→分管领导→总经理</dc:description>
       </rdf:Description>
     </rdf:RDF>
   </metadata>
@@ -37,7 +37,7 @@
   <rect width="1600" height="1400" fill="#ffffff"/>
 
   <text x="800" y="50" class="title-main">Apex Scaffold 工作流审批流程</text>
-  <text x="800" y="80" class="title-version">DAG轻量引擎 · BPMN流程 · 三级审批 · 回退/转办/委派/挂起 · v3.0</text>
+  <text x="800" y="80" class="title-version">DAG JSON 轻量引擎 · 三级审批 · 回退/转办/委派/挂起 · v3.0</text>
 
   <!-- Start节点 -->
   <circle cx="800" cy="150" r="40" fill="#10b981" stroke="#059669" stroke-width="3"/>

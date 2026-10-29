@@ -1,0 +1,117 @@
+{
+  "started_at": "2026-10-21T01:24:27Z",
+  "ended_at": "2026-10-21T01:26:29Z",
+  "status": "passed",
+  "baseline_credit": false,
+  "tool_implementation": "java",
+  "wrapper": "scripts/utils/token-v42-recover.sh",
+  "scenario_filter": "oauth_missing dependency_missing column_type column_default column_generated table_charset trigger wrong_index prefix_index unique_index descending_index invisible_index",
+  "hashes": {
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "scripts/utils/TokenV42Recover.java": "d9fd7145e6840d21103f823b0e1ee71d5935b4f7ab77eef31ebef8d16669a400",
+    "scripts/utils/token-v42-recover.sh": "2d7f35e5dc4ae571e2316e4bbdc4b024d1a9ead155a6707179fdcb126589289d",
+    "/tmp/v42_verify_v3.sh": "4eb385eff043680aa75e0e4d48130bd7a8da607433577c195f1285600ca58e4d"
+  },
+  "container": {
+    "name": "apex-v42-java-6abcb2bc7e32",
+    "id": "d0d828d214a7d1e41890ba6d37d9e8d73833cf2e24d165aa4955f5e5c462e0fc",
+    "network": "none",
+    "storage": "tmpfs",
+    "image": "localhost/mysql:8.0"
+  },
+  "mysql_version": "8.0.46",
+  "isolation": "none",
+  "tmpfs": "{\"/var/lib/mysql\":\"rw,rprivate,nosuid,nodev,tmpcopyup\"}",
+  "scope": "isolated structure recovery only; no Flyway baseline credit",
+  "scenarios": {
+    "oauth_missing": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: oauth2_authorization missing",
+      "before_sha256": "7a986e09fcc58358792ad8ecb588153f22640c7275a63f23ef478f19992bf27e",
+      "after_sha256": "7a986e09fcc58358792ad8ecb588153f22640c7275a63f23ef478f19992bf27e"
+    },
+    "dependency_missing": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: oauth2_authorization.access_token_issued_at: missing/incompatible view dependency",
+      "before_sha256": "c10d04835408fd8f7b05fbd5690c1941c1bc10eb0b066024449db238e2dacd56",
+      "after_sha256": "c10d04835408fd8f7b05fbd5690c1941c1bc10eb0b066024449db238e2dacd56"
+    },
+    "column_type": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: oauth2_authorization.access_token_hash: incompatible column type/nullability/default/extra",
+      "before_sha256": "37917110f7f9e1f2c5222a56097f1f5961ba653b8f6d0c2f8cbafe3374ecbe38",
+      "after_sha256": "37917110f7f9e1f2c5222a56097f1f5961ba653b8f6d0c2f8cbafe3374ecbe38"
+    },
+    "column_default": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.rotation_count: incompatible column type/nullability/default/extra",
+      "before_sha256": "d1323a3c749d781d073251402dd77f16d6735fd0ac7579b3c64aac418e08b6a3",
+      "after_sha256": "d1323a3c749d781d073251402dd77f16d6735fd0ac7579b3c64aac418e08b6a3"
+    },
+    "column_generated": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.access_token_hash: incompatible column type/nullability/default/extra",
+      "before_sha256": "002f22e8789be29cb9bad6aaf80c7ad2c85118f3ff95be2410ca924145091b69",
+      "after_sha256": "002f22e8789be29cb9bad6aaf80c7ad2c85118f3ff95be2410ca924145091b69"
+    },
+    "table_charset": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token: expected utf8mb4 table",
+      "before_sha256": "4b446e0c4597bfa3ac02fecc66903bad8840f9f726505a44c2c4dfb7568233ca",
+      "after_sha256": "4b446e0c4597bfa3ac02fecc66903bad8840f9f726505a44c2c4dfb7568233ca"
+    },
+    "trigger": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token: triggers require manual review",
+      "before_sha256": "cb4b06353a41e4c5da1128a74cdfa5073045b678bafec708916334cff5674a96",
+      "after_sha256": "cb4b06353a41e4c5da1128a74cdfa5073045b678bafec708916334cff5674a96"
+    },
+    "wrong_index": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: oauth2_authorization.idx_access_token_hash: incompatible index",
+      "before_sha256": "30c63f2cc6a696ee6a34bb9905d67c11dba22318232aa9eae53d82decfea98fd",
+      "after_sha256": "30c63f2cc6a696ee6a34bb9905d67c11dba22318232aa9eae53d82decfea98fd"
+    },
+    "prefix_index": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.idx_access_token_hash: incompatible index",
+      "before_sha256": "bb53b20e86e45d9c5fdf7b8c31092df4697f286f7bd77a688abeeeda2273a0e7",
+      "after_sha256": "bb53b20e86e45d9c5fdf7b8c31092df4697f286f7bd77a688abeeeda2273a0e7"
+    },
+    "unique_index": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.idx_access_token_hash: incompatible index",
+      "before_sha256": "9b99f14ab9e20b8a8fce96a565d310886ca10c2eb555a9529b6aa7176269baf9",
+      "after_sha256": "9b99f14ab9e20b8a8fce96a565d310886ca10c2eb555a9529b6aa7176269baf9"
+    },
+    "descending_index": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.idx_access_token_hash: incompatible index",
+      "before_sha256": "e280eca2d77ee0f219a957db947e2dbab2733876454dd2178d116e3a83ef0986",
+      "after_sha256": "e280eca2d77ee0f219a957db947e2dbab2733876454dd2178d116e3a83ef0986"
+    },
+    "invisible_index": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.idx_access_token_hash: incompatible index",
+      "before_sha256": "b4f3e5d99f5d6da0c0a88d6770be13cc616d96a09146079b94e00bb292c45ad2",
+      "after_sha256": "b4f3e5d99f5d6da0c0a88d6770be13cc616d96a09146079b94e00bb292c45ad2"
+    }
+  },
+  "cleanup": {
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true
+  }
+}

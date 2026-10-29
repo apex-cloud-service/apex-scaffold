@@ -31,9 +31,9 @@
 # ============================================================
 
 services:
-  # ---------------- MySQL 8.0 ----------------
+  # ---------------- MySQL 9.0 ----------------
   mysql:
-    image: docker.io/library/mysql:8.0
+    image: docker.io/library/mysql:9.0
     container_name: apex-infra-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-apex-root}
@@ -141,10 +141,17 @@ services:
   rocketmq-broker:
     image: docker.io/apache/rocketmq:5.3.1
     container_name: apex-infra-rocketmq-broker
+    # brokerIP1 显式指定为宿主机回环地址：若不设置，broker 会向 namesrv 上报容器内部网络 IP，
+    # 从宿主机（如 IDE、本机跑集成测试）直连时该内部 IP 不可路由，连接会报 RemotingSendRequestException。
+    # mqbroker 的 BrokerStartup 不支持单项 -D 覆盖，只能通过 -c 加载配置文件，故启动前先落一份临时
+    # broker.conf。同机场景下 EXTERNAL_IP 固定为 127.0.0.1 即可；如需从其他主机访问，应替换为宿主机对外可达地址。
     command:
       - /bin/sh
       - -c
-      - mkdir -p /home/rocketmq/logs && exec sh mqbroker -n rocketmq-namesrv:9876
+      - |
+        mkdir -p /home/rocketmq/logs
+        printf 'brokerClusterName=DefaultCluster\nbrokerName=broker-a\nbrokerId=0\nbrokerIP1=%s\n' "${ROCKETMQ_BROKER_EXTERNAL_IP:-127.0.0.1}" > /home/rocketmq/broker-external.conf
+        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker-external.conf
     environment:
       NAMESRV_ADDR: rocketmq-namesrv:9876
       # 堆内存（镜像 JDK8，runbroker.sh 经 HEAP_OPTS 注入）
@@ -157,6 +164,7 @@ services:
     ports:
       - "10909:10909"
       - "10911:10911"
+      - "10912:10912"
     restart: unless-stopped
     networks:
       - apex-infra

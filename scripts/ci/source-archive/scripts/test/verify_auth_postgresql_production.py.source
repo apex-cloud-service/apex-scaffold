@@ -1,0 +1,93 @@
+"""Verify the auth production jar against a disposable local PostgreSQL database."""
+
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import secrets
+import subprocess
+import tempfile
+import time
+import uuid
+import zipfile
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--jar", type=Path, required=True)
+    args = parser.parse_args()
+    root = Path(__file__).resolve().parents[2]
+    java_home = Path(os.environ["JAVA_HOME"])
+    if java_home.name != "17.0.12-oracle":
+        raise RuntimeError("Source scripts/build/init-build-env.sh first")
+    container = "apex-auth-pg-probe-" + uuid.uuid4().hex[:12]
+    password = secrets.token_hex(24)
+    env = os.environ.copy()
+    env["POSTGRES_PASSWORD"] = password
+    run = lambda *cmd, **kwargs: subprocess.run(
+        cmd, check=True, text=True, capture_output=True, timeout=120, **kwargs
+    )
+    try:
+        run("podman", "run", "--detach", "--name", container, "--memory", "256m",
+            "--cpus", "1", "-p", "127.0.0.1::5432", "-e", "POSTGRES_PASSWORD",
+            "-e", "POSTGRES_DB=auth_probe", "localhost/postgres:17-alpine", env=env)
+        for _ in range(30):
+            ready = subprocess.run(["podman", "exec", container, "pg_isready", "-U", "postgres"],
+                                   capture_output=True, timeout=10)
+            if ready.returncode == 0:
+                break
+            time.sleep(1)
+        else:
+            raise RuntimeError("Isolated PostgreSQL did not become ready")
+        port = run("podman", "port", container, "5432").stdout.strip().rsplit(":", 1)[1]
+        with tempfile.TemporaryDirectory(prefix="auth-production-probe-") as temporary:
+            extracted = Path(temporary)
+            with zipfile.ZipFile(args.jar) as jar:
+                names = jar.namelist()
+                drivers = [name for name in names if name.startswith("BOOT-INF/lib/r2dbc-postgresql-")]
+                assert len(drivers) == 1, drivers
+                assert not any(name.startswith("BOOT-INF/lib/apex-system-") for name in names)
+                for name in names:
+                    if name.startswith(("BOOT-INF/lib/", "BOOT-INF/classes/")):
+                        jar.extract(name, extracted)
+            classpath = os.pathsep.join([str(extracted / "BOOT-INF/classes"),
+                                        str(extracted / "BOOT-INF/lib/*")])
+            run(str(java_home / "bin/javac"), "-proc:none", "-cp", classpath,
+                "-d", temporary, str(root / "scripts/test/AuthPostgresqlProductionProbe.java"))
+            env.update({
+                "SPRING_DATASOURCE_URL": f"jdbc:postgresql://127.0.0.1:{port}/auth_probe",
+                "SPRING_DATASOURCE_DRIVER_CLASS_NAME": "org.postgresql.Driver",
+                "SPRING_DATASOURCE_USERNAME": "postgres",
+                "SPRING_DATASOURCE_PASSWORD": password,
+                "SPRING_R2DBC_URL": f"r2dbc:postgresql://127.0.0.1:{port}/auth_probe",
+                "SPRING_R2DBC_USERNAME": "postgres",
+                "SPRING_R2DBC_PASSWORD": password,
+                "SPRING_FLYWAY_LOCATIONS": "classpath:db/migration/postgresql",
+                "SPRING_R2DBC_POOL_INITIAL_SIZE": "1",
+                "SPRING_R2DBC_POOL_MAX_SIZE": "2",
+                "SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE": "1",
+                "SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE": "2",
+                "SPRING_CLOUD_BOOTSTRAP_ENABLED": "false",
+                "DB_USERNAME": "postgres", "DB_PASSWORD": password,
+            })
+            result = run(str(java_home / "bin/java"), "-Xmx256m", "-cp",
+                         temporary + os.pathsep + classpath, "AuthPostgresqlProductionProbe",
+                         "--spring.profiles.active=prod", env=env, cwd=root)
+            print(result.stdout)
+            assert "AUTH_POSTGRESQL_PRODUCTION_DATABASE_PROBE_PASS" in result.stdout
+            print(json.dumps({"jar_sha256": hashlib.sha256(args.jar.read_bytes()).hexdigest(),
+                              "driver": drivers[0], "container": container,
+                              "profile": "prod", "full_application_started": False}))
+    except subprocess.CalledProcessError as error:
+        print((error.stdout or "").replace(password, "[REDACTED]"))
+        print((error.stderr or "").replace(password, "[REDACTED]"))
+        raise RuntimeError("Production database probe failed") from None
+    finally:
+        subprocess.run(["podman", "rm", "--force", "--volumes", container],
+                       check=True, capture_output=True, timeout=30)
+        print("Isolated PostgreSQL container and anonymous volumes removed")
+
+
+if __name__ == "__main__":
+    main()

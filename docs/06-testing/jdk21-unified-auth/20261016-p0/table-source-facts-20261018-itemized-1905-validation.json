@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "kind": "itemized_sql_source_evidence_validation",
+  "evidence_file": "table-source-facts-20261018-itemized-1905.json",
+  "evidence_collected_at": "2026-10-18T19:04:30.413861+08:00",
+  "evidence_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "baseline_file": "table-source-facts-20261018-reviewed.json",
+  "baseline_sha256": "60d321f7be81b078027f2dea60cf5451487bf1cf1557430da01371171f5ed17a",
+  "old_sql": {
+    "denominator": 589,
+    "preserved_original_items": 589,
+    "uniquely_located_and_linked_items": 589,
+    "stable_unique_ids": 589,
+    "category_counts": {
+      "dynamic_sql": 121,
+      "procedure_or_prepared_control": 465,
+      "ddl_target_identified": 3
+    },
+    "unknown_classification": 0,
+    "dynamic_procedural_or_control_review_remaining": 586,
+    "semantic_verified_items": 0,
+    "unbound_prepared_controls": [
+      {"id": "old-sql-0142", "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql", "line": 47, "statement": "PREPARE stmt FROM @sql"},
+      {"id": "old-sql-0143", "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql", "line": 48, "statement": "EXECUTE stmt"},
+      {"id": "old-sql-0144", "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql", "line": 49, "statement": "DEALLOCATE PREPARE stmt"}
+    ],
+    "boundary": "分类和目标识别不证明执行成功或语义等价；全部589项semantic_verified为false。586是动态、过程或控制项待审阅数，另外3项仅识别出静态DDL目标。"
+  },
+  "old_differences": {
+    "denominator": 139,
+    "preserved_original_items": 139,
+    "stable_unique_ids": 139,
+    "association_counts": {
+      "exact_table_column_tokens_static_or_conditional_target": 47,
+      "migration_version_statements_not_ddl_only": 17,
+      "flyway_managed_catalog_object_no_repository_ddl": 75
+    },
+    "newly_source_linked_items": 64,
+    "without_repository_statement_refs": 75,
+    "unexplained_source_gaps": 0,
+    "semantic_verified_items": 0,
+    "boundary": "47项为条件字符串或过程体内表列候选，17项为迁移版本语句关联（包含DML），75项为Flyway自管对象；来源关联不证明双库等价。"
+  },
+  "current_inventory": {
+    "statement_count": 2120,
+    "category_counts": {
+      "ddl_target_identified": 843,
+      "procedure_or_prepared_control": 465,
+      "ddl_comment": 358,
+      "data_dml": 333,
+      "dynamic_sql": 121
+    },
+    "office_v4_added_statements": 12,
+    "office_v4_added_category_counts": {"data_dml": 8, "ddl_target_identified": 4},
+    "office_v4_parser_issues": 0,
+    "old_catalog_difference_count": 3283,
+    "all_old_catalog_raw_values_preserved": true,
+    "catalog_boundary": "复用历史测试库快照，本轮未查询数据库。office V4新增项独立统计，不计入旧589/139分母。"
+  },
+  "source_validation": {
+    "current_source_count": 1901,
+    "current_source_hash_mismatches": 0,
+    "statement_offsets_and_sha256_validated": 2120,
+    "all_statement_references_resolve": true,
+    "all_old_sql_source_hashes_match_baseline": true,
+    "historical_hash_comparisons": 1203,
+    "historical_hash_mismatches": [
+      {
+        "input": "asset-links-20261018.json",
+        "source": "apex-system/src/main/java/com/apex/scaffold/domain/model/entity/UserEntity.java",
+        "expected": "efd6cb60965b6d07f65ecff194b8c8d099ba9696537a65ae57a566392158d0d5",
+        "actual": "c4ed20e2edf67288af899b83153dc083768661f869c2b22399cceb3972dbf95b"
+      },
+      {
+        "input": "asset-links-20261018.json",
+        "source": "apex-system/src/main/java/com/apex/scaffold/domain/model/entity/MenuEntity.java",
+        "expected": "3b4d59a36871cef4daa28ff7ffbb31bfee423cc857a5be3682ccbcd5650fe939",
+        "actual": "1d0c6e94260a6cb66864802a43c16f4ce7a4ad3549565597e2ca6ebffb586dbb"
+      }
+    ],
+    "collector_sha256": "5300bbff08320819e43147325e434c89e832a9e1d7bd043cc24313c99bca37a7",
+    "test_file_sha256": "6ff1c06a1654959b866fefc2325c637771ee501f36f2807c4180f8eaccb3bb87"
+  },
+  "verification": {
+    "red": {
+      "command": "python3 -m unittest scripts.test.test_collect_table_facts.TableFactsTest.test_statement_categories_separate_comments_settings_data_and_ddl scripts.test.test_collect_table_facts.TableFactsTest.test_baseline_audit_preserves_rows_and_separates_appended_statements",
+      "tests": 2,
+      "failures": 1,
+      "errors": 1,
+      "reason": "实现前category缺失导致断言失败；baseline_audit尚不存在导致AttributeError。"
+    },
+    "green": {
+      "command": "python3 -m unittest scripts/test/test_collect_table_facts.py scripts/test/test_collect_database_schema.py scripts/test/test_collect_migration_tables.py",
+      "tests": 38,
+      "failures": 0,
+      "errors": 0,
+      "result": "OK"
+    },
+    "git_diff_check_exit_code": 0,
+    "assertions_passed": [
+      "589/139分母守恒、分类计数守恒、稳定ID唯一",
+      "旧SQL原值、来源、迁移未解析索引逐项一致",
+      "旧139差异原值逐项一致",
+      "全部语句引用可解析，offset切片和语句SHA-256一致",
+      "1901个当前来源SHA-256重新计算无漂移",
+      "3283项双库差异category/object/mysql/postgresql原值全部保留",
+      "office V4新增12条单列且无parser_issues"
+    ]
+  },
+  "scope": {
+    "java_build_executed": false,
+    "database_query_or_sql_execution": false,
+    "production_java_sql_pom_edited": false,
+    "report_or_main_plan_edited": false,
+    "deleted_cache_or_temp_scripts_restored": false,
+    "commit_or_push": false,
+    "p0_exit_claimed": false
+  }
+}

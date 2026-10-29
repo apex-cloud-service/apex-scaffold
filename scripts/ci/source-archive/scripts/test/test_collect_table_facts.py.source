@@ -1,0 +1,254 @@
+import importlib.util
+import pathlib
+import sys
+import unittest
+
+CI = pathlib.Path(__file__).resolve().parents[1] / "ci"
+sys.path.insert(0, str(CI))
+
+
+class TableFactsTest(unittest.TestCase):
+    def collector(self):
+        path = CI / "collect_table_facts.py"
+        self.assertTrue(path.exists(), "table fact collector must exist")
+        spec = importlib.util.spec_from_file_location("table_facts", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_java_mapping_ignores_comments_and_string_decoys(self):
+        module = self.collector()
+        text = '// @TableName("wrong")\nclass Noise { String x = "@TableName(\\\"fake\\\")"; }\n@TableName("real")\nclass Real {}'
+        self.assertEqual(module.table_mappings(text), [("real", "Real", 3)])
+
+    def test_tenant_membership_requires_full_identifier(self):
+        module = self.collector()
+        self.assertTrue(module.has_tenant_key(["id", '"tenant_id"']))
+        self.assertFalse(module.has_tenant_key(["other_tenant_id", "tenant_id_hash"]))
+
+    def test_default_cast_equivalence_does_not_hide_value_drift(self):
+        module = self.collector()
+        self.assertEqual(module.classify_difference({"category": "column_default_raw", "mysql": "ACTIVE", "postgresql": "'ACTIVE'::character varying"})[0], "dialect_acceptable")
+        self.assertEqual(module.classify_difference({"category": "column_default_raw", "mysql": "ACTIVE", "postgresql": "'DRAFT'::character varying"})[0], "defect_candidate")
+
+    def test_generation_on_update_and_identity_remain_business_decisions(self):
+        module = self.collector()
+        plain = {"category": "column_generation", "mysql": {"extra": "DEFAULT_GENERATED", "expression": ""}, "postgresql": {"identity": "NO", "generated": "NEVER", "expression": None}}
+        self.assertEqual(module.classify_difference(plain)[0], "dialect_acceptable")
+        plain["mysql"]["extra"] = "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+        self.assertEqual(module.classify_difference(plain)[0], "business_confirmation")
+        plain["mysql"]["extra"] = "auto_increment"
+        self.assertEqual(module.classify_difference(plain)[0], "business_confirmation")
+
+    def test_unknown_is_not_semantic_equivalence(self):
+        module = self.collector()
+        self.assertEqual(module.classify_difference({"category": "future_category", "mysql": 1, "postgresql": 2})[0], "unknown")
+        self.assertEqual(module.classify_difference({"category": "column_type_normalized", "mysql": "datetime(0)", "postgresql": "timestamp without time zone(6)"})[0], "business_confirmation")
+
+    def test_count_view_nullability_is_catalog_metadata(self):
+        module = self.collector()
+        row = {"category": "column_nullability", "object": "v_token_health.total_tokens", "mysql": "NO", "postgresql": "YES"}
+        self.assertEqual(module.classify_difference(row)[0], "dialect_acceptable")
+
+    def test_sql_sources_do_not_associate_comment_or_unrelated_column(self):
+        module = self.collector()
+        sql = '-- CREATE TABLE fake (tenant_id INT);\nCREATE TABLE real (id INT, tenant_id VARCHAR(64) NULL);\nALTER TABLE real ADD other INT;'
+        rows = module.sql_facts(sql, "mysql")
+        self.assertEqual([r["table"] for r in rows], ["real", "real"])
+        self.assertEqual(rows[0]["line"], 2)
+        self.assertIn("tenant_id", rows[0]["identifiers"])
+        self.assertNotIn("tenant_id", rows[1]["identifiers"])
+
+    def test_view_comment_temporary_drop_and_multistatement_locations(self):
+        module = self.collector()
+        sql = 'CREATE OR REPLACE VIEW "s"."V" AS SELECT count(*) AS n FROM real;\nCOMMENT ON COLUMN real.id IS \'semi;colon\';\nDROP TEMPORARY TABLE tmp;'
+        rows = module.sql_facts(sql, "postgresql")
+        self.assertEqual([(r["table"], r["operation"]) for r in rows], [("s.V", "create_view"), ("real", "comment_column"), ("tmp", "drop_table")])
+        self.assertEqual([r["line"] for r in rows], [1, 2, 3])
+        self.assertTrue(all(r["scope"] == "top_level_static_target" for r in rows))
+
+    def test_dynamic_literals_keep_condition_and_never_claim_execution(self):
+        module = self.collector()
+        sql = "SET @ddl = IF(1, 'ALTER TABLE real ADD tenant_id VARCHAR(64) COMMENT ''x''', 'SELECT 1');\nPREPARE s FROM @ddl;\nEXECUTE s;\nDEALLOCATE PREPARE s;"
+        rows = module.sql_facts(sql, "mysql")
+        self.assertEqual([(r["table"], r["operation"]) for r in rows], [("real", "alter_table")])
+        self.assertEqual(rows[0]["scope"], "conditional_literal_candidate")
+        statements = module.statement_inventory(sql, "mysql")
+        self.assertEqual(statements[2]["related_assignment_lines"], [1])
+        self.assertTrue(all(not r["semantic_verified"] for r in statements))
+        self.assertIn("IF(1", statements[0]["sql"])
+
+    def test_concat_fragments_are_not_complete_dynamic_targets(self):
+        module = self.collector()
+        sql = "SET @ddl = CONCAT('ALTER TABLE real ADD ', @column); PREPARE s FROM @ddl; EXECUTE s;"
+        self.assertEqual(module.sql_facts(sql, "mysql"), [])
+        rows = module.statement_inventory(sql, "mysql")
+        self.assertEqual(rows[0]["disposition"], "dynamic_expression_requires_runtime_review")
+        self.assertEqual(rows[2]["related_assignment_lines"], [1])
+
+    def test_dollar_body_static_ddl_locations_ignore_literal_decoys(self):
+        module = self.collector()
+        sql = "DO $body$\nBEGIN\n IF true THEN\n ALTER TABLE real ADD tenant_id text;\n CREATE INDEX ix ON real(tenant_id);\n RAISE NOTICE 'ALTER TABLE fake ADD x int';\n END IF;\nEND $body$;"
+        rows = module.sql_facts(sql, "postgresql")
+        self.assertEqual([(r["table"], r["line"]) for r in rows], [("real", 4), ("real", 5)])
+        self.assertTrue(all(r["scope"] == "procedural_body_static_candidate" for r in rows))
+        self.assertEqual(module.statement_inventory(sql, "postgresql")[0]["disposition"], "procedural_body_requires_runtime_review")
+
+    def test_prepared_reassignment_does_not_reuse_old_target(self):
+        module = self.collector()
+        sql = "SET @ddl='ALTER TABLE real ADD x int'; PREPARE s FROM @ddl; DEALLOCATE PREPARE s; EXECUTE s;"
+        rows = module.statement_inventory(sql, "mysql")
+        self.assertEqual(rows[-1]["related_assignment_lines"], [])
+        self.assertEqual(rows[-1]["disposition"], "unbound_prepared_control_requires_review")
+
+    def test_v14_first_procedural_assignment_binds_controls_lexically(self):
+        module = self.collector()
+        path = CI.parents[1] / 'apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql'
+        sql = path.read_text()
+        rows = module.statement_inventory(sql, 'mysql')
+        controls = [r for r in rows if r['line'] in (47, 48, 49)]
+        self.assertEqual(len(controls), 3)
+        for row in controls:
+            self.assertEqual(row['related_assignment_lines'], [46])
+            self.assertEqual(row['disposition'], 'prepared_control_lexically_bound_in_procedure_requires_runtime_review')
+            self.assertFalse(row['semantic_verified'])
+            self.assertEqual(row['facts'], [])
+            self.assertEqual(row['sql'], sql[row['start_offset']:row['end_offset']])
+        self.assertEqual([r['related_assignment_lines'] for r in rows if r['line'] in (51, 52, 53)], [[50]] * 3)
+
+    def test_procedure_binding_ignores_decoys_and_does_not_escape_definition(self):
+        module = self.collector()
+        sql = """SET @ddl='SELECT 0';
+CREATE PROCEDURE p() BEGIN
+ IF 1 THEN
+ -- SET @fake='SELECT 1';
+ SELECT 'SET @fake=1';
+ SET @ddl=CONCAT('ALTER TABLE ', @name);
+ PREPARE s FROM @ddl;
+ SET @ddl='SELECT 2';
+ EXECUTE s;
+ DEALLOCATE PREPARE s;
+ PREPARE s FROM @fake;
+ EXECUTE s;
+ END IF;
+END;
+PREPARE s FROM @ddl;
+EXECUTE s;"""
+        rows = module.statement_inventory(sql, 'mysql')
+        by_line = {r['line']: r for r in rows}
+        self.assertEqual(by_line[7]['related_assignment_lines'], [6])
+        self.assertEqual(by_line[9]['related_assignment_lines'], [6])
+        self.assertEqual(by_line[10]['related_assignment_lines'], [6])
+        for line in (11, 12, 15, 16):
+            self.assertEqual(by_line[line]['related_assignment_lines'], [])
+        embedded = "CREATE PROCEDURE p() BEGIN IF 1 THEN /* SET @fake=1 */ SET @ddl=CONCAT('SET @fake=2', @name); PREPARE s FROM @ddl; PREPARE f FROM @fake; END;"
+        rows = module.statement_inventory(embedded, 'mysql')
+        self.assertEqual(rows[1]['related_assignment_lines'], [1])
+        self.assertEqual(rows[2]['related_assignment_lines'], [])
+        self.assertEqual(rows[0]['facts'], [])
+
+    def test_difference_refs_use_history_file_and_do_not_invent_flyway_ddl(self):
+        module = self.collector()
+        inventory = [{'source': 'v4.sql', 'domain': 'office', 'dialect': 'mysql', 'version': '4', 'line': 2, 'end_line': 2, 'statement_sha256': 'abc', 'facts': []}]
+        row = {'category': 'history_checksum', 'object': '4'}
+        refs, status = module.difference_sources('office', row, inventory)
+        self.assertEqual(refs[0]['source'], 'v4.sql')
+        self.assertEqual(status, 'migration_version_statements_not_ddl_only')
+        refs, status = module.difference_sources('office', {'category': 'column_generation', 'object': 'flyway_schema_history.checksum'}, inventory)
+        self.assertEqual(refs, [])
+        self.assertEqual(status, 'flyway_managed_catalog_object_no_repository_ddl')
+
+    def test_statement_categories_separate_comments_settings_data_and_ddl(self):
+        module = self.collector()
+        rows = module.statement_inventory("COMMENT ON TABLE real IS 'x'; SET search_path=public; UPDATE real SET id=1; ALTER TABLE real ADD x int; VACUUM real;", 'postgresql')
+        self.assertEqual([r.get('category') for r in rows], ['ddl_comment', 'session_setting', 'data_dml', 'ddl_target_identified', 'unknown'])
+        self.assertEqual(len({r.get('start_offset') for r in rows}), 5)
+
+    def test_baseline_audit_preserves_rows_and_separates_appended_statements(self):
+        module = self.collector()
+        sql = 'UPDATE real SET id=1; ALTER TABLE real ADD x int;'
+        inventory = [dict(r, source='v4.sql', domain='office', dialect='mysql', version='4') for r in module.statement_inventory(sql, 'mysql')]
+        baseline = {'sql_unresolved_dispositions': [{'source': 'v4.sql', 'migration_unresolved_index': 0, 'original': {'line': 1, 'reason': 'unsupported_statement'}}], 'dialect_comparisons': [{'domain': 'office', 'differences': [{'original_index': 0, 'category': 'history_checksum', 'object': '4', 'mysql': 1, 'postgresql': 2, 'source_statement_refs': []}]}]}
+        audit = module.baseline_audit(baseline, inventory, {'v4.sql': 'hash'}, {'v4.sql'})
+        self.assertEqual(len(audit['old_sql_items']), 1)
+        self.assertEqual(audit['old_sql_items'][0]['original'], baseline['sql_unresolved_dispositions'][0]['original'])
+        self.assertEqual(audit['old_difference_items'][0]['association_status'], 'migration_version_statements_not_ddl_only')
+        self.assertEqual(len(audit['added_statements']), 2)
+        self.assertEqual(len({r['statement_id'] for r in inventory}), 2)
+        self.assertEqual(audit, module.baseline_audit(baseline, inventory, {'v4.sql': 'hash'}, {'v4.sql'}))
+
+    def test_unknown_statement_and_malformed_view_are_retained(self):
+        module = self.collector()
+        self.assertEqual(module.sql_facts('CREATE VIEW;', 'postgresql'), [])
+        rows = module.statement_inventory('VACUUM real; CREATE VIEW;', 'postgresql')
+        self.assertTrue(all(r['disposition'] == 'unknown_requires_statement_review' for r in rows))
+
+
+class DynamicGuardTest(TableFactsTest):
+    def test_literal_guards_expand_predicate_target_and_prepare_snapshot(self):
+        module = self.collector()
+        sql = "SET @ddl = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE real ADD COLUMN x INT', 'SELECT 1') FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'real' AND column_name = 'x'); PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;"
+        groups = module.expand_mysql_guards(sql)
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(groups[0]['target'], {'table': 'real', 'kind': 'column', 'name': 'x'})
+        self.assertIn('COUNT(*) = 0', groups[0]['condition_sql'])
+        self.assertEqual(groups[0]['present_sql'], 'SELECT 1')
+        self.assertEqual(len(groups[0]['statements']), 4)
+        self.assertFalse(groups[0]['semantic_verified'])
+
+    def test_nested_count_guard_and_escaped_branch_literal(self):
+        module = self.collector()
+        sql = "SET @sql=(SELECT IF((SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='real' AND INDEX_NAME='ix')=0, 'ALTER TABLE real ADD INDEX ix (x)', 'SELECT ''exists''')); PREPARE s FROM @sql; EXECUTE s; DEALLOCATE PREPARE s;"
+        group = module.expand_mysql_guards(sql)[0]
+        self.assertEqual(group['target']['kind'], 'index')
+        self.assertEqual(group['present_sql'], "SELECT 'exists'")
+        self.assertTrue(group['condition_sql'].startswith('SELECT (SELECT COUNT'))
+
+    def test_exists_gate_column_and_index_guards(self):
+        module = self.collector()
+        column = ("SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'real') "
+                  "AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'real' AND COLUMN_NAME = 'tenant_id'), "
+                  "'ALTER TABLE `real` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL', 'SELECT 1'); "
+                  "PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;")
+        group = module.expand_mysql_guards(column)[0]
+        self.assertEqual(group['guard_shape'], 'exists_gate')
+        self.assertEqual(group['target'], {'table': 'real', 'kind': 'column', 'name': 'tenant_id'})
+        self.assertEqual(group['variable'], 'sql')
+        self.assertEqual(group['present_sql'], 'SELECT 1')
+        self.assertEqual(len(group['statements']), 4)
+        index = ("SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'real' AND COLUMN_NAME = 'tenant_id') "
+                 "AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'real' AND INDEX_NAME = 'idx_real_tenant_id'), "
+                 "'CREATE INDEX `idx_real_tenant_id` ON `real` (`tenant_id`)', 'SELECT 1'); "
+                 "PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;")
+        group = module.expand_mysql_guards(index)[0]
+        self.assertEqual(group['target'], {'table': 'real', 'kind': 'index', 'name': 'idx_real_tenant_id'})
+        self.assertTrue(group['condition_sql'].startswith('SELECT EXISTS'))
+        self.assertFalse(group['semantic_verified'])
+
+    def test_exists_gate_mismatched_targets_and_controls_fail_closed(self):
+        module = self.collector()
+        base = ("SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'real') "
+                "AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'real' AND COLUMN_NAME = 'tenant_id'), "
+                "'ALTER TABLE `real` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL', 'SELECT 1');")
+        controls = " PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;"
+        self.assertEqual(len(module.expand_mysql_guards(base + controls)), 1)
+        # 分支 DDL 目标与 guard 不一致、控制语句绑定错误或缺少控制语句时必须拒绝
+        renames = {"'ALTER TABLE `real` ADD COLUMN `tenant_id`": "'ALTER TABLE `other` ADD COLUMN `tenant_id`",
+                   "'ALTER TABLE `real` ADD COLUMN": "'ALTER TABLE `real` ADD INDEX",
+                   "COLUMN_NAME = 'tenant_id')": "COLUMN_NAME = 'other')",
+                   "PREPARE stmt FROM @sql;": "PREPARE stmt FROM @other;"}
+        for original, mutated in renames.items():
+            self.assertEqual(module.expand_mysql_guards((base + controls).replace(original, mutated, 1)), [], mutated)
+        self.assertEqual(module.expand_mysql_guards(base), [])
+
+    def test_reassignment_mismatch_and_concat_fail_closed(self):
+        module = self.collector()
+        base = "SET @ddl=(SELECT IF(COUNT(*)=0, 'ALTER TABLE real ADD COLUMN x INT', 'SELECT 1') FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='real' AND column_name='x');"
+        for suffix in ["SET @ddl='SELECT 2'; PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;", "PREPARE s FROM @other; EXECUTE s; DEALLOCATE PREPARE s;"]:
+            self.assertEqual(module.expand_mysql_guards(base + suffix), [])
+        self.assertEqual(module.expand_mysql_guards((base + 'PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;').replace("column_name='x'", "column_name='wrong'")), [])
+        self.assertEqual(module.expand_mysql_guards("SET @ddl=CONCAT('ALTER TABLE real ADD ', @col); PREPARE s FROM @ddl; EXECUTE s; DEALLOCATE PREPARE s;"), [])
+
+
+if __name__ == "__main__":
+    unittest.main()

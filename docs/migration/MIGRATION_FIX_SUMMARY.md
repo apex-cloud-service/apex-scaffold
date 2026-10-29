@@ -8,7 +8,7 @@
 
 ## 修复的文件
 
-### 新增文件（4个）
+### 新增文件（3个）
 
 1. **MySQL V49 迁移脚本**
    - 路径：`apex-auth-center/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql`
@@ -20,15 +20,10 @@
    - 作用：创建 auth_config 表（PostgreSQL 版本）
    - 大小：1.8 KB
 
-3. **MySQL 迁移测试脚本**
-   - 路径：`scripts/test/test-mysql-migration.sh`
-   - 作用：在隔离环境测试 MySQL 迁移完整流程
-   - 权限：可执行（755）
-
-4. **PostgreSQL 迁移测试脚本**
-   - 路径：`scripts/test/test-postgresql-migration.sh`
-   - 作用：在隔离环境测试 PostgreSQL 迁移完整流程
-   - 权限：可执行（755）
+3. **双库迁移回归测试**
+   - 实现：`apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java`
+   - 作用：以 Testcontainers 在 MySQL 与 PostgreSQL 上逐版本迁移并校验 schema
+   - 执行：`sdk env && mvnd -T4 -B clean verify`（Failsafe 阶段）
 
 ### 修改文件（1个）
 
@@ -100,12 +95,13 @@ V44 → V45 → V46 → V47 → V48 → V49 → V50
 
 ### 快速验证（推荐）
 ```bash
-# MySQL 测试
 cd /Users/work/apex-scaffold
-./scripts/test/test-mysql-migration.sh
 
-# PostgreSQL 测试
-./scripts/test/test-postgresql-migration.sh
+# 检查迁移文件完整性
+./scripts/test/check-migration-integrity.sh
+
+# 双库迁移回归（Testcontainers，需本机容器运行时）
+sdk env && mvnd -T4 -B clean verify
 ```
 
 ### 手动验证

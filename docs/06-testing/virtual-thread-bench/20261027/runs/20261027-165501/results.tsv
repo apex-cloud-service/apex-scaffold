@@ -1,0 +1,5 @@
+mode	pool	rps	latency_avg_ms	p50_ms	p90_ms	p99_ms	non2xx	max_threads	queue_capacity	saturation	completed_in_window	vt_threads
+baseline	event	214.84	329.80	288.93	703.77	1180.00	0	16.0	2048.0	0.3125	n/a	0
+baseline	cache	214.84	329.80	288.93	703.77	1180.00	0	16.0	512.0	0.0	n/a	0
+virtual	event	201.52	338.85	316.73	693.67	1060.00	0	16.0	2048.0	0.0	2090	6087
+virtual	cache	201.52	338.85	316.73	693.67	1060.00	0	16.0	512.0	0.0	41	58

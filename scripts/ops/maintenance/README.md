@@ -174,15 +174,12 @@ find logs/ -name "*.log" -mtime +30 -delete
 chmod +x scripts/ops/maintenance/*.sh
 ```
 
-### 2. Python 环境问题
+### 2. Java 工具 JAR 缺失
 
-链接检查需要 Python 3:
+链接检查由 `apex-tools-deployment` 的 Java 工具承担，需先构建 fat jar:
 ```bash
-# 检查 Python 版本
-python3 --version
-
-# 如果不存在，安装 Python 3
-brew install python3
+source scripts/build/init-build-env.sh
+mvnd -B -pl apex-tools-deployment -am verify
 ```
 
 ### 3. 路径问题

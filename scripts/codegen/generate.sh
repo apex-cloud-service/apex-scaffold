@@ -10,7 +10,7 @@
 #   ./scripts/codegen/generate.sh -i examples/product.json -o ./generated -v 3
 #   ./scripts/codegen/generate.sh -i examples/product.json -f /path/to/apex-admin-web   # 同时生成 Vue3 页面
 #
-# 依赖: sdkman 默认 JDK 17 + mvnd（本项目统一构建环境）
+# 依赖: sdkman 默认 JDK 21 + mvnd（本项目统一构建环境）
 # ============================================================
 
 set -euo pipefail

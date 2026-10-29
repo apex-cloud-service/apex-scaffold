@@ -1,0 +1,37 @@
+import importlib.util
+from pathlib import Path
+import tempfile
+import unittest
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "ci" / "collect_upgrade_baseline.py"
+spec = importlib.util.spec_from_file_location("baseline_link", SCRIPT)
+baseline = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(baseline)
+
+
+class LinkUpgradeAssetsTest(unittest.TestCase):
+    def test_production_dependency_graph_keeps_shared_candidates_and_excludes_test(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for module, dependencies in {
+                "apex-system-service": [("shared", "compile"), ("other", "test")],
+                "apex-auth-service": [("shared", "compile")],
+                "shared": [], "other": [],
+            }.items():
+                (root / module).mkdir()
+                deps = "".join(f"<dependency><groupId>com.apex.scaffold</groupId><artifactId>{name}</artifactId><scope>{scope}</scope></dependency>" for name, scope in dependencies)
+                (root / module / "pom.xml").write_text(f"<project><dependencies>{deps}</dependencies></project>")
+            result = baseline.service_candidates(root, ["apex-system-service", "apex-auth-service", "shared", "other"])
+            self.assertEqual(result["shared"], ["apex-auth-service", "apex-system-service"])
+            self.assertEqual(result["other"], [])
+
+    def test_route_links_smallest_enclosing_declaration_without_claiming_runtime(self):
+        declarations = [{"kind": "CLASS", "signature": "CLASS A", "position": {"offset": 0, "end_offset": 100}},
+                        {"kind": "METHOD", "signature": "A#route()", "position": {"offset": 10, "end_offset": 90}}]
+        self.assertEqual(baseline.enclosing_declaration(declarations, {"offset": 20, "end_offset": 30}), 1)
+        self.assertIsNone(baseline.enclosing_declaration(declarations, {"offset": 101, "end_offset": 102}))
+
+
+if __name__ == "__main__":
+    unittest.main()

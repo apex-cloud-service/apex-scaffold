@@ -128,7 +128,7 @@ public static synchronized void initializeGlobalHooks() {
 
 ### 3.1 MyBatis-Plus 拦截器
 
-[DefaultTenantLineHandler](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java) 实现 `TenantLineHandler` 接口,为 SQL 自动注入租户条件:
+[DefaultTenantLineHandler](../../apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java) 实现 `TenantLineHandler` 接口,为 SQL 自动注入租户条件:
 
 ```java
 @Override
@@ -243,7 +243,7 @@ apex:tenant:TENANT_B:user:123
 
 ### 4.2 多级缓存租户隔离
 
-[MultiLevelCacheService](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) 自动为缓存 key 添加租户前缀:
+[MultiLevelCacheService](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) 自动为缓存 key 添加租户前缀:
 
 ```java
 public <T> Mono<T> get(String key, Class<T> clazz) {

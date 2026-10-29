@@ -1,8 +1,11 @@
 # 02 网络物理部署架构 - 详细说明
 
-> 文档版本: v1.0\
+> 文档版本: v1.1\
 > 创建时间: 2026-09-04\
-> 适用版本: apex-scaffold v1.2.0
+> 最近更新: 2026-10-28（标注历史单体拓扑，指向当前微服务架构）\
+> 适用版本: apex-scaffold v1.3.1
+
+> **⚠️ 架构演进说明**：本文档部分拓扑和配置示例描述的是**单体部署的历史形态**（单一 `apex-app` 实例，业务端口 8080、管理端口 8081）。当前运行架构已演进为 **网关 + 五业务服务 + 任务代理/脱敏服务** 的微服务拆分，各服务独立端口（gateway:8080、auth:8081、system:8082/8083、workflow:8083、office:8084、file:8085、job:8095、masking:8096）。当前架构以 [system-architecture.md](system-architecture.md) §1.2 运行拓扑和 §3.2 组件职责与端口为准，以下单体示例仅作历史参考。
 
 ## 架构图
 
@@ -63,7 +66,7 @@
 
 - JWT Bearer Token 无状态认证
 
-- Sentinel 规则：`SystemRule`、`FlowRule`、`DegradeRule`
+- Resilience4j 熔断器：`CircuitBreaker`（路由级熔断回退）
 
 - CORS 跨域控制：`application.yml` 配置白名单
 
@@ -138,7 +141,7 @@ resources:
 
 | 组件            | 镜像/版本                   | 默认状态 | 生产建议                  |
 | ------------- | ----------------------- | ---- | --------------------- |
-| MySQL 8.0     | `mysql:8.0`             | ✅ 启用 | 主从复制 / MGR / 云 RDS    |
+| MySQL 9.0     | `mysql:9.0`             | ✅ 启用 | 主从复制 / MGR / 云 RDS    |
 | Redis Cluster | `redis:7-alpine`        | ✅ 启用 | Sentinel / Cluster 模式 |
 | MinIO / TOS   | `minio/minio` / 火山云 TOS | ✅ 启用 | 分布式 MinIO / 云对象存储     |
 | RocketMQ      | `apache/rocketmq:5.3.1` | 可选   | 主从 Broker / Dledger   |
@@ -148,7 +151,7 @@ resources:
 
 ```yaml
 mysql:
-  image: mysql:8.0
+  image: mysql:9.0
   environment:
     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     MYSQL_DATABASE: apex_data
@@ -201,7 +204,7 @@ mysql:
 
 ```yaml
 scrape_configs:
-  - job_name: 'apex-application'
+  - job_name: 'apex-system'
     static_configs:
       - targets: ['apex-app:8081']
     metrics_path: '/actuator/prometheus'
@@ -285,7 +288,7 @@ podman-compose -f podman-compose.infra.yml up -d
 
 **启动组件**：
 
-- MySQL 8.0
+- MySQL 9.0
 
 - Redis 7-alpine
 
@@ -348,7 +351,7 @@ open http://localhost:3000  # admin/admin
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apex-application
+  name: apex-system
 spec:
   replicas: 3
   strategy:
@@ -360,7 +363,7 @@ spec:
     spec:
       containers:
       - name: apex-app
-        image: apex-scaffold:1.2.0
+        image: apex-scaffold:1.3.1
         ports:
         - containerPort: 8080
           name: http
@@ -386,12 +389,12 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: apex-application-hpa
+  name: apex-system-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: apex-application
+    name: apex-system
   minReplicas: 2
   maxReplicas: 10
   metrics:
@@ -415,7 +418,7 @@ spec:
 
 ### ✅ 默认栈能力 (Podman Compose，运行结果需按环境验证)
 
-- MySQL 8.0 单实例
+- MySQL 9.0 单实例
 
 - Redis 7-alpine 单实例
 
@@ -437,7 +440,7 @@ spec:
 
 - Nacos 配置中心：`NACOS_CONFIG_ENABLED=true`
 
-- Sentinel Dashboard 集成：配置 `SENTINEL_DASHBOARD_URL`
+- Resilience4j（内置） 集成：配置 `SENTINEL_DASHBOARD_URL`
 
 ### 🚀 建议拓扑能力 (需环境验证)
 

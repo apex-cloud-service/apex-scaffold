@@ -40,7 +40,7 @@
 ### 运维部署
 - [部署指南](../05-operations/deployment.md)
 - [监控体系](../_archive/operations/monitoring.md)
-- [故障排查](./TROUBLESHOOTING.md)
+- [故障排查](./troubleshooting.md)
 
 ---
 
@@ -50,7 +50,7 @@
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
-| Java | 17.0.12 | 编程语言 |
+| Java | 21.0.13 | 编程语言 |
 | Spring Boot | 3.5.15 | 应用框架 |
 | Spring WebFlux | 响应式 Web | 非阻塞式 HTTP 服务 |
 | Spring Security | 6.5.0 | 认证授权 |
@@ -61,7 +61,7 @@
 | 技术 | 版本 | 用途 |
 |------|------|------|
 | MyBatis-Plus | 3.5.10.1 | ORM 框架 |
-| MySQL | 8.x | 关系数据库 |
+| MySQL | 9.0 | 关系数据库 |
 | Redisson | 3.36.0 | Redis 客户端 |
 | Flyway | 10.15.0 | 数据库迁移 |
 
@@ -98,7 +98,7 @@ cd /Users/work/apex-scaffold
 sdk env
 
 # 3. 验证环境
-java -version    # 应显示 17.0.12
+java -version    # 应显示 21.0.13
 mvnd --version   # 应显示 2.0.0-rc-3
 ```
 

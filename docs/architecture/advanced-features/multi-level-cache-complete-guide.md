@@ -45,7 +45,7 @@ graph TB
     end
     
     subgraph Database["数据库层"]
-        MySQL[MySQL 8.x]
+        MySQL[MySQL 9.0]
     end
     
     Request --> UserService

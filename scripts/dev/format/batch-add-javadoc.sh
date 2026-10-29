@@ -129,13 +129,13 @@ done
 
 echo ""
 echo "🔧 正在处理 PO 类..."
-find apex-infrastructure/src/main/java -name "*PO.java" | while read file; do
+find apex-infrastructure-persistence/src/main/java -name "*PO.java" | while read file; do
     add_po_javadoc "$file"
 done
 
 echo ""
 echo "🔧 正在处理 Mapper 接口..."
-find apex-infrastructure/src/main/java -name "*Mapper.java" | while read file; do
+find apex-infrastructure-persistence/src/main/java -name "*Mapper.java" | while read file; do
     add_mapper_javadoc "$file"
 done
 

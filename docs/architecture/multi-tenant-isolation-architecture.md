@@ -43,7 +43,7 @@ graph TB
     end
     
     subgraph Database["数据库层"]
-        MySQL[(MySQL 8.x<br/>tenant_id字段)]
+        MySQL[(MySQL 9.0<br/>tenant_id字段)]
     end
     
     subgraph Cache["缓存层"]
@@ -79,7 +79,7 @@ graph TB
 
 ### 1. TenantWebFilter (过滤器)
 
-**位置**: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/filter/TenantWebFilter.java`
+**位置**: `apex-system/src/main/java/com/apex/scaffold/interfaces/filter/TenantWebFilter.java`
 
 **职责**:
 - 从HTTP请求头提取`X-Tenant-Id`
@@ -135,7 +135,7 @@ public class TenantContext {
 
 ### 3. TenantLineInnerInterceptor (SQL拦截器)
 
-**位置**: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/config/MybatisPlusConfig.java`
+**位置**: `apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java`
 
 **职责**:
 - 拦截所有SQL语句
@@ -362,7 +362,7 @@ class TenantIntegrationTest {
 ## 📚 参考资料
 
 - [AGENTS.md](../../AGENTS.md) - 多租户开发规范
-- [TenantIsolationArchTest.java](../../apex-infrastructure/src/test/java/com/apex/scaffold/arch/TenantIsolationArchTest.java) - 架构约束测试
+- [TenantIsolationArchTest.java](../../apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TenantIsolationArchTest.java) - 架构约束测试
 - Flyway迁移 V14~V19 - 租户隔离相关迁移
 
 ---

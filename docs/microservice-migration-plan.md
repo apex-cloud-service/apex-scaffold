@@ -41,6 +41,8 @@
 
 ---
 
+<a id="1-现状分析"></a>
+
 ## 1. 现状分析
 
 ### 1.1 当前模块拓扑
@@ -111,6 +113,8 @@ graph TD
 4. 共享 Redis、共享 RocketMQ、共享 MinIO 属于**基础设施**，微服务化后仍然共享，不需要"拆分"，只需要按 key/topic/bucket 划命名空间。
 
 ---
+
+<a id="2-拆分原则与微服务边界"></a>
 
 ## 2. 拆分原则与微服务边界
 
@@ -192,6 +196,8 @@ graph LR
 - **用户与认证分离**是最大胆的一处：`apex-domain.UserEntity`（业务档案）与 `apex-auth-center.UserEntity`（认证主体）本就同名重复存在，维持"档案归 system、凭证归 auth"的现有事实，用 `accountId` 关联，通过事件同步（V59 多端统一账户改造已经为此铺路）。
 
 ---
+
+<a id="3-目标系统架构"></a>
 
 ## 3. 目标系统架构
 
@@ -417,6 +423,8 @@ sequenceDiagram
 
 ---
 
+<a id="4-共享基础设施-sdkapex-common-sdk"></a>
+
 ## 4. 共享基础设施 SDK：apex-common-sdk
 
 ### 4.1 拆分方式
@@ -465,6 +473,8 @@ flowchart LR
 横切**能力**（幂等、防重放、操作日志、限流、数据权限）从 interfaces/infrastructure 中抽为按需引入的 Spring Boot Starter（`apex-starter-idempotent`、`apex-starter-operation-log`、`apex-starter-ratelimit` 等），服务通过 `@ConditionalOnProperty` 自选装配——这是防止"SDK 变成新的大一统模块"的关键约束。
 
 ---
+
+<a id="5-api-网关设计apex-gateway"></a>
 
 ## 5. API 网关设计：apex-gateway
 
@@ -525,6 +535,8 @@ spring:
 
 ---
 
+<a id="6-服务间通信设计"></a>
+
 ## 6. 服务间通信设计
 
 ### 6.1 通信模式选择
@@ -543,7 +555,7 @@ flowchart TD
 **选型结论**：
 - **同步**：OpenFeign（声明式、拦截器可注入租户/traceId 头、Fallback 友好）。项目全栈是 WebFlux，Feign 是阻塞 IO——因此 **Feign 调用统一用 `Mono.fromCallable(...).subscribeOn(BlockingIoSchedulers.remote())` 包装**，不阻塞 Netty 事件循环（符合 AGENTS.md 阻塞隔离规范）。备选方案 Spring Cloud Function 式 `WebClient + @LoadBalanced` 保留为纯响应式调用的选项，用于文件流式传输等场景。
 - **异步**：RocketMQ + Outbox（现成：`MqProducerService`、`Outbox dispatcher`、DLQ handler、幂等切面 `IdempotentAspect` 全部复用）。
-- **分布式事务**：**不引入 Seata AT**。理由：项目已具备 Outbox + 事件 + 幂等的完整积木；Seata AT 对响应式/WebFlux 支持不成熟、与 MyBatis-Plus 拦截器和多租户拦截器的兼容性风险高。跨服务写一律"最终一致 + Saga 补偿"，仅当出现真实强一致需求再评估 Seata TCC/Saga 模式。
+- **分布式事务**：默认仍以 **Outbox 最终一致** 为主（项目已具备 Outbox + 事件 + 幂等的完整积木）。Seata 已作为默认关闭的可选增强引入 `apex-seata-spring-boot-starter`，经 `apex.seata.mode` 选择 AT/TCC/SAGA/XA 四模式（缺省 AT，详见 [Seata 接入](05-operations/seata-integration.md)）；默认不初始化 TM/RM。跨服务写优先"最终一致 + Saga 补偿"，出现真实强一致需求时按模式显式接入，注意 AT 对响应式/WebFlux 及 MyBatis-Plus 拦截器的兼容性风险。
 
 ### 6.2 内部 API 契约
 
@@ -605,6 +617,8 @@ public Mono<Result<List<String>>> loadPermissions(Long accountId) {
 Topic 命名 `apex-{domain}-events`，消费者组 `cg-{service}-{event}`；租户上下文由消息体 `tenantId` 恢复进 `TenantContext`（沿用现有消费者规范）。
 
 ---
+
+<a id="7-认证授权改造"></a>
 
 ## 7. 认证授权改造
 
@@ -672,10 +686,12 @@ sequenceDiagram
 
 ---
 
+<a id="8-数据一致性与分布式事务"></a>
+
 ## 8. 数据一致性与分布式事务
 
-> **结论（消除歧义）**：本项目的"分布式事务"统一采用 **Outbox 最终一致** 方案（本地事务内写业务表 + Outbox 表，再由调度投递 RocketMQ，消费端幂等 + DLQ 兜底）。
-> **不启用 Seata**：Seata 仅为可选项，当前未引入、未配置、未依赖。仅当出现无法用"最终一致 + Saga 补偿"覆盖的真实强一致需求时，才重新评估 Seata TCC/Saga 模式。
+> **结论（消除歧义）**：本项目的"分布式事务"默认统一采用 **Outbox 最终一致** 方案（本地事务内写业务表 + Outbox 表，再由调度投递 RocketMQ，消费端幂等 + DLQ 兜底）。
+> **Seata 为默认关闭的可选增强**：已引入 `apex-seata-spring-boot-starter`，经 `apex.seata.mode` 选择 AT/TCC/SAGA/XA（缺省 AT），默认不初始化 TM/RM、不代理数据源。仅当出现无法用"最终一致 + Saga 补偿"覆盖的真实强一致需求，才按模式显式接入并完成真实 TC 验收（见 [Seata 接入](05-operations/seata-integration.md)）。
 > 已落地的 Outbox 支撑组件：`TransactionalOutboxExecutor`（业务写 + Outbox 写同事务）、`DefaultMqLocalTransactionHandler`（RocketMQ 事务消息回查，按 `event_id` 是否存在决定 COMMIT/ROLLBACK）、`MqConsumerMetrics`（含死信指标 `mq.consumer.dlq.messages`）。
 
 ### 8.1 Outbox 事件链路（复用现有实现）
@@ -742,6 +758,8 @@ sequenceDiagram
 | 操作/审计日志 | 最终一致 | 秒级 |
 
 ---
+
+<a id="9-数据库拆分方案"></a>
 
 ## 9. 数据库拆分方案
 
@@ -839,6 +857,8 @@ flowchart TD
 
 ---
 
+<a id="10-多租户与横切能力迁移"></a>
+
 ## 10. 多租户与横切能力迁移
 
 | 能力 | 现实现 | 微服务化方案 |
@@ -854,6 +874,8 @@ flowchart TD
 | 阻塞隔离 | `BlockingIoSchedulers` 六调度器 | 在 SDK 原样复用；Feign 调用点新增 `remote()` 使用约定（§6.1） |
 
 ---
+
+<a id="11-可观测性方案"></a>
 
 ## 11. 可观测性方案
 
@@ -900,6 +922,8 @@ flowchart LR
 
 ---
 
+<a id="12-配置管理与服务治理"></a>
+
 ## 12. 配置管理与服务治理
 
 ### 12.1 Nacos 配置分层
@@ -926,6 +950,8 @@ namespace: public(开发) / dev / prod
 延续现有约定：`APEX_JWT_*`（改为 RSA 私钥仅 auth-service 消费）、`APEX_DB_PASSWORD_{SERVICE}`、`APEX_REDIS_PASSWORD`、各服务独立 DB 账号（最小权限：只授权自己库）。
 
 ---
+
+<a id="13-部署架构"></a>
 
 ## 13. 部署架构
 
@@ -975,6 +1001,8 @@ graph TB
 - **起步替代**：dev/standard 环境可用 podman-compose（gateway + 5 服务 + mysql + redis + rocketmq + nacos + minio），降低初期运维面。
 
 ---
+
+<a id="14-分阶段实施路线图"></a>
 
 ## 14. 分阶段实施路线图
 
@@ -1029,6 +1057,8 @@ gantt
 
 ---
 
+<a id="15-绞杀者模式与灰度迁移"></a>
+
 ## 15. 绞杀者模式与灰度迁移
 
 ### 15.1 目标流量接管顺序
@@ -1053,6 +1083,8 @@ flowchart TD
 
 ---
 
+<a id="16-风险与缓解措施"></a>
+
 ## 16. 风险与缓解措施
 
 | # | 风险 | 等级 | 影响 | 缓解 |
@@ -1068,6 +1100,8 @@ flowchart TD
 | 9 | 网关成性能瓶颈/单点 | 中 | 入口抖动 | ≥2 副本 + Ingress LB；网关无状态；压测目标含网关层 P95 增幅 ≤ 15ms |
 
 ---
+
+<a id="17-验收标准清单"></a>
 
 ## 17. 验收标准清单
 
@@ -1101,6 +1135,8 @@ flowchart TD
 - [ ] 交付物：架构图、部署手册、故障 runbook、SDK 升级指南
 
 ---
+
+<a id="18-附录关键代码证据索引"></a>
 
 ## 18. 附录：关键代码证据索引
 

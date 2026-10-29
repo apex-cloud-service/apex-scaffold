@@ -1,0 +1,794 @@
+{
+  "schema_version": 1,
+  "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+  "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "items": [
+    {
+      "id": "old-sql-0132",
+      "baseline_index": 132,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 12,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-1088ec61419e6a7b4f7dd014"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0133",
+      "baseline_index": 133,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 20,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-51e211cf70f1f3b860507955"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0134",
+      "baseline_index": 134,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 21,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-69c1e4a9e3ea5c648a7c8414"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0135",
+      "baseline_index": 135,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 22,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-14a08cf31a732fb76e67c091"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0136",
+      "baseline_index": 136,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 24,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-b67cc589da6cf52d9a89c921"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0137",
+      "baseline_index": 137,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 30,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-efcc2bfb844ffb49026d9683"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0138",
+      "baseline_index": 138,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 31,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-157c6805c6810718ffd9de01"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0139",
+      "baseline_index": 139,
+      "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 32,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1ba3d7939dd100649d8a1147"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    }
+  ],
+  "groups": [
+    {
+      "target": {
+        "table": "auth_user",
+        "kind": "column",
+        "name": "account_id"
+      },
+      "variable": "ddl_account_id",
+      "statements": [
+        {
+          "line": 12,
+          "end_line": 19,
+          "sql": "SET @ddl_account_id = (SELECT IF(\n    EXISTS (SELECT 1 FROM information_schema.TABLES\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'auth_user')\n    AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'auth_user'\n              AND COLUMN_NAME = 'account_id'),\n    'ALTER TABLE `auth_user` ADD COLUMN `account_id` BIGINT DEFAULT NULL COMMENT ''统一账户ID(sys_user.id，主应用账户体系)''',\n    'SELECT 1'))",
+          "start_offset": 504,
+          "end_offset": 976,
+          "category": "dynamic_sql",
+          "statement_sha256": "c3202b6e1a4e8f73fee28ce7099b8fd9a7b841cd6ba3b1321dec8047bb187e0c",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "auth_user",
+              "line": 18,
+              "end_line": 18,
+              "operation": "alter_table",
+              "identifiers": [
+                "account_id",
+                "add",
+                "alter",
+                "auth_user",
+                "bigint",
+                "column",
+                "comment",
+                "default",
+                "null",
+                "table"
+              ],
+              "sql": "ALTER TABLE `auth_user` ADD COLUMN `account_id` BIGINT DEFAULT NULL COMMENT '统一账户ID(sys_user.id，主应用账户体系)'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 12
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 12,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 20,
+          "end_line": 20,
+          "sql": "PREPARE stmt FROM @ddl_account_id",
+          "start_offset": 978,
+          "end_offset": 1011,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "78e2f27040ed29580e397cb2368394191a0d65665ec7b3d054c9e25372c0c09a",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            12
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 20,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 21,
+          "end_line": 21,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1013,
+          "end_offset": 1025,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            12
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 21,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 22,
+          "end_line": 22,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1027,
+          "end_offset": 1050,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            12
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 22,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "old_ids": [
+        "old-sql-0132",
+        "old-sql-0133",
+        "old-sql-0134",
+        "old-sql-0135"
+      ],
+      "statement_ids": [
+        [
+          "stmt-1088ec61419e6a7b4f7dd014"
+        ],
+        [
+          "stmt-51e211cf70f1f3b860507955"
+        ],
+        [
+          "stmt-69c1e4a9e3ea5c648a7c8414"
+        ],
+        [
+          "stmt-14a08cf31a732fb76e67c091"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "before": {
+            "columns": "",
+            "indexes": "",
+            "data": "1"
+          },
+          "after": {
+            "columns": "bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)",
+            "indexes": "",
+            "data": "1\tNULL"
+          },
+          "selected_sql": "ALTER TABLE `auth_user` ADD COLUMN `account_id` BIGINT DEFAULT NULL COMMENT '统一账户ID(sys_user.id，主应用账户体系)'",
+          "client_output": "ALTER TABLE `auth_user` ADD COLUMN `account_id` BIGINT DEFAULT NULL COMMENT '统一账户ID(sys_user.id，主应用账户体系)'",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS auth_user; CREATE TABLE auth_user(id BIGINT PRIMARY KEY); INSERT INTO auth_user(id) VALUES(1);"
+        },
+        "replay": {
+          "before": {
+            "columns": "bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)",
+            "indexes": "",
+            "data": "1\tNULL"
+          },
+          "after": {
+            "columns": "bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)",
+            "indexes": "",
+            "data": "1\tNULL"
+          },
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "before": {
+            "columns": "varchar(7)\tYES\t<NULL>",
+            "indexes": "",
+            "data": "1\tNULL"
+          },
+          "after": {
+            "columns": "varchar(7)\tYES\t<NULL>",
+            "indexes": "",
+            "data": "1\tNULL"
+          },
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS auth_user; CREATE TABLE auth_user(id BIGINT PRIMARY KEY,account_id VARCHAR(7) NULL); INSERT INTO auth_user(id) VALUES(1);"
+        },
+        "missing_table": {
+          "status": "noop",
+          "client_output": "1"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "auth_user",
+        "kind": "index",
+        "name": "idx_auth_user_account_id"
+      },
+      "variable": "ddl_account_idx",
+      "statements": [
+        {
+          "line": 24,
+          "end_line": 29,
+          "sql": "SET @ddl_account_idx = (SELECT IF(\n    EXISTS (SELECT 1 FROM information_schema.STATISTICS\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'auth_user'\n              AND INDEX_NAME = 'idx_auth_user_account_id'),\n    'SELECT 1',\n    'CREATE INDEX idx_auth_user_account_id ON `auth_user` (`account_id`)'))",
+          "start_offset": 1053,
+          "end_offset": 1368,
+          "category": "dynamic_sql",
+          "statement_sha256": "b0d7b99b1bf7946f74c2cc633f3ba7182092eb35bf550b870fb1c55daffcf69d",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "auth_user",
+              "line": 29,
+              "end_line": 29,
+              "operation": "create_index",
+              "identifiers": [
+                "account_id",
+                "auth_user",
+                "create",
+                "idx_auth_user_account_id",
+                "index",
+                "on"
+              ],
+              "sql": "CREATE INDEX idx_auth_user_account_id ON `auth_user` (`account_id`)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 24
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 24,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 30,
+          "end_line": 30,
+          "sql": "PREPARE stmt FROM @ddl_account_idx",
+          "start_offset": 1370,
+          "end_offset": 1404,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "f49705fd84f8dcfe2f648b318abfebb9a0f06e3a2592e6540ced10aac96150c4",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            24
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 30,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 31,
+          "end_line": 31,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1406,
+          "end_offset": 1418,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            24
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 31,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 32,
+          "end_line": 32,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1420,
+          "end_offset": 1443,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            24
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 32,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "old_ids": [
+        "old-sql-0136",
+        "old-sql-0137",
+        "old-sql-0138",
+        "old-sql-0139"
+      ],
+      "statement_ids": [
+        [
+          "stmt-b67cc589da6cf52d9a89c921"
+        ],
+        [
+          "stmt-efcc2bfb844ffb49026d9683"
+        ],
+        [
+          "stmt-157c6805c6810718ffd9de01"
+        ],
+        [
+          "stmt-1ba3d7939dd100649d8a1147"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "before": {
+            "columns": "bigint\tYES\t<NULL>",
+            "indexes": "",
+            "data": "1\tNULL"
+          },
+          "after": {
+            "columns": "bigint\tYES\t<NULL>",
+            "indexes": "idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES",
+            "data": "1\tNULL"
+          },
+          "selected_sql": "CREATE INDEX idx_auth_user_account_id ON `auth_user` (`account_id`)",
+          "client_output": "CREATE INDEX idx_auth_user_account_id ON `auth_user` (`account_id`)",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS auth_user; CREATE TABLE auth_user(id BIGINT PRIMARY KEY,account_id BIGINT DEFAULT NULL); INSERT INTO auth_user(id) VALUES(1);"
+        },
+        "replay": {
+          "before": {
+            "columns": "bigint\tYES\t<NULL>",
+            "indexes": "idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES",
+            "data": "1\tNULL"
+          },
+          "after": {
+            "columns": "bigint\tYES\t<NULL>",
+            "indexes": "idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES",
+            "data": "1\tNULL"
+          },
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "before": {
+            "columns": "bigint\tYES\t<NULL>",
+            "indexes": "idx_auth_user_account_id\t0\t1\tid\tBTREE\t<NULL>\tA\tYES",
+            "data": "1\tNULL"
+          },
+          "after": {
+            "columns": "bigint\tYES\t<NULL>",
+            "indexes": "idx_auth_user_account_id\t0\t1\tid\tBTREE\t<NULL>\tA\tYES",
+            "data": "1\tNULL"
+          },
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS auth_user; CREATE TABLE auth_user(id BIGINT PRIMARY KEY,account_id BIGINT DEFAULT NULL,UNIQUE INDEX idx_auth_user_account_id(id)); INSERT INTO auth_user(id) VALUES(1);"
+        },
+        "missing_table": {
+          "status": "expected_failure",
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 8: Table 'probe.auth_user' doesn't exist\n",
+          "passed": false
+        }
+      },
+      "semantic_verified": true
+    }
+  ],
+  "status": "passed",
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true,
+    "database_lifetime": "only inside removed tmpfs container"
+  },
+  "limits": [
+    "Synthetic fixtures only; no full upgrade chain",
+    "Only selected MySQL guards; no PostgreSQL or full historical upgrade chain",
+    "Existing names accept incompatible definitions; no equivalence claim",
+    "Missing-table index creation fails; not all scenarios pass",
+    "No PostgreSQL, Java, Flyway, concurrency, privileges or rollback verification"
+  ],
+  "previous_verified_ids": [
+    "old-sql-0000",
+    "old-sql-0001",
+    "old-sql-0002",
+    "old-sql-0003",
+    "old-sql-0004",
+    "old-sql-0005",
+    "old-sql-0006",
+    "old-sql-0007",
+    "old-sql-0008",
+    "old-sql-0009",
+    "old-sql-0010",
+    "old-sql-0011",
+    "old-sql-0012",
+    "old-sql-0013",
+    "old-sql-0014",
+    "old-sql-0015",
+    "old-sql-0016",
+    "old-sql-0017",
+    "old-sql-0018",
+    "old-sql-0019",
+    "old-sql-0020",
+    "old-sql-0021",
+    "old-sql-0022",
+    "old-sql-0023",
+    "old-sql-0024",
+    "old-sql-0025",
+    "old-sql-0026",
+    "old-sql-0027",
+    "old-sql-0028",
+    "old-sql-0029",
+    "old-sql-0030",
+    "old-sql-0031",
+    "old-sql-0032",
+    "old-sql-0033",
+    "old-sql-0034",
+    "old-sql-0035",
+    "old-sql-0036",
+    "old-sql-0037",
+    "old-sql-0038",
+    "old-sql-0039",
+    "old-sql-0040",
+    "old-sql-0041",
+    "old-sql-0042",
+    "old-sql-0043",
+    "old-sql-0044",
+    "old-sql-0045",
+    "old-sql-0046",
+    "old-sql-0047",
+    "old-sql-0048",
+    "old-sql-0049",
+    "old-sql-0050",
+    "old-sql-0051",
+    "old-sql-0052",
+    "old-sql-0053",
+    "old-sql-0054",
+    "old-sql-0055",
+    "old-sql-0056",
+    "old-sql-0057",
+    "old-sql-0058",
+    "old-sql-0059",
+    "old-sql-0060",
+    "old-sql-0061",
+    "old-sql-0062",
+    "old-sql-0063",
+    "old-sql-0064",
+    "old-sql-0065",
+    "old-sql-0066",
+    "old-sql-0067",
+    "old-sql-0068",
+    "old-sql-0069",
+    "old-sql-0070",
+    "old-sql-0071",
+    "old-sql-0072",
+    "old-sql-0073",
+    "old-sql-0074",
+    "old-sql-0075",
+    "old-sql-0076",
+    "old-sql-0077",
+    "old-sql-0078",
+    "old-sql-0079",
+    "old-sql-0080",
+    "old-sql-0081",
+    "old-sql-0082",
+    "old-sql-0083",
+    "old-sql-0084",
+    "old-sql-0085",
+    "old-sql-0086",
+    "old-sql-0087",
+    "old-sql-0088",
+    "old-sql-0089",
+    "old-sql-0090",
+    "old-sql-0091",
+    "old-sql-0092",
+    "old-sql-0093",
+    "old-sql-0094",
+    "old-sql-0095",
+    "old-sql-0096",
+    "old-sql-0097",
+    "old-sql-0098",
+    "old-sql-0099",
+    "old-sql-0100",
+    "old-sql-0101",
+    "old-sql-0102",
+    "old-sql-0103",
+    "old-sql-0104",
+    "old-sql-0105",
+    "old-sql-0106",
+    "old-sql-0107",
+    "old-sql-0108",
+    "old-sql-0109",
+    "old-sql-0110",
+    "old-sql-0111",
+    "old-sql-0112",
+    "old-sql-0113",
+    "old-sql-0114",
+    "old-sql-0115",
+    "old-sql-0116",
+    "old-sql-0117",
+    "old-sql-0118",
+    "old-sql-0119",
+    "old-sql-0120",
+    "old-sql-0121",
+    "old-sql-0122",
+    "old-sql-0123",
+    "old-sql-0124",
+    "old-sql-0125",
+    "old-sql-0126",
+    "old-sql-0127",
+    "old-sql-0128",
+    "old-sql-0129",
+    "old-sql-0130",
+    "old-sql-0131",
+    "old-sql-0140",
+    "old-sql-0141",
+    "old-sql-0142",
+    "old-sql-0143",
+    "old-sql-0144",
+    "old-sql-0145",
+    "old-sql-0146",
+    "old-sql-0147",
+    "old-sql-0148",
+    "old-sql-0149",
+    "old-sql-0150",
+    "old-sql-0151",
+    "old-sql-0152",
+    "old-sql-0153",
+    "old-sql-0154"
+  ],
+  "remaining_before": 439,
+  "previous_evidence_hashes": {
+    "dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "dynamic-auth-v52-catalog-regression-evidence.json": "286fd56716171a547cd65a78e5912e61f548a777ac37a57c9589628e65c4d4d1",
+    "dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "dynamic-system-v14-20261018-client-evidence.json": "bf978a17c42edab2d00ffa055bf34de3cd1695e3d8c69a8c7a27f2db856634ff"
+  },
+  "baseline_dynamic_denominator": 586,
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-auth-v55-client-evidence.json",
+  "updated_at": "2026-10-18T22:26:50.765707+00:00",
+  "container": {
+    "name": "apex-v45-probe-c09240ab2e63",
+    "image": "localhost/mysql:8.0",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "none; empty root only inside network-disabled disposable container",
+    "id": "8387c5ca75a79c6b6fa9034d1caf2d5fe30abe4b6cd2f5d5746ce5627be6d7f0"
+  },
+  "mysql_version": "8.0.46",
+  "full_file": {
+    "initial_execution": true,
+    "replay": true,
+    "initial_catalog": {
+      "columns": "bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)",
+      "indexes": "idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES",
+      "data": "1\tNULL"
+    },
+    "data_and_catalog_before_replay": {
+      "columns": "bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)",
+      "indexes": "idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES",
+      "data": "1\tNULL\n2\t9223372036854775807\n3\t42\n4\t42"
+    },
+    "data_and_catalog_after_replay": {
+      "columns": "bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)",
+      "indexes": "idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES",
+      "data": "1\tNULL\n2\t9223372036854775807\n3\t42\n4\t42"
+    },
+    "nullable_default_bigint_max_nonunique_checked": true,
+    "fixture_sql": "USE probe; CREATE TABLE auth_user(id BIGINT PRIMARY KEY); INSERT INTO auth_user VALUES(1);",
+    "counts_as_branch_proof": false,
+    "missing_table": {
+      "status": "expected_failure",
+      "error": "mysql client failed: ERROR 1146 (42S02) at line 32: Table 'probe.auth_user' doesn't exist\n",
+      "passed": false
+    }
+  },
+  "scenario_status": "branches_passed_with_missing_table_failures",
+  "coverage": {
+    "verified_old_ids": [
+      "old-sql-0132",
+      "old-sql-0133",
+      "old-sql-0134",
+      "old-sql-0135",
+      "old-sql-0136",
+      "old-sql-0137",
+      "old-sql-0138",
+      "old-sql-0139"
+    ],
+    "verified_old_id_count": 8,
+    "remaining_of_586": 431,
+    "passed_branch_runs": 6,
+    "planned_branch_runs": 6,
+    "definition": "distinct baseline IDs whose bound quartet passed absent + present + replay; no credit for full-file success",
+    "remaining_before": 439,
+    "new_unique_passed_count": 8,
+    "remaining_after": 431,
+    "cumulative_verified_count": 155
+  }
+}

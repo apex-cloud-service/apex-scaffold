@@ -47,7 +47,7 @@
 
   <text x="60" y="624" class="legend" font-weight="600">依赖</text>
   <text x="60" y="650" class="box-desc">→ 依赖 apex-domain + apex-common</text>
-  <text x="60" y="672" class="box-desc">← 被 apex-interfaces 依赖（依赖深度 L2）</text>
+  <text x="60" y="672" class="box-desc">← 被 apex-system 依赖（依赖深度 L2）</text>
   <text x="60" y="694" class="box-desc">    （自身依赖仅到 L1，保持低耦合）</text>
 
   <!-- right: 4 layers -->
@@ -104,6 +104,6 @@
   <line x1="700" y1="566" x2="700" y2="578" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
 
   <text x="700" y="762" class="note" text-anchor="middle">apex-workflow 是少数“自包含 DDD 四层”的业务模块：接口 → 应用 → 领域 → 基础设施 内聚成独立引擎</text>
-  <text x="700" y="790" class="note" text-anchor="middle">与登录/审批主流程协作，通过 apex-interfaces 聚合对外暴露；状态机与审批任务为其核心领域模型</text>
+  <text x="700" y="790" class="note" text-anchor="middle">与登录/审批主流程协作，通过 apex-system 聚合对外暴露；状态机与审批任务为其核心领域模型</text>
   <text x="700" y="836" class="note" text-anchor="middle">外部依赖仅 apex-domain + apex-common，保证引擎可独立测试与演进</text>
 </svg>

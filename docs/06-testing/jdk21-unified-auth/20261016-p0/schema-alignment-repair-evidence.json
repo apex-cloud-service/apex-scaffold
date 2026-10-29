@@ -1,0 +1,80 @@
+{
+  "recorded_at": "2026-10-17T21:26:00+08:00",
+  "repository": "/Users/work/apex-scaffold",
+  "scope": "system 测试库 V61 到 V62 增量结构修复；不证明生产数据升级或全部业务语义等价",
+  "worktree_provenance": "任务接续时两份 V62、双库测试已是未跟踪文件，版本和启动测试也已有修改。本轮核对并继续完成，未重写 V1–V61，未修改主报告或方案，未提交或推送。",
+  "environment": {
+    "initialization": "每次 mvnd 命令前 source scripts/build/init-build-env.sh",
+    "java": "17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "parallelism": "-T4",
+    "mysql_container": "apex-p0-gate-mysql-20261017",
+    "postgresql_container": "apex-p0-pg-b1ddd1785ccf",
+    "ryuk": "启用；GREEN 日志记录启动成功，未禁用",
+    "postgresql_warning": "实际 PostgreSQL 17.11；当前 Flyway 声明最新已测试版本为 16，日志存在升级建议"
+  },
+  "repair": {
+    "postgresql": "补14张历史兼容表、v_token_health、OAuth16列、用户安全9列，keycloak_sub扩255；保留BIGSERIAL/BOOLEAN/TIMESTAMP/JSONB方言；不复制示例白名单和密钥种子",
+    "mysql": "off_sync_history补update_time，恢复office_message(send_status,target_user_ids)与wf_workflow_definition(enabled,node_definition)四项NOT NULL；任何持久DDL前CHECK拒绝存量NULL，保留数据",
+    "workflow_default": "两库统一DRAFT；依据system V20需显式发布的字符串状态，保留存量ACTIVE；独立workflow域的整数enabled不用于改写system历史表",
+    "indexes": "补有效遗漏索引；off_employee已有唯一(employee_code,tenant_id,deleted)左前缀覆盖，移除V62冗余二列副本；部分索引与全文索引保留方言",
+    "version_tests": "总数从迁移资源动态解析，检查两库版本集合相同且连续；全仓src/test未发现残留61总数断言，仅升级起点target(61)保留"
+  },
+  "red": {
+    "chronology": "这是对已有V62草稿补跑的V61基线，通过Flyway target(61)排除V62执行；不是声称V62文件创建前已运行RED。随后才运行最终GREEN。",
+    "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-system -am test-compile failsafe:integration-test failsafe:verify -Dit.test=SystemDualDatabaseMigrationIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false -Dapex.schema.alignment.baseline=true",
+    "log": "/Users/eric/.cache/apex-system-alignment-red-20261017.log",
+    "sha256": "ca23bf06ed4e5828aa0deb83afc35d071459d6501b5f42d33bc9cf0f6595dfa5",
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "expected_failures": ["MySQL缺off_department(parent_id,status,sort_order)", "PostgreSQL缺sys_role_dept(tenant_id,dept_id)"]
+  },
+  "green": {
+    "command": "source scripts/build/init-build-env.sh && export DOCKER_HOST=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}') && export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/run/podman/podman.sock && mvnd -T4 -B -pl apex-system -am test-compile failsafe:integration-test failsafe:verify -Dit.test=SystemDualDatabaseMigrationIntegrationTest,FlywayMigrationStartupTest -Dfailsafe.failIfNoSpecifiedTests=false",
+    "log": "/Users/eric/.cache/apex-system-alignment-green-serial-20261017.log",
+    "sha256": "7e4d9a294007803c07dd3d2d85558d74454ff0ac51c0ddb90977a98afa794a09",
+    "result": "BUILD SUCCESS",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "classes": {"FlywayMigrationStartupTest": 6, "SystemDualDatabaseMigrationIntegrationTest": 2},
+    "verified": ["MySQL空库62迁移全部成功", "双库V61升级V62", "15对象和26共享表列存在", "keycloak_sub长度255", "四项业务列NOT NULL和DRAFT默认", "有序索引前缀覆盖", "存量ACTIVE及node_definition保留", "MySQL存量NULL触发CHECK且无持久DDL、副作用前失败", "恢复测试值并repair后升级成功", "validate成功、无pending、重复migrate执行0条", "历史权限菜单和微信身份回填断言"],
+    "mysql_database": "apex_reg_51471fc4000647bb86366ccbf8897d46",
+    "postgresql_database": "apex_reg_6349aa866c374d6496e5355c886bdb93",
+    "expected_error_in_log": "MySQL故意注入NULL的负向用例会记录一次V62 failed，最终测试结果为0失败0错误"
+  },
+  "other_checks": [
+    {"command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-system -am test -Dtest=FlywayMigrationVersionTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true", "tests": 4, "failures": 0, "errors": 0, "result": "BUILD SUCCESS", "log": "/Users/eric/.cache/apex-system-alignment-version-final-20261017.log", "sha256": "574794425f6bff45aa660f4d7c757fb0dbab1f305522699134a2411525608031"},
+    {"command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-system -am spotless:apply spotless:check '-DspotlessFiles=.*(SystemDualDatabaseMigrationIntegrationTest|FlywayMigrationStartupTest|FlywayMigrationVersionTest)\\.java'", "result": "BUILD SUCCESS，仅上述三个测试文件", "log": "/Users/eric/.cache/apex-system-alignment-format-passed-20261017.log", "sha256": "46f5fbd4f7d42a5302e8a881ace7af06c5770a1c0dbb51f2cdabe053866d3014"},
+    {"command": "git diff --check", "result": "exit 0"}
+  ],
+  "capture": {
+    "collector": "scripts/ci/collect_database_schema.py",
+    "commands": ["python3 scripts/ci/collect_database_schema.py --collect docs/06-testing/jdk21-unified-auth/20261016-p0/schema-alignment-final-manifest.json --output docs/06-testing/jdk21-unified-auth/20261016-p0/schema-alignment-final-catalog-evidence.json", "python3 scripts/ci/collect_database_schema.py --compare docs/06-testing/jdk21-unified-auth/20261016-p0/schema-alignment-final-catalog-evidence.json --output docs/06-testing/jdk21-unified-auth/20261016-p0/schema-alignment-final-comparison.json"],
+    "manifest": {"file": "schema-alignment-final-manifest.json", "sha256": "049c760863805109cc84ab2ad7045b19ec1cbfa8409bed0e36646947512bee2e"},
+    "catalog": {"file": "schema-alignment-final-catalog-evidence.json", "sha256": "df8938bcb50cfb27c13e61f5cdef4fb18ff0825c25e5264e80e55bbe49a4b0e0"},
+    "comparison": {"file": "schema-alignment-final-comparison.json", "sha256": "bbfbf2a080c86ec5e6dd1de1de066fcc7900afb67c0fea489ca0a6df141d2305"},
+    "all_history_checksums_match_current_source": true,
+    "all_source_scripts_represented_in_history": true,
+    "counts": {"mysql": {"tables_including_view_and_history": 96, "columns": 1348, "indexes": 451, "constraints": 152, "history": 62}, "postgresql": {"tables_including_view_and_history": 96, "columns": 1348, "indexes": 456, "constraints": 141, "history": 62}},
+    "repaired_difference_counts": {"table_presence": 0, "column_presence": 0, "business_column_nullability": 0, "history_version_presence": 0},
+    "remaining_difference_counts": {"column_type_normalized": 337, "column_generation": 1348, "column_default_raw": 242, "column_order": 98, "column_nullability": 2, "index_raw_inventory": 95, "index_signature_multiset": 14, "constraint_raw_inventory": 95, "constraint_kind_counts": 9, "history_checksum": 57, "history_script": 12},
+    "remaining_nullability": "仅v_token_health.active_families与total_tokens：MySQL COUNT结果catalog为NO、PG视图catalog为YES；不是四项业务列回归",
+    "remaining_index_classification": {
+      "historical_duplicate_non_unique_signatures": ["biz_system_message", "off_department", "off_message", "off_sync_history", "sys_operation_log", "sys_user", "sys_user_role"],
+      "unique_key_covers_omitted_duplicate": ["encryption_key", "encryption_key_version", "jwt_key_version", "mfa_config"],
+      "ordered_unique_prefix_and_historical_duplicates": ["off_employee"],
+      "fulltext_mysql_vs_gin_postgresql": ["doc_document"],
+      "partial_postgresql_vs_existing_mysql_scheduler_prefix": ["sys_message_outbox"]
+    },
+    "remaining_interpretation": "类型、生成、自增序列、默认值cast和布尔表达、字段顺序、约束库存及方言历史脚本/校验和原样保留；不将337项类型或242项默认值差异统称已证明语义等价。完整原值见final comparison/catalog。"
+  },
+  "failed_attempts_retained": [
+    {"log": "/Users/eric/.cache/apex-system-alignment-green-20261017.log", "reason": "索引断言startsWith传List导致编译失败，已改String[]"},
+    {"log": "/Users/eric/.cache/apex-system-alignment-green-final-20261017.log", "reason": "MySQL V36 classpath资源读取失败；同目录并行构建可能争用，串行重跑通过。该次PG通过、MySQL仅到35，不能计为GREEN"},
+    {"files": ["schema-alignment-manifest.json", "schema-alignment-catalog-evidence.json", "schema-alignment-comparison.json"], "reason": "保留中断运行的部分迁移采集，非最终证据；最终请使用final文件"}
+  ],
+  "limitations": ["未执行全仓clean verify，未声称PMD/JaCoCo完整覆盖门禁通过", "定向版本测试跳过JaCoCo，不代表覆盖率结果", "未验证生产存量业务数据、应用启动、查询计划、全文分词、跨库业务读写及所有类型默认值语义", "新增表保留system历史兼容结构，不迁移其他业务域的数据所有权；未删除旧表或旧失败快照", "NULL防护实际注入测试覆盖workflow.enabled路径，SQL预检同时覆盖全部四列"]
+}

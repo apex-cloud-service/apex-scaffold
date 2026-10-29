@@ -74,14 +74,17 @@ apex-auth-center/src/main/resources/db/migration/postgresql/
 └── V50__create_totp_and_mfa_config_tables.sql       (5.5 KB) ← 新增
 ```
 
-### 测试脚本（3 个）
+### 测试脚本（1 个）
 
 ```
 scripts/test/
-├── test-mysql-migration.sh              ← 新增（MySQL 隔离测试）
-├── test-postgresql-migration.sh         ← 新增（PostgreSQL 隔离测试）
-└── check-migration-integrity.sh         ← 新增（完整性验证）
+└── check-migration-integrity.sh         ← 完整性验证
 ```
+
+> 原 `test-mysql-migration.sh` / `test-postgresql-migration.sh` 两个独立容器迁移脚本已移除。
+> 双库迁移回归现由 JUnit 测试 `SystemDualDatabaseMigrationIntegrationTest`（Testcontainers，
+> MySQL 与 PostgreSQL 参数化、逐版本 `validate()` 与 schema 断言）承担，随
+> `mvnd -T4 -B clean verify` 的 Failsafe 阶段执行。
 
 ### 文档（3 个）
 
@@ -117,7 +120,7 @@ docs/migration/
 - ✅ PostgreSQL 迁移文件完整（7 个文件）
 - ✅ V49 auth_config 表创建脚本存在（MySQL + PostgreSQL）
 - ✅ V50 已正确放置在 mysql/ 和 postgresql/ 目录
-- ✅ 迁移测试脚本存在且可执行
+- ✅ 双库迁移回归测试存在（`SystemDualDatabaseMigrationIntegrationTest`）
 - ✅ 修复文档完整
 - ✅ PostgreSQL V48 语法修复完成
 
@@ -151,49 +154,18 @@ apex-auth-center/src/main/resources/db/migration/postgresql/V50__create_totp_and
 在开发环境验证迁移：
 
 ```bash
-# 1. 验证完整性
+# 1. 验证迁移文件完整性
 ./scripts/test/check-migration-integrity.sh
 
-# 2. 测试 MySQL 迁移
-./scripts/test/test-mysql-migration.sh
-
-# 3. 测试 PostgreSQL 迁移
-./scripts/test/test-postgresql-migration.sh
+# 2. 执行双库迁移回归（Testcontainers，需本机容器运行时）
+sdk env
+mvnd -T4 -B clean verify
 ```
 
 ### 2. CI/CD 集成
 
-将测试脚本添加到持续集成流水线：
-
-```yaml
-# .github/workflows/migration-test.yml
-name: Migration Test
-on: [pull_request]
-jobs:
-  test-mysql-migration:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-    steps:
-      - uses: actions/checkout@v3
-      - name: Test MySQL Migration
-        run: ./scripts/test/test-mysql-migration.sh
-        
-  test-postgresql-migration:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-    steps:
-      - uses: actions/checkout@v3
-      - name: Test PostgreSQL Migration
-        run: ./scripts/test/test-postgresql-migration.sh
-```
+双库迁移回归已作为 JUnit 集成测试（`SystemDualDatabaseMigrationIntegrationTest`）随 Failsafe
+阶段在 `mvnd -T4 -B clean verify` 中执行，无需在流水线中额外调用迁移脚本。
 
 ### 3. 生产部署
 

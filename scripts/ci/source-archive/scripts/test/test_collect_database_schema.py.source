@@ -1,0 +1,190 @@
+import copy
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "ci/collect_database_schema.py"
+
+
+def load_collector():
+    spec = importlib.util.spec_from_file_location("collect_database_schema", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def domain(vendor):
+    return {"vendor": vendor, "domain": "system", "tables": [], "columns": [],
+            "indexes": [], "constraints": [], "history": [],
+            "counts": {"indexes": 999}}
+
+
+class DatabaseSchemaTest(unittest.TestCase):
+    def setUp(self):
+        self.assertTrue(SCRIPT.is_file(), "reusable collector must exist")
+        self.collector = load_collector()
+
+    def test_aliases_only(self):
+        for vendor, name in [("mysql", "varchar"), ("postgresql", "character varying")]:
+            self.assertEqual(self.collector.normalize_type(vendor, {
+                "data_type": name, "character_maximum_length": 42}), "varchar(42)")
+
+    def test_tinyint_is_not_boolean(self):
+        self.assertNotEqual(self.collector.normalize_type("mysql", {
+            "data_type": "tinyint", "column_type": "tinyint(1)"}),
+            self.collector.normalize_type("postgresql", {"data_type": "boolean"}))
+
+    def test_width_unsigned_precision_and_timezone_survive(self):
+        for left, right in [
+            ({"data_type": "bigint", "column_type": "bigint unsigned"}, {"data_type": "bigint"}),
+            ({"data_type": "varchar", "character_maximum_length": 8}, {"data_type": "varchar", "character_maximum_length": 9}),
+            ({"data_type": "decimal", "numeric_precision": 10, "numeric_scale": 2}, {"data_type": "decimal", "numeric_precision": 10, "numeric_scale": 3}),
+            ({"data_type": "timestamp with time zone", "datetime_precision": 6}, {"data_type": "timestamp without time zone", "datetime_precision": 6}),
+            ({"data_type": "longtext"}, {"data_type": "text"}),
+        ]:
+            with self.subTest(left=left):
+                self.assertNotEqual(self.collector.normalize_type("mysql", left),
+                                    self.collector.normalize_type("postgresql", right))
+
+    def test_mysql_counts_distinct_indexes_per_table(self):
+        data = domain("mysql")
+        data["indexes"] = [{"table_name": table, "index_name": name}
+                           for table, name in [("a", "PRIMARY"), ("a", "PRIMARY"),
+                                               ("b", "PRIMARY"), ("a", "ix")]]
+        self.assertEqual(self.collector.counts(data)["indexes"], 3)
+        self.assertEqual(self.collector.counts(data)["index_column_rows"], 4)
+
+    def test_postgresql_counts_indexes_without_column_row_label(self):
+        data = domain("postgresql")
+        data["indexes"] = [{"table_name": "a", "index_name": "ix", "keys": ["a", "b"]}]
+        self.assertEqual(self.collector.counts(data)["indexes"], 1)
+        self.assertNotIn("index_column_rows", self.collector.counts(data))
+
+    def test_offline_cli_recomputes_stale_counts_and_preserves_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "evidence.json"
+            output = Path(directory) / "comparison.json"
+            evidence = {"scope": "fixture metadata only", "domains": [domain("mysql"), domain("postgresql")]}
+            source.write_text(json.dumps(evidence), encoding="utf-8")
+            before = source.read_bytes()
+            result = subprocess.run([sys.executable, str(SCRIPT), "--compare", str(source),
+                                     "--output", str(output)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            actual = json.loads(output.read_text())
+            self.assertEqual(actual["domains"][0]["counts"]["mysql"]["indexes"], 0)
+            self.assertEqual(actual["scope"], evidence["scope"])
+            self.assertEqual(source.read_bytes(), before)
+            self.assertIn("Not covered:", actual["normalization_rules"][-1])
+
+    def test_missing_or_duplicate_vendor_pair_rejected(self):
+        for rows in [[domain("mysql")], [domain("mysql"), domain("mysql"), domain("postgresql")]]:
+            with self.subTest(rows=rows), self.assertRaises(ValueError):
+                self.collector.comparison({"scope": "test", "domains": rows}, "evidence.json")
+
+    def test_manifest_requires_test_scope_and_allowlisted_database_names(self):
+        valid = {"test_only": True, "containers": {"mysql": "test-mysql", "postgresql": "test-pg"},
+                 "domains": [{"vendor": "mysql", "domain": "system", "database": "apex_test_fixture", "location": "apex-system/src/main/resources/db/migration/mysql"}]}
+        self.collector.validate_manifest(valid)
+        for field, value in [("test_only", False), ("password", "secret")]:
+            invalid = copy.deepcopy(valid)
+            invalid[field] = value
+            with self.assertRaises(ValueError):
+                self.collector.validate_manifest(invalid)
+        for database in ["apex_prod", "--help", "apex_test_x; DROP DATABASE x", "apex_test_"]:
+            invalid = copy.deepcopy(valid)
+            invalid["domains"][0]["database"] = database
+            with self.assertRaises(ValueError):
+                self.collector.validate_manifest(invalid)
+
+    def test_manifest_rejects_source_path_escape(self):
+        data = {"test_only": True, "containers": {"mysql": "test-mysql"},
+                "domains": [{"vendor": "mysql", "domain": "system", "database": "apex_test_fixture", "location": "../outside"}]}
+        with self.assertRaises(ValueError):
+            self.collector.validate_manifest(data)
+
+    def test_queries_use_readonly_transaction_and_no_password_arguments(self):
+        for vendor, start in [("mysql", "START TRANSACTION READ ONLY;"), ("postgresql", "BEGIN READ ONLY;")]:
+            with self.subTest(vendor=vendor), patch.object(self.collector.subprocess, "run") as run:
+                run.return_value = subprocess.CompletedProcess([], 0, '{"version":"test"}\n', "")
+                rows = self.collector.query(vendor, "apex_test_fixture", "SELECT VERSION()", {vendor: "test-container"}, "podman")
+                self.assertEqual(rows, [{"version": "test"}])
+                args, kwargs = run.call_args
+                self.assertEqual(args[0][:4], ["podman", "exec", "-i", "test-container"])
+                self.assertTrue(kwargs["input"].startswith(start))
+                self.assertTrue(kwargs["input"].endswith("ROLLBACK;\n"))
+                self.assertNotIn("-p", args[0])
+                self.assertNotIn("--password", args[0])
+
+    def test_query_failure_suppresses_stderr(self):
+        with patch.object(self.collector.subprocess, "run") as run:
+            run.return_value = subprocess.CompletedProcess([], 1, "", "secret")
+            with self.assertRaises(RuntimeError) as error:
+                self.collector.query("mysql", "apex_test_fixture", "SELECT VERSION()", {"mysql": "test"}, "podman")
+            self.assertNotIn("secret", str(error.exception))
+
+    def test_offline_comparison_never_invokes_database_clients(self):
+        evidence = {"scope": "test", "domains": [domain("mysql"), domain("postgresql")]}
+        with patch.object(self.collector.subprocess, "run", side_effect=AssertionError("unexpected database access")):
+            self.assertEqual(self.collector.comparison(evidence, "fixture.json")["total_difference_counts"], {})
+
+    def test_capture_reads_fixed_catalogs_and_history_only(self):
+        for vendor in ("mysql", "postgresql"):
+            with self.subTest(vendor=vendor), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                location = f"apex-system/src/main/resources/db/migration/{vendor}"
+                source = root / location
+                source.mkdir(parents=True)
+                (source / "V1__fixture.sql").write_bytes(b"SELECT 1;\n")
+                entry = {"vendor": vendor, "domain": "system", "database": "apex_test_fixture", "location": location}
+                queries = []
+
+                def read(actual_vendor, database, sql, containers, runtime):
+                    queries.append(sql)
+                    self.assertEqual((actual_vendor, database), (vendor, "apex_test_fixture"))
+                    return []
+
+                with patch.object(self.collector, "query", side_effect=read):
+                    actual = self.collector.capture(entry, root, {vendor: "test"}, "podman")
+                self.assertEqual(len(queries), 9)
+                self.assertTrue(all(sql.startswith("SELECT ") for sql in queries))
+                self.assertTrue(all("information_schema." in sql or "pg_index" in sql
+                                    or "pg_constraint" in sql or "flyway_schema_history" in sql
+                                    or "VERSION()" in sql or "version()" in sql for sql in queries))
+                self.assertEqual(actual["source_files"][0]["sha256"],
+                                 hashlib.sha256(b"SELECT 1;\n").hexdigest())
+                self.assertEqual(actual["counts"]["indexes"], 0)
+
+    def test_existing_evidence_regeneration_only_changes_index_counts(self):
+        base = SCRIPT.parents[2] / "docs/06-testing/jdk21-unified-auth/20261016-p0"
+        source = base / "final-schema-evidence.json"
+        if not source.is_file():
+            self.skipTest("historical P0 evidence not available")
+        evidence = json.loads(source.read_text(encoding="utf-8"))
+        actual = self.collector.comparison(evidence, source.name)
+        previous = json.loads((base / "schema-comparison.json").read_text(encoding="utf-8"))
+        self.assertEqual(actual["total_difference_counts"], previous["total_difference_counts"])
+        self.assertEqual([row["differences"] for row in actual["domains"]],
+                         [row["differences"] for row in previous["domains"]])
+        self.assertEqual(actual["domains"][0]["counts"]["mysql"]["indexes"], 447)
+        self.assertEqual(actual["domains"][0]["counts"]["mysql"]["index_column_rows"], 577)
+
+    def test_output_cannot_overwrite_input_or_existing_capture(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "evidence.json"
+            path.write_text("unchanged", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                self.collector.write_json(path, {}, protected=[path])
+            with self.assertRaises(FileExistsError):
+                self.collector.write_json(path, {})
+            self.assertEqual(path.read_text(), "unchanged")
+
+
+if __name__ == "__main__":
+    unittest.main()

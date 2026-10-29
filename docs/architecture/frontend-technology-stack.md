@@ -27,6 +27,8 @@
 
 ---
 
+<a id="1-技术栈概览"></a>
+
 ## 1. 技术栈概览
 
 Apex Admin Web 是基于 **Vue 3.5** + **Vite 6** + **TypeScript 5** 构建的现代化企业级管理后台前端工程。
@@ -74,6 +76,8 @@ pnpm preview
 ```
 
 ---
+
+<a id="2-构建工具与开发环境"></a>
 
 ## 2. 构建工具与开发环境
 
@@ -287,6 +291,8 @@ module.exports = {
 ```
 
 ---
+
+<a id="3-核心框架层"></a>
 
 ## 3. 核心框架层
 
@@ -583,6 +589,8 @@ const canEdit = authStore.hasPermission('system:user:edit')
 
 ---
 
+<a id="4-ui组件库与样式"></a>
+
 ## 4. UI组件库与样式
 
 ### 4.1 Element Plus 2 - 企业级组件库
@@ -712,6 +720,8 @@ const handleReset = () => {
 }
 </script>
 ```
+
+<a id="42-sassscss---css预处理器"></a>
 
 ### 4.2 Sass/SCSS - CSS预处理器
 
@@ -892,7 +902,11 @@ onBeforeUnmount(() => {
 
 ---
 
+<a id="5-数据请求与工具"></a>
+
 ## 5. 数据请求与工具
+
+<a id="51-axios---http客户端"></a>
 
 ### 5.1 Axios - HTTP客户端
 
@@ -1114,6 +1128,8 @@ const isSame = isEqual(obj1, obj2)
 
 ---
 
+<a id="6-功能模块"></a>
+
 ## 6. 功能模块
 
 ### 6.1 认证授权模块
@@ -1151,6 +1167,8 @@ const isSame = isEqual(obj1, obj2)
 - API接口生成
 
 ---
+
+<a id="7-技术选型理由"></a>
 
 ## 7. 技术选型理由
 
@@ -1195,6 +1213,8 @@ const isSame = isEqual(obj1, obj2)
 5. **社区活跃**: Issues响应快
 
 ---
+
+<a id="8-性能优化策略"></a>
 
 ## 8. 性能优化策略
 
@@ -1275,11 +1295,15 @@ const handleSearch = useDebounceFn((keyword: string) => {
 
 ---
 
+<a id="9-开发规范"></a>
+
 ## 9. 开发规范
 
 详见 独立前端仓库 `apex-admin-web` 的 `frontend-docs/frontend-development-standards.md`（前端开发规范文档）
 
 ---
+
+<a id="10-常见问题"></a>
 
 ## 10. 常见问题
 

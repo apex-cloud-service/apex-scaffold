@@ -18,6 +18,8 @@
 
 ---
 
+<a id="测试概述"></a>
+
 ## 测试概述
 
 本次测试主要针对 **代码生成器**、**认证授权配置** 和 **SSO 单点登录** 三个新增模块进行单元测试覆盖。
@@ -33,6 +35,8 @@
 - **Mock 策略**: 对外部依赖(Repository、Assembler、WebClient 等)进行 Mock,专注测试业务逻辑
 
 ---
+
+<a id="测试范围"></a>
 
 ## 测试范围
 
@@ -162,6 +166,8 @@ void revoke_Success() {
 
 ---
 
+<a id="测试文件清单"></a>
+
 ## 测试文件清单
 
 ### Application 层测试文件
@@ -180,6 +186,8 @@ void revoke_Success() {
 **总计**: 8 个测试类,57 个测试方法
 
 ---
+
+<a id="代码质量改进"></a>
 
 ## 代码质量改进
 
@@ -220,6 +228,8 @@ Mono<SysSsoSessionEntity> findBySessionIndex(String sessionIndex);
 ```
 
 ---
+
+<a id="已知问题"></a>
 
 ## 已知问题
 
@@ -274,6 +284,8 @@ mvnd clean install -DskipTests -Dpmd.skip=true
 ```
 
 ---
+
+<a id="后续计划"></a>
 
 ## 后续计划
 

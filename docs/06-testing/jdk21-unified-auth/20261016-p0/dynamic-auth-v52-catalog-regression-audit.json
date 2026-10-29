@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "Latest V52 catalog assertions executed; historical V14 evidence reviewed; stable baseline ID union recomputed",
+  "baseline": {
+    "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/table-source-facts-20261018-itemized-1905.json",
+    "sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+    "all_old_sql_count": 589,
+    "dynamic_and_procedural_denominator": 586,
+    "static_ddl_excluded_count": 3
+  },
+  "source_hashes": {
+    "apex-auth-service/src/main/resources/db/migration/mysql/V52__align_auth_token_fields.sql": "d29af51d282faea9f8ebeb5dc73c37d2e994ae793d44d9b43b4c03faaeba6bd5",
+    "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+    "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql": "2f0368581aa58f7d763c4342710cde06d13bf1c81575fcbeb8ed0dc1467910fd"
+  },
+  "tool_hashes": {
+    "scripts/ci/auth_v45_dynamic_probe_20261018.py": "3cde9d43f323d6013349731b351e7bc09490fc9adffaac147d676da096364469",
+    "scripts/test/test_auth_v45_dynamic_probe_20261018.py": "eeb0a3a58877517003ece5919cea702a4e80732b6b36e8a920b30dda56ee75e5",
+    "scripts/ci/collect_table_facts.py": "49e17ab3d424e9d0f4bed6fbd607a80b88e532071e220bf7ca230cd96eca3735",
+    "scripts/test/test_collect_table_facts.py": "c0448e8d74a026ae109111f77a2fb4b49c27a2228fb62405b361da0128219353"
+  },
+  "evidence_directory": "docs/06-testing/jdk21-unified-auth/20261016-p0",
+  "evidence_hashes": {
+    "dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "dynamic-system-v14-20261018-client-evidence.json": "bf978a17c42edab2d00ffa055bf34de3cd1695e3d8c69a8c7a27f2db856634ff",
+    "dynamic-auth-v52-catalog-regression-evidence.json": "286fd56716171a547cd65a78e5912e61f548a777ac37a57c9589628e65c4d4d1",
+    "dynamic-auth-v52-audit.json": "079e759a53eca3467f938331494c39035ac486ff391a7db5b28b38c05f8cade1"
+  },
+  "logs": {
+    "dynamic-catalog-regression-python.log": {
+      "sha256": "546cb9deafad8f248b733ae1320abb91a17dc0ca9bd292179bcbef3843bea355",
+      "kind": "recorded command and actual unittest output",
+      "command": "python3 -B -m unittest scripts/test/test_auth_v45_dynamic_probe_20261018.py scripts/test/test_collect_table_facts.py",
+      "exit_code": 0,
+      "tests": 46,
+      "failures": 0,
+      "errors": 0
+    },
+    "dynamic-auth-v52-catalog-regression-runtime.log": {
+      "sha256": "bd97abab7c165d4225d297a59e62cd9ed8316ff1a22371e570363e20f851d71c",
+      "kind": "execution summary derived from actual runtime JSON and post-run checks; not raw terminal transcript"
+    }
+  },
+  "v52_current_runtime": {
+    "evidence": "dynamic-auth-v52-catalog-regression-evidence.json",
+    "mysql_version": "8.0.46",
+    "passed_branch_runs": 27,
+    "planned_branch_runs": 27,
+    "groups": 9,
+    "asserted_catalog_fields": ["COLUMN_TYPE", "IS_NULLABLE", "COLUMN_DEFAULT", "EXTRA"],
+    "absent_and_replay_match_expected_catalog": true,
+    "use_count_and_rotation_count_default": "0",
+    "other_column_defaults": "NULL",
+    "present_incompatible_varchar7_unchanged": true,
+    "full_file_initial_execution": true,
+    "full_file_replay": true,
+    "full_file_catalog_equal": true,
+    "full_file_replay_data_unchanged": true,
+    "new_unique_coverage": 0,
+    "cleanup": {"remove_exit_code": 0, "exists_exit_code": 1, "container_and_anonymous_volumes_removed": true},
+    "independent_postrun_probe_container_listing": {"exit_code": 0, "output": ""}
+  },
+  "v14_existing_evidence_review": {
+    "executed_again_this_round": false,
+    "status": "passed",
+    "all_three_branches_passed": true,
+    "missing_table_noop": true,
+    "full_file_initial_execution": true,
+    "procedure_removed": true,
+    "full_file_replay_expected_error": "ERROR 1060 (42S21): Duplicate column name tenant_id",
+    "schema_and_data_unchanged_after_failed_replay": true,
+    "container_and_anonymous_volumes_removed": true,
+    "id_range_inclusive": ["old-sql-0140", "old-sql-0154"],
+    "count": 15,
+    "limit": "Procedure replay succeeds; full migration is not idempotent"
+  },
+  "coverage": {
+    "method": "Set union of coverage.verified_old_ids from passed evidence with successful cleanup, matching current SQL and baseline hashes, verified_in_this_probe item flags, and all absent/present/replay results true. Repeated V52 evidence adds zero IDs.",
+    "verified_id_ranges_inclusive": [["old-sql-0000", "old-sql-0131"], ["old-sql-0140", "old-sql-0154"]],
+    "verified_by_original_batch": {"auth_mysql_V45": 96, "auth_mysql_V52": 36, "system_mysql_V14": 15},
+    "verified_unique_count": 147,
+    "denominator": 586,
+    "remaining_count": 439,
+    "remaining_definition": "Baseline old_sql_items whose category is dynamic_sql or procedure_or_prepared_control, excluding the inclusive verified ID ranges above",
+    "remaining_by_source": {
+      "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql": 8,
+      "apex-system/src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql": 184,
+      "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql": 24,
+      "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql": 16,
+      "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql": 15,
+      "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql": 45,
+      "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": 9,
+      "apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql": 24,
+      "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql": 32,
+      "apex-system/src/main/resources/db/migration/mysql/V51__add_keycloak_fields.sql": 8,
+      "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql": 16,
+      "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql": 4,
+      "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql": 23,
+      "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql": 4,
+      "apex-system/src/main/resources/db/migration/postgresql/V18__add_role_data_scope.sql": 1,
+      "apex-system/src/main/resources/db/migration/postgresql/V19__enforce_department_tenant_integrity.sql": 2,
+      "apex-system/src/main/resources/db/migration/postgresql/V20__create_workflow_engine_tables.sql": 1,
+      "apex-system/src/main/resources/db/migration/postgresql/V24__remove_foreign_keys.sql": 5,
+      "apex-system/src/main/resources/db/migration/postgresql/V26__create_jwt_keys_table.sql": 2,
+      "apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql": 4,
+      "apex-system/src/main/resources/db/migration/postgresql/V31__create_office_message_table.sql": 2,
+      "apex-system/src/main/resources/db/migration/postgresql/V32__create_office_approval_process_table.sql": 2,
+      "apex-system/src/main/resources/db/migration/postgresql/V34__create_office_calendar_event_table.sql": 2,
+      "apex-system/src/main/resources/db/migration/postgresql/V35__create_office_document_info_table.sql": 2,
+      "apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql": 1,
+      "apex-system/src/main/resources/db/migration/postgresql/V44__initialize_default_tenant.sql": 1,
+      "apex-system/src/main/resources/db/migration/postgresql/V45__add_message_outbox.sql": 2
+    }
+  },
+  "historical_accounting_limits": [
+    "Current probe plan_next still seeds V45-only 96 IDs, remaining_before=490, and writes cumulative=132 / remaining=454 for V52. These local fields, including new_unique_passed_count=36, are not the current global union and must not be used for cross-evidence accounting.",
+    "Historical V52 audit source/test hashes precede current V14 and catalog helper changes; historical evidence/log hashes remain intact. This independent run binds latest helper execution to current tool hashes.",
+    "Report and implementation plan contain earlier totals; neither was changed. Existing evidence was preserved."
+  ],
+  "next_batch": {
+    "source": "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql",
+    "id_range_inclusive": ["old-sql-0132", "old-sql-0139"],
+    "unverified_count": 8,
+    "status": "selected_not_executed",
+    "required_scope": "Account column and index guards; absent/present/replay; exact catalog and data checks. Index guard has no table-existence check, so missing-table behavior must be recorded separately. Existing column-only runner needs test-first minimal support before execution."
+  },
+  "checks": {"git_diff_check_exit_code": 0, "implementation_modified_this_round": false, "red_test_required_for_change": "No implementation changes made"},
+  "limits": [
+    "Synthetic MySQL fixtures only; no production data or full historical upgrade chain",
+    "Present-name skip does not establish schema equivalence or repair incompatible definitions",
+    "No PostgreSQL execution, Java build, Flyway application startup or full regression gate",
+    "No privilege denial, concurrent migration or general transaction rollback coverage",
+    "V14 was audited from existing passed evidence, not rerun this round"
+  ]
+}

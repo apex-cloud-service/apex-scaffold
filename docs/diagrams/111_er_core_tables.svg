@@ -184,6 +184,6 @@
   <text x="60" y="628" class="legend">实线箭头 = 外键引用方向（指向被引用表主键）；虚线箭头 = 关联表逻辑引用；自引用 = 树形层级（parent_id）</text>
   <text x="60" y="650" class="legend">所有核心表均含 create_time/update_time/version/deleted（MyBatis-Plus 逻辑删除 + 乐观锁）；tenant_id 实现行级多租户隔离</text>
 
-  <text x="700" y="700" class="note" text-anchor="middle">数据源：apex-interfaces/src/main/resources/db/migration/mysql/V1__init_schema.sql 等 · 权限模型为 RBAC + 数据权限（data_scope）</text>
+  <text x="700" y="700" class="note" text-anchor="middle">数据源：apex-system/src/main/resources/db/migration/mysql/V1__init_schema.sql 等 · 权限模型为 RBAC + 数据权限（data_scope）</text>
   <text x="700" y="722" class="note" text-anchor="middle">同步修正：Flyway 实际版本 V1-V58（原文档误写 V1-V26）</text>
 </svg>

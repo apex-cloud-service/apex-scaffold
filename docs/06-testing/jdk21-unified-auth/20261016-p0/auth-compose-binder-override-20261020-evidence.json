@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-20T07:00:00+08:00",
+  "task": "Apex P0 auth Compose override 的离线 Spring Binder 配置契约补验",
+  "repository": "/Users/work/apex-scaffold",
+  "git_head": "0c506a7ee0f94a07b359edda8ebbab4aac60dab3",
+  "working_tree": "存在大量既有修改；目标测试原为未跟踪且已由用户有意修改。本轮保留原有7个测试，新增2个测试及对应格式调整；没有修改生产配置、依赖或Python测试。",
+  "environment": {
+    "initialization": "source scripts/build/init-build-env.sh",
+    "java": "Oracle Corporation 17.0.12+8-LTS-286",
+    "java_home": "/Users/eric/.sdkman/candidates/java/17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "embedded_maven": "4.0.0-rc-3",
+    "os": "macOS 15.8.2 x86_64",
+    "versions_command": "source scripts/build/init-build-env.sh && java -version && mvnd --version",
+    "versions_command_id": "job-e93589bdd0684f4fbacd616b6b811ecc",
+    "versions_exit_code": 0
+  },
+  "test_design": {
+    "source": "SnakeYAML 读取真实 podman-compose.yml 中合并后的 auth environment，再叠加合成 override Map；YamlPropertySourceLoader 读取真实 prod/application/bootstrap YAML。",
+    "isolation": "移除 StandardEnvironment 的系统属性和宿主环境属性源；只使用合成数据库凭据，不读取 .env 或真实凭据。",
+    "added_tests": [
+      "commonDbTargetOverrideLeavesExplicitComposeJdbcTargetUnchanged",
+      "explicitBothUrlOverridesAlignTargetsAndPreserveCredentialsAndProdTls"
+    ],
+    "common_target_override": {
+      "overrides": ["DB_HOST", "DB_NAME"],
+      "jdbc": "完整显式 Compose JDBC URL 保持原值，目标 mysql:3306/apex_auth，原 useSSL=false 保留。",
+      "r2dbc": "目标变为 override.offline.invalid:3306/override_auth，sslMode=REQUIRED 保留。",
+      "credentials": "JDBC/R2DBC 均保留合成用户名与合成密码。"
+    },
+    "explicit_url_override": {
+      "overrides": ["DB_HOST", "DB_NAME", "SPRING_DATASOURCE_URL", "SPRING_R2DBC_URL"],
+      "target": "JDBC/R2DBC 均为 override.offline.invalid:3306/override_auth。",
+      "credentials": "JDBC/R2DBC 均保留合成用户名与合成密码。",
+      "tls": "合成URL沿用真实prod参数：JDBC useSSL=true&requireSSL=true；R2DBC sslMode=REQUIRED；断言绑定URL完整保留并解析R2DBC sslMode。"
+    },
+    "tdd_note": "为既有行为补充契约测试；首次新增测试即通过，没有修改生产代码制造失败，也不声称经历RED/GREEN。"
+  },
+  "final_verification": {
+    "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-auth-service spotless:check && mvnd -T4 -B -pl apex-auth-service -am -Dtest=AuthDataSourceConfigContractTest -Dsurefire.failIfNoSpecifiedTests=false test && git diff --check",
+    "command_id": "job-a78cbb77613a4e5484f8d70d4aedd80b",
+    "exit_code": 0,
+    "finished_at": "2026-10-20T06:59:14+08:00",
+    "spotless": "BUILD SUCCESS，检查auth-service模块；仅精确调整目标测试的一处Map.of格式。",
+    "reactor": "16个选中模块全部SUCCESS；Surefire按指定类筛选，不能解读为这些模块的全部测试均执行。",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "test_elapsed_seconds": 2.818,
+    "diff_check": "通过",
+    "report": "apex-auth-service/target/surefire-reports/TEST-com.apex.scaffold.authservice.AuthDataSourceConfigContractTest.xml"
+  },
+  "attempts_and_failures": [
+    {
+      "command": "source scripts/build/init-build-env.sh && java -version && mvnd --version && mvnd -T4 -B -pl apex-auth-service -am -Dtest=AuthDataSourceConfigContractTest -Dsurefire.failIfNoSpecifiedTests=false test",
+      "command_id": "job-55f9d0f549ed4e9691b3702eb99c33cd",
+      "outcome": "exit 1，初始化脚本在mvnd --version处失败，测试未执行。"
+    },
+    {
+      "command": "/Users/eric/.sdkman/candidates/mvnd/2.0.0-rc-3/bin/mvnd --version",
+      "command_id": "job-ffdc0662e741444198bad84678ce43d4",
+      "outcome": "单独版本诊断未加载项目环境，daemon连接超时，日志显示Java25 daemon；随后在正确初始化环境执行mvnd --stop，停止3个daemon。未使用错误JDK运行测试。"
+    },
+    {
+      "command": "source scripts/build/init-build-env.sh && java -version && mvnd --version && mvnd -T4 -B -pl apex-auth-service -am -Dtest=AuthDataSourceConfigContractTest -Dsurefire.failIfNoSpecifiedTests=false test",
+      "command_id": "job-863d9266fb594354b163a6b4eb3e72f3",
+      "outcome": "第一次定向测试BUILD SUCCESS：9 tests，0 failures，0 errors，0 skipped；Oracle17.0.12与指定mvnd已确认。"
+    },
+    {
+      "command": "source scripts/build/init-build-env.sh && mvnd --stop && mvnd -T4 -B -pl apex-auth-service spotless:check",
+      "command_id": "job-c1d3f134ba4c4908af84aa3b8cdfdd90",
+      "outcome": "exit 1，仅目标测试Map.of格式不符合Spotless。"
+    },
+    {
+      "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-auth-service -DspotlessFiles=src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java spotless:apply && mvnd -T4 -B -pl apex-auth-service spotless:check && mvnd -T4 -B -pl apex-auth-service -am -Dtest=AuthDataSourceConfigContractTest -Dsurefire.failIfNoSpecifiedTests=false test && git diff --check",
+      "command_id": "job-9fcbc441218c428c94836e9f0b68e1ef",
+      "outcome": "限定apply返回成功但目标格式未变化；紧接的check仍exit 1，后续测试和diff检查未执行。之后按Spotless输出精确调整目标文件，并执行final_verification全部通过。"
+    }
+  ],
+  "sha256": {
+    "apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java": "3becf4617a0d98255482afcb27f73daf75dcb34202072fe0e330e3aecde6514c",
+    "apex-auth-service/src/main/resources/application-prod.yml": "82b7e239ab39fdf5b50eabfe5f5d209812a2c5b2a22256e445c4029ecee367d2",
+    "apex-auth-service/src/main/resources/application.yml": "e084c81c16c9edd220f2e27cdf4cf2f994a11c9d1563dd55e3252b009bcdc4a4",
+    "apex-auth-service/src/main/resources/bootstrap.yml": "6beba707a1f2b883a268d2714c630ab51d9219c0cfd11e6957d9651ea1cb8bdd",
+    "podman-compose.yml": "f0a737bec0c6c1b177c05a79aa69117a46794b5f1d52247c73dfa46506be30dd",
+    "scripts/test/test_config_preflight.py": "f0200364a0a09705fd39abdd9f35b30a2f5a00c2ccd4231805569efc2474314e",
+    "apex-auth-service/target/surefire-reports/TEST-com.apex.scaffold.authservice.AuthDataSourceConfigContractTest.xml": "4b170c7f23d3e6bfa4a7abc02ac4c510790f06a0b6939206431e2451a9305535"
+  },
+  "boundaries": {
+    "verified": "离线真实YAML解析、合成环境覆盖、Spring Binder优先级、URL目标与TLS参数保留、驱动对R2DBC选项的支持判断。",
+    "not_verified": [
+      "真实数据库连接与认证",
+      "真实TLS握手、证书或服务器安全性",
+      "Spring服务或容器启动",
+      "Nacos访问或配置中心覆盖链",
+      "完整clean verify及Failsafe集成测试"
+    ],
+    "external_clients_started": false,
+    "real_credentials_read": false,
+    "production_configuration_changed": false,
+    "python": "用户提供前轮26个Python用例通过的背景；本轮未重跑Python或Compose多-f命令。",
+    "warnings": "构建中有既有模型、MockBean弃用和unchecked警告；未修改无关代码。"
+  }
+}

@@ -1,4 +1,4 @@
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#4f46e5','fontSize':'13px'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TD
     A["创建工作流定义（DAG 模板）<br/>workflow_code · version · node_config_json"] --> B["发起流程实例<br/>POST /api/v1/workflows/{code}/instances"]
     B --> C["ProcessInstance.status = RUNNING<br/>business_key · initiator_id · suspended=false"]

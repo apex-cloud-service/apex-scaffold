@@ -1,0 +1,200 @@
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "ci" / "collect_upgrade_baseline.py"
+
+
+class CollectUpgradeBaselineTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="apex-baseline-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.put("pom.xml", '<project xmlns="http://maven.apache.org/POM/4.0.0">'
+                 '<modules><module>apex-system</module><module>empty</module>'
+                 '</modules></project>')
+        self.put("apex-system/pom.xml", "<project/>")
+        self.put("empty/pom.xml", "<project/>")
+        self.put("apex-system/src/main/java/A.java", "class A {}")
+        self.put("apex-system/src/test/java/Empty.java", "")
+
+    def put(self, name, content):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def run_case(self, *args, success=True):
+        self.assertTrue(SCRIPT.is_file(), "baseline collector must exist")
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "--root", str(self.root), *args],
+            capture_output=True, text=True, timeout=15,
+        )
+        if success:
+            self.assertEqual(result.returncode, 0, result.stderr)
+        else:
+            self.assertNotEqual(result.returncode, 0)
+        return result
+
+    def test_only_reactor_java_with_scope_and_no_build_or_symlinks(self):
+        for name in ("apex-system/target/src/main/java/Generated.java",
+                     "apex-system/src/main/java/build/Generated.java",
+                     "apex-system/src/test/java/target/Generated.java",
+                     "retired/src/main/java/Old.java"):
+            self.put(name, "ignored")
+        source = self.root / "apex-system/src/main/java"
+        (source / "Linked.java").symlink_to(source / "A.java")
+        (source / "linked").symlink_to(source, target_is_directory=True)
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual(data["modules"], ["apex-system", "empty"])
+        self.assertEqual([(r["path"], r["module"], r["scope"])
+                          for r in data["java"]], [
+            ("apex-system/src/main/java/A.java", "apex-system", "main"),
+            ("apex-system/src/test/java/Empty.java", "apex-system", "test"),
+        ])
+        self.assertNotIn("coverage", data)
+
+    def test_zero_bytes_and_stable_sha256(self):
+        first = json.loads(self.run_case().stdout)
+        second = json.loads(self.run_case().stdout)
+        self.assertEqual(first, second)
+        self.assertEqual(first["java"][1]["size"], 0)
+        self.assertEqual(first["java"][1]["sha256"], hashlib.sha256(b"").hexdigest())
+        self.assertEqual(first["java"][0]["sha256"],
+                         hashlib.sha256(b"class A {}").hexdigest())
+
+    def test_flyway_preserves_domain_dialect_and_version_differences(self):
+        for dialect, version in (("mysql", "1"), ("mysql", "2_1"),
+                                 ("postgresql", "1"), ("postgresql", "3")):
+            self.put(f"apex-system/src/main/resources/db/migration/{dialect}/"
+                     f"V{version}__fixture.sql", dialect)
+        self.put("apex-system/target/db/migration/mysql/V9__ignored.sql", "ignored")
+        rows = json.loads(self.run_case().stdout)["migrations"]
+        self.assertEqual([(r["domain"], r["dialect"], r["version"]) for r in rows],
+                         [("system", "mysql", "1"), ("system", "mysql", "2_1"),
+                          ("system", "postgresql", "1"), ("system", "postgresql", "3")])
+        self.assertNotEqual(rows[0]["sha256"], rows[2]["sha256"])
+
+    def test_explicit_configuration_allowlist_never_emits_contents(self):
+        allowed = [".sdkmanrc", "Containerfile", "Containerfile.quick",
+                   ".github/workflows/check.yml", "config/nacos/public.yaml",
+                   "apex-system/src/main/resources/application-prod.yml",
+                   "apex-system/src/test/resources/bootstrap-it.yml"]
+        for path in allowed:
+            self.put(path, "SECRET=must-not-be-printed\n")
+        for path in (".env", "config/private.yaml", "config/nacos/private.json",
+                     "apex-system/src/main/resources/secrets.yml",
+                     "apex-system/target/application.yml",
+                     "apex-system/build/Containerfile",
+                     ".github/workflows/target/ignored.yml"):
+            self.put(path, "SECRET=must-not-be-printed\n")
+        self.put("outside.yml", "SECRET=must-not-be-printed")
+        (self.root / "config/nacos/link.yaml").symlink_to(self.root / "outside.yml")
+        result = self.run_case()
+        self.assertNotIn("must-not-be-printed", result.stdout + result.stderr)
+        rows = json.loads(result.stdout)["configurations"]
+        expected = allowed + ["pom.xml", "apex-system/pom.xml", "empty/pom.xml"]
+        self.assertEqual([r["path"] for r in rows], sorted(expected))
+        for row in rows:
+            self.assertEqual(set(row), {"path", "size", "sha256"})
+
+    def test_deployment_configuration_allowlist_and_exclusions(self):
+        allowed = [
+            ".github/workflows/check.yaml", "config/nacos/public.yml",
+            "podman-compose.yml", "podman-compose.infra.yml",
+            "monitoring/podman-compose.yml", "config/monitoring/podman-compose.yml",
+            "compose.yaml", "docker-compose.test.yaml", "Dockerfile",
+            "Dockerfile.quick", "apex-system/Dockerfile", "apex-system/Containerfile",
+            ".env.example", "scripts/build/build.sh", "scripts/build/init-build-env.sh",
+            "scripts/deploy/app.sh", "scripts/deploy/service/start-local.sh",
+            "scripts/deploy/podman/deploy-monitoring.sh",
+            "scripts/deploy/apex-scaffold.service",
+        ]
+        ignored = [
+            ".env", ".env.prod", ".env.example.backup", "scripts/deploy/.env",
+            "scripts/build/.env", "scripts/deploy/README.md",
+            "scripts/deploy/private.yaml", "scripts/deploy/build/ignored.sh",
+            "scripts/build/target/ignored.sh", "config/monitoring/private.yml",
+            "retired/Dockerfile", "target/compose.yaml", "scripts/dev/other.sh",
+        ]
+        for path in allowed + ignored:
+            self.put(path, "SECRET=deployment-content-must-not-be-printed\n")
+        (self.root / "scripts/deploy/link.sh").symlink_to(self.root / ".env")
+        (self.root / "scripts/build/linked").symlink_to(
+            self.root / "scripts/deploy", target_is_directory=True)
+        result = self.run_case()
+        self.assertNotIn("deployment-content-must-not-be-printed",
+                         result.stdout + result.stderr)
+        rows = json.loads(result.stdout)["configurations"]
+        self.assertEqual([r["path"] for r in rows],
+                         sorted(allowed + ["pom.xml", "apex-system/pom.xml", "empty/pom.xml"]))
+        for row in rows:
+            self.assertEqual(set(row), {"path", "size", "sha256"})
+            if row["path"] in allowed:
+                content = b"SECRET=deployment-content-must-not-be-printed\n"
+                self.assertEqual(row["size"], len(content))
+                self.assertEqual(row["sha256"], hashlib.sha256(content).hexdigest())
+
+    def test_migration_version_differences_are_explicit_per_domain_and_scope(self):
+        self.put("pom.xml", "<project><modules><module>apex-system</module>"
+                 "<module>apex-auth-service</module></modules></project>")
+        for module, scope, dialect, version in [
+            ("apex-system", "main", "mysql", "1"),
+            ("apex-system", "main", "mysql", "2_1"),
+            ("apex-system", "main", "postgresql", "1"),
+            ("apex-system", "main", "postgresql", "3"),
+            ("apex-system", "test", "mysql", "3"),
+            ("apex-auth-service", "main", "mysql", "3"),
+            ("apex-auth-service", "main", "postgresql", "3"),
+        ]:
+            self.put(f"{module}/src/{scope}/resources/db/migration/{dialect}/"
+                     f"V{version}__fixture.sql", dialect)
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual(data.get("migration_version_differences"), [
+            {"domain": "auth", "scope": "main", "mysql_only": [], "postgresql_only": []},
+            {"domain": "system", "scope": "main", "mysql_only": ["2_1"],
+             "postgresql_only": ["3"]},
+            {"domain": "system", "scope": "test", "mysql_only": ["3"],
+             "postgresql_only": []},
+        ])
+        self.assertEqual(len(data["migrations"]), 7)
+
+    def test_git_only_head_and_status_paths_including_rename(self):
+        def git(*args):
+            return subprocess.run(["git", *args], cwd=self.root, check=True,
+                                  capture_output=True, text=True).stdout.strip()
+        git("init", "-q")
+        git("add", ".")
+        git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+            "commit", "-qm", "SECRET-COMMIT-MESSAGE")
+        head = git("rev-parse", "HEAD")
+        git("mv", "apex-system/src/main/java/A.java",
+            "apex-system/src/main/java/Renamed name.java")
+        self.put("untracked name.txt", "SECRET-UNTRACKED-CONTENT")
+        result = self.run_case()
+        data = json.loads(result.stdout)["git"]
+        self.assertEqual(set(data), {"head", "status_paths"})
+        self.assertEqual(data["head"], head)
+        self.assertEqual(data["status_paths"], [
+            "apex-system/src/main/java/A.java",
+            "apex-system/src/main/java/Renamed name.java", "untracked name.txt"])
+        self.assertNotIn("SECRET", result.stdout + result.stderr)
+
+    def test_output_file_and_missing_parent_failure(self):
+        output = self.root / "baseline.json"
+        result = self.run_case("--output", str(output))
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(len(json.loads(output.read_text())["java"]), 2)
+        result = self.run_case("--output", str(self.root / "missing/baseline.json"),
+                               success=False)
+        self.assertEqual(result.stdout, "")
+        self.assertFalse((self.root / "missing").exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

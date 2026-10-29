@@ -28,6 +28,8 @@
 
 ---
 
+<a id="1-应用服务层"></a>
+
 ## 1. 应用服务层
 
 ### 1.1 Apex Scaffold Application
@@ -65,11 +67,11 @@ spec:
     metadata:
       labels:
         app: apex-scaffold
-        version: v1.2.0
+        version: v1.3.1
     spec:
       containers:
       - name: apex-scaffold
-        image: harbor.example.com/apex/apex-scaffold:1.2.0
+        image: harbor.example.com/apex/apex-scaffold:1.3.1
         ports:
         - containerPort: 8080
           name: http
@@ -103,7 +105,7 @@ spec:
 
 ---
 
-### 1.2 Sentinel Dashboard
+### 1.2 Resilience4j（内置）
 
 **职责**: 流控熔断规则管理、实时监控
 
@@ -111,8 +113,8 @@ spec:
 ```yaml
 # Podman Compose
 services:
-  sentinel-dashboard:
-    image: bladex/sentinel-dashboard:1.8.9
+  # (Resilience4j 内置，无需独立 Dashboard)
+    image: (Resilience4j 内置，无需独立 Dashboard)
     ports:
       - "8858:8858"
     environment:
@@ -121,7 +123,7 @@ services:
 ```
 
 **访问地址**: `http://localhost:8858`  
-**默认账号**: `sentinel / sentinel`
+**说明**: Resilience4j 为网关内置组件，无需独立 Dashboard
 
 **功能模块**:
 - ✅ 流控规则配置 (QPS 限流)
@@ -189,7 +191,7 @@ services:
       - "9848:9848"
 ```
 
-**持久化**: MySQL 8.0 (nacos_config 数据库)
+**持久化**: MySQL 9.0 (nacos_config 数据库)
 
 ---
 
@@ -231,6 +233,8 @@ services:
 ```
 
 ---
+
+<a id="2-数据存储层"></a>
 
 ## 2. 数据存储层
 
@@ -496,6 +500,8 @@ services:
 
 ---
 
+<a id="3-监控可观测层"></a>
+
 ## 3. 监控可观测层
 
 ### 3.1 Prometheus
@@ -513,11 +519,11 @@ scrape_configs:
   - job_name: 'apex-scaffold'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['apex-scaffold:9090']
+      - targets: ['apex-system-service:8083']
     
-  - job_name: 'sentinel'
+  # (Resilience4j 指标通过 actuator/micrometer 采集)
     static_configs:
-      - targets: ['sentinel-dashboard:9092']
+
   
   - job_name: 'node-exporter'
     static_configs:
@@ -717,6 +723,8 @@ otelcol.exporter.zipkin "default" {
 
 ---
 
+<a id="4-网关负载均衡层"></a>
+
 ## 4. 网关负载均衡层
 
 ### 4.1 Nginx Ingress Controller
@@ -822,6 +830,8 @@ spec:
 
 ---
 
+<a id="5-容器编排层"></a>
+
 ## 5. 容器编排层
 
 ### 5.1 Kubernetes Cluster
@@ -905,6 +915,8 @@ spec:
 
 ---
 
+<a id="6-cicd-流水线"></a>
+
 ## 6. CI/CD 流水线
 
 ### 6.1 GitHub Actions
@@ -926,7 +938,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: Run Tests
         run: mvn clean test
@@ -985,7 +997,7 @@ Vulnerabilities: 0
 **项目结构**:
 ```
 apex/
-├── apex-scaffold:1.2.0
+├── apex-scaffold:1.3.1
 ├── apex-scaffold:1.1.0
 ├── apex-scaffold:latest
 └── apex-scaffold:dev-20240904
@@ -994,6 +1006,8 @@ apex/
 **镜像扫描**: Trivy (每日自动扫描)
 
 ---
+
+<a id="7-关键数据流向"></a>
 
 ## 7. 关键数据流向
 
@@ -1038,6 +1052,8 @@ MySQL Database
 
 ---
 
+<a id="8-高可用架构"></a>
+
 ## 8. 高可用架构
 
 ### 8.1 应用层 HA
@@ -1058,6 +1074,8 @@ MySQL Database
 - ✅ 自动故障转移 (Cluster Failover)
 
 ---
+
+<a id="9-容量规划"></a>
 
 ## 9. 容量规划
 
@@ -1098,4 +1116,4 @@ MySQL Database
 
 **最后更新**: 2026-09-04  
 **维护者**: Apex Team  
-**版本**: 1.2.0
+**版本**: 1.3.1

@@ -18,8 +18,8 @@
     <marker id="diamond" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M 0 6 L 6 1 L 12 6 L 6 11 z" fill="#ffffff" stroke="#4f46e5"/></marker>
   </defs>
   <rect width="1400" height="940" fill="#fff"/>
-  <text x="700" y="38" class="title">UML 类图：apex-auth-center 领域模型</text>
-  <text x="700" y="60" class="subtitle">com.apex.scaffold.authcenter.domain · 认证/授权领域实体 · 聚合与领域服务 · v1.3.1</text>
+  <text x="700" y="38" class="title">UML 类图：apex-auth 领域模型</text>
+  <text x="700" y="60" class="subtitle">com.apex.scaffold.auth.domain.model · 认证/授权领域实体 · 聚合与领域服务 · v1.3.1</text>
 
   <!-- package boundary -->
   <rect x="40" y="84" width="1320" height="790" rx="10" fill="#4f46e5" opacity="0.04" stroke="#4f46e5" stroke-width="1.5" stroke-dasharray="6 4"/>
@@ -31,12 +31,12 @@
   <text x="195" y="162" class="cls-stereo">«aggregate root»</text>
   <text x="195" y="180" class="cls-name">UserEntity</text>
   <line x1="70" y1="190" x2="320" y2="190" stroke="#c7d2fe"/>
-  <text x="82" y="208" class="field">- id: Long</text>
-  <text x="82" y="224" class="field">- tenantId: String</text>
-  <text x="82" y="240" class="field">- username: String</text>
+  <text x="82" y="208" class="field">- id / tenantId / username</text>
+  <text x="82" y="224" class="field">- email / phone / openId</text>
+  <text x="82" y="240" class="field">- accountId: Long (sys_user)</text>
   <text x="82" y="256" class="field">- passwordHash: String</text>
-  <text x="82" y="272" class="field">- status: Integer</text>
-  <text x="82" y="288" class="field">- failedLoginAttempts: Integer</text>
+  <text x="82" y="272" class="field">- status / failedLoginAttempts</text>
+  <text x="82" y="288" class="field">- lastLoginAt / lastLoginIp</text>
   <text x="82" y="304" class="field">- lockedUntil: LocalDateTime</text>
   <line x1="70" y1="314" x2="320" y2="314" stroke="#c7d2fe"/>
   <text x="82" y="332" class="method">+ isActive(): boolean</text>
@@ -100,25 +100,25 @@
   <text x="195" y="440" class="cls-name">SessionEntity</text>
   <line x1="70" y1="450" x2="320" y2="450" stroke="#c7d2fe"/>
   <text x="82" y="468" class="field">- id / tenantId / userId</text>
-  <text x="82" y="484" class="field">- sessionId: String</text>
-  <text x="82" y="500" class="field">- deviceInfo / clientIp</text>
-  <text x="82" y="516" class="field">- expiresAt: LocalDateTime</text>
+  <text x="82" y="484" class="field">- sessionId / deviceType</text>
+  <text x="82" y="500" class="field">- deviceId / ipAddress</text>
+  <text x="82" y="516" class="field">- status / expiresAt</text>
   <line x1="70" y1="526" x2="320" y2="526" stroke="#c7d2fe"/>
-  <text x="82" y="544" class="method">+ isExpired(): boolean</text>
-  <text x="82" y="560" class="method">+ touch()</text>
+  <text x="82" y="544" class="method">+ isActive() / isExpired()</text>
+  <text x="82" y="560" class="method">+ terminate() / kickOut()</text>
 
   <!-- JwtKeyEntity -->
   <rect x="380" y="400" width="250" height="180" rx="6" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
-  <text x="505" y="422" class="cls-stereo">«entity»</text>
+  <text x="505" y="422" class="cls-stereo">«entity · @Table(jwt_keys)»</text>
   <text x="505" y="440" class="cls-name">JwtKeyEntity</text>
   <line x1="380" y1="450" x2="630" y2="450" stroke="#c7d2fe"/>
-  <text x="392" y="468" class="field">- kid: String</text>
-  <text x="392" y="484" class="field">- algorithm: String</text>
-  <text x="392" y="500" class="field">- publicKey / privateKey</text>
-  <text x="392" y="516" class="field">- active: Boolean</text>
+  <text x="392" y="468" class="field">- keyVersion: String</text>
+  <text x="392" y="484" class="field">- encryptedSecret: String</text>
+  <text x="392" y="500" class="field">- algorithm / status</text>
+  <text x="392" y="516" class="field">- activatedAt / expiresAt</text>
   <line x1="380" y1="526" x2="630" y2="526" stroke="#c7d2fe"/>
-  <text x="392" y="544" class="method">+ rotate()</text>
-  <text x="392" y="560" class="method">+ activate() / deactivate()</text>
+  <text x="392" y="544" class="method">+ isActive() / isExpired()</text>
+  <text x="392" y="560" class="method">+ isUsableForVerification()</text>
 
   <!-- MfaConfigEntity + TotpEntity -->
   <rect x="690" y="400" width="250" height="180" rx="6" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
@@ -128,9 +128,10 @@
   <text x="702" y="468" class="field">- userId / tenantId</text>
   <text x="702" y="484" class="field">- mfaType: String</text>
   <text x="702" y="500" class="field">- enabled: Boolean</text>
-  <text x="702" y="516" class="field">- verified: Boolean</text>
+  <text x="702" y="516" class="field">- required / priority</text>
   <line x1="690" y1="526" x2="940" y2="526" stroke="#c7d2fe"/>
   <text x="702" y="544" class="method">+ enable() / disable()</text>
+  <text x="702" y="560" class="method">+ isMfaType(type): boolean</text>
 
   <rect x="1000" y="400" width="290" height="180" rx="6" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
   <text x="1145" y="422" class="cls-stereo">«entity»</text>
@@ -138,21 +139,22 @@
   <line x1="1000" y1="450" x2="1290" y2="450" stroke="#c7d2fe"/>
   <text x="1012" y="468" class="field">- userId: Long</text>
   <text x="1012" y="484" class="field">- secret: String</text>
-  <text x="1012" y="500" class="field">- recoveryCodes: List&lt;String&gt;</text>
-  <text x="1012" y="516" class="field">- enabled: Boolean</text>
+  <text x="1012" y="500" class="field">- backupCodes: String</text>
+  <text x="1012" y="516" class="field">- verified / enabled</text>
   <line x1="1000" y1="526" x2="1290" y2="526" stroke="#c7d2fe"/>
   <text x="1012" y="544" class="method">+ verify(code): boolean</text>
+  <text x="1012" y="560" class="method">+ useBackupCode(code)</text>
 
   <!-- AuditLogEntity -->
   <rect x="70" y="620" width="250" height="150" rx="6" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
   <text x="195" y="642" class="cls-stereo">«entity»</text>
   <text x="195" y="660" class="cls-name">AuditLogEntity</text>
   <line x1="70" y1="670" x2="320" y2="670" stroke="#c7d2fe"/>
-  <text x="82" y="688" class="field">- eventType: String</text>
+  <text x="82" y="688" class="field">- eventType / eventStatus</text>
   <text x="82" y="704" class="field">- userId / tenantId</text>
-  <text x="82" y="720" class="field">- detail: String</text>
+  <text x="82" y="720" class="field">- details / riskLevel</text>
   <line x1="70" y1="730" x2="320" y2="730" stroke="#c7d2fe"/>
-  <text x="82" y="748" class="method">+ toRecord(): AuditLogRecord</text>
+  <text x="82" y="748" class="method">+ isSuccess() / isHighRisk()</text>
 
   <!-- AuthConfigEntity -->
   <rect x="380" y="620" width="250" height="150" rx="6" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
@@ -160,10 +162,10 @@
   <text x="505" y="660" class="cls-name">AuthConfigEntity</text>
   <line x1="380" y1="670" x2="630" y2="670" stroke="#c7d2fe"/>
   <text x="392" y="688" class="field">- tenantId: String</text>
-  <text x="392" y="704" class="field">- configKey / configValue</text>
-  <text x="392" y="720" class="field">- enabled: Boolean</text>
+  <text x="392" y="704" class="field">- configType / configKey</text>
+  <text x="392" y="720" class="field">- configValue / enabled</text>
   <line x1="380" y1="730" x2="630" y2="730" stroke="#c7d2fe"/>
-  <text x="392" y="748" class="method">+ apply()</text>
+  <text x="392" y="748" class="method">+ isPasswordPolicy() 等</text>
 
   <!-- value objects -->
   <rect x="690" y="620" width="250" height="150" rx="6" fill="#f0fdf4" stroke="#059669" stroke-width="1.4"/>
@@ -181,11 +183,11 @@
   <text x="1145" y="642" class="cls-stereo" fill="#b45309">«domain service»</text>
   <text x="1145" y="660" class="cls-name">认证/安全领域服务</text>
   <line x1="1000" y1="670" x2="1290" y2="670" stroke="#fde68a"/>
-  <text x="1012" y="688" class="field">AuthenticationProtocol</text>
-  <text x="1012" y="704" class="field">MfaService / TokenService</text>
-  <text x="1012" y="720" class="field">JwtKeyRotationService</text>
-  <text x="1012" y="736" class="field">BruteForceProtectionService</text>
-  <text x="1012" y="752" class="field">DeviceTrustService · IpAccessControl</text>
+  <text x="1012" y="688" class="field">AuthenticationProtocol / MfaService</text>
+  <text x="1012" y="704" class="field">TokenService / TokenTtlStrategy</text>
+  <text x="1012" y="720" class="field">JwtKeyRotationService / JwtKeyMaterialService</text>
+  <text x="1012" y="736" class="field">BruteForceProtection / IpAccessControl</text>
+  <text x="1012" y="752" class="field">DeviceTrust / Biometric / PasswordPolicy</text>
 
   <!-- relationship connectors -->
   <!-- Role 持有 Permission (聚合): Role -> Permission -->
@@ -212,5 +214,5 @@
   <!-- legend -->
   <rect x="40" y="894" width="1320" height="34" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="58" y="916" class="legend">图例： ◆—▸ 聚合（含 collect）　—▸ 关联/依赖（1..*）　⇢ «use» 领域服务引用</text>
-  <text x="700" y="916" class="note" text-anchor="middle">7 张核心实体 + 4 张值对象/领域服务；均不依赖持久化与框架实现，遵循 DDD 领域层约束</text>
+  <text x="700" y="916" class="note" text-anchor="middle">10 张核心实体 + 值对象/领域服务；含 PasswordRecoveryEntity 状态机（REQUESTED→VERIFIED→CONSUMED）</text>
 </svg>

@@ -2,7 +2,7 @@
 
 > 文档版本: v1.0  
 > 创建时间: 2026-09-04  
-> 适用版本: apex-scaffold v1.2.0
+> 适用版本: apex-scaffold v1.3.1
 
 ## 架构图
 
@@ -15,7 +15,7 @@
 | 层级 | 职责 | 核心组件 | 部署模式 |
 |------|------|----------|----------|
 | 🌐 **客户端层** | 用户接入 | Web/Mobile/API/CDN/DNS | Internet |
-| 🛡️ **网络安全层** | 流量防护 | WAF/Nginx/ALB/Sentinel/SSO | DMZ |
+| 🛡️ **网络安全层** | 流量防护 | WAF/Nginx/ALB/Sentinel/Resilience4j/SSO | DMZ |
 | ⚙️ **应用服务层** | 业务处理 | Spring Boot WebFlux | K8s Pods / Podman |
 | 💾 **数据存储层** | 持久化 | MySQL/Redis/MinIO/RocketMQ/Meilisearch | 高可用集群 |
 | 🔍 **运维监控层** | 可观测性 | Prometheus/Grafana/Loki/Zipkin | 监控栈 |
@@ -56,7 +56,7 @@
 ## 组件状态速查
 
 ### ✅ 默认启用 (Compose)
-- MySQL 8.0 (`mysql:8.0`)
+- MySQL 9.0 (`mysql:9.0`)
 - Redis 7-alpine (`redis:7-alpine`)
 - Meilisearch (`getmeili/meilisearch`)
 - Prometheus (`prom/prometheus:v2.53.0`)
@@ -68,7 +68,7 @@
 - RocketMQ 消费者: `APEX_MQ_CONSUMER_ENABLED=true`
 - Nacos 服务发现: `NACOS_DISCOVERY_ENABLED=true`
 - Nacos 配置中心: `NACOS_CONFIG_ENABLED=true`
-- Sentinel Dashboard: 配置 `SENTINEL_DASHBOARD_URL`
+- Resilience4j（内置）: 配置 `SENTINEL_DASHBOARD_URL`
 
 ### 🚀 建议拓扑 (需验证)
 - Kubernetes 多实例部署
@@ -103,17 +103,17 @@ podman-compose -f podman-compose.yml logs -f apex-gateway
 
 # 6. 访问监控
 open http://localhost:3000  # Grafana (admin/admin)
-open http://localhost:9090  # Prometheus
+open http://localhost:8083  # Prometheus
 ```
 
 ### 生产部署 (Kubernetes)
 ```bash
 # 1. 构建镜像
-podman build -f Containerfile -t apex-scaffold:1.2.0 .
+podman build -f Containerfile -t apex-scaffold:1.3.1 .
 
 # 2. 推送镜像
-podman tag apex-scaffold:1.2.0 registry.example.com/apex-scaffold:1.2.0
-podman push registry.example.com/apex-scaffold:1.2.0
+podman tag apex-scaffold:1.3.1 registry.example.com/apex-scaffold:1.3.1
+podman push registry.example.com/apex-scaffold:1.3.1
 
 # 3. 部署应用
 kubectl apply -f k8s/deployment.yaml
@@ -121,8 +121,8 @@ kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/ingress.yaml
 
 # 4. 检查状态
-kubectl get pods -l app=apex-application
-kubectl logs -f deployment/apex-application
+kubectl get pods -l app=apex-system
+kubectl logs -f deployment/apex-system
 
 # 5. 配置 HPA
 kubectl apply -f k8s/hpa.yaml
@@ -280,7 +280,7 @@ podman-compose -f podman-compose.infra.yml exec redis redis-cli INFO memory
 ### Prometheus 无数据
 ```bash
 # 1. 检查 Prometheus targets
-open http://localhost:9090/targets
+open http://localhost:8083/targets
 
 # 2. 测试指标端点
 curl http://localhost:8081/actuator/prometheus
@@ -298,14 +298,14 @@ podman-compose -f podman-compose.infra.yml exec prometheus cat /etc/prometheus/p
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apex-application
+  name: apex-system
 spec:
   replicas: 3
   template:
     spec:
       containers:
       - name: apex-app
-        image: apex-scaffold:1.2.0
+        image: apex-scaffold:1.3.1
         ports:
         - containerPort: 8080
         - containerPort: 8081
@@ -316,10 +316,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: apex-application
+  name: apex-system
 spec:
   selector:
-    app: apex-application
+    app: apex-system
   ports:
   - name: http
     port: 80
@@ -334,7 +334,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: apex-application
+  name: apex-system
 spec:
   rules:
   - host: api.example.com
@@ -344,7 +344,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: apex-application
+            name: apex-system
             port:
               number: 80
 ```
@@ -354,12 +354,12 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: apex-application-hpa
+  name: apex-system-hpa
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: apex-application
+    name: apex-system
   minReplicas: 2
   maxReplicas: 10
   metrics:

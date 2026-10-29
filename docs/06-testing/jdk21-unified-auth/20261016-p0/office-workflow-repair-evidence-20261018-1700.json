@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-18T17:00:00+08:00",
+  "scope": "office 四标志非空与必要创建/更新语义；workflow 现有全局唯一兼容契约",
+  "p0ReleaseApproved": false,
+  "baselineEvidence": "office-workflow-contract-evidence-20261018.json",
+  "decisions": {
+    "office": {
+      "flags": ["office_calendar_event.is_all_day", "office_calendar_event.is_recurring", "office_document_info.is_folder", "office_document_info.is_archived"],
+      "contract": "NULL 归 false；数据库 NOT NULL DEFAULT 0；converter 双向 null 归 false，保留 true/false",
+      "migration": "扫描包含未跟踪文件的 office 迁移目录确认已有 V1–V3 后新增 MySQL/PostgreSQL V4；未修改历史迁移",
+      "creation": "日历全天省略值归 false，重复标志显式 false；文档 FOLDER 类型持久化 is_folder=true，归档显式 false",
+      "update": "Handler 传递可选 isAllDay；null 保留已有值，false/true 显式更新；保留七参数 Java 重载兼容调用"
+    },
+    "workflow": {
+      "productionChanged": false,
+      "contract": "保留 (workflow_code, version, deleted) 与 (business_key, deleted) 全局唯一，结束后不释放业务键",
+      "reason": "当前 WorkflowPersistenceConfig 只有分页插件；定义插入未赋 tenant；按 ID 及业务键访问未形成完整 tenant 过滤；身份中继允许缺少 tenant。不能证明租户闭环，因此本轮不引入 tenant 唯一索引。",
+      "reviewedPaths": ["apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/config/WorkflowPersistenceConfig.java", "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/security/IdentityRelayAuthenticationFilter.java", "apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/repository/WorkflowDefinitionRepositoryImpl.java", "apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/repository/ProcessInstanceRepositoryImpl.java"]
+    }
+  },
+  "environment": {
+    "initialization": "source scripts/build/init-build-env.sh",
+    "jdk": "17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "parallelism": "-T4",
+    "podman": "先只读确认可用，复用已运行容器，仅创建 UUID 隔离临时数据库及 PostgreSQL 角色",
+    "mysqlContainer": "apex-p0-gate-mysql-20261017",
+    "postgresqlContainer": "apex-p0-pg-b1ddd1785ccf"
+  },
+  "tdd": {
+    "observedRedBeforeProductionChanges": [
+      {"test": "OfficeBooleanContractTest", "tests": 6, "failures": 2, "errors": 0, "cause": "null flags survive conversion"},
+      {"test": "OfficeCalendarEventServiceTest + OfficeDocumentOperationServiceTest creation checks", "tests": 6, "failures": 2, "errors": 0, "cause": "null allDay and FOLDER raw flag false"},
+      {"test": "OfficeCalendarEventServiceTest update checks", "tests": 7, "failures": 3, "errors": 0, "cause": "eight-argument optional allDay update method absent"}
+    ],
+    "limitations": "未在创建 V4 前执行真实迁移失败测试；不得将夹具或编译错误算作迁移 TDD RED。",
+    "correctedFixtureFailures": ["初始 Mockito 客户端 bean key 不匹配已修正", "联测同临时库中 office/workflow 各自 undo_log 重名；仅在临时库完成 office 验证后删除该表，再完整迁移 workflow，未修改生产 SQL"]
+  },
+  "verification": {
+    "finalTestCommand": "source scripts/build/init-build-env.sh && mvnd -q -T4 -B -pl apex-office-service -am test -Dtest=OfficeBooleanContractTest,OfficeCalendarEventServiceTest,OfficeDocumentOperationServiceTest,OfficeCalendarHandlerTest,OfficeFlywayMigrationTest,OfficeWorkflowBooleanIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true -Dapex.office.real-db=true",
+    "finalTestExitCode": 0,
+    "selectedTests": {"tests": 43, "failures": 0, "errors": 0, "skipped": 0, "breakdown": {"OfficeBooleanContractTest": 6, "OfficeCalendarEventServiceTest": 7, "OfficeDocumentOperationServiceTest": 2, "OfficeCalendarHandlerTestIncludingNested": 21, "OfficeFlywayMigrationTest": 5, "OfficeWorkflowBooleanIntegrationTest": 2}},
+    "spotlessCommand": "source scripts/build/init-build-env.sh && mvnd -q -T4 -B -pl apex-office,apex-office-service spotless:check",
+    "spotlessExitCode": 0,
+    "formattingScope": "仅对本轮修改的十个 Java 文件定向 apply；完整两个 office 模块 check 通过",
+    "diffCheckCommand": "git diff --check",
+    "diffCheckExitCode": 0,
+    "databaseAssertions": ["MySQL V3 nullable 四标志 NULL 回填为 0", "PostgreSQL V3 已 NOT NULL，使用原 0 行验证兼容升级", "两库 V4 恰执行一项、validate 成功、第二次 migrate=0", "两库保留原 true，省略字段默认 0，四列 UPDATE NULL 均被拒绝", "两库四列显式 1→0 写入后查询验证", "两库跨 tenant 相同 workflow code/version 被唯一约束拒绝", "两库跨 tenant 相同 business key 被拒绝，COMPLETED/REJECTED/TERMINATED 后仍被拒绝"],
+    "databaseCleanup": {"finallySucceeded": true, "mysqlPostCheck": "information_schema 无 office_contract_% 库", "postgresqlPostCheck": "pg_database/pg_roles 无 office_contract_% 临时库或角色"},
+    "realDatabaseOptIn": "-Dapex.office.real-db=true；可用 apex.office.mysql.container / apex.office.postgresql.container 指定容器；默认 CI 不依赖本机容器"
+  },
+  "sha256": {
+    "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/converter/CalendarEventConverter.java": "67ffbe2d799503463e39d96cee30ff7493f5cc2a459e50e6f6146e560fbd3fb6",
+    "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/converter/DocumentInfoConverter.java": "f97d1635b3145e3ea23318096034f97e295ef1364b0b480625df606a472857ab",
+    "apex-office/src/main/java/com/apex/scaffold/office/application/OfficeCalendarService.java": "014caf0296882798f28adc057ffce664554ec7e0d22efb1f2dc6c3dc8b27ab25",
+    "apex-office/src/main/java/com/apex/scaffold/office/application/OfficeDocumentService.java": "ed6c744ac3e97886448330ae5d17a357f3dc465a2b1d589d0de26a4b66e3a78a",
+    "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/handler/office/OfficeCalendarHandler.java": "aa1e3967974d96a00af3c73c6fdc75c187f8edf0cc08f6d99c96bc12162abbc0",
+    "apex-office-service/src/main/resources/db/migration/mysql/V4__normalize_office_boolean_flags.sql": "8338b983b5baa3558d3833add9873f169fe8fb1386a4163e087bd6fe27269e38",
+    "apex-office-service/src/main/resources/db/migration/postgresql/V4__normalize_office_boolean_flags.sql": "5de96417c2ea475d6bd84f8ed507436ab2a5a0fa5ad82520367034a1b7ec1e8c",
+    "apex-office-service/src/test/java/com/apex/scaffold/officeservice/db/migration/OfficeWorkflowBooleanIntegrationTest.java": "901f44eea50b7377c3e20a5c0c572f8903249a036173ddc912fd800e27784028"
+  },
+  "limitations": ["未运行全仓 clean verify、PMD、完整 Failsafe 或 JaCoCo 门禁；定向测试显式跳过 JaCoCo", "未验证外部办公平台全天同步；现有 CalendarPort 不提供全天/重复参数", "未修复 workflow 租户闭环，不将全局唯一验证当作租户隔离通过", "未执行真实生产库升级、完整服务启动或外部平台端到端测试", "SQL 保留现有数值布尔类型；未增加 0/1 CHECK 或清洗历史非 0/1 值", "本轮只验证数据库唯一约束及服务参数行为，不声称完整 workflow 启动 API 端到端通过"],
+  "collaboration": {"reportAndImplementationPlanEdited": false, "protectedUserFilesEdited": false, "deletedCacheScriptsRestored": false, "committed": false, "pushed": false}
+}

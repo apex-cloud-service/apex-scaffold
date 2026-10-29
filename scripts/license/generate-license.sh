@@ -19,7 +19,7 @@
 #   ./scripts/license/generate-license.sh ENTERPRISE "示例公司" 365 --fingerprint a1b2c3...
 #
 # 前置要求:
-#   - JDK 17 已安装（JAVA_HOME 已设置）
+#   - JDK 21 已安装（JAVA_HOME 已设置）
 #   - config/license/private.key 与 public.key 已生成（卖方私钥，切勿提交到仓库）
 #   - apex-common 已构建（target/classes 存在）
 # ============================================================

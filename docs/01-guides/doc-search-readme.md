@@ -29,20 +29,29 @@ cd /Users/work/apex-scaffold
 
 按 `Ctrl+C` 停止服务器。
 
+> 说明: 服务器默认仅监听 `127.0.0.1`,只有本机能访问,不会把项目文件暴露给局域网。
+> 确需从局域网其他设备访问时,启动前设置 `APEX_DOC_SEARCH_HOST=0.0.0.0`
+> (此时项目文件对网络内其他设备可见,请自行评估风险)。
+
 ---
 
 ## 🔧 其他启动方式
 
-### 方法 2: 手动启动 Python 服务器
+### 方法 2: 手动启动 Java 静态服务器
 
 ```bash
 # 1. 进入项目目录
 cd /Users/work/apex-scaffold
 
-# 2. 启动 HTTP 服务器
-python3 -m http.server 8080
+# 2. 构建离线运维工具 JAR（如尚未构建）
+source scripts/build/init-build-env.sh
+mvnd -B -pl apex-tools-deployment -am verify
 
-# 3. 在浏览器中打开
+# 3. 启动 HTTP 服务器（仅监听回环地址）
+$JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \
+    com.apex.scaffold.tools.deployment.DocSearchServer 8080 .
+
+# 4. 在浏览器中打开
 # http://localhost:8080/docs/doc-search.html
 ```
 
@@ -170,13 +179,14 @@ http://localhost:8080/docs/link-test.html
 
 **解决方案**: 使用 HTTP 服务器,通过 `http://` 协议访问
 
-### Q2: Python 服务器端口被占用怎么办?
+### Q2: 文档服务器端口被占用怎么办?
 
 **A**: 使用其他端口:
 
 ```bash
 # 使用 8081 端口
-python3 -m http.server 8081
+$JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \
+    com.apex.scaffold.tools.deployment.DocSearchServer 8081 .
 
 # 访问 http://localhost:8081/docs/doc-search.html
 ```

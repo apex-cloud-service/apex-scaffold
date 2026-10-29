@@ -1,0 +1,56 @@
+{
+  "kind": "p0_domain_event_outbox_dual_database_repair",
+  "date": "2026-10-18",
+  "status": "confirmed_defect_repaired_targeted_runtime_verified_not_full_p0_acceptance",
+  "changed_files": [
+    "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxStore.java",
+    "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxDialectTest.java"
+  ],
+  "findings": [
+    "Before repair append/appendSync unconditionally executed ON DUPLICATE KEY UPDATE and IF; PostgreSQL execution failed at DUPLICATE. claim timeout recovery used TIMESTAMPADD and claim used UPDATE ORDER BY LIMIT; retention used TIMESTAMPADD and DELETE LIMIT.",
+    "AuthCenterEventConfig lines 49-97 explicitly constructs Store, publisher and dispatcher for apex.events.outbox.enabled=true or missing. It does not restrict the JDBC database vendor. basic explicitly disables Outbox. Default/prod auth configuration is MySQL, so merely selecting a Spring profile does not select PostgreSQL: JDBC URL/driver, R2DBC URL and Flyway locations must all be overridden for PG. With a PG JDBC DataSource and enabled/default Outbox the SQL path is reachable.",
+    "System scans infrastructure; Store is unconditional Repository and dispatcher enabled=true/missing. apex.database.type selects Flyway locations, not the pre-repair Store SQL. Disabling dispatcher is not proof that every append caller disappears.",
+    "MySQL DEAD duplicate resurrection also had a confirmed defect: status was assigned before attempts/next_attempt_at/locks/error, so subsequent IF(status='DEAD') tested the changed status. Assignment ordering now implements the existing documented revival contract.",
+    "No Outbox dialect option existed in Store. Repair selects PostgreSQL using the actual Connection DatabaseMetaData product name, preserving the existing constructor and transaction connection. PG uses ON CONFLICT, bounded locked subquery with FOR UPDATE SKIP LOCKED, interval arithmetic and bounded delete subquery. Other existing vendor behavior remains MySQL SQL. State updates and token predicates remain unchanged."
+  ],
+  "static_schema_scope": {
+    "auth": "V56 mysql/postgresql table schema, payload TEXT, event_id unique, timestamps and dispatch/lock indexes; exact auth V56 SQL was executed by the runtime tests",
+    "system": "V1 mysql/postgresql creates sys_domain_event_outbox at lines 294/291; static reference checked, full system migration chain was not replayed",
+    "separate_message_outbox": "MessageOutboxMapper still uses DATE_SUB/NOW(6) for sys_message_outbox; MessageOutboxDispatcher requires apex.features.message-queue=true/missing, apex.outbox.dispatcher.enabled=true/missing and RocketMQTemplate class/bean. Not exercised or repaired here, and not claimed PG compatible. It is separate from the P0 candidate sys_domain_event_outbox path."
+  },
+  "runtime": {
+    "isolation": "New containers owned by this task only; no existing containers modified",
+    "postgresql": {"container": "apex-outbox-pg-20261018", "image": "localhost/postgres:17-alpine", "host_port": 15438, "database": "outbox_test"},
+    "mysql": {"container": "apex-outbox-mysql-20261018", "image": "localhost/mysql:8.0", "host_port": 13328, "database": "outbox_test"},
+    "schema_setup": "Test drops/recreates only sys_domain_event_outbox in these disposable databases from auth V56 source SQL, without Spring context, mocks or Store subclass",
+    "scenarios_per_database": ["append idempotence and appendSync rollback/commit", "two simultaneous bounded claims, disjoint IDs, exhausted queue", "claim existing row, deliver and retention delete", "failure backoff, retry counter, timeout recovery, stale owner guard, DEAD and retention", "DEAD duplicate revival resets attempts and becomes claimable", "DELIVERED duplicate does not requeue"],
+    "mysql_concurrency_limit": "Existing default MySQL isolation may deadlock with SQLState 40001 during overlapping claims. Observed on first green attempt. Final test permits one retry only for that SQLState, representing the scheduler next poll; no production retry or isolation behavior was changed. This does not establish deadlock-free claims.",
+    "time_limit": "Container database time differed from host time; test expiry fixtures derive from SELECT CURRENT_TIMESTAMP. Production retry time still uses Instant.now as before; clock/timezone configuration correctness was not repaired or established."
+  },
+  "commands": [
+    {"phase": "red", "command_id": "job-822bc1485e5640c28b123b6faca418d8", "command": "source scripts/build/init-build-env.sh && OUTBOX_DUAL_DB=true [isolated DB environment] mvnd -T4 -B -pl apex-infrastructure-messaging -am -Dtest=DomainEventOutboxDialectTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test", "exit_code": 1, "tests": 12, "failures": 2, "errors": 8, "skipped": 0, "log": "outbox-dialect-20261018-red.log", "qualification": "Includes meaningful PG SQL syntax failures and MySQL revival failure; also included time-fixture failures subsequently corrected using database time"},
+    {"phase": "verified_after_format", "command_id": "job-cccecb66e91c4a02ad28cdb32b5d2c92", "command": "source scripts/build/init-build-env.sh && OUTBOX_DUAL_DB=true [isolated DB environment] mvnd -T4 -B -pl apex-infrastructure-messaging -am -Dtest=DomainEventOutboxDialectTest,TransactionalOutboxExecutorTest,OutboxMetricsReporterTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test && git diff --check", "exit_code": 0, "tests": 19, "failures": 0, "errors": 0, "skipped": 0, "log": "outbox-dialect-20261018-verified.log", "qualification": "12 real dual-database parameterized invocations plus 4 existing H2 transaction and 3 metrics tests; coverage gate intentionally disabled for targeted selection"},
+    {"phase": "quality", "command_id": "job-bac4870f4fac4d938f78c1032433a099", "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-infrastructure-messaging '-DspotlessFiles=.*DomainEventOutbox(Store|DialectTest)\\.java' spotless:apply && mvnd -T4 -B -pl apex-infrastructure-messaging spotless:check pmd:check && git diff --check", "exit_code": 0, "log": "outbox-dialect-20261018-quality-final.log"}
+  ],
+  "sha256": {
+    "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxStore.java": "ea3adb4ad75fafe439f8d84eea1de822adfe041ddec4aea0f593dd0ad8e4696e",
+    "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxDialectTest.java": "5206c381d190c53afd960dc358668d0b94aabe705e75e97cb08b103a55d7293a",
+    "apex-auth-service/src/main/java/com/apex/scaffold/authservice/config/AuthCenterEventConfig.java": "61940c4c6c0500ec492a545200f25e9ed4f91fc47b84719879466561d84e0c1f",
+    "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxDispatcher.java": "3cf737c196449954f824f8bb83258355871178db0f2420a0897f4eb84a1df474",
+    "apex-auth-service/src/main/resources/db/migration/mysql/V56__create_domain_event_outbox.sql": "ef1730b282e1727a6af29aee33502c35ed9170ae8aab40e6d983ab27f90de392",
+    "apex-auth-service/src/main/resources/db/migration/postgresql/V56__create_domain_event_outbox.sql": "0e58a2253728eda4a4eefe00bf4aa076bb5e8566a695b1de5fc15cafd41e6ba2",
+    "apex-system/src/main/resources/db/migration/mysql/V1__init_schema.sql": "97faf08ee6553104ece895f7d71ccdf191fbd454a986d6b7e25d37d422a59ca6",
+    "apex-system/src/main/resources/db/migration/postgresql/V1__init_schema.sql": "4f3ec3eb40fa82fe4ec0f6a994f3675d8b83281a1a3e195c48a68c47b3f415a6",
+    "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/mapper/MessageOutboxMapper.java": "453e7e2462f6d02cf55137cd420a3a5e2f3b607ad43ed8372cc8c7a5a9d4c47c",
+    "outbox-dialect-20261018-red.log": "7973813de4639ec3eaf499f60031a2492dedbd3409a5c1e7890c761843dae0c3",
+    "outbox-dialect-20261018-green-final.log": "3077f139df4154b9e00facc342458ae0f88edab7ea6cc8e184cac44f41d99c60",
+    "outbox-dialect-20261018-verified.log": "71247703400734f94de9840cac95d6abe580fb7e76e2af8b25407074bf80ac89",
+    "outbox-dialect-20261018-quality-final.log": "5151a282195b1f5d7df3d33e1ae4b32502a0fd219df3537e9d79540e9ef63a11"
+  },
+  "limits": [
+    "Oracle 17.0.12 and mvnd 2.0.0-rc-3 activated by sourced project initializer for every build. No full repository verify or full service startup was executed.",
+    "No report/plan, historical migration, dynamic probe or collect_table_facts modification; no restore/delete/commit/push.",
+    "This closes the confirmed shared domain-event Store SQL defect under isolated MySQL 8 and PostgreSQL 17 tests; auth/system deployment wiring remains static evidence, not separate running-service acceptance.",
+    "New tests require OUTBOX_DUAL_DB=true and OUTBOX_MYSQL_URL/USER/PASSWORD plus OUTBOX_POSTGRESQL_URL/USER/PASSWORD. Without opt-in they skip; the reported run explicitly opted in and skipped zero tests."
+  ]
+}

@@ -154,55 +154,28 @@ db/migration/postgresql/
 
 ---
 
-## 测试脚本
+## 迁移回归测试
 
-为确保迁移脚本正确性，创建了两个独立的测试脚本：
+双库迁移回归由 JUnit 集成测试承担：
 
-### 1. MySQL 迁移测试
-**脚本路径：** `scripts/test/test-mysql-migration.sh`
+**实现：** `apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java`
 
-**功能：**
-- 创建临时测试数据库（apex_auth_test_<timestamp>）
-- 运行 Flyway 迁移（V44 → V50）
-- 验证所有关键表是否创建成功
-- 显示迁移历史详情
-- 可选择清理或保留测试数据库
+**覆盖：**
+- 以 `@ParameterizedTest` 分别对 `mysql` 与 `postgresql` 执行真实容器迁移
+- 先迁移到基线版本（`target("61")`）并断言执行数与 pending 数一致
+- 构造 V62 失败场景，验证迁移失败原因并执行 `repair()`
+- 完成后逐版本 `validate()`、校验 schema（索引、视图、列长度、非空约束、默认值）、确认无 pending
 
-**使用方法：**
+**执行：**
 ```bash
-# 使用默认配置（localhost:3306, root/root）
-./scripts/test/test-mysql-migration.sh
-
-# 自定义数据库配置
-TEST_DB_HOST=192.168.1.100 \
-TEST_DB_PORT=3307 \
-TEST_DB_USER=admin \
-TEST_DB_PASSWORD=secret \
-./scripts/test/test-mysql-migration.sh
+cd /Users/work/apex-scaffold
+sdk env
+mvnd -T4 -B clean verify
 ```
 
-### 2. PostgreSQL 迁移测试
-**脚本路径：** `scripts/test/test-postgresql-migration.sh`
-
-**功能：**
-- 创建临时测试数据库（apex_auth_test_<timestamp>）
-- 运行 Flyway 迁移（V44 → V50）
-- 验证所有关键表是否创建成功
-- 显示迁移历史详情
-- 可选择清理或保留测试数据库
-
-**使用方法：**
-```bash
-# 使用默认配置（localhost:5432, postgres/postgres）
-./scripts/test/test-postgresql-migration.sh
-
-# 自定义数据库配置
-TEST_DB_HOST=192.168.1.100 \
-TEST_DB_PORT=5433 \
-TEST_DB_USER=admin \
-TEST_DB_PASSWORD=secret \
-./scripts/test/test-postgresql-migration.sh
-```
+> 2024-09 版报告中的 `scripts/test/test-mysql-migration.sh`、
+> `scripts/test/test-postgresql-migration.sh` 两个独立容器脚本已移除：其断言强度明显低于上述
+> Java 集成测试（仅判断“表数>0 且迁移成功数>0”），职责重复。
 
 ---
 

@@ -1,24 +1,4 @@
 #!/usr/bin/env bash
-# ============================================================
-# Apex Scaffold - Podman Compose 停止
-# 用法: ./scripts/deploy/service/stop.sh [-v]
-# -v 会删除数据卷，数据不可恢复。
-# ============================================================
-set -e
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-cd "${PROJECT_ROOT}"
-
-# Compose 停止超时应大于应用 90 秒总关停预算，并允许调用方覆盖
-export APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-compose}"
-export APEX_GOVERNANCE_SHUTDOWN_TIMEOUT="${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:-90s}"
-export APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT="${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:-5s}"
-export APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT="${APEX_GOVERNANCE_MQ_DRAIN_TIMEOUT:-30s}"
-export APEX_GOVERNANCE_FORCE_SHUTDOWN="${APEX_GOVERNANCE_FORCE_SHUTDOWN:-true}"
-export APEX_STOP_GRACE_PERIOD="${APEX_STOP_GRACE_PERIOD:-105s}"
-COMPOSE_STOP_TIMEOUT="${APEX_COMPOSE_STOP_TIMEOUT:-105}"
-
-echo "停止 Apex Scaffold 服务..."
-podman-compose -f "${PROJECT_ROOT}/podman-compose.yml" down --timeout "${COMPOSE_STOP_TIMEOUT}" "$@"
-echo "服务已停止；未传 -v 时数据卷保留"
+# 保留旧路径，规范目录维护实际实现。
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)" || exit
+exec bash "${SCRIPT_DIR}/../stop.sh" "$@"

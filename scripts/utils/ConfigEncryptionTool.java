@@ -52,11 +52,9 @@ public class ConfigEncryptionTool {
 
         try {
             switch (command) {
-                case "generate-key":
-                    generateKey();
-                    break;
-                    
-                case "encrypt":
+                case "generate-key" -> generateKey();
+
+                case "encrypt" -> {
                     if (args.length < 3) {
                         System.err.println("错误：缺少参数");
                         System.err.println("用法：java ConfigEncryptionTool encrypt <plaintext> <key>");
@@ -70,9 +68,9 @@ public class ConfigEncryptionTool {
                     System.out.println("密文: " + encrypted);
                     System.out.println("\n💡 请将以下内容复制到配置文件中：");
                     System.out.println(encrypted);
-                    break;
-                    
-                case "decrypt":
+                }
+
+                case "decrypt" -> {
                     if (args.length < 3) {
                         System.err.println("错误：缺少参数");
                         System.err.println("用法：java ConfigEncryptionTool decrypt <ciphertext> <key>");
@@ -84,9 +82,9 @@ public class ConfigEncryptionTool {
                     System.out.println("\n✅ 解密成功！");
                     System.out.println("密文: " + ciphertext);
                     System.out.println("明文: " + decrypted);
-                    break;
-                    
-                case "interactive":
+                }
+
+                case "interactive" -> {
                     if (args.length < 2) {
                         System.err.println("错误：缺少密钥参数");
                         System.err.println("用法：java ConfigEncryptionTool interactive <key>");
@@ -94,18 +92,15 @@ public class ConfigEncryptionTool {
                     }
                     String key = args[1];
                     runInteractive(key);
-                    break;
-                    
-                case "help":
-                case "-h":
-                case "--help":
-                    printUsage();
-                    break;
-                    
-                default:
+                }
+
+                case "help", "-h", "--help" -> printUsage();
+
+                default -> {
                     System.err.println("错误：未知命令 '" + command + "'");
                     printUsage();
                     System.exit(1);
+                }
             }
         } catch (Exception e) {
             System.err.println("\n❌ 操作失败：" + e.getMessage());
@@ -256,22 +251,19 @@ public class ConfigEncryptionTool {
             
             try {
                 switch (cmd) {
-                    case "e":
-                    case "encrypt":
+                    case "e", "encrypt" -> {
                         String encrypted = encrypt(value, key);
                         System.out.println("✅ 加密结果：");
                         System.out.println(encrypted);
-                        break;
-                        
-                    case "d":
-                    case "decrypt":
+                    }
+
+                    case "d", "decrypt" -> {
                         String decrypted = decrypt(value, key);
                         System.out.println("✅ 解密结果：");
                         System.out.println(decrypted);
-                        break;
-                        
-                    default:
-                        System.err.println("❌ 未知命令：" + cmd);
+                    }
+
+                    default -> System.err.println("❌ 未知命令：" + cmd);
                 }
             } catch (Exception e) {
                 System.err.println("❌ 操作失败：" + e.getMessage());

@@ -139,6 +139,79 @@
 
 > 注：本清单当前仅完整登记至 29 号，30–83、87–91 号图表（工作流、多租户、缓存、消息、License 等）未在本清单逐项登记。
 
+### 图表双源规范（重要）
+
+本目录图表存在两类载体，维护时必须区分：
+
+| 类型 | 载体 | 编辑方式 | 覆盖范围 |
+| --- | --- | --- | --- |
+| 手写设计稿 | `.svg`（1400×N 画布，自定义 CSS 类） | 直接编辑 SVG 文本 | 01–92 等历史设计稿，无 `.mmd` 源 |
+| Mermaid 双源 | `.mmd` 源 + `.svg` 渲染产物 | 先改 `.mmd`，再重新渲染 SVG | 93–123（UML/ER/模块结构/流程），`sequence/` 下 30–95 |
+
+**重渲染命令**（需 mermaid-cli）：
+
+```bash
+bun x @mermaid-js/mermaid-cli -i docs/diagrams/107_uml_auth_center_domain.mmd \
+    -o docs/diagrams/107_uml_auth_center_domain.svg
+```
+
+改动 `.mmd` 后未重渲染 SVG 会导致两者内容不一致；SVG 是渲染产物，**以 `.mmd` 源码为准**。
+
+### 107–123 UML 类图 / ER 表图 / 模块结构图
+
+以下图表同时提供 `.mmd` 源文件与 `.svg` 渲染产物，统一使用 `theme:base` + 企业四色规范。本节内容已按真实源码逐类核对修正，并补齐 system/file/common 域缺失的 UML。
+
+#### UML 类图（107–120）
+
+| 编号 | 文件（`.mmd` / `.svg`） | 标题 | 覆盖域 | 说明 |
+| -- | ------ | ---- | ------ | ---- |
+| 107 | `107_uml_auth_center_domain` | auth 域 UML 类图 | auth | 10 类实体 + 值对象 + 领域服务；已删除 `kid/publicKey/privateKey/deviceInfo/toRecord/recoveryCodes` 等虚构成员，补齐 `accountId`、`PasswordRecoveryEntity` |
+| 108 | `108_uml_workflow_domain` | workflow 域 UML 类图 | workflow | WorkflowDefinition/ProcessInstance/Task/ApprovalRecord + 4 仓储端口 + WorkflowTaskTransaction |
+| 109 | `109_uml_office_domain` | office 域 UML 类图 | office | OfficeMessage/ApprovalProcess/CalendarEvent/DocumentInfo + 四端口(MessagePort/ApprovalPort/CalendarPort/DocumentPort) + AbstractOfficeClient |
+| 110 | `110_uml_core_aggregate` | 核心聚合基类 UML | common | BaseEntity/BasePO/LogicalDeletion 基类 |
+| 110b | `110b_uml_system_domain` | **system 域 UML 类图（新增）** | system | 17 类：User/Role/Permission/Dept/Menu/Tenant/Dict/Config/Job + 日志 + 安全策略 + TenantQuota VO |
+| 119 | `119_uml_file_domain` | **file 域 UML 类图（新增）** | file | FileEntity/FileChunkEntity/FileShareEntity/DocumentEntity/ChartEntity + 5 仓储 + StorageService/StorageServiceProvider/TenantStatusPort |
+| 120 | `120_uml_common_infrastructure` | **common 模块关键类 UML（新增）** | common | Result/ResultCode/ErrorCode/BusinessException/BaseException + TenantContext/DataScopeContext/DataSourceContext + BlockingIoSchedulers 六池 |
+
+#### ER 表关系图（111–121）
+
+| 编号 | 文件（`.mmd` / `.svg`） | 标题 | 覆盖域 | 说明 |
+| -- | ------ | ---- | ------ | ---- |
+| 111 | `111_er_core_tables` | 核心表 ER 图 | system | sys_user/sys_role/sys_permission/sys_menu/sys_dept/sys_tenant + 关联表 |
+| 112 | `112_er_auth_center_tables` | auth 表 ER 图 | auth | OAuth2/JWT/MFA/Biometric/DeviceTrust/SecurityAudit 等 18 表 |
+| 113 | `113_er_workflow_tables` | workflow 表 ER 图 | workflow | WF_WORKFLOW_DEFINITION/PROCESS_INSTANCE/TASK/APPROVAL_RECORD 等 6 表 |
+| 114 | `114_er_office_tables` | office 表 ER 图 | office | OFFICE_PLATFORM_APP/MESSAGE/APPROVAL/CALENDAR/DOCUMENT 等 17 表 |
+| 121 | `121_er_file_tables` | **file 域表 ER 图（新增）** | file | file_record/file_chunk/file_share/file_document/file_chart，V1–V6 迁移链 |
+
+> 表数量为按 Flyway 迁移脚本 `CREATE TABLE` 语句实测去重统计：system 97、auth 18、workflow 6、file 6、office 17，全仓唯一表名 117 张。
+
+#### 模块结构图（97–106, 122–123）
+
+| 编号 | 文件名 | 标题 | 覆盖模块 | 说明 |
+| -- | ------ | ---- | -------- | ---- |
+| 97–106 | `97–106_module_*.mmd` | 共享/业务模块结构图 | common/domain/infrastructure/application/interfaces/auth/workflow/example/generator/license | DDD 四层包结构 flowchart |
+| 122 | `122_module_file_structure.mmd` | **apex-file 模块结构图（新增）** | file | interfaces→application→domain→infrastructure 四层 + 五后端存储策略 |
+| 123 | `123_module_system_structure.mmd` | **apex-system 模块结构图（新增）** | system | 四层 + office/governance/monitor/security 子包 + 45 实体域模型 |
+
+#### 配色规范
+
+所有 `.mmd` 文件统一使用 `theme:base` + 企业四色，按域分配主色：
+
+| 域 | primaryColor | primaryBorderColor | 适用图表 |
+| -- | ------------ | ------------------ | -------- |
+| auth / common / 通用 | `#eef2ff` | `#4f46e5` (靛蓝) | 107, 110, 115–118, 120, 模块结构, sequence |
+| system | `#ecfeff` | `#0891b2` (青) | 110b |
+| workflow / office | `#ecfdf5` | `#059669` (绿) | 108, 109 |
+| file / infrastructure | `#fffbeb` | `#d97706` (琥珀) | 119, 122 (file) |
+| ER 表图 | `#eff6ff` | `#3b82f6` (蓝) | 111–114, 121 |
+
+#### 校验状态
+
+- **XML 合法性**：`docs/diagrams/` 下 124 个 `.svg` 全部通过 XML 解析校验（2026-10-28）。本轮修复了 4 个既存缺陷：`70`/`71`/`72` 中未转义的 `<`、`>`、`&`，以及 `86` 中错位的属性引号（`height">150"` → `height="150"`）。
+- **内容一致性**：全量扫描确认无 `Java 17`、退役模块名（`apex-interfaces`/`apex-application`/`apex-auth-center`）、`MySQL 8.0`、`Spring Boot 3.5.13`、旧统计数字（32 Handler/34 Service/47 Repository）残留。
+- **统计基准**：Handler 86、Service 159、Router 50、Repository 90、domain 实体 73、Maven 模块 31、唯一表 117（按源码与迁移脚本实测）。
+- **SVG 渲染**：`docs/diagrams/` 与 `sequence/` 下 `.mmd` 均经 mermaid-cli 验证语法有效；本轮新渲染 110b、119、120、121、122、123 六张 SVG。
+
 ---
 
 ## 💡 使用建议

@@ -141,7 +141,7 @@
   <text x="1200" y="200" class="note-text" text-anchor="middle">T2 (+200ms)</text>
   <text x="1200" y="215" class="code-label" text-anchor="middle">请求: 100</text>
   <text x="1200" y="230" class="code-label" text-anchor="middle" fill="#dc2626">✗ 拒绝</text>
-  <text x="1200" y="245" class="param-text" text-anchor="middle">令牌: 98 (96+2<100)</text>
+  <text x="1200" y="245" class="param-text" text-anchor="middle">令牌: 98 (96+2&lt;100)</text>
 
   <!-- T3: 补充后再请求 -->
   <circle cx="1300" cy="180" r="5" fill="#059669"/>
@@ -191,7 +191,7 @@
   <text x="715" y="605" class="code-label">    long now = System.nanoTime();</text>
   <text x="715" y="620" class="code-label">    long elapsedNanos = now - lastRefillTimeNanos.get();</text>
   <text x="715" y="635" class="code-label">    long tokensToAdd = (long)(elapsedNanos * refillRate / 1e9);</text>
-  <text x="715" y="650" class="code-label">    if (tokensToAdd > 0 && lastRefillTimeNanos.compareAndSet(last, now)) {</text>
+  <text x="715" y="650" class="code-label">    if (tokensToAdd &gt; 0 &amp;&amp; lastRefillTimeNanos.compareAndSet(last, now)) {</text>
   <text x="730" y="665" class="code-label">        long newTokens = Math.min(capacity, current + tokensToAdd);</text>
   <text x="730" y="680" class="code-label">        availableTokens.set(newTokens);</text>
   <text x="715" y="695" class="code-label">    }</text>

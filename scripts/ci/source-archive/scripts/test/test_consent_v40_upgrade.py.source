@@ -1,0 +1,43 @@
+import importlib.util
+import pathlib
+import subprocess
+import unittest
+from unittest.mock import patch
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+SPEC = importlib.util.spec_from_file_location('consent_verifier', ROOT / 'scripts/test/verify_consent_v40_upgrade.py')
+VERIFIER = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(VERIFIER)
+
+
+class ConsentUpgradeTest(unittest.TestCase):
+    def test_paired_explicit_upgrade_resources_exist(self):
+        for dialect in ('mysql', 'postgresql'):
+            path = ROOT / 'apex-system/src/main/resources/db/upgrade' / dialect / 'consent_before_v40.sql'
+            self.assertTrue(path.is_file(), f'{dialect} V40前置修复尚未实现')
+            text = path.read_text()
+            self.assertNotIn('flyway_schema_history', text)
+            self.assertIn('registered_client_id', text)
+            self.assertIn('principal_name', text)
+            self.assertIn('updated_at', text)
+
+    def test_postgresql_file_uses_psql_file_without_expanding_includes(self):
+        path = '/tmp/consent-upgrade/upgrade/postgresql/run_v40_with_consent_backup.sql'
+        with patch.object(VERIFIER, 'command', return_value=subprocess.CompletedProcess([], 0, 'COMMIT\n', '')) as run:
+            self.assertEqual(VERIFIER.postgresql_file('isolated-pg', path), 'COMMIT')
+        run.assert_called_once_with(['podman', 'exec', 'isolated-pg', 'psql', '-X', '-U', 'postgres',
+                                     '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At', '-f', path])
+
+    def test_postgresql_file_propagates_include_errors(self):
+        with patch.object(VERIFIER, 'command', return_value=subprocess.CompletedProcess([], 3, '', 'include missing')):
+            with self.assertRaisesRegex(AssertionError, 'include missing'):
+                VERIFIER.postgresql_file('isolated-pg', '/tmp/missing.sql')
+
+    def test_postgresql_rejects_unexpected_existing_id_type(self):
+        text = (ROOT / 'apex-system/src/main/resources/db/upgrade/postgresql/consent_before_v40.sql').read_text()
+        self.assertIn("atttypid='character varying'::regtype AND atttypmod=104", text)
+        self.assertLess(text.index('unexpected consent id type'), text.index('UPDATE oauth2_authorization_consent'))
+
+
+if __name__ == '__main__':
+    unittest.main()

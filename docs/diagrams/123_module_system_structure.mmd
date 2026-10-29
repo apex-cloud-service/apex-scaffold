@@ -1,0 +1,67 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+  subgraph IF["接口层 interfaces (apex-system)"]
+    I1["router · Handler 路由注册（WebFlux 函数式）"]
+    I2["handler · 用户/角色/菜单/部门/字典/配置/任务 Handler + office 子域 Handler"]
+    I3["aspect · RequirePermissionAspect · OperationLogAspect · DataScopeAspect"]
+    I4["security · 安全配置与过滤器"]
+    I5["governance · lifecycle · platform(compose/kubernetes/standalone)"]
+    I6["monitor · dashboard · metrics"]
+    I7["config · exception · filter"]
+  end
+
+  subgraph APP["应用层 application"]
+    A1["service / service.impl / service.auth / service.login · 用例编排（事务边界）"]
+    A2["office · approval / message / command · 办公协同子域用例"]
+    A3["assembler · MapStruct DTO↔Entity 转换"]
+    A4["dto · admin / data / log / request / search"]
+    A5["factory · guard · scheduler · listener · event"]
+    A6["security · support · support.sso · util · job · config"]
+  end
+
+  subgraph DOM["领域层 domain"]
+    D1["model.entity · 45 实体（User/Role/Permission/Dept/Menu/Tenant/Dict/Config/Job/Log...）"]
+    D2["model.valueobject · TenantQuota · PhoneNumber · LoginRecord · WeChatOpenId"]
+    D3["model.generator · GenConfig / GenTemplate / GenDatasource / GenHistory"]
+    D4["model.moderation · 内容审核结果模型"]
+    D5["model.sso / model.record / model.exception / model.system"]
+    D6["enums · DataScopeType / EducationLevel / ActivityStatus"]
+    D7["gateway · UnifiedAuthorizationGateway 端口"]
+    D8["repository · 仓储接口"]
+    D9["service · 领域服务 · search · log · event · moderation"]
+  end
+
+  subgraph INF["基础设施层 infrastructure"]
+    N1["persistence · mapper / po / converter / repository"]
+    N2["cache · Redis 缓存服务"]
+    N3["mq · config / listener · RocketMQ 消费"]
+    N4["log · ApiCallLogSink 持久化"]
+    N5["remote · 远程调用适配"]
+    N6["search · Meilisearch 全文检索"]
+    N7["scheduler · 定时任务执行器"]
+    N8["moderation · 内容审核适配器"]
+  end
+
+  COMMON["apex-common<br>Result / BlockingIoSchedulers / TenantContext / BaseEntity"]
+  DOMAIN["apex-domain<br>共享领域契约"]
+  INFRA["五个 infrastructure 能力 JAR<br>persistence / cache / messaging / remote / integration"]
+  LICENSE["apex-license-spring-boot-starter<br>License 校验"]
+
+  COMMON --> DOM
+  DOMAIN --> DOM
+  INFRA --> INF
+  LICENSE --> INF
+
+  I1 --> A1
+  I2 --> A1
+  I3 --> A1
+  A1 --> D9
+  D9 --> D8
+  D8 -. "被实现" .-> N1
+  A2 --> D9
+  A3 --> D1
+  N2 --> D9
+  N3 --> A5
+
+  NOTE["apex-system: 系统管理核心域（45 实体，项目最大域）\n承接原 interfaces/application 源码，Java 包名不变\noffice 子域: 消息/审批/日历/文档 Handler + Application\n含 governance（优雅停机/降级/自动伸缩）、monitor、security\nsys_* MySQL/PostgreSQL 版本链独立，V42+ 结构恢复"]
+  DOM -.-> NOTE

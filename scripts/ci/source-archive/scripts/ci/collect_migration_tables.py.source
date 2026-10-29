@@ -1,0 +1,327 @@
+#!/usr/bin/env python3
+"""采集历史迁移中的静态表事件；不执行 SQL，不推导最终 schema 或数据库语义等价。"""
+
+import argparse
+from collections import Counter
+import json
+import os
+from pathlib import Path
+import re
+import sys
+import tempfile
+import xml.etree.ElementTree as ET
+
+from collect_upgrade_baseline import collect as collect_baseline
+
+
+LIMITATIONS = {
+    "not_final_schema": "仅历史脚本静态事件；不是当前真实表或最终 schema，不执行历史迁移。",
+    "not_semantic_equivalence": "保留版本及两库事件差异，不证明方言语义等价或迁移可执行。",
+    "lexical_not_sql_validation": "仅识别静态目标及词法错误，不完整验证列定义、约束和 SQL 语法。",
+    "unresolved": "条件执行注释、动态 SQL、过程体及无法静态确定表的索引等显式记录，不展开执行。",
+    "normalization": "parts 保留限定名分段；未引号标识符小写，PostgreSQL 双引号保留大小写，MySQL 小写仅作比较，不推断 lower_case_table_names；不补默认 schema。",
+    "session_modes": "不推导会话 SQL 模式；MySQL 单引号反斜线按默认模式处理，双引号用作标识符时标记模式依赖。",
+}
+
+
+def lex(sql, dialect):
+    """隔离注释和字面量；保留偏移及行号，无法闭合时停止扫描而不猜测后续 DDL。"""
+    tokens = []
+    i, line = 0, 1
+    while i < len(sql):
+        start, first_line = i, line
+        c = sql[i]
+        kind = "symbol"
+        if c.isspace():
+            i += 1
+            line += c == "\n"
+            continue
+        if sql.startswith("--", i) or (c == "#" and dialect == "mysql"):
+            end = sql.find("\n", i)
+            i = len(sql) if end < 0 else end
+            continue
+        if sql.startswith("/*", i):
+            conditional = sql.startswith(("/*!", "/*M!"), i)
+            depth = 1
+            i += 2
+            while i < len(sql) and depth:
+                if sql.startswith("/*", i):
+                    depth += 1
+                    i += 2
+                elif sql.startswith("*/", i):
+                    depth -= 1
+                    i += 2
+                else:
+                    i += 1
+            line += sql[start:i].count("\n")
+            if depth:
+                tokens.append(("error", "unterminated_comment", start, i, first_line))
+                break
+            if conditional:
+                tokens.append(("conditional", "", start, i, first_line))
+            continue
+        dollar = re.match(r"\$(?:[A-Za-z_][A-Za-z_0-9]*)?\$", sql[i:]) if c == "$" else None
+        if dollar:
+            delimiter = dollar[0]
+            end = sql.find(delimiter, i + len(delimiter))
+            if end < 0:
+                tokens.append(("error", "unterminated_dollar_quote", start, len(sql), line))
+                break
+            i = end + len(delimiter)
+            kind = "literal"
+        elif c in "'`\"":
+            quote = c
+            kind = "literal" if c == "'" else "identifier"
+            i += 1
+            closed = False
+            while i < len(sql):
+                if sql[i] == "\\" and quote == "'" and (
+                        dialect == "mysql" or (start > 0 and sql[start - 1] in "eE")):
+                    i += 2
+                elif sql[i] == quote:
+                    i += 1
+                    if i < len(sql) and sql[i] == quote:
+                        i += 1
+                    else:
+                        closed = True
+                        break
+                else:
+                    i += 1
+            if not closed:
+                tokens.append(("error", "unterminated_quote", start, len(sql), line))
+                break
+        elif c.isalpha() or c == "_":
+            i += 1
+            while i < len(sql) and (sql[i].isalnum() or sql[i] in "_$"):
+                i += 1
+            kind = "word"
+        else:
+            i += 1
+        tokens.append((kind, sql[start:i], start, i, first_line))
+        line += sql[start:i].count("\n")
+    return tokens
+
+
+def parse_statement(tokens, sql, dialect):
+    """识别表/索引目标；不校验完整 DDL，不解析过程体或从索引名反推表。"""
+    events, unresolved = [], []
+    if not tokens:
+        return events, unresolved
+    line = tokens[0][4]
+
+    def issue(reason, at=line):
+        unresolved.append({"line": at, "reason": reason})
+
+    if any(t[0] in {"conditional", "error"} for t in tokens):
+        for token in tokens:
+            if token[0] == "conditional":
+                issue("conditional_execution_comment", token[4])
+            elif token[0] == "error":
+                issue(token[1], token[4])
+        return events, unresolved
+    depth = 0
+    for t in tokens:
+        if t[0] == "symbol":
+            depth += (t[1] == "(") - (t[1] == ")")
+            if depth < 0:
+                break
+    if depth:
+        issue("unbalanced_parentheses")
+        return events, unresolved
+    words = [t[1].upper() if t[0] == "word" else "" for t in tokens]
+    i = 0
+
+    def accept(word):
+        nonlocal i
+        if i < len(tokens) and words[i] == word:
+            i += 1
+            return True
+        return False
+
+    def require(word):
+        if not accept(word):
+            raise ValueError("missing keyword")
+
+    def optional_if(create=False):
+        if accept("IF"):
+            if create:
+                require("NOT")
+            require("EXISTS")
+
+    def identifier():
+        nonlocal i
+        start = i
+        parts = []
+        while True:
+            if i >= len(tokens) or tokens[i][0] not in {"word", "identifier"}:
+                raise ValueError("missing identifier")
+            token = tokens[i]
+            raw = token[1]
+            if token[0] == "identifier":
+                value = raw[1:-1].replace(raw[0] * 2, raw[0])
+                if dialect == "mysql" and raw[0] == '"':
+                    issue("mysql_double_quote_mode_dependent", token[4])
+                if dialect == "mysql":
+                    value = value.lower()
+            else:
+                value = raw.lower()
+            parts.append(value)
+            i += 1
+            if i >= len(tokens) or tokens[i][1] != ".":
+                break
+            i += 1
+        return {"raw": sql[tokens[start][2]:tokens[i - 1][3]],
+                "normalized": ".".join(parts), "parts": parts}
+
+    def event(operation, table, **extra):
+        events.append(dict(operation=operation, line=line, table=table, **extra))
+
+    try:
+        verb = words[0]
+        i = 1
+        if verb in {"DO", "CALL", "EXECUTE", "PREPARE", "DEALLOCATE", "DELIMITER",
+                    "BEGIN", "END"} or (verb == "SET" and any(t[1] == "@" for t in tokens)):
+            issue("dynamic_or_procedural_sql")
+        elif verb in {"CREATE", "ALTER", "DROP", "RENAME"}:
+            if verb == "CREATE":
+                accept("GLOBAL") or accept("LOCAL")
+                accept("TEMPORARY") or accept("TEMP") or accept("UNLOGGED")
+                accept("UNIQUE") or accept("FULLTEXT") or accept("SPATIAL")
+            if accept("TABLE"):
+                optional_if(create=verb == "CREATE")
+                if verb == "ALTER":
+                    accept("ONLY")
+                table = identifier()
+                if verb == "CREATE":
+                    if i == len(tokens) or not (tokens[i][1] == "(" or words[i] in {"AS", "LIKE", "PARTITION"}):
+                        raise ValueError("missing table definition")
+                    event("create_table", table)
+                elif verb == "ALTER":
+                    if i == len(tokens):
+                        raise ValueError("missing table action")
+                    event("alter_table", table)
+                    if accept("RENAME"):
+                        if accept("TO") or accept("AS"):
+                            event("rename_table", table, new_table=identifier())
+                        elif i < len(tokens) and words[i] not in {"COLUMN", "CONSTRAINT", "INDEX", "KEY"}:
+                            event("rename_table", table, new_table=identifier())
+                elif verb == "DROP":
+                    event("drop_table", table)
+                    while i < len(tokens) and tokens[i][1] == ",":
+                        i += 1
+                        event("drop_table", identifier())
+                    accept("CASCADE") or accept("RESTRICT")
+                    if i != len(tokens):
+                        raise ValueError("unsupported drop table suffix")
+                else:
+                    while True:
+                        require("TO")
+                        event("rename_table", table, new_table=identifier())
+                        if i == len(tokens):
+                            break
+                        if tokens[i][1] != ",":
+                            raise ValueError("unsupported rename suffix")
+                        i += 1
+                        table = identifier()
+            elif accept("INDEX"):
+                accept("CONCURRENTLY")
+                optional_if(create=verb == "CREATE")
+                index = identifier()
+                if verb in {"CREATE", "DROP"} and accept("ON"):
+                    accept("ONLY")
+                    event(verb.lower() + "_index", identifier(), index=index)
+                else:
+                    issue("index_target_not_static")
+            else:
+                issue("unsupported_ddl")
+        elif verb not in {"INSERT", "UPDATE", "DELETE", "SELECT", "SET", "COMMENT",
+                          "GRANT", "REVOKE", "COMMIT", "START", "WITH"}:
+            issue("unsupported_statement")
+    except ValueError:
+        events = []
+        issue("malformed_or_unsupported_ddl")
+    return events, unresolved
+
+
+def scan_sql(sql, dialect):
+    """按词法分号切分静态语句；引号内分号不会产生伪语句。"""
+    events, unresolved, statement = [], [], []
+    for token in lex(sql, dialect) + [("symbol", ";", len(sql), len(sql), 0)]:
+        if token[0] == "symbol" and token[1] == ";":
+            found, issues = parse_statement(statement, sql, dialect)
+            events.extend(found)
+            unresolved.extend(issues)
+            statement = []
+        else:
+            statement.append(token)
+    return events, unresolved
+
+
+def collect(root):
+    """复用基线 reactor/排除/版本/hash 规则，仅采集生产五域版本脚本。"""
+    baseline = collect_baseline(root)
+    rows = []
+    groups = {}
+    for source in baseline["migrations"]:
+        if source["scope"] != "main":
+            continue
+        events, unresolved = scan_sql((root / source["path"]).read_bytes().decode("utf-8"),
+                                      source["dialect"])
+        row = dict(source, events=events, unresolved=unresolved)
+        rows.append(row)
+        counter = groups.setdefault((source["domain"], source["version"]),
+                                    {"mysql": Counter(), "postgresql": Counter()})
+        for event in events:
+            signature = {"operation": event["operation"], "table": event["table"]["parts"]}
+            if "new_table" in event:
+                signature["new_table"] = event["new_table"]["parts"]
+            counter[source["dialect"]][json.dumps(signature, sort_keys=True)] += 1
+    differences = []
+    for (domain, version), counters in sorted(groups.items()):
+        def difference(left, right):
+            return [dict(json.loads(key), count=count) for key, count in
+                    sorted((counters[left] - counters[right]).items())]
+        differences.append({"domain": domain, "version": version,
+                            "mysql_only": difference("mysql", "postgresql"),
+                            "postgresql_only": difference("postgresql", "mysql")})
+    return {"schema_version": 1, "kind": "static_migration_table_events",
+            "limitations": LIMITATIONS, "modules": baseline["modules"], "migrations": rows,
+            "migration_version_differences": [r for r in baseline["migration_version_differences"]
+                                              if r["scope"] == "main"],
+            "table_event_differences": differences}
+
+
+def write_output(path, data):
+    """完整序列化后同目录原子替换；输入或写入失败不破坏已有产物。"""
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=".migration-tables-", delete=False) as output:
+            temporary = Path(output.name)
+            output.write(data)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
+
+
+def main():
+    """命令入口；采集/输出失败返回非零且不输出部分 JSON 或 SQL 内容。"""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    try:
+        data = json.dumps(collect(args.root.resolve()), ensure_ascii=False, indent=2) + "\n"
+        if args.output:
+            write_output(args.output, data)
+        else:
+            sys.stdout.write(data)
+    except (OSError, ValueError, ET.ParseError):
+        print("migration table collection failed; check input and output paths", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

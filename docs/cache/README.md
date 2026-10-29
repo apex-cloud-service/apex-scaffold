@@ -49,15 +49,15 @@
 
 | 组件 | 路径 |
 |---|---|
-| `MultiLevelCacheService` | [apex-infrastructure/.../cache/service/MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) |
-| `BloomFilterService` ⭐ | [apex-infrastructure/.../cache/service/BloomFilterService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/BloomFilterService.java) |
-| `CachePrewarmService` ⭐ | [apex-infrastructure/.../cache/service/CachePrewarmService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CachePrewarmService.java) |
-| `LocalCacheService` | [apex-infrastructure/.../cache/service/LocalCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) |
-| `CacheConsistencyService` | [apex-infrastructure/.../cache/service/CacheConsistencyService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) |
-| `LogicalExpiryWrapper` ⭐ | [apex-infrastructure/.../cache/wrapper/LogicalExpiryWrapper.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/wrapper/LogicalExpiryWrapper.java) |
-| `CachePrewarmStrategy` ⭐ | [apex-infrastructure/.../cache/prewarm/CachePrewarmStrategy.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/prewarm/CachePrewarmStrategy.java) |
-| `CacheProperties` | [apex-infrastructure/.../cache/config/CacheProperties.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) |
-| `InFlightRequestMerge` | [apex-infrastructure/.../cache/support/InFlightRequestMerge.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) |
-| `CacheLockAspect` | [apex-infrastructure/.../cache/aspect/CacheLockAspect.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) |
+| `MultiLevelCacheService` | [apex-infrastructure-cache/.../cache/service/MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) |
+| `BloomFilterService` ⭐ | [apex-infrastructure-cache/.../cache/service/BloomFilterService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/BloomFilterService.java) |
+| `CachePrewarmService` ⭐ | [apex-infrastructure-cache/.../cache/service/CachePrewarmService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CachePrewarmService.java) |
+| `LocalCacheService` | [apex-infrastructure-cache/.../cache/service/LocalCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) |
+| `CacheConsistencyService` | [apex-infrastructure-cache/.../cache/service/CacheConsistencyService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) |
+| `LogicalExpiryWrapper` ⭐ | [apex-infrastructure/.../cache/wrapper/LogicalExpiryWrapper.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/wrapper/LogicalExpiryWrapper.java) |
+| `CachePrewarmStrategy` ⭐ | [apex-infrastructure-cache/.../cache/prewarm/CachePrewarmStrategy.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/prewarm/CachePrewarmStrategy.java) |
+| `CacheProperties` | [apex-infrastructure-cache/.../cache/config/CacheProperties.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) |
+| `InFlightRequestMerge` | [apex-infrastructure-cache/.../cache/support/InFlightRequestMerge.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) |
+| `CacheLockAspect` | [apex-infrastructure-cache/.../cache/aspect/CacheLockAspect.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) |
 
 > ⭐ 表示本次缓存优化方案新增的组件

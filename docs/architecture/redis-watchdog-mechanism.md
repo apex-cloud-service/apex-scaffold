@@ -397,7 +397,7 @@ public void importFileWithTimeout(Long fileId) {
 ### 项目文档
 - [多级缓存架构](../architecture/advanced-features/multi-level-cache-architecture.md)
 - [后端开发规范](../04-development/development-standards.md)
-- [缓存锁注解使用](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/annotation/CacheLock.java)
+- [缓存锁注解使用](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/annotation/CacheLock.java)
 
 ### 相关代码
 - 配置类：`RedissonConfig.java`

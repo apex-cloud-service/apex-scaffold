@@ -62,7 +62,7 @@
   <text x="270" y="256" class="node-title">JwtAuthenticationFilter 解析</text>
   <text x="270" y="274" class="node-sub">校验 JWT → 从 sys_user.tenant_id 取可信租户</text>
   <text x="270" y="290" class="node-sub">（不以客户端头为唯一信任来源）</text>
-  <text x="270" y="303" class="node-actor">apex-interfaces/security</text>
+  <text x="270" y="303" class="node-actor">apex-system/security</text>
 
   <line x1="270" y1="306" x2="270" y2="332" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -83,7 +83,7 @@
   <rect x="70" y="532" width="400" height="66" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
   <text x="270" y="556" class="node-title">TenantAspect 方法级装配</text>
   <text x="270" y="574" class="node-sub">@TenantAware 注解切面（如 WorkflowHandler）</text>
-  <text x="270" y="590" class="node-actor">apex-interfaces/aspect/TenantAspect</text>
+  <text x="270" y="590" class="node-actor">apex-system/aspect/TenantAspect</text>
 
   <!-- ===== Column 2: 行级 SQL 隔离 ===== -->
   <rect x="530" y="140" width="340" height="70" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
@@ -214,5 +214,5 @@
   <rect x="950" y="980" width="14" height="14" rx="3" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
   <text x="972" y="994" class="legend">配额约束</text>
 
-  <text x="750" y="1024" class="note" text-anchor="middle">数据源：apex-common（context/TenantContext · annotation/TenantAware）、apex-infrastructure（persistence/datapermission/DefaultTenantLineHandler · config/MybatisPlusConfig · po/TenantPO）、apex-interfaces（aspect/TenantAspect · security/JwtAuthenticationFilter）、apex-application（service/TenantApplicationService）、apex-domain（repository/TenantRepository · model/entity/TenantEntity · valueobject/TenantQuota）、迁移 mysql/V17</text>
+  <text x="750" y="1024" class="note" text-anchor="middle">数据源：apex-common（context/TenantContext · annotation/TenantAware）、apex-infrastructure（persistence/datapermission/DefaultTenantLineHandler · config/MybatisPlusConfig · po/TenantPO）、apex-system（aspect/TenantAspect · security/JwtAuthenticationFilter）、apex-system（service/TenantApplicationService）、apex-domain（repository/TenantRepository · model/entity/TenantEntity · valueobject/TenantQuota）、迁移 mysql/V17</text>
 </svg>

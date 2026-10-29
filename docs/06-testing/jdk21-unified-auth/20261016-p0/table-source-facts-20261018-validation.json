@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "evidence_file": "table-source-facts-20261018-reviewed.json",
+  "evidence_sha256": "60d321f7be81b078027f2dea60cf5451487bf1cf1557430da01371171f5ed17a",
+  "validation": {
+    "recorded_source_hashes_rechecked": 1896,
+    "recorded_source_hash_drift": 0,
+    "historical_input_source_hash_comparisons": 1203,
+    "historical_input_source_hash_mismatches": 0,
+    "system_original_difference_counts_and_raw_values_preserved": true,
+    "python_tests": 29,
+    "python_test_command": "python3 -m unittest scripts/test/test_collect_table_facts.py scripts/test/test_collect_database_schema.py scripts/test/test_collect_migration_tables.py",
+    "python_test_exit_code": 0,
+    "git_diff_check_exit_code": 0,
+    "java_build_executed": false,
+    "database_query_executed": false
+  },
+  "denominators": {
+    "domain_table_pairs": 136,
+    "unique_table_names": 112,
+    "physical_domain_reference_associations": 859,
+    "unique_table_source_line_candidates": 628,
+    "unique_source_line_candidates": 610,
+    "domain_tables_with_source_entity_mapping": 103,
+    "domain_tables_without_source_entity_mapping": 33,
+    "domain_tables_without_generic_persistence_binding": 34,
+    "cross_physical_domain_duplicate_names": 21,
+    "domain_table_pairs_for_duplicate_names": 45,
+    "lexical_mapper_repository_call_site_associations": 872,
+    "dialect_difference_rows": 3283,
+    "dialect_acceptable_local_representation_only": 2117,
+    "business_confirmation": 1162,
+    "defect_candidates": 4,
+    "difference_rows_without_static_statement_ref": 139,
+    "sql_unresolved_statements_retained_unknown": 589
+  },
+  "verified_findings": [
+    {
+      "finding": "workflow定义与实例业务唯一键未包含tenant_id；是否允许跨租户同键需业务确认",
+      "sources": [
+        {"source": "apex-workflow-service/src/main/resources/db/migration/mysql/V1__init_workflow_schema.sql", "line": 48},
+        {"source": "apex-workflow-service/src/main/resources/db/migration/mysql/V1__init_workflow_schema.sql", "line": 74}
+      ]
+    },
+    {
+      "finding": "file历史未知所有权保持NULL，不应默认分配租户；双库V4一致保留此规则",
+      "sources": [
+        {"source": "apex-file-service/src/main/resources/db/migration/mysql/V4__add_file_storage_ownership.sql", "line": 1},
+        {"source": "apex-file-service/src/main/resources/db/migration/postgresql/V4__add_file_storage_ownership.sql", "line": 1}
+      ]
+    },
+    {
+      "finding": "office四个标志字段MySQL可空、PostgreSQL NOT NULL，属于真实DDL约束差异候选",
+      "sources": [
+        {"source": "apex-office-service/src/main/resources/db/migration/mysql/V1__init_office_schema.sql", "lines": [210, 216, 250, 257]},
+        {"source": "apex-office-service/src/main/resources/db/migration/postgresql/V1__init_office_schema.sql", "lines": [224, 230, 267, 274]}
+      ]
+    },
+    {
+      "finding": "system v_token_health两列均为COUNT表达式；catalog可空性推断差异不应直接计作业务缺陷",
+      "sources": [
+        {"source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql", "lines": [132, 138]},
+        {"source": "apex-system/src/main/resources/db/migration/postgresql/V62__align_system_database_schema.sql", "lines": [307, 313]}
+      ]
+    }
+  ],
+  "remaining": [
+    "103个域表的实体映射与872个词法调用关联不是完整生产调用图；33个无映射项不能据此删除；34个域表无generic persistence binding仍需显式SQL/协议/外部消费者审阅",
+    "143次SQL字符串关联仍需真实调用路径核验，264次comment_or_non_sql分类为词法候选处置，不能作为语义无消费证明；跨域重复会产生重复关联",
+    "589条未解析SQL仍逐原项保留未知，本轮未完成过程/动态SQL逐句语义确认",
+    "139条双库差异没有静态语句精确关联，不能把规则分类当作已完成逐源SQL核验",
+    "1162条business_confirmation需逐项业务/运行审阅；4条office缺陷候选需要所有者确认预期NULL契约",
+    "目标权威、auth四安全表/system历史同名表、11历史对象、OAuth16列/sys_user9列、office同步列的保留迁移责任尚未由所有者确认",
+    "租户保护须核验实际Bean/数据源配置和每条SQL；workflow唯一键、file历史NULL归属和账号合并冲突规则尚未决策",
+    "本轮没有运行数据库、生产升级、服务启动或Java构建，P0不能据此准出"
+  ],
+  "snapshot_notes": [
+    "table-source-facts-20261018-followup.json为保留的首轮采集，不覆盖；其中859字段名reference_candidates代表关联次数，最终reviewed快照已明确区分628去重候选",
+    "首轮快照含早期工具hash，其后工具已迭代；最终reviewed快照才对应本轮最终工具和1896来源重新校验结果",
+    "未修改生产Java、SQL、POM、report或实施方案；未提交或推送"
+  ]
+}

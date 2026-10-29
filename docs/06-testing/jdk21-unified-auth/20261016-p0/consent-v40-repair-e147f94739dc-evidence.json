@@ -1,0 +1,113 @@
+{
+  "status": "passed_with_postgresql_upgrade_limitation",
+  "started_at": "2026-10-19T05:16:09.131149+00:00",
+  "baseline_credit": false,
+  "databases": {
+    "mysql": {
+      "name": "apex-consent-v40-147e9c1ba1e3",
+      "image": "localhost/mysql:8.0",
+      "network": "none",
+      "storage": "tmpfs",
+      "scenarios": {
+        "legacy": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "original_failure": "ERROR 1062 (23000) at line 25: Duplicate entry '' for key 'oauth2_authorization_consent.PRIMARY'\n",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2026-10-19 05:16:56\t2026-10-19 05:16:56\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659\ta\t用户\tread,write\t2026-10-19 05:16:56\t2026-10-19 05:16:56\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2026-10-19 05:16:56\t2026-10-19 05:16:56\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2026-10-19 05:16:56\t2026-10-19 05:16:56",
+          "passed": true
+        },
+        "partial": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659\ta\t用户\tread,write\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2020-01-02 03:04:05\t2021-02-03 04:05:06",
+          "passed": true
+        },
+        "no_primary_key": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2026-10-19 05:17:18\t2026-10-19 05:17:18\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659\ta\t用户\tread,write\t2026-10-19 05:17:18\t2026-10-19 05:17:18\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2026-10-19 05:17:18\t2026-10-19 05:17:18\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2026-10-19 05:17:18\t2026-10-19 05:17:18",
+          "passed": true
+        },
+        "existing_ids": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nkeep-this-id\ta\t用户\tread,write\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2020-01-02 03:04:05\t2021-02-03 04:05:06",
+          "passed": true
+        }
+      },
+      "container_id": "8b610e7fe485f7d707caac7823e508617f11d9ecafb20347d5c46ad54743660f",
+      "version": "8.0.46",
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "repair_sha256": "243510a4aef34dd5a2ccbc8c9a10dd601102cef8064685fa1d7f5019aba9f532",
+      "unmodified_full_v40_after_preflight_and_replay": true
+    },
+    "postgresql": {
+      "name": "apex-consent-v40-8aad13b1be01",
+      "image": "localhost/postgres:17-alpine",
+      "network": "none",
+      "storage": "tmpfs",
+      "scenarios": {
+        "legacy": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "original_failure": "ERROR:  column \"id\" of relation \"oauth2_authorization_consent\" contains null values\n",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2026-10-19 05:17:54.934005|2026-10-19 05:17:54.934005\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659|a|用户|read,write|2026-10-19 05:17:54.934005|2026-10-19 05:17:54.934005\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2026-10-19 05:17:54.934005|2026-10-19 05:17:54.934005\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2026-10-19 05:17:54.934005|2026-10-19 05:17:54.934005",
+          "passed": true
+        },
+        "partial": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659|a|用户|read,write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2020-01-02 03:04:05|2021-02-03 04:05:06",
+          "passed": true
+        },
+        "no_primary_key": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2026-10-19 05:18:07.362905|2026-10-19 05:18:07.362905\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659|a|用户|read,write|2026-10-19 05:18:07.362905|2026-10-19 05:18:07.362905\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2026-10-19 05:18:07.362905|2026-10-19 05:18:07.362905\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2026-10-19 05:18:07.362905|2026-10-19 05:18:07.362905",
+          "passed": true
+        },
+        "existing_ids": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2020-01-02 03:04:05|2021-02-03 04:05:06\nkeep-this-id|a|用户|read,write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2020-01-02 03:04:05|2021-02-03 04:05:06",
+          "passed": true
+        }
+      },
+      "container_id": "461a3cd3d79f6bd6f23785180d9058a98ed29ddf1c4f7f0580cf8953e637bb9c",
+      "version": "PostgreSQL 17.11 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "source_sha256": "57dd197ca93ddaa54871d221f9ab7550916968810683c7ac6d48535fac8c9481",
+      "repair_sha256": "910a1d993c751b847b02df755148bb9f24f2bb8cca902456f11e93904294f97d",
+      "wrapper_sha256": "b247861ead65d2601c1813ee893a8d4200acf74b40278d185f243d39ff41586b",
+      "injected_failure": "ERROR:  division by zero\n",
+      "transaction_rollback_verified": true,
+      "unmodified_full_v40_via_transactional_wrapper_and_replay": true,
+      "limitation": "psql operational wrapper only; no Flyway history repair/marking. Wrapper replay skips already renamed source columns; original PostgreSQL V40 itself is not idempotent."
+    }
+  },
+  "cleanup": {
+    "mysql": {
+      "container_and_anonymous_volumes_removed": true
+    },
+    "postgresql": {
+      "container_and_anonymous_volumes_removed": true
+    }
+  },
+  "verified_union": {
+    "verified": 403,
+    "denominator": 586,
+    "remaining": 183
+  },
+  "ended_at": "2026-10-19T05:18:24.500152+00:00"
+}

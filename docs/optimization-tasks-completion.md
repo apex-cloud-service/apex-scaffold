@@ -19,7 +19,7 @@
 | 任务 | 状态 | 完成度 | 新增文件/修改 |
 |-----|------|--------|--------------|
 | 1. Sentinel 规则文件监听 | ✅ 完成 | 100% | [SentinelRuleFileWatcher.java](../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelRuleFileWatcher.java) |
-| 2. 布隆过滤器定时重建 | ✅ 完成 | 100% | [BloomFilterRebuildTask.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java) |
+| 2. 布隆过滤器定时重建 | ✅ 完成 | 100% | [BloomFilterRebuildTask.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java) |
 | 3. 自适应采样器 | ✅ 完成 | 100% | AdaptiveSampler.java（历史文件已移除） |
 
 ### 中期任务（1-2月）- 66.7% 完成
@@ -141,7 +141,7 @@ if (adaptiveSamplingEnabled) {
 ### 2.3 ✅ 布隆过滤器定时重建（已完成）
 
 #### 实现状态
-**文件**: [BloomFilterRebuildTask.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
+**文件**: [BloomFilterRebuildTask.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
 
 ✅ **完整功能**：
 - 每天凌晨 3 点自动重建
@@ -195,7 +195,7 @@ apex:
 #### 已实现组件
 
 **企业微信**：
-- [WeWorkService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat/service/WeWorkService.java)
+- [WeWorkService.java](../apex-infrastructure-integration/src/main/java/com/apex/scaffold/infrastructure/wechat/service/WeWorkService.java)
 - [WecomMessageClient.java](../apex-office/src/main/java/com/apex/scaffold/office/infrastructure/client/WecomMessageClient.java)
 
 **钉钉**：
@@ -242,7 +242,7 @@ route:
 
 **现有限流**：
 - [LocalRateLimiter.java](../apex-common/src/main/java/com/apex/scaffold/common/util/ratelimit/LocalRateLimiter.java) - Guava RateLimiter
-- [AdaptiveRateLimiter.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/adaptive/AdaptiveRateLimiter.java) - 自适应本地限流
+- [AdaptiveRateLimiter.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/ratelimit/adaptive/AdaptiveRateLimiter.java) - 自适应本地限流
 
 #### 实现方案（技术储备）
 

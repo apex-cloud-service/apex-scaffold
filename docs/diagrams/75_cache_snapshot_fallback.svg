@@ -179,5 +179,5 @@
   <text x="760" y="698" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">4. 读写分离策略: 读接口返回快照，写接口返回排队状态，符合业务语义</text>
   <text x="760" y="713" font-family="Arial, sans-serif" font-size="10" fill="#fff9c4">5. 可选依赖: ReactiveRedisTemplate 未配置时自动降级为纯本地缓存</text>
 
-  <text x="700" y="770" font-family="Arial, sans-serif" font-size="11" fill="#546e7a" text-anchor="middle">© 2026 Apex Team · 缓存快照降级流程 v1.0 · apex-interfaces/exception/DegradeFallbackService.java</text>
+  <text x="700" y="770" font-family="Arial, sans-serif" font-size="11" fill="#546e7a" text-anchor="middle">© 2026 Apex Team · 缓存快照降级流程 v1.0 · apex-system/exception/DegradeFallbackService.java</text>
 </svg>

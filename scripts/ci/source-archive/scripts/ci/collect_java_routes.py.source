@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""使用固定 JDK 17 的 javac parse-only 采集 reactor main Java 路由语法资产。"""
+
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import xml.etree.ElementTree as ET
+
+from collect_upgrade_baseline import collect, metadata
+
+
+LIMITATIONS = [
+    "Parse-only: imports and AST receiver chains provide syntactic evidence, not symbol/type resolution or semantic validation.",
+    "Routes are source registration candidates, not complete APIs or proof of runtime registration, reachability, permissions or OpenAPI coverage.",
+    "Literal paths, same-class static-final string constants/concatenation, inline path/nest callbacks and unambiguous private RouterFunctions.Builder helpers are expanded syntactically.",
+    "SpringdocRouteBuilder HTTP calls retain the second argument as handler and the third argument as OpenAPI source expression.",
+    "Constant forward/qualified references, arbitrary computed paths, builder aliases/reassignment and control-flow semantics are not resolved; helper standalone scans may retain duplicate unknown-prefix candidates despite expanded call sites.",
+    "Predicate OR and arbitrary predicate combinations are unresolved; only accept/contentType AND refinements are recognized.",
+    "Handler references and declaration signatures retain source spelling; they are not resolved semantic signatures.",
+    "Gateway Java DSL and annotation mappings are unresolved candidates; gateway YAML/configuration, runtime/generated routes and WebSocket URL mappings are outside resolved scope.",
+    "Candidate discovery is syntactic and can include unrelated same-name calls; unresolved entries are never counted as resolved routes.",
+    "Offsets are zero-based UTF-16 with exclusive end; line/column are one-based javac positions.",
+]
+
+
+def collect_routes(root):
+    java_home = Path(os.environ.get("JAVA_HOME", ""))
+    if java_home != Path.home() / ".sdkman/candidates/java/17.0.12-oracle":
+        raise ValueError("source scripts/build/init-build-env.sh; fixed SDKMAN JDK 17.0.12-oracle required")
+    version = subprocess.run([str(java_home / "bin/java"), "-version"],
+                             capture_output=True, text=True, check=True)
+    if 'version "17.0.12"' not in version.stderr:
+        raise ValueError("JDK version must be 17.0.12")
+    baseline = collect(root)
+    files = [row for row in baseline["java"] if row["scope"] == "main"]
+    parsed = []
+    if files:
+        with tempfile.TemporaryDirectory(prefix="apex-java-routes-") as temporary:
+            temp = Path(temporary)
+            manifest = temp / "sources.txt"
+            manifest.write_text("".join(str(root / row["path"]) + "\n" for row in files), encoding="utf-8")
+            subprocess.run([str(java_home / "bin/javac"), "--release", "17", "-proc:none",
+                            "-encoding", "UTF-8", "-d", str(temp),
+                            str(Path(__file__).with_name("JavaRouteCollector.java"))],
+                           check=True, capture_output=True, text=True)
+            result = subprocess.run([str(java_home / "bin/java"), "-cp", str(temp),
+                                     "JavaRouteCollector", str(manifest)],
+                                    check=False, capture_output=True, text=True)
+            if result.returncode:
+                raise ValueError(result.stderr.strip() or "javac parse failed")
+            parsed = json.loads(result.stdout)
+    by_path = {Path(row["path"]): row for row in parsed}
+    routes = []
+    unresolved = []
+    for file in files:
+        if metadata(root, root / file["path"])["sha256"] != file["sha256"]:
+            raise ValueError("source changed during parse; rerun collection")
+        result = by_path[root / file["path"]]
+        for key, destination in (("routes", routes), ("unresolved", unresolved)):
+            for row in sorted(result[key], key=lambda item: item["position"]["end_offset"]):
+                destination.append(dict(row, source=file["path"], module=file["module"],
+                                        source_sha256=file["sha256"]))
+        file["candidate_counts"] = {key: len(result[key]) for key in ("routes", "unresolved")}
+    reasons = {}
+    for row in unresolved:
+        reasons[row["reason"]] = reasons.get(row["reason"], 0) + 1
+    return {"schema_version": 1, "tool": "JavaRouteCollector", "mode": "javac-parse-only",
+            "jdk": "17.0.12-oracle", "semantic_validation": False,
+            "scope": "All reactor src/main/java .java files from baseline module/exclusion rules; no filename filter.",
+            "limitations": LIMITATIONS, "modules": baseline["modules"], "files": files,
+            "routes": routes, "unresolved": unresolved,
+            "summary": {"files": len(files), "routes": len(routes), "unresolved": len(unresolved),
+                        "candidate_files": sum(any(row["candidate_counts"].values()) for row in files),
+                        "unresolved_by_reason": dict(sorted(reasons.items()))}}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    try:
+        data = collect_routes(args.root.resolve())
+        text = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
+        if args.output:
+            args.output.write_text(text, encoding="utf-8")
+        else:
+            sys.stdout.write(text)
+    except (OSError, ValueError, ET.ParseError, subprocess.SubprocessError) as error:
+        print(f"route collection failed: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

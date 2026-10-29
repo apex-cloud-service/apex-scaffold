@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-19T23:37:00+08:00",
+  "status": "passed",
+  "scope": "指定 reactor test-compile、AuthDataSourceConfigContractTest 与 AuthMySqlTlsContractIntegrationTest；非全仓 clean verify",
+  "environment": {
+    "java": "Oracle 17.0.12+8-LTS-286",
+    "java_home": "/Users/eric/.sdkman/candidates/java/17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "podman_client": "5.8.5",
+    "podman_server": "5.8.7",
+    "mysql_server": "8.0.46 MySQL Community Server - GPL, Linux x86_64",
+    "mysql_server_version_command": "podman run --rm --pull=never docker.io/library/mysql:8.0 mysqld --version",
+    "jdbc_driver": "com.mysql:mysql-connector-j:8.4.0",
+    "r2dbc_driver": "io.asyncer:r2dbc-mysql:1.4.2",
+    "driver_version_source": "最终 Failsafe XML java.class.path",
+    "image_id": "6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+    "image_repo_digest_observed": "localhost/mysql@sha256:d29bc43378dc804c1b6fff5c4cd7c25489b13489ea0e94640b24ba8d30d63e51",
+    "image_preparation": "远端 pull 因 Podman 代理 192.168.127.254:12001 拒绝连接失败；将已有 localhost/mysql:8.0 的同一镜像临时标记为 docker.io/library/mysql:8.0，未下载或替换镜像。完成后恢复仅 localhost/mysql:8.0 标签。"
+  },
+  "source_sha256": {
+    "apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMySqlTlsContractIntegrationTest.java": "1196a05634b7db3a91d3616e857e834fd383d86ed3efcb33e3b8dbf0fd65ec23",
+    "apex-auth-service/src/main/resources/application-prod.yml": "82b7e239ab39fdf5b50eabfe5f5d209812a2c5b2a22256e445c4029ecee367d2",
+    "podman-compose.yml": "f0a737bec0c6c1b177c05a79aa69117a46794b5f1d52247c73dfa46506be30dd"
+  },
+  "changes": ["仅对新测试 AuthMySqlTlsContractIntegrationTest.java 应用 Palantir/Spotless 格式；未修改测试语义、生产策略、SQL 或 Markdown。"],
+  "command": "source scripts/build/init-build-env.sh && APEX_AUTH_MYSQL_TLS_IT=true mvnd -T4 -B -pl apex-auth-service -am -Dtest=AuthDataSourceConfigContractTest -Dsurefire.failIfNoSpecifiedTests=false -Dit.test=AuthMySqlTlsContractIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false test-compile surefire:test failsafe:integration-test failsafe:verify",
+  "attempts": [
+    {
+      "job_id": "job-3f848ebd0b584f558a4f130fd4113332",
+      "result": "BUILD FAILURE",
+      "unit": {"tests": 7, "failures": 0, "errors": 0, "skipped": 0},
+      "integration": {"tests": 3, "failures": 3, "errors": 0, "skipped": 0},
+      "reason": "指定 docker.io/library/mysql:8.0 标签不存在，Podman run 失败；不计作 TLS 通过。"
+    },
+    {
+      "job_id": "job-fab74a2900044834ae786e99d3de0d2e",
+      "result": "BUILD SUCCESS",
+      "unit": {"tests": 7, "failures": 0, "errors": 0, "skipped": 0},
+      "integration": {"tests": 3, "failures": 0, "errors": 0, "skipped": 0, "seconds": 55.619},
+      "note": "格式化前源码通过。"
+    },
+    {
+      "job_id": "job-624adacf88124e618f63dd124fdfe42b",
+      "result": "BUILD SUCCESS",
+      "finished_at": "2026-10-19T23:36:22+08:00",
+      "unit": {"tests": 7, "failures": 0, "errors": 0, "skipped": 0, "seconds": 0.717},
+      "integration": {"tests": 3, "failures": 0, "errors": 0, "skipped": 0, "seconds": 48.01},
+      "note": "最终格式化源码重新编译并执行。"
+    }
+  ],
+  "reliable_assertions": {
+    "database": "所有成功 JDBC/R2DBC 连接均在同一会话 SELECT DATABASE()，断言为 isolated_auth_contract。",
+    "tls_status": "各成功连接在同一会话 SHOW SESSION STATUS WHERE Variable_name IN ('Ssl_cipher','Ssl_version')；加密连接两值非空，明文连接两值为空。字段缺失会导致测试失败。",
+    "tls": {
+      "compose_jdbc": "连接成功，Ssl_cipher/Ssl_version 为空",
+      "prod_jdbc": "连接成功，Ssl_cipher/Ssl_version 非空",
+      "prod_r2dbc": "连接成功，Ssl_cipher/Ssl_version 非空",
+      "disabled_r2dbc_control": "连接成功，Ssl_cipher/Ssl_version 为空"
+    },
+    "no-tls": {
+      "compose_jdbc": "连接成功，Ssl_cipher/Ssl_version 为空",
+      "prod_jdbc": "SQLException，消息包含 SSL",
+      "prod_r2dbc": "连接失败，异常栈包含 SSL",
+      "disabled_r2dbc_control": "连接成功，Ssl_cipher/Ssl_version 为空"
+    },
+    "tls-required": {
+      "compose_jdbc": "SQLException，消息包含 insecure transport",
+      "prod_jdbc": "连接成功，Ssl_cipher/Ssl_version 非空",
+      "prod_r2dbc": "连接成功，Ssl_cipher/Ssl_version 非空",
+      "disabled_r2dbc_control": "连接失败，异常栈包含 insecure transport"
+    }
+  },
+  "format_and_whitespace": {
+    "initial_module_spotless": "失败，仅目标新测试有格式差异；一次 spotlessFiles 路径未匹配的 check 不作为有效检查，一次 glob 参数误用导致正则错误，随后使用 .*AuthMySqlTlsContractIntegrationTest.java 精确限定格式化。",
+    "final_command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-auth-service spotless:check && git diff --check",
+    "final_job_id": "job-f8c6cc4616204d9fad8f061ac9e893f3",
+    "exit_code": 0,
+    "module_spotless": "BUILD SUCCESS，59 files clean",
+    "git_diff_check": "通过"
+  },
+  "cleanup": {
+    "strategy": "每个场景 UUID 独占容器及网络；MySQL /var/lib/mysql 使用 tmpfs；finally 强制删除本场景容器并删除网络，清理命令失败将导致测试失败。",
+    "verification_job_id": "job-b5d6d95e638943f1b5f0f5d8e804acfc",
+    "verification_exit_code": 0,
+    "container_query": "podman ps -a --filter name=apex-auth-tls --format '{{.Names}}'",
+    "remaining_test_containers": [],
+    "network_query": "podman network ls --format '{{.Name}}'",
+    "baseline_networks": ["920-es_skywalking", "apex-scaffold_apex-infra", "apex-scaffold_apex-network", "apex-sonar_default", "excalidraw_default", "podman"],
+    "final_networks": ["920-es_skywalking", "apex-scaffold_apex-infra", "apex-scaffold_apex-network", "apex-sonar_default", "excalidraw_default", "podman"],
+    "remaining_test_networks": [],
+    "original_image_id_preserved": true,
+    "final_image_tags": ["localhost/mysql:8.0"],
+    "note": "podman untag 省略标签参数会移除该镜像全部标签；随后已按记录的 image ID 恢复原 localhost/mysql:8.0，最终 inspect 验证一致。未删除镜像或其他容器/网络。"
+  },
+  "reports": [
+    "apex-auth-service/target/surefire-reports/TEST-com.apex.scaffold.authservice.AuthDataSourceConfigContractTest.xml",
+    "apex-auth-service/target/failsafe-reports/TEST-com.apex.scaffold.authservice.AuthMySqlTlsContractIntegrationTest.xml",
+    "apex-auth-service/target/failsafe-reports/failsafe-summary.xml"
+  ],
+  "limitations": [
+    "未保存具体 Ssl_cipher/Ssl_version 字符串；仅陈述由通过的断言可靠证明的空/非空状态。",
+    "REQUIRED/useSSL+requireSSL 验证加密要求，不证明 CA/主机名身份校验；未验证 VERIFY_IDENTITY。",
+    "未启动完整 Spring 应用或整套 Compose；测试使用源 YAML 属性绑定及隔离 MySQL 的真实驱动连接。",
+    "未执行全仓 clean verify、PMD、JaCoCo 门槛或完整业务回归。",
+    "技能引用 docs/guide/代码开发规范.md 不存在；以当前 AGENTS.md 项目规则为准。",
+    "工作区已有大量其他修改，本任务保留这些修改且未提交。"
+  ]
+}

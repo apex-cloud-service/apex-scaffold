@@ -56,7 +56,7 @@
   <text x="740" y="520" class="code">• nacos-1:8848 (主节点)</text>
   <text x="740" y="538" class="code">• nacos-2:8848 (从节点)</text>
   <text x="740" y="556" class="code">• nacos-3:8848 (从节点)</text>
-  <text x="740" y="584" class="text">数据持久化: MySQL 8.0</text>
+  <text x="740" y="584" class="text">数据持久化: MySQL 9.x</text>
   <text x="750" y="602" class="code">CREATE DATABASE nacos_config;</text>
   <text x="750" y="620" class="code">初始化脚本: mysql-schema.sql</text>
   <text x="740" y="648" class="text">高可用保障:</text>

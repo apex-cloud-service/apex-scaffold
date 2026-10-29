@@ -1,0 +1,357 @@
+#!/usr/bin/env python3
+"""Read-only TEST database catalog collection and offline cross-dialect inventory."""
+
+import argparse
+import collections
+import datetime
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import sys
+import zlib
+
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+VENDORS = ("mysql", "postgresql")
+DOMAINS = ("system", "auth", "workflow", "file", "office")
+SCOPE = (
+    "Explicitly allowlisted pre-existing TEST databases, public schema on PostgreSQL; "
+    "metadata and flyway_schema_history only, including history table schema. "
+    "No business rows, migration, repair, clean, upgrade or writes. "
+    "No claim of semantic equivalence."
+)
+NORMALIZATION_RULES = [
+    "Type aliases only: character varying→varchar, character→char, integer→int, numeric→decimal. Preserve varchar/char length, decimal precision/scale, timestamp precision/time zone, unsigned. tinyint remains tinyint; no tinyint→boolean, datetime→timestamp, text/longtext→text, JSON→JSONB folding.",
+    "Defaults compared as raw catalog strings; casts, literals, sequences and SQL expressions are not stripped or asserted equivalent.",
+    "Index signature multiset: ordered key strings, uniqueness, method only; names, predicates, expressions, prefix lengths, directions and full PostgreSQL DDL retained in raw inventories.",
+    "Constraint-kind counts are a limited structural comparison; all raw definitions, key columns, check clauses and referential actions are retained in evidence.",
+    "All catalog metadata remains raw in evidence, including vendor-only collation, engine, precision metadata and comments; these are not all pairwise comparable. Generation inventory intentionally keeps vendor-specific representation.",
+    "History version/script/success/checksum compared across vendors; dialect-specific checksum differences are expected observations, not failed validation. Each vendor separately checked against current source Flyway line CRC32 and SHA-256.",
+    "Not covered: seed/business data equivalence, routines, triggers, sequences as standalone objects, grants, partitioning/storage options beyond catalog fields, runtime planner behavior, application startup, production-data upgrades.",
+]
+
+
+def normalize_type(vendor, column):
+    value = column["data_type"].lower()
+    value = {"character varying": "varchar", "character": "char",
+             "integer": "int", "numeric": "decimal"}.get(value, value)
+    if value in ("varchar", "char"):
+        value += "(" + str(column.get("character_maximum_length")) + ")"
+    elif value == "decimal":
+        value += "(" + str(column.get("numeric_precision")) + "," + str(column.get("numeric_scale")) + ")"
+    elif value in ("datetime", "timestamp", "timestamp without time zone", "timestamp with time zone",
+                   "time", "time without time zone", "time with time zone"):
+        value += "(" + str(column.get("datetime_precision")) + ")"
+    if "unsigned" in column.get("column_type", ""):
+        value += " unsigned"
+    return value
+
+
+def counts(data):
+    result = {key: len(data[key]) for key in ("tables", "columns", "indexes", "constraints", "history")}
+    if data["vendor"] == "mysql":
+        result["indexes"] = len({(row["table_name"], row["index_name"]) for row in data["indexes"]})
+        result["index_column_rows"] = len(data["indexes"])
+    return result
+
+
+def validate_database(database):
+    if not isinstance(database, str) or not re.fullmatch(
+        r"apex_(?:reg_[a-f0-9]{32}|p0(?:pg)?_\d{8}_\d{6}_[a-f0-9]{8}_(?:auth|workflow|file|office)|test_[a-z0-9][a-z0-9_]{0,52})",
+        database,
+    ):
+        raise ValueError("Database outside test allowlist")
+
+
+def validate_manifest(manifest):
+    if set(manifest) != {"test_only", "containers", "domains"} or manifest["test_only"] is not True:
+        raise ValueError("Manifest requires test_only=true, containers and domains only; no credentials")
+    containers = manifest["containers"]
+    if not isinstance(containers, dict) or not containers or set(containers) - set(VENDORS):
+        raise ValueError("Manifest containers must name mysql and/or postgresql")
+    for container in containers.values():
+        if not isinstance(container, str) or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]*", container):
+            raise ValueError("Invalid container name")
+    seen = set()
+    if not manifest["domains"]:
+        raise ValueError("Manifest requires at least one domain")
+    for entry in manifest["domains"]:
+        if set(entry) != {"vendor", "domain", "database", "location"}:
+            raise ValueError("Domain requires vendor, domain, database and location only")
+        vendor, domain = entry["vendor"], entry["domain"]
+        if vendor not in containers or domain not in DOMAINS or (vendor, domain) in seen:
+            raise ValueError("Invalid or duplicate vendor/domain")
+        seen.add((vendor, domain))
+        validate_database(entry["database"])
+        module = "apex-system" if domain == "system" else f"apex-{domain}-service"
+        if entry["location"] != f"{module}/src/main/resources/db/migration/{vendor}":
+            raise ValueError("Migration location must match the repository domain/dialect boundary")
+
+
+def query(vendor, database, sql, containers, runtime):
+    validate_database(database)
+    if vendor == "mysql":
+        args = [runtime, "exec", "-i", containers[vendor], "sh", "-c",
+                'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot --batch --raw --skip-column-names "$1"',
+                "schema-readonly", database]
+        text = "START TRANSACTION READ ONLY;\n" + sql + ";\nROLLBACK;\n"
+    elif vendor == "postgresql":
+        args = [runtime, "exec", "-i", containers[vendor], "psql", "-X", "-U", "postgres",
+                "-d", database, "-At", "-v", "ON_ERROR_STOP=1"]
+        text = "BEGIN READ ONLY;\n" + sql + ";\nROLLBACK;\n"
+    else:
+        raise ValueError("Unsupported vendor")
+    try:
+        process = subprocess.run(args, input=text, text=True, capture_output=True, timeout=60)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("CLI read timed out; output suppressed") from None
+    if process.returncode:
+        raise RuntimeError(f"{vendor}/{database}: CLI read failed (exit {process.returncode}); stderr suppressed to avoid credential disclosure")
+    return [json.loads(line) for line in process.stdout.splitlines() if line.startswith("{")]
+
+
+def capture(entry, root, containers, runtime):
+    vendor, db = entry["vendor"], entry["database"]
+    data = dict(entry, collected_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                collection="fresh read-only CLI metadata; no reused schema snapshot")
+    location = root / entry["location"]
+    if not location.resolve().is_relative_to(root.resolve()) or not location.is_dir():
+        raise ValueError("Migration source directory missing or outside repository")
+    files = []
+    for path in sorted(location.glob("*.sql")):
+        if path.is_symlink():
+            raise ValueError("Migration source must not be a symbolic link")
+        raw = path.read_bytes()
+        crc = 0
+        for line in raw.decode("utf-8-sig").splitlines():
+            crc = zlib.crc32(line.encode("utf-8"), crc)
+        files.append({"file": path.name, "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest(),
+                      "flyway_line_crc32": crc if crc < 2**31 else crc - 2**32})
+    if not files:
+        raise ValueError("Migration source directory contains no SQL files")
+    data["source_files"] = files
+
+    def read(sql):
+        return query(vendor, db, sql, containers, runtime)
+
+    def mysql_rows(table, fields, where="TABLE_SCHEMA = DATABASE()"):
+        pairs = ", ".join("'%s', %s" % (field.lower(), field) for field in fields.split())
+        return read(f"SELECT JSON_OBJECT({pairs}) FROM information_schema.{table} WHERE {where}")
+
+    if vendor == "mysql":
+        data["server"] = read("SELECT JSON_OBJECT('version',VERSION(),'sql_mode',@@sql_mode,'collation',@@collation_database,'time_zone',@@time_zone)")
+        data["tables"] = mysql_rows("TABLES", "TABLE_NAME TABLE_TYPE ENGINE TABLE_COLLATION CREATE_OPTIONS TABLE_COMMENT")
+        data["columns"] = mysql_rows("COLUMNS", "TABLE_NAME COLUMN_NAME ORDINAL_POSITION COLUMN_DEFAULT IS_NULLABLE DATA_TYPE COLUMN_TYPE CHARACTER_MAXIMUM_LENGTH NUMERIC_PRECISION NUMERIC_SCALE DATETIME_PRECISION CHARACTER_SET_NAME COLLATION_NAME COLUMN_KEY EXTRA GENERATION_EXPRESSION COLUMN_COMMENT")
+        data["indexes"] = mysql_rows("STATISTICS", "TABLE_NAME INDEX_NAME NON_UNIQUE SEQ_IN_INDEX COLUMN_NAME COLLATION SUB_PART NULLABLE INDEX_TYPE INDEX_COMMENT IS_VISIBLE EXPRESSION")
+        data["constraints"] = mysql_rows("TABLE_CONSTRAINTS", "TABLE_NAME CONSTRAINT_NAME CONSTRAINT_TYPE ENFORCED")
+        data["key_column_usage"] = mysql_rows("KEY_COLUMN_USAGE", "TABLE_NAME CONSTRAINT_NAME COLUMN_NAME ORDINAL_POSITION POSITION_IN_UNIQUE_CONSTRAINT REFERENCED_TABLE_NAME REFERENCED_COLUMN_NAME")
+        data["check_constraints"] = mysql_rows("CHECK_CONSTRAINTS", "CONSTRAINT_NAME CHECK_CLAUSE", "CONSTRAINT_SCHEMA = DATABASE()")
+        data["referential_constraints"] = mysql_rows("REFERENTIAL_CONSTRAINTS", "TABLE_NAME CONSTRAINT_NAME UNIQUE_CONSTRAINT_NAME MATCH_OPTION UPDATE_RULE DELETE_RULE REFERENCED_TABLE_NAME", "CONSTRAINT_SCHEMA = DATABASE()")
+        fields = "installed_rank version description type script checksum installed_on execution_time success".split()
+        data["history"] = read("SELECT JSON_OBJECT(" + ",".join("'%s',%s" % (field, field) for field in fields) + ") FROM flyway_schema_history ORDER BY installed_rank")
+    else:
+        def pg(sql):
+            return read("SELECT row_to_json(r) FROM (" + sql + ") r")
+        data["server"] = pg("SELECT version(),current_setting('server_encoding') AS encoding,current_setting('TimeZone') AS time_zone")
+        data["tables"] = pg("SELECT * FROM information_schema.tables WHERE table_schema='public'")
+        data["columns"] = pg("SELECT * FROM information_schema.columns WHERE table_schema='public'")
+        data["indexes"] = pg("SELECT t.relname AS table_name,i.relname AS index_name,x.indisunique AS is_unique,x.indisprimary AS is_primary,x.indisvalid AS is_valid,x.indnkeyatts,x.indnatts,x.indkey::text,x.indoption::text,pg_get_expr(x.indpred,x.indrelid) AS predicate,pg_get_indexdef(i.oid) AS definition,am.amname AS method,ARRAY(SELECT pg_get_indexdef(i.oid,k,true) FROM generate_series(1,x.indnkeyatts) k) AS keys FROM pg_index x JOIN pg_class t ON t.oid=x.indrelid JOIN pg_class i ON i.oid=x.indexrelid JOIN pg_namespace n ON n.oid=t.relnamespace JOIN pg_am am ON am.oid=i.relam WHERE n.nspname='public'")
+        data["constraints"] = pg("SELECT t.relname AS table_name,c.conname AS constraint_name,c.contype AS constraint_type,c.convalidated AS validated,c.condeferrable,c.condeferred,c.conkey::text,c.confkey::text,c.confupdtype,c.confdeltype,pg_get_constraintdef(c.oid) AS definition FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='public'")
+        data["key_column_usage"] = pg("SELECT * FROM information_schema.key_column_usage WHERE table_schema='public'")
+        data["check_constraints"] = pg("SELECT * FROM information_schema.check_constraints WHERE constraint_schema='public'")
+        data["referential_constraints"] = pg("SELECT * FROM information_schema.referential_constraints WHERE constraint_schema='public'")
+        data["history"] = pg("SELECT installed_rank,version,description,type,script,checksum,installed_on,execution_time,success FROM public.flyway_schema_history ORDER BY installed_rank")
+    for name in ("tables", "columns", "indexes", "constraints", "key_column_usage", "check_constraints", "referential_constraints"):
+        data[name].sort(key=lambda row: json.dumps(row, sort_keys=True, ensure_ascii=False))
+    source = {file["file"]: file for file in files}
+    data["history_source_checks"] = [
+        {"version": row["version"], "script": row["script"], "success": bool(row["success"]),
+         "stored_checksum": row["checksum"], "source_sha256": source.get(row["script"], {}).get("sha256"),
+         "calculated_flyway_checksum": source.get(row["script"], {}).get("flyway_line_crc32"),
+         "checksum_matches_current_source": row["script"] in source and row["checksum"] == source[row["script"]]["flyway_line_crc32"]}
+        for row in data["history"]
+    ]
+    data["counts"] = counts(data)
+    return data
+
+
+def index_inventory(data):
+    result = collections.defaultdict(list)
+    if data["vendor"] == "mysql":
+        groups = collections.defaultdict(list)
+        for row in data["indexes"]:
+            groups[(row["table_name"], row["index_name"])].append(row)
+        for (table, name), rows in groups.items():
+            rows = sorted(rows, key=lambda row: row["seq_in_index"])
+            result[table].append({"name": name, "unique": not bool(rows[0]["non_unique"]),
+                                  "method": rows[0]["index_type"].lower(),
+                                  "keys": [row["expression"] or row["column_name"] for row in rows],
+                                  "prefixes": [row["sub_part"] for row in rows],
+                                  "directions": [row["collation"] for row in rows]})
+    else:
+        for row in data["indexes"]:
+            result[row["table_name"]].append({"name": row["index_name"], "unique": row["is_unique"],
+                                               "method": row["method"], "keys": row["keys"],
+                                               "predicate": row["predicate"], "definition": row["definition"]})
+    return result
+
+
+def compare(a, b):
+    differences = []
+
+    def add(category, obj, left, right):
+        if left != right:
+            differences.append({"category": category, "object": obj, "mysql": left, "postgresql": right})
+
+    ta = {row["table_name"]: row for row in a["tables"]}
+    tb = {row["table_name"]: row for row in b["tables"]}
+    for table in sorted(ta.keys() | tb.keys()):
+        add("table_presence", table, table in ta, table in tb)
+        if table in ta and table in tb:
+            add("table_kind", table, ta[table]["table_type"], tb[table]["table_type"])
+    ca = {(row["table_name"], row["column_name"]): row for row in a["columns"]}
+    cb = {(row["table_name"], row["column_name"]): row for row in b["columns"]}
+    for key in sorted(ca.keys() | cb.keys()):
+        x, y = ca.get(key), cb.get(key)
+        obj = ".".join(key)
+        if x is None or y is None:
+            add("column_presence", obj, x, y)
+            continue
+        for category, field in [("column_nullability", "is_nullable"), ("column_default_raw", "column_default"), ("column_order", "ordinal_position")]:
+            add(category, obj, x.get(field), y.get(field))
+        add("column_type_normalized", obj, normalize_type("mysql", x), normalize_type("postgresql", y))
+        add("column_generation", obj, {"extra": x.get("extra"), "expression": x.get("generation_expression")},
+            {"identity": y.get("is_identity"), "identity_generation": y.get("identity_generation"),
+             "generated": y.get("is_generated"), "expression": y.get("generation_expression")})
+    ia, ib = index_inventory(a), index_inventory(b)
+    for table in sorted(ia.keys() | ib.keys()):
+        def signatures(rows):
+            return sorted([{"unique": row["unique"], "method": row["method"], "keys": row["keys"]} for row in rows],
+                          key=lambda row: json.dumps(row, sort_keys=True))
+        add("index_signature_multiset", table, signatures(ia[table]), signatures(ib[table]))
+        add("index_raw_inventory", table, ia[table], ib[table])
+    for table in sorted(ta.keys() | tb.keys()):
+        xa = [row for row in a["constraints"] if row["table_name"] == table]
+        xb = [row for row in b["constraints"] if row["table_name"] == table]
+
+        def kinds(rows, vendor):
+            return dict(collections.Counter(
+                {"p": "PRIMARY KEY", "u": "UNIQUE", "f": "FOREIGN KEY", "c": "CHECK"}.get(row["constraint_type"], row["constraint_type"])
+                if vendor == "postgresql" else row["constraint_type"] for row in rows))
+        add("constraint_kind_counts", table, kinds(xa, "mysql"), kinds(xb, "postgresql"))
+        add("constraint_raw_inventory", table, xa, xb)
+    ha = {row["version"]: row for row in a["history"]}
+    hb = {row["version"]: row for row in b["history"]}
+    for version in sorted(ha.keys() | hb.keys(), key=lambda value: tuple(int(part) for part in re.split(r"[._]", value))):
+        x, y = ha.get(version), hb.get(version)
+        if x is None or y is None:
+            add("history_version_presence", version, x, y)
+            continue
+        for field in ("script", "checksum", "success"):
+            left, right = x[field], y[field]
+            if field == "success":
+                left, right = bool(left), bool(right)
+            add("history_" + field, version, left, right)
+    return {"domain": a["domain"], "counts": {"mysql": counts(a), "postgresql": counts(b)},
+            "difference_counts": dict(collections.Counter(row["category"] for row in differences)),
+            "differences": differences}
+
+
+def comparison(evidence, evidence_name):
+    pairs = collections.defaultdict(dict)
+    for data in evidence["domains"]:
+        vendor, domain = data["vendor"], data["domain"]
+        if vendor not in VENDORS or domain not in DOMAINS or vendor in pairs[domain]:
+            raise ValueError("Invalid or duplicate evidence vendor/domain")
+        pairs[domain][vendor] = data
+    if not pairs or any(set(pair) != set(VENDORS) for pair in pairs.values()):
+        raise ValueError("Each evidence domain requires exactly one mysql/postgresql pair")
+    result = {"evidence_file": evidence_name, "scope": evidence["scope"],
+              "normalization_rules": NORMALIZATION_RULES, "domains": []}
+    for domain in DOMAINS:
+        if domain in pairs:
+            result["domains"].append(compare(pairs[domain]["mysql"], pairs[domain]["postgresql"]))
+    result["total_difference_counts"] = dict(sum(
+        (collections.Counter(data["difference_counts"]) for data in result["domains"]), collections.Counter()))
+    return result
+
+
+def write_json(path, data, protected=(), replace=False):
+    path = pathlib.Path(path)
+    if any(path.resolve() == pathlib.Path(source).resolve() for source in protected):
+        raise ValueError("Output must not overwrite an input evidence or manifest")
+    with path.open("w" if replace else "x", encoding="utf-8") as output:
+        output.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, epilog='''
+Offline (Python standard library only; no DB/container invocation):
+  python3 scripts/ci/collect_database_schema.py --compare evidence.json --output comparison.json
+  Add --replace-comparison to explicitly regenerate an existing comparison output.
+Read-only capture (pre-existing TEST databases only; podman/docker and container clients required):
+  python3 scripts/ci/collect_database_schema.py --collect manifest.json --output new-evidence.json
+  python3 scripts/ci/collect_database_schema.py --collect manifest.json --runtime docker --root /path/to/repo --output new-evidence.json
+Manifest JSON (repeat entries for each vendor/domain; never include passwords):
+  {"test_only":true,"containers":{"mysql":"test-mysql","postgresql":"test-pg"},
+   "domains":[{"vendor":"mysql","domain":"system","database":"apex_test_fixture",
+     "location":"apex-system/src/main/resources/db/migration/mysql"}]}
+Domains: system/auth/workflow/file/office. Non-system migration locations use apex-<domain>-service.
+Database allowlist: apex_test_<lowercase identifier>, apex_reg_<32 hex>, or
+apex_p0[pg]_<YYYYMMDD>_<HHMMSS>_<8 hex>_<auth|workflow|file|office>.
+Manifest is the explicit target allowlist and test-only attestation; names alone do not prove safety.
+MySQL uses container MYSQL_ROOT_PASSWORD through MYSQL_PWD; PostgreSQL uses container
+local authentication/.pgpass. No password CLI/manifest fields; CLI stderr is suppressed.
+Capture runs fixed catalog/history SELECTs in READ ONLY transactions ending ROLLBACK.
+It never starts containers, creates databases, runs migrations, repair/clean, or reads business rows.
+PostgreSQL scope is public only. Separate queries are not a consistent point-in-time snapshot;
+use quiescent test databases. Index counts are distinct (table,index); MySQL index_column_rows
+records STATISTICS rows. Comparison recomputes counts without changing source evidence.
+No semantic equivalence claim; standalone routines/triggers/sequences/grants, seed/business data,
+application startup, production upgrades and runtime planner behavior are outside scope.
+Capture outputs must be new files. Offline output can never overwrite its input evidence.
+''')
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--compare", type=pathlib.Path, metavar="EVIDENCE", help="offline comparison of combined evidence")
+    mode.add_argument("--collect", type=pathlib.Path, metavar="MANIFEST", help="read-only metadata collection from explicit test targets")
+    parser.add_argument("--output", required=True, type=pathlib.Path, help="JSON output path (parent must exist)")
+    parser.add_argument("--root", type=pathlib.Path, default=ROOT, help="migration source root; default derived from script location")
+    parser.add_argument("--runtime", choices=("podman", "docker"), default="podman")
+    parser.add_argument("--replace-comparison", action="store_true", help="allow replacing comparison JSON only")
+    args = parser.parse_args(argv)
+    try:
+        source = args.compare or args.collect
+        if args.output.resolve() == source.resolve():
+            raise ValueError("Output must not overwrite an input evidence or manifest")
+        if args.output.exists() and not (args.compare and args.replace_comparison):
+            raise FileExistsError("Refusing overwrite: " + str(args.output))
+        if args.collect and args.replace_comparison:
+            raise ValueError("--replace-comparison is only allowed with --compare")
+        raw = source.read_bytes()
+        data = json.loads(raw)
+        if args.compare:
+            result = comparison(data, source.name)
+        else:
+            validate_manifest(data)
+            result = {"collected_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                      "scope": SCOPE, "containers": data["containers"], "runtime": args.runtime,
+                      "collector": {"path": "scripts/ci/collect_database_schema.py",
+                                    "sha256": hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest()},
+                      "manifest": {"file": source.name, "sha256": hashlib.sha256(raw).hexdigest()},
+                      "domains": [capture(entry, args.root, data["containers"], args.runtime) for entry in data["domains"]]}
+            result["all_history_checksums_match_current_source"] = all(
+                item["checksum_matches_current_source"] and item["success"]
+                for entry in result["domains"] for item in entry["history_source_checks"])
+            result["all_source_scripts_represented_in_history"] = all(
+                sorted(file["file"] for file in entry["source_files"]) == sorted(row["script"] for row in entry["history"])
+                for entry in result["domains"])
+        write_json(args.output, result, protected=[source], replace=bool(args.compare and args.replace_comparison))
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError) as error:
+        parser.exit(1, f"Collection/comparison failed: {error}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

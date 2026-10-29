@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "status": "passed_with_open_runtime_gaps",
+  "scope": "现有迁移覆盖只读复算及Compose多文件渲染契约；非完整运行验收",
+  "migration": {
+    "denominator": 586,
+    "verified": 500,
+    "remaining": 86,
+    "eligible_files": 22,
+    "eligible_memberships": 845,
+    "deduplicated_memberships": 345,
+    "mysql": {
+      "verified": 458,
+      "remaining": 70
+    },
+    "postgresql": {
+      "verified": 42,
+      "remaining": 16
+    },
+    "source_hashes_match_baseline": true,
+    "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+    "audit_sha256": "2cb79a786bf728a399f26f016500ea0a3079ca2da88d4763d8a65064905916b5",
+    "jobs": [
+      "job-6e44e8d098ab4841a4896ac5c540e5f2",
+      "job-c82ed07d5c544406b2ef49decfd2b569",
+      "job-95393073d4fb41d594f208ac3a508e63"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "note": "既有PG partial_diagnostic文件的7个constraint IDs已计分；其中16个trigger IDs仍未计分。新增V19及PG行为诊断均不增加计分。"
+  },
+  "configuration": {
+    "python": "3.13.12",
+    "podman_compose": "1.6.0",
+    "pyyaml": "6.0.3",
+    "command": "/tmp/apex-p0-python-20261019/bin/python -B -m unittest -v scripts.test.test_config_preflight scripts.test.test_local_deployment scripts.test.test_collect_gateway_config",
+    "tests": 26,
+    "seconds": 83.773,
+    "result": "OK",
+    "skipped": 0,
+    "new_test_count": 1,
+    "new_test_subcases": 4,
+    "new_test_seconds": 23.495,
+    "log_sha256": "675f4800ca2237f961c7f99a9af912b64e66aa484e545921b9fec1b9251af16b",
+    "source_sha256": {
+      "scripts/test/test_config_preflight.py": "f0200364a0a09705fd39abdd9f35b30a2f5a00c2ccd4231805569efc2474314e",
+      "podman-compose.yml": "f0a737bec0c6c1b177c05a79aa69117a46794b5f1d52247c73dfa46506be30dd",
+      "scripts/utils/local_deployment.py": "30c687b706e6caa1250f2b682238169dc688cb6c9d51860fc4079081ad77a41e",
+      "apex-gateway/src/main/resources/application-prod.yml": "7eb324fd5947b7ff3bcb5343e01b9c70d54dadd8855ea1dcd36dcd72c0dbae72"
+    },
+    "observations": [
+      "多-f仅覆盖auth DB_HOST/DB_NAME时，显式JDBC URL仍是mysql:3306/apex_auth；无显式R2DBC URL，结合既有Binder契约形成目标分叉",
+      "多-f同时显式覆盖JDBC/R2DBC URL，渲染后目标对齐；此合成URL仅测试目标，不含TLS策略",
+      "公共凭据、安全变量、Redis/Nacos锚点保留；system DB目标保持不变",
+      "四个被测DB变量的非空宿主值优先于--env-file",
+      "collector采集138来源、23路由、474配置disposition；shared_nacos/DB_HOST_PROD仍静态未知，5个无默认引用",
+      "旧config-shared-nacos-chain证据20源哈希中19一致；gateway prod已改为环境占位符，旧字面true描述不再适用",
+      "app.sh环境文件加载在当前62–66行；旧记录39–43行不准确"
+    ],
+    "isolation": "复制主Compose到/tmp，合成变量及临时override；仅config渲染，未读真实.env，未创建容器"
+  },
+  "tls_test_current_source_sha256": "1196a05634b7db3a91d3616e857e834fd383d86ed3efcb33e3b8dbf0fd65ec23",
+  "limitations": [
+    "未获取真实旧制品或可用脱敏Flyway history，未执行完整升级/checksum协调",
+    "未连接远端Nacos；实际Data ID、namespace/group/revision、加载及覆盖链仍未知",
+    "未启动Spring/Compose或连接数据库；多文件验证仅为渲染",
+    "现有compose_check CLI仍只支持单主文件，本轮未扩展部署预检接口",
+    "未执行全仓clean verify，P0未准出，Java21未切换"
+  ]
+}

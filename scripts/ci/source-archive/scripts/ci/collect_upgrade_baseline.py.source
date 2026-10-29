@@ -1,0 +1,295 @@
+#!/usr/bin/env python3
+"""Inventory file bytes, not AST or Javadoc coverage; never emit file contents."""
+
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+
+
+EXCLUDED = {"target", "build"}
+DOMAINS = {
+    "apex-system": "system",
+    "apex-auth-service": "auth",
+    "apex-workflow-service": "workflow",
+    "apex-file-service": "file",
+    "apex-office-service": "office",
+}
+
+
+def safe_path(root, path):
+    relative = path.relative_to(root)
+    return not any((part in EXCLUDED and relative.parts[:i + 1] != ("scripts", "build"))
+                   or (root.joinpath(*relative.parts[:i + 1])).is_symlink()
+                   for i, part in enumerate(relative.parts))
+
+
+def files_under(root, directory):
+    if not safe_path(root, directory) or not directory.is_dir():
+        return
+    for current, directories, filenames in os.walk(directory, followlinks=False):
+        directories[:] = sorted(name for name in directories
+                                if name not in EXCLUDED
+                                and not (Path(current) / name).is_symlink())
+        for name in sorted(filenames):
+            path = Path(current) / name
+            if not path.is_symlink() and path.is_file():
+                yield path
+
+
+def metadata(root, path):
+    digest = hashlib.sha256()
+    size = 0
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            size += len(chunk)
+            digest.update(chunk)
+    return {"path": path.relative_to(root).as_posix(), "size": size,
+            "sha256": digest.hexdigest()}
+
+
+def git_state(root):
+    def git(*args):
+        result = subprocess.run(["git", "-C", str(root), *args],
+                                capture_output=True, check=False)
+        return result.stdout if result.returncode == 0 else None
+
+    head = git("rev-parse", "--verify", "HEAD")
+    status = git("status", "--porcelain=v1", "-z", "--untracked-files=all")
+    paths = set()
+    entries = iter((status or b"").split(b"\0"))
+    for entry in entries:
+        if not entry:
+            continue
+        paths.add(os.fsdecode(entry[3:]))
+        if b"R" in entry[:2] or b"C" in entry[:2]:
+            paths.add(os.fsdecode(next(entries)))
+    return {"head": head.decode("ascii").strip() if head else None,
+            "status_paths": sorted(paths)}
+
+
+def collect(root):
+    pom = root / "pom.xml"
+    if not safe_path(root, pom):
+        raise ValueError("root POM must not be a symbolic link")
+    project = ET.parse(pom).getroot()
+    modules = sorted({node.text.strip() for node in
+                      project.findall("{*}modules/{*}module") if node.text})
+    for module in modules:
+        path = Path(module)
+        if path.is_absolute() or ".." in path.parts:
+            raise ValueError("reactor module must be inside root")
+    java = []
+    migrations = []
+    configurations = {pom}
+    for pattern in (".sdkmanrc", ".env.example", "Containerfile*", "Dockerfile*",
+                    ".github/workflows/*.yml", ".github/workflows/*.yaml",
+                    "config/nacos/*.yaml", "config/nacos/*.yml"):
+        configurations.update(root.glob(pattern))
+    for directory in (root, root / "monitoring", root / "config" / "monitoring"):
+        for prefix in ("compose", "docker-compose", "podman-compose"):
+            for extension in ("yml", "yaml"):
+                configurations.update(directory.glob(f"{prefix}.{extension}"))
+                configurations.update(directory.glob(f"{prefix}.*.{extension}"))
+    for directory in (root / "scripts" / "build", root / "scripts" / "deploy"):
+        for path in files_under(root, directory):
+            if path.suffix == ".sh" or (directory.name == "deploy"
+                                        and path.suffix == ".service"):
+                configurations.add(path)
+    for module in modules:
+        base = root / module
+        configurations.add(base / "pom.xml")
+        configurations.update(base.glob("Containerfile*"))
+        configurations.update(base.glob("Dockerfile*"))
+        for scope in ("main", "test"):
+            for path in files_under(root, base / "src" / scope / "java"):
+                if path.suffix == ".java":
+                    java.append(dict(metadata(root, path), module=module, scope=scope))
+            resources = base / "src" / scope / "resources"
+            for path in files_under(root, resources):
+                if (path.match("application*.yml") or path.match("bootstrap*.yml")):
+                    configurations.add(path)
+            if module in DOMAINS:
+                for dialect in ("mysql", "postgresql"):
+                    directory = resources / "db" / "migration" / dialect
+                    for path in files_under(root, directory):
+                        match = re.fullmatch(r"V([0-9][0-9._]*)__.+\.sql", path.name)
+                        if match:
+                            migrations.append(dict(metadata(root, path), module=module,
+                                                   scope=scope, domain=DOMAINS[module],
+                                                   dialect=dialect, version=match[1]))
+    version_sets = {}
+    for row in migrations:
+        versions = version_sets.setdefault((row["domain"], row["scope"]),
+                                           {"mysql": set(), "postgresql": set()})
+        versions[row["dialect"]].add(row["version"])
+    differences = [
+        {"domain": domain, "scope": scope,
+         "mysql_only": sorted(versions["mysql"] - versions["postgresql"]),
+         "postgresql_only": sorted(versions["postgresql"] - versions["mysql"])}
+        for (domain, scope), versions in sorted(version_sets.items())
+    ]
+    return {
+        "modules": modules,
+        "java": sorted(java, key=lambda row: row["path"]),
+        "migrations": sorted(migrations, key=lambda row: row["path"]),
+        "migration_version_differences": differences,
+        "configurations": [metadata(root, path) for path in sorted(configurations)
+                           if safe_path(root, path) and path.is_file()],
+        "git": git_state(root),
+    }
+
+
+def service_candidates(root, modules):
+    graph = {}
+    for module in modules:
+        pom = ET.parse(root / module / "pom.xml").getroot()
+        graph[module] = [d.findtext("{*}artifactId") for d in pom.findall("{*}dependencies/{*}dependency")
+                         if d.findtext("{*}groupId") == "com.apex.scaffold"
+                         and d.findtext("{*}scope", "compile") not in {"test", "provided"}
+                         and d.findtext("{*}artifactId") in modules]
+    result = {module: [] for module in modules}
+    for service in sorted(m for m in modules if m.endswith("-service") or m == "apex-gateway"):
+        pending, reached = [service], set()
+        while pending:
+            module = pending.pop()
+            if module not in reached:
+                reached.add(module)
+                pending.extend(graph[module])
+        for module in reached:
+            result[module].append(service)
+    return result
+
+
+def enclosing_declaration(declarations, position):
+    matches = [(d["position"]["end_offset"] - d["position"]["offset"], i)
+               for i, d in enumerate(declarations)
+               if 0 <= d["position"]["offset"] <= position["offset"]
+               and position["end_offset"] <= d["position"]["end_offset"]]
+    return min(matches)[1] if matches else None
+
+
+def link_assets(root, directory):
+    from collections import Counter
+    from datetime import datetime, timezone
+    names = {key: f"{key}-20261018.json" for key in ("baseline", "declarations", "routes", "tables")}
+    assets = {key: json.loads((directory / name).read_text()) for key, name in names.items()}
+    baseline, declarations, routes, tables = (assets[key] for key in names)
+    candidates = service_candidates(root, baseline["modules"])
+    files = {row["path"]: row for row in declarations["files"]}
+    checks = {}
+    for section in (baseline["java"], baseline["migrations"], baseline["configurations"],
+                    declarations["files"], routes["files"], tables["migrations"]):
+        for row in section:
+            current = metadata(root, root / row["path"])["sha256"]
+            if current != row["sha256"]:
+                raise ValueError("source changed: " + row["path"])
+            checks[row["path"]] = current
+    links = []
+    for kind in ("routes", "unresolved"):
+        for index, row in enumerate(routes[kind]):
+            source = files[row["source"]]
+            links.append({"collection": kind, "index": index, "source": row["source"],
+                          "position": row["position"], "reason": row.get("reason"),
+                          "module": row["module"], "service_candidates": candidates[row["module"]],
+                          "declaration_index": enclosing_declaration(source["declarations"], row["position"]),
+                          "source_sha256": row["source_sha256"]})
+    table_links = {}
+    for migration_index, row in enumerate(tables["migrations"]):
+        for event_index, event in enumerate(row["events"]):
+            name = event["table"]["normalized"]
+            key = (row["domain"], name)
+            item = table_links.setdefault(key, {"domain": row["domain"], "table": name,
+                "migration_module": row["module"], "service_candidates": candidates[row["module"]],
+                "events": [], "production_reference_candidates": []})
+            item["events"].append({"migration_index": migration_index, "event_index": event_index,
+                                   "source": row["path"], "line": event["line"],
+                                   "dialect": row["dialect"], "version": row["version"]})
+    # Text hits are discovery evidence only; comments and strings may match.
+    patterns = {name: re.compile(r"(?<![A-Za-z0-9_])" + re.escape(name.split(".")[-1]) + r"(?![A-Za-z0-9_])", re.I)
+                for _, name in table_links}
+    references = {name: [] for name in patterns}
+    for module in baseline["modules"]:
+        for path in files_under(root, root / module / "src" / "main"):
+            if path.suffix not in {".java", ".xml", ".sql"} or "/db/migration/" in path.as_posix():
+                continue
+            text = path.read_text(encoding="utf-8")
+            for name, pattern in patterns.items():
+                for match in pattern.finditer(text):
+                    references[name].append({"source": path.relative_to(root).as_posix(),
+                        "line": text.count("\n", 0, match.start()) + 1, "module": module,
+                        "service_candidates": candidates[module], "sha256": metadata(root, path)["sha256"],
+                        "evidence": "text-reference-candidate-not-semantic"})
+    for (_, name), item in table_links.items():
+        item["production_reference_candidates"] = references[name]
+    old = json.loads((directory / "baseline-expanded.json").read_text())
+    old_config = {r["path"]: r["sha256"] for r in old["configurations"]}
+    poms = []
+    plugin_rows = []
+    for path in [root / "pom.xml"] + [root / m / "pom.xml" for m in baseline["modules"]]:
+        info = metadata(root, path)
+        previous = old_config.get(info["path"])
+        poms.append(dict(info, old_sha256=previous,
+                         status="unchanged-since-old-baseline" if previous == info["sha256"] else
+                         "changed-since-old-baseline" if previous else "no-old-hash"))
+        pom = ET.parse(path).getroot()
+        for plugin in pom.findall(".//{*}plugin"):
+            plugin_rows.append({"source": info["path"], "artifact": plugin.findtext("{*}artifactId"),
+                "version_expression": plugin.findtext("{*}version"),
+                "configuration_xml": ET.tostring(plugin, encoding="unicode")})
+    dependency = directory / "dependency-evidence.json"
+    evidence = json.loads(dependency.read_text())
+    log = Path(evidence["log_path"])
+    return {"schema_version": 1, "collected_at": datetime.now(timezone.utc).astimezone().isoformat(),
+        "limitations": ["Candidates derived from direct production POM graph, not confirmed business authority or runtime wiring",
+                         "Table text references are not a SQL/Mapper semantic analysis; absence is not proof of no consumer",
+                         "Route linkage uses UTF-16 AST spans; unresolved candidates remain unresolved",
+                         "Old baseline POM hashes are not hashes captured atomically with dependency:tree; unchanged does not certify current effective dependencies"],
+        "assets": [metadata(root, directory / name) for name in names.values()],
+        "tools": [metadata(root, root / "scripts/ci" / name) for name in
+                  ("collect_upgrade_baseline.py", "collect_java_declarations.py", "JavaDeclarationCollector.java",
+                   "collect_java_routes.py", "JavaRouteCollector.java", "collect_migration_tables.py")],
+        "source_hashes_verified": len(checks), "module_service_candidates": candidates,
+        "declaration_files": [{"source": row["path"], "module": row["module"], "scope": row["scope"],
+            "sha256": row["sha256"], "declarations": len(row["declarations"]),
+            "service_candidates": candidates[row["module"]]} for row in declarations["files"]],
+        "route_links": links, "unresolved_by_reason": dict(Counter(r["reason"] for r in routes["unresolved"])),
+        "table_links": list(table_links.values()), "pom_comparison": poms, "plugin_declarations": plugin_rows,
+        "dependency_evidence": dict(metadata(root, dependency), log_path=str(log), log_available=log.is_file(),
+            log_sha256=hashlib.sha256(log.read_bytes()).hexdigest() if log.is_file() else None,
+            current_effective_tree_status="not-revalidated", historical_result=evidence["final_build_conclusion"],
+            scope="35 selected historical coordinates and scopes remain historical evidence; no new dependency resolution"),
+        "summary": {"modules": len(candidates), "reactor_projects": len(candidates) + 1,
+            "declarations": declarations["summary"], "routes": routes["summary"],
+            "migration_files": len(tables["migrations"]), "table_domain_pairs": len(table_links),
+            "unique_table_names": len(patterns), "table_reference_candidates": sum(map(len, references.values())),
+            "poms_by_status": dict(Counter(r["status"] for r in poms))}}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--link-assets", type=Path, help="link existing 20261018 snapshots without recollecting")
+    args = parser.parse_args()
+    try:
+        result = (link_assets(args.root.resolve(), args.link_assets.resolve())
+                  if args.link_assets else collect(args.root.resolve()))
+        data = json.dumps(result, ensure_ascii=True, indent=2) + "\n"
+        if args.output:
+            args.output.write_text(data, encoding="utf-8")
+        else:
+            sys.stdout.write(data)
+    except (OSError, ValueError, ET.ParseError):
+        print("baseline collection failed; check input and output paths", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

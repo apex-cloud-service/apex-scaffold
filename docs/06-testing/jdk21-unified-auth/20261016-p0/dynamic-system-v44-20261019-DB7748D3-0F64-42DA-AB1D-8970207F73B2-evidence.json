@@ -1,0 +1,2193 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+  "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "items": [
+    {
+      "id": "old-sql-0473",
+      "baseline_index": 473,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 3,
+        "reason": "unsupported_ddl"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-fad4cb51130f7f6019085df9"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0474",
+      "baseline_index": 474,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 4,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5df64201ff3ffcfa9b204709"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0475",
+      "baseline_index": 475,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 8,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-a77c574e2148a44fa3fc27b1"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0476",
+      "baseline_index": 476,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 9,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9baa1740fd4c9cc433578dab"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0477",
+      "baseline_index": 477,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 10,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-6f88a4911754eaa02b356cc5"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0478",
+      "baseline_index": 478,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 11,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-65ef5c4130ffa557e4568ee2"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0479",
+      "baseline_index": 479,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 12,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f16f8b564d86148fde6176c1"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0480",
+      "baseline_index": 480,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 13,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-469ebbf70489ad1c7dbad114"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0481",
+      "baseline_index": 481,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 14,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9bd4829196ead63d7749db8f"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0482",
+      "baseline_index": 482,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 15,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-91ecf7a63b6117a0e94014f7"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0483",
+      "baseline_index": 483,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 25,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-ca965f66a72640dd0ac40273"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0484",
+      "baseline_index": 484,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 28,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e2f2d66ba460f8ace5d31f03"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0485",
+      "baseline_index": 485,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 30,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-62c51749d7f04bab0ba13f71"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0486",
+      "baseline_index": 486,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 33,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-553159d087ce60984e49181d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0487",
+      "baseline_index": 487,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 39,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e4ff57d1a00377d2644dcdbf"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0488",
+      "baseline_index": 488,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 15,
+      "original": {
+        "line": 42,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-69d179562873e96a31b41ab0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0489",
+      "baseline_index": 489,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 16,
+      "original": {
+        "line": 50,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4fce83d3a646cc6f9af4a0d0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0490",
+      "baseline_index": 490,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 17,
+      "original": {
+        "line": 53,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-390973dfd748b4808daba700"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0491",
+      "baseline_index": 491,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 18,
+      "original": {
+        "line": 60,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-347ccd96807c0e0b4609bbad"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0492",
+      "baseline_index": 492,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 19,
+      "original": {
+        "line": 63,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9a64dfc4ba0865dd30ba6489"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0493",
+      "baseline_index": 493,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 20,
+      "original": {
+        "line": 69,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-aff0ab8e27fd338323f44cec"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0494",
+      "baseline_index": 494,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 21,
+      "original": {
+        "line": 72,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-053dfd05d36b550ee7b4aea7"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0495",
+      "baseline_index": 495,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 22,
+      "original": {
+        "line": 81,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-a10ac37b96a87e4f0659c224"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0496",
+      "baseline_index": 496,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 23,
+      "original": {
+        "line": 84,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-d634c9ccf5321f4569072ac8"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0497",
+      "baseline_index": 497,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 24,
+      "original": {
+        "line": 93,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-36ed74898d136a65cdce4bc6"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0498",
+      "baseline_index": 498,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 25,
+      "original": {
+        "line": 96,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1b7fc6a133fea49e64963bb7"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0499",
+      "baseline_index": 499,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 26,
+      "original": {
+        "line": 98,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-513f980ba64a1583a7d4c28e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0500",
+      "baseline_index": 500,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 27,
+      "original": {
+        "line": 103,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-926e75e2b245ed032d11f925"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0501",
+      "baseline_index": 501,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 28,
+      "original": {
+        "line": 111,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b176a70334091eb2c9f4dccf"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0502",
+      "baseline_index": 502,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 29,
+      "original": {
+        "line": 152,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4402e93766bb0d64b78253b0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0503",
+      "baseline_index": 503,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 30,
+      "original": {
+        "line": 155,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e43906967730a42a3cd522ed"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0504",
+      "baseline_index": 504,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql",
+      "migration_unresolved_index": 31,
+      "original": {
+        "line": 156,
+        "reason": "unsupported_ddl"
+      },
+      "source_sha256": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-7224af71868a408465b65b93"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    }
+  ],
+  "groups": [
+    {
+      "target": {
+        "kind": "source",
+        "name": "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql"
+      },
+      "statements": [
+        {
+          "line": 3,
+          "end_line": 3,
+          "sql": "DROP PROCEDURE IF EXISTS `initialize_default_tenant`",
+          "start_offset": 25,
+          "end_offset": 77,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "e7a5b8b129e806c31a0ee617c6e3c521a42d16e9895fc5d31a8f060b36a6284a",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 3,
+              "reason": "unsupported_ddl"
+            }
+          ],
+          "statement_id": "stmt-fad4cb51130f7f6019085df9"
+        },
+        {
+          "line": 4,
+          "end_line": 7,
+          "sql": "DELIMITER //\nCREATE PROCEDURE `initialize_default_tenant`()\nBEGIN\n    DECLARE v_tenant_count INT DEFAULT 0",
+          "start_offset": 79,
+          "end_offset": 185,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "5eafee85587495c33456cdfda7424a9c889bf5be9246a293d8fd08752887620e",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 4,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-5df64201ff3ffcfa9b204709"
+        },
+        {
+          "line": 8,
+          "end_line": 8,
+          "sql": "DECLARE v_other_tenant_count INT DEFAULT 0",
+          "start_offset": 191,
+          "end_offset": 233,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "5b425a0f88f82bc31b3ba751f0cfb9c1eb215a8faade336e21df25cccb0da8da",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 8,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-a77c574e2148a44fa3fc27b1"
+        },
+        {
+          "line": 9,
+          "end_line": 9,
+          "sql": "DECLARE v_admin_count INT DEFAULT 0",
+          "start_offset": 239,
+          "end_offset": 274,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "0bc27f465fdc42b00b871bda6dd6c60e4bc2537513bbf1e18365ed2f37f9a954",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 9,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-9baa1740fd4c9cc433578dab"
+        },
+        {
+          "line": 10,
+          "end_line": 10,
+          "sql": "DECLARE v_unassigned_user_count INT DEFAULT 0",
+          "start_offset": 280,
+          "end_offset": 325,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "085d7e93a93ecac0db8d866020abb253cb23c54fcf00362caa5b3afe4adafae0",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 10,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-6f88a4911754eaa02b356cc5"
+        },
+        {
+          "line": 11,
+          "end_line": 11,
+          "sql": "DECLARE v_unassigned_dept_count INT DEFAULT 0",
+          "start_offset": 331,
+          "end_offset": 376,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "6a0b7063011845952d1b2b6153fcce43816af834755f20c8288456b754020e2a",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 11,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-65ef5c4130ffa557e4568ee2"
+        },
+        {
+          "line": 12,
+          "end_line": 12,
+          "sql": "DECLARE v_root_conflict_count INT DEFAULT 0",
+          "start_offset": 382,
+          "end_offset": 425,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "975c2f0fe32c4b346bb9b4c57e1d1f285ec4c0545e4ca8569b452620fec54e25",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 12,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-f16f8b564d86148fde6176c1"
+        },
+        {
+          "line": 13,
+          "end_line": 13,
+          "sql": "DECLARE v_unassigned_role_count INT DEFAULT 0",
+          "start_offset": 431,
+          "end_offset": 476,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7f55eba8f837112d14fe4275a7bfddb994cc9f620f28ead1e4904d088d543a39",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 13,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-469ebbf70489ad1c7dbad114"
+        },
+        {
+          "line": 14,
+          "end_line": 14,
+          "sql": "DECLARE v_unassigned_role_dept_count INT DEFAULT 0",
+          "start_offset": 482,
+          "end_offset": 532,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "5aedaf5fcd3320455b5bd7d720cb908f02f8075b82be5101f33bdf06d180bc76",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 14,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-9bd4829196ead63d7749db8f"
+        },
+        {
+          "line": 15,
+          "end_line": 15,
+          "sql": "DECLARE v_tenant_id BIGINT DEFAULT 1",
+          "start_offset": 538,
+          "end_offset": 574,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "4bb15e52b0df5734ee9c70fd8f0ab05466fafbfe5db9135aecba8a5fe57237f9",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 15,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-91ecf7a63b6117a0e94014f7"
+        },
+        {
+          "line": 25,
+          "end_line": 27,
+          "sql": "IF v_other_tenant_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 cannot initialize apex-default while another active tenant exists'",
+          "start_offset": 834,
+          "end_offset": 1001,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "11c5d5ee7e527b22e6437673cd160d8524d0cd2c3625231e2699110cb17e9711",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 25,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-ca965f66a72640dd0ac40273"
+        },
+        {
+          "line": 28,
+          "end_line": 28,
+          "sql": "END IF",
+          "start_offset": 1007,
+          "end_offset": 1013,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 28,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-e2f2d66ba460f8ace5d31f03"
+        },
+        {
+          "line": 30,
+          "end_line": 32,
+          "sql": "IF v_tenant_count > 1 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 found duplicate active apex-default tenants'",
+          "start_offset": 1020,
+          "end_offset": 1159,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "eeeb03e6323dd0019b27d1828e311dfbb5535c732aa097bd9b64e0aff499ce7f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 30,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-62c51749d7f04bab0ba13f71"
+        },
+        {
+          "line": 33,
+          "end_line": 33,
+          "sql": "END IF",
+          "start_offset": 1165,
+          "end_offset": 1171,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 33,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-553159d087ce60984e49181d"
+        },
+        {
+          "line": 39,
+          "end_line": 41,
+          "sql": "IF v_admin_count <> 1 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 requires exactly one active admin user'",
+          "start_offset": 1305,
+          "end_offset": 1439,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "132e31f787079a93e92b74f08e8d676ab2904edee8e0ad732cf067656ded8daa",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 39,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-e4ff57d1a00377d2644dcdbf"
+        },
+        {
+          "line": 42,
+          "end_line": 42,
+          "sql": "END IF",
+          "start_offset": 1445,
+          "end_offset": 1451,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 42,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-69d179562873e96a31b41ab0"
+        },
+        {
+          "line": 50,
+          "end_line": 52,
+          "sql": "IF v_unassigned_user_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 found unassigned non-admin users and cannot infer their tenant'",
+          "start_offset": 1659,
+          "end_offset": 1826,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3c7357ba7bec66e5ae92b14bb6c346b45f042492a4d26ed471b81403e5e7524f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 50,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-4fce83d3a646cc6f9af4a0d0"
+        },
+        {
+          "line": 53,
+          "end_line": 53,
+          "sql": "END IF",
+          "start_offset": 1832,
+          "end_offset": 1838,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 53,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-390973dfd748b4808daba700"
+        },
+        {
+          "line": 60,
+          "end_line": 62,
+          "sql": "IF v_root_conflict_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 cannot safely use department id 1 as the default root'",
+          "start_offset": 2010,
+          "end_offset": 2166,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "40b8c0351bac04063153d2bda2d33e3d41f4f3685433f99dd14df8ae8a19ca1b",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 60,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-347ccd96807c0e0b4609bbad"
+        },
+        {
+          "line": 63,
+          "end_line": 63,
+          "sql": "END IF",
+          "start_offset": 2172,
+          "end_offset": 2178,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 63,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-9a64dfc4ba0865dd30ba6489"
+        },
+        {
+          "line": 69,
+          "end_line": 71,
+          "sql": "IF v_unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 found unassigned departments and cannot infer their tenant'",
+          "start_offset": 2306,
+          "end_offset": 2469,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "8d31b85bfcfa72ad1f0e730b2b184a592f5b37a00bfaed210a959eec43d2b7d2",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 69,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-aff0ab8e27fd338323f44cec"
+        },
+        {
+          "line": 72,
+          "end_line": 72,
+          "sql": "END IF",
+          "start_offset": 2475,
+          "end_offset": 2481,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 72,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-053dfd05d36b550ee7b4aea7"
+        },
+        {
+          "line": 81,
+          "end_line": 83,
+          "sql": "IF v_unassigned_role_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 found unassigned roles for non-admin users'",
+          "start_offset": 2763,
+          "end_offset": 2910,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c081be65267d534a0a2f7dfb14152d116e14d241a350b895fb7b6142fbadcf67",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 81,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-a10ac37b96a87e4f0659c224"
+        },
+        {
+          "line": 84,
+          "end_line": 84,
+          "sql": "END IF",
+          "start_offset": 2916,
+          "end_offset": 2922,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 84,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-d634c9ccf5321f4569072ac8"
+        },
+        {
+          "line": 93,
+          "end_line": 95,
+          "sql": "IF v_unassigned_role_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V44 found ambiguous role department tenant assignments'",
+          "start_offset": 3219,
+          "end_offset": 3379,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "471decfb924dc0fed419df1047d7a4572dab15780af4379f40855ea97cf1a79a",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 93,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-36ed74898d136a65cdce4bc6"
+        },
+        {
+          "line": 96,
+          "end_line": 96,
+          "sql": "END IF",
+          "start_offset": 3385,
+          "end_offset": 3391,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 96,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-1b7fc6a133fea49e64963bb7"
+        },
+        {
+          "line": 98,
+          "end_line": 102,
+          "sql": "IF v_tenant_count = 0 THEN\n        INSERT INTO `sys_tenant`\n            (`id`, `tenant_code`, `tenant_name`, `status`, `create_time`, `update_time`, `version`, `deleted`)\n        VALUES\n            (v_tenant_id, 'apex-default', 'Apex 默认租户', 'ACTIVE', NOW(), NOW(), 0, 0)",
+          "start_offset": 3398,
+          "end_offset": 3668,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "963491838fa14efedd8215663e69ff31e406b20f16a394bfe40300364c796121",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 98,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-513f980ba64a1583a7d4c28e"
+        },
+        {
+          "line": 103,
+          "end_line": 107,
+          "sql": "ELSE\n        SELECT `id` INTO v_tenant_id\n        FROM `sys_tenant`\n        WHERE `tenant_code` = 'apex-default' AND `deleted` = 0\n        LIMIT 1",
+          "start_offset": 3674,
+          "end_offset": 3820,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "46911418cc8748bc566b55510c26ea0f713fdab9526356dc4182a8e84cca410e",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 103,
+              "reason": "unsupported_statement"
+            }
+          ],
+          "statement_id": "stmt-926e75e2b245ed032d11f925"
+        },
+        {
+          "line": 111,
+          "end_line": 111,
+          "sql": "END IF",
+          "start_offset": 3972,
+          "end_offset": 3978,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 111,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-b176a70334091eb2c9f4dccf"
+        },
+        {
+          "line": 152,
+          "end_line": 153,
+          "sql": "END//\nDELIMITER",
+          "start_offset": 5838,
+          "end_offset": 5853,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "b02f460f83850e6cb01639f198b502823d215515cd2b6a55e7d572de483c3527",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 152,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-4402e93766bb0d64b78253b0"
+        },
+        {
+          "line": 155,
+          "end_line": 155,
+          "sql": "CALL `initialize_default_tenant`()",
+          "start_offset": 5857,
+          "end_offset": 5891,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "0833dfce9dd7984a9dbecafe5fc0291f8296a1c8276cbf43dfc038265c3ff335",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 155,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-e43906967730a42a3cd522ed"
+        },
+        {
+          "line": 156,
+          "end_line": 156,
+          "sql": "DROP PROCEDURE IF EXISTS `initialize_default_tenant`",
+          "start_offset": 5893,
+          "end_offset": 5945,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "e7a5b8b129e806c31a0ee617c6e3c521a42d16e9895fc5d31a8f060b36a6284a",
+          "disposition": "procedural_definition_or_control_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 156,
+              "reason": "unsupported_ddl"
+            }
+          ],
+          "statement_id": "stmt-7224af71868a408465b65b93"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0473",
+        "old-sql-0474",
+        "old-sql-0475",
+        "old-sql-0476",
+        "old-sql-0477",
+        "old-sql-0478",
+        "old-sql-0479",
+        "old-sql-0480",
+        "old-sql-0481",
+        "old-sql-0482",
+        "old-sql-0483",
+        "old-sql-0484",
+        "old-sql-0485",
+        "old-sql-0486",
+        "old-sql-0487",
+        "old-sql-0488",
+        "old-sql-0489",
+        "old-sql-0490",
+        "old-sql-0491",
+        "old-sql-0492",
+        "old-sql-0493",
+        "old-sql-0494",
+        "old-sql-0495",
+        "old-sql-0496",
+        "old-sql-0497",
+        "old-sql-0498",
+        "old-sql-0499",
+        "old-sql-0500",
+        "old-sql-0501",
+        "old-sql-0502",
+        "old-sql-0503",
+        "old-sql-0504"
+      ],
+      "statement_ids": [
+        [
+          "stmt-fad4cb51130f7f6019085df9"
+        ],
+        [
+          "stmt-5df64201ff3ffcfa9b204709"
+        ],
+        [
+          "stmt-a77c574e2148a44fa3fc27b1"
+        ],
+        [
+          "stmt-9baa1740fd4c9cc433578dab"
+        ],
+        [
+          "stmt-6f88a4911754eaa02b356cc5"
+        ],
+        [
+          "stmt-65ef5c4130ffa557e4568ee2"
+        ],
+        [
+          "stmt-f16f8b564d86148fde6176c1"
+        ],
+        [
+          "stmt-469ebbf70489ad1c7dbad114"
+        ],
+        [
+          "stmt-9bd4829196ead63d7749db8f"
+        ],
+        [
+          "stmt-91ecf7a63b6117a0e94014f7"
+        ],
+        [
+          "stmt-ca965f66a72640dd0ac40273"
+        ],
+        [
+          "stmt-e2f2d66ba460f8ace5d31f03"
+        ],
+        [
+          "stmt-62c51749d7f04bab0ba13f71"
+        ],
+        [
+          "stmt-553159d087ce60984e49181d"
+        ],
+        [
+          "stmt-e4ff57d1a00377d2644dcdbf"
+        ],
+        [
+          "stmt-69d179562873e96a31b41ab0"
+        ],
+        [
+          "stmt-4fce83d3a646cc6f9af4a0d0"
+        ],
+        [
+          "stmt-390973dfd748b4808daba700"
+        ],
+        [
+          "stmt-347ccd96807c0e0b4609bbad"
+        ],
+        [
+          "stmt-9a64dfc4ba0865dd30ba6489"
+        ],
+        [
+          "stmt-aff0ab8e27fd338323f44cec"
+        ],
+        [
+          "stmt-053dfd05d36b550ee7b4aea7"
+        ],
+        [
+          "stmt-a10ac37b96a87e4f0659c224"
+        ],
+        [
+          "stmt-d634c9ccf5321f4569072ac8"
+        ],
+        [
+          "stmt-36ed74898d136a65cdce4bc6"
+        ],
+        [
+          "stmt-1b7fc6a133fea49e64963bb7"
+        ],
+        [
+          "stmt-513f980ba64a1583a7d4c28e"
+        ],
+        [
+          "stmt-926e75e2b245ed032d11f925"
+        ],
+        [
+          "stmt-b176a70334091eb2c9f4dccf"
+        ],
+        [
+          "stmt-4402e93766bb0d64b78253b0"
+        ],
+        [
+          "stmt-e43906967730a42a3cd522ed"
+        ],
+        [
+          "stmt-7224af71868a408465b65b93"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "present": true,
+        "replay": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe;\nDROP TABLE IF EXISTS sys_tenant,sys_user,sys_dept,sys_user_role,sys_role_dept;\nCREATE TABLE sys_tenant(id BIGINT PRIMARY KEY,tenant_code VARCHAR(64),tenant_name VARCHAR(100),status VARCHAR(20),admin_user_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,username VARCHAR(64),status INT,tenant_id VARCHAR(64),dept_id BIGINT,create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(100),name VARCHAR(100),order_num INT,status INT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_user_role(id BIGINT PRIMARY KEY,user_id BIGINT,role_id BIGINT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,role_id BIGINT,dept_id BIGINT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nINSERT INTO sys_user VALUES(7,'admin',1,NULL,NULL,'2020-01-01','2020-01-01',3,0),(8,'中文用户',1,'preserved',9,'2020-01-01','2020-01-01',4,0);\nINSERT INTO sys_dept VALUES(9,0,'0','保留部门',2,1,'preserved','2020-01-01','2020-01-01',5,0);\nINSERT INTO sys_user_role VALUES(10,7,2,NULL,'2020-01-01','2020-01-01',6,0),(11,8,3,'preserved','2020-01-01','2020-01-01',7,0);\nINSERT INTO sys_role_dept VALUES(20,3,9,'preserved','2020-01-01','2020-01-01',8,0);\n",
+          "before": {
+            "sys_tenant": "",
+            "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+            "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+            "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+            "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+          },
+          "after": {
+            "sys_tenant": "1\tapex-default\tApex 默认租户\tACTIVE\t7\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0",
+            "sys_user": "7\tadmin\t1\tapex-default\t1\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+            "sys_dept": "1\t0\t0\tApex 科技\t1\t1\tapex-default\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0\n9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+            "sys_user_role": "10\t7\t2\tapex-default\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+            "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0\n21\t2\t1\tapex-default\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0"
+          },
+          "catalog": "sys_dept\tid\tbigint\tNO\t<NULL>\t1\nsys_dept\tparent_id\tbigint\tYES\t<NULL>\t2\nsys_dept\tancestors\tvarchar(100)\tYES\t<NULL>\t3\nsys_dept\tname\tvarchar(100)\tYES\t<NULL>\t4\nsys_dept\torder_num\tint\tYES\t<NULL>\t5\nsys_dept\tstatus\tint\tYES\t<NULL>\t6\nsys_dept\ttenant_id\tvarchar(64)\tYES\t<NULL>\t7\nsys_dept\tcreate_time\tdatetime\tYES\t<NULL>\t8\nsys_dept\tupdate_time\tdatetime\tYES\t<NULL>\t9\nsys_dept\tversion\tint\tYES\t<NULL>\t10\nsys_dept\tdeleted\tint\tYES\t<NULL>\t11\nsys_role_dept\tid\tbigint\tNO\t<NULL>\t1\nsys_role_dept\trole_id\tbigint\tYES\t<NULL>\t2\nsys_role_dept\tdept_id\tbigint\tYES\t<NULL>\t3\nsys_role_dept\ttenant_id\tvarchar(64)\tYES\t<NULL>\t4\nsys_role_dept\tcreate_time\tdatetime\tYES\t<NULL>\t5\nsys_role_dept\tupdate_time\tdatetime\tYES\t<NULL>\t6\nsys_role_dept\tversion\tint\tYES\t<NULL>\t7\nsys_role_dept\tdeleted\tint\tYES\t<NULL>\t8\nsys_tenant\tid\tbigint\tNO\t<NULL>\t1\nsys_tenant\ttenant_code\tvarchar(64)\tYES\t<NULL>\t2\nsys_tenant\ttenant_name\tvarchar(100)\tYES\t<NULL>\t3\nsys_tenant\tstatus\tvarchar(20)\tYES\t<NULL>\t4\nsys_tenant\tadmin_user_id\tvarchar(64)\tYES\t<NULL>\t5\nsys_tenant\tcreate_time\tdatetime\tYES\t<NULL>\t6\nsys_tenant\tupdate_time\tdatetime\tYES\t<NULL>\t7\nsys_tenant\tversion\tint\tYES\t<NULL>\t8\nsys_tenant\tdeleted\tint\tYES\t<NULL>\t9\nsys_user\tid\tbigint\tNO\t<NULL>\t1\nsys_user\tusername\tvarchar(64)\tYES\t<NULL>\t2\nsys_user\tstatus\tint\tYES\t<NULL>\t3\nsys_user\ttenant_id\tvarchar(64)\tYES\t<NULL>\t4\nsys_user\tdept_id\tbigint\tYES\t<NULL>\t5\nsys_user\tcreate_time\tdatetime\tYES\t<NULL>\t6\nsys_user\tupdate_time\tdatetime\tYES\t<NULL>\t7\nsys_user\tversion\tint\tYES\t<NULL>\t8\nsys_user\tdeleted\tint\tYES\t<NULL>\t9\nsys_user_role\tid\tbigint\tNO\t<NULL>\t1\nsys_user_role\tuser_id\tbigint\tYES\t<NULL>\t2\nsys_user_role\trole_id\tbigint\tYES\t<NULL>\t3\nsys_user_role\ttenant_id\tvarchar(64)\tYES\t<NULL>\t4\nsys_user_role\tcreate_time\tdatetime\tYES\t<NULL>\t5\nsys_user_role\tupdate_time\tdatetime\tYES\t<NULL>\t6\nsys_user_role\tversion\tint\tYES\t<NULL>\t7\nsys_user_role\tdeleted\tint\tYES\t<NULL>\t8",
+          "indexes": "sys_dept\tPRIMARY\t0\t1\tid\tBTREE\nsys_role_dept\tPRIMARY\t0\t1\tid\tBTREE\nsys_tenant\tPRIMARY\t0\t1\tid\tBTREE\nsys_user\tPRIMARY\t0\t1\tid\tBTREE\nsys_user_role\tPRIMARY\t0\t1\tid\tBTREE",
+          "after_replay": {
+            "sys_tenant": "1\tapex-default\tApex 默认租户\tACTIVE\t7\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0",
+            "sys_user": "7\tadmin\t1\tapex-default\t1\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+            "sys_dept": "1\t0\t0\tApex 科技\t1\t1\tapex-default\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0\n9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+            "sys_user_role": "10\t7\t2\tapex-default\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+            "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0\n21\t2\t1\tapex-default\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0"
+          },
+          "projection": "apex-default\tApex 默认租户\tACTIVE\t7\t0\t0\n7\tadmin\tapex-default\t1\t3\n8\t中文用户\tpreserved\t9\t4\n1\t0\t0\tApex 科技\tapex-default\t0\n9\t0\t0\t保留部门\tpreserved\t5\n10\t7\t2\tapex-default\t6\n11\t8\t3\tpreserved\t7\n20\t3\t9\tpreserved\t8\n21\t2\t1\tapex-default\t0"
+        },
+        "present": {
+          "fixture_sql": "USE probe;\nDROP TABLE IF EXISTS sys_tenant,sys_user,sys_dept,sys_user_role,sys_role_dept;\nCREATE TABLE sys_tenant(id BIGINT PRIMARY KEY,tenant_code VARCHAR(64),tenant_name VARCHAR(100),status VARCHAR(20),admin_user_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,username VARCHAR(64),status INT,tenant_id VARCHAR(64),dept_id BIGINT,create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(100),name VARCHAR(100),order_num INT,status INT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_user_role(id BIGINT PRIMARY KEY,user_id BIGINT,role_id BIGINT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,role_id BIGINT,dept_id BIGINT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);\nINSERT INTO sys_user VALUES(7,'admin',1,NULL,NULL,'2020-01-01','2020-01-01',3,0),(8,'中文用户',1,'preserved',9,'2020-01-01','2020-01-01',4,0);\nINSERT INTO sys_dept VALUES(9,0,'0','保留部门',2,1,'preserved','2020-01-01','2020-01-01',5,0);\nINSERT INTO sys_user_role VALUES(10,7,2,NULL,'2020-01-01','2020-01-01',6,0),(11,8,3,'preserved','2020-01-01','2020-01-01',7,0);\nINSERT INTO sys_role_dept VALUES(20,3,9,'preserved','2020-01-01','2020-01-01',8,0);\nINSERT INTO sys_tenant VALUES(42,'apex-default','old','DISABLED',NULL,'2020-01-01','2020-01-01',0,0);INSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',1,1,'apex-default','2020-01-01','2020-01-01',0,0);",
+          "before": {
+            "sys_tenant": "42\tapex-default\told\tDISABLED\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t0\t0",
+            "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+            "sys_dept": "1\t0\t0\tApex 科技\t1\t1\tapex-default\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t0\t0\n9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+            "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+            "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+          },
+          "after": {
+            "sys_tenant": "42\tapex-default\tApex 默认租户\tACTIVE\t7\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0",
+            "sys_user": "7\tadmin\t1\tapex-default\t1\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+            "sys_dept": "1\t0\t0\tApex 科技\t1\t1\tapex-default\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t0\t0\n9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+            "sys_user_role": "10\t7\t2\tapex-default\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+            "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0\n21\t2\t1\tapex-default\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0"
+          },
+          "catalog": "sys_dept\tid\tbigint\tNO\t<NULL>\t1\nsys_dept\tparent_id\tbigint\tYES\t<NULL>\t2\nsys_dept\tancestors\tvarchar(100)\tYES\t<NULL>\t3\nsys_dept\tname\tvarchar(100)\tYES\t<NULL>\t4\nsys_dept\torder_num\tint\tYES\t<NULL>\t5\nsys_dept\tstatus\tint\tYES\t<NULL>\t6\nsys_dept\ttenant_id\tvarchar(64)\tYES\t<NULL>\t7\nsys_dept\tcreate_time\tdatetime\tYES\t<NULL>\t8\nsys_dept\tupdate_time\tdatetime\tYES\t<NULL>\t9\nsys_dept\tversion\tint\tYES\t<NULL>\t10\nsys_dept\tdeleted\tint\tYES\t<NULL>\t11\nsys_role_dept\tid\tbigint\tNO\t<NULL>\t1\nsys_role_dept\trole_id\tbigint\tYES\t<NULL>\t2\nsys_role_dept\tdept_id\tbigint\tYES\t<NULL>\t3\nsys_role_dept\ttenant_id\tvarchar(64)\tYES\t<NULL>\t4\nsys_role_dept\tcreate_time\tdatetime\tYES\t<NULL>\t5\nsys_role_dept\tupdate_time\tdatetime\tYES\t<NULL>\t6\nsys_role_dept\tversion\tint\tYES\t<NULL>\t7\nsys_role_dept\tdeleted\tint\tYES\t<NULL>\t8\nsys_tenant\tid\tbigint\tNO\t<NULL>\t1\nsys_tenant\ttenant_code\tvarchar(64)\tYES\t<NULL>\t2\nsys_tenant\ttenant_name\tvarchar(100)\tYES\t<NULL>\t3\nsys_tenant\tstatus\tvarchar(20)\tYES\t<NULL>\t4\nsys_tenant\tadmin_user_id\tvarchar(64)\tYES\t<NULL>\t5\nsys_tenant\tcreate_time\tdatetime\tYES\t<NULL>\t6\nsys_tenant\tupdate_time\tdatetime\tYES\t<NULL>\t7\nsys_tenant\tversion\tint\tYES\t<NULL>\t8\nsys_tenant\tdeleted\tint\tYES\t<NULL>\t9\nsys_user\tid\tbigint\tNO\t<NULL>\t1\nsys_user\tusername\tvarchar(64)\tYES\t<NULL>\t2\nsys_user\tstatus\tint\tYES\t<NULL>\t3\nsys_user\ttenant_id\tvarchar(64)\tYES\t<NULL>\t4\nsys_user\tdept_id\tbigint\tYES\t<NULL>\t5\nsys_user\tcreate_time\tdatetime\tYES\t<NULL>\t6\nsys_user\tupdate_time\tdatetime\tYES\t<NULL>\t7\nsys_user\tversion\tint\tYES\t<NULL>\t8\nsys_user\tdeleted\tint\tYES\t<NULL>\t9\nsys_user_role\tid\tbigint\tNO\t<NULL>\t1\nsys_user_role\tuser_id\tbigint\tYES\t<NULL>\t2\nsys_user_role\trole_id\tbigint\tYES\t<NULL>\t3\nsys_user_role\ttenant_id\tvarchar(64)\tYES\t<NULL>\t4\nsys_user_role\tcreate_time\tdatetime\tYES\t<NULL>\t5\nsys_user_role\tupdate_time\tdatetime\tYES\t<NULL>\t6\nsys_user_role\tversion\tint\tYES\t<NULL>\t7\nsys_user_role\tdeleted\tint\tYES\t<NULL>\t8",
+          "indexes": "sys_dept\tPRIMARY\t0\t1\tid\tBTREE\nsys_role_dept\tPRIMARY\t0\t1\tid\tBTREE\nsys_tenant\tPRIMARY\t0\t1\tid\tBTREE\nsys_user\tPRIMARY\t0\t1\tid\tBTREE\nsys_user_role\tPRIMARY\t0\t1\tid\tBTREE",
+          "after_replay": {
+            "sys_tenant": "42\tapex-default\tApex 默认租户\tACTIVE\t7\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0",
+            "sys_user": "7\tadmin\t1\tapex-default\t1\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+            "sys_dept": "1\t0\t0\tApex 科技\t1\t1\tapex-default\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t0\t0\n9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+            "sys_user_role": "10\t7\t2\tapex-default\t2020-01-01 00:00:00\t2026-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+            "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0\n21\t2\t1\tapex-default\t2026-01-01 00:00:00\t2026-01-01 00:00:00\t0\t0"
+          },
+          "projection": "apex-default\tApex 默认租户\tACTIVE\t7\t0\t0\n7\tadmin\tapex-default\t1\t3\n8\t中文用户\tpreserved\t9\t4\n1\t0\t0\tApex 科技\tapex-default\t0\n9\t0\t0\t保留部门\tpreserved\t5\n10\t7\t2\tapex-default\t6\n11\t8\t3\tpreserved\t7\n20\t3\t9\tpreserved\t8\n21\t2\t1\tapex-default\t0"
+        },
+        "refusal_guards": [
+          {
+            "mutation_sql": "INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(2,'other',0);",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 cannot initialize apex-default while another active tenant exists\n",
+            "before": {
+              "sys_tenant": "2\tother\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            },
+            "after": {
+              "sys_tenant": "2\tother\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            }
+          },
+          {
+            "mutation_sql": "INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(2,'apex-default',0),(3,'apex-default',0);",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 found duplicate active apex-default tenants\n",
+            "before": {
+              "sys_tenant": "2\tapex-default\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0\n3\tapex-default\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            },
+            "after": {
+              "sys_tenant": "2\tapex-default\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0\n3\tapex-default\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\t0",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            }
+          },
+          {
+            "mutation_sql": "UPDATE sys_user SET status=0 WHERE username='admin';",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 requires exactly one active admin user\n",
+            "before": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t0\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            },
+            "after": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t0\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            }
+          },
+          {
+            "mutation_sql": "UPDATE sys_user SET tenant_id=NULL WHERE id=8;",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 found unassigned non-admin users and cannot infer their tenant\n",
+            "before": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tNULL\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            },
+            "after": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tNULL\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            }
+          },
+          {
+            "mutation_sql": "INSERT INTO sys_dept(id,parent_id,ancestors,name,tenant_id) VALUES(1,0,'0','conflict','preserved');",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 cannot safely use department id 1 as the default root\n",
+            "before": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "1\t0\t0\tconflict\tNULL\tNULL\tpreserved\tNULL\tNULL\tNULL\tNULL\n9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            },
+            "after": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "1\t0\t0\tconflict\tNULL\tNULL\tpreserved\tNULL\tNULL\tNULL\tNULL\n9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            }
+          },
+          {
+            "mutation_sql": "UPDATE sys_dept SET tenant_id=NULL WHERE id=9;",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 found unassigned departments and cannot infer their tenant\n",
+            "before": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            },
+            "after": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            }
+          },
+          {
+            "mutation_sql": "UPDATE sys_user_role SET tenant_id=NULL WHERE user_id=8;",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 found unassigned roles for non-admin users\n",
+            "before": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            },
+            "after": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0"
+            }
+          },
+          {
+            "mutation_sql": "INSERT INTO sys_role_dept(id,role_id,dept_id,tenant_id,deleted) VALUES(30,4,99,NULL,0);",
+            "error": "mysql client failed: ERROR 1644 (45000) at line 156: V44 found ambiguous role department tenant assignments\n",
+            "before": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0\n30\t4\t99\tNULL\tNULL\tNULL\tNULL\t0"
+            },
+            "after": {
+              "sys_tenant": "",
+              "sys_user": "7\tadmin\t1\tNULL\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t3\t0\n8\t中文用户\t1\tpreserved\t9\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t4\t0",
+              "sys_dept": "9\t0\t0\t保留部门\t2\t1\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t5\t0",
+              "sys_user_role": "10\t7\t2\tNULL\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t6\t0\n11\t8\t3\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t7\t0",
+              "sys_role_dept": "20\t3\t9\tpreserved\t2020-01-01 00:00:00\t2020-01-01 00:00:00\t8\t0\n30\t4\t99\tNULL\tNULL\tNULL\tNULL\t0"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "status": "passed",
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true,
+    "database_lifetime": "only inside removed tmpfs container"
+  },
+  "limits": [
+    "Synthetic nonempty fixtures; not a historical upgrade chain",
+    "Only selected MySQL guards; no PostgreSQL or full historical upgrade chain",
+    "No Flyway startup, concurrent migration, privileges or production verification",
+    "One source-level closure requires all eight refusal guards and both tenant initialization paths"
+  ],
+  "previous_verified_ids": [
+    "old-sql-0000",
+    "old-sql-0001",
+    "old-sql-0002",
+    "old-sql-0003",
+    "old-sql-0004",
+    "old-sql-0005",
+    "old-sql-0006",
+    "old-sql-0007",
+    "old-sql-0008",
+    "old-sql-0009",
+    "old-sql-0010",
+    "old-sql-0011",
+    "old-sql-0012",
+    "old-sql-0013",
+    "old-sql-0014",
+    "old-sql-0015",
+    "old-sql-0016",
+    "old-sql-0017",
+    "old-sql-0018",
+    "old-sql-0019",
+    "old-sql-0020",
+    "old-sql-0021",
+    "old-sql-0022",
+    "old-sql-0023",
+    "old-sql-0024",
+    "old-sql-0025",
+    "old-sql-0026",
+    "old-sql-0027",
+    "old-sql-0028",
+    "old-sql-0029",
+    "old-sql-0030",
+    "old-sql-0031",
+    "old-sql-0032",
+    "old-sql-0033",
+    "old-sql-0034",
+    "old-sql-0035",
+    "old-sql-0036",
+    "old-sql-0037",
+    "old-sql-0038",
+    "old-sql-0039",
+    "old-sql-0040",
+    "old-sql-0041",
+    "old-sql-0042",
+    "old-sql-0043",
+    "old-sql-0044",
+    "old-sql-0045",
+    "old-sql-0046",
+    "old-sql-0047",
+    "old-sql-0048",
+    "old-sql-0049",
+    "old-sql-0050",
+    "old-sql-0051",
+    "old-sql-0052",
+    "old-sql-0053",
+    "old-sql-0054",
+    "old-sql-0055",
+    "old-sql-0056",
+    "old-sql-0057",
+    "old-sql-0058",
+    "old-sql-0059",
+    "old-sql-0060",
+    "old-sql-0061",
+    "old-sql-0062",
+    "old-sql-0063",
+    "old-sql-0064",
+    "old-sql-0065",
+    "old-sql-0066",
+    "old-sql-0067",
+    "old-sql-0068",
+    "old-sql-0069",
+    "old-sql-0070",
+    "old-sql-0071",
+    "old-sql-0072",
+    "old-sql-0073",
+    "old-sql-0074",
+    "old-sql-0075",
+    "old-sql-0076",
+    "old-sql-0077",
+    "old-sql-0078",
+    "old-sql-0079",
+    "old-sql-0080",
+    "old-sql-0081",
+    "old-sql-0082",
+    "old-sql-0083",
+    "old-sql-0084",
+    "old-sql-0085",
+    "old-sql-0086",
+    "old-sql-0087",
+    "old-sql-0088",
+    "old-sql-0089",
+    "old-sql-0090",
+    "old-sql-0091",
+    "old-sql-0092",
+    "old-sql-0093",
+    "old-sql-0094",
+    "old-sql-0095",
+    "old-sql-0096",
+    "old-sql-0097",
+    "old-sql-0098",
+    "old-sql-0099",
+    "old-sql-0100",
+    "old-sql-0101",
+    "old-sql-0102",
+    "old-sql-0103",
+    "old-sql-0104",
+    "old-sql-0105",
+    "old-sql-0106",
+    "old-sql-0107",
+    "old-sql-0108",
+    "old-sql-0109",
+    "old-sql-0110",
+    "old-sql-0111",
+    "old-sql-0112",
+    "old-sql-0113",
+    "old-sql-0114",
+    "old-sql-0115",
+    "old-sql-0116",
+    "old-sql-0117",
+    "old-sql-0118",
+    "old-sql-0119",
+    "old-sql-0120",
+    "old-sql-0121",
+    "old-sql-0122",
+    "old-sql-0123",
+    "old-sql-0124",
+    "old-sql-0125",
+    "old-sql-0126",
+    "old-sql-0127",
+    "old-sql-0128",
+    "old-sql-0129",
+    "old-sql-0130",
+    "old-sql-0131",
+    "old-sql-0132",
+    "old-sql-0133",
+    "old-sql-0134",
+    "old-sql-0135",
+    "old-sql-0136",
+    "old-sql-0137",
+    "old-sql-0138",
+    "old-sql-0139",
+    "old-sql-0140",
+    "old-sql-0141",
+    "old-sql-0142",
+    "old-sql-0143",
+    "old-sql-0144",
+    "old-sql-0145",
+    "old-sql-0146",
+    "old-sql-0147",
+    "old-sql-0148",
+    "old-sql-0149",
+    "old-sql-0150",
+    "old-sql-0151",
+    "old-sql-0152",
+    "old-sql-0153",
+    "old-sql-0154",
+    "old-sql-0155",
+    "old-sql-0156",
+    "old-sql-0157",
+    "old-sql-0158",
+    "old-sql-0159",
+    "old-sql-0160",
+    "old-sql-0161",
+    "old-sql-0162",
+    "old-sql-0163",
+    "old-sql-0164",
+    "old-sql-0165",
+    "old-sql-0166",
+    "old-sql-0167",
+    "old-sql-0168",
+    "old-sql-0169",
+    "old-sql-0170",
+    "old-sql-0171",
+    "old-sql-0172",
+    "old-sql-0173",
+    "old-sql-0174",
+    "old-sql-0175",
+    "old-sql-0176",
+    "old-sql-0177",
+    "old-sql-0178",
+    "old-sql-0179",
+    "old-sql-0180",
+    "old-sql-0181",
+    "old-sql-0182",
+    "old-sql-0183",
+    "old-sql-0184",
+    "old-sql-0185",
+    "old-sql-0186",
+    "old-sql-0187",
+    "old-sql-0188",
+    "old-sql-0189",
+    "old-sql-0190",
+    "old-sql-0191",
+    "old-sql-0192",
+    "old-sql-0193",
+    "old-sql-0194",
+    "old-sql-0195",
+    "old-sql-0196",
+    "old-sql-0197",
+    "old-sql-0198",
+    "old-sql-0199",
+    "old-sql-0200",
+    "old-sql-0201",
+    "old-sql-0202",
+    "old-sql-0203",
+    "old-sql-0204",
+    "old-sql-0205",
+    "old-sql-0206",
+    "old-sql-0207",
+    "old-sql-0208",
+    "old-sql-0209",
+    "old-sql-0210",
+    "old-sql-0211",
+    "old-sql-0212",
+    "old-sql-0213",
+    "old-sql-0214",
+    "old-sql-0215",
+    "old-sql-0216",
+    "old-sql-0217",
+    "old-sql-0218",
+    "old-sql-0219",
+    "old-sql-0220",
+    "old-sql-0221",
+    "old-sql-0222",
+    "old-sql-0223",
+    "old-sql-0224",
+    "old-sql-0225",
+    "old-sql-0226",
+    "old-sql-0227",
+    "old-sql-0228",
+    "old-sql-0229",
+    "old-sql-0230",
+    "old-sql-0231",
+    "old-sql-0232",
+    "old-sql-0233",
+    "old-sql-0234",
+    "old-sql-0235",
+    "old-sql-0236",
+    "old-sql-0237",
+    "old-sql-0238",
+    "old-sql-0239",
+    "old-sql-0240",
+    "old-sql-0241",
+    "old-sql-0242",
+    "old-sql-0243",
+    "old-sql-0244",
+    "old-sql-0245",
+    "old-sql-0246",
+    "old-sql-0247",
+    "old-sql-0248",
+    "old-sql-0249",
+    "old-sql-0250",
+    "old-sql-0251",
+    "old-sql-0252",
+    "old-sql-0253",
+    "old-sql-0254",
+    "old-sql-0255",
+    "old-sql-0256",
+    "old-sql-0257",
+    "old-sql-0258",
+    "old-sql-0259",
+    "old-sql-0260",
+    "old-sql-0261",
+    "old-sql-0262",
+    "old-sql-0263",
+    "old-sql-0264",
+    "old-sql-0265",
+    "old-sql-0266",
+    "old-sql-0267",
+    "old-sql-0268",
+    "old-sql-0269",
+    "old-sql-0270",
+    "old-sql-0271",
+    "old-sql-0272",
+    "old-sql-0273",
+    "old-sql-0274",
+    "old-sql-0275",
+    "old-sql-0276",
+    "old-sql-0277",
+    "old-sql-0278",
+    "old-sql-0279",
+    "old-sql-0280",
+    "old-sql-0281",
+    "old-sql-0282",
+    "old-sql-0283",
+    "old-sql-0284",
+    "old-sql-0285",
+    "old-sql-0286",
+    "old-sql-0287",
+    "old-sql-0288",
+    "old-sql-0289",
+    "old-sql-0290",
+    "old-sql-0291",
+    "old-sql-0292",
+    "old-sql-0293",
+    "old-sql-0294",
+    "old-sql-0295",
+    "old-sql-0296",
+    "old-sql-0297",
+    "old-sql-0298",
+    "old-sql-0299",
+    "old-sql-0300",
+    "old-sql-0301",
+    "old-sql-0302",
+    "old-sql-0303",
+    "old-sql-0304",
+    "old-sql-0305",
+    "old-sql-0306",
+    "old-sql-0307",
+    "old-sql-0308",
+    "old-sql-0309",
+    "old-sql-0310",
+    "old-sql-0311",
+    "old-sql-0312",
+    "old-sql-0313",
+    "old-sql-0314",
+    "old-sql-0315",
+    "old-sql-0316",
+    "old-sql-0317",
+    "old-sql-0318",
+    "old-sql-0319",
+    "old-sql-0320",
+    "old-sql-0321",
+    "old-sql-0322",
+    "old-sql-0323",
+    "old-sql-0324",
+    "old-sql-0325",
+    "old-sql-0326",
+    "old-sql-0327",
+    "old-sql-0328",
+    "old-sql-0329",
+    "old-sql-0330",
+    "old-sql-0331",
+    "old-sql-0332",
+    "old-sql-0333",
+    "old-sql-0334",
+    "old-sql-0335",
+    "old-sql-0336",
+    "old-sql-0337",
+    "old-sql-0338",
+    "old-sql-0339",
+    "old-sql-0340",
+    "old-sql-0341",
+    "old-sql-0342",
+    "old-sql-0343",
+    "old-sql-0344",
+    "old-sql-0345",
+    "old-sql-0346",
+    "old-sql-0347",
+    "old-sql-0348",
+    "old-sql-0349",
+    "old-sql-0350",
+    "old-sql-0351",
+    "old-sql-0352",
+    "old-sql-0353",
+    "old-sql-0354",
+    "old-sql-0355",
+    "old-sql-0356",
+    "old-sql-0357",
+    "old-sql-0358",
+    "old-sql-0359",
+    "old-sql-0360",
+    "old-sql-0361",
+    "old-sql-0362",
+    "old-sql-0379",
+    "old-sql-0380",
+    "old-sql-0381",
+    "old-sql-0382",
+    "old-sql-0383",
+    "old-sql-0384",
+    "old-sql-0385",
+    "old-sql-0386",
+    "old-sql-0387",
+    "old-sql-0388",
+    "old-sql-0389",
+    "old-sql-0390",
+    "old-sql-0391",
+    "old-sql-0392",
+    "old-sql-0393",
+    "old-sql-0449",
+    "old-sql-0450",
+    "old-sql-0451",
+    "old-sql-0452",
+    "old-sql-0453",
+    "old-sql-0454",
+    "old-sql-0455",
+    "old-sql-0456",
+    "old-sql-0457",
+    "old-sql-0458",
+    "old-sql-0459",
+    "old-sql-0460",
+    "old-sql-0461",
+    "old-sql-0462",
+    "old-sql-0463",
+    "old-sql-0464",
+    "old-sql-0465",
+    "old-sql-0466",
+    "old-sql-0467",
+    "old-sql-0468",
+    "old-sql-0469",
+    "old-sql-0470",
+    "old-sql-0471",
+    "old-sql-0472",
+    "old-sql-0505",
+    "old-sql-0506",
+    "old-sql-0507",
+    "old-sql-0508",
+    "old-sql-0509",
+    "old-sql-0510",
+    "old-sql-0511",
+    "old-sql-0512",
+    "old-sql-0513",
+    "old-sql-0514",
+    "old-sql-0515",
+    "old-sql-0516",
+    "old-sql-0517",
+    "old-sql-0518",
+    "old-sql-0519",
+    "old-sql-0520",
+    "old-sql-0521",
+    "old-sql-0522",
+    "old-sql-0523",
+    "old-sql-0524",
+    "old-sql-0525",
+    "old-sql-0526",
+    "old-sql-0527",
+    "old-sql-0528"
+  ],
+  "remaining_before": 160,
+  "previous_evidence_hashes": {
+    "dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "dynamic-auth-v52-catalog-regression-evidence.json": "286fd56716171a547cd65a78e5912e61f548a777ac37a57c9589628e65c4d4d1",
+    "dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "dynamic-auth-v55-client-evidence.json": "88b811c98334d55235d8a9282b38a091adbd08fe227e270ec83713f2e72e6fac",
+    "dynamic-system-v14-20261018-client-evidence.json": "bf978a17c42edab2d00ffa055bf34de3cd1695e3d8c69a8c7a27f2db856634ff",
+    "dynamic-system-v15-20261019-rerun-evidence.json": "37e4821b20ce16058ff0836d2f88d465ff474bc851df5f027a7d460b895fb303",
+    "dynamic-system-v15-20261019-rerun-subagent-evidence.json": "c66df02e6c26616bc0f5bc0a07904babbbc7215555261b8c20a69a1924a8ed6a",
+    "dynamic-system-v16-20261019-client-evidence.json": "ee97ae2bb94a4d82a8de8e139cde76b37a1a6c1711431d401dc42bc2f7db0fad",
+    "dynamic-system-v37-20261019-597E34B9-739D-48C1-A6B6-1C63FCB92ED3-evidence.json": "d73bbf4c809ad2dcca866eb9a4c0d0a226cef0e56b01125ddd28685de8a18201",
+    "dynamic-system-v43-20261019-client-evidence.json": "4c76fefb305913982111e346ee4c258805b0b5f7101fc14f5f18675521514918",
+    "dynamic-system-v51-20261019-7b2ec947-evidence.json": "5be00f8da636d88e0dfad1b715326e691cc444a901142c3368200d59af7468f0",
+    "dynamic-system-v59-20261019-client-compatible-evidence.json": "663a39c2fe7b433468beb65ed4fd8bfd7a7ace6e176b70c3f687036168b60f85",
+    "dynamic-system-v59-20261019-client-final-evidence.json": "ba135b0fdfaa02aad4a554f68d0b0a4c662f0b58d040942eaa0b1132944c3e66"
+  },
+  "baseline_dynamic_denominator": 586,
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v44-20261019-DB7748D3-0F64-42DA-AB1D-8970207F73B2-evidence.json",
+  "updated_at": "2026-10-19T06:27:38.426256+00:00",
+  "container": {
+    "name": "apex-v45-probe-fd30a6b1ef2c",
+    "image": "localhost/mysql:8.0",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "none; empty root only inside network-disabled disposable container",
+    "id": "84b92a9b468260b844bf5dab63d4ae8cd5d08787d77143eef285e7e543906f8b"
+  },
+  "mysql_version": "8.0.46",
+  "full_file": {
+    "initial_execution": true,
+    "replay": true,
+    "original_file_used": true,
+    "tenant_paths": 2,
+    "refusal_guards": 8,
+    "timestamp_fixed_for_comparison": 1767225600
+  },
+  "coverage": {
+    "verified_old_ids": [
+      "old-sql-0473",
+      "old-sql-0474",
+      "old-sql-0475",
+      "old-sql-0476",
+      "old-sql-0477",
+      "old-sql-0478",
+      "old-sql-0479",
+      "old-sql-0480",
+      "old-sql-0481",
+      "old-sql-0482",
+      "old-sql-0483",
+      "old-sql-0484",
+      "old-sql-0485",
+      "old-sql-0486",
+      "old-sql-0487",
+      "old-sql-0488",
+      "old-sql-0489",
+      "old-sql-0490",
+      "old-sql-0491",
+      "old-sql-0492",
+      "old-sql-0493",
+      "old-sql-0494",
+      "old-sql-0495",
+      "old-sql-0496",
+      "old-sql-0497",
+      "old-sql-0498",
+      "old-sql-0499",
+      "old-sql-0500",
+      "old-sql-0501",
+      "old-sql-0502",
+      "old-sql-0503",
+      "old-sql-0504"
+    ],
+    "verified_old_id_count": 32,
+    "remaining_of_586": 128,
+    "passed_branch_runs": 3,
+    "planned_branch_runs": 3,
+    "definition": "distinct baseline IDs whose bound quartet passed absent + present + replay; no credit for full-file success",
+    "remaining_before": 160,
+    "new_unique_passed_count": 32,
+    "remaining_after": 128,
+    "cumulative_verified_count": 458
+  }
+}

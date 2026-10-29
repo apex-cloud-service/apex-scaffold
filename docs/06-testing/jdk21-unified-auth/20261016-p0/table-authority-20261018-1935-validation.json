@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "evidence_file": "table-authority-20261018-1935.json",
+  "evidence_sha256": "87dc85adcbfe87c44c47442b0df3a684788e2cc387660f15d415bdf7a3c8b378",
+  "collector_sha256": "e863c618bced7a63ac40252e9c798be92fb99e9612786788925b0106fa091182",
+  "test_file": "scripts/test/test_collect_table_authority.py",
+  "test_sha256": "a905db8df4983c42f1f38fc2f7b6e569d50a70ddebfa76c1f2af05b97e28e809",
+  "validation": {
+    "json_parsed": true,
+    "evidence_ranges_checked": 1569,
+    "unique_referenced_sources": 313,
+    "current_file_and_range_hash_mismatches": 0,
+    "input_and_collector_hash_mismatches": 0,
+    "historical_sources_rechecked": 1896,
+    "historical_source_drift": 24,
+    "historical_drift_disposition": "完整明细见登记JSON historical_source_hash_checks；当前引用重新读取并核验，漂移不抹除历史快照。",
+    "python_tests": 30,
+    "python_test_command": "python3 -m unittest scripts/test/test_collect_table_authority.py scripts/test/test_collect_migration_tables.py scripts/test/test_collect_database_schema.py",
+    "python_test_exit_code": 0,
+    "git_diff_check_exit_code": 0,
+    "new_files_no_index_whitespace_diagnostics": 0,
+    "java_build_executed": false,
+    "database_query_executed": false
+  },
+  "denominators": {
+    "domain_table_pairs": 136,
+    "normalized_names": 112,
+    "no_entity_mapping": 33,
+    "no_generic_binding": 34,
+    "duplicate_names": 21,
+    "duplicate_pairs": 45
+  },
+  "decisions": {
+    "static_service_boundary_resolved": 18,
+    "static_sql_consumer_resolved": 6,
+    "framework_local_conditional": 5,
+    "migration_lifecycle_only": 2,
+    "legacy_copy_retention_pending": 19,
+    "consumer_migration_domain_mismatch": 2,
+    "candidate_requires_validation": 84
+  },
+  "limits": [
+    "静态服务边界18项由已审阅装配规则分配，不能表述为18项实体上游调用均经人工逐项审阅。",
+    "6项SQL只证明代码定义或直接调用；Outbox的两物理域仍需有效条件装配和本地数据源运行验证。",
+    "两项错位为system.jwt_keys和system.mfa_config；oauth2_registered_client与oauth2_authorization_consent的映射在system，不误归auth。",
+    "19项历史复制的保留迁移、84项候选调用、两项错位及租户/唯一键/历史NULL语义仍待验证；不宣称P0准出。",
+    "未修改collect_table_facts.py、生产SQL/Java/POM、方案/report；未执行Java构建、数据库访问、commit或push。"
+  ]
+}

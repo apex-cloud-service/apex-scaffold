@@ -1,0 +1,31 @@
+{
+  "started_at": "2026-10-20T23:36:02Z",
+  "ended_at": "2026-10-20T23:38:32Z",
+  "status": "passed",
+  "baseline_credit": false,
+  "tool_implementation": "java",
+  "wrapper": "scripts/utils/token-v42-recover.sh",
+  "hashes": {
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "scripts/utils/TokenV42Recover.java": "d9fd7145e6840d21103f823b0e1ee71d5935b4f7ab77eef31ebef8d16669a400",
+    "scripts/utils/token-v42-recover.sh": "2d7f35e5dc4ae571e2316e4bbdc4b024d1a9ead155a6707179fdcb126589289d",
+    "harness:/tmp/verify_token_v42_recovery_java.sh": "ec46c30d77ee51857184d30c4ab916e8af955ceaef349b882582c3d35eeda528"
+  },
+  "container": {
+    "name": "apex-v42-java-58a30b698b94",
+    "id": "96728c5b019f7f3141d0720ec3afcb6d477ebdb33d707f09d5b99a669872f636",
+    "network": "none",
+    "storage": "tmpfs",
+    "image": "localhost/mysql:8.0"
+  },
+  "mysql_version": "8.0.46",
+  "isolation": "none",
+  "tmpfs": "{\"/var/lib/mysql\":\"rw,rprivate,nosuid,nodev,tmpcopyup\"}",
+  "scope": "isolated structure recovery only; no Flyway baseline credit",
+  "scenarios": {},
+  "cleanup": {
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true
+  }
+}

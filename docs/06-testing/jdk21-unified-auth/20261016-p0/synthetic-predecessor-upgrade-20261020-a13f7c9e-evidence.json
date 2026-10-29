@@ -1,0 +1,887 @@
+{
+  "run_id": "synthetic-predecessor-upgrade-20261020-a13f7c9e",
+  "started_at": "2026-10-20T11:30:55+0800",
+  "scope": "current-source synthetic V1..V61 predecessor -> V62; NOT historical release upgrade",
+  "baseline_credit": false,
+  "assertion_scope": {
+    "basis": "Both parameterized cases completed without failure/error/skip; assertion reach inferred from passing test source, with migration stages corroborated by saved stdout",
+    "both_vendors_completed": ["Current source V1..V61 applied (61 migrations), then V62 applied (1 migration)", "Flyway validate; zero pending; repeat migrate executes zero; 62 applied versions continuous", "Synthetic workflow ACTIVE/node_definition preserved; 15 index prefixes; 14 tables and one view; security columns; keycloak_sub length 255; four NOT NULL constraints; DRAFT default", "workflow.version singleton/type/value; seven permission-role grants; workflow and OAuth column contracts; seeded WeChat social-binding backfill; two menus"],
+    "mysql_only_completed": ["V62 rejects synthetic NULL with expected marker before off_sync_history.update_time creation", "NULL row remains, fixture restores ACTIVE, then existing fixture-only Flyway repair runs before V62 retry"],
+    "not_verified": ["Historical release artifact or restored predecessor snapshot", "V40/V42 production history/checksum coordination", "Historical plaintext token encryption migration", "Production upgrade, rollback, service startup or Auth MFA"]
+  },
+  "report_provenance": {
+    "original_xml_mtime": "2026-10-20T11:34:15.647970+08:00",
+    "mtime_within_run_window": true,
+    "stdout_vendor_databases": {"mysql": "apex_reg_af025af8c6d048079aa8a3eef390c24e", "postgresql": "apex_reg_ccb3391c1298471aab2d82d6544a4a57"},
+    "suite_seconds": 133.696,
+    "reactor_wall_time": "02:55 min",
+    "compile_scope": "test-compile ran for 10 reactor projects; upstream production/test classes were up to date, apex-system compiled 237 test sources with release 17; no clean rebuild claimed",
+    "spotless": "check executed successfully for all 10 selected reactor projects",
+    "baseline_early_return_property": "apex.schema.alignment.baseline not set by invocation; V62 stdout confirms full path"
+  },
+  "commands": [
+    {
+      "argv": [
+        "podman",
+        "ps",
+        "-a",
+        "--format",
+        "json"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "volume",
+        "ls",
+        "--format",
+        "json"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "images",
+        "--no-trunc",
+        "--format",
+        "{{.ID}} {{.Repository}}:{{.Tag}}"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "version",
+        "--format",
+        "json"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "run",
+        "-d",
+        "--pull",
+        "never",
+        "--name",
+        "apex-synth-a13f7c9e-mysql",
+        "--network",
+        "none",
+        "--tmpfs",
+        "/var/lib/mysql:rw,size=1024m",
+        "--tmpfs",
+        "/tmp:rw,size=128m",
+        "-e",
+        "MYSQL_ROOT_PASSWORD",
+        "sha256:6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39"
+      ],
+      "env_keys": [
+        "MYSQL_ROOT_PASSWORD"
+      ],
+      "label": "mysql-create"
+    },
+    {
+      "argv": [
+        "podman",
+        "inspect",
+        "apex-synth-a13f7c9e-mysql"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "mysqladmin",
+        "ping",
+        "--silent"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "mysqladmin",
+        "ping",
+        "--silent"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "mysqladmin",
+        "ping",
+        "--silent"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "mysqladmin",
+        "ping",
+        "--silent"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "mysqladmin",
+        "ping",
+        "--silent"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "mysqladmin",
+        "ping",
+        "--silent"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "sh",
+        "-c",
+        "MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\" mysql -h 127.0.0.1 -uroot -N -e \"SELECT VERSION()\""
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "sh",
+        "-c",
+        "MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\" mysql -h 127.0.0.1 -uroot -N -e \"SELECT VERSION()\""
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "sh",
+        "-c",
+        "MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\" mysql -h 127.0.0.1 -uroot -N -e \"SELECT VERSION()\""
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "sh",
+        "-c",
+        "MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\" mysql -h 127.0.0.1 -uroot -N -e \"SELECT VERSION()\""
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "sh",
+        "-c",
+        "MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\" mysql -h 127.0.0.1 -uroot -N -e \"SELECT VERSION()\""
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "sh",
+        "-c",
+        "MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\" mysql -h 127.0.0.1 -uroot -N -e \"SELECT VERSION()\""
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-mysql",
+        "sh",
+        "-c",
+        "command -v bash; command -v nc; command -v socat; command -v cat; true"
+      ],
+      "env_keys": [],
+      "label": "mysql-relay-capabilities"
+    },
+    {
+      "argv": [
+        "podman",
+        "run",
+        "-d",
+        "--pull",
+        "never",
+        "--name",
+        "apex-synth-a13f7c9e-postgresql",
+        "--network",
+        "none",
+        "--tmpfs",
+        "/var/lib/postgresql/data:rw,size=1024m",
+        "--tmpfs",
+        "/tmp:rw,size=128m",
+        "-e",
+        "POSTGRES_PASSWORD",
+        "sha256:79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537"
+      ],
+      "env_keys": [
+        "POSTGRES_PASSWORD"
+      ],
+      "label": "postgresql-create"
+    },
+    {
+      "argv": [
+        "podman",
+        "inspect",
+        "apex-synth-a13f7c9e-postgresql"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-postgresql",
+        "pg_isready",
+        "-U",
+        "postgres"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-postgresql",
+        "pg_isready",
+        "-U",
+        "postgres"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-postgresql",
+        "pg_isready",
+        "-U",
+        "postgres"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-postgresql",
+        "psql",
+        "-U",
+        "postgres",
+        "-Atc",
+        "SELECT VERSION()"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "exec",
+        "apex-synth-a13f7c9e-postgresql",
+        "sh",
+        "-c",
+        "command -v bash; command -v nc; command -v socat; command -v cat; true"
+      ],
+      "env_keys": [],
+      "label": "postgresql-relay-capabilities"
+    },
+    {
+      "argv": [
+        "zsh",
+        "-c",
+        "source scripts/build/init-build-env.sh && java -version && mvnd --version && mvnd --stop"
+      ],
+      "env_keys": [],
+      "label": "toolchain"
+    },
+    {
+      "argv": [
+        "zsh",
+        "-c",
+        "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-system -am test-compile failsafe:integration-test failsafe:verify spotless:check -Dskip.unit.tests=true -Djacoco.skip=true -Dit.test=SystemDualDatabaseMigrationIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false"
+      ],
+      "env_keys": [
+        "APEX_TEST_MYSQL_CONTAINER",
+        "APEX_TEST_MYSQL_PORT",
+        "APEX_TEST_POSTGRES_CONTAINER",
+        "APEX_TEST_POSTGRES_PORT"
+      ],
+      "label": "targeted-failsafe"
+    },
+    {
+      "argv": [
+        "podman",
+        "logs",
+        "apex-synth-a13f7c9e-mysql"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "rm",
+        "-f",
+        "-v",
+        "apex-synth-a13f7c9e-mysql"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "logs",
+        "apex-synth-a13f7c9e-postgresql"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "rm",
+        "-f",
+        "-v",
+        "apex-synth-a13f7c9e-postgresql"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "ps",
+        "-a",
+        "--format",
+        "json"
+      ],
+      "env_keys": [],
+      "label": null
+    },
+    {
+      "argv": [
+        "podman",
+        "volume",
+        "ls",
+        "--format",
+        "json"
+      ],
+      "env_keys": [],
+      "label": null
+    }
+  ],
+  "coverage": {
+    "verified": 500,
+    "total": 586,
+    "remaining": 86,
+    "full_upgrade": "all 86 unverified",
+    "p0": "not approved",
+    "java21": "not switched"
+  },
+  "limits": [
+    "No historical release artifact or restorable predecessor snapshot available",
+    "No full clean verify, unit tests, ArchUnit, PMD or JaCoCo gate claimed",
+    "Existing fixture repair is limited to synthetic MySQL database after expected V62 NULL rejection",
+    "No existing container credentials, real configuration or production accessed; no image pull or published container port"
+  ],
+  "artifacts": {
+    "resources-before.json": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-resources-before.json",
+      "sha256": "19509ee3d71405b57e0537e2ed23d377e5cd4f2d89fdf67e1da3fbb6458d5855"
+    },
+    "images-before.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-images-before.log",
+      "sha256": "5bf19f51ac99584d8860d9b856ab059d12730fb83e02cf0690a69b647d6a9456"
+    },
+    "mysql-create.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-mysql-create.log",
+      "sha256": "28e783ca71d54c3fef449772c19b2395cb8b96b7618ea654a8f7972d72b131d5"
+    },
+    "mysql-relay-capabilities.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-mysql-relay-capabilities.log",
+      "sha256": "fd4e68e1173e326a85938c56e7970ce9f30c4f8ef70e626bd22256926712989b"
+    },
+    "postgresql-create.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-postgresql-create.log",
+      "sha256": "2e57578851356aa2d38cd12d844a210f756216943933e35c6213fd3169114ba6"
+    },
+    "postgresql-relay-capabilities.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-postgresql-relay-capabilities.log",
+      "sha256": "0c7bd50a2d6a60499b05a00062d3399fa3f7a86436c453362d6a5467890ba486"
+    },
+    "toolchain.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-toolchain.log",
+      "sha256": "4d2a055844361794891165ca674126ee1beefdaf02f34992f71af4ac26bec30a"
+    },
+    "targeted-failsafe.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-targeted-failsafe.log",
+      "sha256": "781fb9a823176a42f3719922c97adc88d0d674e9c237a2a71c991df48c6e44c9"
+    },
+    "failsafe.xml": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-failsafe.xml",
+      "sha256": "9ec6a5316ab02ed111eaaa42d0f3de208d5d4b70d5e86286142c38be5e22bbb0"
+    },
+    "failsafe.txt": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-failsafe.txt",
+      "sha256": "2edd61bde889366631289791e9eac175b5a934011e90e5ff86f495dac91b8535"
+    },
+    "apex-synth-a13f7c9e-mysql-container.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-apex-synth-a13f7c9e-mysql-container.log",
+      "sha256": "9b292afd50c4d35426ea162e60f1ccf6c9e580516a7858854440dd917508eb84"
+    },
+    "apex-synth-a13f7c9e-postgresql-container.log": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-apex-synth-a13f7c9e-postgresql-container.log",
+      "sha256": "02faf4ef3eb8b419be401f798c851b44b2e554b050cf0183298ff250ce76ee3e"
+    },
+    "resources-after.json": {
+      "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/synthetic-predecessor-upgrade-20261020-a13f7c9e-resources-after.json",
+      "sha256": "19509ee3d71405b57e0537e2ed23d377e5cd4f2d89fdf67e1da3fbb6458d5855"
+    }
+  },
+  "results": {
+    "toolchain": {
+      "exit_code": 0,
+      "command": "source scripts/build/init-build-env.sh && java -version && mvnd --version && mvnd --stop"
+    },
+    "targeted-failsafe": {
+      "exit_code": 0,
+      "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-system -am test-compile failsafe:integration-test failsafe:verify spotless:check -Dskip.unit.tests=true -Djacoco.skip=true -Dit.test=SystemDualDatabaseMigrationIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false"
+    },
+    "test_counts": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_cases": [
+      {
+        "name": "shouldMigrateEveryVersionAndValidate(String)[1]",
+        "time": "56.767",
+        "failure": []
+      },
+      {
+        "name": "shouldMigrateEveryVersionAndValidate(String)[2]",
+        "time": "76.849",
+        "failure": []
+      }
+    ]
+  },
+  "source_sha256_before": {
+    "apex-system/pom.xml": "cfc30688eff039b37c4707cee1aaa37caeccaf589a014984260a0212510d82f4",
+    "apex-system/src/main/resources/db/migration/mysql/V10__add_super_admin_role.sql": "515dbb59270af25f9c50efc9cc63c35c5aed6fae45cf164b9626d3b5b8c279c5",
+    "apex-system/src/main/resources/db/migration/mysql/V11__fix_menu_status_and_seed_monitor.sql": "80862593148b6b11141b40b7b835d4b59c3684455076ae334315f461cf8b15f8",
+    "apex-system/src/main/resources/db/migration/mysql/V12__drop_audit_log.sql": "171707d7698061d7b8e0898e76d2f80f5cd19089efac20b2728e6fcf2e0bbc51",
+    "apex-system/src/main/resources/db/migration/mysql/V13__seed_api_call_log_permissions.sql": "a8851e8321dba3eb1c1b5a56ee92a9720418a5d67a169b20051fcd7340054b2f",
+    "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+    "apex-system/src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql": "003383a4ac436588bd27f89b6aef852e8916eeb25a77e5bdd96a4e7f072af78f",
+    "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+    "apex-system/src/main/resources/db/migration/mysql/V17__create_sys_tenant.sql": "d0c78ac318069fc229f0eae50c48c4414baa71db95aeb7596f8dc15240f56e90",
+    "apex-system/src/main/resources/db/migration/mysql/V18__add_role_data_scope.sql": "e137eb7d361372c4a476674d16ca0df6f9136bd1164536e0d8c9f127b3e83d26",
+    "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+    "apex-system/src/main/resources/db/migration/mysql/V1__init_schema.sql": "97faf08ee6553104ece895f7d71ccdf191fbd454a986d6b7e25d37d422a59ca6",
+    "apex-system/src/main/resources/db/migration/mysql/V20__create_workflow_engine_tables.sql": "c7ac7e06fad42056bc250e6c5a6703fa30c80293d5afb4ca81fdb8eb2d8bd438",
+    "apex-system/src/main/resources/db/migration/mysql/V21__enhance_workflow_tables.sql": "83c8608b90a2d686cf2fbaa707647ea961584d94e994b31f19985117db1ec0a8",
+    "apex-system/src/main/resources/db/migration/mysql/V22__seed_search_and_log_permissions.sql": "abc32ce565dbf751821e5e70c66583c0cf8bdb8ef44cdc7482cdfc9769a46be5",
+    "apex-system/src/main/resources/db/migration/mysql/V23__add_database_config_menu.sql": "93d459758ea295ada958046366b4cdda128b01696777e6adeec33ff3f607dc16",
+    "apex-system/src/main/resources/db/migration/mysql/V24__remove_foreign_keys.sql": "1aadb1210296454d12e92a3438a103cb46b0b014dc84b1517d1dde195f93af04",
+    "apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql": "428b4b5082e5a74a598d223f53e5a66d0cdec49ee250ba22957fe870cd3fe23e",
+    "apex-system/src/main/resources/db/migration/mysql/V26__create_jwt_keys_table.sql": "48a7156601792408cc77d5750eecba5ea412e7514420296ec2c3d9dfdb8e0c6a",
+    "apex-system/src/main/resources/db/migration/mysql/V27__mfa_config.sql": "cfa96c9def13d36c726c9c28807ae90c00db53f0a29816a40a8a1c8fd20f5aa6",
+    "apex-system/src/main/resources/db/migration/mysql/V28__add_job_query_menu_and_permissions.sql": "e44c17de4efb61df86e689c13225eaa095ff472caa4a2ef59dc428594941020e",
+    "apex-system/src/main/resources/db/migration/mysql/V29__create_office_platform_tables.sql": "0b7a16b5766586bdef89fae41729ce1e9e40f56c67bd3079e7be51a5a1842da5",
+    "apex-system/src/main/resources/db/migration/mysql/V2__seed_system_permissions.sql": "883b52bd7e9746de66861f50a47257d70515486a542a653696827ed9aff79299",
+    "apex-system/src/main/resources/db/migration/mysql/V30__add_office_admin_permissions.sql": "74aadaf732711ecb839b301c74103face2fc40647cccc25fc3847f54b8745975",
+    "apex-system/src/main/resources/db/migration/mysql/V31__create_office_message_table.sql": "54d67dc69562ad59972b3b348ec6afd3fd5c28d4e65139d18212ba4378300870",
+    "apex-system/src/main/resources/db/migration/mysql/V32__create_office_approval_process_table.sql": "9e39bd64bdb196b9f68407f2b94aeea210191aafdba6a2fa7fb7bf254239557f",
+    "apex-system/src/main/resources/db/migration/mysql/V33__add_office_platform_menus.sql": "c077052f92289f14411ca9e3a3785caad6793a1a433814e486ce34ac8a47a3b4",
+    "apex-system/src/main/resources/db/migration/mysql/V34__create_office_calendar_event_table.sql": "c1459a709af2482e40a336c4b3a9419f3002cbf3e85b66ade98bab0fdedc92b0",
+    "apex-system/src/main/resources/db/migration/mysql/V35__create_office_document_info_table.sql": "bff29c8bbdc9144a7902ce696473da613cdf0e3b5a0f601db48ce97975687940",
+    "apex-system/src/main/resources/db/migration/mysql/V36__add_office_message_menu_and_permissions.sql": "0ab2de82b2007a7590f78db59de0ce8d2875330631a9e2c380807667269bdf9f",
+    "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+    "apex-system/src/main/resources/db/migration/mysql/V38__supplement_missing_menus.sql": "b2af08c13acb65ac83ef9e8fcdb28b891fde48970a54e2c94f1077757784792d",
+    "apex-system/src/main/resources/db/migration/mysql/V39__fix_online_users_and_seed_jobs.sql": "d3471bbbf0bb8e812626369291ba5e8f04938757fb0b4fb9df630ac0d50ce51c",
+    "apex-system/src/main/resources/db/migration/mysql/V3__add_username_password_to_sys_user.sql": "88edcb4c572642eb8a6c6b6bd3388541c29bba993bd060e5496adc516017de88",
+    "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+    "apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql": "2adccc78a662f4d0223f5ebadfab1e5b7ce946fdf1439c0f8fed82172328832a",
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql": "e457d95723040f545ac574c28b43f45b16082192883f7fce2d75c06001886006",
+    "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+    "apex-system/src/main/resources/db/migration/mysql/V45__add_message_outbox.sql": "b253fa6440e55b90e38282328dd50686661eb4e5d2082b78cfbffadfe5b78785",
+    "apex-system/src/main/resources/db/migration/mysql/V46__disable_unimplemented_system_jobs.sql": "2a012f053b72cce4ec88528647e1c3da3cc00a37ae3381683dc2f0879c212082",
+    "apex-system/src/main/resources/db/migration/mysql/V47__add_client_secret_rotation_tracking.sql": "30b6fea993cc9ddf1d701ee4d62a091ff3682f939b2d14c3c30ac09f27cab9e4",
+    "apex-system/src/main/resources/db/migration/mysql/V48__security_enhancements.sql": "a45c144693b32e5bd9e711e1d3ed4474fe9e6381cf152bf70ead7c4a9f114867",
+    "apex-system/src/main/resources/db/migration/mysql/V49__create_sys_datasource.sql": "fc0f24128f34be2c6c5bd8c08c9d35776ce030d7d3bc670f7ba2b9cbd6a3d6d5",
+    "apex-system/src/main/resources/db/migration/mysql/V4__seed_audit_log_permissions.sql": "922e457d4a41d783b8657c34c0eae580d9e5ccea69977028c727f217f5464a2d",
+    "apex-system/src/main/resources/db/migration/mysql/V50__register_module_permission_codes.sql": "e59fafce2b441acb4c2346adc57a45b18ba1fc3d150071ef9be43f5d6514f9cf",
+    "apex-system/src/main/resources/db/migration/mysql/V51__add_keycloak_fields.sql": "5bcce0eec1a75873b724e3c3c5bacbada38c4e90c391aca11018a2e5bd416e38",
+    "apex-system/src/main/resources/db/migration/mysql/V52__add_token_revocation_tracking.sql": "e1ef7fce809a07442484e87ab7c8fd4e5f461b92841617c5a3a216b0b398b9c4",
+    "apex-system/src/main/resources/db/migration/mysql/V53__ip_access_control.sql": "eb55302e8b282bc107ec0bb5ffb0f69fe5b707d956738f30302bf12176e5e590",
+    "apex-system/src/main/resources/db/migration/mysql/V54__create_document_and_chart_tables.sql": "847ada922b0a065a8f0c08f78a97877a683ff5fc7cceb824e2d1fbda40cf185a",
+    "apex-system/src/main/resources/db/migration/mysql/V55__biometric_auth.sql": "a99c0fabd01d3c219e0ac8c6c996bd3bfa4d3a1385b366fa7dd2c99148bed86d",
+    "apex-system/src/main/resources/db/migration/mysql/V56__device_trust.sql": "a91f3cb9e82a97febfc4d6afc268318c1d9996da3e8f01e3a545f2a459551d30",
+    "apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql": "71fe90ea97c457477b3b1980bf4b425e46826f08c8d41194eb67a6655b9497fc",
+    "apex-system/src/main/resources/db/migration/mysql/V58__add_token_revocation_tracking.sql": "7ee27811bfc618c8fa08a4d516cb6681af597cbaa3995a90f72d6c77dd41a5f0",
+    "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+    "apex-system/src/main/resources/db/migration/mysql/V5__seed_online_user_permission.sql": "af79e2c91b9bf93eee84c1ea690e4ae61f528142d22b9ec367ac1752c2bc424d",
+    "apex-system/src/main/resources/db/migration/mysql/V60__create_gateway_access_log.sql": "8431e6f3b6d597ec8085e8f1ed117c2c9baff3f3425c00a98e89704336b54e7a",
+    "apex-system/src/main/resources/db/migration/mysql/V61__create_seata_undo_log.sql": "0e7292b4b07b40c24773d3378446016824c3142d17f8e9358d2405c0264c9613",
+    "apex-system/src/main/resources/db/migration/mysql/V62__align_system_database_schema.sql": "830ab0333a200847929bee5c2215c1e383319049a193bcd78e11720289f04bd8",
+    "apex-system/src/main/resources/db/migration/mysql/V6__create_dept_and_data_permission.sql": "e248a1251d8b0ac36a937526f47736f08db9be1f337cef31e92f4d87940bbd18",
+    "apex-system/src/main/resources/db/migration/mysql/V7__add_call_time_to_api_call_log.sql": "a912ca7712bd546b537006e9663521d4f9d7108826bfba57fad2dc0138321769",
+    "apex-system/src/main/resources/db/migration/mysql/V8__seed_admin_user_and_fix_menus.sql": "cabfe5e913865ec8d9482fd1b25528846bf2d1506b01c1c8219e2653404a716c",
+    "apex-system/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql": "ace2b9d40fce461975ece4c20cd8cb933dc648b95d30beaa5010466436fe95f3",
+    "apex-system/src/main/resources/db/migration/postgresql/V10__add_super_admin_role.sql": "ef7e48035afbc2db048eda8cf0b3dc795ce67105f0bee8503673bcad13c24fab",
+    "apex-system/src/main/resources/db/migration/postgresql/V11__fix_menu_status_and_seed_monitor.sql": "266d5fe4fba40c25281543daacbfa3dfe9e090cfd42b8ec3267a2c87861bb814",
+    "apex-system/src/main/resources/db/migration/postgresql/V12__drop_audit_log.sql": "a15c328b3a65377817fdaa3d076d2c2d782d1fcf76b1bb27f8e0a55ec93a395f",
+    "apex-system/src/main/resources/db/migration/postgresql/V13__seed_api_call_log_permissions.sql": "82a4b4adfc209069c9c56c9019bf55d5a4fe5f2a3319dcfa5654bab478404fbb",
+    "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql": "344ed0c461f60629457f97e29e6d09b3c66e80ef6c933153c4b47d2ab2538f26",
+    "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+    "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql": "9f913456ce98b24c456d2d4466e847ea75bb3c791e088aa55306852d8ae4e390",
+    "apex-system/src/main/resources/db/migration/postgresql/V17__create_sys_tenant.sql": "ecd8b347f8ec9063a2136a7295d43991c45938915f38e1030aef796413a22e65",
+    "apex-system/src/main/resources/db/migration/postgresql/V18__add_role_data_scope.sql": "c6b76410b362ab89b5f8d699a727e52ca00f45f88d610f703eacc604139b120e",
+    "apex-system/src/main/resources/db/migration/postgresql/V19__enforce_department_tenant_integrity.sql": "5c1320dce0bee6b442fca838f9a48ab0a59844e9e884fc03673d828beeeeef5f",
+    "apex-system/src/main/resources/db/migration/postgresql/V1__init_schema.sql": "4f3ec3eb40fa82fe4ec0f6a994f3675d8b83281a1a3e195c48a68c47b3f415a6",
+    "apex-system/src/main/resources/db/migration/postgresql/V20__create_workflow_engine_tables.sql": "f5b571927bc7585106061fffb264d604b57a029d7a7cf6ae7857287a63feebb5",
+    "apex-system/src/main/resources/db/migration/postgresql/V21__enhance_workflow_tables.sql": "b4544cc778887d65c1fa048f7b7f4725447325dc71d3e89d4918ddf2eba44ed5",
+    "apex-system/src/main/resources/db/migration/postgresql/V22__seed_search_and_log_permissions.sql": "4767fecd1f6540084b2c1537b01cfb3a80d9ef2583dfdd78fdc554a185aad856",
+    "apex-system/src/main/resources/db/migration/postgresql/V23__add_database_config_menu.sql": "f7ef37ff2bafb75dee594c8728e5772f61af43a0de9b87144e95e8375956c328",
+    "apex-system/src/main/resources/db/migration/postgresql/V24__remove_foreign_keys.sql": "b70d7a38a3343f40a883b4e2a9fc071d9ffbdf682fe2de17bd5117a39b69d92e",
+    "apex-system/src/main/resources/db/migration/postgresql/V25__oauth2_authorization_server_schema.sql": "e6aca5e17bd39a0a114b793fe335092e47b1abb197405764a3f82a0b86d70f12",
+    "apex-system/src/main/resources/db/migration/postgresql/V26__create_jwt_keys_table.sql": "049422dee1b089d88a85297a63720ab6608a88d675935aa75a16e5faf9c45181",
+    "apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql": "dbee671db6be9356125bb3684c24545069f64bc1b3fad188014ea973840f7335",
+    "apex-system/src/main/resources/db/migration/postgresql/V28__add_job_query_menu_and_permissions.sql": "e44c17de4efb61df86e689c13225eaa095ff472caa4a2ef59dc428594941020e",
+    "apex-system/src/main/resources/db/migration/postgresql/V29__create_office_platform_tables.sql": "7de6ffe74ebbd46c4620af4d85700d8715bf3eb790a189db71c05a8a2187cb72",
+    "apex-system/src/main/resources/db/migration/postgresql/V2__seed_system_permissions.sql": "883b52bd7e9746de66861f50a47257d70515486a542a653696827ed9aff79299",
+    "apex-system/src/main/resources/db/migration/postgresql/V30__add_office_admin_permissions.sql": "74aadaf732711ecb839b301c74103face2fc40647cccc25fc3847f54b8745975",
+    "apex-system/src/main/resources/db/migration/postgresql/V31__create_office_message_table.sql": "794269930e6abacdd17888b6ded7231c5193c8a53c9814162577b57daa651af3",
+    "apex-system/src/main/resources/db/migration/postgresql/V32__create_office_approval_process_table.sql": "6e13c7fe4d51be72ec16c9696fa0608eed54fcad17924f240c86af663726e086",
+    "apex-system/src/main/resources/db/migration/postgresql/V33__add_office_platform_menus.sql": "c077052f92289f14411ca9e3a3785caad6793a1a433814e486ce34ac8a47a3b4",
+    "apex-system/src/main/resources/db/migration/postgresql/V34__create_office_calendar_event_table.sql": "59ab1203804a297b2b2756fee5dee2a9b26b07ae32bba48b8ad761ad0c836a7c",
+    "apex-system/src/main/resources/db/migration/postgresql/V35__create_office_document_info_table.sql": "a4e7d7d37b6dcc1678aafd1249d7e0c4e8fe7698cf2cf262919fad5dc5c6286c",
+    "apex-system/src/main/resources/db/migration/postgresql/V36__add_office_message_menu_and_permissions.sql": "0ab2de82b2007a7590f78db59de0ce8d2875330631a9e2c380807667269bdf9f",
+    "apex-system/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql": "a515bd7ffb13a34fa0a2a96adba5757d40f100190478452cf61c2bba9876b06b",
+    "apex-system/src/main/resources/db/migration/postgresql/V38__supplement_missing_menus.sql": "3fc208cbf8a183a1cf50027061ed4099b0e48b9c4fc33bc558ec1eb03cff2669",
+    "apex-system/src/main/resources/db/migration/postgresql/V39__fix_online_users_and_seed_jobs.sql": "b425b7c1133c3feea6db0cebdc8b98bb0a7a4557d69b71d210614979b5632d39",
+    "apex-system/src/main/resources/db/migration/postgresql/V3__add_username_password_to_sys_user.sql": "df390a69ea46e310ca391223de44daac70687c5ebcc2984a7b257dbaee7885d6",
+    "apex-system/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql": "57dd197ca93ddaa54871d221f9ab7550916968810683c7ac6d48535fac8c9481",
+    "apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql": "dd544e8b530ce37fadb74341ce6ac97d58a33d634d8be40a61c61dd51c364552",
+    "apex-system/src/main/resources/db/migration/postgresql/V42__add_office_platform_tables.sql": "57f1c30600e40949d452ce8b818e4f107ef665fd5081a6d0c2891a3815b733a5",
+    "apex-system/src/main/resources/db/migration/postgresql/V43__performance_optimization_indexes.sql": "16195ab677658644cdbfd6a52387dd85c257a6bad64365266b19917bbe8b79ae",
+    "apex-system/src/main/resources/db/migration/postgresql/V44__initialize_default_tenant.sql": "47c7dd54aade56284033fca56639518846f2a04e0ff10dd1540b9a01dd73e632",
+    "apex-system/src/main/resources/db/migration/postgresql/V45__add_message_outbox.sql": "5df73982eff149b7143e68cb906612a2aaf91b38e7324c8f224589538a597f6d",
+    "apex-system/src/main/resources/db/migration/postgresql/V46__disable_unimplemented_system_jobs.sql": "5aa4b791a3f3a40539856e5da50e8d24659860b03b22d05241964c1ef27c4390",
+    "apex-system/src/main/resources/db/migration/postgresql/V47__add_token_revocation_tracking.sql": "336f31f88437b2b9143168047bef7b0fc53e81547b65824f0dc5f627c78465b8",
+    "apex-system/src/main/resources/db/migration/postgresql/V48__add_client_secret_rotation_tracking.sql": "593ce4a9054683c48707b1b99a6a5cb23b94aa8b7c2ca31b8ecec2cc1caf2f08",
+    "apex-system/src/main/resources/db/migration/postgresql/V49__create_sys_datasource.sql": "9597672b33226eb883cd9a05639aa76939b959ff71bcf7a0ce90a6d704ca017c",
+    "apex-system/src/main/resources/db/migration/postgresql/V4__seed_audit_log_permissions.sql": "f73750ff6f3d89481dfa3456c5e8c0bc01d871d2a0d45f0186b4840815068073",
+    "apex-system/src/main/resources/db/migration/postgresql/V50__register_module_permission_codes.sql": "72357909da88e4945c27eee944c5a0e0ff15cc3da79aa8c643bd3e34dae22a77",
+    "apex-system/src/main/resources/db/migration/postgresql/V51__mysql_alignment_placeholder.sql": "5a4857c72076f3f1d2a2de0c64337280d412f9015a3384d39a52e28d0dc179d8",
+    "apex-system/src/main/resources/db/migration/postgresql/V52__mysql_alignment_placeholder.sql": "1cb1d34a8f5ebf9548b62fa7e05f16b915e20f81c00ceb01e1b1545ff08ffba4",
+    "apex-system/src/main/resources/db/migration/postgresql/V53__mysql_alignment_placeholder.sql": "e2d9fb0b41fa490bbf929ccf7cb8ab337ebe019bb46abae0dcecdff74bc9ed3e",
+    "apex-system/src/main/resources/db/migration/postgresql/V54__mysql_alignment_placeholder.sql": "a7886510c2589da87737e1e07fa512b451200dc2600e94337bd4f1e561ff42b6",
+    "apex-system/src/main/resources/db/migration/postgresql/V55__mysql_alignment_placeholder.sql": "30278a9383406813a30b83051399b9faa581b1b8bd7bdc6b8428a41402b44d10",
+    "apex-system/src/main/resources/db/migration/postgresql/V56__mysql_alignment_placeholder.sql": "42d0fad060f2bdc49e1cce262bf52747e8f6763a8243d705a13d3e33504de8d6",
+    "apex-system/src/main/resources/db/migration/postgresql/V57__mysql_alignment_placeholder.sql": "9301a6487a4bed61cb9026e67288dcfe416bf58adaa3f4da36f851620eb71c56",
+    "apex-system/src/main/resources/db/migration/postgresql/V58__mysql_alignment_placeholder.sql": "774f4f711bca5ae2d722e0f9a55034e12b9a7cb8814d47036c60eb5cdd0ff6db",
+    "apex-system/src/main/resources/db/migration/postgresql/V59__multi_client_account.sql": "d2e975f2658188b4b730bf7caa7c8ca7a79ac6a6a3ae2e48d36c6fe642896dda",
+    "apex-system/src/main/resources/db/migration/postgresql/V5__seed_online_user_permission.sql": "12179c728acce016485759d61f9dc6a0acab6dd5f0ccf16b63e53799a31c1e17",
+    "apex-system/src/main/resources/db/migration/postgresql/V60__create_gateway_access_log.sql": "8d115873af7740c0cc59b9ab827d3461e2c932de0e6be159f15daa25d66c7dad",
+    "apex-system/src/main/resources/db/migration/postgresql/V61__create_seata_undo_log.sql": "59e647c1c78f3eed23fc9882481099a231612da20e92bf1208c52adf990d4244",
+    "apex-system/src/main/resources/db/migration/postgresql/V62__align_system_database_schema.sql": "817e7e9c1a8e82da21794d136e9d82e78fcc7ade4f92d0b1b33857ab6a3d8334",
+    "apex-system/src/main/resources/db/migration/postgresql/V6__create_dept_and_data_permission.sql": "54f19723fced09b7881836b407c18cea7b6e789a047422207e3c50ed399eadb3",
+    "apex-system/src/main/resources/db/migration/postgresql/V7__add_call_time_to_api_call_log.sql": "e062e1e9c5db05da17a9314508972163b31806df501f0a2aea7fb7d7c59293a3",
+    "apex-system/src/main/resources/db/migration/postgresql/V8__seed_admin_user_and_fix_menus.sql": "e85fb408a9663517398113ac077808b9732259ae15ff2f9c22fb7a376ea53c7a",
+    "apex-system/src/main/resources/db/migration/postgresql/V9__add_birthday_onboarding_to_sys_user.sql": "f3593eb4021b9c23634521f4b90b42445b2900124d204bb2177b87aa088ae56c",
+    "apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java": "855fbe948daf8daf14b919fb36f596c1d632a518e9178a26504d5f856df1213f",
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/migration-one-time-acceptance-20261020.json": "e7069952d1faac8ba30455f579658e332f2bed17a39154cfd448d000c3d3ae63",
+    "pom.xml": "9dad56c03bd9d1872e9980b5c0fa1e273a0ca957939b37ee65fe722719ef9bba",
+    "scripts/build/init-build-env.sh": "3235bcbf795381f192ae243f51db6624ee958b0a94cf4290cd7ab976f2ac6d1a"
+  },
+  "podman": {
+    "Client": {
+      "APIVersion": "5.8.5",
+      "Version": "5.8.5",
+      "GoVersion": "go1.26.5",
+      "GitCommit": "6d48b6f12f793176f3f6bc808b5a440984c14eb2",
+      "BuiltTime": "Thu Jul  9 02:40:10 2026",
+      "Built": 1783536010,
+      "BuildOrigin": "pkginstaller",
+      "OsArch": "darwin/amd64",
+      "Os": "darwin"
+    },
+    "Server": {
+      "APIVersion": "5.8.7",
+      "Version": "5.8.7",
+      "GoVersion": "go1.26.8-X:nodwarf5",
+      "GitCommit": "c593b672bf3db1173aebea565ebf1a724ea196dc",
+      "BuiltTime": "Wed Sep 16 08:00:00 2026",
+      "Built": 1789516800,
+      "OsArch": "linux/amd64",
+      "Os": "linux"
+    }
+  },
+  "databases": {
+    "mysql": {
+      "container": "apex-synth-a13f7c9e-mysql",
+      "image": "6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+      "network_mode": "none",
+      "port_bindings": {},
+      "mounts": [],
+      "tmpfs": {
+        "/tmp": "rw,size=128m,rprivate,nosuid,nodev,tmpcopyup",
+        "/var/lib/mysql": "rw,size=1024m,rprivate,nosuid,nodev,tmpcopyup"
+      },
+      "actual_version": "8.0.46",
+      "loopback_relay": {
+        "host": "127.0.0.1",
+        "port": 54915,
+        "exec_argv": [
+          "podman",
+          "exec",
+          "-i",
+          "apex-synth-a13f7c9e-mysql",
+          "bash",
+          "-c",
+          "exec 3<>/dev/tcp/127.0.0.1/3306; cat <&3 & cat >&3; wait"
+        ]
+      }
+    },
+    "postgresql": {
+      "container": "apex-synth-a13f7c9e-postgresql",
+      "image": "79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537",
+      "network_mode": "none",
+      "port_bindings": {},
+      "mounts": [],
+      "tmpfs": {
+        "/tmp": "rw,size=128m,rprivate,nosuid,nodev,tmpcopyup",
+        "/var/lib/postgresql/data": "rw,size=1024m,rprivate,nosuid,nodev,tmpcopyup"
+      },
+      "actual_version": "PostgreSQL 17.11 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "loopback_relay": {
+        "host": "127.0.0.1",
+        "port": 54926,
+        "exec_argv": [
+          "podman",
+          "exec",
+          "-i",
+          "apex-synth-a13f7c9e-postgresql",
+          "nc",
+          "127.0.0.1",
+          "5432"
+        ]
+      }
+    }
+  },
+  "status": "passed",
+  "cleanup": {
+    "operations": {
+      "apex-synth-a13f7c9e-mysql": {
+        "exit_code": 0,
+        "output": "apex-synth-a13f7c9e-mysql"
+      },
+      "apex-synth-a13f7c9e-postgresql": {
+        "exit_code": 0,
+        "output": "apex-synth-a13f7c9e-postgresql"
+      }
+    },
+    "container_ids_unchanged": true,
+    "volume_names_unchanged": true,
+    "relay_listeners_closed": true
+  },
+  "source_sha256_after": {
+    "apex-system/pom.xml": "cfc30688eff039b37c4707cee1aaa37caeccaf589a014984260a0212510d82f4",
+    "apex-system/src/main/resources/db/migration/mysql/V10__add_super_admin_role.sql": "515dbb59270af25f9c50efc9cc63c35c5aed6fae45cf164b9626d3b5b8c279c5",
+    "apex-system/src/main/resources/db/migration/mysql/V11__fix_menu_status_and_seed_monitor.sql": "80862593148b6b11141b40b7b835d4b59c3684455076ae334315f461cf8b15f8",
+    "apex-system/src/main/resources/db/migration/mysql/V12__drop_audit_log.sql": "171707d7698061d7b8e0898e76d2f80f5cd19089efac20b2728e6fcf2e0bbc51",
+    "apex-system/src/main/resources/db/migration/mysql/V13__seed_api_call_log_permissions.sql": "a8851e8321dba3eb1c1b5a56ee92a9720418a5d67a169b20051fcd7340054b2f",
+    "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+    "apex-system/src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql": "003383a4ac436588bd27f89b6aef852e8916eeb25a77e5bdd96a4e7f072af78f",
+    "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+    "apex-system/src/main/resources/db/migration/mysql/V17__create_sys_tenant.sql": "d0c78ac318069fc229f0eae50c48c4414baa71db95aeb7596f8dc15240f56e90",
+    "apex-system/src/main/resources/db/migration/mysql/V18__add_role_data_scope.sql": "e137eb7d361372c4a476674d16ca0df6f9136bd1164536e0d8c9f127b3e83d26",
+    "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+    "apex-system/src/main/resources/db/migration/mysql/V1__init_schema.sql": "97faf08ee6553104ece895f7d71ccdf191fbd454a986d6b7e25d37d422a59ca6",
+    "apex-system/src/main/resources/db/migration/mysql/V20__create_workflow_engine_tables.sql": "c7ac7e06fad42056bc250e6c5a6703fa30c80293d5afb4ca81fdb8eb2d8bd438",
+    "apex-system/src/main/resources/db/migration/mysql/V21__enhance_workflow_tables.sql": "83c8608b90a2d686cf2fbaa707647ea961584d94e994b31f19985117db1ec0a8",
+    "apex-system/src/main/resources/db/migration/mysql/V22__seed_search_and_log_permissions.sql": "abc32ce565dbf751821e5e70c66583c0cf8bdb8ef44cdc7482cdfc9769a46be5",
+    "apex-system/src/main/resources/db/migration/mysql/V23__add_database_config_menu.sql": "93d459758ea295ada958046366b4cdda128b01696777e6adeec33ff3f607dc16",
+    "apex-system/src/main/resources/db/migration/mysql/V24__remove_foreign_keys.sql": "1aadb1210296454d12e92a3438a103cb46b0b014dc84b1517d1dde195f93af04",
+    "apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql": "428b4b5082e5a74a598d223f53e5a66d0cdec49ee250ba22957fe870cd3fe23e",
+    "apex-system/src/main/resources/db/migration/mysql/V26__create_jwt_keys_table.sql": "48a7156601792408cc77d5750eecba5ea412e7514420296ec2c3d9dfdb8e0c6a",
+    "apex-system/src/main/resources/db/migration/mysql/V27__mfa_config.sql": "cfa96c9def13d36c726c9c28807ae90c00db53f0a29816a40a8a1c8fd20f5aa6",
+    "apex-system/src/main/resources/db/migration/mysql/V28__add_job_query_menu_and_permissions.sql": "e44c17de4efb61df86e689c13225eaa095ff472caa4a2ef59dc428594941020e",
+    "apex-system/src/main/resources/db/migration/mysql/V29__create_office_platform_tables.sql": "0b7a16b5766586bdef89fae41729ce1e9e40f56c67bd3079e7be51a5a1842da5",
+    "apex-system/src/main/resources/db/migration/mysql/V2__seed_system_permissions.sql": "883b52bd7e9746de66861f50a47257d70515486a542a653696827ed9aff79299",
+    "apex-system/src/main/resources/db/migration/mysql/V30__add_office_admin_permissions.sql": "74aadaf732711ecb839b301c74103face2fc40647cccc25fc3847f54b8745975",
+    "apex-system/src/main/resources/db/migration/mysql/V31__create_office_message_table.sql": "54d67dc69562ad59972b3b348ec6afd3fd5c28d4e65139d18212ba4378300870",
+    "apex-system/src/main/resources/db/migration/mysql/V32__create_office_approval_process_table.sql": "9e39bd64bdb196b9f68407f2b94aeea210191aafdba6a2fa7fb7bf254239557f",
+    "apex-system/src/main/resources/db/migration/mysql/V33__add_office_platform_menus.sql": "c077052f92289f14411ca9e3a3785caad6793a1a433814e486ce34ac8a47a3b4",
+    "apex-system/src/main/resources/db/migration/mysql/V34__create_office_calendar_event_table.sql": "c1459a709af2482e40a336c4b3a9419f3002cbf3e85b66ade98bab0fdedc92b0",
+    "apex-system/src/main/resources/db/migration/mysql/V35__create_office_document_info_table.sql": "bff29c8bbdc9144a7902ce696473da613cdf0e3b5a0f601db48ce97975687940",
+    "apex-system/src/main/resources/db/migration/mysql/V36__add_office_message_menu_and_permissions.sql": "0ab2de82b2007a7590f78db59de0ce8d2875330631a9e2c380807667269bdf9f",
+    "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+    "apex-system/src/main/resources/db/migration/mysql/V38__supplement_missing_menus.sql": "b2af08c13acb65ac83ef9e8fcdb28b891fde48970a54e2c94f1077757784792d",
+    "apex-system/src/main/resources/db/migration/mysql/V39__fix_online_users_and_seed_jobs.sql": "d3471bbbf0bb8e812626369291ba5e8f04938757fb0b4fb9df630ac0d50ce51c",
+    "apex-system/src/main/resources/db/migration/mysql/V3__add_username_password_to_sys_user.sql": "88edcb4c572642eb8a6c6b6bd3388541c29bba993bd060e5496adc516017de88",
+    "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+    "apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql": "2adccc78a662f4d0223f5ebadfab1e5b7ce946fdf1439c0f8fed82172328832a",
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql": "e457d95723040f545ac574c28b43f45b16082192883f7fce2d75c06001886006",
+    "apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql": "a13e3f3fb6643fc585dc14f55f7d3b686461079bc6fe1ee18f307ef5afd85c7b",
+    "apex-system/src/main/resources/db/migration/mysql/V45__add_message_outbox.sql": "b253fa6440e55b90e38282328dd50686661eb4e5d2082b78cfbffadfe5b78785",
+    "apex-system/src/main/resources/db/migration/mysql/V46__disable_unimplemented_system_jobs.sql": "2a012f053b72cce4ec88528647e1c3da3cc00a37ae3381683dc2f0879c212082",
+    "apex-system/src/main/resources/db/migration/mysql/V47__add_client_secret_rotation_tracking.sql": "30b6fea993cc9ddf1d701ee4d62a091ff3682f939b2d14c3c30ac09f27cab9e4",
+    "apex-system/src/main/resources/db/migration/mysql/V48__security_enhancements.sql": "a45c144693b32e5bd9e711e1d3ed4474fe9e6381cf152bf70ead7c4a9f114867",
+    "apex-system/src/main/resources/db/migration/mysql/V49__create_sys_datasource.sql": "fc0f24128f34be2c6c5bd8c08c9d35776ce030d7d3bc670f7ba2b9cbd6a3d6d5",
+    "apex-system/src/main/resources/db/migration/mysql/V4__seed_audit_log_permissions.sql": "922e457d4a41d783b8657c34c0eae580d9e5ccea69977028c727f217f5464a2d",
+    "apex-system/src/main/resources/db/migration/mysql/V50__register_module_permission_codes.sql": "e59fafce2b441acb4c2346adc57a45b18ba1fc3d150071ef9be43f5d6514f9cf",
+    "apex-system/src/main/resources/db/migration/mysql/V51__add_keycloak_fields.sql": "5bcce0eec1a75873b724e3c3c5bacbada38c4e90c391aca11018a2e5bd416e38",
+    "apex-system/src/main/resources/db/migration/mysql/V52__add_token_revocation_tracking.sql": "e1ef7fce809a07442484e87ab7c8fd4e5f461b92841617c5a3a216b0b398b9c4",
+    "apex-system/src/main/resources/db/migration/mysql/V53__ip_access_control.sql": "eb55302e8b282bc107ec0bb5ffb0f69fe5b707d956738f30302bf12176e5e590",
+    "apex-system/src/main/resources/db/migration/mysql/V54__create_document_and_chart_tables.sql": "847ada922b0a065a8f0c08f78a97877a683ff5fc7cceb824e2d1fbda40cf185a",
+    "apex-system/src/main/resources/db/migration/mysql/V55__biometric_auth.sql": "a99c0fabd01d3c219e0ac8c6c996bd3bfa4d3a1385b366fa7dd2c99148bed86d",
+    "apex-system/src/main/resources/db/migration/mysql/V56__device_trust.sql": "a91f3cb9e82a97febfc4d6afc268318c1d9996da3e8f01e3a545f2a459551d30",
+    "apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql": "71fe90ea97c457477b3b1980bf4b425e46826f08c8d41194eb67a6655b9497fc",
+    "apex-system/src/main/resources/db/migration/mysql/V58__add_token_revocation_tracking.sql": "7ee27811bfc618c8fa08a4d516cb6681af597cbaa3995a90f72d6c77dd41a5f0",
+    "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+    "apex-system/src/main/resources/db/migration/mysql/V5__seed_online_user_permission.sql": "af79e2c91b9bf93eee84c1ea690e4ae61f528142d22b9ec367ac1752c2bc424d",
+    "apex-system/src/main/resources/db/migration/mysql/V60__create_gateway_access_log.sql": "8431e6f3b6d597ec8085e8f1ed117c2c9baff3f3425c00a98e89704336b54e7a",
+    "apex-system/src/main/resources/db/migration/mysql/V61__create_seata_undo_log.sql": "0e7292b4b07b40c24773d3378446016824c3142d17f8e9358d2405c0264c9613",
+    "apex-system/src/main/resources/db/migration/mysql/V62__align_system_database_schema.sql": "830ab0333a200847929bee5c2215c1e383319049a193bcd78e11720289f04bd8",
+    "apex-system/src/main/resources/db/migration/mysql/V6__create_dept_and_data_permission.sql": "e248a1251d8b0ac36a937526f47736f08db9be1f337cef31e92f4d87940bbd18",
+    "apex-system/src/main/resources/db/migration/mysql/V7__add_call_time_to_api_call_log.sql": "a912ca7712bd546b537006e9663521d4f9d7108826bfba57fad2dc0138321769",
+    "apex-system/src/main/resources/db/migration/mysql/V8__seed_admin_user_and_fix_menus.sql": "cabfe5e913865ec8d9482fd1b25528846bf2d1506b01c1c8219e2653404a716c",
+    "apex-system/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql": "ace2b9d40fce461975ece4c20cd8cb933dc648b95d30beaa5010466436fe95f3",
+    "apex-system/src/main/resources/db/migration/postgresql/V10__add_super_admin_role.sql": "ef7e48035afbc2db048eda8cf0b3dc795ce67105f0bee8503673bcad13c24fab",
+    "apex-system/src/main/resources/db/migration/postgresql/V11__fix_menu_status_and_seed_monitor.sql": "266d5fe4fba40c25281543daacbfa3dfe9e090cfd42b8ec3267a2c87861bb814",
+    "apex-system/src/main/resources/db/migration/postgresql/V12__drop_audit_log.sql": "a15c328b3a65377817fdaa3d076d2c2d782d1fcf76b1bb27f8e0a55ec93a395f",
+    "apex-system/src/main/resources/db/migration/postgresql/V13__seed_api_call_log_permissions.sql": "82a4b4adfc209069c9c56c9019bf55d5a4fe5f2a3319dcfa5654bab478404fbb",
+    "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql": "344ed0c461f60629457f97e29e6d09b3c66e80ef6c933153c4b47d2ab2538f26",
+    "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+    "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql": "9f913456ce98b24c456d2d4466e847ea75bb3c791e088aa55306852d8ae4e390",
+    "apex-system/src/main/resources/db/migration/postgresql/V17__create_sys_tenant.sql": "ecd8b347f8ec9063a2136a7295d43991c45938915f38e1030aef796413a22e65",
+    "apex-system/src/main/resources/db/migration/postgresql/V18__add_role_data_scope.sql": "c6b76410b362ab89b5f8d699a727e52ca00f45f88d610f703eacc604139b120e",
+    "apex-system/src/main/resources/db/migration/postgresql/V19__enforce_department_tenant_integrity.sql": "5c1320dce0bee6b442fca838f9a48ab0a59844e9e884fc03673d828beeeeef5f",
+    "apex-system/src/main/resources/db/migration/postgresql/V1__init_schema.sql": "4f3ec3eb40fa82fe4ec0f6a994f3675d8b83281a1a3e195c48a68c47b3f415a6",
+    "apex-system/src/main/resources/db/migration/postgresql/V20__create_workflow_engine_tables.sql": "f5b571927bc7585106061fffb264d604b57a029d7a7cf6ae7857287a63feebb5",
+    "apex-system/src/main/resources/db/migration/postgresql/V21__enhance_workflow_tables.sql": "b4544cc778887d65c1fa048f7b7f4725447325dc71d3e89d4918ddf2eba44ed5",
+    "apex-system/src/main/resources/db/migration/postgresql/V22__seed_search_and_log_permissions.sql": "4767fecd1f6540084b2c1537b01cfb3a80d9ef2583dfdd78fdc554a185aad856",
+    "apex-system/src/main/resources/db/migration/postgresql/V23__add_database_config_menu.sql": "f7ef37ff2bafb75dee594c8728e5772f61af43a0de9b87144e95e8375956c328",
+    "apex-system/src/main/resources/db/migration/postgresql/V24__remove_foreign_keys.sql": "b70d7a38a3343f40a883b4e2a9fc071d9ffbdf682fe2de17bd5117a39b69d92e",
+    "apex-system/src/main/resources/db/migration/postgresql/V25__oauth2_authorization_server_schema.sql": "e6aca5e17bd39a0a114b793fe335092e47b1abb197405764a3f82a0b86d70f12",
+    "apex-system/src/main/resources/db/migration/postgresql/V26__create_jwt_keys_table.sql": "049422dee1b089d88a85297a63720ab6608a88d675935aa75a16e5faf9c45181",
+    "apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql": "dbee671db6be9356125bb3684c24545069f64bc1b3fad188014ea973840f7335",
+    "apex-system/src/main/resources/db/migration/postgresql/V28__add_job_query_menu_and_permissions.sql": "e44c17de4efb61df86e689c13225eaa095ff472caa4a2ef59dc428594941020e",
+    "apex-system/src/main/resources/db/migration/postgresql/V29__create_office_platform_tables.sql": "7de6ffe74ebbd46c4620af4d85700d8715bf3eb790a189db71c05a8a2187cb72",
+    "apex-system/src/main/resources/db/migration/postgresql/V2__seed_system_permissions.sql": "883b52bd7e9746de66861f50a47257d70515486a542a653696827ed9aff79299",
+    "apex-system/src/main/resources/db/migration/postgresql/V30__add_office_admin_permissions.sql": "74aadaf732711ecb839b301c74103face2fc40647cccc25fc3847f54b8745975",
+    "apex-system/src/main/resources/db/migration/postgresql/V31__create_office_message_table.sql": "794269930e6abacdd17888b6ded7231c5193c8a53c9814162577b57daa651af3",
+    "apex-system/src/main/resources/db/migration/postgresql/V32__create_office_approval_process_table.sql": "6e13c7fe4d51be72ec16c9696fa0608eed54fcad17924f240c86af663726e086",
+    "apex-system/src/main/resources/db/migration/postgresql/V33__add_office_platform_menus.sql": "c077052f92289f14411ca9e3a3785caad6793a1a433814e486ce34ac8a47a3b4",
+    "apex-system/src/main/resources/db/migration/postgresql/V34__create_office_calendar_event_table.sql": "59ab1203804a297b2b2756fee5dee2a9b26b07ae32bba48b8ad761ad0c836a7c",
+    "apex-system/src/main/resources/db/migration/postgresql/V35__create_office_document_info_table.sql": "a4e7d7d37b6dcc1678aafd1249d7e0c4e8fe7698cf2cf262919fad5dc5c6286c",
+    "apex-system/src/main/resources/db/migration/postgresql/V36__add_office_message_menu_and_permissions.sql": "0ab2de82b2007a7590f78db59de0ce8d2875330631a9e2c380807667269bdf9f",
+    "apex-system/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql": "a515bd7ffb13a34fa0a2a96adba5757d40f100190478452cf61c2bba9876b06b",
+    "apex-system/src/main/resources/db/migration/postgresql/V38__supplement_missing_menus.sql": "3fc208cbf8a183a1cf50027061ed4099b0e48b9c4fc33bc558ec1eb03cff2669",
+    "apex-system/src/main/resources/db/migration/postgresql/V39__fix_online_users_and_seed_jobs.sql": "b425b7c1133c3feea6db0cebdc8b98bb0a7a4557d69b71d210614979b5632d39",
+    "apex-system/src/main/resources/db/migration/postgresql/V3__add_username_password_to_sys_user.sql": "df390a69ea46e310ca391223de44daac70687c5ebcc2984a7b257dbaee7885d6",
+    "apex-system/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql": "57dd197ca93ddaa54871d221f9ab7550916968810683c7ac6d48535fac8c9481",
+    "apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql": "dd544e8b530ce37fadb74341ce6ac97d58a33d634d8be40a61c61dd51c364552",
+    "apex-system/src/main/resources/db/migration/postgresql/V42__add_office_platform_tables.sql": "57f1c30600e40949d452ce8b818e4f107ef665fd5081a6d0c2891a3815b733a5",
+    "apex-system/src/main/resources/db/migration/postgresql/V43__performance_optimization_indexes.sql": "16195ab677658644cdbfd6a52387dd85c257a6bad64365266b19917bbe8b79ae",
+    "apex-system/src/main/resources/db/migration/postgresql/V44__initialize_default_tenant.sql": "47c7dd54aade56284033fca56639518846f2a04e0ff10dd1540b9a01dd73e632",
+    "apex-system/src/main/resources/db/migration/postgresql/V45__add_message_outbox.sql": "5df73982eff149b7143e68cb906612a2aaf91b38e7324c8f224589538a597f6d",
+    "apex-system/src/main/resources/db/migration/postgresql/V46__disable_unimplemented_system_jobs.sql": "5aa4b791a3f3a40539856e5da50e8d24659860b03b22d05241964c1ef27c4390",
+    "apex-system/src/main/resources/db/migration/postgresql/V47__add_token_revocation_tracking.sql": "336f31f88437b2b9143168047bef7b0fc53e81547b65824f0dc5f627c78465b8",
+    "apex-system/src/main/resources/db/migration/postgresql/V48__add_client_secret_rotation_tracking.sql": "593ce4a9054683c48707b1b99a6a5cb23b94aa8b7c2ca31b8ecec2cc1caf2f08",
+    "apex-system/src/main/resources/db/migration/postgresql/V49__create_sys_datasource.sql": "9597672b33226eb883cd9a05639aa76939b959ff71bcf7a0ce90a6d704ca017c",
+    "apex-system/src/main/resources/db/migration/postgresql/V4__seed_audit_log_permissions.sql": "f73750ff6f3d89481dfa3456c5e8c0bc01d871d2a0d45f0186b4840815068073",
+    "apex-system/src/main/resources/db/migration/postgresql/V50__register_module_permission_codes.sql": "72357909da88e4945c27eee944c5a0e0ff15cc3da79aa8c643bd3e34dae22a77",
+    "apex-system/src/main/resources/db/migration/postgresql/V51__mysql_alignment_placeholder.sql": "5a4857c72076f3f1d2a2de0c64337280d412f9015a3384d39a52e28d0dc179d8",
+    "apex-system/src/main/resources/db/migration/postgresql/V52__mysql_alignment_placeholder.sql": "1cb1d34a8f5ebf9548b62fa7e05f16b915e20f81c00ceb01e1b1545ff08ffba4",
+    "apex-system/src/main/resources/db/migration/postgresql/V53__mysql_alignment_placeholder.sql": "e2d9fb0b41fa490bbf929ccf7cb8ab337ebe019bb46abae0dcecdff74bc9ed3e",
+    "apex-system/src/main/resources/db/migration/postgresql/V54__mysql_alignment_placeholder.sql": "a7886510c2589da87737e1e07fa512b451200dc2600e94337bd4f1e561ff42b6",
+    "apex-system/src/main/resources/db/migration/postgresql/V55__mysql_alignment_placeholder.sql": "30278a9383406813a30b83051399b9faa581b1b8bd7bdc6b8428a41402b44d10",
+    "apex-system/src/main/resources/db/migration/postgresql/V56__mysql_alignment_placeholder.sql": "42d0fad060f2bdc49e1cce262bf52747e8f6763a8243d705a13d3e33504de8d6",
+    "apex-system/src/main/resources/db/migration/postgresql/V57__mysql_alignment_placeholder.sql": "9301a6487a4bed61cb9026e67288dcfe416bf58adaa3f4da36f851620eb71c56",
+    "apex-system/src/main/resources/db/migration/postgresql/V58__mysql_alignment_placeholder.sql": "774f4f711bca5ae2d722e0f9a55034e12b9a7cb8814d47036c60eb5cdd0ff6db",
+    "apex-system/src/main/resources/db/migration/postgresql/V59__multi_client_account.sql": "d2e975f2658188b4b730bf7caa7c8ca7a79ac6a6a3ae2e48d36c6fe642896dda",
+    "apex-system/src/main/resources/db/migration/postgresql/V5__seed_online_user_permission.sql": "12179c728acce016485759d61f9dc6a0acab6dd5f0ccf16b63e53799a31c1e17",
+    "apex-system/src/main/resources/db/migration/postgresql/V60__create_gateway_access_log.sql": "8d115873af7740c0cc59b9ab827d3461e2c932de0e6be159f15daa25d66c7dad",
+    "apex-system/src/main/resources/db/migration/postgresql/V61__create_seata_undo_log.sql": "59e647c1c78f3eed23fc9882481099a231612da20e92bf1208c52adf990d4244",
+    "apex-system/src/main/resources/db/migration/postgresql/V62__align_system_database_schema.sql": "817e7e9c1a8e82da21794d136e9d82e78fcc7ade4f92d0b1b33857ab6a3d8334",
+    "apex-system/src/main/resources/db/migration/postgresql/V6__create_dept_and_data_permission.sql": "54f19723fced09b7881836b407c18cea7b6e789a047422207e3c50ed399eadb3",
+    "apex-system/src/main/resources/db/migration/postgresql/V7__add_call_time_to_api_call_log.sql": "e062e1e9c5db05da17a9314508972163b31806df501f0a2aea7fb7d7c59293a3",
+    "apex-system/src/main/resources/db/migration/postgresql/V8__seed_admin_user_and_fix_menus.sql": "e85fb408a9663517398113ac077808b9732259ae15ff2f9c22fb7a376ea53c7a",
+    "apex-system/src/main/resources/db/migration/postgresql/V9__add_birthday_onboarding_to_sys_user.sql": "f3593eb4021b9c23634521f4b90b42445b2900124d204bb2177b87aa088ae56c",
+    "apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java": "855fbe948daf8daf14b919fb36f596c1d632a518e9178a26504d5f856df1213f",
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/migration-one-time-acceptance-20261020.json": "e7069952d1faac8ba30455f579658e332f2bed17a39154cfd448d000c3d3ae63",
+    "pom.xml": "9dad56c03bd9d1872e9980b5c0fa1e273a0ca957939b37ee65fe722719ef9bba",
+    "scripts/build/init-build-env.sh": "3235bcbf795381f192ae243f51db6624ee958b0a94cf4290cd7ab976f2ac6d1a"
+  },
+  "source_unchanged_during_execution": true,
+  "finished_at": "2026-10-20T11:34:23+0800"
+}

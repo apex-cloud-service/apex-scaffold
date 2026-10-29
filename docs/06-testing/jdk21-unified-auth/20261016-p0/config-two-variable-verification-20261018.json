@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-18",
+  "scope": "P0 REDIS_PASSWORD 与 DB_HOST_PROD 来源复核；仅源码、受控 shell 与 Compose config 验证",
+  "baseline": {
+    "path": "config-propagation-evidence-20261018-1208.json",
+    "sha256": "023617838875cf17c389bcdea1de95ceb444473b7d4af387bab2faedf8c0ac95",
+    "preserved": true
+  },
+  "new_inventory": {
+    "path": "config-propagation-evidence-20261018-followup.json",
+    "sha256": "d01013adc51967e1b6c983802e09190749e5d43d323b1fa4d9ab759dee790348",
+    "scope_name_count": 474,
+    "categories": {"有默认": 472, "外部前置": 1, "静态未知": 1}
+  },
+  "safety": {
+    "real_env_or_secrets_read": false,
+    "java_build_or_runtime_started": false,
+    "production_deployment_or_process_changes": false,
+    "report_or_plan_modified": false,
+    "test_environment": "临时目录复制已知仓库脚本和 Compose；子进程仅接收 PATH 与虚构 sentinel 变量。app.sh 使用假 java 与假 jar；Compose 仅执行 config，未执行 up/build/run。"
+  },
+  "variables": [
+    {
+      "scope": "apex-system",
+      "name": "REDIS_PASSWORD",
+      "previous_category": "宿主继承",
+      "current_category": "外部前置",
+      "reason": "旧采集按业务库名称匹配服务，遗漏 apex-system-service 对 apex-system 的直接生产依赖；任意脚本 export 又优先于同服务 Compose，造成误分类。已依据 POM 映射运行模块，并让同服务显式 Compose 候选优先。",
+      "chains": [
+        {"entry": "Compose", "steps": ["podman-compose.yml:44 定义共享环境锚点", "podman-compose.yml:66 对 REDIS_PASSWORD 使用带回退插值", "podman-compose.yml:245-246 合并到 apex-system-service environment", "apex-system-service/pom.xml:53 直接依赖 apex-system", "apex-system/src/main/resources/application-prod.yml:229 为无默认引用"], "verification": "临时目录 podman-compose config 三个场景通过；证明渲染后的声明，未启动容器或 Spring。"},
+        {"entry": "app.sh console/start", "steps": ["scripts/deploy/service/app.sh:62-67 仅当 APEX_ENV_FILE 有效时 set -a/source/set +a", "普通 shell 赋值不会自动传给子进程；宿主已 export 的变量可继承", "有效 source 文件中的同名赋值覆盖既有宿主变量并自动导出", "console 与 start 的命令环境显式传递 SPRING_PROFILES_ACTIVE"], "verification": "真实 app.sh 的 console 在假 java 下四场景通过；后台 start 仅静态核对。"},
+        {"entry": "start-local.sh", "steps": ["scripts/deploy/service/start-local.sh:39 是独立本地入口中的无条件 export", "该脚本自行启动 java；app.sh 不 source 或调用它"], "verification": "仅静态候选，不是生产入口被执行的证据。"},
+        {"entry": "systemd", "steps": ["scripts/deploy/apex-scaffold.service:86 指向外部 EnvironmentFile", "scripts/deploy/apex-scaffold.service:106 直接启动 java"], "verification": "外部文件和运行进程未读取；不能据模板证明真实注入。"}
+      ],
+      "defaults": {"system_library_prod_reference": "无默认", "system_service_base_reference": "空默认，application.yml:150", "compose": "存在非空模板回退，不输出值；不代表符合生产凭据要求"},
+      "isolated_results": ["app.sh 不自动加载工作目录 .env", "宿主已导出 sentinel 被假 java 继承", "不存在的 APEX_ENV_FILE 不注入变量", "有效 APEX_ENV_FILE 自动导出并覆盖宿主同名变量", "Compose 无输入时 system 与 redis 服务获得相同非空回退", "Compose --env-file sentinel 注入两个服务", "Compose 宿主 sentinel 覆盖文件 sentinel"],
+      "closed": "采集误分类原因、显式 Compose 链和 app.sh 的受控环境传播",
+      "runtime_injection_verified": false,
+      "unverified": ["实际部署入口及执行记录", "实际凭据供给与 Redis 认证", "激活 profile 后 Spring 属性来源及重复 classpath 配置选择", "Nacos 远端覆盖优先级"],
+      "owner_decision": {"roles": ["部署维护人", "system 模块维护人"], "named_owner": null, "status": "待确认", "required": "指定实际入口、profile 与凭据供给渠道，以不含秘密的部署记录及属性来源验证生产满足；不能以模板回退或本测试代替验收。"}
+    },
+    {
+      "scope": "shared_nacos",
+      "name": "DB_HOST_PROD",
+      "current_category": "静态未知",
+      "references": {"path": "config/nacos/apex-datasource-prod.yaml", "lines": [22, 30, 38, 46, 54], "domains": ["auth", "system", "workflow", "office", "file"]},
+      "reason": "仅定位到 Nacos 模板五个数据源 URL 引用；限定仓库源文件中未发现赋值、export 或 Compose environment 注入。",
+      "defaults": {"DB_HOST_PROD": "无默认", "DB_PORT_PROD": "3306"},
+      "loading": {"template_comment": "声称通过 bootstrap external-configs 挂载共享 Data ID", "repository_evidence": "未找到对应 external-configs/shared-configs 挂载；system-service bootstrap 的 Nacos config 默认关闭，使用 yml 后缀。模板注释不能证明远端发布或加载。", "normal_system_datasource": "application.yml:161 使用 DB_HOST；主 Compose 使用 DB_HOST 和 SPRING_DATASOURCE_URL，不能当作 DB_HOST_PROD 的别名映射。"},
+      "isolated_results": ["app.sh 可将虚构 DB_HOST_PROD 从宿主或有效 APEX_ENV_FILE 传到假 java", "Compose 插值输入存在 DB_HOST_PROD 也不会自动向 system 服务 environment 注入该变量"],
+      "closed": "仓库可见引用、默认缺失及未发现显式注入的范围已登记；未证明真实环境缺失。",
+      "runtime_injection_verified": false,
+      "unverified": ["共享 Data ID 是否在实际 Nacos 发布", "namespace/group/Data ID 及导入执行记录", "服务前缀下 datasource 属性是否被实际消费者绑定", "实际宿主、容器或远端配置是否供给 DB_HOST_PROD"],
+      "owner_decision": {"roles": ["部署维护人", "Nacos 配置维护人", "五域模块维护人"], "named_owner": null, "status": "待确认实际使用", "required": "先提供无秘密的发布/导入/消费记录。若使用该模板，明确变量注入及属性绑定并隔离验证；若未使用，由所有者登记遗留模板状态。当前不足以认定部署缺陷，未改生产配置。"}
+    }
+  ],
+  "ci_review": "ci-cd.yml 与 release.yml 未找到目标变量或 app.sh 的实际生产部署注入链；构建、镜像推送和配置打包不等于生产执行。",
+  "collector_change": {"path": "scripts/ci/collect_gateway_config.py", "mapping": "仅五业务库具有对应 service POM 直接 compile/runtime 依赖时映射；不依名称相似度猜测。", "runtime_verified_flags": false},
+  "validation": {
+    "command": "python3 -B -m unittest scripts.test.test_collect_gateway_config",
+    "result": "12 tests, 35.786s, OK；无 skipped",
+    "app_console_scenarios": 4,
+    "compose_config_scenarios": 3,
+    "regression": "分类回归先失败（宿主继承），修复后通过（外部前置）。",
+    "additional_suite": {"command": "python3 -B -m unittest scripts.test.test_collect_gateway_config scripts.test.test_local_deployment", "initial_result": "18 tests；Compose fixture 初始缺少必填加密变量的三个子场景失败，已补虚构渲染输入并单独重跑配置全套通过；local_deployment 的三个用例因缺少 cryptography 报错。", "remaining": "未安装额外依赖；本地迁移完整测试未通过，不能计为已验证。"}
+  },
+  "acceptance": "两项源码与隔离传播核实完成；REDIS_PASSWORD 采集误判已修复。DB_HOST_PROD 保留静态未知及责任决策；真实运行环境均未验收，P0 不据此准出。"
+}

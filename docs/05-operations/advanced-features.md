@@ -180,5 +180,5 @@ public Mono<PageResponse<OrderDTO>> listOrders(ServerRequest request) {
 
 ## 关联文档
 - 架构分层与端口规范：[ARCHITECTURE_USAGE_GUIDE.md](../02-architecture/architecture-usage-guide.md)
-- 配置符号规范与键说明：[CONFIGURATION.md](CONFIGURATION.md)
+- 配置符号规范与键说明：[configuration.md](configuration.md)
 - 接口文档：启动后访问 `/doc.html`（Knife4j）

@@ -86,7 +86,7 @@
   <rect x="530" y="510" width="340" height="70" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
   <text x="700" y="535" text-anchor="middle" class="label" font-weight="bold">流控熔断</text>
   <text x="550" y="555" class="small-label">• Sentinel 43条限流规则</text>
-  <text x="550" y="570" class="small-label">• Resilience4j 熔断降级</text>
+  <text x="550" y="570" class="small-label">• Sentinel 限流 · Resilience4j 熔断降级</text>
 
   <rect x="910" y="510" width="550" height="70" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
   <text x="1185" y="535" text-anchor="middle" class="label" font-weight="bold">跨域CORS + 安全响应头</text>

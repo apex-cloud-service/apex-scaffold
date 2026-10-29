@@ -12,14 +12,14 @@
 
 | 组件 | 路径 | 职责 |
 |---|---|---|
-| `MultiLevelCacheService` | [apex-infrastructure/.../cache/service/MultiLevelCacheService.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 多级缓存核心服务：L1+L2 读写、回源、空值标记、Single-Flight |
-| `LocalCacheService` | [apex-infrastructure/.../cache/service/LocalCacheService.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) | L1 Caffeine 实现，带独立 TTL 跟踪 |
-| `CacheServiceImpl` | [apex-infrastructure/.../cache/service/CacheServiceImpl.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java) | L2 Redis 单层缓存（实现 `CacheService` 接口） |
-| `CacheConsistencyService` | [apex-infrastructure/.../cache/service/CacheConsistencyService.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) | 一致性服务，带 TTL jitter、空值标记、Single-Flight |
-| `InFlightRequestMerge` | [apex-infrastructure/.../cache/support/InFlightRequestMerge.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) | Single-Flight 请求合并器（进程内） |
-| `CacheLockAspect` + `@CacheLock` | [apex-infrastructure/.../cache/aspect/CacheLockAspect.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 基于 Redisson 的分布式锁切面 |
-| `MultiLevelCacheConfig` | [apex-infrastructure/.../cache/config/MultiLevelCacheConfig.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfig.java) | Caffeine CacheManager 配置 |
-| `CacheProperties` | [apex-infrastructure/.../cache/config/CacheProperties.java](../../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 读降级配置（`apex.cache.read-degradation`） |
+| `MultiLevelCacheService` | [apex-infrastructure/.../cache/service/MultiLevelCacheService.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 多级缓存核心服务：L1+L2 读写、回源、空值标记、Single-Flight |
+| `LocalCacheService` | [apex-infrastructure/.../cache/service/LocalCacheService.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) | L1 Caffeine 实现，带独立 TTL 跟踪 |
+| `CacheServiceImpl` | [apex-infrastructure/.../cache/service/CacheServiceImpl.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java) | L2 Redis 单层缓存（实现 `CacheService` 接口） |
+| `CacheConsistencyService` | [apex-infrastructure/.../cache/service/CacheConsistencyService.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) | 一致性服务，带 TTL jitter、空值标记、Single-Flight |
+| `InFlightRequestMerge` | [apex-infrastructure/.../cache/support/InFlightRequestMerge.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) | Single-Flight 请求合并器（进程内） |
+| `CacheLockAspect` + `@CacheLock` | [apex-infrastructure/.../cache/aspect/CacheLockAspect.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 基于 Redisson 的分布式锁切面 |
+| `MultiLevelCacheConfig` | [apex-infrastructure/.../cache/config/MultiLevelCacheConfig.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfig.java) | Caffeine CacheManager 配置 |
+| `CacheProperties` | [apex-infrastructure/.../cache/config/CacheProperties.java](../../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 读降级配置（`apex.cache.read-degradation`） |
 
 ### 2.2 已有的防护机制
 

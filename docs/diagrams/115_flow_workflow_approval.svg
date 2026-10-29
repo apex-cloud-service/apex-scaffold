@@ -181,7 +181,7 @@
   <text x="60" y="734" class="note">1. 状态以字符串表达：实例 RUNNING/COMPLETED/REJECTED/SUSPENDED/TERMINATED；任务 PENDING/COMPLETED/REJECTED/ROLLED_BACK/DELEGATED/CANCELLED（其中 CANCELLED、TERMINATED、实例 COMPLETED 仅在 Javadoc 声明，无代码路径置值）。</text>
   <text x="60" y="756" class="note">2. rejectTask 曾以 taskId 误当 processInstanceId 查询实例，且 ApprovalRecord 模型/仓储具备但服务未写入（comment 仅日志）；挂起后 completeTask 未校验实例 SUSPENDED，挂起阻断审批未真正生效。</text>
   <text x="60" y="778" class="note">3. 转办 transferTask=所有权永久转移（transferredFrom 记录原办理人）；委派 delegateTask=临时转移，新建 DELEGATED 任务而原任务保持 PENDING。回退 rollbackToNode 会新建目标节点 PENDING 任务。</text>
-  <text x="60" y="800" class="note">4. 当前引擎为“状态标记 + 单表 CRUD”轻量骨架，非完整 BPMN/DAG 驱动；DAG 自动流转（节点→审批人解析→自动建单）为待补能力。</text>
+  <text x="60" y="800" class="note">4. 当前引擎为“状态标记 + 单表 CRUD”轻量骨架，非完整 DAG 驱动；DAG 自动流转（节点→审批人解析→自动建单）为待补能力。</text>
 
   <!-- Legend -->
   <line x1="60" y1="830" x2="110" y2="830" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#a)"/>
@@ -199,5 +199,5 @@
   <rect x="920" y="820" width="14" height="14" rx="3" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
   <text x="942" y="834" class="legend">处置/状态</text>
 
-  <text x="750" y="880" class="note" text-anchor="middle">数据源：apex-workflow（application/service/WorkflowService · scheduler/WorkflowTimeoutHandler · query/WorkflowQueryService &amp; WorkflowStatisticsService）、apex-interfaces（router/WorkflowRouter · handler/WorkflowHandler）</text>
+  <text x="750" y="880" class="note" text-anchor="middle">数据源：apex-workflow（application/service/WorkflowService · scheduler/WorkflowTimeoutHandler · query/WorkflowQueryService &amp; WorkflowStatisticsService）、apex-system（router/WorkflowRouter · handler/WorkflowHandler）</text>
 </svg>

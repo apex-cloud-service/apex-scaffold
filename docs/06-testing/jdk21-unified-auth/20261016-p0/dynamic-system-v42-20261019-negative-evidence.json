@@ -1,0 +1,743 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+  "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "items": [
+    {
+      "id": "old-sql-0439",
+      "baseline_index": 439,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 33,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-8c89eb6ff9a4d1ba52a2d15a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0440",
+      "baseline_index": 440,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 41,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-555e79aa37505d8d236bc63c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0441",
+      "baseline_index": 441,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 57,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-401c0255f374bd5d6e5039d6"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0442",
+      "baseline_index": 442,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 58,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-8ecc84160e866ed11795606c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0443",
+      "baseline_index": 443,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 59,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9f75c9bf4e3dc90a07262894"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0444",
+      "baseline_index": 444,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 62,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-6aa7e4f1200abe70723537d3"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0445",
+      "baseline_index": 445,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 71,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-a6e11097fbbff448ce2c76aa"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0446",
+      "baseline_index": 446,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 72,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-50b66f2f3e94fdaba54c4433"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0447",
+      "baseline_index": 447,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 73,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-02ac321637ddb7e913e2e07e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    }
+  ],
+  "bindings": [
+    {
+      "item": {
+        "id": "old-sql-0439",
+        "baseline_index": 439,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 0,
+        "original": {
+          "line": 33,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "dynamic_sql",
+        "disposition": "dynamic_expression_requires_runtime_review",
+        "statement_ids": [
+          "stmt-8c89eb6ff9a4d1ba52a2d15a"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 33,
+        "end_line": 38,
+        "sql": "SET @table_exists = (\n    SELECT COUNT(*) \n    FROM information_schema.tables \n    WHERE table_schema = DATABASE() \n    AND table_name = 'token'\n)",
+        "start_offset": 1331,
+        "end_offset": 1477,
+        "category": "dynamic_sql",
+        "statement_sha256": "3e59e1023edbe1dc720fee03850b707afac2f98d033c3c7bd8ddc37d94c30628",
+        "disposition": "dynamic_expression_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 33,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-8c89eb6ff9a4d1ba52a2d15a"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0440",
+        "baseline_index": 440,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 1,
+        "original": {
+          "line": 41,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "dynamic_sql",
+        "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+        "statement_ids": [
+          "stmt-555e79aa37505d8d236bc63c"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 41,
+        "end_line": 55,
+        "sql": "SET @alter_sql = IF(\n    @table_exists > 0,\n    'ALTER TABLE token \n     ADD COLUMN IF NOT EXISTS access_token_hash VARCHAR(64) COMMENT ''Access Token SHA256哈希'',\n     ADD COLUMN IF NOT EXISTS access_token_encrypted TEXT COMMENT ''加密的Access Token'',\n     ADD COLUMN IF NOT EXISTS access_token_iv VARCHAR(32) COMMENT ''加密向量'',\n     ADD COLUMN IF NOT EXISTS refresh_token_hash VARCHAR(64) COMMENT ''Refresh Token哈希'',\n     ADD COLUMN IF NOT EXISTS refresh_token_encrypted TEXT COMMENT ''加密的Refresh Token'',\n     ADD COLUMN IF NOT EXISTS refresh_token_iv VARCHAR(32) COMMENT ''Refresh Token IV'',\n     ADD COLUMN IF NOT EXISTS token_family VARCHAR(64) COMMENT ''Token Family ID'',\n     ADD COLUMN IF NOT EXISTS previous_jti VARCHAR(100) COMMENT ''前一个JTI'',\n     ADD COLUMN IF NOT EXISTS revoked_at DATETIME NULL COMMENT ''撤销时间'',\n     ADD COLUMN IF NOT EXISTS rotation_count INT DEFAULT 0 COMMENT ''轮换次数''',\n    'SELECT ''token表不存在，跳过'' AS result'\n)",
+        "start_offset": 1501,
+        "end_offset": 2447,
+        "category": "dynamic_sql",
+        "statement_sha256": "8ac5e64df7c463ed5150da598d136a5f4b20d4d0861b71c592333651ed3e823e",
+        "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [
+          {
+            "table": "token",
+            "line": 43,
+            "end_line": 53,
+            "operation": "alter_table",
+            "identifiers": [
+              "access_token_encrypted",
+              "access_token_hash",
+              "access_token_iv",
+              "add",
+              "alter",
+              "column",
+              "comment",
+              "datetime",
+              "default",
+              "exists",
+              "if",
+              "int",
+              "not",
+              "null",
+              "previous_jti",
+              "refresh_token_encrypted",
+              "refresh_token_hash",
+              "refresh_token_iv",
+              "revoked_at",
+              "rotation_count",
+              "table",
+              "text",
+              "token",
+              "token_family",
+              "varchar"
+            ],
+            "sql": "ALTER TABLE token \n     ADD COLUMN IF NOT EXISTS access_token_hash VARCHAR(64) COMMENT 'Access Token SHA256哈希',\n     ADD COLUMN IF NOT EXISTS access_token_encrypted TEXT COMMENT '加密的Access Token',\n     ADD COLUMN IF NOT EXISTS access_token_iv VARCHAR(32) COMMENT '加密向量',\n     ADD COLUMN IF NOT EXISTS refresh_token_hash VARCHAR(64) COMMENT 'Refresh Token哈希',\n     ADD COLUMN IF NOT EXISTS refresh_token_encrypted TEXT COMMENT '加密的Refresh Token',\n     ADD COLUMN IF NOT EXISTS refresh_token_iv VARCHAR(32) COMMENT 'Refresh Token IV',\n     ADD COLUMN IF NOT EXISTS token_family VARCHAR(64) COMMENT 'Token Family ID',\n     ADD COLUMN IF NOT EXISTS previous_jti VARCHAR(100) COMMENT '前一个JTI',\n     ADD COLUMN IF NOT EXISTS revoked_at DATETIME NULL COMMENT '撤销时间',\n     ADD COLUMN IF NOT EXISTS rotation_count INT DEFAULT 0 COMMENT '轮换次数'",
+            "parser_issues": [],
+            "scope": "conditional_literal_candidate",
+            "semantic_verified": false,
+            "container_line": 41
+          }
+        ],
+        "parser_issues": [
+          {
+            "line": 41,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-555e79aa37505d8d236bc63c"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0441",
+        "baseline_index": 441,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 2,
+        "original": {
+          "line": 57,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "statement_ids": [
+          "stmt-401c0255f374bd5d6e5039d6"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 57,
+        "end_line": 57,
+        "sql": "PREPARE stmt FROM @alter_sql",
+        "start_offset": 2450,
+        "end_offset": 2478,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "efe4c738faf77fa7ecdb733aa23232a9f3c7601645e38dd1c6c4ff4de48fac7a",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [
+          41
+        ],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 57,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-401c0255f374bd5d6e5039d6"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0442",
+        "baseline_index": 442,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 3,
+        "original": {
+          "line": 58,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "statement_ids": [
+          "stmt-8ecc84160e866ed11795606c"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 58,
+        "end_line": 58,
+        "sql": "EXECUTE stmt",
+        "start_offset": 2480,
+        "end_offset": 2492,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [
+          41
+        ],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 58,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-8ecc84160e866ed11795606c"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0443",
+        "baseline_index": 443,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 4,
+        "original": {
+          "line": 59,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "statement_ids": [
+          "stmt-9f75c9bf4e3dc90a07262894"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 59,
+        "end_line": 59,
+        "sql": "DEALLOCATE PREPARE stmt",
+        "start_offset": 2494,
+        "end_offset": 2517,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [
+          41
+        ],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 59,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-9f75c9bf4e3dc90a07262894"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0444",
+        "baseline_index": 444,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 5,
+        "original": {
+          "line": 62,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "dynamic_sql",
+        "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+        "statement_ids": [
+          "stmt-6aa7e4f1200abe70723537d3"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 62,
+        "end_line": 69,
+        "sql": "SET @index_sql = IF(\n    @table_exists > 0,\n    'CREATE INDEX IF NOT EXISTS idx_access_token_hash ON token(access_token_hash);\n     CREATE INDEX IF NOT EXISTS idx_refresh_token_hash ON token(refresh_token_hash);\n     CREATE INDEX IF NOT EXISTS idx_token_family ON token(token_family);\n     CREATE INDEX IF NOT EXISTS idx_revoked_at ON token(revoked_at)',\n    'SELECT ''token表不存在，跳过索引创建'' AS result'\n)",
+        "start_offset": 2545,
+        "end_offset": 2945,
+        "category": "dynamic_sql",
+        "statement_sha256": "21ff1ff5ebbaccb6a17ef3b2194d8b00359b9d84bf3cc9b5286db552429cde1d",
+        "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [
+          {
+            "table": "token",
+            "line": 64,
+            "end_line": 67,
+            "operation": "create_index",
+            "identifiers": [
+              "access_token_hash",
+              "create",
+              "exists",
+              "idx_access_token_hash",
+              "if",
+              "index",
+              "not",
+              "on",
+              "token"
+            ],
+            "sql": "CREATE INDEX IF NOT EXISTS idx_access_token_hash ON token(access_token_hash)",
+            "parser_issues": [],
+            "scope": "conditional_literal_candidate",
+            "semantic_verified": false,
+            "container_line": 62
+          },
+          {
+            "table": "token",
+            "line": 64,
+            "end_line": 67,
+            "operation": "create_index",
+            "identifiers": [
+              "create",
+              "exists",
+              "idx_refresh_token_hash",
+              "if",
+              "index",
+              "not",
+              "on",
+              "refresh_token_hash",
+              "token"
+            ],
+            "sql": "CREATE INDEX IF NOT EXISTS idx_refresh_token_hash ON token(refresh_token_hash)",
+            "parser_issues": [],
+            "scope": "conditional_literal_candidate",
+            "semantic_verified": false,
+            "container_line": 62
+          },
+          {
+            "table": "token",
+            "line": 64,
+            "end_line": 67,
+            "operation": "create_index",
+            "identifiers": [
+              "create",
+              "exists",
+              "idx_token_family",
+              "if",
+              "index",
+              "not",
+              "on",
+              "token",
+              "token_family"
+            ],
+            "sql": "CREATE INDEX IF NOT EXISTS idx_token_family ON token(token_family)",
+            "parser_issues": [],
+            "scope": "conditional_literal_candidate",
+            "semantic_verified": false,
+            "container_line": 62
+          },
+          {
+            "table": "token",
+            "line": 64,
+            "end_line": 67,
+            "operation": "create_index",
+            "identifiers": [
+              "create",
+              "exists",
+              "idx_revoked_at",
+              "if",
+              "index",
+              "not",
+              "on",
+              "revoked_at",
+              "token"
+            ],
+            "sql": "CREATE INDEX IF NOT EXISTS idx_revoked_at ON token(revoked_at)",
+            "parser_issues": [],
+            "scope": "conditional_literal_candidate",
+            "semantic_verified": false,
+            "container_line": 62
+          }
+        ],
+        "parser_issues": [
+          {
+            "line": 62,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-6aa7e4f1200abe70723537d3"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0445",
+        "baseline_index": 445,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 6,
+        "original": {
+          "line": 71,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "statement_ids": [
+          "stmt-a6e11097fbbff448ce2c76aa"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 71,
+        "end_line": 71,
+        "sql": "PREPARE stmt FROM @index_sql",
+        "start_offset": 2948,
+        "end_offset": 2976,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "77abf16bd0c4a86a2139a4c801b738b4fc919a521de09e96f2116e11fc960866",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [
+          62
+        ],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 71,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-a6e11097fbbff448ce2c76aa"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0446",
+        "baseline_index": 446,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 7,
+        "original": {
+          "line": 72,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "statement_ids": [
+          "stmt-50b66f2f3e94fdaba54c4433"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 72,
+        "end_line": 72,
+        "sql": "EXECUTE stmt",
+        "start_offset": 2978,
+        "end_offset": 2990,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [
+          62
+        ],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 72,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-50b66f2f3e94fdaba54c4433"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0447",
+        "baseline_index": 447,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+        "migration_unresolved_index": 8,
+        "original": {
+          "line": 73,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "statement_ids": [
+          "stmt-02ac321637ddb7e913e2e07e"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 73,
+        "end_line": 73,
+        "sql": "DEALLOCATE PREPARE stmt",
+        "start_offset": 2992,
+        "end_offset": 3015,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+        "disposition": "prepared_control_bound_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [
+          62
+        ],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 73,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-02ac321637ddb7e913e2e07e"
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "label": "column_absent",
+      "sql": "USE probe;\nSET @table_exists = (\n    SELECT COUNT(*) \n    FROM information_schema.tables \n    WHERE table_schema = DATABASE() \n    AND table_name = 'token'\n);\nSET @alter_sql = IF(\n    @table_exists > 0,\n    'ALTER TABLE token \n     ADD COLUMN IF NOT EXISTS access_token_hash VARCHAR(64) COMMENT ''Access Token SHA256哈希'',\n     ADD COLUMN IF NOT EXISTS access_token_encrypted TEXT COMMENT ''加密的Access Token'',\n     ADD COLUMN IF NOT EXISTS access_token_iv VARCHAR(32) COMMENT ''加密向量'',\n     ADD COLUMN IF NOT EXISTS refresh_token_hash VARCHAR(64) COMMENT ''Refresh Token哈希'',\n     ADD COLUMN IF NOT EXISTS refresh_token_encrypted TEXT COMMENT ''加密的Refresh Token'',\n     ADD COLUMN IF NOT EXISTS refresh_token_iv VARCHAR(32) COMMENT ''Refresh Token IV'',\n     ADD COLUMN IF NOT EXISTS token_family VARCHAR(64) COMMENT ''Token Family ID'',\n     ADD COLUMN IF NOT EXISTS previous_jti VARCHAR(100) COMMENT ''前一个JTI'',\n     ADD COLUMN IF NOT EXISTS revoked_at DATETIME NULL COMMENT ''撤销时间'',\n     ADD COLUMN IF NOT EXISTS rotation_count INT DEFAULT 0 COMMENT ''轮换次数''',\n    'SELECT ''token表不存在，跳过'' AS result'\n);\nPREPARE stmt FROM @alter_sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+      "counts_as_branch_proof": false,
+      "client_output": "token表不存在，跳过",
+      "status": "succeeded",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS token;",
+      "catalog_before": "",
+      "catalog_after": ""
+    },
+    {
+      "label": "column_replay",
+      "sql": "USE probe;\nSET @table_exists = (\n    SELECT COUNT(*) \n    FROM information_schema.tables \n    WHERE table_schema = DATABASE() \n    AND table_name = 'token'\n);\nSET @alter_sql = IF(\n    @table_exists > 0,\n    'ALTER TABLE token \n     ADD COLUMN IF NOT EXISTS access_token_hash VARCHAR(64) COMMENT ''Access Token SHA256哈希'',\n     ADD COLUMN IF NOT EXISTS access_token_encrypted TEXT COMMENT ''加密的Access Token'',\n     ADD COLUMN IF NOT EXISTS access_token_iv VARCHAR(32) COMMENT ''加密向量'',\n     ADD COLUMN IF NOT EXISTS refresh_token_hash VARCHAR(64) COMMENT ''Refresh Token哈希'',\n     ADD COLUMN IF NOT EXISTS refresh_token_encrypted TEXT COMMENT ''加密的Refresh Token'',\n     ADD COLUMN IF NOT EXISTS refresh_token_iv VARCHAR(32) COMMENT ''Refresh Token IV'',\n     ADD COLUMN IF NOT EXISTS token_family VARCHAR(64) COMMENT ''Token Family ID'',\n     ADD COLUMN IF NOT EXISTS previous_jti VARCHAR(100) COMMENT ''前一个JTI'',\n     ADD COLUMN IF NOT EXISTS revoked_at DATETIME NULL COMMENT ''撤销时间'',\n     ADD COLUMN IF NOT EXISTS rotation_count INT DEFAULT 0 COMMENT ''轮换次数''',\n    'SELECT ''token表不存在，跳过'' AS result'\n);\nPREPARE stmt FROM @alter_sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+      "counts_as_branch_proof": false,
+      "client_output": "token表不存在，跳过",
+      "status": "succeeded",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS token;",
+      "catalog_before": "",
+      "catalog_after": ""
+    },
+    {
+      "label": "column_present",
+      "sql": "USE probe;\nSET @table_exists = (\n    SELECT COUNT(*) \n    FROM information_schema.tables \n    WHERE table_schema = DATABASE() \n    AND table_name = 'token'\n);\nSET @alter_sql = IF(\n    @table_exists > 0,\n    'ALTER TABLE token \n     ADD COLUMN IF NOT EXISTS access_token_hash VARCHAR(64) COMMENT ''Access Token SHA256哈希'',\n     ADD COLUMN IF NOT EXISTS access_token_encrypted TEXT COMMENT ''加密的Access Token'',\n     ADD COLUMN IF NOT EXISTS access_token_iv VARCHAR(32) COMMENT ''加密向量'',\n     ADD COLUMN IF NOT EXISTS refresh_token_hash VARCHAR(64) COMMENT ''Refresh Token哈希'',\n     ADD COLUMN IF NOT EXISTS refresh_token_encrypted TEXT COMMENT ''加密的Refresh Token'',\n     ADD COLUMN IF NOT EXISTS refresh_token_iv VARCHAR(32) COMMENT ''Refresh Token IV'',\n     ADD COLUMN IF NOT EXISTS token_family VARCHAR(64) COMMENT ''Token Family ID'',\n     ADD COLUMN IF NOT EXISTS previous_jti VARCHAR(100) COMMENT ''前一个JTI'',\n     ADD COLUMN IF NOT EXISTS revoked_at DATETIME NULL COMMENT ''撤销时间'',\n     ADD COLUMN IF NOT EXISTS rotation_count INT DEFAULT 0 COMMENT ''轮换次数''',\n    'SELECT ''token表不存在，跳过'' AS result'\n);\nPREPARE stmt FROM @alter_sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+      "counts_as_branch_proof": false
+    }
+  ],
+  "status": "diagnostic_failed",
+  "coverage": {
+    "verified_old_ids": [],
+    "verified_old_id_count": 0
+  },
+  "limits": [
+    "Synthetic fixtures, not a full historical upgrade or Flyway execution",
+    "Expected failures are diagnostic only; no absent/present/replay closure or additive credit"
+  ],
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true
+  },
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v42-20261019-negative-evidence.json",
+  "container": {
+    "name": "apex-negative-probe-99abe40ce6f1",
+    "network": "none",
+    "data": "tmpfs",
+    "image": "localhost/mysql:8.0",
+    "id": "520d2fdfd3d78ace973be04194b639767129fbfd2ab7214a4ba0bd0a0e8958dd"
+  },
+  "mysql_version": "8.0.46",
+  "updated_at": "2026-10-19T05:52:28.469073+00:00",
+  "error": "'utf-8' codec can't decode byte 0xc3 in position 241: invalid continuation byte"
+}

@@ -1,0 +1,197 @@
+{
+  "schema_version": "1.0",
+  "evidence_date": "2026-10-18",
+  "repository": "/Users/work/apex-scaffold",
+  "purpose": "P0六项源码事实核验；不决定目标业务契约，不实施数据库修复",
+  "scope": {
+    "items": 6,
+    "changes": ["仅新增本独立证据JSON"],
+    "excluded": ["修改report或主方案", "新增迁移", "修改唯一键", "回填历史数据", "提交或推送"],
+    "source_snapshot": "当前工作区，包含用户未提交改动；不是HEAD快照",
+    "hash_algorithm": "SHA-256",
+    "location_format": "source_id对应source_manifest路径；lines为当前文件一基行号，含首尾"
+  },
+  "source_manifest": {
+    "rules": {"path": "AGENTS.md", "sha256": "f48b6d27c35e11bed8ef965d5c3382079f9e1dc81d63dfc055594c59b9461f70"},
+    "plan": {"path": "docs/02-architecture/jdk21-unified-auth-multitenancy-implementation-plan.md", "sha256": "7c22003cc3a4659d6034e1de7cd45cc397b7fae2277df11d990de81575416df6"},
+    "report": {"path": "docs/06-testing/jdk21-unified-auth/20261016-p0/report.md", "sha256": "3c9fbe738c6975518ee2291cb40eeeb02cee92499f9cd6cbb0bc9c210ae96c20"},
+    "reviewed": {"path": "docs/06-testing/jdk21-unified-auth/20261016-p0/table-source-facts-20261018-reviewed.json", "sha256": "60d321f7be81b078027f2dea60cf5451487bf1cf1557430da01371171f5ed17a"},
+    "validation": {"path": "docs/06-testing/jdk21-unified-auth/20261016-p0/table-source-facts-20261018-validation.json", "sha256": "2ec8634a7e15a5b2e67ff51f94d135fb82da34db84617eef9d4945407f916e43"},
+    "office_mysql": {"path": "apex-office-service/src/main/resources/db/migration/mysql/V1__init_office_schema.sql", "sha256": "28fddde77b29950128751f0b4a59104264111f0bae493247187cef9cf0b93bcd"},
+    "office_pg": {"path": "apex-office-service/src/main/resources/db/migration/postgresql/V1__init_office_schema.sql", "sha256": "6ac392a2e7093d8eacd48bffcad5ef788545a052a8eb3cc045f5617bb7748f22"},
+    "workflow_mysql": {"path": "apex-workflow-service/src/main/resources/db/migration/mysql/V1__init_workflow_schema.sql", "sha256": "648b46e03ce783be19bcf98658946733eac8ba2532b227da6e8529f3d00776e5"},
+    "workflow_pg": {"path": "apex-workflow-service/src/main/resources/db/migration/postgresql/V1__init_workflow_schema.sql", "sha256": "6643ef8741f8a02bcd34bde6f187a6c6ffdff3dc22f5eee4a89b75349c802f42"},
+    "calendar_create_dto": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/dto/office/calendar/CreateCalendarEventRequest.java", "sha256": "017d4d47afab6a8be31c4a6f3b6b8663a9197d089e24323bb930902caf254f7f"},
+    "calendar_update_dto": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/dto/office/calendar/UpdateCalendarEventRequest.java", "sha256": "3f93700dfe2f1875d3e30849e11137632a5f23fcfcc1edb7c9f2fdb3e4513150"},
+    "calendar_handler": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/handler/office/OfficeCalendarHandler.java", "sha256": "18fe4bfea4fa8098579a564505e55e15d4db6043e690be5aa38681fa96a8c038"},
+    "calendar_service": {"path": "apex-office/src/main/java/com/apex/scaffold/office/application/OfficeCalendarService.java", "sha256": "7975cc885130dee93bb3e94776efe162c0695f697754c7a335cfcd488a94588e"},
+    "calendar_model": {"path": "apex-office/src/main/java/com/apex/scaffold/office/domain/calendar/CalendarEvent.java", "sha256": "f83c40999eca75166b0b756722104ae683b69e50b42fdae4d255f936f8e8ce3b"},
+    "calendar_po": {"path": "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/po/CalendarEventPO.java", "sha256": "cf2ff6fbfbd7bd54abb066ad86d3e28743e35c91cc4e7db20e7b79042b4dbbe2"},
+    "calendar_converter": {"path": "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/converter/CalendarEventConverter.java", "sha256": "a73531cd7512c3d01932351d14cd5ff257aaabf308728903a6d8fdf89c208ec8"},
+    "calendar_repository": {"path": "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/repository/CalendarEventRepositoryImpl.java", "sha256": "bcac165827b29e69efec8749dec5041b08ff8debc042b3cb49c8778d1919a529"},
+    "document_create_dto": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/dto/office/document/CreateDocumentRequest.java", "sha256": "35b23b99954e0c0f7d8e421003555949b78f3b54a9efdf28b3a4f4739b03e7bf"},
+    "document_handler": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/handler/office/OfficeDocumentHandler.java", "sha256": "d290a155f3a344bcea920346ecfd70e12a2afd3f600558bd96dd2e1b7a26fa99"},
+    "document_service": {"path": "apex-office/src/main/java/com/apex/scaffold/office/application/OfficeDocumentService.java", "sha256": "eef7a412f69cd229301d5ea913026c12bd4f4cbfa0df37c67fbf439a5cb33238"},
+    "document_model": {"path": "apex-office/src/main/java/com/apex/scaffold/office/domain/document/DocumentInfo.java", "sha256": "65509d23c6e8a10f8ca75276e2b9fbd806c76beea8f2c8d817ff2f6bfa8fbf74"},
+    "document_po": {"path": "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/po/DocumentInfoPO.java", "sha256": "f7137c7faedcc669bb7e052765b586861dad6cb4b86899e2b1596e1ed2d5b3b4"},
+    "document_converter": {"path": "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/converter/DocumentInfoConverter.java", "sha256": "3b6c899535588d560abac91c44cb7842bebfb5a4be115c8db190661340bbc59a"},
+    "document_repository": {"path": "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/repository/DocumentInfoRepositoryImpl.java", "sha256": "b8f91cdc162beed31aae301991ae1217e9a70b883b1e05a07c1c93a0396fd06e"},
+    "document_mapper": {"path": "apex-office/src/main/java/com/apex/scaffold/office/infrastructure/mapper/DocumentInfoMapper.java", "sha256": "16dbedb9a8c5dafb35865607af7acf51a9d668b247328b75fe22d363f4b81ab5"},
+    "office_tenant_config": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/config/MessageTenantConfig.java", "sha256": "d5538261ad5e3d19d267f50ed2d0c880af18b7cd90d8f3d58743cdad4925667c"},
+    "office_boot": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/OfficeServiceApplication.java", "sha256": "26711fa3755e1ddb2ca755ae3aa759bb15cf7ba76ad6b0bb4a52609ca3275f4d"},
+    "office_auth": {"path": "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/security/IdentityRelayAuthenticationFilter.java", "sha256": "2044fc5c8954ee83870ca3b16d8dae15cd25140a3eadea42b2a91bddf2d33f04"},
+    "office_config": {"path": "apex-office-service/src/main/resources/application.yml", "sha256": "1f6d37e6149e50530825e1f6d60a2f79e8c7155aed122df1b5760d195d49dddf"},
+    "workflow_service": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/application/service/WorkflowService.java", "sha256": "c7636794276b266db6c0ca9c4966cc176fd77c421cbf8671eff655524bded918"},
+    "definition_model": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/domain/model/WorkflowDefinition.java", "sha256": "6e629d4c37ddf45e999cdd409bfcfd5ef2aa2a890b511f2cbc903bb723c1e159"},
+    "definition_po": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/po/WorkflowDefinitionPO.java", "sha256": "906a6c11769ec8e1249d1f4055fa6f3d292b16a50df938bae0d53f1ed0bab3a0"},
+    "definition_converter": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/converter/WorkflowDefinitionPoConverter.java", "sha256": "98a565030b8666abff702ebac2a5806dc1959b0501c275f7c763a7e610015693"},
+    "definition_repository": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/repository/WorkflowDefinitionRepositoryImpl.java", "sha256": "fd0d88d9bee5cf6d3afbcdecc58f731b5561be96d7b8b7a407e9a7451b6e1fee"},
+    "instance_model": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/domain/model/ProcessInstance.java", "sha256": "143fefc60e55143de487bf4ae56b33eeb5fecae0ce1a8ae2f187766e35422d53"},
+    "instance_po": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/po/ProcessInstancePO.java", "sha256": "398ac890f34aba90b651b71fc261ee8ed47e8cbad03ca0b65fe369aa90612e6c"},
+    "instance_repository": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/repository/ProcessInstanceRepositoryImpl.java", "sha256": "9e2ef6d31fb56031d87b6835fe9638309e63f3f264c1c1a0f22eb9b857f04417"},
+    "instance_dto": {"path": "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/dto/workflow/StartProcessInstanceRequest.java", "sha256": "088ab81a562b5f98c2598b84ae8bff0f638401b18194b8e8dd8d073e1d8f3a6f"},
+    "workflow_query": {"path": "apex-workflow/src/main/java/com/apex/scaffold/workflow/application/query/WorkflowQueryService.java", "sha256": "4210d26bbf061a9d5ec1cf229dc1afd7cf66535220879670e48dc3ede851fcd2"},
+    "workflow_config": {"path": "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/config/WorkflowPersistenceConfig.java", "sha256": "677505ceda605a085c8b24bf422f2699af8517778e3d24e17744ce848c866454"},
+    "workflow_boot": {"path": "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/WorkflowServiceApplication.java", "sha256": "83e7424b7af98ac658917edda7d8c85b3f2bb0c527ba7cc23d3e7afec765bbc5"},
+    "workflow_auth": {"path": "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/security/IdentityRelayAuthenticationFilter.java", "sha256": "e1e33a46a49e0eee2460d3d33d1e29976739004f72dcc59f32ad678162785d5d"},
+    "tenant_context": {"path": "apex-common/src/main/java/com/apex/scaffold/common/context/TenantContext.java", "sha256": "bde518643c4eae0787184da6ad995e3f6d29231ef29b326a77f2a2a69549d758"},
+    "base_po": {"path": "apex-common/src/main/java/com/apex/scaffold/common/persistence/po/BasePO.java", "sha256": "8294a62510f44b9e54da0357b961281b9f67c9f023c10b780878034153acf56e"},
+    "calendar_test": {"path": "apex-office/src/test/java/com/apex/scaffold/office/application/OfficeCalendarEventServiceTest.java", "sha256": "832cd0a4d3d4fb1b84019726ee1e567c59cbe1c24462243f006706b24329811f"},
+    "workflow_test": {"path": "apex-workflow/src/test/java/com/apex/scaffold/workflow/application/service/WorkflowServiceTest.java", "sha256": "ee6747c08b2df82db2feee9a47532272b0c258487cbf62a692e4220f209b12b6"}
+  },
+  "shared_facts": [
+    {
+      "id": "orm_null_strategy",
+      "fact": "本地mybatis-plus-core 3.5.10.1 GlobalConfig.DbConfig构造器经javap检查，insertStrategy和updateStrategy默认均为NOT_NULL；目标四个PO字段没有字段级覆盖，office application.yml未配置策略覆盖。",
+      "dependency": {"absolute_path": "/Users/eric/.m2/repository/com/baomidou/mybatis-plus-core/3.5.10.1/mybatis-plus-core-3.5.10.1.jar", "sha256": "7a3ea960e4aaa1408486ae04d3a1136d4d519cf273d9fc3e36f0d7ddf02fe72d", "method": "javap -c -p com.baomidou.mybatisplus.core.config.GlobalConfig$DbConfig"},
+      "locations": [{"source_id": "calendar_po", "lines": [65, 96]}, {"source_id": "document_po", "lines": [80, 112]}, {"source_id": "office_config", "lines": [65, 87]}],
+      "inference": "按该默认策略生成的BaseMapper插入省略null属性对应列，由数据库DEFAULT补0；更新省略null属性对应列，保留原值。不能推为显式写SQL NULL，也不能推为更新会把历史NULL补0。",
+      "condition": "未加载外部配置或自定义Bean改变字段策略；本轮未抓取运行SQL。数据库显式NULL与省略列是不同实验。"
+    },
+    {
+      "id": "office_mapping_and_readback",
+      "fact": "office转换器未定义Boolean归一化；已检查生成DocumentInfoConverterImpl使用getIsFolder/getIsArchived双向原样映射。仓储insert后转换当前PO返回，不重新读取数据库默认值；updateById亦未设置标志默认值。",
+      "locations": [{"source_id": "calendar_converter", "lines": [1, 50]}, {"source_id": "document_converter", "lines": [1, 50]}, {"source_id": "calendar_repository", "lines": [35, 44]}, {"source_id": "document_repository", "lines": [35, 43]}, {"source_id": "document_repository", "lines": [131, 139]}],
+      "inference": "Java对象中的null、数据库插入后的0以及领域判断false可以同时存在；不能把某一层默认当成全链路统一契约。"
+    },
+    {
+      "id": "tenant_boundaries",
+      "fact": "office认证过滤器验证JWT并将用户租户写入上下文；workflow过滤器当前从X-User-Id/X-Tenant-Id头构建身份。TenantContext.withTenant在Reactor Context有租户时桥接线程上下文，缺失时原样透传。office租户插件仅处理off_message/off_message_recipient，workflow配置仅注册分页插件。两个启动类扫描各自业务、service和common包，未扫描共享infrastructure包。",
+      "locations": [{"source_id": "office_auth", "lines": [70, 153]}, {"source_id": "workflow_auth", "lines": [48, 82]}, {"source_id": "tenant_context", "lines": [168, 183]}, {"source_id": "office_tenant_config", "lines": [1, 50]}, {"source_id": "workflow_config", "lines": [1, 31]}, {"source_id": "office_boot", "lines": [35, 57]}, {"source_id": "workflow_boot", "lines": [32, 56]}],
+      "inference": "不能把共享租户插件或网关身份验证自动套用到全部目标Mapper；唯一键是否含tenant与查询/更新是否受租户约束是独立问题。",
+      "unverified": "外部部署网络、网关头清洗、额外运行Bean、实际跨租户访问结果均未运行验证；不据此给出已证实可利用漏洞结论。"
+    }
+  ],
+  "items": [
+    {
+      "id": "office_calendar_event.is_all_day",
+      "facts": [
+        "MySQL V1为TINYINT(1) DEFAULT 0且可NULL；PostgreSQL V1为SMALLINT NOT NULL DEFAULT 0。未发现所属域后续迁移改变该约束。",
+        "创建DTO为boxed Boolean，无@NotNull或字段初始值；Schema example不是默认值。Handler验证后将getIsAllDay原样传入应用服务，应用构造实体时原样保存。",
+        "更新DTO也暴露可空isAllDay，但当前Handler调用updateEvent未传该字段，应用更新方法没有该参数；取消/确认仅变更状态，不归一化该标志。",
+        "领域和PO均为boxed Boolean；仓储使用converter和BaseMapper，无标志专用SQL或回读默认值。"
+      ],
+      "locations": [{"source_id": "office_mysql", "lines": [210, 210]}, {"source_id": "office_pg", "lines": [224, 224]}, {"source_id": "calendar_create_dto", "lines": [48, 49]}, {"source_id": "calendar_update_dto", "lines": [39, 40]}, {"source_id": "calendar_handler", "lines": [118, 138]}, {"source_id": "calendar_handler", "lines": [249, 268]}, {"source_id": "calendar_service", "lines": [61, 114]}, {"source_id": "calendar_service", "lines": [160, 200]}, {"source_id": "calendar_model", "lines": [125, 142]}, {"source_id": "calendar_repository", "lines": [120, 129]}],
+      "inferences": ["默认NOT_NULL插入路径中，缺省/显式JSON null可进入Java对象，但预计省略数据库列并存为0；尚不能断言PostgreSQL会拒绝普通HTTP创建。", "当前更新接口不能更改全天标志；是否应该支持更新属于业务契约决策。"],
+      "decision_needed": "是否允许独立未知态NULL；缺省值及更新字段的预期行为是什么。",
+      "verifiable_options": ["二态：确认缺省false及历史NULL解释后，另行设计归一化/约束迁移；测试缺省、null、false、true及创建响应与回读。", "三态：明确NULL含义、PG约束及响应/查询规则；测试显式NULL与省略列的区别。", "更新契约：确认该字段只读或可更新后，测试当前忽略行为或批准后的更新行为。"],
+      "disposition": "源码事实已收口；保留双库差异与接口更新偏差，目标契约待决策；本轮不修复。"
+    },
+    {
+      "id": "office_calendar_event.is_recurring",
+      "facts": [
+        "MySQL可NULL DEFAULT 0；PostgreSQL NOT NULL DEFAULT 0。",
+        "创建DTO声明可空isRecurring及recurrenceRule，但创建Handler调用应用服务未传递二者；应用创建实体显式isRecurring(false)。",
+        "更新DTO没有isRecurring；当前更新和状态操作不归一化数据库既有NULL。实体和PO本身仍可持有null。"
+      ],
+      "locations": [{"source_id": "office_mysql", "lines": [216, 216]}, {"source_id": "office_pg", "lines": [230, 230]}, {"source_id": "calendar_create_dto", "lines": [71, 76]}, {"source_id": "calendar_handler", "lines": [118, 138]}, {"source_id": "calendar_service", "lines": [93, 114]}, {"source_id": "calendar_model", "lines": [75, 85]}, {"source_id": "calendar_po", "lines": [90, 96]}],
+      "inferences": ["普通创建路径不依赖DB默认值保证该字段false；DTO传true当前也不会开启重复事件。该事实不能证明其他导入或直接SQL不会写NULL。"],
+      "decision_needed": "重复事件是否为当前受支持能力；该标志是否允许未知态。",
+      "verifiable_options": ["仅支持非重复：明确请求字段兼容策略，测试true/null输入实际处理。", "支持重复：先定义标志与recurrenceRule一致性，再验证DTO到平台及持久化的完整传递。", "分别测试MySQL历史NULL读取/更新及PG显式NULL拒绝，决定历史处理后另行迁移。"],
+      "disposition": "已排除普通创建直接透传NULL这一解释；约束差异仍保留，重复能力目标待决策；本轮不修复。"
+    },
+    {
+      "id": "office_document_info.is_folder",
+      "facts": [
+        "MySQL可NULL DEFAULT 0；PostgreSQL NOT NULL DEFAULT 0。",
+        "CreateDocumentRequest没有isFolder字段；Handler传平台、父目录、标题、文档类型及所有者。create/copy/upload统一经过buildDocumentInfo，显式isFolder(false)。",
+        "buildDocumentInfo即使documentType为FOLDER仍赋标志false；领域isFolder()为Boolean.TRUE.equals(isFolder)或documentType==FOLDER。持久化转换读取boxed getter，不会因领域判断为true自动写true。",
+        "移动、改标题和平台详情同步不计算isFolder；目录查询SQL按原始列is_folder排序。"
+      ],
+      "locations": [{"source_id": "office_mysql", "lines": [250, 250]}, {"source_id": "office_pg", "lines": [267, 267]}, {"source_id": "document_create_dto", "lines": [1, 52]}, {"source_id": "document_handler", "lines": [115, 131]}, {"source_id": "document_service", "lines": [403, 447]}, {"source_id": "document_model", "lines": [110, 140]}, {"source_id": "document_mapper", "lines": [40, 51]}],
+      "inferences": ["普通创建不向HTTP暴露此标志且写false；领域目录判断、持久化列及SQL排序存在可分离语义，不能直接把NULL全量回填false视为目录语义修复。"],
+      "decision_needed": "is_folder是独立业务状态、documentType派生冗余值，还是允许未知；与FOLDER类型冲突时何者权威。",
+      "verifiable_options": ["派生值：批准类型到标志的完整映射及历史冲突处理后，测试FOLDER/非FOLDER与null/false/true组合。", "独立值或三态：明确与documentType的优先级及SQL排序预期，再决定NULL和约束。"],
+      "disposition": "创建与领域/存储差异已核清；保留双库差异及派生关系待决策，不自动回填。"
+    },
+    {
+      "id": "office_document_info.is_archived",
+      "facts": [
+        "MySQL可NULL DEFAULT 0；PostgreSQL NOT NULL DEFAULT 0。创建DTO不暴露该字段，buildDocumentInfo显式false。",
+        "领域isArchived()把null判断为false，但原始boxed字段仍是null；archive()/unarchive()分别赋true/false。应用归档用例读取实体后archive再update。",
+        "归档查询SQL使用is_archived=1，NULL不命中。普通标题/移动更新默认省略null列，不会补齐历史NULL。"
+      ],
+      "locations": [{"source_id": "office_mysql", "lines": [257, 257]}, {"source_id": "office_pg", "lines": [274, 274]}, {"source_id": "document_service", "lines": [363, 374]}, {"source_id": "document_service", "lines": [403, 429]}, {"source_id": "document_model", "lines": [130, 175]}, {"source_id": "document_mapper", "lines": [75, 82]}],
+      "inferences": ["常规创建与归档状态变更不依赖SQL DEFAULT保证布尔值；领域容错false不能证明历史NULL已被修复，也不能单独证明NULL没有业务含义。"],
+      "decision_needed": "归档NULL是否等同未归档，或需要保留未知态；是否存在独立取消归档接口需求。",
+      "verifiable_options": ["二态：先确认NULL等同false及历史数据范围，再验证归档true、取消false和NULL旧行更新。", "三态：规定未知态展示和筛选，验证两库显式NULL契约。"],
+      "disposition": "创建/归档事实已收口；保留NULL语义和双库约束待决策，本轮不改历史数据。"
+    },
+    {
+      "id": "wf_workflow_definition.uk_workflow_code_version",
+      "key_columns": ["workflow_code", "version", "deleted"],
+      "facts": [
+        "MySQL/PostgreSQL V1唯一键均不含tenant_id；tenant_id为NOT NULL。未发现后续域迁移改变该键。该约束在物理表范围内对相同code/version/deleted拒绝重复，与租户无关。",
+        "领域定义包含workflowCode/version/enabled/deleted但无tenant字段；PO声明Long tenantId，而DDL为VARCHAR(64)。创建应用方法仅转交insert；仓储converter后直接insert，没有赋租户，converter也未提供租户来源。",
+        "findByCode只在currentTenantId存在时增加tenant谓词，并筛enabled=1、version倒序LIMIT 1。无tenant时不拒绝。findById/findAll/update/delete没有显式tenant谓词。",
+        "另一路getDefinitionDetail仅以workflowCode查询，没有tenant/version/enabled条件；不能把findByCode的选择规则套用于所有入口。",
+        "未发现生产代码调用createWorkflowDefinition的HTTP创建链；现有创建单测使用mock仓储。"
+      ],
+      "locations": [{"source_id": "workflow_mysql", "lines": [25, 49]}, {"source_id": "workflow_pg", "lines": [25, 49]}, {"source_id": "definition_model", "lines": [25, 91]}, {"source_id": "definition_po", "lines": [25, 55]}, {"source_id": "definition_converter", "lines": [1, 53]}, {"source_id": "workflow_service", "lines": [115, 123]}, {"source_id": "definition_repository", "lines": [39, 95]}, {"source_id": "workflow_query", "lines": [230, 245]}],
+      "inferences": ["不同租户在同一表写入同code/version/deleted会冲突；这是索引确定的条件行为，不是本轮真实数据库实验。", "当前创建源码链没有证明tenant_id非空如何满足，不能用mock创建成功宣称数据库创建正常。", "代码没有充分证明code/version应为全局namespace还是租户namespace；tenant过滤存在不等于唯一键必须改。", "enabled不是唯一键列，停用不释放键；deleted仅区分其不同值，不提供无限历史版本槽。"],
+      "decision_needed": "定义编码/版本采用全局共享还是租户内命名空间；共享定义与租户覆盖是否并存，以及权威读取规则。",
+      "verifiable_options": ["保留全局键：定义共享/拥有者语义、可信租户写入和统一查找规则；测试两租户同code/version拒绝及版本选择。", "租户内键：批准tenant+code+version+deleted及共享定义方案后，先核查既有数据与调用者，再另行迁移；测试跨租户可同键、同租户拒绝。", "两种方案均验证缺租户拒绝、按ID访问/更新/删除、getDefinitionDetail多版本选择，以及真实创建时tenant类型和填充。"],
+      "disposition": "物理键与源码查询/创建行为已核验；命名空间尚无充分业务证据，不改唯一键。租户写入与查询完整性需独立整改评估，不能靠改键代替。"
+    },
+    {
+      "id": "wf_process_instance.uk_business_key",
+      "key_columns": ["business_key", "deleted"],
+      "facts": [
+        "MySQL/PostgreSQL V1均为business_key/deleted唯一，不含tenant、definition或status；business_key和tenant_id为NOT NULL。",
+        "启动DTO对businessKey使用@NotBlank与@Size(max=200)，不自动trim或加命名空间；应用将businessKey原样写入新RUNNING实例，直接insert，不提供现有实例幂等返回。",
+        "实例仓储insert通过withTenant桥接，并从currentTenantId.orElseThrow赋String tenantId；缺租户时该路径失败。findByBusinessKey仅按businessKey，不显式加tenant条件。",
+        "PO的getProcessCode/setProcessCode兼容访问器读写同一个businessKey，不能据该名称认定键已含流程编码。状态操作修改status，不重写businessKey；逻辑删除值采用0/1。"
+      ],
+      "locations": [{"source_id": "workflow_mysql", "lines": [52, 75]}, {"source_id": "workflow_pg", "lines": [53, 79]}, {"source_id": "instance_dto", "lines": [30, 41]}, {"source_id": "workflow_service", "lines": [145, 169]}, {"source_id": "instance_repository", "lines": [40, 84]}, {"source_id": "instance_po", "lines": [35, 88]}, {"source_id": "instance_model", "lines": [30, 95]}, {"source_id": "base_po", "lines": [65, 90]}, {"source_id": "workflow_service", "lines": [450, 515]}],
+      "inferences": ["同表内不同租户或不同流程定义使用相同businessKey/deleted会被物理键拒绝；流程结束/拒绝/挂起不会释放该键。", "deleted在唯一键中只提供不同deleted值的区分；已删除行仍占对应键槽，多轮删除复用可能冲突，需用真实数据和数据库实验确认历史策略。", "代码只描述业务关联键，未证明它是全局幂等键、租户单据号还是租户+流程的单据号；不能自动选择增加tenant或definition。"],
+      "decision_needed": "businessKey唯一范围是全局、租户内还是租户+流程；重复启动的预期是拒绝、幂等返回还是允许重发；完成和删除后的复用规则。",
+      "verifiable_options": ["全局键：保留物理键，明确全局键生成和重复响应；验证跨租户/跨定义重复拒绝。", "租户键：批准tenant+businessKey范围后另行设计迁移及查找契约；验证同租户拒绝、不同租户允许。", "租户+流程键或可重发：明确流程标识是否含版本、历史实例与幂等规则后设计；验证同单据跨流程、结束重发、删除重发及多轮逻辑删除。", "所有方案均验证缺租户、跨租户按ID/业务键查询和状态更新；索引变更不代替访问控制。"],
+      "disposition": "已确认当前全表唯一及启动/状态路径；业务命名空间和生命周期复用待决策，本轮不改键或历史语义。"
+    }
+  ],
+  "minimum_owner_decisions": [
+    {"id": "D1", "subject": "office四标志", "question": "逐字段确认NULL是否有独立未知语义、缺省false是否权威；同时确认is_folder与documentType关系及日历重复/全天字段的可写范围。可以一次评审，但不能默认四项语义完全相同。"},
+    {"id": "D2", "subject": "workflow定义", "question": "确认code/version全局共享或租户内命名空间，以及读取时共享/租户版本优先级。"},
+    {"id": "D3", "subject": "workflow实例", "question": "确认businessKey唯一范围与重复启动、结束/删除后复用规则。"}
+  ],
+  "validation": {
+    "java_environment": {"activation": "source scripts/build/init-build-env.sh", "jdk": "17.0.12-oracle", "build_tool": "mvnd 2.0.0-rc-3"},
+    "executed_test": {
+      "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-office,apex-workflow -am -Dtest=OfficeCalendarEventServiceTest,WorkflowServiceTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test",
+      "started_at": "2026-10-18T11:13:21+08:00",
+      "finished_at": "2026-10-18T11:13:26+08:00",
+      "result": "BUILD SUCCESS",
+      "reactor": ["apex-scaffold", "apex-common", "apex-domain", "apex-workflow", "apex-office"],
+      "suites": [{"source_id": "workflow_test", "tests": 19}, {"source_id": "calendar_test", "tests": 1}],
+      "tests": 20,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "coverage": "mock仓储单元测试；日历测试仅覆盖详情不存在，workflow测试验证应用编排等既有行为；不直接验证六项双库SQL契约",
+      "limitations": ["JaCoCo显式跳过", "未执行完整verify或Failsafe", "未运行服务启动", "未进行双库NULL DML、唯一键碰撞或跨租户HTTP/SQL实验"]
+    },
+    "new_tests_or_production_changes": "无；本轮证据不足以授权猜测目标契约并修改生产代码",
+    "existing_validation_not_inherited": "reviewed/validation及report历史测试结果只作为输入，不计为本轮执行结果"
+  },
+  "overall_disposition": "六项当前源码行为可收口；六项目标契约均不可仅凭命名或差异自动决定。P0准出仍受业务决策、真实双库DML及租户访问验证限制。本证据不宣称完整门禁或生产安全已通过。"
+}

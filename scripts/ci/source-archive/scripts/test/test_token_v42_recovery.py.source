@@ -1,0 +1,93 @@
+import importlib.util
+import pathlib
+import unittest
+import contextlib
+import io
+from unittest.mock import patch
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+TOOL = ROOT / 'apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py'
+SPEC = importlib.util.spec_from_file_location('token_v42_recover', TOOL)
+MODULE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+SOURCE = (ROOT / 'apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql').read_text()
+
+
+class TokenV42ContractTest(unittest.TestCase):
+    def test_original_source_contract(self):
+        columns, tables, view = MODULE.source_contract(SOURCE)
+        self.assertEqual(len(columns), 10)
+        self.assertEqual(set(tables), {'token_rotation_history', 'token_security_event', 'encryption_key_version'})
+        self.assertEqual(tables['encryption_key_version'][0]['active'], ('tinyint(1)', 'YES', '1', ''))
+        self.assertEqual(tables['token_rotation_history'][0]['rotated_at'], ('datetime', 'NO', 'CURRENT_TIMESTAMP', 'DEFAULT_GENERATED'))
+        self.assertTrue(view.startswith('CREATE VIEW'))
+
+    def test_changed_source_is_rejected(self):
+        with self.assertRaisesRegex(MODULE.Rejected, 'hash differs'):
+            MODULE.source_contract(SOURCE + '\n')
+
+    def test_view_normalization_keeps_semantics(self):
+        self.assertEqual(MODULE.normalize_view('SELECT `probe`.`a` FROM `probe`.`t`', 'probe'), 'selectafromt')
+        self.assertNotEqual(MODULE.normalize_view('select count(0)', 'probe'), MODULE.normalize_view('select count(1)', 'probe'))
+
+    def test_view_normalization_preserves_quoted_identifier(self):
+        self.assertNotEqual(MODULE.normalize_view('SELECT `a b` FROM `t`', 'probe'),
+                            MODULE.normalize_view('SELECT `ab` FROM `t`', 'probe'))
+
+    def test_apply_rejects_incomplete_postflight(self):
+        client = unittest.mock.Mock()
+        client.execute.return_value = '8.0.45'
+        with patch.object(MODULE, 'Client', return_value=client), \
+                patch.object(MODULE, 'preflight', return_value=['ALTER TABLE token ADD missing INT;']), \
+                patch('sys.argv', ['recover', '--database', 'probe', '--offline', '--apply']), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(MODULE.main(), 1)
+
+    def test_plan_defaults_and_no_writes(self):
+        client = unittest.mock.Mock()
+        client.execute.return_value = '8.0.45'
+        output = io.StringIO()
+        with patch.object(MODULE, 'Client', return_value=client) as factory, \
+                patch.object(MODULE, 'preflight', return_value=['ALTER TABLE token ADD missing INT;']), \
+                patch('sys.argv', ['recover', '--database', 'probe', '--offline']), \
+                contextlib.redirect_stdout(output):
+            self.assertEqual(MODULE.main(), 0)
+        factory.assert_called_once_with(['mysql', '--no-defaults'], 'probe')
+        client.execute.assert_called_once_with('SELECT VERSION();')
+        self.assertIn('"mode": "plan"', output.getvalue())
+
+    def test_cli_requires_offline_and_simple_database(self):
+        for args in (['--database', 'probe'], ['--database', 'probe;drop', '--offline'],
+                     ['--database', 'probe', '--offline', '--mysql-command']):
+            with self.subTest(args=args), patch.object(MODULE, 'Client') as client, \
+                    patch('sys.argv', ['recover'] + args), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    MODULE.main()
+                self.assertEqual(raised.exception.code, 2)
+                client.assert_not_called()
+
+    def test_apply_checks_view_after_complete_postflight(self):
+        client = unittest.mock.Mock()
+        client.execute.side_effect = ['8.0.45', '', RuntimeError('view unavailable')]
+        output = io.StringIO()
+        with patch.object(MODULE, 'Client', return_value=client), \
+                patch.object(MODULE, 'preflight', side_effect=[['DDL'], []]), \
+                patch('sys.argv', ['recover', '--database', 'probe', '--offline', '--apply']), \
+                contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(MODULE.main(), 1)
+        self.assertNotIn('structure recovery complete', output.getvalue())
+        self.assertEqual(client.execute.call_args.args, ('SELECT * FROM v_token_health LIMIT 0;',))
+
+    def test_force_option_forms_rejected_before_client(self):
+        for option in ('--force=true', '-vf'):
+            with self.subTest(option=option), patch.object(MODULE, 'Client') as client, \
+                    patch('sys.argv', ['recover', '--database', 'probe', '--offline', '--mysql-command', 'mysql', option]), \
+                    contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    MODULE.main()
+                self.assertEqual(raised.exception.code, 2)
+                client.assert_not_called()
+
+
+if __name__ == '__main__':
+    unittest.main()

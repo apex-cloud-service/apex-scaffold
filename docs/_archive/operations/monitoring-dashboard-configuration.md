@@ -24,6 +24,8 @@
 
 ***
 
+<a id="1-监控体系概览"></a>
+
 ## 1. 监控体系概览
 
 ### 1.1 架构图
@@ -59,6 +61,8 @@
 - **采集周期**: 15秒
 
 ***
+
+<a id="2-prometheus-配置"></a>
 
 ## 2. Prometheus 配置
 
@@ -720,6 +724,8 @@ apex_cache_latency_seconds{quantile="0.95"}  # P95 延迟
 
 ***
 
+<a id="3-grafana-配置"></a>
+
 ## 3. Grafana 配置
 
 ### 3.1 数据源配置
@@ -1094,6 +1100,8 @@ Mention: @channel (严重告警时)
 
 ***
 
+<a id="4-监控面板说明"></a>
+
 ## 4. 监控面板说明
 
 ### 4.1 核心指标看板 (6个)
@@ -1270,6 +1278,8 @@ increase(sentinel_block_qps_total{resource=~".*"}[5m])
 **可视化**: Stat，显示最近5分钟拒绝数
 
 ***
+
+<a id="5-告警规则配置"></a>
 
 ## 5. 告警规则配置
 
@@ -1480,6 +1490,8 @@ groups:
 
 ***
 
+<a id="6-运维操作"></a>
+
 ## 6. 运维操作
 
 ### 6.1 配置热重载
@@ -1550,6 +1562,8 @@ tar -czf prometheus-snapshot-$(date +%Y%m%d).tar.gz \
 ```
 
 ***
+
+<a id="7-故障排查"></a>
 
 ## 7. 故障排查
 
@@ -1663,6 +1677,8 @@ docker logs alertmanager
 ```
 
 ***
+
+<a id="8-最佳实践"></a>
 
 ## 8. 最佳实践
 

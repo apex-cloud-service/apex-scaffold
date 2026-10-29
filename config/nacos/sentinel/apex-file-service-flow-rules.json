@@ -4,5 +4,9 @@
   {"resource":"/api/v1/files/**","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/documents/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/admin-api/v1/documents/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
-  {"resource":"/api/v1/files/{id}/chunk","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false}
+  {"resource":"/api/v1/files/{id}/chunk","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v2/file-shares/exchange","limitApp":"default","grade":1,"count":30,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v2/file-shares/download","limitApp":"default","grade":1,"count":30,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v2/files/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
+  {"resource":"/api/v2/file-shares/**","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false}
 ]

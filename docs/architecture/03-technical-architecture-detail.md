@@ -2,7 +2,7 @@
 
 > 文档版本: v1.1  
 > 最后更新: 2026-09-05  
-> 适用版本: apex-scaffold v1.2.0+
+> 适用版本: apex-scaffold v1.3.1+
 
 ## 架构图
 
@@ -73,7 +73,8 @@ npm run lint  # ESLint + Prettier
 | 技术组件 | 版本 | 用途 | 配置位置 |
 |----------|------|------|----------|
 | **Nginx / ALB** | - | 反向代理 | SSL 终止 + 负载均衡 |
-| **Sentinel** | 1.8.9 | 流量治理 | 限流/熔断/热点参数 |
+| **Sentinel** | 1.8.9 | 流量治理 | system 域流控/热点参数（SentinelConfig） |
+| **Resilience4j** | 2.2.0 | 网关熔断器 | CircuitBreaker 路由级熔断回退 |
 | **JWT / Bearer** | - | 无状态认证 | Access + Refresh 双令牌 |
 | **Spring Security** | 6.5.0 | 安全框架 | SecurityWebFilterChain |
 | **RouterFunction** | - | 函数式路由 | WebFlux 路由 |
@@ -96,7 +97,20 @@ npm run lint  # ESLint + Prettier
 鉴权 → @RequirePermission("system:user:list")
 ```
 
-**Sentinel 规则配置**：
+**Resilience4j 熔断器配置**（网关路由级）：
+```yaml
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+```
+
+**Sentinel 流控配置**（system 域，`SentinelNacosDataSourceConfig.java`）：
 ```yaml
 spring:
   cloud:
@@ -132,7 +146,7 @@ spring:
 
 | 技术组件 | 版本 | 用途 | 配置位置 |
 |----------|------|------|----------|
-| **Spring Boot** | 3.5.15 | 应用框架 | Java 17 + WebFlux |
+| **Spring Boot** | 3.5.15 | 应用框架 | Java 21 + WebFlux |
 | **MyBatis-Plus** | 3.5.10.1 | ORM 框架 | LambdaQuery + 逻辑删除 |
 | **Resilience4j** | 2.2.0 | 弹性库 | CircuitBreaker + RateLimiter |
 | **Flyway** | 10.15.0 | 数据库迁移 | V1-V20 版本化脚本 |
@@ -153,12 +167,12 @@ spring:
 
 **DDD 四层架构**：
 ```
-apex-interfaces (接口层)
+apex-system (接口层)
   ├── handler/          # Handler 薄层，权限注解 + 参数校验
   ├── router/           # WebFlux RouterFunction 路由
   └── config/           # Spring 配置
 
-apex-application (应用层)
+apex-system (应用层)
   ├── service/          # 用例编排，事务边界
   └── dto/              # DTO 转换
 
@@ -220,7 +234,7 @@ public Mono<Void> createUser(UserCreateDTO dto) {
 
 | 组件 | 镜像/版本 | 用途 | 默认状态 |
 |------|-----------|------|----------|
-| **MySQL** | 8.4.0 | 业务数据 | ✅ Compose 启用 |
+| **MySQL** | 9.0 | 业务数据 | ✅ Compose 启用 |
 | **Redis** | 7-alpine | 缓存 + 分布式锁 | ✅ Compose 启用 |
 | **Caffeine** | 3.1.8 | 堆内一级缓存 | ✅ 默认启用 |
 | **MinIO** | RELEASE.2024-08-17T01-24-54Z | S3 兼容对象存储 | ✅ Compose 启用 |
@@ -331,7 +345,7 @@ meilisearch:
 
 | 组件 | 版本 | 用途 | 配置位置 |
 |------|------|------|----------|
-| **JDK** | 17 LTS | Java 运行时 | JVM 参数按环境选择 |
+| **JDK** | 21 LTS | Java 运行时 | JVM 参数按环境选择 |
 | **Podman** | - | 容器化 | Containerfile 多阶段构建 + 镜像优化 |
 | **Kubernetes** | >= 1.24 | 容器编排 | HPA + Ingress + ConfigMap |
 | **podman-compose** | - | 本地开发 | 一键启动完整栈 |
@@ -357,7 +371,7 @@ JAVA_OPTS="
 **Containerfile 多阶段构建**（历史单体示例；实际构建使用仓库根目录 `Containerfile`）：
 ```dockerfile
 # 阶段 1: Maven 构建
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline
@@ -365,7 +379,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # 阶段 2: 运行时
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080 8081
@@ -409,7 +423,7 @@ class UserServiceTest {
 @Testcontainers
 class IntegrationTest {
     @Container
-    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0");
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:9.0");
     
     @Container
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine");
@@ -484,13 +498,13 @@ redis_commands_duration_seconds_count{command="get"} 456
 **Loki 日志查询**：
 ```logql
 # 查询错误日志
-{app="apex-application"} |= "ERROR"
+{app="apex-system"} |= "ERROR"
 
 # 按 traceId 查询完整调用链
-{app="apex-application"} | json | traceId="a1b2c3d4e5f6"
+{app="apex-system"} | json | traceId="a1b2c3d4e5f6"
 
 # 统计 5xx 错误
-sum(rate({app="apex-application"} | json | status >= 500 [1m]))
+sum(rate({app="apex-system"} | json | status >= 500 [1m]))
 ```
 
 **Zipkin 链路追踪**：
@@ -565,7 +579,7 @@ Prometheus → AlertManager → 飞书/邮件 (告警)
 | **全文检索** | Meilisearch | ❌ | ✅ | ✅ |
 | **消息队列** | RocketMQ | ❌ | ❌ | ✅ |
 | **服务发现** | Nacos | ❌ | ❌ | ✅ |
-| **流量治理** | Sentinel | ❌ | ❌ | ✅ |
+| **流量治理** | Resilience4j | ✅ | ✅ | ✅ |
 | **链路追踪** | Zipkin | ❌ | ✅ | ✅ |
 | **监控大盘** | Prometheus + Grafana | ❌ | ✅ | ✅ |
 

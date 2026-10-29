@@ -9,7 +9,7 @@
   <text x="70" y="120" class="box-title">构建阶段 (Build)</text>
   <text x="70" y="145" class="text">触发条件: push/pull_request</text>
   <text x="70" y="170" class="code">1. checkout代码</text>
-  <text x="70" y="188" class="code">2. setup JDK 17 + Node 20</text>
+  <text x="70" y="188" class="code">2. setup JDK 21 + Node 20</text>
   <text x="70" y="206" class="code">3. mvn clean package</text>
   <text x="80" y="224" class="text">-DskipTests=false</text>
   <text x="80" y="242" class="text">-Dmaven.test.failure.ignore=false</text>
@@ -23,7 +23,7 @@
   <rect x="500" y="90" width="430" height="320" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="2"/>
   <text x="520" y="120" class="box-title">镜像构建 (Podman)</text>
   <text x="520" y="145" class="text">多阶段构建 Containerfile:</text>
-  <text x="520" y="170" class="code">FROM eclipse-temurin:17-jre-alpine AS base</text>
+  <text x="520" y="170" class="code">FROM eclipse-temurin:21-jre-alpine AS base</text>
   <text x="520" y="188" class="code">COPY *.jar /app.jar</text>
   <text x="520" y="206" class="code">EXPOSE 8080 8081</text>
   <text x="520" y="224" class="code">ENTRYPOINT ["java","-jar","/app.jar"]</text>
@@ -63,7 +63,7 @@
   <text x="70" y="672" class="text">流水线加速:</text>
   <text x="80" y="692" class="code">• GitHub Actions缓存 (Maven .m2, 容器镜像层)</text>
   <text x="80" y="710" class="code">• 并行任务: 前端构建 || 后端构建</text>
-  <text x="80" y="728" class="code">• 矩阵构建: JDK 17/21 × MySQL 8.0/8.4</text>
+  <text x="80" y="728" class="code">• 矩阵构建: JDK 21/21 × MySQL 9.x/8.4</text>
 
   <text x="700" y="785" class="code" text-anchor="middle">© 2026 Apex Team · CI/CD流水线 v3.0 · GitHub Actions</text>
 </svg>

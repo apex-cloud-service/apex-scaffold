@@ -75,7 +75,7 @@
   <rect width="1800" height="1400" fill="#ffffff"/>
 
   <text x="900" y="45" class="title-main">Apex Generator 代码生成器模板系统</text>
-  <text x="900" y="73" class="title-version">DDD 五层架构 · 18个FreeMarker模板 · 13个后端+4个前端文件 · 一键生成完整CRUD模块 · v1.2.0</text>
+  <text x="900" y="73" class="title-version">DDD 五层架构 · 18个FreeMarker模板 · 13个后端+4个前端文件 · 一键生成完整CRUD模块 · v1.3.1</text>
 
   <!-- 输入：表结构定义 -->
   <g id="input">

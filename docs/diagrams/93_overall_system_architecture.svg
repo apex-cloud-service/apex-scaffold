@@ -71,7 +71,7 @@
   <rect x="40" y="300" width="130" height="96" rx="10" fill="#0891b2"/>
   <text x="105" y="338" class="layer-title" text-anchor="middle">接口层</text>
   <text x="105" y="358" class="layer-sub" text-anchor="middle">Interfaces</text>
-  <text x="105" y="376" class="layer-sub" text-anchor="middle" font-size="9">apex-interfaces</text>
+  <text x="105" y="376" class="layer-sub" text-anchor="middle" font-size="9">apex-system</text>
   <rect x="185" y="314" width="192" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
   <text x="198" y="336" class="box-title">认证 / 会话 Handler</text>
   <text x="198" y="354" class="box-desc">AuthHandler · SsoAuthHandler</text>
@@ -104,7 +104,7 @@
   <rect x="40" y="416" width="130" height="96" rx="10" fill="#0891b2" opacity="0.85"/>
   <text x="105" y="454" class="layer-title" text-anchor="middle">应用层</text>
   <text x="105" y="474" class="layer-sub" text-anchor="middle">Application</text>
-  <text x="105" y="492" class="layer-sub" text-anchor="middle" font-size="9">apex-application</text>
+  <text x="105" y="492" class="layer-sub" text-anchor="middle" font-size="9">apex-system</text>
   <rect x="185" y="430" width="192" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
   <text x="198" y="452" class="box-title">AuthService</text>
   <text x="198" y="470" class="box-desc">登录/登出 · Token 编排</text>
@@ -189,7 +189,7 @@
   <text x="1006" y="718" class="code">RemoteApiClient</text>
   <rect x="1173" y="662" width="171" height="68" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
   <text x="1186" y="684" class="box-title">韧性治理</text>
-  <text x="1186" y="702" class="box-desc">Sentinel · Resilience4j</text>
+  <text x="1186" y="702" class="box-desc">Sentinel 限流 · Resilience4j 熔断</text>
   <text x="1186" y="718" class="code">舱壁 · 自适应限流</text>
 
   <line x1="700" y1="744" x2="700" y2="762" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
@@ -224,5 +224,5 @@
   <text x="1261" y="803" class="box-title" text-anchor="middle" font-size="12">可观测</text>
   <text x="1261" y="822" class="box-desc" text-anchor="middle">Prometheus/Grafana/Loki/Zipkin</text>
 
-  <text x="700" y="878" class="note" text-anchor="middle">跨切模块：apex-common（通用能力/上下文/限流算法） · apex-license-spring-boot-starter（授权门控） · apex-auth-center（独立认证中心 ApplicationContext） · apex-generator / apex-example</text>
+  <text x="700" y="878" class="note" text-anchor="middle">跨切模块：apex-common（通用能力/上下文/限流算法） · apex-license-spring-boot-starter（授权门控） · apex-auth（独立认证中心 ApplicationContext） · apex-generator / apex-example</text>
 </svg>

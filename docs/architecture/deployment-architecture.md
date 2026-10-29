@@ -1,9 +1,12 @@
 # Apex Scaffold 部署架构文档
 
-> 文档版本: v1.0
+> 文档版本: v1.1
 > 创建时间: 2026-09-04
-> 适用版本: apex-scaffold v2.5.0+
+> 最近更新: 2026-10-28（标注历史单体拓扑，修正 Java 版本和日志方案）
+> 适用版本: apex-scaffold v1.3.1+
 > 部署方式: Kubernetes / Podman / podman-compose
+
+> **⚠️ 架构演进说明**：本文档中的 Containerfile、Deployment YAML 和 podman-compose 示例部分保留了**单体部署的历史形态**（单一 `apex-app` 镜像）。当前运行架构已拆分为网关 + 五业务服务 + 任务代理/脱敏服务的独立镜像，各服务独立端口。实际部署以仓库根目录的 `podman-compose.yml`、`podman-compose.infra.yml`、`Containerfile`/`Containerfile.quick` 和 [system-architecture.md](system-architecture.md) §3.2 为准。日志聚合当前使用 Grafana Loki + Alloy（非 ELK）。
 
 > **配套架构图**:
 > - [部署架构拓扑图](../diagrams/45_deployment_flow.svg)
@@ -48,7 +51,7 @@ Apex Scaffold 采用**云原生架构**设计，支持多种部署方式，从�
                     │
 ┌───────────────────┴─────────────────────────────────────────┐
 │  应用服务层 (Kubernetes Cluster)                             │
-│  - Apex Pod-1/2/3: apex:v2.5.0 (2C4G)                       │
+│  - Apex Pod-1/2/3: apex:v1.3.1 (2C4G)                       │
 │  - HPA: 自动扩缩容 (Min:3 Max:10)                            │
 │  - ConfigMap: 配置注入                                       │
 │  - Secret: 密钥管理                                          │
@@ -68,7 +71,7 @@ Apex Scaffold 采用**云原生架构**设计，支持多种部署方式，从�
 
 | 组件 | 版本 | 端口 | 副本数 | 资源配额 |
 |------|------|------|--------|---------|
-| apex-scaffold | v2.5.0 | 8080(业务) / 8081(管理) | 3+ (HPA) | 2C / 4G |
+| apex-scaffold | v1.3.1 | 多服务独立端口 | 各服务 2+ (HPA) | 2C / 4G |
 
 #### 数据存储
 
@@ -83,7 +86,7 @@ Apex Scaffold 采用**云原生架构**设计，支持多种部署方式，从�
 | 组件 | 版本 | 端口 | 部署模式 | 说明 |
 |------|------|------|---------|------|
 | Nacos | 2.x | 8848 | 3节点集群 | 配置中心+服务发现 |
-| Sentinel | 1.8.x | 8858 | 单节点 | 流控熔断Dashboard |
+| Resilience4j | 2.2.0 | 内置 | 网关路由级 | 熔断回退 |
 | RocketMQ NameServer | 5.x | 9876 | 3节点 | 路由注册 |
 | RocketMQ Broker | 5.x | 10911 | 2主2从 | 消息存储 |
 
@@ -133,7 +136,7 @@ metadata:
   namespace: apex-prod
   labels:
     app: apex-scaffold
-    version: v2.5.0
+    version: v1.3.1
 spec:
   replicas: 3
   selector:
@@ -143,11 +146,11 @@ spec:
     metadata:
       labels:
         app: apex-scaffold
-        version: v2.5.0
+        version: v1.3.1
     spec:
       containers:
       - name: apex-scaffold
-        image: harbor.example.com/apex/apex-scaffold:v2.5.0
+        image: harbor.example.com/apex/apex-scaffold:v1.3.1
         ports:
         - containerPort: 8080
           name: http
@@ -364,9 +367,9 @@ services:
       timeout: 10s
       retries: 3
 
-  # MySQL 8.0
+  # MySQL 9.0
   mysql:
-    image: mysql:8.0
+    image: mysql:9.0
     container_name: apex-mysql
     ports:
       - "3306:3306"
@@ -454,7 +457,7 @@ services:
     image: prom/prometheus:latest
     container_name: apex-prometheus
     ports:
-      - "9090:9090"
+      - "9090:8083"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -517,7 +520,7 @@ podman-compose -f podman-compose.yml down -v
 
 **Containerfile**（以下为历史单体镜像示例；实际构建使用仓库根目录的多阶段 `Containerfile`）:
 ```dockerfile
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="apex-team"
 
@@ -551,11 +554,11 @@ EXPOSE 8080 8081
 mvn clean package -DskipTests
 
 # Podman 构建（仓库根目录）
-podman build -f Containerfile -t apex-scaffold:v2.5.0 .
+podman build -f Containerfile -t apex-scaffold:v1.3.1 .
 
 # 推送到Harbor
-podman tag apex-scaffold:v2.5.0 harbor.example.com/apex/apex-scaffold:v2.5.0
-podman push harbor.example.com/apex/apex-scaffold:v2.5.0
+podman tag apex-scaffold:v1.3.1 harbor.example.com/apex/apex-scaffold:v1.3.1
+podman push harbor.example.com/apex/apex-scaffold:v1.3.1
 ```
 
 ### 5.2 Kubernetes 部署流程
@@ -696,7 +699,7 @@ spec:
 
 ### 8.1 日志管理
 
-- ✅ 集中式日志: Filebeat → Logstash → Elasticsearch
+- ✅ 集中式日志: Grafana Alloy → Loki
 - ✅ 日志保留: 30天，自动轮转
 - ✅ 日志级别: 生产环境 INFO，问题排查时动态调整为DEBUG
 - ✅ TraceID关联: 全链路日志关联

@@ -12,12 +12,12 @@
 
 ### 必需（basic 档位）
 
-- ✅ **JDK 17+** - 推荐使用 `17.0.12-oracle`
+- ✅ **JDK 21** - 推荐使用 `21.0.13.0+9-tem`（SDKMAN，Temurin 21 LTS）
 - ✅ **Maven** - 推荐使用 `mvnd 2.0.0-rc-3`（速度快 3 倍）
 
 ### 可选（standard/enterprise 档位）
 
-- 🔵 **MySQL 8.0+** - 标准档位及以上需要
+- 🔵 **MySQL 9.0+** - 标准档位及以上需要
 - 🔵 **Redis 7.0+** - 标准档位及以上需要
 - 🟢 **RocketMQ 5.x** - 企业档位需要
 - 🟢 **Nacos 2.x** - 企业档位需要
@@ -28,7 +28,7 @@
 # 加载 sdkman（JDK + mvnd，推荐）
 source ~/.sdkman/bin/sdkman-init.sh
 
-# 检查Java版本(需要17+)
+# 检查Java版本(需要21)
 java -version
 
 # 检查构建工具版本（推荐 mvnd，Maven Daemon；mvn 亦可）
@@ -40,7 +40,7 @@ podman-compose --version
 ```
 
 如果未安装,请参考:
-- [JDK 17下载](https://www.oracle.com/java/technologies/downloads/#java17)（推荐 sdkman：`sdk install java 17.0.12-oracle`）
+- [JDK 21下载](https://adoptium.net/temurin/releases/?version=21)（推荐 sdkman：`sdk install java 21.0.13.0+9-tem`）
 - [mvnd安装指南](https://github.com/apache/maven-mvnd)（推荐 sdkman：`sdk install mvnd`；传统 Maven 亦可）
 - [Podman 安装指南](https://podman.io/docs/installation)
 

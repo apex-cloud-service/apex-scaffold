@@ -123,6 +123,8 @@ case "${SERVICE_MODULE}" in
   apex-workflow-service) DEFAULT_SERVER_PORT=8083 ;;
   apex-office-service) DEFAULT_SERVER_PORT=8084 ;;
   apex-file-service) DEFAULT_SERVER_PORT=8085 ;;
+  apex-job-service) DEFAULT_SERVER_PORT=8095 ;;
+  apex-masking-service) DEFAULT_SERVER_PORT=8096 ;;
   *) DEFAULT_SERVER_PORT=8080 ;;
 esac
 SERVER_PORT="${SERVER_PORT:-${DEFAULT_SERVER_PORT}}"
@@ -133,7 +135,23 @@ else
 fi
 SHUTDOWN_TIMEOUT_SECONDS="${APEX_SHUTDOWN_TIMEOUT_SECONDS:-90}"
 APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-standalone}"
-READINESS_URL="${APEX_READINESS_URL:-http://127.0.0.1:${MANAGEMENT_PORT}/actuator/health/readiness}"
+DEFAULT_READINESS_PATH=/actuator/health/readiness
+DEFAULT_READINESS_STATUS=200
+case "${SERVICE_MODULE}" in
+  apex-job-service)
+    # 仅确认任务路由存活；上游权限和数据库就绪仍需独立验证。
+    DEFAULT_READINESS_PATH=/admin-api/v1/jobs
+    DEFAULT_READINESS_STATUS=401 ;;
+  apex-masking-service) DEFAULT_READINESS_PATH=/actuator/health ;;
+esac
+READINESS_URL="${APEX_READINESS_URL:-http://127.0.0.1:${MANAGEMENT_PORT}${DEFAULT_READINESS_PATH}}"
+READINESS_STATUS="${APEX_READINESS_STATUS:-${DEFAULT_READINESS_STATUS}}"
+
+readiness_passed() {
+  local status
+  status="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "${READINESS_URL}" 2>/dev/null)" || return 1
+  [ "${status}" = "${READINESS_STATUS}" ]
+}
 
 # ---------- 定位可执行 jar ----------
 if [ -n "${APEX_JAR:-}" ]; then
@@ -207,7 +225,7 @@ cmd_start() {
   local waited=0
   echo -n "⏳ 等待服务就绪"
   while [ "${waited}" -lt "${SHUTDOWN_TIMEOUT_SECONDS}" ]; do
-    if curl -sf -o /dev/null "${READINESS_URL}" 2>/dev/null; then
+    if readiness_passed; then
       echo ""
       echo "✅ 服务已就绪: ${READINESS_URL}  (PID $(get_pid))"
       return 0
@@ -255,7 +273,7 @@ cmd_status() {
     echo "   PID      : ${pid}"
     echo "   Profiles : ${SPRING_PROFILES_ACTIVE}"
     echo "   JAR      : ${JAR}"
-    if curl -sf -o /dev/null "${READINESS_URL}" 2>/dev/null; then
+    if readiness_passed; then
       echo "   readiness : UP (${READINESS_URL})"
     else
       echo "   readiness : 启动中或异常（未通过 ${READINESS_URL}）"

@@ -3,7 +3,7 @@
 
 > 文档版本: v1.0
 > 创建时间: 2026-09-04
-> 适用版本: apex-scaffold v2.5.0+
+> 适用版本: apex-scaffold v1.3.1+
 > RocketMQ版本: 5.x
 
 > **配套架构图**:

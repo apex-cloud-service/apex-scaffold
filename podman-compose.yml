@@ -6,6 +6,9 @@
 # 用法:
 #   # 1) 本地/测试一键栈（默认读取 .env，需先配置全部安全密钥）
 #   cp .env.example .env        # 密钥格式见 docs/05-operations/configuration.md
+#   # 先在项目固定 Java 21/mvnd 环境构建 security-key-check 所需 JAR：
+#   source scripts/build/init-build-env.sh
+#   mvnd -B -pl apex-tools-deployment -am verify
 #   podman-compose -f podman-compose.yml up -d --build
 #   podman-compose -f podman-compose.yml ps           # 等待 mysql/redis/nacos healthy、各微服务就绪
 #
@@ -123,11 +126,11 @@ x-app-common-environment: &app-common-environment
 
 services:
   security-key-check:
-    image: docker.io/library/python:3.13-alpine
+    image: docker.io/library/eclipse-temurin:21-jre-alpine
     environment: *security-environment
-    command: ["python3", "-B", "/tools/local_deployment.py", "validate"]
+    command: ["java", "-jar", "/tools/local-deployment.jar", "validate"]
     volumes:
-      - ./scripts/utils/local_deployment.py:/tools/local_deployment.py:ro
+      - ./apex-tools-deployment/target/local-deployment.jar:/tools/local-deployment.jar:ro
     network_mode: none
     read_only: true
     cap_drop: ["ALL"]
@@ -161,6 +164,8 @@ services:
     environment:
       <<: *app-common-environment
       GATEWAY_PORT: "8080"
+      ROUTE_JOB_URI: ${ROUTE_JOB_URI:-http://apex-job-service:8095}
+      ROUTE_MASKING_URI: ${ROUTE_MASKING_URI:-http://apex-masking-service:8096}
     depends_on:
       security-key-check:
         condition: service_completed_successfully
@@ -287,6 +292,9 @@ services:
     environment:
       <<: *app-common-environment
       DB_NAME: apex_workflow
+      WORKFLOW_JWT_PUBLIC_KEY_BASE64: ${WORKFLOW_JWT_PUBLIC_KEY_BASE64:-}
+      WORKFLOW_JWT_HMAC_ENABLED: ${WORKFLOW_JWT_HMAC_ENABLED:-false}
+      WORKFLOW_JWT_SECRET: ${WORKFLOW_JWT_SECRET:-}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_workflow?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}
@@ -368,11 +376,39 @@ services:
     image: apex-file-service:${TAG:-latest}
     volumes:
       - ./logs/apex-file-service:/app/logs
+      # 与容器路径固定绑定，避免 .env 中主机相对路径改变对象实际位置。
+      - ./data/storage:/app/data/storage
     ports:
       - "${FILE_PORT:-8085}:8085"
     environment:
       <<: *app-common-environment
       DB_NAME: apex_file
+      FILE_JWT_PUBLIC_KEY_BASE64: ${FILE_JWT_PUBLIC_KEY_BASE64:-}
+      FILE_JWT_SECRET: ${FILE_JWT_SECRET:-}
+      STORAGE_DEFAULT_TYPE: ${STORAGE_DEFAULT_TYPE:-local}
+      STORAGE_BUCKET_NAME: ${STORAGE_BUCKET_NAME:-apex}
+      STORAGE_PRESIGNED_URL_EXPIRE_SECONDS: ${STORAGE_PRESIGNED_URL_EXPIRE_SECONDS:-300}
+      STORAGE_LOCAL_ENABLED: ${STORAGE_LOCAL_ENABLED:-true}
+      STORAGE_LOCAL_BASE_PATH: /app/data/storage
+      STORAGE_MINIO_ENABLED: ${STORAGE_MINIO_ENABLED:-false}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-}
+      STORAGE_VOLCENGINE_ENABLED: ${STORAGE_VOLCENGINE_ENABLED:-false}
+      STORAGE_VOLCENGINE_ENDPOINT: ${STORAGE_VOLCENGINE_ENDPOINT:-}
+      STORAGE_VOLCENGINE_REGION: ${STORAGE_VOLCENGINE_REGION:-}
+      STORAGE_VOLCENGINE_ACCESS_KEY: ${STORAGE_VOLCENGINE_ACCESS_KEY:-}
+      STORAGE_VOLCENGINE_SECRET_KEY: ${STORAGE_VOLCENGINE_SECRET_KEY:-}
+      STORAGE_ALIYUN_OSS_ENABLED: ${STORAGE_ALIYUN_OSS_ENABLED:-false}
+      STORAGE_ALIYUN_OSS_ENDPOINT: ${STORAGE_ALIYUN_OSS_ENDPOINT:-}
+      STORAGE_ALIYUN_OSS_ACCESS_KEY: ${STORAGE_ALIYUN_OSS_ACCESS_KEY:-}
+      STORAGE_ALIYUN_OSS_SECRET_KEY: ${STORAGE_ALIYUN_OSS_SECRET_KEY:-}
+      STORAGE_QINIU_ENABLED: ${STORAGE_QINIU_ENABLED:-false}
+      STORAGE_QINIU_ACCESS_KEY: ${STORAGE_QINIU_ACCESS_KEY:-}
+      STORAGE_QINIU_SECRET_KEY: ${STORAGE_QINIU_SECRET_KEY:-}
+      STORAGE_QINIU_REGION: ${STORAGE_QINIU_REGION:-}
+      STORAGE_QINIU_BUCKET: ${STORAGE_QINIU_BUCKET:-}
+      STORAGE_QINIU_DOWNLOAD_DOMAIN: ${STORAGE_QINIU_DOWNLOAD_DOMAIN:-}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_file?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}
@@ -396,6 +432,117 @@ services:
     networks:
       - apex-network
       - observability
+
+  # 任务代理无数据库和注册中心；403 探针只证明 HTTP 安全链存活，不证明上游就绪。
+  apex-job-service:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-job-service
+        SERVICE_PORT: "8095"
+        MANAGEMENT_PORT: "8095"
+        HEALTHCHECK_PORT: "8095"
+    image: apex-job-service:${TAG:-latest}
+    ports:
+      - "127.0.0.1:${APEX_JOB_PORT:-8095}:8095"
+    environment:
+      APEX_JOB_PORT: "8095"
+      APEX_JOB_SYSTEM_URL: ${APEX_JOB_SYSTEM_URL:-http://apex-system-service:8082}
+      SW_AGENT_ENABLED: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -S --spider http://127.0.0.1:8095/actuator/health 2>&1 | grep -q 'HTTP/1.1 403'"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+    networks: [apex-network]
+
+  # 脱敏服务不需要数据库；必填信任配置为空时应用校验明确拒绝启动。
+  apex-masking-service:
+    profiles: [masking]
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-masking-service
+        SERVICE_PORT: "8096"
+        MANAGEMENT_PORT: "8096"
+        HEALTHCHECK_PORT: "8096"
+    image: apex-masking-service:${TAG:-latest}
+    ports:
+      - "127.0.0.1:${MASKING_PORT:-8096}:8096"
+    environment:
+      MASKING_PORT: "8096"
+      MASKING_JWT_ISSUER: ${MASKING_JWT_ISSUER:-}
+      MASKING_JWT_JWK_SET_URI: ${MASKING_JWT_JWK_SET_URI:-}
+      MASKING_JWT_AUDIENCE: ${MASKING_JWT_AUDIENCE:-}
+      MASKING_ALLOWED_TENANT: ${MASKING_ALLOWED_TENANT:-}
+      SW_AGENT_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8096/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+    networks: [apex-network]
+
+  # 调度中心与 TC 均可选；外部完整配置和官方建表是启动前置条件，不内置秘密。
+  xxl-job-admin:
+    profiles: [xxl-job]
+    image: docker.io/xuxueli/xxl-job-admin:3.1.1
+    environment:
+      PARAMS: "--spring.config.additional-location=file:/config/application.properties"
+    volumes:
+      - type: bind
+        source: ${XXL_ADMIN_CONFIG_FILE:-./config/xxl-job/application.properties}
+        target: /config/application.properties
+        read_only: true
+        bind:
+          create_host_path: false
+      - xxl-job-logs:/data/applogs
+    ports:
+      - "127.0.0.1:${XXL_ADMIN_PORT:-8097}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/xxl-job-admin/actuator/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+    networks: [apex-network]
+
+  seata-tc:
+    profiles: [seata]
+    image: docker.io/apache/seata-server:2.2.0
+    environment:
+      SEATA_IP: ${SEATA_ADVERTISE_HOST:-seata-tc}
+      SEATA_PORT: "8091"
+      STORE_MODE: db
+    volumes:
+      - type: bind
+        source: ${SEATA_SERVER_CONFIG_FILE:-./config/seata/application.yml}
+        target: /seata-server/resources/application.yml
+        read_only: true
+        bind:
+          create_host_path: false
+      - seata-logs:/seata-server/logs
+    ports:
+      - "127.0.0.1:${SEATA_RPC_PORT:-8091}:8091"
+      - "127.0.0.1:${SEATA_CONSOLE_PORT:-7091}:7091"
+    # TCP 探针不代表真实 AT 提交、回滚或数据库恢复成功。
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8091'"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+    networks: [apex-network]
 
   # ---------------- Nacos（服务发现 + 配置中心） ----------------
   # 微服务拓扑下网关 lb:// 路由依赖服务发现；提供 nacos/nacos（单机模式，仅用于本地起步）。
@@ -425,7 +572,7 @@ services:
 
   # ---------------- MySQL ----------------
   mysql:
-    image: docker.io/library/mysql:8.0
+    image: docker.io/library/mysql:9.0
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-apex-root}
       # 引导库（旧单体 apex_data 已随单体退役收敛为 apex_system，见 §Phase 6）；
@@ -638,10 +785,17 @@ services:
   rocketmq-broker:
     image: docker.io/apache/rocketmq:5.3.1
     profiles: ["rocketmq"]
+    # brokerIP1 显式指定为宿主机回环地址：若不设置，broker 会向 namesrv 上报容器内部网络 IP，
+    # 从宿主机（如 IDE、本机跑集成测试）直连时该内部 IP 不可路由，连接会报 RemotingSendRequestException。
+    # mqbroker 的 BrokerStartup 不支持单项 -D 覆盖，只能通过 -c 加载配置文件，故启动前先落一份临时
+    # broker.conf。同机场景下 EXTERNAL_IP 固定为 127.0.0.1 即可；如需从其他主机访问，应替换为宿主机对外可达地址。
     command:
       - /bin/sh
       - -c
-      - mkdir -p /home/rocketmq/logs && exec sh mqbroker -n rocketmq-namesrv:9876
+      - |
+        mkdir -p /home/rocketmq/logs
+        printf 'brokerClusterName=DefaultCluster\nbrokerName=broker-a\nbrokerId=0\nbrokerIP1=%s\n' "${ROCKETMQ_BROKER_EXTERNAL_IP:-127.0.0.1}" > /home/rocketmq/broker-external.conf
+        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker-external.conf
     environment:
       NAMESRV_ADDR: rocketmq-namesrv:9876
       HEAP_OPTS: "-Xms512m -Xmx1g -Xmn256m"
@@ -653,6 +807,7 @@ services:
     ports:
       - "10909:10909"
       - "10911:10911"
+      - "10912:10912"
     restart: unless-stopped
     networks:
       - apex-network
@@ -665,6 +820,8 @@ volumes:
   alloy-data:
   keycloak-data:
   nacos-data:
+  xxl-job-logs:
+  seata-logs:
 
 networks:
   apex-network:

@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""Read-only-source MySQL negative probes; expected failures never grant coverage."""
+import argparse
+import hashlib
+import json
+import pathlib
+import sys
+import subprocess
+import base64
+import time
+import uuid
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import auth_v45_dynamic_probe_20261018 as shared
+from collect_table_facts import statement_inventory
+
+SOURCES = {v: 'apex-system/src/main/resources/db/migration/mysql/' + filename for v, filename in (
+    ('V19', 'V19__enforce_department_tenant_integrity.sql'),
+    ('V42', 'V42__add_token_encryption.sql'))}
+
+
+def plan(version, source_text=None):
+    source = SOURCES[version]
+    text = (shared.ROOT / source).read_text() if source_text is None else source_text
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    items = [i for i in json.loads(shared.BASELINE.read_text())['baseline_audit']['old_sql_items']
+             if i['source'] == source and i['category'] in ('dynamic_sql', 'procedure_or_prepared_control')]
+    if not items or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    statements = statement_inventory(text, 'mysql')
+    bindings = []
+    for statement in statements:
+        identity = f"{source}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+        statement['statement_id'] = 'stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]
+    for item in items:
+        matches = [s for s in statements if item['statement_ids'] == [s['statement_id']]
+                   and item['original']['line'] == s['line']]
+        if len(matches) != 1:
+            raise ValueError('statement line/offset/hash differs from baseline')
+        bindings.append({'item': item, 'statement': matches[0]})
+    return {'schema_version': 1, 'source': source, 'source_sha256': digest,
+            'baseline_sha256': hashlib.sha256(shared.BASELINE.read_bytes()).hexdigest(),
+            'items': items, 'bindings': bindings, 'scenarios': [], 'status': 'planned_not_run',
+            'coverage': {'verified_old_ids': [], 'verified_old_id_count': 0},
+            'limits': ['Synthetic fixtures, not a full historical upgrade or Flyway execution',
+                       'Expected failures are diagnostic only; no absent/present/replay closure or additive credit'],
+            'cleanup': {'attempted': False}}
+
+
+def save(result):
+    shared.save(result)
+
+
+def observe(result, sql, label, text, error=None):
+    record = {'label': label, 'sql': text, 'counts_as_branch_proof': False}
+    result['scenarios'].append(record)
+    try:
+        record['client_output'] = sql(text)
+    except RuntimeError as exc:
+        record['error'] = str(exc)
+        if hasattr(exc, 'stderr_base64'):
+            record['stderr_base64'] = exc.stderr_base64
+        record['status'] = 'expected_failure' if error and error in str(exc) else 'unexpected_failure'
+        save(result)
+        if not error or error not in str(exc):
+            raise
+    else:
+        record['status'] = 'unexpected_success' if error else 'succeeded'
+        save(result)
+        if error:
+            raise AssertionError(label + ' unexpectedly succeeded')
+    return record
+
+
+def verify_v42(result, sql):
+    full = (shared.ROOT / result['source']).read_text()
+    rows = statement_inventory(full, 'mysql')
+    guard = rows[5]['sql'] + ';\n'
+    catalog = "SELECT column_name,column_type FROM information_schema.columns WHERE table_schema='probe' AND table_name='token' ORDER BY ordinal_position;"
+    for start, kind in ((6, 'column'), (10, 'index')):
+        body = guard + ';\n'.join(s['sql'] for s in rows[start:start + 4]) + ';'
+        for branch in ('absent', 'replay', 'present'):
+            fixture = 'USE probe; DROP TABLE IF EXISTS token;'
+            if branch == 'present':
+                fixture += ' CREATE TABLE token(id BIGINT PRIMARY KEY,access_token_hash VARCHAR(64),refresh_token_hash VARCHAR(64),token_family VARCHAR(64),revoked_at DATETIME);'
+            sql(fixture)
+            before = sql(catalog)
+            record = observe(result, sql, kind + '_' + branch, 'USE probe;\n' + body,
+                             '1064' if branch == 'present' else None)
+            record.update(fixture_sql=fixture, catalog_before=before, catalog_after=sql(catalog))
+            assert record['catalog_before'] == record['catalog_after']
+            save(result)
+    sql('USE probe; DROP TABLE token; CREATE TABLE token(id BIGINT PRIMARY KEY);')
+    observe(result, sql, 'single_valid_prepared_ddl', "USE probe; SET @s='ALTER TABLE token ADD COLUMN a INT'; PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;")
+    observe(result, sql, 'add_column_if_not_exists_control', 'USE probe; ALTER TABLE token ADD COLUMN IF NOT EXISTS b INT;', '1064')
+    observe(result, sql, 'create_index_if_not_exists_control', 'USE probe; CREATE INDEX IF NOT EXISTS idx_a ON token(a);', '1064')
+    observe(result, sql, 'prepare_multiple_valid_statements_control', "USE probe; SET @s='ALTER TABLE token ADD COLUMN b INT; ALTER TABLE token ADD COLUMN c INT'; PREPARE s FROM @s;", '1064')
+    fixture = '''USE probe; DROP TABLE IF EXISTS token,oauth2_authorization,token_rotation_history,token_security_event,encryption_key_version;
+CREATE TABLE oauth2_authorization(id BIGINT PRIMARY KEY,access_token_issued_at DATETIME,access_token_expires_at DATETIME);
+INSERT INTO oauth2_authorization VALUES(1,'2026-01-01','2026-02-01');
+'''
+    sql(fixture)
+    record = observe(result, sql, 'full_file_token_absent_initial', 'USE probe;\n' + full)
+    record['fixture_sql'] = fixture
+    observe(result, sql, 'full_file_replay_duplicate_column', 'USE probe;\n' + full, '1060')
+    sql(fixture + 'CREATE TABLE token(id BIGINT PRIMARY KEY);')
+    record = observe(result, sql, 'full_file_token_present_initial', 'USE probe;\n' + full, '1064')
+    record['fixture_sql'] = fixture + 'CREATE TABLE token(id BIGINT PRIMARY KEY);'
+    save(result)
+    verify_v42_partial_commit(result, sql)
+
+
+def verify_v42_partial_commit(result, sql):
+    full = (shared.ROOT / SOURCES['V42']).read_text()
+    fixture = '''USE probe;
+DROP VIEW IF EXISTS v_token_health;
+DROP TABLE IF EXISTS token,oauth2_authorization,token_rotation_history,token_security_event,encryption_key_version,commit_marker;
+CREATE TABLE oauth2_authorization(id BIGINT PRIMARY KEY,access_token_issued_at DATETIME,access_token_expires_at DATETIME) ENGINE=InnoDB;
+INSERT INTO oauth2_authorization VALUES(1,'2026-01-01','2026-02-01');
+CREATE TABLE token(id BIGINT PRIMARY KEY) ENGINE=InnoDB;
+INSERT INTO token VALUES(7);
+CREATE TABLE commit_marker(id BIGINT PRIMARY KEY) ENGINE=InnoDB;
+'''
+    def snapshot():
+        return {
+            'columns': sql("SELECT column_name FROM information_schema.columns WHERE table_schema='probe' AND table_name='oauth2_authorization' ORDER BY ordinal_position;"),
+            'indexes': sql("SELECT index_name,non_unique,column_name FROM information_schema.statistics WHERE table_schema='probe' AND table_name='oauth2_authorization' ORDER BY index_name,seq_in_index;"),
+            'data': sql('USE probe; SELECT id,rotation_count FROM oauth2_authorization ORDER BY id;'),
+            'token_data': sql('USE probe; SELECT id FROM token ORDER BY id;'),
+            'committed_marker': sql('USE probe; SELECT id FROM commit_marker ORDER BY id;'),
+            'later_objects': sql("SELECT table_name FROM information_schema.tables WHERE table_schema='probe' AND table_name IN ('token_rotation_history','token_security_event','encryption_key_version','v_token_health') ORDER BY table_name;")}
+
+    sql(fixture)
+    record = observe(result, sql, 'v42_failure_after_implicit_commit',
+                     'USE probe; SET autocommit=0; START TRANSACTION; INSERT INTO commit_marker VALUES(99);\n' + full,
+                     '1064')
+    after = snapshot()
+    expected_columns = ['id', 'access_token_issued_at', 'access_token_expires_at', 'access_token_hash',
+                        'access_token_encrypted', 'access_token_iv', 'refresh_token_hash',
+                        'refresh_token_encrypted', 'refresh_token_iv', 'token_family', 'previous_jti',
+                        'revoked_at', 'rotation_count']
+    assert after['columns'].splitlines() == expected_columns, after
+    assert set(after['indexes'].splitlines()) == {
+        'PRIMARY\t0\tid', 'idx_access_token_hash\t1\taccess_token_hash',
+        'idx_refresh_token_hash\t1\trefresh_token_hash', 'idx_revoked_at\t1\trevoked_at',
+        'idx_token_family\t1\ttoken_family'}, after
+    assert after['committed_marker'] == '99', ('implicit commit did not persist prior transactional DML', after)
+    assert after['data'] == '1\t0' and after['token_data'] == '7' and not after['later_objects'], after
+    record.update(fixture_sql=fixture, after=after,
+                  finding='Earlier ALTER/CREATE INDEX and pre-DDL transaction marker persist despite later PREPARE failure; later objects absent')
+    save(result)
+    replay = observe(result, sql, 'v42_partial_state_replay_duplicate_column', 'USE probe;\n' + full, '1060')
+    replay['after'] = snapshot()
+    assert replay['after'] == after, 'replay changed partial state'
+    save(result)
+
+
+def verify_v19(result, sql):
+    full = (shared.ROOT / result['source']).read_text()
+    procedure = full[:full.index('ALTER TABLE `sys_dept`')]
+    fixture = '''USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;
+CREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;
+CREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);
+CREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;
+INSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');
+INSERT INTO sys_role_dept VALUES(2,'tenant-a',2);
+'''
+    seed = "INSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL); INSERT INTO sys_user VALUES(1,'admin-openid','admin',1);"
+    query = 'USE probe; SELECT id,tenant_id FROM sys_dept ORDER BY id; SELECT id,dept_id FROM sys_user ORDER BY id; SELECT id,tenant_id,dept_id FROM sys_role_dept ORDER BY id;'
+    for label, data in (('seed_absent', ''), ('seed_present', seed)):
+        sql(fixture + data)
+        record = observe(result, sql, label, 'USE probe;\n' + procedure)
+        after = sql(query)
+        assert after == ('2\ttenant-a\n2\ttenant-a\t2' if not data else '2\ttenant-a\n1\tNULL\n2\ttenant-a\t2'), after
+        record.update(fixture_sql=fixture + data, data_after=after)
+        replay = observe(result, sql, label + '_procedure_replay', 'USE probe;\n' + procedure)
+        replay['data_after'] = sql(query)
+        assert replay['data_after'] == after
+        save(result)
+    cases = (
+        ('missing_admin', "INSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL);", 'ambiguous'),
+        ('wrong_admin', seed + "UPDATE sys_user SET username='other';", 'ambiguous'),
+        ('other_user_reference', seed + "INSERT INTO sys_user VALUES(3,'other','other',1);", 'ambiguous'),
+        ('role_reference', seed + "INSERT INTO sys_role_dept VALUES(3,'tenant-a',1);", 'ambiguous'),
+        ('unassigned_department', "INSERT INTO sys_dept VALUES(3,0,'0','unassigned',NULL);", 'explicit tenant_id'))
+    for label, data, error in cases:
+        sql(fixture + data)
+        before = sql(query)
+        record = observe(result, sql, label, 'USE probe;\n' + procedure, error)
+        record.update(fixture_sql=fixture + data, data_before=before, data_after=sql(query))
+        assert before == record['data_after'], label
+        save(result)
+    sql(fixture + seed)
+    record = observe(result, sql, 'full_file_initial', 'USE probe;\n' + full)
+    record.update(fixture_sql=fixture + seed, data_after=sql(query),
+                  table_definition=sql('USE probe; SHOW CREATE TABLE sys_dept; SHOW CREATE TABLE sys_role_dept;'))
+    assert 'uk_sys_dept_tenant_id_id' in record['table_definition'] and 'fk_sys_role_dept_tenant_dept' in record['table_definition']
+    assert sql("SELECT is_nullable FROM information_schema.columns WHERE table_schema='probe' AND table_name='sys_dept' AND column_name='tenant_id';") == 'NO'
+    observe(result, sql, 'cross_tenant_fk_rejected', "USE probe; INSERT INTO sys_role_dept VALUES(9,'tenant-b',2);", '1452')
+    observe(result, sql, 'same_tenant_fk_accepted', "USE probe; INSERT INTO sys_role_dept VALUES(9,'tenant-a',2);")
+    observe(result, sql, 'null_department_tenant_rejected', "USE probe; INSERT INTO sys_dept VALUES(8,0,'0','bad',NULL);", '1048')
+    observe(result, sql, 'full_file_replay_duplicate_key', 'USE probe;\n' + full, '1061')
+    save(result)
+    verify_v19_failure_residue(result, sql, fixture, seed, query)
+
+
+def verify_v19_failure_residue(result, sql, fixture, seed, query):
+    full = (shared.ROOT / SOURCES['V19']).read_text()
+    result['v19_unique_constraint_limit'] = ('Composite unique index is verified by catalog name, uniqueness and ordered columns only; '
+        'PRIMARY(id) already prevents duplicate pairs, so ERROR 1062 is not independent composite-uniqueness proof')
+    result['limits'].append('SIGNAL transaction comparison observes a new connection after the failing mysql client exits; disconnect rolls back uncommitted DML, not SIGNAL itself')
+
+    def snapshot():
+        return {
+            'data': sql(query),
+            'tenant_nullable': sql("SELECT is_nullable FROM information_schema.columns WHERE table_schema='probe' AND table_name='sys_dept' AND column_name='tenant_id';"),
+            'composite_index': sql("SELECT index_name,non_unique,column_name FROM information_schema.statistics WHERE table_schema='probe' AND table_name='sys_dept' AND index_name='uk_sys_dept_tenant_id_id' ORDER BY seq_in_index;"),
+            'foreign_key': sql("SELECT constraint_name FROM information_schema.referential_constraints WHERE constraint_schema='probe' AND constraint_name='fk_sys_role_dept_tenant_dept';")}
+
+    for kind, data, error in (
+            ('fk', "INSERT INTO sys_role_dept VALUES(3,'tenant-b',2);", '1452'),
+            ('signal', "INSERT INTO sys_dept VALUES(3,0,'0','unassigned',NULL);", 'explicit tenant_id')):
+        for mode in ('autocommit', 'transaction'):
+            setup = fixture + seed + data
+            sql(setup)
+            before = snapshot()
+            # Procedure DDL commits implicitly; begin immediately before CALL.
+            prefix = 'SET autocommit=1;\n' if mode == 'autocommit' else 'SET autocommit=0; START TRANSACTION;\n'
+            call = 'CALL `enforce_department_tenant_integrity`();'
+            body = full.replace(call, prefix + call)
+            record = observe(result, sql, 'v19_' + ('fk_failure_' if kind == 'fk' else 'signal_') + mode,
+                             'USE probe;\n' + body, error)
+            after = snapshot()
+            record.update(fixture_sql=setup, before=before, after=after, transaction_mode=mode,
+                          observation_boundary='fresh connection after failed client disconnect')
+            save(result)
+            if kind == 'fk':
+                assert after['data'] == '2\ttenant-a\n1\tNULL\n2\ttenant-a\t2\n3\ttenant-b\t2', after
+                assert after['tenant_nullable'] == 'NO' and not after['foreign_key'], after
+                assert after['composite_index'].splitlines() == [
+                    'uk_sys_dept_tenant_id_id\t0\ttenant_id', 'uk_sys_dept_tenant_id_id\t0\tid'], after
+                replay = observe(result, sql, 'v19_fk_replay_' + mode, 'USE probe;\n' + body, '1061')
+                replay['after'] = snapshot()
+                assert replay['after'] == after, 'V19 replay changed partial state'
+            else:
+                expected = ('2\ttenant-a\n3\tNULL\n1\tNULL\n2\ttenant-a\t2' if mode == 'autocommit' else before['data'])
+                assert after['data'] == expected, after
+                assert after['tenant_nullable'] == 'YES' and not after['composite_index'] and not after['foreign_key'], after
+                replay = observe(result, sql, 'v19_signal_replay_' + mode, 'USE probe;\n' + body, error)
+                replay['after'] = snapshot()
+                assert replay['after'] == after, 'V19 SIGNAL replay changed state'
+            save(result)
+
+
+def run(result):
+    name = 'apex-negative-probe-' + uuid.uuid4().hex[:12]
+    owned = False
+    result['container'] = {'name': name, 'network': 'none', 'data': 'tmpfs', 'image': 'localhost/mysql:8.0'}
+
+    def sql(text):
+        p = subprocess.run(['podman', 'exec', '-i', name, 'mysql', '--no-defaults', '-uroot', '--default-character-set=utf8mb4', '--batch', '--raw', '--skip-column-names'], input=text.encode(), capture_output=True, timeout=45)
+        if p.returncode:
+            error = RuntimeError(p.stderr.decode('utf-8', errors='backslashreplace'))
+            error.stderr_base64 = base64.b64encode(p.stderr).decode('ascii')
+            raise error
+        return p.stdout.decode('utf-8').strip()
+
+    try:
+        p = shared.command(['podman', 'create', '--name', name, '--network', 'none', '--pull=never', '--tmpfs', '/var/lib/mysql:rw', '-e', 'MYSQL_ALLOW_EMPTY_PASSWORD=yes', 'localhost/mysql:8.0'])
+        if p.returncode:
+            raise RuntimeError(p.stderr)
+        owned = True
+        result['container']['id'] = p.stdout.strip()
+        p = shared.command(['podman', 'start', name])
+        if p.returncode:
+            raise RuntimeError(p.stderr)
+        for attempt in range(60):
+            if shared.command(shared.readiness_command(name), timeout=10).returncode == 0:
+                break
+            time.sleep(1)
+        else:
+            raise RuntimeError('MySQL readiness timeout')
+        result['mysql_version'] = sql('SELECT VERSION();')
+        sql('CREATE DATABASE probe;')
+        (verify_v19 if result['source'] == SOURCES['V19'] else verify_v42)(result, sql)
+        result['status'] = 'diagnostic_expected_failures_confirmed'
+    except Exception as exc:
+        result.update(status='diagnostic_failed', error=str(exc))
+    finally:
+        if owned:
+            removed = shared.command(['podman', 'rm', '-f', '--volumes', name], timeout=60)
+            exists = shared.command(['podman', 'container', 'exists', name])
+            result['cleanup'] = {'attempted': True, 'remove_exit_code': removed.returncode,
+                                 'exists_exit_code': exists.returncode,
+                                 'container_and_anonymous_volumes_removed': removed.returncode == 0 and exists.returncode == 1}
+        save(result)
+    return result['status'] == 'diagnostic_expected_failures_confirmed' and result['cleanup'].get('container_and_anonymous_volumes_removed')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version', required=True, choices=SOURCES)
+    parser.add_argument('--output', required=True, type=pathlib.Path)
+    args = parser.parse_args()
+    if args.output.exists():
+        parser.error('evidence must be new; cannot overwrite prior evidence')
+    result = plan(args.version)
+    result['output'] = str(args.output)
+    passed = run(result)
+    print(json.dumps({k: result.get(k) for k in ('status', 'error', 'cleanup', 'coverage')}, ensure_ascii=False))
+    return 0 if passed else 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

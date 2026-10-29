@@ -4,9 +4,9 @@
 
 **Goal:** 在不进行微服务拆分的前提下，补齐单体应用的优雅关机、运行期降级与上下线协同，并让同一套代码根据配置或启动环境选择 `standalone`、Podman Compose、Kubernetes 治理实现，为 `java -jar` 到 Kubernetes 的迁移提供兼容路径。
 
-**Architecture:** 在 `apex-interfaces` 建立平台无关的治理 SPI、配置属性、启动期部署模式解析、生命周期状态机、统一 deadline 和关停协调器；通过策略模式隔离 standalone、Compose、Kubernetes，通过适配器连接 Spring Availability、Nacos 和平台探针。MQ、线程池等资源以 drain participant 接入协调器，HPA/Deployment 仍由 Kubernetes 控制面负责，业务代码不直接调用平台 API。
+**Architecture:** 在 `apex-system` 建立平台无关的治理 SPI、配置属性、启动期部署模式解析、生命周期状态机、统一 deadline 和关停协调器；通过策略模式隔离 standalone、Compose、Kubernetes，通过适配器连接 Spring Availability、Nacos 和平台探针。MQ、线程池等资源以 drain participant 接入协调器，HPA/Deployment 仍由 Kubernetes 控制面负责，业务代码不直接调用平台 API。
 
-**Tech Stack:** Java 17、Spring Boot 3.5.15、Spring WebFlux、Spring Availability、Spring Cloud Alibaba Nacos/Sentinel、RocketMQ Spring、Micrometer、JUnit 5、Mockito、AssertJ、Podman Compose、Kubernetes YAML、Bash。
+**Tech Stack:** Java 21、Spring Boot 3.5.15、Spring WebFlux、Spring Availability、Spring Cloud Alibaba Nacos/Sentinel、RocketMQ Spring、Micrometer、JUnit 5、Mockito、AssertJ、Podman Compose、Kubernetes YAML、Bash。
 
 ---
 
@@ -16,7 +16,7 @@
 - [application.yml](../../apex-system/src/main/resources/application.yml) 已启用 `server.shutdown=graceful`，管理端口默认 `8081`，readiness 包含 `readinessState,db,redis`，但关停时没有主动设置拒绝流量。
 - [SentinelConfig.java](../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java) 已有流控、熔断和系统保护规则；本次不改变业务资源规则，仅使其与治理状态解耦。
 - [SentinelNacosDataSourceConfig.java](../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelNacosDataSourceConfig.java) 已接入动态规则；本次仅在必要处补充生命周期和失败策略配置，不把 Nacos 故障误判为应用存活失败。
-- [MqConsumerService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java)、[UserMessageListener.java](../../apex-system/src/main/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageListener.java)、[DeadLetterQueueProcessor.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java) 需要提供停止 intake、in-flight 计数和 deadline drain 能力。
+- [MqConsumerService.java](../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java)、[UserMessageListener.java](../../apex-system/src/main/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageListener.java)、[DeadLetterQueueProcessor.java](../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java) 需要提供停止 intake、in-flight 计数和 deadline drain 能力。
 - [ThreadPoolConfig.java](../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/ThreadPoolConfig.java) 与 [AsyncConfig.java](../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/AsyncConfig.java) 各自管理关闭等待，需接入统一资源排空协议，避免等待时间叠加。
 - [k8s/deployment.yaml](../../k8s/deployment.yaml) 已存在 probes 与 HPA；[podman-compose.yml](../../podman-compose.yml) 已有基础服务，但应用缺少 readiness healthcheck 和 stop grace 配置。
 - [scripts/deploy/app.sh](../../scripts/deploy/app.sh)、[scripts/deploy/start.sh](../../scripts/deploy/start.sh)、[scripts/deploy/stop.sh](../../scripts/deploy/stop.sh) 需要统一检查管理端口 readiness 和退出码。
@@ -37,34 +37,34 @@
 
 ### 新增生产代码
 
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/config/GovernanceProperties.java`：治理配置绑定、默认值和校验。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentMode.java`：部署模式枚举。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolver.java`：无副作用的启动期模式解析。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategy.java`：跨平台策略接口。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategyRegistry.java`：策略注册、唯一选择和能力查询。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/GovernanceCapabilities.java`：平台能力值对象。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/standalone/StandaloneGovernanceStrategy.java`：JAR/systemd 模式策略。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/compose/ComposeGovernanceStrategy.java`：Compose 健康检查/可选 Nacos 策略。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/kubernetes/KubernetesGovernanceStrategy.java`：Kubernetes readiness 协作策略。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleState.java`：生命周期状态枚举。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleStateMachine.java`：原子状态迁移和幂等校验。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/DrainParticipant.java`：资源停止接收、排空和强制停止契约。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/DrainResult.java`：排空结果和诊断信息。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ResourceDrainRegistry.java`：participant 注册和 deadline 协调。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ReadinessStateController.java`：Spring `ApplicationAvailability` 适配。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/GracefulShutdownCoordinator.java`：统一关停编排。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/GovernanceLifecycleConfiguration.java`：配置属性、策略、协调器和 participant 的 Spring 装配。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/config/GovernanceProperties.java`：治理配置绑定、默认值和校验。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentMode.java`：部署模式枚举。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolver.java`：无副作用的启动期模式解析。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategy.java`：跨平台策略接口。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategyRegistry.java`：策略注册、唯一选择和能力查询。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/GovernanceCapabilities.java`：平台能力值对象。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/standalone/StandaloneGovernanceStrategy.java`：JAR/systemd 模式策略。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/compose/ComposeGovernanceStrategy.java`：Compose 健康检查/可选 Nacos 策略。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/kubernetes/KubernetesGovernanceStrategy.java`：Kubernetes readiness 协作策略。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleState.java`：生命周期状态枚举。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleStateMachine.java`：原子状态迁移和幂等校验。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/DrainParticipant.java`：资源停止接收、排空和强制停止契约。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/DrainResult.java`：排空结果和诊断信息。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ResourceDrainRegistry.java`：participant 注册和 deadline 协调。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ReadinessStateController.java`：Spring `ApplicationAvailability` 适配。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/GracefulShutdownCoordinator.java`：统一关停编排。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/GovernanceLifecycleConfiguration.java`：配置属性、策略、协调器和 participant 的 Spring 装配。
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/governance/MqDrainParticipant.java`：MQ 消费排空适配。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ExecutorDrainParticipant.java`：线程池排空适配。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ExecutorDrainParticipant.java`：线程池排空适配。
 
 ### 修改生产代码
 
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java`：保留兼容 Bean 和构造器入口，移除固定 sleep，委托 `GracefulShutdownCoordinator`。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java`：保留兼容 Bean 和构造器入口，移除固定 sleep，委托 `GracefulShutdownCoordinator`。
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java`：增加 intake 状态、in-flight 计数和 participant 所需方法。
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageListener.java`：在消息处理前后接入计数和拒绝新 intake。
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java`：纳入 participant 管理，明确关闭和失败语义。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/ThreadPoolConfig.java`、`AsyncConfig.java`：避免独立等待超过总 deadline，改由 participant 或统一关闭钩子管理。
-- `apex-interfaces/src/main/resources/application.yml` 及 `application-{dev,basic,standard,enterprise,prod,performance}.yml`：增加治理配置和逐环境能力声明。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/config/ThreadPoolConfig.java`、`AsyncConfig.java`：避免独立等待超过总 deadline，改由 participant 或统一关闭钩子管理。
+- `apex-system/src/main/resources/application.yml` 及 `application-{dev,basic,standard,enterprise,prod,performance}.yml`：增加治理配置和逐环境能力声明。
 
 ### 修改部署、脚本和文档
 
@@ -80,26 +80,26 @@
 
 ### 新增测试代码
 
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolverTest.java`
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleStateMachineTest.java`
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/ResourceDrainRegistryTest.java`
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/GracefulShutdownCoordinatorTest.java`
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/ReadinessStateControllerTest.java`
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolverTest.java`
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleStateMachineTest.java`
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/ResourceDrainRegistryTest.java`
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/GracefulShutdownCoordinatorTest.java`
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/lifecycle/ReadinessStateControllerTest.java`
 - `apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/mq/governance/MqDrainParticipantTest.java`
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/ReadinessEndpointIntegrationTest.java`
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/GovernanceConfigurationContextTest.java`
-- `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/GracefulShutdownE2ETest.java`，仅在仓库现有 E2E 基础设施可复用时启用。
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/ReadinessEndpointIntegrationTest.java`
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/GovernanceConfigurationContextTest.java`
+- `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/GracefulShutdownE2ETest.java`，仅在仓库现有 E2E 基础设施可复用时启用。
 
 ## 4. 实施任务
 
 ### Task 1：建立配置和部署模式解析
 
 **Files:**
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/config/GovernanceProperties.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentMode.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolver.java`
-- Create: `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolverTest.java`
-- Modify: `apex-interfaces/src/main/resources/application.yml`
+- Create: `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/config/GovernanceProperties.java`
+- Create: `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentMode.java`
+- Create: `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolver.java`
+- Create: `apex-system/src/test/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolverTest.java`
+- Modify: `apex-system/src/main/resources/application.yml`
 
 - [ ] 定义 `DeploymentMode`、`RegistrationProvider`、`FailMode`，枚举值仅覆盖 `AUTO/STANDALONE/COMPOSE/KUBERNETES`、`NONE/NACOS/PLATFORM/AUTO` 和 `OPEN/CLOSED/AUTO`。
 - [ ] 绑定 `apex.governance`，至少包含：`enabled`、`deployment-mode`、`auto-detection.enabled`、`auto-detection.fail-on-ambiguous-environment`、`registration.provider`、`registration.fail-mode`、`shutdown.total-timeout`、`shutdown.readiness-withdraw-timeout`、`shutdown.force-shutdown-after-timeout`、`mq.drain-timeout`。
@@ -237,7 +237,7 @@
   ```bash
   source ./scripts/build/init-build-env.sh
   mvnd --version
-  mvnd -pl apex-interfaces,apex-infrastructure -am test
+  mvnd -pl apex-system,apex-infrastructure -am test
   scripts/test/test-javadoc.sh
   git diff --check
   git status --short

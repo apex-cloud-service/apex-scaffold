@@ -397,11 +397,15 @@ mysql -u root -p apex_scaffold < scripts/data/init_workflow_test_data_v2.sql
 | 脚本 | 功能 | 使用场景 |
 |-----|------|---------|
 | `bench.sh` | 性能基准测试 | 测试系统吞吐量、延迟等性能指标 |
+| `bench-vt.sh` | 虚拟线程 A/B 压测 | 对比平台线程与虚拟线程模式下阻塞 I/O 池的吞吐与延迟 |
 
 **示例**:
 ```bash
 # 运行性能测试
 ./scripts/bench/bench.sh
+
+# 对比平台线程与虚拟线程模式（自动启停 system-service）
+./scripts/bench/bench-vt.sh
 ```
 
 ---
@@ -506,7 +510,7 @@ cd /Users/work/apex-scaffold
 sdk env
 
 # 2. 验证 Java 和 mvnd 版本
-java -version   # 应该是 17.0.12-oracle
+java -version   # 应该是 21.0.13.0+9-tem
 mvnd --version  # 应该是 2.0.0-rc-3
 ```
 

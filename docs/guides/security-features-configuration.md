@@ -15,6 +15,8 @@
 
 ---
 
+<a id="1-token加密存储"></a>
+
 ## 1. Token加密存储
 
 ### 功能说明
@@ -65,6 +67,8 @@ Token加密对应用层透明，无需修改业务代码。系统会自动：
 
 ---
 
+<a id="2-refresh-token轮换"></a>
+
 ## 2. Refresh Token轮换
 
 ### 功能说明
@@ -114,6 +118,8 @@ apex:
 3. **监控异常刷新**：关注审计日志中的异常事件
 
 ---
+
+<a id="3-jwt密钥轮换"></a>
 
 ## 3. JWT密钥轮换
 
@@ -182,6 +188,8 @@ jwt:key:{keyId}:created    -> 创建时间戳
 3. **快速响应**：密钥泄露时立即执行强制轮换
 
 ---
+
+<a id="4-统一审计日志"></a>
 
 ## 4. 统一审计日志
 
@@ -307,6 +315,8 @@ output {
 
 ---
 
+<a id="5-sso配置加密"></a>
+
 ## 5. SSO配置加密
 
 ### 功能说明
@@ -383,6 +393,8 @@ encryptionService.rotateMasterKey()
 
 ---
 
+<a id="6-oauth2客户端密钥轮换"></a>
+
 ## 6. OAuth2客户端密钥轮换
 
 ### 功能说明
@@ -454,6 +466,8 @@ String newSecret = rotationService.forceRotateClientSecret(
 
 ---
 
+<a id="7-saml重放攻击防护"></a>
+
 ## 7. SAML重放攻击防护
 
 ### 功能说明
@@ -494,6 +508,8 @@ redis-cli XREAD COUNT 100 STREAMS audit:security:alert 0 | grep SAML_REPLAY
 ```
 
 ---
+
+<a id="8-oidc-state验证"></a>
 
 ## 8. OIDC State验证
 

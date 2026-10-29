@@ -1,0 +1,98 @@
+{
+  "recorded_at": "2026-10-18T20:46:00+08:00",
+  "scope": "auth PostgreSQL production R2DBC provider and database configuration boundary",
+  "status": "targeted_tests_production_database_probe_and_full_verify_passed_with_two_explicit_skips",
+  "p0_clearance_claim": false,
+  "environment": {"java": "17.0.12-oracle", "mvnd": "2.0.0-rc-3", "initialization": "source scripts/build/init-build-env.sh", "parallelism": "-T1; all Java build/probe commands sequential"},
+  "implementation": {
+    "file": "apex-auth/pom.xml",
+    "change": "Add org.postgresql:r2dbc-postgresql with runtime scope, no explicit version; Spring Boot 3.5.15 dependency management resolves 1.0.9.RELEASE.",
+    "before": "apex-auth runtime supplied H2/MySQL only; auth-service obtained PostgreSQL R2DBC only through its test-scoped apex-system dependency.",
+    "unrelated_existing_pom_change_preserved": "apex-infrastructure -> apex-infrastructure-integration",
+    "historical_migrations_changed": false,
+    "report_and_plan_edited": false,
+    "existing_mfa_test_changed": false,
+    "commit_or_push": false
+  },
+  "tdd": {
+    "test": "apex-auth/src/test/java/com/apex/scaffold/auth/infrastructure/persistence/R2dbcDriverAvailabilityTest.java",
+    "command": "mvnd -Dmvnd.java.home=\"$JAVA_HOME\" -T1 -B -pl apex-auth -am test -Dtest=R2dbcDriverAvailabilityTest -Dsurefire.failIfNoSpecifiedTests=false",
+    "initial_attempt": "3 tests, 2 assertion failures: PostgreSQL missing provider plus incorrect H2 options missing mem protocol. Corrected H2 to parsed r2dbc:h2:mem:///auth before implementation.",
+    "meaningful_red": {"log": "/tmp/auth-pg-r2dbc-red-corrected-20261018.log", "result": "BUILD FAILURE", "tests": 3, "failures": 1, "errors": 0, "skipped": 0, "failure": "Only PostgreSQL provider unavailable; MySQL and H2 pass."},
+    "green": {"command": "mvnd -Dmvnd.java.home=\"$JAVA_HOME\" -T1 -B -pl apex-auth-service -am test -Dtest=R2dbcDriverAvailabilityTest,MfaServiceImplTest,AuthMfaMigrationIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false", "log": "/tmp/auth-pg-r2dbc-green-20261018.log", "result": "BUILD SUCCESS", "tests": 28, "failures": 0, "errors": 0, "skipped": 0, "classes": {"R2dbcDriverAvailabilityTest": 3, "MfaServiceImplTest": 21, "AuthMfaMigrationIntegrationTest": 4}}
+  },
+  "configuration_boundary": {
+    "build_tiers": ["basic", "standard", "enterprise"],
+    "no_build_tier_changes_postgresql_selection": true,
+    "base_and_prod_default": "MySQL JDBC driver/url and Flyway mysql location; prod adds MySQL R2DBC URL. No automatic PostgreSQL vendor switch.",
+    "basic_runtime_profile": "H2 JDBC/R2DBC and Flyway disabled; Maven build tier is distinct from runtime profile.",
+    "postgresql_required_overrides": ["SPRING_DATASOURCE_URL=jdbc:postgresql://host:port/database", "SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver", "SPRING_R2DBC_URL=r2dbc:postgresql://host:port/database", "SPRING_FLYWAY_LOCATIONS=classpath:db/migration/postgresql"],
+    "credentials": "Supply both spring.datasource and spring.r2dbc username/password; prod DB_USERNAME/DB_PASSWORD placeholders must resolve.",
+    "db_host_port_name_only": "Does not change vendor; overriding only one URL can split JDBC/Flyway and R2DBC targets.",
+    "flyway": "No separate spring.flyway.url in auth resources. Minimal probe explicitly wires DataSource from DataSourceProperties and Flyway consumes that JDBC DataSource.",
+    "production_transport": "Probe uses loopback disposable PostgreSQL without TLS. Production JDBC sslmode and R2DBC sslMode/TLS trust settings still require deployment-specific validation. Existing MySQL TLS query parameters must not be copied to PG URLs.",
+    "no_config_default_change": "Preserve MySQL defaults and Spring standard property override mechanism; no new vendor selector or environment aliases added. Nacos/Compose final property injection not verified."
+  },
+  "production_packages": {
+    "command_template": "mvnd -Dmvnd.java.home=\"$JAVA_HOME\" -T1 -B -P<tier> -pl apex-auth-service -am package -DskipTests",
+    "basic": "BUILD SUCCESS; inspected BOOT-INF/lib/r2dbc-postgresql-1.0.9.RELEASE.jar; no apex-system jar",
+    "standard": "BUILD SUCCESS; inspected BOOT-INF/lib/r2dbc-postgresql-1.0.9.RELEASE.jar; no apex-system jar",
+    "enterprise": "BUILD SUCCESS; inspected BOOT-INF/lib/r2dbc-postgresql-1.0.9.RELEASE.jar; no apex-system jar",
+    "test_claim": "Package runs used -DskipTests; these are packaging/classpath checks, not test executions.",
+    "enterprise_jar_sha256_at_probe": "8a047c5c71899abe571b6e9cd1763495314d1fdf2c0b502134737bfddb0b9c70",
+    "artifact_retention": "Subsequent clean verify rebuilds target artifacts; this hash identifies the probed artifact at that time, not every later jar."
+  },
+  "production_database_probe": {
+    "command": "source scripts/build/init-build-env.sh && python3 -B scripts/test/verify_auth_postgresql_production.py --jar apex-auth-service/target/apex-auth-service-1.3.1.jar",
+    "log": "/tmp/auth-pg-production-probe-20261018.log",
+    "result": "AUTH_POSTGRESQL_PRODUCTION_DATABASE_PROBE_PASS migrations=15 mfa=save,read,update,tenant-query,delete",
+    "classpath": "Extracted production jar BOOT-INF/classes + BOOT-INF/lib/* plus compiled probe; no target/test-classes, test dependencies or apex-system jar.",
+    "context": "SpringApplicationBuilder non-web minimal configuration; prod resources loaded, explicit DataSourceProperties-backed DataSource plus Boot R2DBC/Data/Flyway auto-configurations and auth R2DBC repository scan. Not AuthServiceApplication.",
+    "isolation": "New apex-auth-pg-probe-04d4ac164f28 container, localhost/postgres:17-alpine, random port restricted to 127.0.0.1, random password injected via environment and never printed; CPU 1/memory 256m; Java Xmx256m.",
+    "assertions": ["Production provider supports postgresql", "JDBC and R2DBC URL address exactly same isolated database", "Flyway auth V44-V58: 15 applied, no pending, validate succeeds", "Actual Spring-registered MFA repository generated id/save/read/ACTIVE update/tenant-scoped exclusion/delete"],
+    "cleanup": "finally podman rm --force --volumes succeeded; temporary extracted classpath removed",
+    "limitations": ["Not a complete auth application startup or HTTP/MFA/TOTP/encryption flow", "Opaque string persistence only", "PostgreSQL deployment TLS, Nacos precedence, production credentials/data and Redis not verified", "Existing repository query tenant behavior not a full tenant security audit"]
+  },
+  "final_gate": {
+    "command": "source scripts/build/init-build-env.sh && mvnd -Dmvnd.java.home=\"$JAVA_HOME\" -T1 -B clean verify",
+    "log": "/tmp/auth-pg-final-clean-verify-20261018.log",
+    "log_sha256": "6d8b60bc62cd43235ec49b3912b2e6869194dfff56b28734f02c4c7d0bd83ff8",
+    "status": "BUILD SUCCESS",
+    "reactor": {"projects": 31, "success": 31},
+    "finished_at": "2026-10-18T20:45:19+08:00",
+    "duration": "15:06 min",
+    "surefire": {"tests": 4816, "failures": 0, "errors": 0, "skipped": 0, "module_summaries": 27},
+    "failsafe": {"tests": 305, "failures": 0, "errors": 0, "skipped": 2, "module_summaries": 10},
+    "counting_method": "Sum this invocation's exact per-module Surefire/Failsafe Results lines in final gate log. Raw recursive XML totals are unsuitable: retired apex-interfaces retains stale reports and nested system XML reports count differently from Maven's summary. No stale report was treated as a current failure or deleted.",
+    "skipped": [
+      {"class": "com.apex.scaffold.seata.SeataAtIntegrationTest", "test": "commitsAndRollsBackAcrossTwoHttpServicesAndDatabases", "reason": "Environment variable [APEX_SEATA_IT] does not exist"},
+      {"class": "com.apex.scaffold.officeservice.db.migration.OfficeWorkflowBooleanIntegrationTest", "test": "validatesOfficeUpgradeAndGlobalWorkflowKeys(String)", "reason": "System property [apex.office.real-db] does not exist"}
+    ],
+    "auth_mfa_migration": {"tests": 4, "failures": 0, "errors": 0, "skipped": 0},
+    "dual_service_authorization": {"tests": 5, "failures": 0, "errors": 0, "skipped": 0},
+    "quality": {"spotless_check_executions": 31, "pmd_check_executions": 31, "jacoco_check_executions": 42, "jacoco_checks_met_messages": 38, "note": "Execution counts are plugin invocations, not independent modules or uniform coverage guarantees; aggregator checks can skip for missing execution data. Existing architecture guards ran within tests."},
+    "pmd_diagnostic": "Log includes PMD aktStatus is NULL diagnostics; PMD check goals and reactor still finished successfully. No blanket claim of a diagnostic-free log."
+  },
+  "checks": {"git_diff_check": "PASS", "spotless": "Applied only new R2dbcDriverAvailabilityTest.java; existing AuthMfaMigrationIntegrationTest.java preserved byte-for-byte"},
+  "sha256": {
+    "apex-auth/pom.xml": "edfc757cf925c65d87cccc582082684a8ab6058e26089cb5ae4ec7752fcbb1a6",
+    "apex-auth-service/pom.xml": "84eec77e043071e55bde15b53ee9cf108ddda8e62594babd7ddd20af99403334",
+    "apex-system/pom.xml": "cfc30688eff039b37c4707cee1aaa37caeccaf589a014984260a0212510d82f4",
+    "apex-auth-service/src/main/resources/application-basic.yml": "cee9a35221fe0d6d8f5cb390f03de4210304afb161299d716028924f9f871172",
+    "apex-auth-service/src/main/resources/application-dev.yml": "eef67ab9fa53222ed716b544745a8d48e3ebc099131b172a277c7d4224a1a3cb",
+    "apex-auth-service/src/main/resources/application-prod.yml": "82b7e239ab39fdf5b50eabfe5f5d209812a2c5b2a22256e445c4029ecee367d2",
+    "apex-auth-service/src/main/resources/application.yml": "e084c81c16c9edd220f2e27cdf4cf2f994a11c9d1563dd55e3252b009bcdc4a4",
+    "apex-auth/src/test/java/com/apex/scaffold/auth/infrastructure/persistence/R2dbcDriverAvailabilityTest.java": "0a6d03134483b5696b91136422c162bcf8b8a2650dc588c4374a395c433bd4e8",
+    "apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMfaMigrationIntegrationTest.java": "854f76a83d7688e06c0f00eef9b4c0bdd9f759081fcac9e6e6e750eee91da681",
+    "scripts/test/AuthPostgresqlProductionProbe.java": "628902a927e666d98c4093baf6fe9715df74458aca7a56f80ed0b9f6bc9bddbd",
+    "scripts/test/verify_auth_postgresql_production.py": "a766f2ce4c68f8d375d8ed96437cb4bb57027d9f628bb53276fdeacb59963ad1",
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/report.md": "ddcde6a2dd71ece28e9ee19087177efd5d8ce1e1bf79d9a76437263b4d3906cd",
+    "docs/02-architecture/jdk21-unified-auth-multitenancy-implementation-plan.md": "106634a505fce87c5d4871fd4f420711655223597766a543c55b219304d17ece",
+    "/tmp/auth-pg-r2dbc-red-corrected-20261018.log": "133608637c9c9d1c5c7489d2ac8873e44dc03e51c8912c67e63bf31a0f9c7e2f",
+    "/tmp/auth-pg-r2dbc-green-20261018.log": "6aa95b2af3ac40f570eb130d04a50b2dedeead5aeaa131406fb1de1830247e49",
+    "/tmp/auth-pg-package-basic-20261018.log": "43eaf531e197ace7da899b7b06f07952fbbb13864191959838df029d100979cb",
+    "/tmp/auth-pg-package-standard-20261018.log": "36e54e963acf003d3345bd5b08947ebb74e7f1cca6d80f0d4b448605c17e81fd",
+    "/tmp/auth-pg-package-enterprise-20261018.log": "2e26f213e047c381d041b60b0bf89e9ac5f666a58924a8fc891483611d9a10e9",
+    "/tmp/auth-pg-production-probe-20261018.log": "69596b2d55890e78b6c0722dcc1943b8741bfee5dc115ba6b7e7cc1b27ed5c40"
+  }
+}

@@ -274,7 +274,12 @@ check_dto_schema_annotations() {
 
     local dto_dirs=(
         "${PROJECT_ROOT}/apex-system/src/main/java/com/apex/scaffold/interfaces/dto"
-        "${PROJECT_ROOT}/apex-application/src/main/java/com/apex/scaffold/application/dto"
+        "${PROJECT_ROOT}/apex-system/src/main/java/com/apex/scaffold/application/dto"
+        "${PROJECT_ROOT}/apex-auth/src/main/java/com/apex/scaffold/auth/application/dto"
+        "${PROJECT_ROOT}/apex-workflow/src/main/java/com/apex/scaffold/workflow/application/dto"
+        "${PROJECT_ROOT}/apex-file/src/main/java/com/apex/scaffold/file/application/dto"
+        "${PROJECT_ROOT}/apex-office/src/main/java/com/apex/scaffold/office/application/dto"
+        "${PROJECT_ROOT}/apex-office/src/main/java/com/apex/scaffold/office/off/application/dto"
     )
 
     for dto_dir in "${dto_dirs[@]}"; do

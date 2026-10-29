@@ -2,7 +2,7 @@
 # 拉取基础设施镜像，网络失败最多重试四次。
 set -u
 IMAGES=(
-  "docker.io/library/mysql:8.0"
+  "docker.io/library/mysql:9.0"
   "docker.io/library/redis:7-alpine"
   "docker.io/nacos/nacos-server:v2.3.2"
   "docker.io/apache/rocketmq:5.3.1"

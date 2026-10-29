@@ -25,6 +25,8 @@
 
 ---
 
+<a id="1-项目概述"></a>
+
 ## 1. 项目概述
 
 ### 1.1 项目背景
@@ -49,6 +51,8 @@
 - ✅ 完全自主实现OAuth2协议
 
 ---
+
+<a id="2-需求分析"></a>
 
 ## 2. 需求分析
 
@@ -94,6 +98,8 @@
 - Flyway数据库迁移
 
 ---
+
+<a id="3-技术方案"></a>
 
 ## 3. 技术方案
 
@@ -214,6 +220,8 @@ Client                          Auth Server
 - **主动撤销**: 支持Token黑名单
 
 ---
+
+<a id="4-实施过程"></a>
 
 ## 4. 实施过程
 
@@ -376,6 +384,8 @@ apex-interfaces/src/main/java/com/apex/scaffold/interfaces/
 
 ---
 
+<a id="5-功能清单"></a>
+
 ## 5. 功能清单
 
 ### 5.1 OAuth2授权端点
@@ -446,6 +456,8 @@ apex-interfaces/src/main/java/com/apex/scaffold/interfaces/
 
 ---
 
+<a id="6-代码统计"></a>
+
 ## 6. 代码统计
 
 ### 6.1 文件统计
@@ -482,6 +494,8 @@ apex-interfaces/src/main/java/com/apex/scaffold/interfaces/
 | OAuth2AuthorizationConsentRepositoryImpl | 115行 | 授权同意仓储 |
 
 ---
+
+<a id="7-测试验证"></a>
 
 ## 7. 测试验证
 
@@ -525,6 +539,8 @@ mvnd clean compile -DskipTests
 
 ---
 
+<a id="8-文档交付"></a>
+
 ## 8. 文档交付
 
 ### 8.1 技术文档
@@ -551,6 +567,8 @@ mvnd clean compile -DskipTests
 - ✅ 初始化数据说明
 
 ---
+
+<a id="9-技术亮点"></a>
 
 ## 9. 技术亮点
 
@@ -614,6 +632,8 @@ mvnd clean compile -DskipTests
 
 ---
 
+<a id="10-遗留问题"></a>
+
 ## 10. 遗留问题
 
 ### 10.1 已知限制
@@ -655,6 +675,8 @@ mvnd clean compile -DskipTests
    - 添加告警规则
 
 ---
+
+<a id="11-后续建议"></a>
 
 ## 11. 后续建议
 
@@ -711,6 +733,8 @@ mvnd clean compile -DskipTests
    - [ ] 实现租户级监控
 
 ---
+
+<a id="12-附录"></a>
 
 ## 12. 附录
 

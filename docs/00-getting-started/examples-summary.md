@@ -16,6 +16,8 @@
 
 ---
 
+<a id="改造示例清单"></a>
+
 ## 改造示例清单
 
 ### ✅ 已完成改造的示例文件
@@ -38,6 +40,8 @@
 | **项目计划** | `.trae/plans/javadoc-lombok-build-plan.md` | 完整改造计划（8 个 Phase） |
 
 ---
+
+<a id="基础设施层示例"></a>
 
 ## 基础设施层示例
 
@@ -334,6 +338,8 @@ UserPO toPo(UserEntity entity);
 
 ---
 
+<a id="应用层示例"></a>
+
 ## 应用层示例
 
 ### 4. LoginRequest.java（DTO 类）
@@ -416,6 +422,8 @@ public class LoginRequest {
 
 ---
 
+<a id="关键改进点总结"></a>
+
 ## 关键改进点总结
 
 ### 📊 改进对比
@@ -440,6 +448,8 @@ public class LoginRequest {
 8. **敏感字段**：在 `@ToString` 中排除密码、Token 等敏感字段（示例中已体现）
 
 ---
+
+<a id="如何使用本文档"></a>
 
 ## 如何使用本文档
 

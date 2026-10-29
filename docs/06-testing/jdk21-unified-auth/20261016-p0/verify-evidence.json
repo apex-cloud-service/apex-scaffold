@@ -1,0 +1,1422 @@
+{
+  "command_id": "job-8c519b9d54df41bb9e61de7c3b696cef",
+  "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -l /tmp/apex-p0-20261017-verify.log clean verify",
+  "working_directory": "/Users/work/apex-scaffold",
+  "log_path": "/tmp/apex-p0-20261017-verify.log",
+  "observation_date": "2026-10-17",
+  "timezone": "Asia/Shanghai",
+  "versions": {
+    "source": "项目构建命令使用的固定环境",
+    "java": "17.0.12",
+    "java_sdkman": "17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3"
+  },
+  "status": "success",
+  "terminal_state_observed": true,
+  "exit_code": 0,
+  "exit_code_source": "上一上下文已确认该 command_id 的进程状态退出码为 0；本轮未重新运行构建。",
+  "final_build_conclusion": "BUILD SUCCESS",
+  "status_evidence": {
+    "reactor_summary_line": 26307,
+    "reactor_project_count": 31,
+    "reactor_all_success": true,
+    "build_success_line": 26341,
+    "total_time_line": 26343,
+    "total_time": "14:08 min (Wall Clock)",
+    "finished_at_line": 26344,
+    "finished_at": "2026-10-17T07:18:25+08:00"
+  },
+  "reactor": {
+    "status_policy": "仅将最终 Reactor Summary 中明确标记为 SUCCESS 的项目记为通过。",
+    "project_count": 31,
+    "modules": [
+      {
+        "module": "Apex Scaffold",
+        "final_status": "SUCCESS",
+        "line": 26309
+      },
+      {
+        "module": "apex-common",
+        "final_status": "SUCCESS",
+        "line": 26310
+      },
+      {
+        "module": "apex-storage-spring-boot-starter",
+        "final_status": "SUCCESS",
+        "line": 26311
+      },
+      {
+        "module": "Apex License Spring Boot Starter",
+        "final_status": "SUCCESS",
+        "line": 26312
+      },
+      {
+        "module": "Apex License Tools (Internal)",
+        "final_status": "SUCCESS",
+        "line": 26313
+      },
+      {
+        "module": "apex-domain",
+        "final_status": "SUCCESS",
+        "line": 26314
+      },
+      {
+        "module": "apex-infrastructure-persistence",
+        "final_status": "SUCCESS",
+        "line": 26315
+      },
+      {
+        "module": "apex-infrastructure-cache",
+        "final_status": "SUCCESS",
+        "line": 26316
+      },
+      {
+        "module": "apex-infrastructure-messaging",
+        "final_status": "SUCCESS",
+        "line": 26317
+      },
+      {
+        "module": "apex-infrastructure-remote",
+        "final_status": "SUCCESS",
+        "line": 26318
+      },
+      {
+        "module": "apex-infrastructure-integration",
+        "final_status": "SUCCESS",
+        "line": 26319
+      },
+      {
+        "module": "apex-infrastructure",
+        "final_status": "SUCCESS",
+        "line": 26320
+      },
+      {
+        "module": "apex-workflow",
+        "final_status": "SUCCESS",
+        "line": 26321
+      },
+      {
+        "module": "apex-system",
+        "final_status": "SUCCESS",
+        "line": 26322
+      },
+      {
+        "module": "Apex Example Module",
+        "final_status": "SUCCESS",
+        "line": 26323
+      },
+      {
+        "module": "apex-generator",
+        "final_status": "SUCCESS",
+        "line": 26324
+      },
+      {
+        "module": "apex-services-bom",
+        "final_status": "SUCCESS",
+        "line": 26325
+      },
+      {
+        "module": "apex-api-contract",
+        "final_status": "SUCCESS",
+        "line": 26326
+      },
+      {
+        "module": "apex-gateway",
+        "final_status": "SUCCESS",
+        "line": 26327
+      },
+      {
+        "module": "Apex Seata Starter",
+        "final_status": "SUCCESS",
+        "line": 26328
+      },
+      {
+        "module": "apex-job-spring-boot-starter",
+        "final_status": "SUCCESS",
+        "line": 26329
+      },
+      {
+        "module": "apex-workflow-service",
+        "final_status": "SUCCESS",
+        "line": 26330
+      },
+      {
+        "module": "apex-file",
+        "final_status": "SUCCESS",
+        "line": 26331
+      },
+      {
+        "module": "apex-file-service",
+        "final_status": "SUCCESS",
+        "line": 26332
+      },
+      {
+        "module": "apex-office",
+        "final_status": "SUCCESS",
+        "line": 26333
+      },
+      {
+        "module": "apex-office-service",
+        "final_status": "SUCCESS",
+        "line": 26334
+      },
+      {
+        "module": "apex-system-service",
+        "final_status": "SUCCESS",
+        "line": 26335
+      },
+      {
+        "module": "apex-auth",
+        "final_status": "SUCCESS",
+        "line": 26336
+      },
+      {
+        "module": "apex-auth-service",
+        "final_status": "SUCCESS",
+        "line": 26337
+      },
+      {
+        "module": "apex-job-service",
+        "final_status": "SUCCESS",
+        "line": 26338
+      },
+      {
+        "module": "apex-masking-service",
+        "final_status": "SUCCESS",
+        "line": 26339
+      }
+    ]
+  },
+  "tests": {
+    "scope": "新轮次最终日志中的 Surefire/Failsafe 插件级汇总。",
+    "counting_policy": "仅收录以 Skipped 数字结尾的插件汇总，排除含 -- in 的测试类明细；同一模块的 Surefire 与 Failsafe 分开列出。",
+    "plugin_summary_count": 36,
+    "final_total": {
+      "run": 5050,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    "observed_plugin_summaries": [
+      {
+        "module": "apex-generator",
+        "plugin": "surefire",
+        "line": 226,
+        "run": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-common",
+        "plugin": "surefire",
+        "line": 1093,
+        "run": 538,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-domain",
+        "plugin": "surefire",
+        "line": 1436,
+        "run": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-api-contract",
+        "plugin": "surefire",
+        "line": 1592,
+        "run": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-storage-spring-boot-starter",
+        "plugin": "surefire",
+        "line": 1753,
+        "run": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-license-spring-boot-starter",
+        "plugin": "surefire",
+        "line": 1877,
+        "run": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-seata-spring-boot-starter",
+        "plugin": "surefire",
+        "line": 2089,
+        "run": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-seata-spring-boot-starter",
+        "plugin": "failsafe",
+        "line": 2123,
+        "run": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      },
+      {
+        "module": "apex-infrastructure-remote",
+        "plugin": "surefire",
+        "line": 2324,
+        "run": 84,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-infrastructure-persistence",
+        "plugin": "surefire",
+        "line": 3089,
+        "run": 83,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-infrastructure-cache",
+        "plugin": "surefire",
+        "line": 3345,
+        "run": 130,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-workflow",
+        "plugin": "surefire",
+        "line": 3530,
+        "run": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-infrastructure-cache",
+        "plugin": "failsafe",
+        "line": 3616,
+        "run": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-job-spring-boot-starter",
+        "plugin": "surefire",
+        "line": 3710,
+        "run": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-office",
+        "plugin": "surefire",
+        "line": 4369,
+        "run": 69,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-infrastructure-messaging",
+        "plugin": "surefire",
+        "line": 5041,
+        "run": 77,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-file",
+        "plugin": "surefire",
+        "line": 5063,
+        "run": 59,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-infrastructure-messaging",
+        "plugin": "failsafe",
+        "line": 5371,
+        "run": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-infrastructure-integration",
+        "plugin": "surefire",
+        "line": 7114,
+        "run": 124,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-gateway",
+        "plugin": "surefire",
+        "line": 7218,
+        "run": 100,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-masking-service",
+        "plugin": "surefire",
+        "line": 7355,
+        "run": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-workflow-service",
+        "plugin": "surefire",
+        "line": 7647,
+        "run": 36,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-gateway",
+        "plugin": "failsafe",
+        "line": 8264,
+        "run": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-workflow-service",
+        "plugin": "failsafe",
+        "line": 9846,
+        "run": 27,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-job-service",
+        "plugin": "surefire",
+        "line": 11259,
+        "run": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-auth",
+        "plugin": "surefire",
+        "line": 11606,
+        "run": 1260,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-file-service",
+        "plugin": "surefire",
+        "line": 11817,
+        "run": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-office-service",
+        "plugin": "surefire",
+        "line": 13966,
+        "run": 343,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-file-service",
+        "plugin": "failsafe",
+        "line": 14725,
+        "run": 50,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-office-service",
+        "plugin": "failsafe",
+        "line": 15360,
+        "run": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-system",
+        "plugin": "surefire",
+        "line": 17073,
+        "run": 1542,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-system",
+        "plugin": "failsafe",
+        "line": 17300,
+        "run": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-system-service",
+        "plugin": "surefire",
+        "line": 17755,
+        "run": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-auth-service",
+        "plugin": "surefire",
+        "line": 19956,
+        "run": 103,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-example",
+        "plugin": "failsafe",
+        "line": 19975,
+        "run": 17,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "module": "apex-auth-service",
+        "plugin": "failsafe",
+        "line": 26230,
+        "run": 179,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "quality_checks": {
+    "spotless": {
+      "plugin": "spotless:2.43.0:check",
+      "scope_modules": [
+        "apex-scaffold",
+        "apex-services-bom",
+        "apex-generator",
+        "apex-common",
+        "apex-domain",
+        "apex-api-contract",
+        "apex-storage-spring-boot-starter",
+        "apex-license-spring-boot-starter",
+        "apex-seata-spring-boot-starter",
+        "apex-infrastructure-remote",
+        "apex-infrastructure-persistence",
+        "apex-workflow",
+        "apex-infrastructure-cache",
+        "apex-job-spring-boot-starter",
+        "apex-office",
+        "apex-file",
+        "apex-infrastructure-messaging",
+        "apex-infrastructure-integration",
+        "apex-license-tools",
+        "apex-masking-service",
+        "apex-gateway",
+        "apex-workflow-service",
+        "apex-job-service",
+        "apex-infrastructure",
+        "apex-auth",
+        "apex-file-service",
+        "apex-office-service",
+        "apex-system",
+        "apex-system-service",
+        "apex-example",
+        "apex-auth-service"
+      ],
+      "observed_module_count": 31,
+      "file_clean_summary_module_count": 28,
+      "modules_without_file_clean_summary": ["apex-scaffold", "apex-services-bom", "apex-infrastructure"],
+      "result": "本次门禁通过；28 个模块明确输出 Spotless.Java 文件清洁汇总且需要修改的文件数均为 0。scope_modules 记录 31 个目标执行模块，其余 3 个模块未输出文件清洁汇总，不据此认定它们检查了 Java 文件。"
+    },
+    "pmd_p3c": {
+      "plugin": "pmd:3.19.0:check (p3c-pmd-check)",
+      "scope_modules": [
+        "apex-scaffold",
+        "apex-services-bom",
+        "apex-generator",
+        "apex-common",
+        "apex-domain",
+        "apex-api-contract",
+        "apex-storage-spring-boot-starter",
+        "apex-license-spring-boot-starter",
+        "apex-seata-spring-boot-starter",
+        "apex-infrastructure-remote",
+        "apex-infrastructure-persistence",
+        "apex-workflow",
+        "apex-job-spring-boot-starter",
+        "apex-infrastructure-cache",
+        "apex-file",
+        "apex-office",
+        "apex-infrastructure-messaging",
+        "apex-infrastructure-integration",
+        "apex-license-tools",
+        "apex-masking-service",
+        "apex-gateway",
+        "apex-workflow-service",
+        "apex-job-service",
+        "apex-infrastructure",
+        "apex-auth",
+        "apex-file-service",
+        "apex-office-service",
+        "apex-system",
+        "apex-system-service",
+        "apex-example",
+        "apex-auth-service"
+      ],
+      "observed_module_count": 31,
+      "engine_version": "6.49.0",
+      "result": "p3c-pmd-check 随最终 clean verify 门禁完成且未报告规则违规；scope_modules 是目标执行范围，不是实际扫描源码模块数。日志未给出统一的逐模块扫描文件数量，不能将 31 个目标启动等同于 31 个模块均扫描了源码；apex-scaffold、apex-services-bom 为父 POM，apex-infrastructure 为兼容聚合。"
+    },
+    "jacoco": {
+      "plugin": "jacoco:0.8.12",
+      "report_goal_modules": [
+        "apex-scaffold",
+        "apex-services-bom",
+        "apex-common",
+        "apex-generator",
+        "apex-domain",
+        "apex-api-contract",
+        "apex-storage-spring-boot-starter",
+        "apex-license-spring-boot-starter",
+        "apex-seata-spring-boot-starter",
+        "apex-infrastructure-remote",
+        "apex-infrastructure-persistence",
+        "apex-infrastructure-cache",
+        "apex-workflow",
+        "apex-job-spring-boot-starter",
+        "apex-office",
+        "apex-infrastructure-messaging",
+        "apex-file",
+        "apex-infrastructure-integration",
+        "apex-license-tools",
+        "apex-masking-service",
+        "apex-gateway",
+        "apex-workflow-service",
+        "apex-job-service",
+        "apex-infrastructure",
+        "apex-auth",
+        "apex-file-service",
+        "apex-office-service",
+        "apex-system",
+        "apex-system-service",
+        "apex-example",
+        "apex-auth-service"
+      ],
+      "report_goal_module_count": 31,
+      "coverage_check_passed_module_count": 27,
+      "coverage_check_passed_modules_policy": "report_goal_modules 排除 skipped_modules；27 个模块均出现 All coverage checks have been met.，不将 report/check 目标开始视为完成。",
+      "skipped_modules": [
+        "apex-scaffold",
+        "apex-services-bom",
+        "apex-license-tools",
+        "apex-infrastructure"
+      ],
+      "skipped_reason": "缺少对应 target/jacoco.exec；这些模块的 JaCoCo report/check 按日志跳过，不记为覆盖率检查通过。"
+    }
+  },
+  "archunit_and_flyway_evidence": {
+    "counting_policy": "以下类级证据已包含在插件级测试总数内，不再次累加；12 个类均为 0 失败、0 错误、0 跳过。",
+    "class_summary_lines": {
+      "TenantIsolationArchTest": 2645,
+      "TimeFieldArchTest": 2706,
+      "GatewayArchTest": 7163,
+      "WorkflowFlywayMigrationTest": 7472,
+      "PersistenceContractTest": 10853,
+      "NoBoundedElasticArchGuardTest": 11751,
+      "FileFlywayMigrationTest": 11757,
+      "OfficeFlywayMigrationTest": 11882,
+      "FlywayMigrationVersionTest": 16228,
+      "LayeringArchTest": 17066,
+      "FlywayMigrationStartupTest": 17294,
+      "SystemServiceBoundaryTest": 17750
+    }
+  },
+  "archunit_and_flyway_tests": [
+    {
+      "module": "apex-infrastructure-persistence",
+      "tests": [
+        "TenantIsolationArchTest",
+        "TimeFieldArchTest"
+      ],
+      "result": "通过"
+    },
+    {
+      "module": "apex-gateway",
+      "tests": [
+        "GatewayArchTest"
+      ],
+      "result": "通过"
+    },
+    {
+      "module": "apex-auth",
+      "tests": [
+        "PersistenceContractTest"
+      ],
+      "result": "通过"
+    },
+    {
+      "module": "apex-system",
+      "tests": [
+        "NoBoundedElasticArchGuardTest",
+        "LayeringArchTest",
+        "FlywayMigrationVersionTest",
+        "FlywayMigrationStartupTest"
+      ],
+      "result": "通过"
+    },
+    {
+      "module": "apex-system-service",
+      "tests": [
+        "SystemServiceBoundaryTest"
+      ],
+      "result": "通过"
+    },
+    {
+      "module": "apex-workflow-service",
+      "tests": [
+        "WorkflowFlywayMigrationTest"
+      ],
+      "result": "通过"
+    },
+    {
+      "module": "apex-file-service",
+      "tests": [
+        "FileFlywayMigrationTest"
+      ],
+      "result": "通过"
+    },
+    {
+      "module": "apex-office-service",
+      "tests": [
+        "OfficeFlywayMigrationTest"
+      ],
+      "result": "通过"
+    }
+  ],
+  "seata": {
+    "unit_and_safety_tests": "通过（24 次运行，0 失败，0 错误）",
+    "real_tc_integration_test": {
+      "test": "SeataAtIntegrationTest",
+      "run": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "result": "跳过"
+    },
+    "skip_reason": "日志仅明确记录 SeataAtIntegrationTest 跳过 1 项，未输出具体条件原因；当前源码第 31 行使用 @EnabledIfEnvironmentVariable(named=\"APEX_SEATA_IT\", matches=\"true\")。该真实 TC、双独立 MySQL 和 HTTP 分支服务验证未执行；不能从跳过推断 TC 实际可用性，也不记为端到端通过。"
+  },
+  "limitations": [
+    "BUILD SUCCESS 只证明本次 clean verify 的构建与已配置测试/质量门禁完成，不等同于各业务服务生产启动验证。",
+    "真实 Seata TC 集成测试因环境门控跳过；AT/TCC/SAGA/XA 的真实 TC 端到端行为未由本轮证明。",
+    "JaCoCo 在 apex-scaffold、apex-services-bom、apex-license-tools、apex-infrastructure 因缺少执行数据跳过 report/check；其余实际生成执行数据的模块报告并通过覆盖率门槛。"
+  ],
+  "previous_attempt": {
+    "command_id": "job-dff35a402a084126bad0ba6d0c986b6b",
+    "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -l /tmp/apex-p0-20261016-verify.log clean verify",
+    "working_directory": "/Users/work/apex-scaffold",
+    "log_path": "/tmp/apex-p0-20261016-verify.log",
+    "observation_date": "2026-10-16",
+    "timezone": "Asia/Shanghai",
+    "versions": {
+      "source": "指定命令的状态输出，非另启版本检查命令",
+      "java": "17.0.12",
+      "java_sdkman": "17.0.12-oracle",
+      "java_version_output": "java version \"17.0.12\" 2024-07-16 LTS",
+      "mvnd": "2.0.0-rc-3",
+      "mvnd_version_output": "Apache Maven Daemon (mvnd) 2.0.0-rc-3 darwin-amd64 native client (f912362c18c9a75faf3e31a4e0e0b921206013b9)"
+    },
+    "status": "interrupted",
+    "terminal_state_observed": true,
+    "terminal_state_meaning": "主代理调用 StopCommand 已确认工具停止；不代表 Maven 自然终态，未取得实际退出码或最终 BUILD 结论。精确停止时刻未知。",
+    "status_evidence_scope": "status_evidence、latest_observation_utc、reactor、tests 与原错误摘录保留为中止前的历史运行快照；当前状态以顶层字段及 observation_history 的停止事件为准。",
+    "exit_code": null,
+    "final_build_conclusion": null,
+    "status_evidence": {
+      "command_status_checks": 3,
+      "last_command_status": "Running",
+      "reactor_summary_observed": false,
+      "build_success_or_failure_observed": false,
+      "note": "三次有间隔状态查询均直接观测到仍在运行；日志未出现 Reactor Summary 或最终 BUILD SUCCESS/FAILURE。本文件是运行中快照，不代表完整门禁通过。"
+    },
+    "latest_observation_utc": "2026-10-16T22:42:11Z",
+    "observation_history": [
+      {
+        "observed_at_utc": "2026-10-16T22:42:11Z",
+        "status": "running",
+        "terminal_state_observed": false,
+        "exit_code": null,
+        "final_build_conclusion": null,
+        "reason": "原回归 mvnd 客户端及 apex-example 测试 JVM 仍存在，日志继续输出数据库连接被拒绝；未观察到终态。保留此前 status_evidence、reactor 和 tests 作为旧快照，不将其改写为本次完整结果。",
+        "process_evidence": {
+          "method": "ps -ww 定向核对命令参数与父子关系，再以 ps -p 核对进程存在；未发送信号或启动新构建。仅记录所需进程信息，不保存原始 shell 参数。",
+          "original_command_match": "mvnd -T4 -B -l /tmp/apex-p0-20261016-verify.log clean verify",
+          "processes": [
+            {
+              "pid": 11417,
+              "ppid": 11356,
+              "role": "原回归 mvnd 客户端",
+              "elapsed": "07:59:32"
+            },
+            {
+              "pid": 11412,
+              "ppid": 1,
+              "role": "JDK 17.0.12-oracle mvnd daemon",
+              "elapsed": "07:59:34"
+            },
+            {
+              "pid": 12555,
+              "ppid": 11412,
+              "role": "apex-example 测试 fork 启动 shell",
+              "elapsed": "07:52:22"
+            },
+            {
+              "pid": 12556,
+              "ppid": 12555,
+              "role": "apex-example JDK 17.0.12-oracle 测试 JVM；参数指向该模块 target/surefire/surefirebooter",
+              "elapsed": "07:52:22"
+            }
+          ]
+        },
+        "log_evidence": {
+          "path": "/tmp/apex-p0-20261016-verify.log",
+          "reactor_summary_observed": false,
+          "build_success_or_failure_observed": false,
+          "line_count_sample": 2370554,
+          "line_count_is_final": false,
+          "read_window": {
+            "start_line": 2370500,
+            "end_line": 2370564
+          },
+          "latest_timestamp_in_read_window": "2026-10-17 06:41:54.039 Asia/Shanghai",
+          "excerpts": [
+            {
+              "line": 2370513,
+              "excerpt": "DruidDataSource - create connection SQLException",
+              "interpretation": "apex-example 连接池仍尝试连接 MySQL 测试库。"
+            },
+            {
+              "line": 2370514,
+              "excerpt": "com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failure"
+            },
+            {
+              "line": 2370545,
+              "excerpt": "Caused by: java.net.ConnectException: Connection refused"
+            },
+            {
+              "line": 2370555,
+              "excerpt": "2026-10-17 06:41:54.039 ERROR ... DruidDataSource - create connection SQLException",
+              "interpretation": "日志较旧快照继续增长；不能把反复连接错误直接写成最终构建失败。"
+            }
+          ]
+        },
+        "example_test_investigation": {
+          "scope": "当前工作区源码、配置与 POM 静态核对；不证明跨夜运行期间源码始终未变化，也未采集线程栈。",
+          "test_source": "apex-example/src/test/java/com/apex/example/integration/ExampleCapabilityIntegrationTest.java:24",
+          "base_source": "apex-example/src/test/java/com/apex/example/integration/BaseIntegrationTest.java:21",
+          "real_mysql_required": true,
+          "reason": "BaseIntegrationTest 使用完整 SpringBootTest 与 test profile；application-test.yml 配置真实 MySQL dynamic master/slave，启用 Flyway 加载 db/example-migration；基类 BeforeEach 调用 ExampleUserMapper 删除非种子数据。测试替身未替换 DataSource 或该 Mapper。",
+          "skip_policy": "测试类与基类没有 Disabled、EnabledIf、Assumptions 或数据库可用性探测。根 POM 默认 Failsafe 包含 *IntegrationTest.java 并绑定 integration-test/verify；Surefire 排除仅影响单测阶段。apex-example/pom.xml 没有额外跳过配置，因此缺失数据库不会自动 skip。",
+          "configuration_sources": [
+            "apex-example/src/test/resources/application-test.yml:41",
+            "apex-example/src/test/java/com/apex/example/integration/ExampleTestMockConfiguration.java:33",
+            "apex-example/pom.xml:74",
+            "pom.xml:1081",
+            "pom.xml:1180"
+          ],
+          "external_dependency": "可连接且具备 Flyway 建表、迁移及测试数据读写权限的 MySQL 测试库；测试 profile 的 master/slave 共用 DB_MASTER_*。",
+          "required_configuration_names_only": [
+            "DB_MASTER_URL",
+            "DB_MASTER_USERNAME",
+            "DB_MASTER_PASSWORD"
+          ],
+          "other_dependencies": "Redis 使用测试替身并排除 Spring Data Redis 自动配置；Nacos discovery 关闭；R2DBC 自动配置排除；Loki、Meilisearch 配置为禁用且相关依赖有替身；邮件仅满足装配，当前测试不验证真实 SMTP。上述静态配置不构成对所有运行期外部调用的证明。"
+        }
+      },
+      {
+        "event": "tool_stop_confirmed",
+        "observed_at_utc": null,
+        "timestamp_note": "精确停止时刻未知，未以记录时间或日志时间代替。",
+        "command_id": "job-dff35a402a084126bad0ba6d0c986b6b",
+        "status": "interrupted",
+        "terminal_state_observed": true,
+        "natural_terminal_state_observed": false,
+        "exit_code": null,
+        "final_build_conclusion": null,
+        "source": "本次授权任务转述：主代理已调用 StopCommand 并确认成功停止。",
+        "reason": "apex-example 真实 MySQL 连接被拒绝，Druid 长期重试，主代理中止原 verify。",
+        "note": "仅确认工具停止，未取得实际退出码或最终 BUILD SUCCESS/FAILURE；不将中止记为自然构建失败或完整门禁通过。"
+      }
+    ],
+    "reactor": {
+      "status_policy": "未出现最终 Reactor Summary，所有模块 final_status 为 null。verify_goal_seen 仅表示日志出现 failsafe:verify 目标开始，不据此推断模块 SUCCESS。",
+      "modules": [
+        {
+          "module": "apex-scaffold",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 102
+        },
+        {
+          "module": "apex-common",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 1260
+        },
+        {
+          "module": "apex-storage-spring-boot-starter",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 1960
+        },
+        {
+          "module": "apex-license-spring-boot-starter",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 1887
+        },
+        {
+          "module": "apex-license-tools",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 10812
+        },
+        {
+          "module": "apex-domain",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 1515
+        },
+        {
+          "module": "apex-infrastructure-persistence",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 3511
+        },
+        {
+          "module": "apex-infrastructure-cache",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 3806
+        },
+        {
+          "module": "apex-infrastructure-messaging",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 5729
+        },
+        {
+          "module": "apex-infrastructure-remote",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 2457
+        },
+        {
+          "module": "apex-infrastructure-integration",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 6030
+        },
+        {
+          "module": "apex-infrastructure",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 11571
+        },
+        {
+          "module": "apex-workflow",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 3597
+        },
+        {
+          "module": "apex-system",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 17560
+        },
+        {
+          "module": "apex-example",
+          "final_status": null,
+          "last_observed_goal": "failsafe:integration-test",
+          "line": 17676,
+          "running_test": "com.apex.example.integration.ExampleCapabilityIntegrationTest",
+          "running_test_line": 17748
+        },
+        {
+          "module": "apex-generator",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 308
+        },
+        {
+          "module": "apex-services-bom",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 150
+        },
+        {
+          "module": "apex-api-contract",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 1674
+        },
+        {
+          "module": "apex-gateway",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 8547
+        },
+        {
+          "module": "apex-seata-spring-boot-starter",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 2188
+        },
+        {
+          "module": "apex-job-spring-boot-starter",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 3874
+        },
+        {
+          "module": "apex-workflow-service",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 10538
+        },
+        {
+          "module": "apex-file",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 7169
+        },
+        {
+          "module": "apex-file-service",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 15088
+        },
+        {
+          "module": "apex-office",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 6216
+        },
+        {
+          "module": "apex-office-service",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 15762
+        },
+        {
+          "module": "apex-system-service",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 17850
+        },
+        {
+          "module": "apex-auth",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 11690
+        },
+        {
+          "module": "apex-auth-service",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 32075
+        },
+        {
+          "module": "apex-job-service",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 11481
+        },
+        {
+          "module": "apex-masking-service",
+          "final_status": null,
+          "last_observed_goal": "failsafe:verify",
+          "line": 10697
+        }
+      ]
+    },
+    "failure_reason": null,
+    "observed_error_excerpts": [
+      {
+        "line": 270,
+        "excerpt": "[ERROR] aktStatus is NULL: maximum Iterations exceeded, abort 0",
+        "interpretation": "运行过程错误行，未作为最终构建失败原因。"
+      },
+      {
+        "module": "apex-example",
+        "line": 31597,
+        "excerpt": "com.mysql.cj.jdbc.exceptions.CommunicationsException: Communications link failure"
+      },
+      {
+        "module": "apex-example",
+        "line": 31578,
+        "excerpt": "Caused by: java.net.ConnectException: Connection refused",
+        "interpretation": "示例集成测试执行期间数据库连接被拒绝；命令尚未结束，不能据此判定最终测试或构建失败。"
+      }
+    ],
+    "tests": {
+      "scope": "仅截至本次观察已输出的插件级汇总；不代表全仓最终测试结果。",
+      "counting_policy": "仅收录以 Skipped 数字结尾的 Tests run 汇总，排除含 -- in 的测试类明细，避免类明细与插件汇总双计。同一模块 Surefire 与 Failsafe 分开列出。无汇总的模块不补零；不推算全仓总数。",
+      "final_total": null,
+      "observed_plugin_summaries": [
+        {
+          "module": "apex-generator",
+          "plugin": "surefire",
+          "line": 226,
+          "run": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-common",
+          "plugin": "surefire",
+          "line": 1163,
+          "run": 538,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-domain",
+          "plugin": "surefire",
+          "line": 1436,
+          "run": 9,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-api-contract",
+          "plugin": "surefire",
+          "line": 1592,
+          "run": 30,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-license-spring-boot-starter",
+          "plugin": "surefire",
+          "line": 1773,
+          "run": 19,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-storage-spring-boot-starter",
+          "plugin": "surefire",
+          "line": 1847,
+          "run": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-seata-spring-boot-starter",
+          "plugin": "surefire",
+          "line": 2089,
+          "run": 24,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-seata-spring-boot-starter",
+          "plugin": "failsafe",
+          "line": 2107,
+          "run": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 1
+        },
+        {
+          "module": "apex-infrastructure-remote",
+          "plugin": "surefire",
+          "line": 2313,
+          "run": 84,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-infrastructure-cache",
+          "plugin": "surefire",
+          "line": 3325,
+          "run": 130,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-infrastructure-persistence",
+          "plugin": "surefire",
+          "line": 3356,
+          "run": 83,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-workflow",
+          "plugin": "surefire",
+          "line": 3424,
+          "run": 40,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-infrastructure-cache",
+          "plugin": "failsafe",
+          "line": 3634,
+          "run": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-job-spring-boot-starter",
+          "plugin": "surefire",
+          "line": 3794,
+          "run": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-infrastructure-messaging",
+          "plugin": "surefire",
+          "line": 4756,
+          "run": 77,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-office",
+          "plugin": "surefire",
+          "line": 4788,
+          "run": 69,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-infrastructure-messaging",
+          "plugin": "failsafe",
+          "line": 5638,
+          "run": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-infrastructure-integration",
+          "plugin": "surefire",
+          "line": 5943,
+          "run": 124,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-file",
+          "plugin": "surefire",
+          "line": 6946,
+          "run": 59,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-gateway",
+          "plugin": "surefire",
+          "line": 7213,
+          "run": 100,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-workflow-service",
+          "plugin": "surefire",
+          "line": 7412,
+          "run": 36,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-gateway",
+          "plugin": "failsafe",
+          "line": 8207,
+          "run": 2,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-workflow-service",
+          "plugin": "failsafe",
+          "line": 9665,
+          "run": 27,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-masking-service",
+          "plugin": "surefire",
+          "line": 10624,
+          "run": 6,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-auth",
+          "plugin": "surefire",
+          "line": 11369,
+          "run": 1260,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-job-service",
+          "plugin": "surefire",
+          "line": 11404,
+          "run": 7,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-file-service",
+          "plugin": "surefire",
+          "line": 12623,
+          "run": 25,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-office-service",
+          "plugin": "surefire",
+          "line": 14041,
+          "run": 343,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-file-service",
+          "plugin": "failsafe",
+          "line": 14992,
+          "run": 50,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-office-service",
+          "plugin": "failsafe",
+          "line": 15355,
+          "run": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-system",
+          "plugin": "surefire",
+          "line": 17075,
+          "run": 1542,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-system",
+          "plugin": "failsafe",
+          "line": 17302,
+          "run": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-system-service",
+          "plugin": "surefire",
+          "line": 17755,
+          "run": 4,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-auth-service",
+          "plugin": "surefire",
+          "line": 21777,
+          "run": 103,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "module": "apex-auth-service",
+          "plugin": "failsafe",
+          "line": 31591,
+          "run": 179,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    }
+  }
+}

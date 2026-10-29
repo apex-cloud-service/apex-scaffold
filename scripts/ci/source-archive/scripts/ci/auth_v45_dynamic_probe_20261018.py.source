@@ -1,0 +1,1741 @@
+#!/usr/bin/env python3
+"""Bounded auth V45 client probe; only owns its newly created Podman container."""
+import argparse
+import datetime
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+import time
+import uuid
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts/ci'))
+from collect_table_facts import expand_mysql_guards
+
+P0 = ROOT / 'docs/06-testing/jdk21-unified-auth/20261016-p0'
+BASELINE = P0 / 'table-source-facts-20261018-itemized-1905.json'
+SOURCE = 'apex-auth-service/src/main/resources/db/migration/mysql/V45__align_auth_domain_fields.sql'
+OUTPUT = P0 / 'dynamic-auth-v45-20261018-client-evidence.json'
+
+
+def closed(results):
+    return all(results.get(k) is True for k in ('absent', 'present', 'replay'))
+
+
+def plan(source_text=None, source=SOURCE):
+    baseline = json.loads(BASELINE.read_text())
+    items = [i for i in baseline['baseline_audit']['old_sql_items'] if i['source'] == source]
+    text = (ROOT / source).read_text() if source_text is None else source_text
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if not items or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    groups = expand_mysql_guards(text)
+    by_line = {i['original']['line']: i for i in items}
+    for g in groups:
+        g['old_ids'] = [by_line[s['line']]['id'] for s in g['statements']]
+        g['statement_ids'] = [by_line[s['line']]['statement_ids'] for s in g['statements']]
+        g['results'] = {}
+        g['observations'] = {}
+    bound = [i for g in groups for i in g['old_ids']]
+    if len(bound) != len(set(bound)) or set(bound) != {i['id'] for i in items}:
+        raise ValueError('incomplete or duplicate old ID binding')
+    return {'schema_version': 1, 'source': source, 'source_sha256': digest,
+            'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+            'baseline_dynamic_denominator': 586, 'groups': groups, 'items': items,
+            'status': 'planned_not_run', 'cleanup': {'attempted': False},
+            'limits': ['Synthetic fixtures, not production data or a full historical upgrade chain',
+                       'Only MySQL V45; PostgreSQL and other 490 old items not tested',
+                       'Existing-name branch intentionally accepts incompatible definitions; no equivalence claim',
+                       'Closure means both explicit IF branches plus replay and catalog checks for these bound IDs only',
+                       'Missing-table, privilege denial, concurrent migration and rollback behavior not covered']}
+
+
+def verified_union():
+    baseline_hash = hashlib.sha256(BASELINE.read_bytes()).hexdigest()
+    baseline = json.loads(BASELINE.read_text())['baseline_audit']['old_sql_items']
+    dynamic = {i['id']: i for i in baseline if i['category'] in ('dynamic_sql', 'procedure_or_prepared_control')}
+    verified, hashes = set(), {}
+    for path in sorted(P0.glob('dynamic-*-evidence.json')):
+        evidence = json.loads(path.read_text())
+        if evidence.get('probe_kind') in ('postgresql_p0_do_guard', 'postgresql_p0_remaining', 'postgresql_p0_final_four'):
+            from pg_p0_dynamic_probe import verified_ids, verified_remaining_ids, verified_final_four_ids
+            try:
+                validator = {'postgresql_p0_do_guard': verified_ids,
+                             'postgresql_p0_remaining': verified_remaining_ids,
+                             'postgresql_p0_final_four': verified_final_four_ids}[evidence['probe_kind']]
+                ids = validator(evidence)
+            except ValueError:
+                continue
+            if ids:
+                verified.update(ids)
+                hashes[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+            continue
+        source = evidence.get('source')
+        if (evidence.get('status') != 'passed' or evidence.get('baseline_sha256') != baseline_hash
+                or not evidence.get('cleanup', {}).get('container_and_anonymous_volumes_removed')
+                or not source or hashlib.sha256((ROOT / source).read_bytes()).hexdigest() != evidence.get('source_sha256')):
+            continue
+        if source in (V37, V44) and not all(evidence.get('full_file', {}).get(k) is True
+                                               for k in ('initial_execution', 'replay')):
+            continue
+        if source in (V43, V40, V51, V37, V44):
+            expected = {V43: plan_v43, V40: plan_v40, V51: plan_v51, V37: plan_v37, V44: plan_v44}[source](include_prior=False)
+            if not all(closed(g.get('results', {})) for g in evidence.get('groups', [])):
+                continue
+            fields = ('target', 'columns', 'old_ids', 'statement_ids', 'statements')
+            signature = lambda groups: [{k: g.get(k) for k in fields} for g in groups]
+            if signature(evidence.get('groups', [])) != signature(expected['groups']):
+                continue
+            actual_items = [{k: v for k, v in item.items() if k not in ('verified_in_this_probe', 'unpassed_branches')}
+                            for item in evidence.get('items', [])]
+            if actual_items != expected['items']:
+                continue
+        closed_ids = {i for g in evidence.get('groups', []) if closed(g['results']) for i in g['old_ids']}
+        flags = {i['id'] for i in evidence.get('items', []) if i.get('verified_in_this_probe')}
+        ids = set(evidence.get('coverage', {}).get('verified_old_ids', [])) & closed_ids & flags
+        ids = {i for i in ids if i in dynamic and dynamic[i]['source'] == source
+               and dynamic[i]['source_sha256'] == evidence['source_sha256']}
+        verified.update(ids)
+        hashes[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return sorted(verified), hashes, len(dynamic)
+
+
+def attach_prior(result):
+    prior, hashes, denominator = verified_union()
+    result.update(previous_verified_ids=prior, remaining_before=denominator - len(prior),
+                  previous_evidence_hashes=hashes, baseline_dynamic_denominator=denominator)
+    result['limits'][1] = 'Only selected MySQL guards; no PostgreSQL or full historical upgrade chain'
+    return result
+
+
+def plan_next(source):
+    return attach_prior(plan(source=source))
+
+
+V37 = 'apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql'
+V44 = 'apex-system/src/main/resources/db/migration/mysql/V44__initialize_default_tenant.sql'
+
+
+def plan_bound_source(source, count, source_text=None):
+    from collect_table_facts import statement_inventory
+    text = (ROOT / source).read_text() if source_text is None else source_text
+    items = [i for i in json.loads(BASELINE.read_text())['baseline_audit']['old_sql_items']
+             if i['source'] == source and i['category'] in ('dynamic_sql', 'procedure_or_prepared_control')]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if len(items) != count or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    statements = []
+    for item in items:
+        matches = [s for s in statement_inventory(text, 'mysql') if s['line'] == item['original']['line']]
+        if len(matches) != 1:
+            raise ValueError('statement binding is ambiguous')
+        statement = matches[0]
+        identity = f"{source}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+        statement['statement_id'] = 'stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]
+        if item['statement_ids'] != [statement['statement_id']]:
+            raise ValueError('statement binding differs from baseline offset/hash')
+        statements.append(statement)
+    group = {'target': {'kind': 'source', 'name': source}, 'statements': statements,
+             'old_ids': [i['id'] for i in items], 'statement_ids': [i['statement_ids'] for i in items],
+             'results': {}, 'observations': {}}
+    return {'schema_version': 1, 'source': source, 'source_sha256': digest,
+            'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+            'items': items, 'groups': [group], 'status': 'planned_not_run', 'cleanup': {'attempted': False},
+            'limits': ['Synthetic nonempty fixtures; not a historical upgrade chain', '',
+                       'No Flyway startup, concurrent migration, privileges or production verification']}
+
+
+def plan_v37(source_text=None, include_prior=True):
+    result = plan_bound_source(V37, 15, source_text)
+    statements = result['groups'][0]['statements']
+    result['groups'] = [dict(target={'table': 'sys_user', 'kind': kind, 'name': name},
+                             statements=statements[n:n + 5],
+                             old_ids=[i['id'] for i in result['items'][n:n + 5]],
+                             statement_ids=[i['statement_ids'] for i in result['items'][n:n + 5]],
+                             results={}, observations={})
+                        for n, kind, name in ((0, 'column', 'email'), (5, 'column', 'keycloak_sub'), (10, 'index', 'uk_keycloak_sub'))]
+    return attach_prior(result) if include_prior else result
+
+
+def verify_v37(result, sql):
+    fixture = ("USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64));"
+               " INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept');")
+    data_query = 'USE probe; SELECT id,phone FROM sys_user ORDER BY id;'
+    column_query = ("SELECT COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),ORDINAL_POSITION,COLUMN_COMMENT "
+                    "FROM information_schema.columns WHERE table_schema='probe' AND table_name='sys_user' ORDER BY ordinal_position;")
+    index_query = ("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics "
+                   "WHERE table_schema='probe' AND table_name='sys_user' ORDER BY INDEX_NAME,SEQ_IN_INDEX;")
+    base_columns = 'id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t'
+    email = '\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱'
+    sub = '\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识'
+    primary = 'PRIMARY\t0\t1\tid\tBTREE'
+    full = (ROOT / V37).read_text()
+    for group in result['groups']:
+        name, kind = group['target']['name'], group['target']['kind']
+        statements = group['statements']
+        body = full[statements[0]['start_offset']:statements[-1]['end_offset']] + ';'
+        setup = fixture
+        if name != 'email':
+            setup += ' ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT \'用户邮箱\' AFTER phone;'
+        if kind == 'index':
+            setup += " ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT 'Keycloak用户唯一标识' AFTER email;"
+        expected_columns = base_columns + email + (sub if name != 'email' else '')
+        expected_indexes = primary + ('\nuk_keycloak_sub\t0\t1\tkeycloak_sub\tBTREE' if kind == 'index' else '')
+        for branch in ('absent', 'replay', 'present'):
+            branch_setup = setup
+            if branch == 'present':
+                branch_setup += (' ALTER TABLE sys_user ADD UNIQUE INDEX uk_keycloak_sub(id);' if kind == 'index' else
+                                 f" ALTER TABLE sys_user ADD COLUMN {name} VARCHAR(7) NOT NULL DEFAULT 'legacy';")
+            if branch != 'replay':
+                sql(branch_setup)
+            before = {'columns': sql(column_query), 'indexes': sql(index_query), 'data': sql(data_query)}
+            sql('USE probe; ' + body)
+            after = {'columns': sql(column_query), 'indexes': sql(index_query), 'data': sql(data_query)}
+            assert after['data'] == before['data'] == '1\t中文电话\n2\tkept', after
+            if branch == 'present':
+                assert before == after, 'present-name guard changed existing definition or data'
+                assert ('uk_keycloak_sub\t0\t1\tid\tBTREE' in after['indexes'] if kind == 'index' else
+                        f'{name}\tvarchar(7)\tNO\tlegacy' in after['columns']), after
+            else:
+                assert after['columns'] == expected_columns, after
+                assert after['indexes'] == expected_indexes, after
+                if branch == 'replay':
+                    assert before == after, 'guard replay changed schema/data'
+            group['results'][branch] = True
+            group['observations'][branch] = {'fixture_sql': branch_setup if branch != 'replay' else 'reuse absent result',
+                                              'executed_sql': body, 'before': before, 'after': after}
+        save(result)
+    sql(fixture)
+    sql('USE probe; ' + full)
+    assert sql(column_query) == base_columns + email + sub, sql(column_query)
+    assert sql(index_query) == primary + '\nuk_keycloak_sub\t0\t1\tkeycloak_sub\tBTREE', sql(index_query)
+    assert sql(data_query) == '1\t中文电话\n2\tkept'
+    sql("USE probe; UPDATE sys_user SET email='person@example.test',keycloak_sub='retained-sub' WHERE id=1;")
+    snapshot = lambda: {'columns': sql(column_query), 'indexes': sql(index_query), 'data': sql('USE probe; SELECT * FROM sys_user ORDER BY id;')}
+    first = snapshot()
+    sql('USE probe; ' + full)
+    second = snapshot()
+    assert first == second, 'full-file replay changed structure or nonempty data'
+    result['full_file'] = {'fixture_sql': fixture, 'initial_execution': True, 'replay': True,
+                           'before_replay': first, 'after_replay': second}
+    verify_v37_refusals(result, sql)
+    result['status'] = 'passed'
+
+
+def verify_v37_refusals(result, sql):
+    full = (ROOT / V37).read_text()
+    statements = result['groups'][2]['statements']
+    index_body = full[statements[0]['start_offset']:statements[-1]['end_offset']] + ';'
+    cases = (
+        ('missing_table', 'USE probe; DROP TABLE IF EXISTS sys_user;', full, '1146', False),
+        ('missing_phone', 'USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY); INSERT INTO sys_user VALUES(1),(2);', full, '1054', True),
+        ('duplicate_sub', "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64),email VARCHAR(100),keycloak_sub VARCHAR(100)); INSERT INTO sys_user VALUES(1,'中文',NULL,'duplicate'),(2,'kept',NULL,'duplicate');", index_body, '1062', True))
+    observations = []
+    for name, setup, body, error_code, has_table in cases:
+        sql(setup)
+        def snapshot():
+            return {'columns': sql("SELECT COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE FROM information_schema.columns WHERE table_schema='probe' AND table_name='sys_user' ORDER BY ORDINAL_POSITION;"),
+                    'indexes': sql("SELECT INDEX_NAME,NON_UNIQUE,COLUMN_NAME FROM information_schema.statistics WHERE table_schema='probe' AND table_name='sys_user' ORDER BY INDEX_NAME,SEQ_IN_INDEX;"),
+                    'data': sql('USE probe; SELECT * FROM sys_user ORDER BY id;') if has_table else None}
+        before = snapshot()
+        try:
+            sql('USE probe; ' + body)
+        except RuntimeError as exc:
+            assert 'ERROR ' + error_code in str(exc), str(exc)
+            after = snapshot()
+            assert before == after, 'V37 refusal changed schema or data'
+            observations.append({'case': name, 'fixture_sql': setup, 'executed_sql': body,
+                                 'error': str(exc), 'before': before, 'after': after})
+        else:
+            raise AssertionError('expected V37 refusal: ' + name)
+    result['refusal_checks'] = observations
+
+
+def v44_fixture():
+    return '''USE probe;
+DROP TABLE IF EXISTS sys_tenant,sys_user,sys_dept,sys_user_role,sys_role_dept;
+CREATE TABLE sys_tenant(id BIGINT PRIMARY KEY,tenant_code VARCHAR(64),tenant_name VARCHAR(100),status VARCHAR(20),admin_user_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);
+CREATE TABLE sys_user(id BIGINT PRIMARY KEY,username VARCHAR(64),status INT,tenant_id VARCHAR(64),dept_id BIGINT,create_time DATETIME,update_time DATETIME,version INT,deleted INT);
+CREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(100),name VARCHAR(100),order_num INT,status INT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);
+CREATE TABLE sys_user_role(id BIGINT PRIMARY KEY,user_id BIGINT,role_id BIGINT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);
+CREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,role_id BIGINT,dept_id BIGINT,tenant_id VARCHAR(64),create_time DATETIME,update_time DATETIME,version INT,deleted INT);
+INSERT INTO sys_user VALUES(7,'admin',1,NULL,NULL,'2020-01-01','2020-01-01',3,0),(8,'中文用户',1,'preserved',9,'2020-01-01','2020-01-01',4,0);
+INSERT INTO sys_dept VALUES(9,0,'0','保留部门',2,1,'preserved','2020-01-01','2020-01-01',5,0);
+INSERT INTO sys_user_role VALUES(10,7,2,NULL,'2020-01-01','2020-01-01',6,0),(11,8,3,'preserved','2020-01-01','2020-01-01',7,0);
+INSERT INTO sys_role_dept VALUES(20,3,9,'preserved','2020-01-01','2020-01-01',8,0);
+'''
+
+
+def verify_v44(result, sql):
+    full = (ROOT / V44).read_text()
+    group = result['groups'][0]
+    fixture = v44_fixture()
+    tables = ('sys_tenant', 'sys_user', 'sys_dept', 'sys_user_role', 'sys_role_dept')
+    catalog_query = ("SELECT TABLE_NAME,COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),ORDINAL_POSITION "
+                     "FROM information_schema.columns WHERE table_schema='probe' ORDER BY TABLE_NAME,ORDINAL_POSITION;")
+    index_query = ("SELECT TABLE_NAME,INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE "
+                   "FROM information_schema.statistics WHERE table_schema='probe' ORDER BY TABLE_NAME,INDEX_NAME,SEQ_IN_INDEX;")
+    def snapshot():
+        return {table: sql('USE probe; SELECT * FROM ' + table + ' ORDER BY id;') for table in tables}
+    def execute():
+        return sql('USE probe; SET timestamp=1767225600;\n' + full)
+    expected = ('apex-default\tApex 默认租户\tACTIVE\t7\t0\t0\n'
+                '7\tadmin\tapex-default\t1\t3\n8\t中文用户\tpreserved\t9\t4\n'
+                '1\t0\t0\tApex 科技\tapex-default\t0\n9\t0\t0\t保留部门\tpreserved\t5\n'
+                '10\t7\t2\tapex-default\t6\n11\t8\t3\tpreserved\t7\n'
+                '20\t3\t9\tpreserved\t8\n21\t2\t1\tapex-default\t0')
+    projection = '''USE probe;
+SELECT tenant_code,tenant_name,status,admin_user_id,version,deleted FROM sys_tenant ORDER BY id;
+SELECT id,username,tenant_id,dept_id,version FROM sys_user ORDER BY id;
+SELECT id,parent_id,ancestors,name,tenant_id,version FROM sys_dept ORDER BY id;
+SELECT id,user_id,role_id,tenant_id,version FROM sys_user_role ORDER BY id;
+SELECT id,role_id,dept_id,tenant_id,version FROM sys_role_dept ORDER BY id;'''
+    for branch in ('absent', 'present'):
+        setup = fixture
+        if branch == 'present':
+            setup += ("INSERT INTO sys_tenant VALUES(42,'apex-default','old','DISABLED',NULL,'2020-01-01','2020-01-01',0,0);"
+                      "INSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',1,1,'apex-default','2020-01-01','2020-01-01',0,0);"
+                      "INSERT INTO sys_role_dept VALUES(21,2,1,NULL,'2020-01-01','2020-01-01',0,0);")
+        sql(setup)
+        before_catalog, before_indexes = sql(catalog_query), sql(index_query)
+        assert before_catalog and before_indexes, 'fixture catalog missing'
+        before = snapshot()
+        assert before['sys_user'] and before['sys_dept'] and before['sys_user_role'] and before['sys_role_dept'], 'fixture data missing'
+        execute()
+        assert sql(projection) == expected, sql(projection)
+        assert sql('USE probe; SELECT id FROM sys_tenant;') == ('42' if branch == 'present' else '1')
+        assert sql(catalog_query) == before_catalog and sql(index_query) == before_indexes, 'migration changed schema'
+        assert sql("SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema='probe';") == '0'
+        first = snapshot()
+        execute()
+        second = snapshot()
+        assert first == second, 'full original file replay changed retained IDs/data/timestamps'
+        group['results'][branch] = True
+        group['observations'][branch] = {'fixture_sql': setup, 'before': before, 'after': first,
+                                          'catalog': before_catalog, 'indexes': before_indexes,
+                                          'after_replay': second, 'projection': expected}
+    refusals = (
+        ("INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(2,'other',0);", 'another active tenant'),
+        ("INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(2,'apex-default',0),(3,'apex-default',0);", 'duplicate active'),
+        ("UPDATE sys_user SET status=0 WHERE username='admin';", 'exactly one active admin'),
+        ("UPDATE sys_user SET tenant_id=NULL WHERE id=8;", 'unassigned non-admin users'),
+        ("INSERT INTO sys_dept(id,parent_id,ancestors,name,tenant_id) VALUES(1,0,'0','conflict','preserved');", 'default root'),
+        ("UPDATE sys_dept SET tenant_id=NULL WHERE id=9;", 'unassigned departments'),
+        ("UPDATE sys_user_role SET tenant_id=NULL WHERE user_id=8;", 'unassigned roles'),
+        ("INSERT INTO sys_role_dept(id,role_id,dept_id,tenant_id,deleted) VALUES(30,4,99,NULL,0);", 'ambiguous role department'))
+    group['observations']['refusal_guards'] = []
+    for mutation, message in refusals:
+        sql(fixture + mutation)
+        before = snapshot()
+        try:
+            execute()
+        except RuntimeError as exc:
+            assert 'ERROR 1644' in str(exc) and message in str(exc), str(exc)
+            observation = {'mutation_sql': mutation, 'error': str(exc), 'before': before, 'after': snapshot()}
+            assert observation['before'] == observation['after'], 'refusal changed persistent data'
+            group['observations']['refusal_guards'].append(observation)
+        else:
+            raise AssertionError('expected V44 refusal: ' + message)
+        sql('USE probe; DROP PROCEDURE IF EXISTS initialize_default_tenant;')
+    group['results']['replay'] = True
+    result['full_file'] = {'initial_execution': True, 'replay': True, 'original_file_used': True,
+                           'tenant_paths': 2, 'refusal_guards': len(refusals), 'timestamp_fixed_for_comparison': 1767225600}
+    result['status'] = 'passed'
+    save(result)
+
+
+def plan_v44(source_text=None, include_prior=True):
+    result = plan_bound_source(V44, 32, source_text)
+    result['limits'].append('One source-level closure requires all eight refusal guards and both tenant initialization paths')
+    return attach_prior(result) if include_prior else result
+
+
+V51 = 'apex-system/src/main/resources/db/migration/mysql/V51__add_keycloak_fields.sql'
+
+
+def plan_v51(source_text=None, include_prior=True):
+    from collect_table_facts import statement_inventory
+    import re
+    text = (ROOT / V51).read_text() if source_text is None else source_text
+    items = [i for i in json.loads(BASELINE.read_text())['baseline_audit']['old_sql_items']
+             if i['source'] == V51 and i['category'] in ('dynamic_sql', 'procedure_or_prepared_control')]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if len(items) != 8 or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    rows = statement_inventory(text, 'mysql')
+    groups = []
+    for offset, kind, name in ((1, 'column', 'email'), (5, 'index', 'idx_email')):
+        statements = rows[offset:offset + 4]
+        bound = []
+        for statement in statements:
+            identity = f"{V51}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+            statement['statement_id'] = 'stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]
+            matches = [i for i in items if i['original']['line'] == statement['line']
+                       and i['statement_ids'] == [statement['statement_id']]]
+            if len(matches) != 1:
+                raise ValueError('statement binding differs from baseline line/offset/hash')
+            bound.append(matches[0])
+        literals = re.findall(r"'((?:''|[^'])*)'", statements[0]['sql'])
+        alternatives = [s.replace("''", "'") for s in literals if s.startswith(('ALTER TABLE', 'SELECT '))]
+        if len(alternatives) != 2:
+            raise ValueError('unexpected V51 branch binding')
+        groups.append({'target': {'table': 'sys_user', 'kind': kind, 'name': name},
+                       'variable': 'sql', 'absent_sql': alternatives[0], 'present_sql': alternatives[1],
+                       'statements': statements, 'old_ids': [i['id'] for i in bound],
+                       'statement_ids': [i['statement_ids'] for i in bound], 'results': {}, 'observations': {}})
+    if {i for g in groups for i in g['old_ids']} != {i['id'] for i in items}:
+        raise ValueError('incomplete old ID binding')
+    result = {'schema_version': 1, 'source': V51, 'source_sha256': digest,
+              'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+              'items': items, 'groups': groups, 'status': 'planned_not_run', 'cleanup': {'attempted': False},
+              'limits': ['Synthetic fixtures only; no production data or full historical upgrade chain', '',
+                         'Existing-name guards accept incompatible definitions; no equivalence claim',
+                         'Missing table or required source column produces actual errors, not successful migration',
+                         'No PostgreSQL, Flyway startup, concurrency, privileges or rollback verification']}
+    return attach_prior(result) if include_prior else result
+
+
+def v51_expected_columns():
+    return '\n'.join(('sys_user\tid\tbigint\tNO\t<NULL>\t1',
+                      'sys_user\tphone\tvarchar(64)\tYES\t<NULL>\t2',
+                      'sys_user\temail\tvarchar(255)\tYES\t<NULL>\t3',
+                      'sys_user\tkeycloak_sub\tvarchar(255)\tYES\t<NULL>\t4'))
+
+
+def v51_expected_indexes():
+    return 'sys_user\tidx_email\t1\t1\temail\tBTREE\nsys_user\tPRIMARY\t0\t1\tid\tBTREE'
+
+
+def verify_v51(result, sql):
+    fixture = ("USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,"
+               "phone VARCHAR(64),keycloak_sub VARCHAR(100)); INSERT INTO sys_user VALUES(1,'中文电话','legacy-sub');")
+    stable_query = 'USE probe; SELECT id,phone,keycloak_sub FROM sys_user ORDER BY id;'
+    def expected_error(text, code):
+        try:
+            sql(text)
+        except RuntimeError as exc:
+            assert 'ERROR ' + str(code) in str(exc), str(exc)
+            return {'status': 'expected_failure', 'passed': False, 'error': str(exc), 'sql': text}
+        raise AssertionError('expected MySQL ERROR ' + str(code))
+    for g in result['groups']:
+        kind, name = g['target']['kind'], g['target']['name']
+        assignment = g['statements'][0]['sql'] + '; SELECT @sql; '
+        controls = ';\n'.join(s['sql'] for s in g['statements'][1:]) + ';'
+        execute = 'USE probe; ' + assignment + controls
+        query = ("SELECT COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),ORDINAL_POSITION "
+                 "FROM information_schema.columns WHERE table_schema='probe' AND table_name='sys_user' AND column_name='email';"
+                 if kind == 'column' else
+                 "SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics "
+                 "WHERE table_schema='probe' AND table_name='sys_user' AND index_name='idx_email' ORDER BY SEQ_IN_INDEX;")
+        expected = 'varchar(255)\tYES\t<NULL>\t3' if kind == 'column' else 'idx_email\t1\t1\temail\tBTREE'
+        incompatible = 'varchar(7)\tNO\tlegacy\t4' if kind == 'column' else 'idx_email\t0\t1\tid\tBTREE'
+        for branch in ('absent', 'replay', 'present'):
+            setup = fixture
+            if kind == 'index':
+                setup += ' ALTER TABLE sys_user ADD COLUMN email VARCHAR(255) NULL AFTER phone;'
+            if branch == 'present':
+                setup += (" ALTER TABLE sys_user ADD COLUMN email VARCHAR(7) NOT NULL DEFAULT 'legacy';" if kind == 'column'
+                          else ' ALTER TABLE sys_user ADD UNIQUE INDEX idx_email(id);')
+            if branch != 'replay':
+                sql(setup)
+            before = sql(query)
+            data_before = sql(stable_query)
+            selected = sql(execute).splitlines()[0]
+            after = sql(query)
+            assert selected == g['absent_sql' if branch == 'absent' else 'present_sql'], selected
+            assert after == (incompatible if branch == 'present' else expected), after
+            if branch == 'absent':
+                assert before == '', before
+            else:
+                assert before == after, 'no-op changed catalog'
+            assert sql(stable_query) == data_before == '1\t中文电话\tlegacy-sub'
+            g['results'][branch] = True
+            g['observations'][branch] = {'fixture_sql': setup if branch != 'replay' else 'reuse absent result',
+                                         'selected_sql': selected, 'before': before, 'after': after,
+                                         'data_before': data_before, 'data_after': sql(stable_query)}
+        sql('USE probe; DROP TABLE sys_user;')
+        g['observations']['missing_table'] = expected_error(execute, 1146)
+        assert sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='probe' AND table_name='sys_user';") == '0'
+        missing_fixture = ('USE probe; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,keycloak_sub VARCHAR(100));'
+                           " INSERT INTO sys_user VALUES(1,'legacy-sub');")
+        sql(missing_fixture)
+        g['observations']['missing_source_column'] = expected_error(execute, 1054 if kind == 'column' else 1072)
+        g['observations']['missing_source_column']['fixture_sql'] = missing_fixture
+        g['semantic_verified'] = closed(g['results'])
+        save(result)
+    full = (ROOT / V51).read_text()
+    sql(fixture)
+    before = sql(stable_query)
+    sql('USE probe;\n' + full)
+    columns = "SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>'),ordinal_position FROM information_schema.columns WHERE table_schema='probe' AND table_name='sys_user' ORDER BY ordinal_position;"
+    indexes = "SELECT table_name,index_name,non_unique,seq_in_index,column_name,index_type FROM information_schema.statistics WHERE table_schema='probe' AND table_name='sys_user' ORDER BY index_name,seq_in_index;"
+    assert sql(columns) == v51_expected_columns(), sql(columns)
+    assert sql(indexes) == v51_expected_indexes(), sql(indexes)
+    assert sql(stable_query) == before == '1\t中文电话\tlegacy-sub'
+    sql("USE probe; UPDATE sys_user SET email='person@example.test';")
+    comment = "SELECT TABLE_COMMENT FROM information_schema.tables WHERE table_schema='probe' AND table_name='sys_user';"
+    snapshot = lambda: {'columns': sql(columns), 'indexes': sql(indexes), 'data': sql('USE probe; SELECT * FROM sys_user ORDER BY id;'), 'comment': sql(comment)}
+    first = snapshot()
+    assert first['comment'] == '系统用户表（支持本地JWT认证和Keycloak SSO认证）'
+    sql('USE probe;\n' + full)
+    second = snapshot()
+    assert first == second, 'full-file replay changed schema/data/comment'
+    result['full_file'] = {'fixture_sql': fixture, 'before_initial': before, 'before_replay': first,
+                           'after_replay': second, 'initial_execution': True, 'replay': True, 'counts_as_branch_proof': False}
+    result['full_file']['missing_table'] = expected_error('USE probe; DROP TABLE sys_user;\n' + full, 1146)
+    result['full_file']['missing_keycloak_sub'] = expected_error(
+        'USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,\'kept\');\n' + full, 1054)
+    result['status'] = 'passed' if all(closed(g['results']) for g in result['groups']) else 'partial_failure'
+
+
+V55 = 'apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql'
+V55_COLUMN = 'bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)'
+V55_INDEX = 'idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES'
+
+
+def plan_v55(source_text=None):
+    from collect_table_facts import statement_inventory
+    text = (ROOT / V55).read_text() if source_text is None else source_text
+    items = [i for i in json.loads(BASELINE.read_text())['baseline_audit']['old_sql_items'] if i['source'] == V55]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    rows = statement_inventory(text, 'mysql')
+    groups = []
+    for offset, kind, name, variable in ((0, 'column', 'account_id', 'ddl_account_id'),
+                                       (4, 'index', 'idx_auth_user_account_id', 'ddl_account_idx')):
+        statements = rows[offset:offset + 4]
+        bound = [next(i for i in items if i['original']['line'] == s['line']) for s in statements]
+        groups.append({'target': {'table': 'auth_user', 'kind': kind, 'name': name},
+                       'variable': variable, 'statements': statements,
+                       'old_ids': [i['id'] for i in bound], 'statement_ids': [i['statement_ids'] for i in bound],
+                       'results': {}, 'observations': {}})
+    assert len(items) == 8 and len({i for g in groups for i in g['old_ids']}) == 8
+    return attach_prior({'schema_version': 1, 'source': V55, 'source_sha256': digest,
+                         'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+                         'items': items, 'groups': groups, 'status': 'planned_not_run',
+                         'cleanup': {'attempted': False},
+                         'limits': ['Synthetic fixtures only; no full upgrade chain', '',
+                                    'Existing names accept incompatible definitions; no equivalence claim',
+                                    'Missing-table index creation fails; not all scenarios pass',
+                                    'No PostgreSQL, Java, Flyway, concurrency, privileges or rollback verification']})
+
+
+V59 = 'apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql'
+V59_TIME = '2026-01-02 03:04:05'
+
+
+def plan_v59(source_text=None):
+    from collect_table_facts import statement_inventory
+    import re
+    text = (ROOT / V59).read_text() if source_text is None else source_text
+    items = [i for i in json.loads(BASELINE.read_text())['baseline_audit']['old_sql_items']
+             if i['source'] == V59 and i['category'] in ('dynamic_sql', 'procedure_or_prepared_control')]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if len(items) != 16 or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    rows = statement_inventory(text, 'mysql')
+    groups = []
+    targets = ((0, 'sys_user', 'column', 'register_channel'),
+               (4, 'sys_user', 'index', 'idx_sys_user_register_channel'),
+               (10, 'sys_login_log', 'column', 'client_type'),
+               (14, 'sys_login_log', 'column', 'platform'))
+    for offset, table, kind, name in targets:
+        statements = rows[offset:offset + 4]
+        bound = [next(i for i in items if i['original']['line'] == s['line']) for s in statements]
+        for statement, item in zip(statements, bound):
+            identity = f"{V59}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+            statement['statement_id'] = 'stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]
+            if item['statement_ids'] != [statement['statement_id']]:
+                raise ValueError('statement binding differs from baseline offset/hash')
+        literals = re.findall(r"'((?:''|[^'])*)'", statements[0]['sql'])
+        absent = next(s.replace("''", "'") for s in literals if s.startswith(('ALTER TABLE', 'CREATE INDEX')))
+        groups.append({'target': {'table': table, 'kind': kind, 'name': name},
+                       'variable': re.match(r'SET\s+@(\w+)', statements[0]['sql'])[1],
+                       'absent_sql': absent, 'present_sql': 'SELECT 1', 'statements': statements,
+                       'old_ids': [i['id'] for i in bound], 'statement_ids': [i['statement_ids'] for i in bound],
+                       'results': {}, 'observations': {}})
+    assert {i for g in groups for i in g['old_ids']} == {i['id'] for i in items}
+    return attach_prior({'schema_version': 1, 'source': V59, 'source_sha256': digest,
+                         'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+                         'items': items, 'groups': groups, 'status': 'planned_not_run',
+                         'cleanup': {'attempted': False},
+                         'limits': ['Synthetic fixtures only; not production multitenant safety proof', '',
+                                    'Existing names accept incompatible definitions; no equivalence claim',
+                                    'Index guard and full file fail without sys_user (1146); these scenarios are not passed',
+                                    'Global (channel,open_id) uniqueness and NOT EXISTS omit tenant scope; no production tenant isolation claim',
+                                    'Full-file fixture uses utf8mb4_unicode_ci compatible with new social table; default utf8mb4_0900_ai_ci user fixture failed with real 1267 in retained first evidence',
+                                    'No PostgreSQL, full upgrade chain, Flyway, concurrency, privileges or rollback verification']})
+
+
+def v59_expected_columns():
+    definitions = {
+        'sys_user': [('id', 'bigint', 'NO', '<NULL>', ''), ('tenant_id', 'varchar(64)', 'YES', '<NULL>', ''),
+                     ('open_id', 'varchar(100)', 'YES', '<NULL>', ''), ('union_id', 'varchar(100)', 'YES', '<NULL>', ''),
+                     ('deleted', 'int', 'YES', '0', ''), ('create_time', 'datetime', 'YES', '<NULL>', ''),
+                     ('register_channel', 'varchar(32)', 'NO', 'UNKNOWN', '')],
+        'sys_login_log': [('id', 'bigint', 'NO', '<NULL>', ''), ('client_type', 'varchar(32)', 'YES', '<NULL>', ''),
+                          ('platform', 'varchar(32)', 'YES', '<NULL>', '')],
+        'sys_user_social': [('id', 'bigint', 'NO', '<NULL>', ''), ('tenant_id', 'varchar(64)', 'YES', '<NULL>', ''),
+                            ('user_id', 'bigint', 'NO', '<NULL>', ''), ('channel', 'varchar(32)', 'NO', '<NULL>', ''),
+                            ('open_id', 'varchar(100)', 'NO', '<NULL>', ''), ('union_id', 'varchar(100)', 'YES', '<NULL>', ''),
+                            ('status', 'int', 'NO', '1', ''), ('bound_at', 'datetime', 'NO', 'CURRENT_TIMESTAMP', 'DEFAULT_GENERATED'),
+                            ('create_time', 'datetime', 'NO', 'CURRENT_TIMESTAMP', 'DEFAULT_GENERATED'),
+                            ('update_time', 'datetime', 'NO', 'CURRENT_TIMESTAMP', 'DEFAULT_GENERATED on update CURRENT_TIMESTAMP'),
+                            ('version', 'int', 'NO', '0', ''), ('deleted', 'int', 'NO', '0', '')]}
+    return '\n'.join('\t'.join((table, name, typ, nullable, default, extra, str(n)))
+                     for table in sorted(definitions) for n, (name, typ, nullable, default, extra) in enumerate(definitions[table], 1))
+
+
+def v59_expected_indexes():
+    definitions = {'sys_login_log': [('PRIMARY', 0, ('id',))],
+                   'sys_user': [('PRIMARY', 0, ('id',)), ('idx_sys_user_register_channel', 1, ('register_channel',))],
+                   'sys_user_social': [('PRIMARY', 0, ('id',)), ('idx_union_id', 1, ('union_id',)),
+                                       ('idx_user_id', 1, ('user_id',)), ('uk_channel_openid', 0, ('channel', 'open_id'))]}
+    return '\n'.join('\t'.join((table, name, str(unique), str(n), column, 'BTREE'))
+                     for table in sorted(definitions) for name, unique, cols in sorted(definitions[table], key=lambda row: row[0].lower())
+                     for n, column in enumerate(cols, 1))
+
+
+def v59_existing_social():
+    return '\n'.join('\t'.join(map(str, row)) for row in (
+        (90, 'original-tenant', 900, 'WECHAT_APP', 'o-existing', 'original-union', 0, '2020-01-01 00:00:00', V59_TIME, V59_TIME, 7, 1),
+        (91, 'mini-tenant', 901, 'WECHAT_MINI', 'o-valid-a', 'mini-union', 1, '2020-01-01 00:00:00', V59_TIME, V59_TIME, 0, 0)))
+
+
+def v59_expected_social():
+    rows = [(1, 'tenant-a', 'o-valid-a', 'union-a', '2021-02-03 04:05:06'),
+            (2, 'tenant-b', 'o-valid-b', 'NULL', '2022-03-04 05:06:07'),
+            (6, 'NULL', 'o-null-time', 'union-six', V59_TIME),
+            (7, 'tenant-c', 'PHONEXvalid', 'union-seven', V59_TIME)]
+    return '\n'.join('\t'.join(map(str, (i, tenant, i, 'WECHAT_APP', oid, union, 1, bound, V59_TIME, V59_TIME, 0, 0)))
+                     for i, tenant, oid, union, bound in rows) + '\n' + v59_existing_social()
+
+
+def verify_v59(result, sql):
+    from collect_table_facts import statement_inventory
+    full = (ROOT / V59).read_text()
+    for g in result['groups']:
+        table, kind, name = (g['target'][k] for k in ('table', 'kind', 'name'))
+        body = ';\n'.join(s['sql'] for s in g['statements']) + ';'
+        query = ("SELECT COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>') FROM information_schema.columns "
+                 "WHERE table_schema='probe' AND table_name='" + table + "' AND column_name='" + name + "';" if kind == 'column' else
+                 "SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics "
+                 "WHERE table_schema='probe' AND table_name='" + table + "' AND index_name='" + name + "' ORDER BY SEQ_IN_INDEX;")
+        expected = ('varchar(32)\tNO\tUNKNOWN' if name == 'register_channel' else 'varchar(32)\tYES\t<NULL>') if kind == 'column' else name + '\t1\t1\tregister_channel\tBTREE'
+        incompatible = 'varchar(7)\tYES\t<NULL>' if kind == 'column' else name + '\t0\t1\tid\tBTREE'
+        for branch in ('absent', 'replay', 'present'):
+            extra = ', register_channel VARCHAR(32)' if kind == 'index' else ''
+            if branch == 'present':
+                extra += ', ' + name + ' VARCHAR(7) NULL' if kind == 'column' else ', UNIQUE INDEX ' + name + '(id)'
+            fixture = 'USE probe; DROP TABLE IF EXISTS ' + table + '; CREATE TABLE ' + table + '(id BIGINT PRIMARY KEY' + extra + '); INSERT INTO ' + table + '(id) VALUES(1);'
+            if branch != 'replay':
+                sql(fixture)
+            before = sql(query)
+            data_query = 'USE probe; SELECT id FROM ' + table + ' ORDER BY id;'
+            data_before = sql(data_query)
+            output = sql('USE probe; ' + body + '\nSELECT @' + g['variable'] + ';')
+            after, data_after = sql(query), sql(data_query)
+            selected = output.splitlines()[-1] if output else ''
+            assert selected == (g['absent_sql'] if branch == 'absent' else 'SELECT 1'), output
+            assert after == (incompatible if branch == 'present' else expected), after
+            assert before == ('' if branch == 'absent' else after), (before, after)
+            assert data_before == data_after == '1', (data_before, data_after)
+            g['results'][branch] = True
+            g['observations'][branch] = {'fixture_sql': fixture if branch != 'replay' else 'reuse absent result',
+                                        'catalog_before': before, 'catalog_after': after, 'data_before': data_before,
+                                        'data_after': data_after, 'selected_sql': selected, 'client_output': output}
+            save(result)
+        fixture = 'USE probe; DROP TABLE IF EXISTS ' + table + ';'
+        sql(fixture)
+        try:
+            output = sql('USE probe; ' + body + '\nSELECT @' + g['variable'] + ';')
+        except RuntimeError as exc:
+            assert kind == 'index' and '1146' in str(exc) and 'sys_user' in str(exc), str(exc)
+            missing = {'status': 'expected_failure', 'passed': False, 'error': str(exc)}
+        else:
+            assert kind == 'column' and output.splitlines()[-1] == 'SELECT 1', output
+            missing = {'status': 'noop', 'selected_sql': 'SELECT 1', 'client_output': output}
+        assert sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='probe' AND table_name='" + table + "';") == '0'
+        missing.update(fixture_sql=fixture, table_still_absent=True)
+        g['observations']['missing_table'] = missing
+        g['semantic_verified'] = closed(g['results'])
+        save(result)
+    prefix = "USE probe; SET time_zone='+00:00'; SET timestamp=1767323045;\n"
+    fixture = '''USE probe; DROP TABLE IF EXISTS sys_user_social,sys_user,sys_login_log;
+CREATE TABLE sys_user(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),open_id VARCHAR(100),union_id VARCHAR(100),deleted INT DEFAULT 0,create_time DATETIME) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE sys_login_log(id BIGINT PRIMARY KEY);
+INSERT INTO sys_login_log VALUES(1),(2);
+INSERT INTO sys_user VALUES
+(1,'tenant-a','o-valid-a','union-a',0,'2021-02-03 04:05:06'),
+(2,'tenant-b','o-valid-b',NULL,0,'2022-03-04 05:06:07'),
+(3,'tenant-a','PHONE_123','phone-union',0,NULL),
+(4,'tenant-b',NULL,'null-union',0,NULL),
+(5,'tenant-c','o-deleted','deleted-union',1,NULL),
+(6,NULL,'o-null-time','union-six',0,NULL),
+(7,'tenant-c','PHONEXvalid','union-seven',0,'2026-01-02 03:04:05'),
+(8,'tenant-b','o-existing','replacement-union',0,NULL);
+'''
+    create_social = statement_inventory(full, 'mysql')[8]['sql'] + ';'
+    fixture += create_social + '''
+INSERT INTO sys_user_social(id,tenant_id,user_id,channel,open_id,union_id,status,bound_at,version,deleted) VALUES
+(90,'original-tenant',900,'WECHAT_APP','o-existing','original-union',0,'2020-01-01 00:00:00',7,1),
+(91,'mini-tenant',901,'WECHAT_MINI','o-valid-a','mini-union',1,'2020-01-01 00:00:00',0,0);
+'''
+    result['full_file'] = {'fixture_sql': fixture, 'execution_prefix': prefix, 'counts_as_branch_proof': False}
+    sql(prefix + fixture)
+    column_query = ("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>'),extra,ordinal_position "
+                    "FROM information_schema.columns WHERE table_schema='probe' ORDER BY table_name,ordinal_position;")
+    index_query = ("SELECT table_name,index_name,NON_UNIQUE,SEQ_IN_INDEX,column_name,INDEX_TYPE "
+                   "FROM information_schema.statistics WHERE table_schema='probe' ORDER BY table_name,index_name,seq_in_index;")
+    def snapshot():
+        return {'columns': sql(column_query), 'indexes': sql(index_query),
+                'data': {t: sql('USE probe; SELECT * FROM ' + t + ' ORDER BY id;') for t in ('sys_user', 'sys_login_log', 'sys_user_social')}}
+    before = snapshot()
+    result['full_file']['before_initial'] = before
+    assert before['data']['sys_user_social'] == v59_existing_social(), before
+    save(result)
+    sql(prefix + full)
+    after = snapshot()
+    result['full_file']['after_initial'] = after
+    save(result)
+    assert after['columns'] == v59_expected_columns(), after['columns']
+    assert after['indexes'] == v59_expected_indexes(), after['indexes']
+    assert after['data']['sys_user_social'] == v59_expected_social(), after['data']['sys_user_social']
+    for table, suffix in (('sys_user', '\tUNKNOWN'), ('sys_login_log', '\tNULL\tNULL')):
+        expected_data = '\n'.join(line + suffix for line in before['data'][table].splitlines())
+        assert after['data'][table] == expected_data, (table, after['data'][table], expected_data)
+    result['full_file']['before_replay'] = after
+    sql(prefix + full)
+    replay = snapshot()
+    result['full_file']['after_replay'] = replay
+    assert after == replay, 'full replay changed catalog or data'
+    result['full_file'].update(initial_execution=True, replay=True, catalog_equal=True, backfill_verified=True)
+    missing_fixture = 'USE probe; DROP TABLE sys_user;'
+    try:
+        sql(prefix + missing_fixture + '\n' + full)
+    except RuntimeError as exc:
+        assert '1146' in str(exc) and 'sys_user' in str(exc), str(exc)
+        result['full_file']['missing_table'] = {'status': 'expected_failure', 'passed': False,
+                                                'fixture_sql': missing_fixture, 'error': str(exc)}
+    else:
+        raise AssertionError('full file without sys_user unexpectedly passed')
+    result['scenario_status'] = 'branches_and_backfill_passed_with_missing_table_expected_failures'
+    result['status'] = 'passed'
+
+
+V14 = 'apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql'
+V15 = 'apex-system/src/main/resources/db/migration/mysql/V15__complete_tenant_isolation_schema.sql'
+
+
+V16 = 'apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql'
+V16_INDEXES = {'idx_job_tenant_id': ('tenant_id',),
+               'idx_job_tenant_status': ('tenant_id', 'status'),
+               'idx_job_log_tenant_id': ('tenant_id',),
+               'idx_job_log_tenant_job_start': ('tenant_id', 'job_id', 'start_time')}
+
+
+def plan_v16(source_text=None):
+    result = attach_prior(plan(source_text=source_text, source=V16))
+    assert len(result['items']) == 24 and len(result['groups']) == 6
+    result['limits'] = ['Synthetic job fixtures only; no full historical upgrade chain or production data',
+                        'Only MySQL V16; no PostgreSQL, Java or Flyway parser verification',
+                        'Existing-name guards accept incompatible column/index definitions; no equivalence claim',
+                        'Nullable tenant defaults and AFTER deleted checked on synthetic tables only',
+                        'No concurrency, privilege denial, rollback or application tenant isolation verification']
+    return result
+
+
+def verify_v16(result, sql):
+    tables = ('sys_job', 'sys_job_log')
+    base = '(id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME'
+
+    def columns(table):
+        return sql("SELECT COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),EXTRA,COLUMN_COMMENT,ORDINAL_POSITION "
+                   "FROM information_schema.columns WHERE table_schema='probe' AND table_name='" + table +
+                   "' AND column_name='tenant_id';")
+
+    def indexes(table, name):
+        return sql("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics "
+                   "WHERE table_schema='probe' AND table_name='" + table + "' AND index_name='" + name + "' ORDER BY SEQ_IN_INDEX;")
+
+    def expected_index(name):
+        return '\n'.join(name + '\t1\t' + str(i) + '\t' + col + '\tBTREE'
+                         for i, col in enumerate(V16_INDEXES[name], 1))
+
+    for g in result['groups']:
+        table, kind, name = g['target']['table'], g['target']['kind'], g['target']['name']
+        body = ';\n'.join(s['sql'] for s in g['statements']) + ';'
+        expected = ('varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3' if kind == 'column' else expected_index(name))
+        def snapshot():
+            return columns(table) if kind == 'column' else indexes(table, name)
+        for branch in ('absent', 'replay', 'present'):
+            fixture = 'USE probe; DROP TABLE IF EXISTS ' + table + '; CREATE TABLE ' + table + ' ' + base
+            if kind == 'index':
+                fixture += ', tenant_id VARCHAR(64) NULL'
+                if branch == 'present':
+                    fixture += ', UNIQUE INDEX ' + name + ' (id)'
+            elif branch == 'present':
+                fixture += ', tenant_id VARCHAR(7) NULL'
+            fixture += '); INSERT INTO ' + table + ' (id) VALUES (1);'
+            if branch != 'replay':
+                sql(fixture)
+            before = snapshot()
+            data_query = 'USE probe; SELECT id,deleted FROM ' + table + ' ORDER BY id;'
+            data_before = sql(data_query)
+            output = sql('USE probe; ' + body + '\nSELECT @' + g['variable'] + ';')
+            after, data_after = snapshot(), sql(data_query)
+            selected = output.splitlines()[-1] if output else ''
+            assert selected == (g['absent_sql'].replace("''", "'") if branch == 'absent' else 'SELECT 1'), output
+            if branch == 'absent':
+                assert before == '', before
+            else:
+                assert before == after, 'no-op changed target definition'
+            if branch != 'present':
+                assert after == expected, after
+            elif kind == 'column':
+                assert after.split('\t')[0] == 'varchar(7)', after
+            else:
+                assert after == name + '\t0\t1\tid\tBTREE', after
+            assert data_before == data_after == '1\t0', (data_before, data_after)
+            g['results'][branch] = True
+            g['observations'][branch] = {'selected_sql': selected, 'client_output': output,
+                                        'catalog_before': before, 'catalog_after': after,
+                                        'data_before': data_before, 'data_after': data_after,
+                                        'fixture_sql': fixture if branch != 'replay' else 'reuse absent result'}
+            save(result)
+        sql('USE probe; DROP TABLE IF EXISTS ' + table + ';')
+        output = sql('USE probe; ' + body + '\nSELECT @' + g['variable'] + ';')
+        assert output.splitlines()[-1] == 'SELECT 1', 'missing-table selected SQL: ' + output
+        count = sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='probe' AND table_name='" + table + "';")
+        assert count == '0', 'missing-table was created: ' + count
+        g['observations']['missing_table'] = {'status': 'noop', 'selected_sql': 'SELECT 1',
+                                             'client_output': output, 'table_still_absent': True}
+        g['semantic_verified'] = closed(g['results'])
+        save(result)
+    fixture = 'USE probe;\n' + '\n'.join('DROP TABLE IF EXISTS ' + t + '; CREATE TABLE ' + t + ' ' + base +
+        "); INSERT INTO " + t + " (id,status,job_id,start_time) VALUES (1,1,7,'2026-01-02 03:04:05');" for t in tables)
+    sql(fixture)
+    full = (ROOT / V16).read_text()
+    sql('USE probe;\n' + full)
+    column_query = ("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>'),ordinal_position "
+                    "FROM information_schema.columns WHERE table_schema='probe' ORDER BY table_name,ordinal_position;")
+    index_query = ("SELECT table_name,index_name,NON_UNIQUE,SEQ_IN_INDEX,column_name,INDEX_TYPE "
+                   "FROM information_schema.statistics WHERE table_schema='probe' AND index_name IN (" +
+                   ','.join("'" + n + "'" for n in V16_INDEXES) + ') ORDER BY table_name,index_name,seq_in_index;')
+    first, indexes_first = sql(column_query), sql(index_query)
+    expected_indexes = []
+    for name in V16_INDEXES:
+        table = 'sys_job_log' if name.startswith('idx_job_log') else 'sys_job'
+        expected_indexes.extend(table + '\t' + line for line in expected_index(name).splitlines())
+    assert indexes_first.splitlines() == sorted(expected_indexes), indexes_first
+    for table in tables:
+        assert table + '\ttenant_id\tvarchar(64)\tYES\t<NULL>\t3' in first.splitlines(), first
+        assert sql('USE probe; SELECT tenant_id FROM ' + table + ' WHERE id=1;') == 'NULL'
+        sql("USE probe; UPDATE " + table + " SET tenant_id='tenant-a' WHERE id=1;")
+        assert sql('USE probe; SELECT tenant_id FROM ' + table + ' WHERE id=1;') == 'tenant-a'
+    before = {t: sql('USE probe; SELECT * FROM ' + t + ' ORDER BY id;') for t in tables}
+    sql('USE probe;\n' + full)
+    assert first == sql(column_query), 'full replay schema differs'
+    assert indexes_first == sql(index_query), 'full replay indexes differ'
+    after = {t: sql('USE probe; SELECT * FROM ' + t + ' ORDER BY id;') for t in tables}
+    assert before == after, 'full replay data differs'
+    result['full_file'] = {'initial_execution': True, 'replay': True, 'catalog_equal': True,
+                           'tenant_columns_created': 2, 'tenant_indexes_created': 4,
+                           'catalog': first, 'index_catalog': indexes_first,
+                           'data_before_replay': before, 'data_after_replay': after,
+                           'nullable_tenant_default_checked': True, 'fixture_sql': fixture,
+                           'counts_as_branch_proof': False}
+    sql('USE probe; DROP TABLE sys_job,sys_job_log;')
+    output = sql('USE probe;\n' + full)
+    count = sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='probe' AND table_name IN ('sys_job','sys_job_log');")
+    assert count == '0', 'missing-table full file created tables: ' + count
+    result['full_file']['missing_tables'] = {'status': 'noop', 'client_output': output, 'table_still_absent': True}
+    result['scenario_status'] = 'branches_passed_and_missing_table_noop'
+    result['status'] = 'passed' if all(g['semantic_verified'] for g in result['groups']) else 'partial_failure'
+
+
+def verify_v15(result, sql):
+    """Run both EXISTS-gate branches plus replay and missing-table no-op for every V15 guard."""
+    def columns(table):
+        return sql("SELECT COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),EXTRA,COLUMN_COMMENT,ORDINAL_POSITION "
+                   "FROM information_schema.columns WHERE table_schema='probe' AND table_name='" + table +
+                   "' AND column_name='tenant_id';")
+
+    def indexes(table, name):
+        return sql("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics "
+                   "WHERE table_schema='probe' AND table_name='" + table + "' AND index_name='" + name + "' ORDER BY SEQ_IN_INDEX;")
+
+    def rows(table):
+        return sql('USE probe; SELECT id,deleted FROM ' + table + ' ORDER BY id;')
+
+    def snapshot(g):
+        return (columns(g['target']['table']) if g['target']['kind'] == 'column'
+                else indexes(g['target']['table'], g['target']['name']))
+
+    for g in result['groups']:
+        table, kind, name = g['target']['table'], g['target']['kind'], g['target']['name']
+        positional = 'id' if table == 'biz_admin_review_audit' else 'deleted'
+        expected_ordinal = '2' if positional == 'id' else '3'
+        body = ';\n'.join(s['sql'] for s in g['statements']) + ';'
+        for branch in ('absent', 'replay', 'present'):
+            fixture = ('USE probe; DROP TABLE IF EXISTS ' + table + '; CREATE TABLE ' + table +
+                       ' (id BIGINT PRIMARY KEY, deleted TINYINT NULL')
+            if kind == 'index':
+                fixture += ', tenant_id VARCHAR(64) NULL'
+                if branch == 'present':
+                    fixture += ', UNIQUE INDEX ' + name + ' (id)'
+            elif branch == 'present':
+                fixture += ', tenant_id VARCHAR(7) NULL'
+            fixture += '); INSERT INTO ' + table + ' (id) VALUES (1);'
+            if branch != 'replay':
+                sql(fixture)
+            before, data_before = snapshot(g), rows(table)
+            output = sql('USE probe; ' + body + '\nSELECT @' + g['variable'] + ';')
+            after, data_after = snapshot(g), rows(table)
+            selected = output.splitlines()[-1] if output else ''
+            try:
+                if branch == 'absent':
+                    assert before == '', 'absent fixture already contains target: ' + before
+                    assert selected == g['absent_sql'].replace("''", "'"), output
+                    if kind == 'column':
+                        assert after.split('\t')[0] == 'varchar(64)' and '\tYES\t<NULL>\t\t' in after, after
+                        assert after.endswith('\t' + expected_ordinal), after
+                    else:
+                        assert after == name + '\t1\t1\ttenant_id\tBTREE', after
+                else:
+                    assert selected == 'SELECT 1', output
+                    assert before == after, 'no-op branch changed definition'
+                    if branch == 'replay':
+                        if kind == 'column':
+                            assert after.split('\t')[0] == 'varchar(64)' and after.endswith('\t' + expected_ordinal), after
+                        else:
+                            assert after == name + '\t1\t1\ttenant_id\tBTREE', after
+                    elif kind == 'column':
+                        assert after.split('\t')[0] == 'varchar(7)', after
+                    else:
+                        assert after.startswith(name + '\t0\t1\tid\t'), after
+                assert data_before == data_after == '1\tNULL', (data_before, data_after)
+                g['results'][branch] = True
+                g['observations'][branch] = {'selected_sql': selected, 'client_output': output,
+                                            'catalog_before': before, 'catalog_after': after,
+                                            'data_before': data_before, 'data_after': data_after,
+                                            'fixture_sql': fixture if branch != 'replay' else 'reuse absent result'}
+            except AssertionError as exc:
+                g['results'][branch] = False
+                g['observations'][branch] = {'error': str(exc), 'client_output': output,
+                                            'catalog_before': before, 'catalog_after': after}
+            save(result)
+        sql('USE probe; DROP TABLE IF EXISTS ' + table + ';')
+        output = sql('USE probe; ' + body + '\nSELECT @' + g['variable'] + ';')
+        selected = output.splitlines()[-1] if output else ''
+        assert selected == 'SELECT 1', 'missing-table selected SQL: ' + output
+        table_count = sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='probe' AND table_name='" + table + "';")
+        assert table_count == '0', 'missing-table was created: ' + table_count
+        g['observations']['missing_table'] = {'status': 'noop', 'selected_sql': selected,
+                                             'client_output': output, 'table_still_absent': True}
+        g['semantic_verified'] = closed(g['results'])
+        save(result)
+    tables = sorted({g['target']['table'] for g in result['groups']})
+    fixture = 'USE probe;\n' + '\n'.join(
+        'DROP TABLE IF EXISTS ' + t + '; CREATE TABLE ' + t + ' (id BIGINT PRIMARY KEY, deleted TINYINT NULL); '
+        'INSERT INTO ' + t + ' (id) VALUES (1);' for t in tables)
+    sql(fixture)
+    full = (ROOT / V15).read_text()
+    sql('USE probe;\n' + full)
+    first = sql("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>') "
+                "FROM information_schema.columns WHERE table_schema='probe' ORDER BY table_name,ordinal_position;")
+    index_targets = [g['target'] for g in result['groups'] if g['target']['kind'] == 'index']
+    index_query = ("SELECT table_name,index_name,NON_UNIQUE,SEQ_IN_INDEX,column_name,INDEX_TYPE "
+                   "FROM information_schema.statistics WHERE table_schema='probe' AND index_name IN (" +
+                   ','.join("'" + t['name'] + "'" for t in index_targets) +
+                   ') ORDER BY table_name,index_name,seq_in_index;')
+    indexes_first = sql(index_query)
+    expected_indexes = sorted(t['table'] + '\t' + t['name'] + '\t1\t1\ttenant_id\tBTREE' for t in index_targets)
+    assert len([line for line in first.splitlines() if line.split('\t')[1] == 'tenant_id']) == len(tables), first
+    assert len(indexes_first.splitlines()) == len(tables), indexes_first
+    assert indexes_first.splitlines() == expected_indexes, indexes_first
+    before_replay = {t: sql('USE probe; SELECT * FROM ' + t + ' ORDER BY id;') for t in tables}
+    sql('USE probe;\n' + full)
+    assert first == sql("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>') "
+                        "FROM information_schema.columns WHERE table_schema='probe' ORDER BY table_name,ordinal_position;")
+    assert indexes_first == sql(index_query)
+    after_replay = {t: sql('USE probe; SELECT * FROM ' + t + ' ORDER BY id;') for t in tables}
+    assert before_replay == after_replay
+    result['full_file'] = {'initial_execution': True, 'replay': True, 'catalog_equal': True,
+                           'tenant_columns_created': len(tables), 'tenant_indexes_created': len(tables),
+                           'catalog': first, 'index_catalog': indexes_first,
+                           'data_before_replay': before_replay, 'data_after_replay': after_replay,
+                           'fixture_sql': fixture, 'counts_as_branch_proof': False}
+    sql('USE probe; ' + ' '.join('DROP TABLE IF EXISTS ' + t + ';' for t in tables[:len(tables) // 2]))
+    sql('USE probe;\n' + full)
+    remaining = sql("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='probe' AND column_name='tenant_id';")
+    result['full_file']['missing_tables'] = {
+        'status': 'noop', 'remaining_tenant_columns': remaining,
+        'expected_remaining': len(tables) - len(tables) // 2}
+    assert remaining == str(len(tables) - len(tables) // 2), remaining
+    result['scenario_status'] = 'branches_passed_and_missing_table_noop'
+    result['status'] = 'passed' if all(g['semantic_verified'] for g in result['groups']) else 'partial_failure'
+
+
+def plan_v15(source_text=None):
+    text = (ROOT / V15).read_text() if source_text is None else source_text
+    items = [i for i in json.loads(BASELINE.read_text())['baseline_audit']['old_sql_items'] if i['source'] == V15]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if not items or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    groups = expand_mysql_guards(text)
+    by_line = {i['original']['line']: i for i in items}
+    for g in groups:
+        g['old_ids'] = [by_line[s['line']]['id'] for s in g['statements']]
+        g['statement_ids'] = [by_line[s['line']]['statement_ids'] for s in g['statements']]
+        g['results'] = {}
+        g['observations'] = {}
+    bound = [i for g in groups for i in g['old_ids']]
+    if len(bound) != len(set(bound)) or set(bound) != {i['id'] for i in items}:
+        raise ValueError('incomplete or duplicate old ID binding')
+    return attach_prior({'schema_version': 1, 'source': V15, 'source_sha256': digest,
+                         'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+                         'items': items, 'groups': groups, 'status': 'planned_not_run',
+                         'cleanup': {'attempted': False},
+                         'limits': ['Synthetic fixtures only; no full historical upgrade chain',
+                                    'Only MySQL V15; PostgreSQL V15 and the other remaining guards not tested',
+                                    'Existing-name branches accept incompatible definitions; no equivalence claim',
+                                    'Column DDL uses AFTER deleted (AFTER id for biz_admin_review_audit); ordering verified only on synthetic tables',
+                                    'Missing-table behavior differs by guard shape: column guard no-ops, index guard also no-ops',
+                                    'No Flyway parser, concurrency, privilege denial, rollback or production data verification']})
+
+
+def plan_v14(source_text=None):
+    text = (ROOT / V14).read_text() if source_text is None else source_text
+    baseline = json.loads(BASELINE.read_text())
+    items = [i for i in baseline['baseline_audit']['old_sql_items'] if i['source'] == V14]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if not items or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    start = text.index('DELIMITER ;;')
+    end = text.index('CALL add_tenant_id_if_not_exists')
+    return {'schema_version': 1, 'source': V14, 'source_sha256': digest,
+            'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+            'procedure_sql': text[start:end], 'calls_sql': text[end:text.index('DROP PROCEDURE')],
+            'items': items, 'groups': [{'old_ids': [i['id'] for i in items],
+                                      'statement_ids': [i['statement_ids'] for i in items],
+                                      'results': {}, 'observations': {}}],
+            'status': 'planned_not_run', 'cleanup': {'attempted': False},
+            'limits': ['Synthetic fixtures; MySQL client only, no Flyway parser or history/checksum validation',
+                       'No PostgreSQL, full historical upgrade chain, production tenant backfill or application isolation proof',
+                       'Existing tenant_id bypasses index creation and accepts incompatible column definitions',
+                       'Core-table ALTER is not replayable; procedure replay is a separate claim',
+                       'No concurrency, privilege denial, DDL rollback or production load validation']}
+
+
+def verify_v14(result, sql):
+    g = result['groups'][0]
+    tables = ('operation_log', 'system_message')
+
+    def snapshot(table):
+        return {'columns': sql("SELECT COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),COLUMN_COMMENT,ORDINAL_POSITION FROM information_schema.columns WHERE table_schema='probe' AND table_name='" + table + "' ORDER BY ORDINAL_POSITION;"),
+                'indexes': sql("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME FROM information_schema.statistics WHERE table_schema='probe' AND table_name='" + table + "' ORDER BY INDEX_NAME,SEQ_IN_INDEX;"),
+                'data': sql('USE probe; SELECT * FROM `' + table + '` ORDER BY id;')}
+
+    def call():
+        return sql('USE probe; SET @sql=NULL,@idx_sql=NULL;\n' + result['calls_sql'] +
+                   "SELECT COALESCE(@sql,'<NULL>'),COALESCE(@idx_sql,'<NULL>');")
+
+    sql('USE probe;\n' + result['procedure_sql'])
+    for branch in ('absent', 'replay', 'present'):
+        if branch != 'replay':
+            extra = ', tenant_id VARCHAR(7) NULL' if branch == 'present' else ''
+            for table in tables:
+                sql('USE probe; DROP TABLE IF EXISTS `' + table + '`; CREATE TABLE `' + table + '` (id BIGINT PRIMARY KEY, deleted TINYINT NOT NULL DEFAULT 0' + extra + ', marker VARCHAR(20)); INSERT INTO `' + table + "` (id,marker) VALUES (1,'fixture');")
+        before = {t: snapshot(t) for t in tables}
+        output = call()
+        after = {t: snapshot(t) for t in tables}
+        for table in tables:
+            if branch == 'absent':
+                assert 'tenant_id' not in before[table]['columns']
+                assert 'tenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3' in after[table]['columns'], after
+                assert after[table]['data'] == '1\t0\tNULL\tfixture', after
+                assert 'idx_' + table + '_tenant_id\t1\t1\ttenant_id' in after[table]['indexes'], after
+            else:
+                assert before[table] == after[table], (before, after)
+            if branch == 'present':
+                assert 'varchar(7)' in after[table]['columns'] and 'idx_' not in after[table]['indexes']
+        assert (output == '<NULL>\t<NULL>') == (branch != 'absent'), output
+        g['results'][branch] = True
+        g['observations'][branch] = {'before': before, 'after': after, 'session_dynamic_sql': output}
+        if branch == 'absent':
+            for table in tables:
+                sql('USE probe; INSERT INTO `' + table + "` (id,tenant_id,marker) VALUES (2,REPEAT('t',64),'width'),(3,'same','duplicate'),(4,'same','duplicate');")
+                assert sql('USE probe; SELECT CHAR_LENGTH(tenant_id) FROM `' + table + '` WHERE id=2;') == '64'
+            g['observations'][branch]['nullable_default_width64_and_nonunique_index_checked'] = True
+        save(result)
+    sql('USE probe; DROP TABLE operation_log,system_message;')
+    assert call() == '<NULL>\t<NULL>'
+    result['missing_table_noop'] = True
+    sql('USE probe; DROP PROCEDURE IF EXISTS add_tenant_id_if_not_exists;')
+    fixture = 'USE probe;\n'
+    for table in ('sys_user', 'sys_user_role') + tables:
+        fixture += 'CREATE TABLE `' + table + '` (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0); INSERT INTO `' + table + '` (id) VALUES (1);\n'
+    sql(fixture)
+    full = (ROOT / V14).read_text()
+    sql('USE probe;\n' + full)
+    catalogs = {t: snapshot(t) for t in ('sys_user', 'sys_user_role') + tables}
+    for table, catalog in catalogs.items():
+        assert 'tenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3' in catalog['columns'], catalog
+        assert catalog['data'] == '1\t0\tNULL', catalog
+        index = 'idx_user_role_tenant_id' if table == 'sys_user_role' else 'idx_' + table + '_tenant_id'
+        assert index + '\t1\t1\ttenant_id' in catalog['indexes'], catalog
+    assert sql("SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema='probe';") == '0'
+    try:
+        sql('USE probe;\n' + full)
+    except RuntimeError as exc:
+        assert '1060' in str(exc) and 'tenant_id' in str(exc), str(exc)
+        replay_error = str(exc)
+    else:
+        raise AssertionError('full V14 unexpectedly replayed')
+    assert catalogs == {t: snapshot(t) for t in catalogs}
+    result['full_file'] = {'initial_execution': True, 'catalog': catalogs,
+                           'procedure_removed': True, 'replay_expected_failure': replay_error,
+                           'schema_and_data_unchanged_after_failed_replay': True,
+                           'fixture_sql': fixture, 'counts_as_branch_proof': False}
+    g['semantic_verified'] = closed(g['results'])
+    result['status'] = 'passed'
+
+
+V40 = 'apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql'
+
+
+def plan_v40(source_text=None, include_prior=True):
+    import re
+    from collect_table_facts import statement_inventory
+    text = (ROOT / V40).read_text() if source_text is None else source_text
+    baseline = json.loads(BASELINE.read_text())
+    items = [i for i in baseline['baseline_audit']['old_sql_items'] if i['source'] == V40]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if not items or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    rows = statement_inventory(text, 'mysql')
+    by_line = {}
+    for statement in rows:
+        identity = f"{V40}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+        statement['statement_id'] = 'stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]
+        by_line[statement['line']] = statement
+    for item in items:
+        statement = by_line.get(item['original']['line'])
+        if not statement or item['statement_ids'] != [statement['statement_id']]:
+            raise ValueError('statement binding differs from baseline offset/hash')
+    groups = []
+    for n in range(0, len(rows), 6):
+        statements = rows[n:n + 6]
+        if len(statements) != 6:
+            raise ValueError('incomplete V40 statement binding')
+        match = re.search(r"TABLE_NAME = '([\w]+)'\s+AND COLUMN_NAME = '([\w]+)'", statements[1]['sql'])
+        literal = re.fullmatch(r"SET @sql = IF\(@col_exists = 0,\s*'((?:''|[^'])*)',\s*'((?:''|[^'])*)'\)", statements[2]['sql'])
+        if (not match or not literal or statements[0]['sql'] != 'SET @col_exists = 0'
+                or [s['sql'] for s in statements[3:]] != ['PREPARE stmt FROM @sql', 'EXECUTE stmt', 'DEALLOCATE PREPARE stmt']):
+            raise ValueError('unsupported V40 guard binding')
+        bound = [i for i in items if i['original']['line'] in {s['line'] for s in statements}]
+        if len(bound) != 5:
+            raise ValueError('incomplete V40 old ID binding')
+        groups.append({'target': {'table': match[1], 'kind': 'column', 'name': match[2]},
+                       'statements': statements, 'old_ids': [i['id'] for i in bound],
+                       'statement_ids': [i['statement_ids'] for i in bound],
+                       'absent_sql': literal[1].replace("''", "'"),
+                       'present_sql': literal[2].replace("''", "'"), 'results': {}, 'observations': {}})
+    if len(rows) != 54 or len(groups) != 9 or len(items) != 45 or len({i['id'] for i in items}) != 45:
+        raise ValueError('incomplete or duplicate V40 old ID binding')
+    result = {'schema_version': 1, 'source': V40, 'source_sha256': digest,
+              'baseline_sha256': hashlib.sha256(BASELINE.read_bytes()).hexdigest(),
+              'items': items, 'groups': groups, 'status': 'planned_not_run', 'cleanup': {'attempted': False},
+              'limits': ['Synthetic two-row fixtures only; no production data or historical upgrade chain', '',
+                         'Present incompatible columns prove name-guard no-op only, not schema equivalence',
+                         'MySQL client only; no Java/Flyway, PostgreSQL, concurrency or production performance proof']}
+    return attach_prior(result) if include_prior else result
+
+
+def verify_v40(result, sql):
+    sources = {'node_definition': 'node_config_json', 'enabled': 'status', 'form_data': 'context_json',
+               'target_type': 'recipient_type', 'target_user_ids': 'recipient_ids',
+               'send_status': 'status', 'failure_reason': 'result_message'}
+    expected = {'node_definition': 'text\tYES\t<NULL>', 'enabled': 'varchar(20)\tYES\tACTIVE',
+                'form_data': 'text\tYES\t<NULL>', 'title': 'varchar(500)\tYES\t<NULL>',
+                'target_type': 'varchar(50)\tNO\t<NULL>', 'target_user_ids': 'text\tYES\t<NULL>',
+                'send_status': 'varchar(50)\tYES\tPENDING', 'failure_reason': 'varchar(1000)\tYES\t<NULL>'}
+
+    def fixture(table, names, present=False):
+        if table == 'oauth2_authorization_consent':
+            definition = 'registered_client_id VARCHAR(100),principal_name VARCHAR(100),authorities TEXT,PRIMARY KEY(registered_client_id,principal_name)'
+            values = "('client-a','user-a','read'),('client-b','user-b','write')"
+            if present:
+                definition += ',id VARCHAR(7) NULL'
+                values = "('client-a','user-a','read','odd-a'),('client-b','user-b','write','odd-b')"
+        else:
+            columns = [name if present else sources.get(name, 'message_type') for name in names]
+            definition = 'id BIGINT PRIMARY KEY,marker VARCHAR(32)' + ''.join(',`' + c + '` VARCHAR(7) NULL' for c in columns)
+            values = ','.join('(' + str(n) + ",'row-" + str(n) + "'" + ''.join(",'v" + str(n) + "'" for c in columns) + ')' for n in (1, 2))
+        return ('USE probe; DROP TABLE IF EXISTS `' + table + '`; CREATE TABLE `' + table + '` (' + definition + '); INSERT INTO `' + table + '` VALUES ' + values + ';')
+
+    def snapshot(table):
+        return {'columns': sql("SELECT COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),EXTRA,ORDINAL_POSITION FROM information_schema.columns WHERE table_schema='probe' AND table_name='" + table + "' ORDER BY ORDINAL_POSITION;"),
+                'indexes': sql("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics WHERE table_schema='probe' AND table_name='" + table + "' ORDER BY INDEX_NAME,SEQ_IN_INDEX;"),
+                'data': sql('USE probe; SELECT * FROM `' + table + '` ORDER BY 1;')}
+
+    def attempt(body):
+        try:
+            return {'succeeded': True, 'client_output': sql('USE probe;\n' + body)}
+        except RuntimeError as exc:
+            return {'succeeded': False, 'error': str(exc)}
+
+    for g in result['groups']:
+        table, name = g['target']['table'], g['target']['name']
+        body = ';\n'.join(s['sql'] for s in g['statements']) + ';'
+        for branch in ('absent', 'replay', 'present'):
+            setup = fixture(table, [name], present=branch == 'present')
+            if branch != 'replay':
+                sql(setup)
+            before = snapshot(table)
+            observation = attempt(body + '\nSELECT @col_exists,@sql;')
+            after = snapshot(table)
+            observation.update(before=before, after=after, fixture_sql=setup if branch != 'replay' else 'reuse absent result')
+            if observation['succeeded']:
+                output = observation['client_output'].splitlines()[-1]
+                selected = g['absent_sql'] if branch == 'absent' else g['present_sql']
+                assert output == ('0' if branch == 'absent' else '1') + '\t' + selected, output
+                if branch in ('present', 'replay'):
+                    assert before['data'] and before == after, ('no-op changed catalog/data', before, after)
+                else:
+                    assert name != 'id', 'nonempty consent primary-key conversion requires explicit backfill validation'
+                    target = sql("SELECT COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>') FROM information_schema.columns WHERE table_schema='probe' AND table_name='" + table + "' AND column_name='" + name + "';")
+                    assert target == expected[name], ('target column catalog', name, target)
+                    expected_columns = before['columns'].splitlines()
+                    if name == 'title':
+                        assert after['data'] == '\n'.join(row + '\tNULL' for row in before['data'].splitlines()), after
+                        expected_columns.append('title\tvarchar(500)\tYES\t<NULL>\t\t4')
+                    else:
+                        source = sources[name]
+                        expected_columns = [line if not line.startswith(source + '\t') else name + '\t' + expected[name] + '\t\t3' for line in expected_columns]
+                        assert before['data'] and before['data'] == after['data'], ('rename data changed', before, after)
+                    assert after['columns'].splitlines() == expected_columns, ('column directory drift', before, after)
+                    assert after['indexes'] == before['indexes'] == 'PRIMARY\t0\t1\tid\tBTREE', after
+                g['results'][branch] = True
+            else:
+                g['results'][branch] = False
+                assert before == after, ('failed DDL changed table', before, after)
+            g['observations'][branch] = observation
+            save(result)
+        sql('USE probe; DROP TABLE `' + table + '`;')
+        missing = attempt(body)
+        assert not missing['succeeded'] and '1146' in missing['error'], missing
+        g['observations']['missing_table'] = missing
+        if name in sources:
+            setup = fixture(table, [name])
+            sql(setup)
+            sql('USE probe; ALTER TABLE `' + table + '` DROP COLUMN `' + sources[name] + '`;')
+            before = snapshot(table)
+            missing = attempt(body)
+            assert not missing['succeeded'] and '1054' in missing['error'], missing
+            assert before == snapshot(table), 'missing-source failure changed table'
+            missing.update(before=before, after=snapshot(table), fixture_sql=setup,
+                           dropped_source=sources[name])
+            g['observations']['missing_source_column'] = missing
+        g['semantic_verified'] = closed(g['results'])
+        save(result)
+    tables = {}
+    for g in result['groups']:
+        tables.setdefault(g['target']['table'], []).append(g['target']['name'])
+    full = (ROOT / V40).read_text()
+    result['full_file'] = {}
+    for scenario, present in [('original_nonempty', False), ('incompatible_present', True)]:
+        setup = '\n'.join(fixture(table, names, present) for table, names in tables.items())
+        sql(setup)
+        before = {table: snapshot(table) for table in tables}
+        observations = {'fixture_sql': setup, 'before': before, 'counts_as_branch_proof': False}
+        for execution in ('initial', 'replay'):
+            observation = attempt(full)
+            after = {table: snapshot(table) for table in tables}
+            observation['after'] = after
+            if present or not observation['succeeded']:
+                assert before == after, ('full-file catalog/data drift', scenario, execution)
+            observations[execution] = observation
+        result['full_file'][scenario] = observations
+        save(result)
+    passed = all(closed(g['results']) for g in result['groups']) and all(
+        observations[execution]['succeeded'] for observations in result['full_file'].values() for execution in ('initial', 'replay'))
+    result['scenario_status'] = 'all_branches_and_full_file_passed' if passed else 'nonempty_primary_key_conversion_failed; no_batch_credit'
+    result['status'] = 'passed' if passed else 'partial_failure'
+
+
+V43 = 'apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql'
+
+
+def plan_v43(source_text=None, include_prior=True):
+    import re
+    from collect_table_facts import statement_inventory
+    text = (ROOT / V43).read_text() if source_text is None else source_text
+    baseline_bytes = BASELINE.read_bytes()
+    baseline = json.loads(BASELINE.read_text())
+    items = [i for i in baseline['baseline_audit']['old_sql_items'] if i['source'] == V43]
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    if not items or any(i['source_sha256'] != digest for i in items):
+        raise ValueError('source hash differs from old ID baseline')
+    rows = statement_inventory(text, 'mysql')
+    by_line = {s['line']: s for s in rows}
+    bound = []
+    for item in items:
+        statement = by_line.get(item['original']['line'])
+        if statement is None:
+            raise ValueError('statement binding missing baseline line')
+        identity = f"{V43}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+        statement['statement_id'] = 'stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]
+        if item['statement_ids'] != [statement['statement_id']]:
+            raise ValueError('statement binding differs from baseline offset/hash')
+        bound.append((statement, item))
+    groups, lifecycle = [], []
+    for statement, item in bound:
+        match = re.fullmatch(r"CALL add_index_if_columns_exist\('([\w]+)', '([\w]+)', '([\w,]+)'\)", statement['sql'])
+        if not match:
+            lifecycle.append((statement, item))
+            continue
+        table, name, columns = match.groups()
+        groups.append({'target': {'table': table, 'kind': 'index', 'name': name},
+                       'columns': columns.split(','), 'statements': [statement],
+                       'old_ids': [item['id']], 'statement_ids': [item['statement_ids']],
+                       'results': {}, 'observations': {}})
+    if (len(lifecycle) != 3 or len(groups) != 21 or len(items) != 24
+            or len({i['id'] for i in items}) != 24 or len(rows) != len(items)):
+        raise ValueError('incomplete or duplicate V43 old ID binding')
+    groups.append({'target': {'kind': 'procedure', 'name': 'add_index_if_columns_exist'},
+                   'statements': [s for s, i in lifecycle], 'old_ids': [i['id'] for s, i in lifecycle],
+                   'statement_ids': [i['statement_ids'] for s, i in lifecycle], 'results': {}, 'observations': {}})
+    result = {'schema_version': 1, 'source': V43, 'source_sha256': digest,
+                         'baseline_sha256': hashlib.sha256(baseline_bytes).hexdigest(),
+                         'procedure_sql': text[:text.index('CALL add_index_if_columns_exist')],
+                         'items': items, 'groups': groups, 'status': 'planned_not_run',
+                         'cleanup': {'attempted': False},
+                         'limits': ['Synthetic nonempty fixtures only; no production data or complete historical upgrade chain', '',
+                                    'Existing index names accept incompatible UNIQUE(id) definitions; no equivalence claim',
+                                    'MySQL client executes original delimiters; no Java or Flyway parser/checksum validation',
+                                    'No PostgreSQL, privilege denial, concurrency, rollback or production performance verification']}
+    return attach_prior(result) if include_prior else result
+
+
+def verify_v43(result, sql):
+    calls = [g for g in result['groups'] if g['target']['kind'] == 'index']
+    lifecycle = next(g for g in result['groups'] if g['target']['kind'] == 'procedure')
+    routine_query = ("SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema='probe' "
+                     "AND routine_name='add_index_if_columns_exist';")
+
+    def fixture(table, columns, name=None):
+        extra = ''.join(', `' + c + '` VARCHAR(32)' for c in columns)
+        if name:
+            extra += ', UNIQUE INDEX `' + name + '` (`id`)'
+        return ('USE probe; DROP TABLE IF EXISTS `' + table + '`; CREATE TABLE `' + table +
+                '` (`id` BIGINT PRIMARY KEY, `marker` VARCHAR(32)' + extra + '); INSERT INTO `' +
+                table + "` (`id`,`marker`) VALUES (1,'fixture-a'),(2,'fixture-b');")
+
+    def snapshot(table):
+        return {'columns': sql("SELECT COLUMN_NAME,COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),ORDINAL_POSITION "
+                               "FROM information_schema.columns WHERE table_schema='probe' AND table_name='" + table + "' ORDER BY ORDINAL_POSITION;"),
+                'indexes': sql("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics "
+                               "WHERE table_schema='probe' AND table_name='" + table + "' ORDER BY INDEX_NAME,SEQ_IN_INDEX;"),
+                'data': sql('USE probe; SELECT * FROM `' + table + '` ORDER BY id;')}
+
+    def target_catalog(g):
+        return sql("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE FROM information_schema.statistics "
+                   "WHERE table_schema='probe' AND table_name='" + g['target']['table'] + "' AND index_name='" +
+                   g['target']['name'] + "' ORDER BY SEQ_IN_INDEX;")
+
+    def expected(g):
+        return '\n'.join(g['target']['name'] + '\t1\t' + str(n) + '\t' + c + '\tBTREE'
+                         for n, c in enumerate(g['columns'], 1))
+
+    def call(g):
+        return sql('USE probe; SET @create_index_sql=NULL;\n' + g['statements'][0]['sql'] +
+                   ";\nSELECT COALESCE(@create_index_sql,'<NULL>');")
+
+    sql('USE probe;\n' + result['procedure_sql'])
+    for g in calls:
+        table, name = g['target']['table'], g['target']['name']
+        for branch in ('absent', 'replay', 'present'):
+            setup = fixture(table, g['columns'], name if branch == 'present' else None)
+            if branch != 'replay':
+                sql(setup)
+            before, index_before = snapshot(table), target_catalog(g)
+            output = call(g)
+            after, index_after = snapshot(table), target_catalog(g)
+            selected = ('CREATE INDEX `' + name + '` ON `' + table + '` (`' + '`,`'.join(g['columns']) + '`)'
+                        if branch == 'absent' else '<NULL>')
+            assert output == selected, ('selected SQL', output, selected)
+            assert before['data'] and before['data'] == after['data'], ('data changed', before, after)
+            assert before['columns'] == after['columns'], ('columns changed', before, after)
+            assert index_after == (name + '\t0\t1\tid\tBTREE' if branch == 'present' else expected(g)), index_after
+            if branch == 'absent':
+                assert index_before == '', index_before
+            else:
+                assert before == after, ('no-op changed table', before, after)
+            g['results'][branch] = True
+            g['observations'][branch] = {'before': before, 'after': after, 'selected_sql': output,
+                                        'target_catalog': index_after,
+                                        'fixture_sql': setup if branch != 'replay' else 'reuse absent result'}
+            save(result)
+        sql('USE probe; DROP TABLE IF EXISTS `' + table + '`;')
+        output = call(g)
+        assert output == '<NULL>', output
+        assert sql("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='probe' AND table_name='" + table + "';") == '0'
+        assert target_catalog(g) == ''
+        g['observations']['missing_table'] = {'status': 'noop', 'selected_sql': output, 'table_still_absent': True}
+        g['observations']['missing_columns'] = {}
+        for missing in g['columns']:
+            setup = fixture(table, [c for c in g['columns'] if c != missing])
+            sql(setup)
+            before = snapshot(table)
+            output = call(g)
+            after = snapshot(table)
+            assert output == '<NULL>', ('missing-column selected SQL', missing, output)
+            assert before['data'] and before == after, ('missing-column changed table', missing, before, after)
+            assert target_catalog(g) == ''
+            g['observations']['missing_columns'][missing] = {'status': 'noop', 'selected_sql': output,
+                                                            'before': before, 'after': after, 'fixture_sql': setup}
+        g['semantic_verified'] = closed(g['results'])
+        save(result)
+    tables = {}
+    for g in calls:
+        tables.setdefault(g['target']['table'], set()).update(g['columns'])
+    setup = '\n'.join(fixture(t, sorted(columns)) for t, columns in sorted(tables.items()))
+    sql(setup)
+    before = {t: snapshot(t) for t in tables}
+    full = (ROOT / V43).read_text()
+    result['full_file'] = {'fixture_sql': setup, 'before_initial': before, 'counts_as_branch_proof': False}
+    sql('USE probe;\n' + full)
+    first = {t: snapshot(t) for t in tables}
+    assert sql(routine_query) == '0', 'procedure not removed after initial execution'
+    for table in tables:
+        assert before[table]['data'] and before[table]['data'] == first[table]['data'], table
+        assert before[table]['columns'] == first[table]['columns'], table
+        expected_indexes = ['PRIMARY\t0\t1\tid\tBTREE']
+        expected_indexes += [line for g in calls if g['target']['table'] == table for line in expected(g).splitlines()]
+        assert first[table]['indexes'].splitlines() == sorted(expected_indexes, key=str.lower), first[table]['indexes']
+    sql('USE probe;\n' + full)
+    replay = {t: snapshot(t) for t in tables}
+    assert first == replay, 'full-file replay changed catalog or data'
+    assert sql(routine_query) == '0', 'procedure not removed after replay'
+    result['full_file'].update(initial_execution=True, replay=True, procedure_removed=True,
+                               after_initial=first, after_replay=replay)
+    assert all(closed(g['results']) for g in calls)
+    lifecycle['results'] = {'absent': True, 'present': True, 'replay': True}
+    lifecycle['semantic_verified'] = True
+    lifecycle['observations'] = {'definition': 'Original initial DROP, CREATE and final DROP executed with all CALL branches; complete file executed twice; routine absent after each run',
+                                 'call_count': len(calls), 'procedure_removed': True}
+    result['scenario_status'] = 'all_calls_branches_missing_tables_missing_columns_and_full_replay_passed'
+    result['status'] = 'passed'
+
+
+def verify_v55(result, sql):
+    def snapshot():
+        return {'columns': sql("SELECT COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),EXTRA,COLUMN_COMMENT FROM information_schema.columns WHERE table_schema='probe' AND table_name='auth_user' AND column_name='account_id';"),
+                'indexes': sql("SELECT INDEX_NAME,NON_UNIQUE,SEQ_IN_INDEX,COLUMN_NAME,INDEX_TYPE,COALESCE(SUB_PART,'<NULL>'),COLLATION,IS_VISIBLE FROM information_schema.statistics WHERE table_schema='probe' AND table_name='auth_user' AND index_name='idx_auth_user_account_id' ORDER BY SEQ_IN_INDEX;"),
+                'data': sql('USE probe; SELECT * FROM auth_user ORDER BY id;')}
+
+    for g in result['groups']:
+        kind = g['target']['kind']
+        body = ';\n'.join(s['sql'] for s in g['statements']) + ';'
+        for branch in ('absent', 'replay', 'present'):
+            if branch != 'replay':
+                column = ',account_id VARCHAR(7) NULL' if kind == 'column' and branch == 'present' else ',account_id BIGINT DEFAULT NULL' if kind == 'index' else ''
+                index = ',UNIQUE INDEX idx_auth_user_account_id(id)' if kind == 'index' and branch == 'present' else ''
+                fixture = 'USE probe; DROP TABLE IF EXISTS auth_user; CREATE TABLE auth_user(id BIGINT PRIMARY KEY' + column + index + '); INSERT INTO auth_user(id) VALUES(1);'
+                sql(fixture)
+            before = snapshot()
+            output = sql('USE probe; ' + body + '\nSELECT @' + g['variable'] + ';')
+            after = snapshot()
+            if branch == 'absent':
+                assert not before['columns' if kind == 'column' else 'indexes'], before
+            else:
+                assert before == after, (before, after)
+            if branch != 'present':
+                assert after['columns'] == V55_COLUMN if kind == 'column' else after['indexes'] == V55_INDEX, after
+                assert after['data'] == '1\tNULL', after
+            else:
+                assert 'varchar(7)' in after['columns'] if kind == 'column' else '\t0\t1\tid\t' in after['indexes'], after
+            selected = output.splitlines()[-1]
+            assert (selected == 'SELECT 1') == (branch != 'absent'), output
+            g['results'][branch] = True
+            g['observations'][branch] = {'before': before, 'after': after, 'selected_sql': selected,
+                                        'client_output': output, 'fixture_sql': fixture if branch != 'replay' else 'reuse absent result'}
+        sql('USE probe; DROP TABLE auth_user;')
+        if kind == 'column':
+            output = sql('USE probe; ' + body)
+            missing = {'status': 'noop', 'client_output': output}
+        else:
+            try:
+                sql('USE probe; ' + body)
+            except RuntimeError as exc:
+                assert '1146' in str(exc) and 'auth_user' in str(exc), str(exc)
+                missing = {'status': 'expected_failure', 'error': str(exc), 'passed': False}
+            else:
+                raise AssertionError('missing-table index unexpectedly passed')
+        g['observations']['missing_table'] = missing
+        g['semantic_verified'] = closed(g['results'])
+        save(result)
+    fixture = 'USE probe; CREATE TABLE auth_user(id BIGINT PRIMARY KEY); INSERT INTO auth_user VALUES(1);'
+    sql(fixture)
+    full = (ROOT / V55).read_text()
+    sql('USE probe;\n' + full)
+    first = snapshot()
+    assert first['columns'] == V55_COLUMN and first['indexes'] == V55_INDEX, first
+    sql('USE probe; INSERT INTO auth_user(id,account_id) VALUES(2,9223372036854775807),(3,42),(4,42);')
+    before_replay = snapshot()
+    sql('USE probe;\n' + full)
+    assert before_replay == snapshot()
+    result['full_file'] = {'initial_execution': True, 'replay': True, 'initial_catalog': first,
+                           'data_and_catalog_before_replay': before_replay, 'data_and_catalog_after_replay': snapshot(),
+                           'nullable_default_bigint_max_nonunique_checked': True,
+                           'fixture_sql': fixture, 'counts_as_branch_proof': False}
+    sql('USE probe; DROP TABLE auth_user;')
+    try:
+        sql('USE probe;\n' + full)
+    except RuntimeError as exc:
+        assert '1146' in str(exc) and 'auth_user' in str(exc), str(exc)
+        result['full_file']['missing_table'] = {'status': 'expected_failure', 'error': str(exc), 'passed': False}
+    else:
+        raise AssertionError('missing-table full file unexpectedly passed')
+    result['scenario_status'] = 'branches_passed_with_missing_table_failures'
+    result['status'] = 'passed'
+
+
+def expected_v52_catalog(column):
+    types = {'revoked_by': 'varchar(64)', 'revoke_reason': 'varchar(255)',
+             'last_used_at': 'timestamp', 'use_count': 'int', 'token_hash': 'varchar(255)',
+             'token_iv': 'varchar(128)', 'token_family': 'varchar(64)',
+             'previous_jti': 'varchar(100)', 'rotation_count': 'int'}
+    default = '0' if column in ('use_count', 'rotation_count') else '<NULL>'
+    return types[column] + '\tYES\t' + default + '\t'
+
+
+def save(result):
+    result['updated_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    pathlib.Path(result.get('output', OUTPUT)).write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+
+
+def command(args, text=None, timeout=45):
+    return subprocess.run(args, input=text, text=True, capture_output=True, timeout=timeout)
+
+
+def readiness_command(name):
+    return ['podman', 'exec', name, 'mysqladmin', '--no-defaults', '-uroot',
+            '--protocol=TCP', '-h127.0.0.1', 'ping']
+
+
+def run(result):
+    execute_probe(result)
+    return result['status'] == 'passed' and result['cleanup'].get('container_and_anonymous_volumes_removed')
+
+
+def execute_probe(result):
+    name = 'apex-v45-probe-' + uuid.uuid4().hex[:12]
+    result['container'] = {'name': name, 'image': 'localhost/mysql:8.0',
+                           'network': 'none', 'published_ports': [], 'storage': 'tmpfs',
+                           'credentials': 'none; empty root only inside network-disabled disposable container'}
+    owned = False
+
+    def sql(text):
+        p = command(['podman', 'exec', '-i', name, 'mysql', '--no-defaults', '-uroot',
+                     '--batch', '--raw', '--skip-column-names'], text)
+        if p.returncode:
+            raise RuntimeError('mysql client failed: ' + p.stderr[:1500])
+        return p.stdout.strip()
+
+    def catalog(table, column):
+        return sql("SELECT COLUMN_TYPE,IS_NULLABLE,COALESCE(COLUMN_DEFAULT,'<NULL>'),EXTRA "
+                   "FROM information_schema.columns WHERE table_schema='probe' AND table_name='" +
+                   table + "' AND column_name='" + column + "';")
+
+    try:
+        p = command(['podman', 'create', '--name', name, '--network', 'none', '--pull=never',
+                     '--tmpfs', '/var/lib/mysql:rw', '-e', 'MYSQL_ALLOW_EMPTY_PASSWORD=yes',
+                     'localhost/mysql:8.0'])
+        if p.returncode:
+            raise RuntimeError('podman create failed: ' + p.stderr[:1000])
+        owned = True
+        result['container']['id'] = p.stdout.strip()
+        p = command(['podman', 'start', name])
+        if p.returncode:
+            raise RuntimeError('podman start failed: ' + p.stderr[:1000])
+        for attempt in range(60):
+            p = command(readiness_command(name), timeout=10)
+            if p.returncode == 0:
+                break
+            time.sleep(1)
+        else:
+            raise RuntimeError('temporary MySQL did not become ready in 60 attempts')
+        result['mysql_version'] = sql('SELECT VERSION();')
+        sql('CREATE DATABASE probe;')
+        result['status'] = 'running'
+        verifier = {V37: verify_v37, V44: verify_v44, V14: verify_v14, V55: verify_v55, V15: verify_v15, V16: verify_v16, V59: verify_v59, V43: verify_v43, V40: verify_v40, V51: verify_v51}.get(result['source'])
+        if verifier:
+            verifier(result, sql)
+        for g in result['groups'] if not verifier else []:
+            table, column = g['target']['table'], g['target']['name']
+            body = ';\n'.join(s['sql'] for s in g['statements']) + ';'
+            assignment = g['statements'][0]['sql'] + ';'
+            controls = ';\n'.join(s['sql'] for s in g['statements'][1:]) + ';'
+            for branch in ('absent', 'replay', 'present'):
+                try:
+                    if branch != 'replay':
+                        extra = ', ' + column + ' VARCHAR(7) NULL' if branch == 'present' else ''
+                        sql('USE probe; DROP TABLE IF EXISTS ' + table + '; CREATE TABLE ' + table + ' (id BIGINT PRIMARY KEY' + extra + '); INSERT INTO ' + table + ' (id) VALUES (1);')
+                    before = catalog(table, column)
+                    data_before = sql('USE probe; SELECT * FROM ' + table + ' ORDER BY id;')
+                    condition = sql('USE probe; ' + g['condition_sql'] + ';')
+                    expected_condition = '1' if branch == 'absent' else '0'
+                    expected_sql = g['absent_sql'] if branch == 'absent' else g['present_sql']
+                    output = sql('USE probe; ' + assignment + '\nSELECT CONCAT(\'selected=\',@' + g['variable'] + ');\n' + controls)
+                    after = catalog(table, column)
+                    assert condition == expected_condition, (condition, expected_condition)
+                    assert 'selected=' + expected_sql in output.splitlines(), output
+                    assert after, 'target missing after execution'
+                    if branch == 'absent':
+                        assert not before, 'absent fixture already contains target'
+                    else:
+                        assert before == after, 'no-op branch changed column definition'
+                    data_after = sql('USE probe; SELECT * FROM ' + table + ' ORDER BY id;')
+                    if table == 'auth_token':
+                        if branch != 'present':
+                            assert after == expected_v52_catalog(column).rstrip(), after
+                        expected_data = ('1\tNULL' if branch == 'present' or column not in ('use_count', 'rotation_count') else '1\t0')
+                        assert data_after == expected_data, data_after
+                        if branch != 'absent':
+                            assert data_before == data_after, 'no-op changed data'
+                    assert sql('USE probe; SELECT COUNT(*) FROM ' + table + ';') == '1'
+                    g['results'][branch] = True
+                    g['observations'][branch] = {'condition_result': condition, 'selected_sql': expected_sql,
+                                                'client_output': output, 'catalog_before': before,
+                                                'catalog_after': after, 'row_count': 1,
+                                                'data_before': data_before, 'data_after': data_after}
+                except Exception as exc:
+                    g['results'][branch] = False
+                    g['observations'][branch] = {'error': str(exc)}
+            g['semantic_verified'] = closed(g['results'])
+            save(result)
+        fixture = '''USE probe;
+DROP TABLE IF EXISTS auth_permission,auth_role,auth_session,auth_audit_log;
+CREATE TABLE auth_permission(id BIGINT PRIMARY KEY);
+CREATE TABLE auth_role(id BIGINT PRIMARY KEY,data_scope INT);
+CREATE TABLE auth_session(id BIGINT PRIMARY KEY);
+CREATE TABLE auth_audit_log(id BIGINT PRIMARY KEY,created_at TIMESTAMP NULL,metadata VARCHAR(255));
+INSERT INTO auth_permission VALUES(1);
+INSERT INTO auth_role VALUES(1,2);
+INSERT INTO auth_session VALUES(1);
+INSERT INTO auth_audit_log VALUES(1,'2026-01-02 03:04:05','fixture');
+'''
+        if not verifier:
+            v52 = result['source'] != SOURCE
+            if v52:
+                fixture = 'USE probe; DROP TABLE IF EXISTS auth_token; CREATE TABLE auth_token(id BIGINT PRIMARY KEY); INSERT INTO auth_token VALUES(1);'
+            sql(fixture)
+            full = (ROOT / result['source']).read_text()
+            sql('USE probe;\n' + full)
+            first = sql("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>') FROM information_schema.columns WHERE table_schema='probe' ORDER BY table_name,ordinal_position;")
+            if v52:
+                data = sql('USE probe; SELECT * FROM auth_token;')
+                assert data == '1\tNULL\tNULL\tNULL\t0\tNULL\tNULL\tNULL\tNULL\t0', data
+                sql("USE probe; UPDATE auth_token SET use_count=7, rotation_count=3, revoked_by='fixture';")
+                replay_data = sql('USE probe; SELECT * FROM auth_token;')
+            else:
+                data = sql('USE probe; SELECT event_time=created_at,metadata FROM auth_audit_log; SELECT data_scope FROM auth_role;')
+                assert data == '1\tfixture\n2', data
+                sql('USE probe; UPDATE auth_audit_log SET event_time=\'2026-02-03 04:05:06\';')
+            sql('USE probe;\n' + full)
+            second = sql("SELECT table_name,column_name,column_type,is_nullable,COALESCE(column_default,'<NULL>') FROM information_schema.columns WHERE table_schema='probe' ORDER BY table_name,ordinal_position;")
+            assert first == second, 'full replay schema differs'
+            if v52:
+                assert replay_data == sql('USE probe; SELECT * FROM auth_token;')
+            else:
+                assert sql("USE probe; SELECT event_time='2026-02-03 04:05:06' FROM auth_audit_log;") == '1'
+            result['full_file'] = {'initial_execution': True, 'replay': True, 'catalog_equal': True,
+                                   'null_event_time_backfilled': True, 'non_null_event_time_preserved_on_replay': True,
+                                   'catalog': first, 'initial_data_check': data,
+                                   'fixture_sql': fixture, 'counts_as_branch_proof': False}
+            if v52:
+                result['full_file'].pop('null_event_time_backfilled')
+                result['full_file'].pop('non_null_event_time_preserved_on_replay')
+                result['full_file'].update(data_before='1', data_before_replay=replay_data,
+                                           data_after_replay=sql('USE probe; SELECT * FROM auth_token;'))
+            result['status'] = 'passed' if all(g['semantic_verified'] for g in result['groups']) else 'partial_failure'
+    except Exception as exc:
+        result['status'] = 'failed_or_environment_unavailable'
+        result['error'] = str(exc)
+    finally:
+        if owned:
+            p = command(['podman', 'rm', '-f', '--volumes', name], timeout=60)
+            absent = command(['podman', 'container', 'exists', name])
+            result['cleanup'] = {'attempted': True, 'remove_exit_code': p.returncode,
+                                 'exists_exit_code': absent.returncode,
+                                 'container_and_anonymous_volumes_removed': p.returncode == 0 and absent.returncode == 1,
+                                 'database_lifetime': 'only inside removed tmpfs container'}
+        if result['source'] in (V37, V44) and (
+                not all(closed(g['results']) for g in result['groups'])
+                or not all(result.get('full_file', {}).get(k) is True for k in ('initial_execution', 'replay'))):
+            result['status'] = 'partial_failure'
+        verified = {i for g in result['groups'] if closed(g['results'])
+                    and result['status'] == 'passed'
+                    and result['cleanup'].get('container_and_anonymous_volumes_removed') for i in g['old_ids']}
+        for item in result['items']:
+            group = next(g for g in result['groups'] if item['id'] in g['old_ids'])
+            item['verified_in_this_probe'] = item['id'] in verified
+            item['unpassed_branches'] = [k for k in ('absent', 'present', 'replay') if group['results'].get(k) is not True]
+        result['coverage'] = {'verified_old_ids': sorted(verified), 'verified_old_id_count': len(verified),
+                              'remaining_of_586': 586 - len(verified),
+                              'passed_branch_runs': sum(v is True for g in result['groups'] for v in g['results'].values()),
+                              'planned_branch_runs': len(result['groups']) * 3,
+                              'definition': 'distinct baseline IDs whose bound quartet passed absent + present + replay; no credit for full-file success'}
+        if result['source'] in (V37, V44):
+            result['coverage']['definition'] = ('Entire source only after every bound group, full original file execution/replay and cleanup; '
+                                                'V37 three guards/nine branch runs; V44 two tenant paths, both full-file replays and eight refusal guards')
+        if result['source'] == V43:
+            result['coverage']['definition'] = '24 distinct baseline IDs: 21 CALLs each passed absent/present/replay, missing table and every required missing column; 3 lifecycle IDs require all CALLs plus full-file initial/replay and final procedure removal; credit only after successful cleanup'
+        if result['source'] == V14:
+            result['coverage']['definition'] = '15 baseline IDs bound to the original procedure lifecycle and both CALLs; absent/present/replay catalogs and data plus full-file lifecycle verified; no global additive credit'
+        if 'remaining_before' in result:
+            result['coverage'].update(remaining_before=result['remaining_before'],
+                                      new_unique_passed_count=len(verified - set(result['previous_verified_ids'])),
+                                      remaining_after=586 - len(set(result['previous_verified_ids']) | verified),
+                                      cumulative_verified_count=len(set(result['previous_verified_ids']) | verified))
+            result['coverage']['remaining_of_586'] = 586 - len(set(result['previous_verified_ids']) | verified)
+        save(result)
+    return result['status'] == 'passed' and result['cleanup'].get('container_and_anonymous_volumes_removed')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--run', action='store_true')
+    parser.add_argument('--source', default=SOURCE)
+    parser.add_argument('--output', type=pathlib.Path, default=OUTPUT)
+    args = parser.parse_args()
+    if args.source != SOURCE:
+        if args.output == OUTPUT or args.output.exists():
+            parser.error('next-batch output must be new; previous evidence cannot be overwritten')
+        result = plan_v37() if args.source == V37 else plan_v44() if args.source == V44 else plan_v51() if args.source == V51 else plan_v40() if args.source == V40 else plan_v43() if args.source == V43 else plan_v14() if args.source == V14 else plan_v55() if args.source == V55 else plan_v15() if args.source == V15 else plan_v16() if args.source == V16 else plan_v59() if args.source == V59 else plan_next(args.source)
+        result['output'] = str(args.output)
+    else:
+        result = plan()
+    if args.source == SOURCE and OUTPUT.exists():
+        previous = json.loads(OUTPUT.read_text())
+        if previous.get('coverage'):
+            result['previous_attempt'] = {k: previous.get(k) for k in
+                                          ('status', 'container', 'cleanup', 'coverage', 'updated_at')}
+            result['previous_attempt']['limitation'] = 'Socket readiness hit initialization server; superseded by TCP-readiness rerun, no additive coverage credit'
+    save(result)
+    if args.run:
+        passed = run(result) and result['cleanup'].get('container_and_anonymous_volumes_removed')
+        print(json.dumps({'status': result['status'], 'coverage': result['coverage'], 'cleanup': result['cleanup']}, ensure_ascii=False))
+        return 0 if passed else 1
+    print(str(OUTPUT))
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

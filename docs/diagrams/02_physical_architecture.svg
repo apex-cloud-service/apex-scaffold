@@ -146,7 +146,7 @@
     <text x="740" y="438" class="node-desc">限流/熔断/鉴权</text>
 
     <rect x="880" y="380" width="220" height="60" rx="6" fill="#ffffff" stroke="#ef4444" stroke-width="2"/>
-    <text x="990" y="405" class="node-title">Sentinel Dashboard</text>
+    <text x="990" y="405" class="node-title">Resilience4j (内置)</text>
     <text x="990" y="423" class="node-port">:8858 (可选)</text>
     <text x="990" y="438" class="node-desc">流量治理中心</text>
   </g>
@@ -199,7 +199,7 @@
     <rect x="130" y="810" width="240" height="110" rx="6" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
     <text x="250" y="835" class="node-title">MySQL Primary</text>
     <text x="150" y="860" class="node-port">:3306 (写)</text>
-    <text x="150" y="878" class="tech-label">MySQL 8.x</text>
+    <text x="150" y="878" class="tech-label">MySQL 9.x</text>
     <text x="150" y="894" class="tech-label">DB: apex_data</text>
     <text x="150" y="910" class="tech-label">Flyway迁移 V1-V22</text>
 
@@ -242,7 +242,7 @@
 
     <rect x="130" y="1050" width="280" height="60" rx="6" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
     <text x="270" y="1075" class="node-title">Prometheus</text>
-    <text x="150" y="1093" class="node-port">:9090 (采集 :8081/actuator/prometheus)</text>
+    <text x="150" y="1093" class="node-port">:8083 (采集 :8081/actuator/prometheus)</text>
 
     <rect x="440" y="1050" width="280" height="60" rx="6" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
     <text x="580" y="1075" class="node-title">Grafana</text>

@@ -72,7 +72,7 @@ com.apex.scaffold.domain.model.entity.ChatEntity            # 聊天系统
 
 ---
 
-### ⚠️ apex-application (部分可复用)
+### ⚠️ apex-system (部分可复用)
 
 应用层,**主要作为参考**:
 
@@ -141,7 +141,7 @@ com.apex.scaffold.infrastructure.repository
 
 ---
 
-### ✅ apex-interfaces (完全可复用)
+### ✅ apex-system (完全可复用)
 
 接口层,**100%可以安全使用**:
 
@@ -223,7 +223,7 @@ cp -r apex-example my-business
 - `apex-common` - 全部可用
 - `apex-domain` - 只复制 BaseEntity、UserEntity 等通用实体
 - `apex-infrastructure` - 只复制 RedisGateway、StorageGateway 等通用实现
-- `apex-interfaces` - 全部可用
+- `apex-system` - 全部可用
 
 ---
 
@@ -285,7 +285,7 @@ cd apex-example
 │  └─ ✅ 使用 apex-common
 │
 ├─ 是HTTP端点、安全配置?
-│  └─ ✅ 参考 apex-interfaces
+│  └─ ✅ 参考 apex-system
 │
 ├─ 是Redis/存储/微信等基础设施?
 │  └─ ✅ 复制 apex-infrastructure 中的通用实现
@@ -304,7 +304,7 @@ cd apex-example
 我们计划在未来版本中:
 
 1. **v1.1.0**: 将示例业务代码移至独立模块 `apex-demo-business`
-2. **v1.2.0**: 提供脚手架生成器,自动创建纯净项目骨架
+2. **v1.3.1**: 提供脚手架生成器,自动创建纯净项目骨架
 3. **v2.0.0**: 完全剥离示例业务,仅保留通用基础设施
 
 在此之前,请遵循本文档的指导使用脚手架。

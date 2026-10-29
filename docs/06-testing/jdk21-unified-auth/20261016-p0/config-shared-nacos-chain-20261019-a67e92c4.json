@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-19",
+  "scope": "P0 shared_nacos/DB_HOST_PROD 仓库静态消费链核验",
+  "status": "static_chain_narrowed_runtime_unknown",
+  "runtime_injection_verified": false,
+  "baseline": [
+    {"path": "docs/06-testing/jdk21-unified-auth/20261016-p0/config-two-variable-verification-20261018.json", "sha256": "8fdfcc68c2cfd29aa3040078a9575719b1a2232b80fdc70047733670723b8c6b"},
+    {"path": "docs/06-testing/jdk21-unified-auth/20261016-p0/config-preflight-verification-20261018-1641.json", "sha256": "9a028b9de542d396398b5789592bca8706bcfb385867b56ff6ea5ff1c8bbe1dc"}
+  ],
+  "sources": [
+    {"path": "config/nacos/apex-datasource-prod.yaml", "sha256": "540bef5af29723d9a660590919f7d1e3e01f1514fba7127c24068b420f0bb3d8"},
+    {"path": "config/nacos/README.md", "sha256": "0f5519fd0b672e1a545a72437975d69780f88b6d5e511c021c326f71728814ca"},
+    {"path": "podman-compose.yml", "sha256": "f0a737bec0c6c1b177c05a79aa69117a46794b5f1d52247c73dfa46506be30dd"},
+    {"path": "scripts/deploy/service/app.sh", "sha256": "bfdb6d21c5c50dc7b208b45cf0da4bab66c709d9532beba4d8bacbe8c8d41d30"},
+    {"path": "scripts/utils/local_deployment.py", "sha256": "30c687b706e6caa1250f2b682238169dc688cb6c9d51860fc4079081ad77a41e"},
+    {"path": "scripts/test/test_config_preflight.py", "sha256": "b054c93c01b51520af891fd4d7d08683e6a51ab6f20e633dce619e1822e8b5f0"},
+    {"path": "scripts/test/test_collect_gateway_config.py", "sha256": "9f0878acc57276302de5495d3dd33ea22a1397aff8407b4e14b6f9c950466a67"},
+    {"path": "scripts/test/test_local_deployment.py", "sha256": "6cda1657bfa0b94156107c7275806b972384a5cc1a182d94d3ae10169c2bb5ff"},
+    {"path": "apex-system-service/src/main/resources/bootstrap.yml", "sha256": "beaf6c1f851f6516a4442855a3bb63ec6c27dd7313aa27586ada46363ca6c046"},
+    {"path": "apex-system-service/src/main/resources/application.yml", "sha256": "be92bb5be471b3a17b3adeb431e60a7fdc45dbc2efb2efe64586838faecd9542"},
+    {"path": "apex-system/src/main/resources/bootstrap.yml", "sha256": "fef45c9245cae2a31c60617d17f95d1735a39f3cb5e70c22f2200a8c37ffa44e"},
+    {"path": "apex-system/src/main/resources/application.yml", "sha256": "247cbf9c228ecfc9fc8c915ef7a4b31b1ad62a64ed2a14f6b8a22de5eb292109"},
+    {"path": "apex-system/src/main/resources/application-prod.yml", "sha256": "a14318a14e90940b923cf719d577def624585afd6f8121b784155011db20095c"},
+    {"path": "apex-auth-service/src/main/resources/application-prod.yml", "sha256": "82b7e239ab39fdf5b50eabfe5f5d209812a2c5b2a22256e445c4029ecee367d2"},
+    {"path": "apex-auth-service/src/main/resources/bootstrap.yml", "sha256": "6beba707a1f2b883a268d2714c630ab51d9219c0cfd11e6957d9651ea1cb8bdd"},
+    {"path": "apex-workflow-service/src/main/resources/bootstrap.yml", "sha256": "c78bcedd9387f747fe7b111ca6c085791a8a6fa8ebccbf76fc653d6abdad5217"},
+    {"path": "apex-file-service/src/main/resources/bootstrap.yml", "sha256": "f22482db6ee4131e77fb4c0c74452a7f08a4bcc9f9a09016dcfc39c80f1a35d0"},
+    {"path": "apex-office-service/src/main/resources/bootstrap.yml", "sha256": "bedddab3aa50afa9f67710b34ed5aecfecfaee5cf9848559fe358faec5519fc6"},
+    {"path": "apex-gateway/src/main/resources/bootstrap.yml", "sha256": "03c8ace2888ca02528aac3bd05b86d3e333b05dd4cbde5e87fc02a527e609b87"},
+    {"path": "apex-gateway/src/main/resources/application-prod.yml", "sha256": "06006b5803eb8f7088fab7df8f53ba19899ac85825e2cd31bbe99059e017fe16"}
+  ],
+  "search_scope": {
+    "method": "源码文件精确变量/模板名/导入键搜索，再读取实际匹配配置与脚本；不把注释视作实现",
+    "extensions": ["java", "yml", "yaml", "sh", "xml", "py"],
+    "patterns": ["DB_HOST_PROD", "apex-datasource", "shared-configs", "external-configs", "extension-configs", "spring.config.import", "envsubst", "config/nacos", "apex-(auth|system|workflow|office|file)-service\\.datasource"],
+    "negative_result_limit": "仅表示检索的仓库源码未发现显式关系，不排除外部文件、远端配置、动态键构造、依赖制品或实际部署覆盖；不将 target/classes 副本作为当前源码证据"
+  },
+  "chains": [
+    {
+      "id": "template_reference",
+      "source": "config/nacos/apex-datasource-prod.yaml",
+      "url_lines": [22, 30, 38, 46, 54],
+      "prefixes": ["apex-auth-service.datasource", "apex-system-service.datasource", "apex-workflow-service.datasource", "apex-office-service.datasource", "apex-file-service.datasource"],
+      "fact": "五处 URL 引用 DB_HOST_PROD 且无默认；DB_PORT_PROD 默认3306。这是模板属性值引用，不是已绑定的数据源消费者。"
+    },
+    {
+      "id": "publication_and_loading",
+      "fact": "README 第3–6行明确模板本身不参与启动；第83–112行是人工控制台与curl示例，curl示例仅发布 common/gateway。主Compose nacos服务第543–565行只见持久数据卷，未见共享模板挂载或发布命令。模板第7行 external-configs 声明是注释；检索未发现真实共享 Data ID 挂载。",
+      "gap": "apex-datasource-prod.yaml 是否实际发布、namespace/group/revision及加载入口均未验证。bootstrap file-extension=yml 不能独自证明 .yaml 共享 Data ID 已加载或必然未加载。"
+    },
+    {
+      "id": "property_binding",
+      "fact": "本地配置声明的 Spring 数据源路径与模板的服务名前缀不同：system-service application.yml 第159–164行使用 spring.datasource，auth prod同时声明 spring.datasource/spring.r2dbc 并引用 DB_HOST；system库prod第97–118行另有 spring.datasource.dynamic.datasource.master.url 引用 DB_MASTER_URL。精确服务名.datasource 搜索未找到显式映射。",
+      "gap": "必须确认运行时加载的属性源和最终绑定路径；不能自动把整个服务名前缀section映射为spring.datasource，也不能把DB_HOST或DB_MASTER_URL猜成DB_HOST_PROD别名。"
+    },
+    {
+      "id": "compose_injection",
+      "fact": "主Compose五业务服务均继承共享环境并显式声明 SPRING_DATASOURCE_URL/USERNAME/PASSWORD；NACOS三个开关有显式容器注入，默认true。DB_HOST_PROD既不是共享环境键，也不是五服务的显式环境键。",
+      "test_limit": "现有真实Compose config测试只对system环境执行 DB_HOST_PROD 不存在断言，五服务其余声明来自静态阅读；没有启动任何容器或Spring应用。"
+    },
+    {
+      "id": "script_propagation",
+      "fact": "app.sh 第39–43行仅在APEX_ENV_FILE指向有效文件时set -a/source；已导出的宿主变量可继承，有效文件可覆盖它们。工作目录.env不会自动加载。真实脚本加假Java四场景测试验证该通用传播能力。",
+      "gap": "没有证明部署提供了哪个文件或变量，也没有证明Java/Spring消费DB_HOST_PROD。"
+    },
+    {
+      "id": "preflight",
+      "fact": "既有 nacos-datasource-prod preflight 仅检查当前进程DB_HOST_PROD缺失/空白/未解析占位符，拒绝以DB_HOST代替；不发布、不渲染共享模板、不证明DNS或数据库可达性。",
+      "gap": "实际发布/部署流程是否接入该失败即停入口未知。"
+    }
+  ],
+  "nacos_switch_declarations": [
+    {"location": "五业务service bootstrap.yml", "config_discovery_register_defaults": [false, false, false], "config_namespace_default": "public", "discovery_namespace_default": "dev", "group": "DEFAULT_GROUP", "file_extension": "yml"},
+    {"location": "apex-system-service application.yml:183–198", "config_discovery_register_defaults": [true, true, true], "namespace_default": "public"},
+    {"location": "apex-system bootstrap.yml及application.yml", "config_discovery_register_defaults": [true, true, true], "note": "业务库与启动模块存在同名classpath资源，不推断最终选择"},
+    {"location": "apex-system application-prod.yml:37–70", "config_discovery_register_defaults": [true, true, true], "namespace_default": "prod"},
+    {"location": "apex-gateway bootstrap.yml", "config_discovery_register_defaults": [true, true, true], "config_namespace_default": "public", "discovery_namespace_default": "dev"},
+    {"location": "apex-gateway application-prod.yml:16–21", "config_discovery_register_literals": [true, true, true], "namespace_default": "prod", "note": "此处不是NACOS_*占位符；不能只凭Compose传入false证明最终关闭，实际属性源优先级未运行求值"},
+    {"location": "podman-compose.yml:68–72", "config_discovery_register_defaults": [true, true, true], "namespace_default": "public", "note": "容器环境注入声明，不等于Spring最终生效值"}
+  ],
+  "validation": {
+    "command": "/tmp/apex-p0-python-20261019/bin/python -B -m unittest scripts.test.test_config_preflight scripts.test.test_collect_gateway_config scripts.test.test_local_deployment",
+    "tests": 25,
+    "seconds": 68.295,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "exit_code": 0,
+    "includes": ["preflight拒绝缺失/空白/占位符及DB_HOST伪别名", "临时目录真实app.sh与假Java环境传播", "临时文件和合成值的真实podman-compose config渲染"],
+    "java_build_run": false,
+    "spring_startup_run": false,
+    "production_configuration_modified": false
+  },
+  "remaining_runtime_facts": [
+    "该共享模板是否实际使用；若不用，给出实际配置权威入口及责任确认，不可由静态未命中代填",
+    "若使用，提供不含秘密的Data ID/namespace/group/revision、发布或转换入口、服务加载引用",
+    "提供服务名前缀到实际DataSource/ConnectionFactory属性的绑定或转换关系及运行profile/属性源事实",
+    "提供DB_HOST_PROD供给所在环节：发布前渲染、宿主export、APEX_ENV_FILE、容器environment或远端属性；仅需入口和责任，不需秘密值",
+    "确认config/discovery/register分别的最终有效值、namespace/group以及配置责任人；preflight是否接入实际发布/部署流程"
+  ],
+  "disposition": "保留原474组合中的shared_nacos/DB_HOST_PROD为静态未知，仅模板实际消费时必填；新增分段证据，不将unknown计为已关闭，不证明生产缺陷，P0仍未准出。未形成需要RED/修复的已证实代码错误，本轮不修改生产配置或工具。",
+  "safety": {
+    "real_credentials_read": false,
+    "production_connected": false,
+    "nacos_remote_read_or_write": false,
+    "container_started": false,
+    "real_dotenv_loaded": false,
+    "previous_evidence_rewritten": false,
+    "commit_or_push": false
+  }
+}

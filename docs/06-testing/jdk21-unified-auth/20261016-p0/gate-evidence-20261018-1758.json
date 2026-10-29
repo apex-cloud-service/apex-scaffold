@@ -1,0 +1,88 @@
+{
+  "recorded_at": "2026-10-18T17:59:00+08:00",
+  "status": "FULL_VERIFY_BLOCKED_MVND_NO_DAEMON_INITIALIZATION",
+  "repository": "/Users/work/apex-scaffold",
+  "baseline_evidence": "docs/06-testing/jdk21-unified-auth/20261016-p0/gate-evidence-20261018-1810.json",
+  "previous_failure": {
+    "started_at": "2026-10-18T17:41:27.536773+08:00",
+    "finished_at": "2026-10-18T17:46:19.209099+08:00",
+    "direct_failure": "DaemonException$StaleAddressException; No message received within 3000ms",
+    "last_daemon_keepalive": "2026-10-18T17:46:15.813+08:00",
+    "root_cause": "UNKNOWN",
+    "oom_confirmed": false,
+    "jvm_crash_confirmed": false,
+    "log": "/Users/eric/.cache/apex-p0-gate-20261018-1810/verify.log",
+    "log_sha256": "a111440595c5c9537b40660723b749ad4bc674d794adc158f74071c4d2cf1e0e",
+    "daemon_log": "/Users/eric/.m2/mvnd/registry/2.0.0-rc-3/daemon-d80d780c.log",
+    "daemon_log_sha256": "9fe92e93a56318612606d5607f339c0b229f6bc8c4245093542a8eb54cdee9df",
+    "daemon_stdout": "/Users/eric/.m2/mvnd/registry/2.0.0-rc-3/daemon-d80d780c.out.log",
+    "daemon_stdout_sha256": "d735af746f116084c3eb3b643ae7b709950d4a87dbc550ad9363e096cf038104",
+    "daemon_heap": "-Xmx1024m -XX:+UseG1GC",
+    "crash_search": {
+      "patterns": ["/Users/work/apex-scaffold/**/hs_err_pid*.log", "/tmp/hs_err_pid*.log", "/Users/eric/Library/Logs/DiagnosticReports/*java*"],
+      "matches": 0,
+      "limitation": "仅覆盖所列模式与路径，未发现不等同于证明没有崩溃。"
+    },
+    "system_observations": {
+      "physical_memory_bytes": 17179869184,
+      "swap_used_mib_at_1752": 3938,
+      "swap_total_mib_at_1752": 5120,
+      "memory_pressure_free_percentage_at_1753": 73,
+      "interpretation": "当前及累计内存状态不能证明17:46故障由OOM导致；所查kernel日志未提供Java被杀的确证。"
+    }
+  },
+  "concurrency_check": {
+    "observed_existing_command": "source scripts/build/init-build-env.sh && mvnd --stop && mvnd -T2 -B verify > /tmp/apex-current-recovery-verify.log 2>&1",
+    "existing_client_pid": 70543,
+    "existing_daemon_pid": 70554,
+    "action": "等待既有客户端消失，并通过mvnd --status确认daemon Idle，未并发clean或停止既有构建。",
+    "idle_confirmed_at": "2026-10-18T17:57:01+08:00",
+    "existing_build_result": "日志未见BUILD终态；不作为本次clean verify结果。"
+  },
+  "mitigation": {
+    "basis": "绕开已观察到的独立daemon通信故障路径，串行执行保持原质量门禁。",
+    "help_confirmed": ["MVND_CLIENT=jvm由安装目录bin/mvnd.sh说明支持", "mvnd --help说明-Dmvnd.noDaemon=true仅非native客户端可用，client与daemon同JVM", "mvnd --help说明--serial使用单线程、默认project builder及无日志缓冲"],
+    "help_checked_at": "2026-10-18T17:57:11+08:00"
+  },
+  "attempt": {
+    "command": "source scripts/build/init-build-env.sh && MVND_CLIENT=jvm /Users/eric/.sdkman/candidates/mvnd/2.0.0-rc-3/bin/mvnd.sh -Dmvnd.noDaemon=true --serial -B clean verify",
+    "started_at": "2026-10-18T17:58:04.093690+08:00",
+    "finished_at": "2026-10-18T17:58:10.321524+08:00",
+    "natural_exit_code": 100,
+    "java": "17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "initialization_script_passed": true,
+    "log": "/tmp/apex-p0-20261018-1758.log",
+    "log_sha256": "00afbcb5a23dec4adab3b5f5d95c0e65518e8bafc94fdf6993297a59201292b2",
+    "result_file": "/tmp/apex-p0-20261018-1758.result.json",
+    "failure_chain": ["RuntimeException: Unable to connect to internal daemon", "RuntimeException: Could not initialize org.mvndaemon.mvnd.daemon.Server", "IllegalStateException: The system property mvnd.java.home is missing"],
+    "failure_log_lines": [107, 128, 131],
+    "reactor_entered": false,
+    "clean_executed": false,
+    "repeated_attempts": 0
+  },
+  "sources": {
+    "scope": "沿用基线before.json的2537个文件路径逐项计算SHA-256；不代表全仓所有文件。",
+    "count": 2537,
+    "before_snapshot": "/tmp/apex-p0-20261018-1758.before.json",
+    "after_snapshot": "/tmp/apex-p0-20261018-1758.after.json",
+    "manifest_algorithm": "SHA-256 of UTF-8 json.dumps(files, sort_keys=True, separators=(',', ':')); 与旧证据manifest算法不作跨算法比较。",
+    "before_manifest_sha256": "7b5444ec57c328c8884a001c83856fe21663c78b7f959a8be7b8e54baf8cbed1",
+    "after_manifest_sha256": "7b5444ec57c328c8884a001c83856fe21663c78b7f959a8be7b8e54baf8cbed1",
+    "changed": [],
+    "comparison_to_previous_before_files": "逐文件一致"
+  },
+  "current_run_test_reports": {
+    "method": "扫描apex-*/target/{surefire,failsafe}-reports/TEST-*.xml，mtime早于本次started_at的报告全部排除。",
+    "xml_total_on_disk": 1159,
+    "excluded_pre_run_xml": 1159,
+    "current_xml": 0,
+    "executed_tests": 0,
+    "current_skip_records": [],
+    "interpretation": "构建未进入reactor，没有当前测试结果；0 skip不是环境完整或Seata通过的证明。"
+  },
+  "reactor": {"expected_projects_including_root": 31, "started": 0, "completed": 0, "build_success": false, "summary_present": false},
+  "quality_gates": {"spotless": "NOT_EXECUTED", "pmd_p3c": "NOT_EXECUTED", "archunit": "NOT_EXECUTED", "jacoco": "NOT_EXECUTED", "failsafe": "NOT_EXECUTED", "seata_real_tc_dual_database": "NOT_VERIFIED"},
+  "remaining": ["定位mvnd 2.0.0-rc-3同JVM启动缺mvnd.java.home的原因或选择已验证的替代启动参数后，仍需完整clean verify自然终态。", "上轮daemon停止响应的底层原因尚未证实。", "真实Seata TC/双库环境验证仍未完成，不能记为通过。"],
+  "workspace": {"production_dependency_changes": false, "report_or_plan_modified": false, "deleted_cache_scripts_restored": false, "commit_or_push": false, "existing_user_changes_preserved": true, "git_diff_check": "PASS before evidence creation; final check recorded by operator"}
+}

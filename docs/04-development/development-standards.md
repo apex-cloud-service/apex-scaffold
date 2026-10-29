@@ -2,7 +2,7 @@
 
 **版本**: v1.0.0\
 **适用范围**: Apex Scaffold 后端多模块 Maven 工程\
-**技术栈**: Java 17、Spring Boot 3.5.15、Spring WebFlux、Project Reactor、DDD、MyBatis-Plus、MySQL、PostgreSQL、Redis、Nacos、Sentinel、RocketMQ、MapStruct、Lombok\
+**技术栈**: Java 21、Spring Boot 3.5.15、Spring WebFlux、Project Reactor、DDD、MyBatis-Plus、MySQL、PostgreSQL、Redis、Nacos、Sentinel、RocketMQ、MapStruct、Lombok\
 **最后更新**: 2026-10-10
 
 > 本文档由原有零散规范整合而成，统一收录：后端开发规范、注释规范、JavaDoc 指南、Lombok 指南、构建工具（mvnd）标准。文中所有约束均为强制性要求，与仓库根目录 [AGENTS.md](../../AGENTS.md) 及 [CONTRIBUTING.md](../../CONTRIBUTING.md) 保持一致；如有冲突，以 AGENTS.md 为准。
@@ -26,6 +26,8 @@
 13. [开发检查清单](#13-开发检查清单)
 
 ***
+
+<a id="1-适用范围与基本原则"></a>
 
 ## 1. 适用范围与基本原则
 
@@ -52,6 +54,8 @@ mvnd spotless:apply
 ```
 
 ***
+
+<a id="2-项目架构"></a>
 
 ## 2. 项目架构
 
@@ -106,6 +110,8 @@ interfaces → application → domain ← infrastructure
 
 ***
 
+<a id="3-编码规范"></a>
+
 ## 3. 编码规范
 
 ### 3.1 命名
@@ -125,6 +131,8 @@ interfaces → application → domain ← infrastructure
 | 常量                  | 全大写，下划线分隔                      | `TOKEN_BLACKLIST_TTL_MS` |
 
 方法名要表达业务意图，例如 `login`、`refreshToken`、`findByPhone`、`deleteById`。避免使用 `process`、`handle`、`doSomething` 等无法说明行为的名称。
+
+<a id="32-lombok"></a>
 
 ### 3.2 Lombok
 
@@ -227,6 +235,8 @@ log.error("External service call failed, traceId: {}", traceId, exception);
 ```
 
 ***
+
+<a id="4-注释与-javadoc-规范"></a>
 
 ## 4. 注释与 JavaDoc 规范
 
@@ -582,6 +592,8 @@ scripts/dev/check/scan-javadoc-issues.sh
 
 ***
 
+<a id="5-响应式编程规范"></a>
+
 ## 5. 响应式编程规范
 
 ### 5.1 返回类型
@@ -664,6 +676,8 @@ return webClient.get()
 
 ***
 
+<a id="6-数据访问规范"></a>
+
 ## 6. 数据访问规范
 
 ### 6.1 Entity、PO 与 DTO
@@ -734,6 +748,8 @@ public interface UserMapper extends BaseMapper<UserPO> {
 
 ***
 
+<a id="7-api-设计规范"></a>
+
 ## 7. API 设计规范
 
 ### 7.1 路由与 Handler
@@ -797,6 +813,8 @@ public class Result<T> {
 
 ***
 
+<a id="8-安全规范"></a>
+
 ## 8. 安全规范
 
 ### 8.1 认证与会话
@@ -841,6 +859,8 @@ public Mono<Result<Void>> addUser(CreateUserRequest request) {
 - 错误响应只返回客户端需要的信息，详细堆栈写入受控日志。
 
 ***
+
+<a id="9-测试规范"></a>
 
 ## 9. 测试规范
 
@@ -887,6 +907,8 @@ mvnd -pl apex-interfaces -am compile -DskipTests
 
 ***
 
+<a id="10-性能与稳定性"></a>
+
 ## 10. 性能与稳定性
 
 - Redis 缓存必须定义 key 规则、TTL、空值策略和失效策略。
@@ -907,6 +929,8 @@ mvnd -pl apex-interfaces -am compile -DskipTests
 
 ***
 
+<a id="11-构建规范mvnd"></a>
+
 ## 11. 构建规范（mvnd）
 
 ### 11.1 强制要求
@@ -923,7 +947,7 @@ mvnd -pl apex-interfaces -am compile -DskipTests
 
 ```bash
 # .sdkmanrc
-java=17.0.12-oracle
+java=21.0.13.0+9-tem
 mvnd=2.0.0-rc-3
 ```
 
@@ -931,15 +955,15 @@ mvnd=2.0.0-rc-3
 
 ```bash
 cd /Users/work/apex-scaffold
-sdk env            # 依据 .sdkmanrc 加载 JDK 17.0.12-oracle + mvnd 2.0.0-rc-3
+sdk env            # 依据 .sdkmanrc 加载 JDK 21.0.13.0+9-tem + mvnd 2.0.0-rc-3
 # 或使用仓库脚本：source scripts/build/init-build-env.sh
 
 # 验证
 mvnd --version     # 输出应包含 Apache Maven Daemon (mvnd) 2.0.0-rc-3
 ```
 
-- JDK 必须为 `17.0.12-oracle`；禁止依赖 `~/.sdkman/candidates/java/current`（会随 `sdk use`/`sdk default` 漂移）。
-- 如需显式指定 `JAVA_HOME`，必须使用绝对路径 `/Users/eric/.sdkman/candidates/java/17.0.12-oracle`。
+- JDK 必须为 `21.0.13.0+9-tem`；禁止依赖 `~/.sdkman/candidates/java/current`（会随 `sdk use`/`sdk default` 漂移）。
+- 如需显式指定 `JAVA_HOME`，必须使用绝对路径 `/Users/eric/.sdkman/candidates/java/21.0.13.0+9-tem`。
 - 若此前用过其他 JDK 构建，先 `mvnd --stop` 清掉残留 daemon，再以正确的 `JAVA_HOME` 重新构建。
 
 ### 11.3 命令对照表
@@ -970,6 +994,8 @@ mvnd --stop     # 停止所有守护进程
 ```
 
 ***
+
+<a id="12-提交与审查"></a>
 
 ## 12. 提交与审查
 
@@ -1019,6 +1045,8 @@ mvnd clean test
 - 测试是否覆盖新增分支并通过格式检查。
 
 ***
+
+<a id="13-开发检查清单"></a>
 
 ## 13. 开发检查清单
 

@@ -1,0 +1,975 @@
+import importlib.util
+import hashlib
+import json
+import pathlib
+import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / 'scripts/ci/auth_v45_dynamic_probe_20261018.py'
+V52 = 'apex-auth-service/src/main/resources/db/migration/mysql/V52__align_auth_token_fields.sql'
+
+
+class ProbeTest(unittest.TestCase):
+    def load(self):
+        self.assertTrue(SCRIPT.exists(), '独立 V45 验证器尚未实现')
+        spec = importlib.util.spec_from_file_location('v45_probe', SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_complete_exact_old_id_binding(self):
+        module = self.load()
+        plan = module.plan()
+        self.assertEqual(24, len(plan['groups']))
+        self.assertEqual(96, len(plan['items']))
+        self.assertEqual({f'old-sql-{i:04d}' for i in range(96)}, {i['id'] for i in plan['items']})
+        self.assertTrue(all(len(g['old_ids']) == 4 for g in plan['groups']))
+        self.assertIn("DEFAULT 'ACTIVE'", plan['groups'][13]['absent_sql'])
+
+    def test_v52_complete_binding_excludes_previous_credit(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_next'), '可复用下一批规划尚未实现')
+        plan = module.plan_next(V52)
+        self.assertEqual(9, len(plan['groups']))
+        self.assertEqual(36, len(plan['items']))
+        bound = [i for g in plan['groups'] for i in g['old_ids']]
+        self.assertEqual(36, len(set(bound)))
+        self.assertEqual({i['id'] for i in plan['items']}, set(bound))
+        prior, _, denominator = module.verified_union()
+        self.assertEqual(prior, plan['previous_verified_ids'])
+        self.assertGreaterEqual(len(prior), 147)
+        self.assertEqual(denominator - len(prior), plan['remaining_before'])
+        self.assertTrue(all(len(g['statement_ids']) == 4 for g in plan['groups']))
+
+    def test_v52_reference_catalog_is_explicit(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'expected_v52_catalog'), 'V52列定义校验尚未实现')
+        self.assertEqual('int\tYES\t0\t', module.expected_v52_catalog('use_count'))
+        self.assertEqual('timestamp\tYES\t<NULL>\t', module.expected_v52_catalog('last_used_at'))
+        self.assertEqual('varchar(100)\tYES\t<NULL>\t', module.expected_v52_catalog('previous_jti'))
+
+    def test_v14_binds_procedure_and_calls_without_literal_guard_assumption(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v14'), 'V14过程探针尚未实现')
+        plan = module.plan_v14()
+        self.assertEqual({f'old-sql-{i:04d}' for i in range(140, 155)},
+                         {i['id'] for i in plan['items']})
+        self.assertEqual(15, len(plan['groups'][0]['old_ids']))
+        self.assertEqual(15, len(plan['groups'][0]['statement_ids']))
+        self.assertIn('CREATE PROCEDURE IF NOT EXISTS', plan['procedure_sql'])
+        self.assertNotIn('ALTER TABLE `sys_user`', plan['procedure_sql'])
+        self.assertIn('CALL add_tenant_id_if_not_exists', plan['calls_sql'])
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan_v14(source_text='SELECT 1;')
+
+    def test_v55_binding_and_catalog_reference(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v55'), 'V55列与索引规划尚未实现')
+        plan = module.plan_v55()
+        self.assertEqual({f'old-sql-{i:04d}' for i in range(132, 140)},
+                         {i for g in plan['groups'] for i in g['old_ids']})
+        self.assertEqual(['column', 'index'], [g['target']['kind'] for g in plan['groups']])
+        self.assertGreaterEqual(len(plan['previous_verified_ids']), 147)
+        self.assertEqual('bigint\tYES\t<NULL>\t\t统一账户ID(sys_user.id，主应用账户体系)', module.V55_COLUMN)
+        self.assertEqual('idx_auth_user_account_id\t1\t1\taccount_id\tBTREE\t<NULL>\tA\tYES', module.V55_INDEX)
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan_v55(source_text='SELECT 1;')
+
+    def v15_fixture(self, module, missing_sql='SELECT 1'):
+        group = next(g for g in module.plan_v15()['groups'] if g['target']['kind'] == 'index')
+        table, name = group['target']['table'], group['target']['name']
+        expected = name + '\t1\t1\ttenant_id\tBTREE'
+        snapshots = iter(('', expected, expected, expected, name + '\t0\t1\tid\tBTREE', name + '\t0\t1\tid\tBTREE'))
+        outputs = iter((group['absent_sql'].replace("''", "'"), 'SELECT 1', 'SELECT 1', missing_sql))
+
+        def sql(text):
+            if 'SELECT @' in text:
+                return next(outputs)
+            if 'SELECT INDEX_NAME,' in text:
+                return next(snapshots)
+            if 'SELECT id,deleted' in text:
+                return '1\tNULL'
+            if 'SELECT table_name,column_name,column_type' in text:
+                return table + '\ttenant_id\tvarchar(64)\tYES\t<NULL>'
+            if 'FROM information_schema.statistics' in text:
+                target = table + '\t' + name + '\ttenant_id'
+                if 'NON_UNIQUE' in text:
+                    target = table + '\t' + expected
+                return target if 'index_name IN' in text else target + '\n' + table + '\tPRIMARY\tid'
+            if 'information_schema.tables' in text:
+                return '0'
+            if 'SELECT COUNT(*)' in text:
+                return '1'
+            if 'SELECT *' in text:
+                return '1\tNULL\tNULL'
+            return ''
+
+        return {'groups': [group], 'source': module.V15}, sql
+
+    def test_v15_target_index_catalog_and_replay_fixture(self):
+        module = self.load()
+        result, sql = self.v15_fixture(module)
+        with patch.object(module, 'save'):
+            module.verify_v15(result, sql)
+        self.assertEqual('passed', result['status'])
+        self.assertEqual('reuse absent result', result['groups'][0]['observations']['replay']['fixture_sql'])
+        self.assertEqual(1, result['full_file']['tenant_indexes_created'])
+        self.assertEqual(result['full_file']['data_before_replay'], result['full_file']['data_after_replay'])
+        self.assertEqual(1, len(result['full_file']['data_before_replay']))
+        self.assertTrue(result['groups'][0]['observations']['missing_table']['table_still_absent'])
+
+    def test_v15_full_file_rejects_wrong_target_index_definition(self):
+        module = self.load()
+        for old, new in (('\t1\t1\ttenant_id\tBTREE', '\t0\t1\ttenant_id\tBTREE'),
+                         ('\ttenant_id\tBTREE', '\tid\tBTREE'),
+                         ('\t1\t1\t', '\t1\t2\t')):
+            with self.subTest(replacement=new):
+                result, original_sql = self.v15_fixture(module)
+                def sql(text):
+                    output = original_sql(text)
+                    return output.replace(old, new) if 'index_name IN' in text else output
+                with patch.object(module, 'save'), self.assertRaises(AssertionError):
+                    module.verify_v15(result, sql)
+
+    def test_v15_missing_table_must_remain_absent(self):
+        module = self.load()
+        result, original_sql = self.v15_fixture(module)
+        def sql(text):
+            if 'information_schema.tables' in text:
+                return '1'
+            return original_sql(text)
+        with patch.object(module, 'save'), self.assertRaisesRegex(AssertionError, 'missing-table was created'):
+            module.verify_v15(result, sql)
+
+    def test_v15_replay_must_preserve_all_table_data(self):
+        module = self.load()
+        result, original_sql = self.v15_fixture(module)
+        data = iter(('1\tNULL\tNULL', '2\tNULL\tNULL'))
+        def sql(text):
+            if 'SELECT *' in text:
+                return next(data)
+            return original_sql(text)
+        with patch.object(module, 'save'), self.assertRaises(AssertionError):
+            module.verify_v15(result, sql)
+
+    def test_v15_missing_table_must_select_noop(self):
+        module = self.load()
+        result, sql = self.v15_fixture(module, 'SELECT 2')
+        with patch.object(module, 'save'), self.assertRaisesRegex(AssertionError, 'missing-table selected SQL'):
+            module.verify_v15(result, sql)
+
+    def test_v16_binding_and_source_hash(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v16'), 'V16专用规划尚未实现')
+        result = module.plan_v16()
+        self.assertEqual(6, len(result['groups']))
+        self.assertEqual({f'old-sql-{i:04d}' for i in range(339, 363)},
+                         {i for g in result['groups'] for i in g['old_ids']})
+        self.assertTrue(all(len(g['statement_ids']) == 4 for g in result['groups']))
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan_v16('SELECT 1;')
+
+    def v16_fixture(self, module, mutation=None):
+        self.assertTrue(hasattr(module, 'verify_v16'), 'V16专用验证尚未实现')
+        result = module.plan_v16()
+        targets = {'idx_job_tenant_id': ('tenant_id',),
+                   'idx_job_tenant_status': ('tenant_id', 'status'),
+                   'idx_job_log_tenant_id': ('tenant_id',),
+                   'idx_job_log_tenant_job_start': ('tenant_id', 'job_id', 'start_time')}
+        counters = {}
+        def sql(text):
+            key = text
+            counters[key] = counters.get(key, 0) + 1
+            n = counters[key]
+            if 'SELECT @' in text:
+                group = next(g for g in result['groups'] if g['statements'][0]['sql'] in text)
+                return (group['absent_sql'].replace("''", "'") if n == 1 else
+                        'SELECT 2' if mutation == 'missing_selected' and n == 4 else 'SELECT 1')
+            if 'information_schema.tables' in text:
+                return '1' if mutation == 'missing_created' else '0'
+            if 'SELECT COLUMN_TYPE,' in text:
+                return ('', 'varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3',
+                        'varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3',
+                        'varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3',
+                        'varchar(7)\tYES\t<NULL>\t\t\t6', 'varchar(7)\tYES\t<NULL>\t\t\t6')[n - 1]
+            if 'SELECT INDEX_NAME,' in text:
+                name = next(name for name in targets if "index_name='" + name + "'" in text)
+                expected = '\n'.join(name + '\t1\t' + str(i) + '\t' + col + '\tBTREE'
+                                     for i, col in enumerate(targets[name], 1))
+                return ('', expected, expected, expected, name + '\t0\t1\tid\tBTREE', name + '\t0\t1\tid\tBTREE')[n - 1]
+            if 'SELECT id,deleted' in text:
+                return '1\t0'
+            if 'SELECT table_name,column_name,' in text:
+                output = '\n'.join(t + '\ttenant_id\tvarchar(64)\tYES\t<NULL>\t3' for t in ('sys_job', 'sys_job_log'))
+                return output + ('\nchanged' if mutation == 'schema_replay' and n == 2 else '')
+            if 'SELECT table_name,index_name,' in text:
+                lines = []
+                for name, cols in targets.items():
+                    table = 'sys_job_log' if name.startswith('idx_job_log') else 'sys_job'
+                    lines.extend(table + '\t' + name + '\t1\t' + str(i) + '\t' + col + '\tBTREE'
+                                 for i, col in enumerate(cols, 1))
+                output = '\n'.join(sorted(lines))
+                if mutation == 'index_order':
+                    output = output.replace('\t2\tstatus\t', '\t2\ttenant_id\t')
+                if mutation == 'index_job_order':
+                    output = output.replace('\t2\tjob_id\t', '\t2\tstart_time\t')
+                if mutation == 'index_unique':
+                    output = output.replace('\t1\t1\t', '\t0\t1\t')
+                return output
+            if 'SELECT *' in text:
+                return '1\t0\ttenant-a\t1\t7\t2026-01-02 03:04:05' + ('changed' if mutation == 'data_replay' and n == 2 else '')
+            if 'SELECT tenant_id' in text:
+                return 'NULL' if n == 1 or mutation == 'tenant_null' else 'tenant-a'
+            return ''
+        return result, sql
+
+    def test_v16_composite_indexes_full_replay_and_missing_table(self):
+        module = self.load()
+        result, sql = self.v16_fixture(module)
+        with patch.object(module, 'save'):
+            module.verify_v16(result, sql)
+        self.assertEqual('passed', result['status'])
+        self.assertEqual(4, result['full_file']['tenant_indexes_created'])
+        self.assertEqual(2, len(result['full_file']['data_before_replay']))
+        self.assertEqual(result['full_file']['data_before_replay'], result['full_file']['data_after_replay'])
+        self.assertTrue(result['full_file']['missing_tables']['table_still_absent'])
+        self.assertTrue(all(g['observations']['missing_table']['table_still_absent'] for g in result['groups']))
+
+    def test_v16_rejects_wrong_indexes_missing_table_and_replay_drift(self):
+        module = self.load()
+        for mutation in ('index_order', 'index_job_order', 'index_unique', 'missing_created',
+                         'missing_selected', 'schema_replay', 'data_replay', 'tenant_null'):
+            with self.subTest(mutation=mutation):
+                result, sql = self.v16_fixture(module, mutation)
+                with patch.object(module, 'save'), self.assertRaises(AssertionError):
+                    module.verify_v16(result, sql)
+
+    def test_v16_cleanup_and_status_gate_credit(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v16'), 'V16专用规划尚未实现')
+        for status, removed, expected in (('passed', True, 24), ('passed', False, 0), ('partial_failure', True, 0)):
+            def command(args, *unused, **kwargs):
+                code = (1 if removed else 0) if args[1:3] == ['container', 'exists'] else 0
+                return SimpleNamespace(returncode=code, stdout='8.0.46', stderr='')
+            def verify(result, sql):
+                for group in result['groups']:
+                    group['results'] = {'absent': True, 'present': True, 'replay': True}
+                result['status'] = status
+            result = module.plan_v16()
+            with patch.object(module, 'command', side_effect=command), patch.object(module, 'save'), patch.object(module, 'verify_v16', side_effect=verify):
+                self.assertEqual(expected == 24, bool(module.run(result)))
+            self.assertEqual(expected, result['coverage']['verified_old_id_count'])
+
+    def test_v59_exact_binding_offsets_and_hash(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v59'), 'V59专用规划尚未实现')
+        result = module.plan_v59()
+        self.assertEqual(4, len(result['groups']))
+        self.assertEqual({f'old-sql-{i:04d}' for i in range(513, 529)},
+                         {i['id'] for i in result['items']})
+        self.assertLess(module.v59_expected_indexes().index('sys_user_social\tidx_union_id'),
+                        module.v59_expected_indexes().index('sys_user_social\tPRIMARY'))
+        text = (ROOT / module.V59).read_text()
+        lines = []
+        for group in result['groups']:
+            self.assertEqual(4, len(group['old_ids']))
+            for statement in group['statements']:
+                self.assertEqual(statement['sql'], text[statement['start_offset']:statement['end_offset']])
+                lines.append(statement['line'])
+            self.assertTrue(all(len(ids) == 1 for ids in group['statement_ids']))
+        self.assertEqual([15, 23, 24, 25, 28, 34, 35, 36, 72, 80, 81, 82, 84, 92, 93, 94], lines)
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan_v59('SELECT 1;')
+
+    def test_v59_rejects_incorrect_baseline_statement_id(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v59'), 'V59专用规划尚未实现')
+        import json
+        baseline = json.loads(module.BASELINE.read_text())
+        item = next(i for i in baseline['baseline_audit']['old_sql_items'] if i['id'] == 'old-sql-0513')
+        item['statement_ids'] = ['stmt-wrong-offset-or-hash']
+        original = pathlib.Path.read_text
+        def read_text(path, *args, **kwargs):
+            return json.dumps(baseline) if path == module.BASELINE else original(path, *args, **kwargs)
+        with patch.object(pathlib.Path, 'read_text', read_text), self.assertRaisesRegex(ValueError, 'statement binding'):
+            module.plan_v59()
+
+    def v59_fixture(self, module, mutation=None):
+        self.assertTrue(hasattr(module, 'verify_v59'), 'V59专用验证尚未实现')
+        result = module.plan_v59()
+        counters = {}
+        def sql(text):
+            counters[text] = counters.get(text, 0) + 1
+            n = counters[text]
+            if 'SELECT @' in text:
+                group = next(g for g in result['groups'] if g['statements'][0]['sql'] in text)
+                if n == 4 and group['target']['kind'] == 'index':
+                    raise RuntimeError("ERROR 1146 (42S02): Table 'probe.sys_user' doesn't exist")
+                return group['absent_sql'] if n == 1 else 'SELECT 1'
+            if 'SELECT COLUMN_TYPE,' in text:
+                name = next(name for name in ('register_channel', 'client_type', 'platform') if "column_name='" + name + "'" in text)
+                expected = 'varchar(32)\tNO\tUNKNOWN' if name == 'register_channel' else 'varchar(32)\tYES\t<NULL>'
+                if mutation == 'default' and name == 'register_channel':
+                    expected = expected.replace('UNKNOWN', 'BAD')
+                if mutation == 'nullable' and name == 'register_channel':
+                    expected = expected.replace('NO', 'YES')
+                return ('', expected, expected, expected, 'varchar(7)\tYES\t<NULL>', 'varchar(7)\tYES\t<NULL>')[n - 1]
+            if 'SELECT INDEX_NAME,' in text:
+                expected = 'idx_sys_user_register_channel\t1\t1\tregister_channel\tBTREE'
+                return ('', expected, expected, expected, 'idx_sys_user_register_channel\t0\t1\tid\tBTREE', 'idx_sys_user_register_channel\t0\t1\tid\tBTREE')[n - 1]
+            if 'information_schema.tables' in text:
+                return '0'
+            if 'SELECT id FROM' in text:
+                return '1'
+            if 'SELECT table_name,column_name,' in text:
+                return module.v59_expected_columns()
+            if 'SELECT table_name,index_name,' in text:
+                output = module.v59_expected_indexes()
+                return output.replace('\t0\t2\topen_id', '\t0\t2\tid') if mutation == 'index' else output
+            if 'SELECT * FROM sys_user_social' in text:
+                output = module.v59_expected_social()
+                if n == 1:
+                    return module.v59_existing_social()
+                return output.replace('union-a', 'wrong-union') if mutation == 'backfill' else output
+            if 'SELECT * FROM' in text:
+                suffix = '\tUNKNOWN' if 'FROM sys_user ' in text else '\tNULL\tNULL'
+                if mutation == 'user_data' and n > 1:
+                    return 'changed fixture' + suffix
+                return 'preserved fixture' + (suffix if n > 1 else '')
+            if 'CREATE TABLE IF NOT EXISTS `sys_user_social`' in text and 'SET @ddl_register_channel' in text:
+                if 'DROP TABLE sys_user;' in text:
+                    raise RuntimeError("ERROR 1146 (42S02): Table 'probe.sys_user' doesn't exist")
+            return ''
+        return result, sql
+
+    def test_v59_branches_backfill_replay_and_missing_table_failures(self):
+        module = self.load()
+        result, sql = self.v59_fixture(module)
+        with patch.object(module, 'save'):
+            module.verify_v59(result, sql)
+        self.assertEqual('passed', result['status'])
+        self.assertTrue(all(module.closed(g['results']) for g in result['groups']))
+        missing = result['groups'][1]['observations']['missing_table']
+        self.assertEqual('expected_failure', missing['status'])
+        self.assertFalse(missing['passed'])
+        self.assertEqual('expected_failure', result['full_file']['missing_table']['status'])
+        self.assertFalse(result['full_file']['missing_table']['passed'])
+        self.assertEqual(result['full_file']['before_replay'], result['full_file']['after_replay'])
+        self.assertIn('PHONE_', result['full_file']['fixture_sql'])
+        self.assertIn('DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci', result['full_file']['fixture_sql'].split('CREATE TABLE sys_login_log')[0])
+        self.assertIn('SET timestamp=', result['full_file']['execution_prefix'])
+        self.assertFalse(result['full_file']['counts_as_branch_proof'])
+
+    def test_v59_rejects_wrong_defaults_nullability_indexes_and_backfill(self):
+        module = self.load()
+        for mutation in ('default', 'nullable', 'index', 'backfill', 'user_data'):
+            with self.subTest(mutation=mutation):
+                result, sql = self.v59_fixture(module, mutation)
+                with patch.object(module, 'save'), self.assertRaises(AssertionError):
+                    module.verify_v59(result, sql)
+
+    def test_v59_cleanup_and_terminal_status_gate_credit(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v59'), 'V59专用规划尚未实现')
+        for status, removed, expected in (('passed', True, 16), ('passed', False, 0), ('partial_failure', True, 0)):
+            def command(args, *unused, **kwargs):
+                code = (1 if removed else 0) if args[1:3] == ['container', 'exists'] else 0
+                return SimpleNamespace(returncode=code, stdout='8.0.46', stderr='')
+            def verify(result, sql):
+                for group in result['groups']:
+                    group['results'] = {'absent': True, 'present': True, 'replay': True}
+                result['status'] = status
+            result = module.plan_v59()
+            with patch.object(module, 'command', side_effect=command), patch.object(module, 'save'), patch.object(module, 'verify_v59', side_effect=verify):
+                self.assertEqual(expected == 16, bool(module.run(result)))
+            self.assertEqual(expected, result['coverage']['verified_old_id_count'])
+
+    def test_v43_exact_binding_and_tamper_rejection(self):
+        import hashlib
+        import json
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v43'), 'V43过程规划尚未实现')
+        result = module.plan_v43()
+        self.assertEqual({f'old-sql-{i:04d}' for i in range(449, 473)}, {i['id'] for i in result['items']})
+        calls = [g for g in result['groups'] if g['target']['kind'] == 'index']
+        self.assertEqual(21, len(calls))
+        self.assertEqual(24, len({i for g in result['groups'] for i in g['old_ids']}))
+        text = (ROOT / module.V43).read_text()
+        for group in result['groups']:
+            for statement, ids in zip(group['statements'], group['statement_ids']):
+                self.assertEqual(statement['sql'], text[statement['start_offset']:statement['end_offset']])
+                identity = f"{module.V43}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+                self.assertEqual(['stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]], ids)
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan_v43('SELECT 1;')
+        baseline = json.loads(module.BASELINE.read_text())
+        item = next(i for i in baseline['baseline_audit']['old_sql_items'] if i['id'] == 'old-sql-0450')
+        item['statement_ids'] = ['stmt-tampered']
+        original = pathlib.Path.read_text
+        def read_text(path, *args, **kwargs):
+            return json.dumps(baseline) if path == module.BASELINE else original(path, *args, **kwargs)
+        with patch.object(pathlib.Path, 'read_text', read_text), self.assertRaisesRegex(ValueError, 'statement binding'):
+            module.plan_v43()
+
+    def v43_fixture(self, module, mutation=None):
+        import re
+        self.assertTrue(hasattr(module, 'verify_v43'), 'V43真实场景验证尚未实现')
+        result = module.plan_v43()
+        tables, indexes = {}, {}
+        procedure = False
+        def sql(text):
+            nonlocal procedure
+            if 'CREATE PROCEDURE' in text:
+                procedure = True
+            for table in re.findall(r'DROP TABLE IF EXISTS `([^`]+)`', text):
+                tables.pop(table, None)
+                indexes.pop(table, None)
+            for table, body in re.findall(r'CREATE TABLE `([^`]+)` \((.*?)\);', text):
+                tables[table] = set(re.findall(r'`(\w+)` VARCHAR', body))
+                indexes[table] = {'PRIMARY': (0, ['id'])}
+                for name in re.findall(r'UNIQUE INDEX `(\w+)`', body):
+                    indexes[table][name] = (0, ['id'])
+            for table, name, columns in re.findall(r"CALL add_index_if_columns_exist\('([^']+)', '([^']+)', '([^']+)'\)", text):
+                cols = columns.split(',')
+                if table in tables and name not in indexes[table]:
+                    if set(cols) <= tables[table] or mutation == 'missing_column':
+                        indexes[table][name] = (1, cols)
+                        selected = 'CREATE INDEX `' + name + '` ON `' + table + '` (`' + '`,`'.join(cols) + '`)'
+                    else:
+                        selected = '<NULL>'
+                else:
+                    selected = '<NULL>'
+                if 'SELECT COALESCE(@create_index_sql' in text:
+                    return 'wrong' if mutation == 'selected_sql' else selected
+            if text.rstrip().endswith('DROP PROCEDURE IF EXISTS add_index_if_columns_exist;'):
+                procedure = False
+            if 'information_schema.routines' in text:
+                return '1' if procedure or mutation == 'procedure' else '0'
+            if 'information_schema.tables' in text:
+                return '1' if mutation == 'missing_table' else '0'
+            if 'information_schema.columns' in text:
+                return '\n'.join(sorted(t + '\t' + c for t in tables for c in tables[t]))
+            if 'information_schema.statistics' in text:
+                match = re.search(r"table_name='([^']+)'", text)
+                names = re.search(r"index_name='([^']+)'", text)
+                lines = []
+                for table in sorted(tables):
+                    if match and table != match[1]:
+                        continue
+                    for name, (unique, cols) in sorted(indexes[table].items(), key=lambda row: row[0].lower()):
+                        if names and name != names[1]:
+                            continue
+                        for seq, col in enumerate(cols, 1):
+                            line = '\t'.join(map(str, (name, unique, seq, col, 'BTREE')))
+                            lines.append((table + '\t' if 'SELECT table_name,' in text else '') + line)
+                output = '\n'.join(lines)
+                if mutation == 'unique':
+                    output = output.replace('\t1\t1\t', '\t0\t1\t')
+                elif mutation == 'sequence':
+                    output = output.replace('\t1\t2\t', '\t1\t3\t')
+                elif mutation == 'column':
+                    output = output.replace('\trecipient_id\t', '\tid\t')
+                elif mutation == 'type':
+                    output = output.replace('BTREE', 'HASH')
+                return output
+            if 'SELECT * FROM' in text:
+                return 'changed' if mutation == 'data' and any(len(v) > 1 for v in indexes.values()) else '1\tfixture'
+            return ''
+        return result, sql
+
+    def test_v43_all_calls_missing_columns_and_full_lifecycle(self):
+        module = self.load()
+        result, sql = self.v43_fixture(module)
+        with patch.object(module, 'save'):
+            module.verify_v43(result, sql)
+        self.assertEqual('passed', result['status'])
+        calls = [g for g in result['groups'] if g['target']['kind'] == 'index']
+        self.assertTrue(all(module.closed(g['results']) for g in result['groups']))
+        self.assertEqual(21, len(calls))
+        for g in calls:
+            self.assertTrue(g['observations']['missing_table']['table_still_absent'])
+            self.assertEqual(set(g['columns']), set(g['observations']['missing_columns']))
+            self.assertEqual(g['observations']['present']['before'], g['observations']['present']['after'])
+        self.assertTrue(result['full_file']['procedure_removed'])
+        self.assertEqual(result['full_file']['after_initial'], result['full_file']['after_replay'])
+        for table, before in result['full_file']['before_initial'].items():
+            self.assertEqual(before['data'], result['full_file']['after_initial'][table]['data'])
+
+    def test_v43_rejects_catalog_noop_data_and_lifecycle_drift(self):
+        module = self.load()
+        for mutation in ('unique', 'sequence', 'column', 'type', 'missing_column', 'selected_sql',
+                         'missing_table', 'procedure', 'data'):
+            with self.subTest(mutation=mutation):
+                result, sql = self.v43_fixture(module, mutation)
+                with patch.object(module, 'save'), self.assertRaises(AssertionError):
+                    module.verify_v43(result, sql)
+
+    def test_v43_cleanup_and_terminal_status_gate_credit(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v43'), 'V43过程规划尚未实现')
+        for status, removed, expected in (('passed', True, 24), ('passed', False, 0), ('partial_failure', True, 0)):
+            commands = []
+            def command(args, *unused, **kwargs):
+                commands.append(args)
+                code = (1 if removed else 0) if args[1:3] == ['container', 'exists'] else 0
+                return SimpleNamespace(returncode=code, stdout='8.0.46', stderr='')
+            def verify(result, sql):
+                for group in result['groups']:
+                    group['results'] = {'absent': True, 'present': True, 'replay': True}
+                result['status'] = status
+            result = module.plan_v43()
+            with patch.object(module, 'command', side_effect=command), patch.object(module, 'save'), patch.object(module, 'verify_v43', side_effect=verify):
+                self.assertEqual(expected == 24, bool(module.run(result)))
+            self.assertEqual(expected, result['coverage']['verified_old_id_count'])
+            self.assertTrue(any(args[1:4] == ['rm', '-f', '--volumes'] for args in commands))
+            create = next(args for args in commands if args[1] == 'create')
+            self.assertIn('none', create)
+            self.assertIn('--tmpfs', create)
+
+    def test_v43_union_rejects_tampered_statement_binding(self):
+        import copy
+        import json
+        module = self.load()
+        result = module.plan_v43()
+        result['status'] = 'passed'
+        result['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in result['groups']:
+            group['results'] = {'absent': True, 'present': True, 'replay': True}
+        for item in result['items']:
+            item['verified_in_this_probe'] = True
+            item['unpassed_branches'] = []
+        result['coverage'] = {'verified_old_ids': [i['id'] for i in result['items']]}
+        evidence_path = module.P0 / 'dynamic-v43-test-evidence.json'
+        original = pathlib.Path.read_text
+        for mutation in (None, 'statement_ids', 'offset', 'missing_group'):
+            evidence = copy.deepcopy(result)
+            if mutation == 'statement_ids':
+                evidence['groups'][0]['statement_ids'] = [['stmt-tampered']]
+            elif mutation == 'offset':
+                evidence['groups'][0]['statements'][0]['start_offset'] += 1
+            elif mutation == 'missing_group':
+                evidence['groups'].pop()
+            def read_text(path, *args, **kwargs):
+                return json.dumps(evidence) if path == evidence_path else original(path, *args, **kwargs)
+            original_bytes = pathlib.Path.read_bytes
+            def read_bytes(path):
+                return json.dumps(evidence).encode() if path == evidence_path else original_bytes(path)
+            with patch.object(pathlib.Path, 'glob', return_value=[evidence_path]), patch.object(pathlib.Path, 'read_text', read_text), patch.object(pathlib.Path, 'read_bytes', read_bytes):
+                verified, _, _ = module.verified_union()
+            self.assertEqual(24 if mutation is None else 0, len(verified), mutation)
+
+    def test_v43_cli_dispatch_and_existing_evidence_protection(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v43'), 'V43 CLI分派尚未实现')
+        output = module.P0 / 'nonexistent-v43-test-evidence.json'
+        with patch('sys.argv', ['probe', '--source', module.V43, '--output', str(output)]), patch.object(module, 'save') as save:
+            self.assertEqual(0, module.main())
+        self.assertEqual(module.V43, save.call_args[0][0]['source'])
+        with patch('sys.argv', ['probe', '--source', module.V43, '--output', str(module.BASELINE)]), self.assertRaises(SystemExit):
+            module.main()
+
+    def test_v40_exact_binding_and_source_rejection(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v40'), 'V40 planner 尚未实现')
+        result = module.plan_v40(include_prior=False)
+        self.assertEqual(45, len(result['items']))
+        self.assertEqual(9, len(result['groups']))
+        self.assertEqual(54, sum(len(g['statements']) for g in result['groups']))
+        self.assertEqual(45, len({i for g in result['groups'] for i in g['old_ids']}))
+        for group in result['groups']:
+            self.assertEqual(5, len(group['old_ids']))
+            for statement in group['statements']:
+                text = (module.ROOT / module.V40).read_text()
+                fragment = text[statement['start_offset']:statement['end_offset']]
+                self.assertEqual(statement['statement_sha256'], hashlib.sha256(fragment.encode()).hexdigest())
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan_v40(source_text='SELECT 1;', include_prior=False)
+
+    def test_v40_baseline_statement_tamper_rejected(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v40'), 'V40 planner 尚未实现')
+        baseline = json.loads(module.BASELINE.read_text())
+        item = next(i for i in baseline['baseline_audit']['old_sql_items'] if i['source'] == module.V40)
+        item['statement_ids'] = ['stmt-tampered']
+        original = pathlib.Path.read_text
+        with patch.object(pathlib.Path, 'read_text', lambda path, *a, **kw: json.dumps(baseline) if path == module.BASELINE else original(path, *a, **kw)):
+            with self.assertRaisesRegex(ValueError, 'binding'):
+                module.plan_v40(include_prior=False)
+
+    def test_v40_cli_dispatch_and_existing_evidence_protection(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v40'), 'V40 CLI 尚未实现')
+        output = module.P0 / 'nonexistent-v40-test-evidence.json'
+        with patch('sys.argv', ['probe', '--source', module.V40, '--output', str(output)]), patch.object(module, 'save') as save:
+            self.assertEqual(0, module.main())
+        self.assertEqual(module.V40, save.call_args[0][0]['source'])
+        with patch('sys.argv', ['probe', '--source', module.V40, '--output', str(module.BASELINE)]), self.assertRaises(SystemExit):
+            module.main()
+
+    def test_v40_failure_and_cleanup_gate_credit(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v40'), 'V40 verifier 尚未实现')
+        for status, removed, count in [('passed', True, 45), ('passed', False, 0), ('partial_failure', True, 0)]:
+            result = module.plan_v40(include_prior=False)
+            def command(args, *unused, **kwargs):
+                code = (1 if removed else 0) if args[1:3] == ['container', 'exists'] else 0
+                return SimpleNamespace(returncode=code, stdout='8.0.46', stderr='')
+            def verify(result, sql):
+                for group in result['groups']:
+                    group['results'] = dict(absent=True, present=True, replay=True)
+                result['status'] = status
+            with patch.object(module, 'command', side_effect=command) as commands, patch.object(module, 'save'), patch.object(module, 'verify_v40', side_effect=verify):
+                module.run(result)
+            self.assertEqual(count, result['coverage']['verified_old_id_count'])
+            self.assertTrue(any(c.args[0][1:4] == ['rm', '-f', '--volumes'] for c in commands.call_args_list))
+
+    def test_run_returns_final_status_after_cleanup(self):
+        module = self.load()
+        def command(args, *unused, **kwargs):
+            return SimpleNamespace(returncode=1 if args[1:3] == ['container', 'exists'] else 0,
+                                   stdout='8.0.46', stderr='')
+        def verify(result, sql):
+            for group in result['groups']:
+                group['results'] = {'absent': True, 'present': True, 'replay': True}
+            result['status'] = 'partial_failure'
+        for planner, verifier in ((module.plan_v14, 'verify_v14'), (module.plan_v55, 'verify_v55'),
+                                  (module.plan_v15, 'verify_v15')):
+            with self.subTest(verifier=verifier):
+                result = planner()
+                with patch.object(module, 'command', side_effect=command), patch.object(module, 'save'), patch.object(module, verifier, side_effect=verify):
+                    self.assertFalse(module.run(result))
+                    self.assertEqual(0, result['coverage']['verified_old_id_count'])
+
+    def test_v51_exact_binding_and_baseline_tamper(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v51'), 'V51严格绑定尚未实现')
+        result = module.plan_v51(include_prior=False)
+        self.assertEqual(8, len(result['items']))
+        self.assertEqual(['email', 'idx_email'], [g['target']['name'] for g in result['groups']])
+        text = (ROOT / module.V51).read_text()
+        for group in result['groups']:
+            for statement, ids in zip(group['statements'], group['statement_ids']):
+                self.assertEqual(statement['sql'], text[statement['start_offset']:statement['end_offset']])
+                identity = f"{module.V51}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+                self.assertEqual(['stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]], ids)
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan_v51('SELECT 1;', include_prior=False)
+        for field, value in [('statement_ids', ['stmt-wrong']), ('original', {'line': -1})]:
+            baseline = json.loads(module.BASELINE.read_text())
+            item = next(i for i in baseline['baseline_audit']['old_sql_items'] if i['source'] == module.V51 and i['category'] in ('dynamic_sql', 'procedure_or_prepared_control'))
+            item[field] = value
+            original = pathlib.Path.read_text
+            with patch.object(pathlib.Path, 'read_text', lambda path, *a, **kw: json.dumps(baseline) if path == module.BASELINE else original(path, *a, **kw)):
+                with self.assertRaisesRegex(ValueError, 'binding'):
+                    module.plan_v51(include_prior=False)
+
+    def v51_fixture(self, module, mutation=None):
+        self.assertTrue(hasattr(module, 'verify_v51'), 'V51验证器尚未实现')
+        result = module.plan_v51(include_prior=False)
+        counters = {}
+        def sql(text):
+            counters[text] = counters.get(text, 0) + 1
+            n = counters[text]
+            if 'SELECT @sql' in text:
+                group = next(g for g in result['groups'] if g['statements'][0]['sql'] in text)
+                name = group['target']['name']
+                if n == 4:
+                    raise RuntimeError('ERROR 1146 missing table')
+                if n == 5:
+                    code = 1054 if group['target']['kind'] == 'column' else 1072
+                    raise RuntimeError(f'ERROR {code} missing source column')
+                return group['absent_sql'] if n == 1 else group['present_sql']
+            if 'SELECT COLUMN_TYPE,' in text:
+                expected = 'varchar(255)\tYES\t<NULL>\t3'
+                if mutation in ('type', 'nullable', 'default', 'order'):
+                    expected = {'type': 'text\tYES\t<NULL>\t3', 'nullable': 'varchar(255)\tNO\t<NULL>\t3', 'default': 'varchar(255)\tYES\tx\t3', 'order': 'varchar(255)\tYES\t<NULL>\t4'}[mutation]
+                return ('', expected, expected, expected, 'varchar(7)\tNO\tlegacy\t4', 'varchar(7)\tNO\tlegacy\t4')[n - 1]
+            if 'SELECT INDEX_NAME,' in text:
+                expected = 'idx_email\t1\t1\temail\tBTREE'
+                if mutation == 'index':
+                    expected = expected.replace('\t1\t1\temail', '\t0\t2\tid')
+                return ('', expected, expected, expected, 'idx_email\t0\t1\tid\tBTREE', 'idx_email\t0\t1\tid\tBTREE')[n - 1]
+            if 'SELECT table_name,column_name,' in text:
+                return module.v51_expected_columns()
+            if 'SELECT table_name,index_name,' in text:
+                return module.v51_expected_indexes()
+            if 'SELECT id,phone,keycloak_sub' in text:
+                return '1\t中文电话\tlegacy-sub'
+            if 'SELECT * FROM sys_user' in text:
+                return '1\t中文电话\tperson@example.test\tlegacy-sub' + ('changed' if mutation == 'data' and n > 1 else '')
+            if 'SELECT TABLE_COMMENT' in text:
+                return '系统用户表（支持本地JWT认证和Keycloak SSO认证）'
+            if 'SELECT COUNT(*) FROM information_schema.tables' in text:
+                return '0'
+            if 'MODIFY COLUMN keycloak_sub' in text and text.startswith('USE probe; DROP TABLE'):
+                raise RuntimeError('ERROR 1054 missing keycloak_sub' if 'CREATE TABLE' in text else 'ERROR 1146 missing table')
+            return ''
+        return result, sql
+
+    def test_v51_branches_full_replay_and_negative_errors(self):
+        module = self.load()
+        result, sql = self.v51_fixture(module)
+        with patch.object(module, 'save'):
+            module.verify_v51(result, sql)
+        self.assertEqual('passed', result['status'])
+        self.assertTrue(all(module.closed(g['results']) for g in result['groups']))
+        for group in result['groups']:
+            for key in ('missing_table', 'missing_source_column'):
+                self.assertEqual('expected_failure', group['observations'][key]['status'])
+                self.assertFalse(group['observations'][key]['passed'])
+        self.assertEqual(result['full_file']['before_replay'], result['full_file']['after_replay'])
+
+    def test_v51_rejects_catalog_and_data_drift(self):
+        module = self.load()
+        for mutation in ('type', 'nullable', 'default', 'order', 'index', 'data'):
+            with self.subTest(mutation=mutation):
+                result, sql = self.v51_fixture(module, mutation)
+                with patch.object(module, 'save'), self.assertRaises(AssertionError):
+                    module.verify_v51(result, sql)
+
+    def test_v51_union_rejects_tampered_statement_binding(self):
+        import copy
+        import json
+        module = self.load()
+        result = module.plan_v51(include_prior=False)
+        result['status'] = 'passed'
+        result['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in result['groups']:
+            group['results'] = {'absent': True, 'present': True, 'replay': True}
+        for item in result['items']:
+            item['verified_in_this_probe'] = True
+            item['unpassed_branches'] = []
+        result['coverage'] = {'verified_old_ids': [i['id'] for i in result['items']]}
+        evidence_path = module.P0 / 'dynamic-v51-test-evidence.json'
+        original_text, original_bytes = pathlib.Path.read_text, pathlib.Path.read_bytes
+        for mutation in (None, 'statement_ids', 'offset', 'missing_group', 'item'):
+            evidence = copy.deepcopy(result)
+            if mutation == 'statement_ids':
+                evidence['groups'][0]['statement_ids'] = [['stmt-tampered']]
+            elif mutation == 'offset':
+                evidence['groups'][0]['statements'][0]['start_offset'] += 1
+            elif mutation == 'missing_group':
+                evidence['groups'].pop()
+            elif mutation == 'item':
+                evidence['items'][0]['statement_ids'] = ['stmt-tampered']
+            def read_text(path, *args, **kwargs):
+                return json.dumps(evidence) if path == evidence_path else original_text(path, *args, **kwargs)
+            def read_bytes(path):
+                return json.dumps(evidence).encode() if path == evidence_path else original_bytes(path)
+            with patch.object(pathlib.Path, 'glob', return_value=[evidence_path]), patch.object(pathlib.Path, 'read_text', read_text), patch.object(pathlib.Path, 'read_bytes', read_bytes):
+                verified, _, _ = module.verified_union()
+            self.assertEqual(8 if mutation is None else 0, len(verified), mutation)
+
+    def test_v51_cli_and_cleanup_gate(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'plan_v51'), 'V51分派尚未实现')
+        output = module.P0 / 'nonexistent-v51-test-evidence.json'
+        with patch('sys.argv', ['probe', '--source', module.V51, '--output', str(output)]), patch.object(module, 'save') as save:
+            self.assertEqual(0, module.main())
+        self.assertEqual(module.V51, save.call_args[0][0]['source'])
+        with patch('sys.argv', ['probe', '--source', module.V51, '--output', str(module.BASELINE)]), self.assertRaises(SystemExit):
+            module.main()
+        for status, removed, branch, expected in [('passed', True, True, 8), ('passed', False, True, 0), ('partial_failure', True, True, 0), ('passed', True, False, 0)]:
+            def command(args, *a, **kw):
+                return SimpleNamespace(returncode=(1 if removed else 0) if args[1:3] == ['container', 'exists'] else 0, stdout='8.0.46', stderr='')
+            def verify(result, sql):
+                for group in result['groups']:
+                    group['results'] = dict(absent=branch, present=True, replay=True)
+                result['status'] = status
+            result = module.plan_v51(include_prior=False)
+            with patch.object(module, 'command', side_effect=command), patch.object(module, 'save'), patch.object(module, 'verify_v51', side_effect=verify):
+                module.run(result)
+            self.assertEqual(expected, result['coverage']['verified_old_id_count'])
+
+    def test_v37_v44_entire_source_requires_all_branches(self):
+        module = self.load()
+        for version in (37, 44):
+            result = getattr(module, f'plan_v{version}')(include_prior=False)
+            def command(args, *a, **kw):
+                return SimpleNamespace(returncode=1 if args[1:3] == ['container', 'exists'] else 0, stdout='8.0.46', stderr='')
+            def verify(result, sql):
+                for group in result['groups']:
+                    group['results'] = dict(absent=True, present=True, replay=True)
+                result['groups'][0]['results']['present'] = False
+                result['status'] = 'passed'
+            with patch.object(module, 'command', side_effect=command), patch.object(module, 'save'), patch.object(module, f'verify_v{version}', side_effect=verify):
+                module.run(result)
+            self.assertEqual(0, result['coverage']['verified_old_id_count'], version)
+
+    def test_v37_failure_checks_require_actual_mysql_errors(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'verify_v37_refusals'))
+        result = module.plan_v37(include_prior=False)
+        with self.assertRaisesRegex(AssertionError, 'expected V37 refusal'):
+            module.verify_v37_refusals(result, lambda text: 'unchanged')
+
+    def test_v37_v44_full_file_required_before_runtime_credit(self):
+        module = self.load()
+        for version in (37, 44):
+            result = getattr(module, f'plan_v{version}')(include_prior=False)
+            def command(args, *a, **kw):
+                return SimpleNamespace(returncode=1 if args[1:3] == ['container', 'exists'] else 0, stdout='8.0.46', stderr='')
+            def verify(result, sql):
+                for group in result['groups']:
+                    group['results'] = dict(absent=True, present=True, replay=True)
+                result['status'] = 'passed'
+                result['full_file'] = dict(initial_execution=True, replay=False)
+            with patch.object(module, 'command', side_effect=command), patch.object(module, 'save'), patch.object(module, f'verify_v{version}', side_effect=verify):
+                module.run(result)
+            self.assertEqual(0, result['coverage']['verified_old_id_count'], version)
+
+    def test_v37_v44_verifiers_reject_false_catalog_and_data(self):
+        module = self.load()
+        for version in (37, 44):
+            self.assertTrue(hasattr(module, f'verify_v{version}'), 'semantic verifier missing')
+            result = getattr(module, f'plan_v{version}')(include_prior=False)
+            with patch.object(module, 'save'), self.assertRaises(AssertionError):
+                getattr(module, f'verify_v{version}')(result, lambda text: '')
+            self.assertNotEqual('passed', result['status'])
+
+    def test_v37_v44_strict_binding(self):
+        module = self.load()
+        for version, count in ((37, 15), (44, 32)):
+            self.assertTrue(hasattr(module, f'plan_v{version}'), f'V{version} strict planner missing')
+            planner = getattr(module, f'plan_v{version}')
+            result = planner(include_prior=False)
+            self.assertEqual(count, len(result['items']))
+            self.assertEqual(count, len({i for g in result['groups'] for i in g['old_ids']}))
+            text = (ROOT / result['source']).read_text()
+            for group in result['groups']:
+                for statement in group['statements']:
+                    self.assertEqual(statement['sql'], text[statement['start_offset']:statement['end_offset']])
+                    self.assertEqual(hashlib.sha256(statement['sql'].encode()).hexdigest(), statement['statement_sha256'])
+            with self.assertRaisesRegex(ValueError, 'source hash'):
+                planner(source_text='SELECT 1;', include_prior=False)
+            baseline = json.loads(module.BASELINE.read_text())
+            next(i for i in baseline['baseline_audit']['old_sql_items'] if i['source'] == result['source'])['statement_ids'] = ['forged']
+            original = pathlib.Path.read_text
+            with patch.object(pathlib.Path, 'read_text', lambda path, *a, **kw: json.dumps(baseline) if path == module.BASELINE else original(path, *a, **kw)):
+                with self.assertRaisesRegex(ValueError, 'binding'):
+                    planner(include_prior=False)
+
+    def test_v37_v44_union_rejects_tampering_and_partial_source(self):
+        module = self.load()
+        import copy
+        for version in (37, 44):
+            self.assertTrue(hasattr(module, f'plan_v{version}'), 'strict planner missing')
+            result = getattr(module, f'plan_v{version}')(include_prior=False)
+            result['status'] = 'passed'
+            result['cleanup']['container_and_anonymous_volumes_removed'] = True
+            for group in result['groups']:
+                group['results'] = dict(absent=True, present=True, replay=True)
+            for item in result['items']:
+                item['verified_in_this_probe'] = True
+            result['coverage'] = {'verified_old_ids': [i['id'] for i in result['items']]}
+            result['full_file'] = {'initial_execution': True, 'replay': True}
+            path = module.P0 / 'dynamic-test-new-evidence.json'
+            original_text, original_bytes = pathlib.Path.read_text, pathlib.Path.read_bytes
+            for mutation in ('valid', 'offset', 'statement_id', 'item', 'missing_group', 'branch', 'cleanup', 'status', 'full_file'):
+                evidence = copy.deepcopy(result)
+                if mutation == 'offset': evidence['groups'][0]['statements'][0]['start_offset'] += 1
+                if mutation == 'statement_id': evidence['groups'][0]['statement_ids'][0] = ['forged']
+                if mutation == 'item': evidence['items'][0]['original']['line'] += 1
+                if mutation == 'missing_group': evidence['groups'].pop()
+                if mutation == 'branch': evidence['groups'][0]['results']['present'] = False
+                if mutation == 'cleanup': evidence['cleanup']['container_and_anonymous_volumes_removed'] = False
+                if mutation == 'status': evidence['status'] = 'partial_failure'
+                if mutation == 'full_file': evidence['full_file']['replay'] = False
+                payload = json.dumps(evidence)
+                with patch.object(pathlib.Path, 'glob', return_value=[path]), patch.object(pathlib.Path, 'read_text', lambda p, *a, **kw: payload if p == path else original_text(p, *a, **kw)), patch.object(pathlib.Path, 'read_bytes', lambda p: payload.encode() if p == path else original_bytes(p)):
+                    self.assertEqual(len(result['items']) if mutation == 'valid' else 0, len(module.verified_union()[0]), (version, mutation))
+
+    def test_pg_multisource_union_validates_evidence_and_records_hash(self):
+        import copy
+        module = self.load()
+        import pg_p0_dynamic_probe as pg
+        result = pg.plan()
+        result['status'] = 'passed'
+        result['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in result['groups']:
+            group['results'] = dict.fromkeys(pg.BRANCHES, True)
+        pg.finalize(result)
+        path = module.P0 / 'dynamic-test-pg-evidence.json'
+        original_text, original_bytes = pathlib.Path.read_text, pathlib.Path.read_bytes
+        for mutation in ('valid', 'baseline', 'source', 'statement', 'old_id', 'item',
+                         'missing_group', 'cleanup', 'status', 'coverage', *pg.BRANCHES):
+            with self.subTest(mutation=mutation):
+                evidence = copy.deepcopy(result)
+                if mutation == 'baseline': evidence['baseline_sha256'] = 'stale'
+                if mutation == 'source': evidence['sources'][0]['source_sha256'] = 'stale'
+                if mutation == 'statement': evidence['groups'][0]['statements'][0]['start_offset'] += 1
+                if mutation == 'old_id': evidence['groups'][0]['old_ids'] = ['old-sql-0000']
+                if mutation == 'item': evidence['items'][0]['original']['line'] += 1
+                if mutation == 'missing_group': evidence['groups'].pop()
+                if mutation == 'cleanup': evidence['cleanup']['container_and_anonymous_volumes_removed'] = False
+                if mutation == 'status': evidence['status'] = 'failed'
+                if mutation == 'coverage': evidence['coverage']['verified_old_ids'].pop()
+                if mutation in pg.BRANCHES: evidence['groups'][0]['results'][mutation] = False
+                payload = json.dumps(evidence)
+                with patch.object(pathlib.Path, 'glob', return_value=[path]), patch.object(pathlib.Path, 'read_text', lambda p, *a, **kw: payload if p == path else original_text(p, *a, **kw)), patch.object(pathlib.Path, 'read_bytes', lambda p: payload.encode() if p == path else original_bytes(p)):
+                    ids, hashes, denominator = module.verified_union()
+                self.assertEqual(586, denominator)
+                self.assertEqual(result['coverage']['verified_old_ids'] if mutation == 'valid' else [], ids)
+                self.assertEqual({path.name: hashlib.sha256(payload.encode()).hexdigest()} if mutation == 'valid' else {}, hashes)
+
+    def test_pg_multisource_duplicate_evidence_counts_old_ids_once(self):
+        import pg_p0_dynamic_probe as pg
+        module = self.load()
+        evidence = pg.plan()
+        evidence['status'] = 'passed'
+        evidence['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in evidence['groups']:
+            group['results'] = dict.fromkeys(pg.BRANCHES, True)
+        pg.finalize(evidence)
+        payload = json.dumps(evidence)
+        paths = [module.P0 / f'dynamic-test-pg-{n}-evidence.json' for n in range(2)]
+        original_text, original_bytes = pathlib.Path.read_text, pathlib.Path.read_bytes
+        with patch.object(pathlib.Path, 'glob', return_value=paths), patch.object(
+                pathlib.Path, 'read_text', lambda p, *a, **kw: payload if p in paths else original_text(p, *a, **kw)), patch.object(
+                pathlib.Path, 'read_bytes', lambda p: payload.encode() if p in paths else original_bytes(p)):
+            ids, hashes, denominator = module.verified_union()
+        self.assertEqual(evidence['coverage']['verified_old_ids'], ids)
+        self.assertEqual(31, len(ids))
+        self.assertEqual(586, denominator)
+        self.assertEqual({p.name: hashlib.sha256(payload.encode()).hexdigest() for p in paths}, hashes)
+
+    def test_pg_source_drift_excludes_evidence_without_aborting_union(self):
+        module = self.load()
+        import pg_p0_dynamic_probe as pg
+        evidence = pg.plan()
+        evidence['status'] = 'passed'
+        evidence['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in evidence['groups']:
+            group['results'] = dict.fromkeys(pg.BRANCHES, True)
+        pg.finalize(evidence)
+        path = module.P0 / 'dynamic-test-pg-drift-evidence.json'
+        payload = json.dumps(evidence)
+        original = pathlib.Path.read_text
+        with patch.object(pathlib.Path, 'glob', return_value=[path]), patch.object(
+                pathlib.Path, 'read_text', lambda p, *a, **kw: payload if p == path else original(p, *a, **kw)), patch.object(
+                pg, 'source_text', return_value='DO $$ BEGIN NULL; END $$;'):
+            self.assertEqual(([], {}, 586), module.verified_union())
+
+    def test_partial_branch_never_closes_old_id(self):
+        module = self.load()
+        self.assertFalse(module.closed({'absent': True, 'present': True, 'replay': False}))
+        self.assertFalse(module.closed({'absent': True}))
+        self.assertTrue(module.closed({'absent': True, 'present': True, 'replay': True}))
+
+    def test_source_change_rejected(self):
+        module = self.load()
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            module.plan(source_text='SELECT 1;')
+
+    def test_readiness_excludes_entrypoint_temporary_socket_server(self):
+        module = self.load()
+        self.assertTrue(hasattr(module, 'readiness_command'), '正式服务 TCP 就绪检查尚未实现')
+        args = module.readiness_command('owned-container')
+        self.assertIn('--protocol=TCP', args)
+        self.assertIn('-h127.0.0.1', args)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,0 +1,1127 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+  "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "items": [
+    {
+      "id": "old-sql-0363",
+      "baseline_index": 363,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 3,
+        "reason": "unsupported_ddl"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e4570075722f37b4ad1f7311"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0364",
+      "baseline_index": 364,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 5,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-ca8dbfa285fd6720bf5a4405"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0365",
+      "baseline_index": 365,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 9,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-148e77a0b951788e891029e3"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0366",
+      "baseline_index": 366,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 10,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f448134eb8b34eb0d84707d6"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0367",
+      "baseline_index": 367,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 11,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f417cc796c88b38ba6fc40a0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0368",
+      "baseline_index": 368,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 12,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-00db7d498dee08cbd21a75fe"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0369",
+      "baseline_index": 369,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 22,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-558f761de25decd577abce20"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0370",
+      "baseline_index": 370,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 39,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-d44dd2e0b585a5c8fcd3146a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0371",
+      "baseline_index": 371,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 55,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-8251295acdd191cf8f137dd1"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0372",
+      "baseline_index": 372,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 58,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-0dbb33105c13b6ad3bd02f46"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0373",
+      "baseline_index": 373,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 59,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b65c9355cf9919e617e08614"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0374",
+      "baseline_index": 374,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 65,
+        "reason": "unsupported_statement"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1f57a3471228b3c7726fb41b"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0375",
+      "baseline_index": 375,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 68,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-d6396ca4659f874e43fd82c5"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0376",
+      "baseline_index": 376,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 69,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5e14e9166072fbf4246fa50e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0377",
+      "baseline_index": 377,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 72,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5a7f829856d5556cece623d0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    },
+    {
+      "id": "old-sql-0378",
+      "baseline_index": 378,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "migration_unresolved_index": 15,
+      "original": {
+        "line": 73,
+        "reason": "unsupported_ddl"
+      },
+      "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1b3463b3ed21990c7eff9eca"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+    }
+  ],
+  "bindings": [
+    {
+      "item": {
+        "id": "old-sql-0363",
+        "baseline_index": 363,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 0,
+        "original": {
+          "line": 3,
+          "reason": "unsupported_ddl"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-e4570075722f37b4ad1f7311"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 3,
+        "end_line": 3,
+        "sql": "DROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`",
+        "start_offset": 74,
+        "end_offset": 136,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "d27bb6628b29887e9f58dcd23435910450a27b1c94a5268807bc188d3a8910f0",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 3,
+            "reason": "unsupported_ddl"
+          }
+        ],
+        "statement_id": "stmt-e4570075722f37b4ad1f7311"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0364",
+        "baseline_index": 364,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 1,
+        "original": {
+          "line": 5,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-ca8dbfa285fd6720bf5a4405"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 5,
+        "end_line": 8,
+        "sql": "DELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0",
+        "start_offset": 139,
+        "end_offset": 256,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "886dfa3216c14ea15aad3bcafd25c2a6321fcdc6c1730eb886b3a1af770c956c",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 5,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-ca8dbfa285fd6720bf5a4405"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0365",
+        "baseline_index": 365,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 2,
+        "original": {
+          "line": 9,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-148e77a0b951788e891029e3"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 9,
+        "end_line": 9,
+        "sql": "DECLARE seed_admin_count INT DEFAULT 0",
+        "start_offset": 262,
+        "end_offset": 300,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "78cf1ddea9c8c30316395f15d01a32702dd146cede1e05c66b8c5f2ddbf7f522",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 9,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-148e77a0b951788e891029e3"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0366",
+        "baseline_index": 366,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 3,
+        "original": {
+          "line": 10,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-f448134eb8b34eb0d84707d6"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 10,
+        "end_line": 10,
+        "sql": "DECLARE other_user_reference_count INT DEFAULT 0",
+        "start_offset": 306,
+        "end_offset": 354,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "c505fc7a3a1fb9cf318e08c443d73f342c951cb9d8fbf3b779a30e595cf97d31",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 10,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-f448134eb8b34eb0d84707d6"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0367",
+        "baseline_index": 367,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 4,
+        "original": {
+          "line": 11,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-f417cc796c88b38ba6fc40a0"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 11,
+        "end_line": 11,
+        "sql": "DECLARE role_dept_reference_count INT DEFAULT 0",
+        "start_offset": 360,
+        "end_offset": 407,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "f9e249df557aefe2d01815707844a9e23b43bccca3c8e672d1e9a7ea598f9f37",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 11,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-f417cc796c88b38ba6fc40a0"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0368",
+        "baseline_index": 368,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 5,
+        "original": {
+          "line": 12,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-00db7d498dee08cbd21a75fe"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 12,
+        "end_line": 12,
+        "sql": "DECLARE unassigned_dept_count INT DEFAULT 0",
+        "start_offset": 413,
+        "end_offset": 456,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "3d9d52cc3fe32913ef17661954050e462b02fc3a2126cec6e7f95697ec1f6680",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 12,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-00db7d498dee08cbd21a75fe"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0369",
+        "baseline_index": 369,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 6,
+        "original": {
+          "line": 22,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-558f761de25decd577abce20"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 22,
+        "end_line": 28,
+        "sql": "IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1",
+        "start_offset": 658,
+        "end_offset": 882,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "c01a5faa6246b6c4ae823de18a781237b0e850a3747337a31569bd891daf37ef",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 22,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-558f761de25decd577abce20"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0370",
+        "baseline_index": 370,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 7,
+        "original": {
+          "line": 39,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-d44dd2e0b585a5c8fcd3146a"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 39,
+        "end_line": 47,
+        "sql": "IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1",
+        "start_offset": 1202,
+        "end_offset": 1537,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "954b09bc932f80091fad8db456bab882f1155c9c1273b9b277d2bbde513c1cab",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 39,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-d44dd2e0b585a5c8fcd3146a"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0371",
+        "baseline_index": 371,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 8,
+        "original": {
+          "line": 55,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-8251295acdd191cf8f137dd1"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 55,
+        "end_line": 57,
+        "sql": "ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous'",
+        "start_offset": 1756,
+        "end_offset": 1922,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "04c0ed2eeeafedbd4c59533c563367a28342b50f02486a406f669de3daa188cb",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 55,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-8251295acdd191cf8f137dd1"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0372",
+        "baseline_index": 372,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 9,
+        "original": {
+          "line": 58,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-0dbb33105c13b6ad3bd02f46"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 58,
+        "end_line": 58,
+        "sql": "END IF",
+        "start_offset": 1932,
+        "end_offset": 1938,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 58,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-0dbb33105c13b6ad3bd02f46"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0373",
+        "baseline_index": 373,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 10,
+        "original": {
+          "line": 59,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-b65c9355cf9919e617e08614"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 59,
+        "end_line": 59,
+        "sql": "END IF",
+        "start_offset": 1944,
+        "end_offset": 1950,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 59,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-b65c9355cf9919e617e08614"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0374",
+        "baseline_index": 374,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 11,
+        "original": {
+          "line": 65,
+          "reason": "unsupported_statement"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-1f57a3471228b3c7726fb41b"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 65,
+        "end_line": 67,
+        "sql": "IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration'",
+        "start_offset": 2056,
+        "end_offset": 2231,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "9630245522dac732cdad5f86cc5c9c70a40d785455bc3b49781bbc2bf30367c5",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 65,
+            "reason": "unsupported_statement"
+          }
+        ],
+        "statement_id": "stmt-1f57a3471228b3c7726fb41b"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0375",
+        "baseline_index": 375,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 12,
+        "original": {
+          "line": 68,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-d6396ca4659f874e43fd82c5"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 68,
+        "end_line": 68,
+        "sql": "END IF",
+        "start_offset": 2237,
+        "end_offset": 2243,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "3d0e478aaa0b6a98b920a8afeb1891c55fc4d1b15b2adaf31e3856255c111f2f",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 68,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-d6396ca4659f874e43fd82c5"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0376",
+        "baseline_index": 376,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 13,
+        "original": {
+          "line": 69,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-5e14e9166072fbf4246fa50e"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 69,
+        "end_line": 70,
+        "sql": "END//\nDELIMITER",
+        "start_offset": 2245,
+        "end_offset": 2260,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "b02f460f83850e6cb01639f198b502823d215515cd2b6a55e7d572de483c3527",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 69,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-5e14e9166072fbf4246fa50e"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0377",
+        "baseline_index": 377,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 14,
+        "original": {
+          "line": 72,
+          "reason": "dynamic_or_procedural_sql"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-5a7f829856d5556cece623d0"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 72,
+        "end_line": 72,
+        "sql": "CALL `enforce_department_tenant_integrity`()",
+        "start_offset": 2264,
+        "end_offset": 2308,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "9f85ff25101f5940fde36f4f99b682872374c73314574cde0a7d7d3b8dd928be",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 72,
+            "reason": "dynamic_or_procedural_sql"
+          }
+        ],
+        "statement_id": "stmt-5a7f829856d5556cece623d0"
+      }
+    },
+    {
+      "item": {
+        "id": "old-sql-0378",
+        "baseline_index": 378,
+        "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+        "migration_unresolved_index": 15,
+        "original": {
+          "line": 73,
+          "reason": "unsupported_ddl"
+        },
+        "source_sha256": "f245b680ef5b4c84ade1e5384fe2b3fdb43681ebe3b23cb59ec1305789d7f701",
+        "source_matches_baseline": true,
+        "category": "procedure_or_prepared_control",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "statement_ids": [
+          "stmt-1b3463b3ed21990c7eff9eca"
+        ],
+        "semantic_verified": false,
+        "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价"
+      },
+      "statement": {
+        "line": 73,
+        "end_line": 73,
+        "sql": "DROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`",
+        "start_offset": 2310,
+        "end_offset": 2372,
+        "category": "procedure_or_prepared_control",
+        "statement_sha256": "d27bb6628b29887e9f58dcd23435910450a27b1c94a5268807bc188d3a8910f0",
+        "disposition": "procedural_definition_or_control_requires_runtime_review",
+        "semantic_verified": false,
+        "related_assignment_lines": [],
+        "facts": [],
+        "parser_issues": [
+          {
+            "line": 73,
+            "reason": "unsupported_ddl"
+          }
+        ],
+        "statement_id": "stmt-1b3463b3ed21990c7eff9eca"
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "label": "seed_absent",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "client_output": "",
+      "status": "succeeded",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\n",
+      "data_after": "2\ttenant-a\n2\ttenant-a\t2"
+    },
+    {
+      "label": "seed_absent_procedure_replay",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "client_output": "",
+      "status": "succeeded",
+      "data_after": "2\ttenant-a\n2\ttenant-a\t2"
+    },
+    {
+      "label": "seed_present",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "client_output": "",
+      "status": "succeeded",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\nINSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL); INSERT INTO sys_user VALUES(1,'admin-openid','admin',1);",
+      "data_after": "2\ttenant-a\n1\tNULL\n2\ttenant-a\t2"
+    },
+    {
+      "label": "seed_present_procedure_replay",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "client_output": "",
+      "status": "succeeded",
+      "data_after": "2\ttenant-a\n1\tNULL\n2\ttenant-a\t2"
+    },
+    {
+      "label": "missing_admin",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1644 (45000) at line 73: V19 cannot safely remove the legacy seed department because its references are ambiguous\n",
+      "stderr_base64": "RVJST1IgMTY0NCAoNDUwMDApIGF0IGxpbmUgNzM6IFYxOSBjYW5ub3Qgc2FmZWx5IHJlbW92ZSB0aGUgbGVnYWN5IHNlZWQgZGVwYXJ0bWVudCBiZWNhdXNlIGl0cyByZWZlcmVuY2VzIGFyZSBhbWJpZ3VvdXMK",
+      "status": "expected_failure",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\nINSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL);",
+      "data_before": "1\tNULL\n2\ttenant-a\n2\ttenant-a\t2",
+      "data_after": "1\tNULL\n2\ttenant-a\n2\ttenant-a\t2"
+    },
+    {
+      "label": "wrong_admin",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1644 (45000) at line 73: V19 cannot safely remove the legacy seed department because its references are ambiguous\n",
+      "stderr_base64": "RVJST1IgMTY0NCAoNDUwMDApIGF0IGxpbmUgNzM6IFYxOSBjYW5ub3Qgc2FmZWx5IHJlbW92ZSB0aGUgbGVnYWN5IHNlZWQgZGVwYXJ0bWVudCBiZWNhdXNlIGl0cyByZWZlcmVuY2VzIGFyZSBhbWJpZ3VvdXMK",
+      "status": "expected_failure",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\nINSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL); INSERT INTO sys_user VALUES(1,'admin-openid','admin',1);UPDATE sys_user SET username='other';",
+      "data_before": "1\tNULL\n2\ttenant-a\n1\t1\n2\ttenant-a\t2",
+      "data_after": "1\tNULL\n2\ttenant-a\n1\t1\n2\ttenant-a\t2"
+    },
+    {
+      "label": "other_user_reference",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1644 (45000) at line 73: V19 cannot safely remove the legacy seed department because its references are ambiguous\n",
+      "stderr_base64": "RVJST1IgMTY0NCAoNDUwMDApIGF0IGxpbmUgNzM6IFYxOSBjYW5ub3Qgc2FmZWx5IHJlbW92ZSB0aGUgbGVnYWN5IHNlZWQgZGVwYXJ0bWVudCBiZWNhdXNlIGl0cyByZWZlcmVuY2VzIGFyZSBhbWJpZ3VvdXMK",
+      "status": "expected_failure",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\nINSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL); INSERT INTO sys_user VALUES(1,'admin-openid','admin',1);INSERT INTO sys_user VALUES(3,'other','other',1);",
+      "data_before": "1\tNULL\n2\ttenant-a\n1\t1\n3\t1\n2\ttenant-a\t2",
+      "data_after": "1\tNULL\n2\ttenant-a\n1\t1\n3\t1\n2\ttenant-a\t2"
+    },
+    {
+      "label": "role_reference",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1644 (45000) at line 73: V19 cannot safely remove the legacy seed department because its references are ambiguous\n",
+      "stderr_base64": "RVJST1IgMTY0NCAoNDUwMDApIGF0IGxpbmUgNzM6IFYxOSBjYW5ub3Qgc2FmZWx5IHJlbW92ZSB0aGUgbGVnYWN5IHNlZWQgZGVwYXJ0bWVudCBiZWNhdXNlIGl0cyByZWZlcmVuY2VzIGFyZSBhbWJpZ3VvdXMK",
+      "status": "expected_failure",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\nINSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL); INSERT INTO sys_user VALUES(1,'admin-openid','admin',1);INSERT INTO sys_role_dept VALUES(3,'tenant-a',1);",
+      "data_before": "1\tNULL\n2\ttenant-a\n1\t1\n2\ttenant-a\t2\n3\ttenant-a\t1",
+      "data_after": "1\tNULL\n2\ttenant-a\n1\t1\n2\ttenant-a\t2\n3\ttenant-a\t1"
+    },
+    {
+      "label": "unassigned_department",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\n",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1644 (45000) at line 73: V19 requires every department to have an explicit tenant_id before migration\n",
+      "stderr_base64": "RVJST1IgMTY0NCAoNDUwMDApIGF0IGxpbmUgNzM6IFYxOSByZXF1aXJlcyBldmVyeSBkZXBhcnRtZW50IHRvIGhhdmUgYW4gZXhwbGljaXQgdGVuYW50X2lkIGJlZm9yZSBtaWdyYXRpb24K",
+      "status": "expected_failure",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\nINSERT INTO sys_dept VALUES(3,0,'0','unassigned',NULL);",
+      "data_before": "2\ttenant-a\n3\tNULL\n2\ttenant-a\t2",
+      "data_after": "2\ttenant-a\n3\tNULL\n2\ttenant-a\t2"
+    },
+    {
+      "label": "full_file_initial",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nALTER TABLE `sys_dept`\n    MODIFY COLUMN `tenant_id` VARCHAR(64) NOT NULL COMMENT '租户ID（多租户隔离）',\n    ADD UNIQUE KEY `uk_sys_dept_tenant_id_id` (`tenant_id`, `id`);\n\nALTER TABLE `sys_role_dept`\n    ADD CONSTRAINT `fk_sys_role_dept_tenant_dept`\n    FOREIGN KEY (`tenant_id`, `dept_id`)\n    REFERENCES `sys_dept` (`tenant_id`, `id`);\n",
+      "counts_as_branch_proof": false,
+      "client_output": "",
+      "status": "succeeded",
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_role_dept,sys_user,sys_dept;\nCREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors VARCHAR(64),name VARCHAR(64),tenant_id VARCHAR(64)) DEFAULT CHARSET=utf8mb4;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id VARCHAR(64),username VARCHAR(64),dept_id BIGINT);\nCREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),dept_id BIGINT) DEFAULT CHARSET=utf8mb4;\nINSERT INTO sys_dept VALUES(2,0,'0','retained','tenant-a');\nINSERT INTO sys_role_dept VALUES(2,'tenant-a',2);\nINSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL); INSERT INTO sys_user VALUES(1,'admin-openid','admin',1);",
+      "data_after": "2\ttenant-a\n1\tNULL\n2\ttenant-a\t2",
+      "table_definition": "sys_dept\tCREATE TABLE `sys_dept` (\n  `id` bigint NOT NULL,\n  `parent_id` bigint DEFAULT NULL,\n  `ancestors` varchar(64) DEFAULT NULL,\n  `name` varchar(64) DEFAULT NULL,\n  `tenant_id` varchar(64) NOT NULL COMMENT '租户ID（多租户隔离）',\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `uk_sys_dept_tenant_id_id` (`tenant_id`,`id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci\nsys_role_dept\tCREATE TABLE `sys_role_dept` (\n  `id` bigint NOT NULL,\n  `tenant_id` varchar(64) DEFAULT NULL,\n  `dept_id` bigint DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `fk_sys_role_dept_tenant_dept` (`tenant_id`,`dept_id`),\n  CONSTRAINT `fk_sys_role_dept_tenant_dept` FOREIGN KEY (`tenant_id`, `dept_id`) REFERENCES `sys_dept` (`tenant_id`, `id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci"
+    },
+    {
+      "label": "cross_tenant_fk_rejected",
+      "sql": "USE probe; INSERT INTO sys_role_dept VALUES(9,'tenant-b',2);",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1452 (23000) at line 1: Cannot add or update a child row: a foreign key constraint fails (`probe`.`sys_role_dept`, CONSTRAINT `fk_sys_role_dept_tenant_dept` FOREIGN KEY (`tenant_id`, `dept_id`) REFERENCES `sys_dept` (`tenant_id`, `id`))\n",
+      "stderr_base64": "RVJST1IgMTQ1MiAoMjMwMDApIGF0IGxpbmUgMTogQ2Fubm90IGFkZCBvciB1cGRhdGUgYSBjaGlsZCByb3c6IGEgZm9yZWlnbiBrZXkgY29uc3RyYWludCBmYWlscyAoYHByb2JlYC5gc3lzX3JvbGVfZGVwdGAsIENPTlNUUkFJTlQgYGZrX3N5c19yb2xlX2RlcHRfdGVuYW50X2RlcHRgIEZPUkVJR04gS0VZIChgdGVuYW50X2lkYCwgYGRlcHRfaWRgKSBSRUZFUkVOQ0VTIGBzeXNfZGVwdGAgKGB0ZW5hbnRfaWRgLCBgaWRgKSkK",
+      "status": "expected_failure"
+    },
+    {
+      "label": "same_tenant_fk_accepted",
+      "sql": "USE probe; INSERT INTO sys_role_dept VALUES(9,'tenant-a',2);",
+      "counts_as_branch_proof": false,
+      "client_output": "",
+      "status": "succeeded"
+    },
+    {
+      "label": "null_department_tenant_rejected",
+      "sql": "USE probe; INSERT INTO sys_dept VALUES(8,0,'0','bad',NULL);",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1048 (23000) at line 1: Column 'tenant_id' cannot be null\n",
+      "stderr_base64": "RVJST1IgMTA0OCAoMjMwMDApIGF0IGxpbmUgMTogQ29sdW1uICd0ZW5hbnRfaWQnIGNhbm5vdCBiZSBudWxsCg==",
+      "status": "expected_failure"
+    },
+    {
+      "label": "full_file_replay_duplicate_key",
+      "sql": "USE probe;\n-- 脚本用途：清理历史空租户部门并强制部门与授权关系的同租户完整性。\n-- 风险控制：无法唯一确认历史种子部门归属时终止迁移，禁止静默分配租户。\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nDELIMITER //\nCREATE PROCEDURE `enforce_department_tenant_integrity`()\nBEGIN\n    DECLARE seed_dept_count INT DEFAULT 0;\n    DECLARE seed_admin_count INT DEFAULT 0;\n    DECLARE other_user_reference_count INT DEFAULT 0;\n    DECLARE role_dept_reference_count INT DEFAULT 0;\n    DECLARE unassigned_dept_count INT DEFAULT 0;\n\n    SELECT COUNT(*) INTO seed_dept_count\n    FROM `sys_dept`\n    WHERE `id` = 1\n      AND `parent_id` = 0\n      AND `ancestors` = '0'\n      AND `name` = 'Apex 科技'\n      AND `tenant_id` IS NULL;\n\n    IF seed_dept_count = 1 THEN\n        SELECT COUNT(*) INTO seed_admin_count\n        FROM `sys_user`\n        WHERE `id` = 1\n          AND `open_id` = 'admin-openid'\n          AND `username` = 'admin'\n          AND `dept_id` = 1;\n\n        SELECT COUNT(*) INTO other_user_reference_count\n        FROM `sys_user`\n        WHERE `dept_id` = 1\n          AND NOT (`id` = 1 AND `open_id` = 'admin-openid' AND `username` = 'admin');\n\n        SELECT COUNT(*) INTO role_dept_reference_count\n        FROM `sys_role_dept`\n        WHERE `dept_id` = 1;\n\n        IF seed_admin_count = 1\n                AND other_user_reference_count = 0\n                AND role_dept_reference_count = 0 THEN\n            UPDATE `sys_user`\n            SET `dept_id` = NULL\n            WHERE `id` = 1\n              AND `open_id` = 'admin-openid'\n              AND `username` = 'admin'\n              AND `dept_id` = 1;\n\n            DELETE FROM `sys_dept`\n            WHERE `id` = 1\n              AND `parent_id` = 0\n              AND `ancestors` = '0'\n              AND `name` = 'Apex 科技'\n              AND `tenant_id` IS NULL;\n        ELSE\n            SIGNAL SQLSTATE '45000'\n                SET MESSAGE_TEXT = 'V19 cannot safely remove the legacy seed department because its references are ambiguous';\n        END IF;\n    END IF;\n\n    SELECT COUNT(*) INTO unassigned_dept_count\n    FROM `sys_dept`\n    WHERE `tenant_id` IS NULL;\n\n    IF unassigned_dept_count > 0 THEN\n        SIGNAL SQLSTATE '45000'\n            SET MESSAGE_TEXT = 'V19 requires every department to have an explicit tenant_id before migration';\n    END IF;\nEND//\nDELIMITER ;\n\nCALL `enforce_department_tenant_integrity`();\nDROP PROCEDURE IF EXISTS `enforce_department_tenant_integrity`;\n\nALTER TABLE `sys_dept`\n    MODIFY COLUMN `tenant_id` VARCHAR(64) NOT NULL COMMENT '租户ID（多租户隔离）',\n    ADD UNIQUE KEY `uk_sys_dept_tenant_id_id` (`tenant_id`, `id`);\n\nALTER TABLE `sys_role_dept`\n    ADD CONSTRAINT `fk_sys_role_dept_tenant_dept`\n    FOREIGN KEY (`tenant_id`, `dept_id`)\n    REFERENCES `sys_dept` (`tenant_id`, `id`);\n",
+      "counts_as_branch_proof": false,
+      "error": "ERROR 1061 (42000) at line 76: Duplicate key name 'uk_sys_dept_tenant_id_id'\n",
+      "stderr_base64": "RVJST1IgMTA2MSAoNDIwMDApIGF0IGxpbmUgNzY6IER1cGxpY2F0ZSBrZXkgbmFtZSAndWtfc3lzX2RlcHRfdGVuYW50X2lkX2lkJwo=",
+      "status": "expected_failure"
+    }
+  ],
+  "status": "diagnostic_expected_failures_confirmed",
+  "coverage": {
+    "verified_old_ids": [],
+    "verified_old_id_count": 0
+  },
+  "limits": [
+    "Synthetic fixtures, not a full historical upgrade or Flyway execution",
+    "Expected failures are diagnostic only; no absent/present/replay closure or additive credit"
+  ],
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true
+  },
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v19-20261019-negative-evidence.json",
+  "container": {
+    "name": "apex-negative-probe-53a22ee4087d",
+    "network": "none",
+    "data": "tmpfs",
+    "image": "localhost/mysql:8.0",
+    "id": "f1973fc37ccd850b0edb6267a10074ac2deda07b325718ac483af0934503d03f"
+  },
+  "mysql_version": "8.0.46",
+  "updated_at": "2026-10-19T05:55:26.506193+00:00"
+}

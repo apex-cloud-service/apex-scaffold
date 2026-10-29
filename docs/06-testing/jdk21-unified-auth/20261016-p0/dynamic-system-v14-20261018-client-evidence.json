@@ -1,0 +1,565 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+  "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "procedure_sql": "DELIMITER ;;\nCREATE PROCEDURE IF NOT EXISTS add_tenant_id_if_not_exists(IN p_table VARCHAR(128), IN p_after_col VARCHAR(128))\nBEGIN\n    IF EXISTS (\n        SELECT 1 FROM information_schema.TABLES\n        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = p_table\n    ) AND NOT EXISTS (\n        SELECT 1 FROM information_schema.COLUMNS\n        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = p_table AND COLUMN_NAME = 'tenant_id'\n    ) THEN\n        SET @sql = CONCAT('ALTER TABLE `', p_table, '` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT ''租户ID（多租户隔离）'' AFTER `', p_after_col, '`');\n        PREPARE stmt FROM @sql;\n        EXECUTE stmt;\n        DEALLOCATE PREPARE stmt;\n        SET @idx_sql = CONCAT('CREATE INDEX `idx_', p_table, '_tenant_id` ON `', p_table, '` (`tenant_id`)');\n        PREPARE idx_stmt FROM @idx_sql;\n        EXECUTE idx_stmt;\n        DEALLOCATE PREPARE idx_stmt;\n    END IF;\nEND ;;\nDELIMITER ;\n\n",
+  "calls_sql": "CALL add_tenant_id_if_not_exists('operation_log', 'deleted');\nCALL add_tenant_id_if_not_exists('system_message', 'deleted');\n\n",
+  "items": [
+    {
+      "id": "old-sql-0140",
+      "baseline_index": 140,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 36,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-672b29abc8834f7f3b4bad76"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0141",
+      "baseline_index": 141,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 37,
+        "reason": "unsupported_ddl"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-13a98de9e84a597d1d4434b3"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0142",
+      "baseline_index": 142,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 47,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "unbound_prepared_control_requires_review",
+      "statement_ids": [
+        "stmt-7e97bbec20a4f07b80eafff6"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0143",
+      "baseline_index": 143,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 48,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "unbound_prepared_control_requires_review",
+      "statement_ids": [
+        "stmt-ab2072db0637b075ed2dfb7a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0144",
+      "baseline_index": 144,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 49,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "unbound_prepared_control_requires_review",
+      "statement_ids": [
+        "stmt-43e42940aeab55316a63577e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0145",
+      "baseline_index": 145,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 50,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-bba0d11b7472a19ed42ddc72"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0146",
+      "baseline_index": 146,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 51,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-07ed9a7120a02bdf5f2d0fb4"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0147",
+      "baseline_index": 147,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 52,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-68e49ea3d7c6edb952c0ff86"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0148",
+      "baseline_index": 148,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 53,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-d60554840e5ec310487ae2cd"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0149",
+      "baseline_index": 149,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 54,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-58467391271a2e8b62eafd03"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0150",
+      "baseline_index": 150,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 55,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-90fca8b0ce1cdcfbcdf9e787"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0151",
+      "baseline_index": 151,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 56,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-68578f5aaa794344e032dd03"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0152",
+      "baseline_index": 152,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 58,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-ceb8109767acba3d3e351910"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0153",
+      "baseline_index": 153,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 59,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-44a81742ed4e59b833341e0a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0154",
+      "baseline_index": 154,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 61,
+        "reason": "unsupported_ddl"
+      },
+      "source_sha256": "97d94234e5860b5a1163d431a3252d126e37aa88e1abcecda86a770ff3850bfe",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_definition_or_control_requires_runtime_review",
+      "statement_ids": [
+        "stmt-da104a090f58cadba2b5e167"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    }
+  ],
+  "groups": [
+    {
+      "old_ids": [
+        "old-sql-0140",
+        "old-sql-0141",
+        "old-sql-0142",
+        "old-sql-0143",
+        "old-sql-0144",
+        "old-sql-0145",
+        "old-sql-0146",
+        "old-sql-0147",
+        "old-sql-0148",
+        "old-sql-0149",
+        "old-sql-0150",
+        "old-sql-0151",
+        "old-sql-0152",
+        "old-sql-0153",
+        "old-sql-0154"
+      ],
+      "statement_ids": [
+        [
+          "stmt-672b29abc8834f7f3b4bad76"
+        ],
+        [
+          "stmt-13a98de9e84a597d1d4434b3"
+        ],
+        [
+          "stmt-7e97bbec20a4f07b80eafff6"
+        ],
+        [
+          "stmt-ab2072db0637b075ed2dfb7a"
+        ],
+        [
+          "stmt-43e42940aeab55316a63577e"
+        ],
+        [
+          "stmt-bba0d11b7472a19ed42ddc72"
+        ],
+        [
+          "stmt-07ed9a7120a02bdf5f2d0fb4"
+        ],
+        [
+          "stmt-68e49ea3d7c6edb952c0ff86"
+        ],
+        [
+          "stmt-d60554840e5ec310487ae2cd"
+        ],
+        [
+          "stmt-58467391271a2e8b62eafd03"
+        ],
+        [
+          "stmt-90fca8b0ce1cdcfbcdf9e787"
+        ],
+        [
+          "stmt-68578f5aaa794344e032dd03"
+        ],
+        [
+          "stmt-ceb8109767acba3d3e351910"
+        ],
+        [
+          "stmt-44a81742ed4e59b833341e0a"
+        ],
+        [
+          "stmt-da104a090f58cadba2b5e167"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "before": {
+            "operation_log": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\nmarker\tvarchar(20)\tYES\t<NULL>\t\t3",
+              "indexes": "PRIMARY\t0\t1\tid",
+              "data": "1\t0\tfixture"
+            },
+            "system_message": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\nmarker\tvarchar(20)\tYES\t<NULL>\t\t3",
+              "indexes": "PRIMARY\t0\t1\tid",
+              "data": "1\t0\tfixture"
+            }
+          },
+          "after": {
+            "operation_log": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "idx_operation_log_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture"
+            },
+            "system_message": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "idx_system_message_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture"
+            }
+          },
+          "session_dynamic_sql": "ALTER TABLE `system_message` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`\tCREATE INDEX `idx_system_message_tenant_id` ON `system_message` (`tenant_id`)",
+          "nullable_default_width64_and_nonunique_index_checked": true
+        },
+        "replay": {
+          "before": {
+            "operation_log": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "idx_operation_log_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture\n2\t0\ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt\twidth\n3\t0\tsame\tduplicate\n4\t0\tsame\tduplicate"
+            },
+            "system_message": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "idx_system_message_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture\n2\t0\ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt\twidth\n3\t0\tsame\tduplicate\n4\t0\tsame\tduplicate"
+            }
+          },
+          "after": {
+            "operation_log": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "idx_operation_log_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture\n2\t0\ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt\twidth\n3\t0\tsame\tduplicate\n4\t0\tsame\tduplicate"
+            },
+            "system_message": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "idx_system_message_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture\n2\t0\ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt\twidth\n3\t0\tsame\tduplicate\n4\t0\tsame\tduplicate"
+            }
+          },
+          "session_dynamic_sql": "<NULL>\t<NULL>"
+        },
+        "present": {
+          "before": {
+            "operation_log": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(7)\tYES\t<NULL>\t\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "PRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture"
+            },
+            "system_message": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(7)\tYES\t<NULL>\t\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "PRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture"
+            }
+          },
+          "after": {
+            "operation_log": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(7)\tYES\t<NULL>\t\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "PRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture"
+            },
+            "system_message": {
+              "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tNO\t0\t\t2\ntenant_id\tvarchar(7)\tYES\t<NULL>\t\t3\nmarker\tvarchar(20)\tYES\t<NULL>\t\t4",
+              "indexes": "PRIMARY\t0\t1\tid",
+              "data": "1\t0\tNULL\tfixture"
+            }
+          },
+          "session_dynamic_sql": "<NULL>\t<NULL>"
+        }
+      },
+      "semantic_verified": true
+    }
+  ],
+  "status": "passed",
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true,
+    "database_lifetime": "only inside removed tmpfs container"
+  },
+  "limits": [
+    "Synthetic fixtures; MySQL client only, no Flyway parser or history/checksum validation",
+    "No PostgreSQL, full historical upgrade chain, production tenant backfill or application isolation proof",
+    "Existing tenant_id bypasses index creation and accepts incompatible column definitions",
+    "Core-table ALTER is not replayable; procedure replay is a separate claim",
+    "No concurrency, privilege denial, DDL rollback or production load validation"
+  ],
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v14-20261018-client-evidence.json",
+  "updated_at": "2026-10-18T13:35:27.022446+00:00",
+  "container": {
+    "name": "apex-v45-probe-14b470c2a47a",
+    "image": "localhost/mysql:8.0",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "none; empty root only inside network-disabled disposable container",
+    "id": "8a0ba992d9cc56d806f5e307da6afc2bf7cd7014da20c04ff1503abe4e215cfb"
+  },
+  "mysql_version": "8.0.46",
+  "missing_table_noop": true,
+  "full_file": {
+    "initial_execution": true,
+    "catalog": {
+      "sys_user": {
+        "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tYES\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3",
+        "indexes": "idx_sys_user_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+        "data": "1\t0\tNULL"
+      },
+      "sys_user_role": {
+        "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tYES\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3",
+        "indexes": "idx_user_role_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+        "data": "1\t0\tNULL"
+      },
+      "operation_log": {
+        "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tYES\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3",
+        "indexes": "idx_operation_log_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+        "data": "1\t0\tNULL"
+      },
+      "system_message": {
+        "columns": "id\tbigint\tNO\t<NULL>\t\t1\ndeleted\ttinyint\tYES\t0\t\t2\ntenant_id\tvarchar(64)\tYES\t<NULL>\t租户ID（多租户隔离）\t3",
+        "indexes": "idx_system_message_tenant_id\t1\t1\ttenant_id\nPRIMARY\t0\t1\tid",
+        "data": "1\t0\tNULL"
+      }
+    },
+    "procedure_removed": true,
+    "replay_expected_failure": "mysql client failed: ERROR 1060 (42S21) at line 22: Duplicate column name 'tenant_id'\n",
+    "schema_and_data_unchanged_after_failed_replay": true,
+    "fixture_sql": "USE probe;\nCREATE TABLE `sys_user` (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0); INSERT INTO `sys_user` (id) VALUES (1);\nCREATE TABLE `sys_user_role` (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0); INSERT INTO `sys_user_role` (id) VALUES (1);\nCREATE TABLE `operation_log` (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0); INSERT INTO `operation_log` (id) VALUES (1);\nCREATE TABLE `system_message` (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0); INSERT INTO `system_message` (id) VALUES (1);\n",
+    "counts_as_branch_proof": false
+  },
+  "coverage": {
+    "verified_old_ids": [
+      "old-sql-0140",
+      "old-sql-0141",
+      "old-sql-0142",
+      "old-sql-0143",
+      "old-sql-0144",
+      "old-sql-0145",
+      "old-sql-0146",
+      "old-sql-0147",
+      "old-sql-0148",
+      "old-sql-0149",
+      "old-sql-0150",
+      "old-sql-0151",
+      "old-sql-0152",
+      "old-sql-0153",
+      "old-sql-0154"
+    ],
+    "verified_old_id_count": 15,
+    "remaining_of_586": 571,
+    "passed_branch_runs": 3,
+    "planned_branch_runs": 3,
+    "definition": "15 baseline IDs bound to the original procedure lifecycle and both CALLs; absent/present/replay catalogs and data plus full-file lifecycle verified; no global additive credit"
+  }
+}

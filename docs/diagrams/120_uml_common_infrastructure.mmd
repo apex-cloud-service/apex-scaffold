@@ -1,0 +1,163 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+classDiagram
+    direction TB
+
+    class Result~T~ {
+        «统一响应»
+        - Integer code
+        - String msg
+        - T data
+        - String traceId
+        + success()$ Result~T~
+        + success(data)$ Result~T~
+        + success(data, traceId)$ Result~T~
+        + error()$ Result~T~
+        + error(msg)$ Result~T~
+        + error(code, msg)$ Result~T~
+        + error(ResultCode)$ Result~T~
+        + error(ErrorCode)$ Result~T~
+        + setTraceId(traceId) Result~T~
+    }
+    note for Result "code=0 表示成功（非 HTTP 200）\ntraceId 全链路追踪\n泛型 T 为业务数据载体"
+
+    class ResultCode {
+        «enumeration · 响应码»
+        SUCCESS(0, "成功", "sys.success")
+        - Integer code
+        - String msg
+        - String messageKey
+        + fromCode(code)$ ResultCode
+    }
+
+    class ErrorCode {
+        «enumeration · 错误码»
+        AUTH_FAILED(1004)
+        BUSINESS_RULE_VIOLATION(3001)
+        - int code
+        - String message
+        + fromCode(code)$ ErrorCode
+    }
+
+    class BaseException {
+        «abstract · 基础异常»
+        - Integer code
+        - String msg
+        - String messageKey
+        + BaseException(message)
+        + BaseException(code, message)
+        + BaseException(ResultCode)
+        + BaseException(ResultCode, message)
+    }
+
+    class BusinessException {
+        «业务异常»
+        + BusinessException(message)
+        + BusinessException(code, message)
+        + BusinessException(ResultCode)
+        + BusinessException(ResultCode, message)
+        + BusinessException(message, cause)
+    }
+
+    class BaseEntity {
+        «abstract · 领域基类»
+        # Long id
+        # LocalDateTime createTime
+        # LocalDateTime updateTime
+        # Integer lockVersion
+        # Integer deleted
+        + isDeleted() boolean
+        + markAsDeleted()
+        + restore()
+        + isNew() boolean
+    }
+    note for BaseEntity "LogicalDeletion 枚举: NOT_DELETED(0)/DELETED(1)\n@SuperBuilder 构造\n领域实体继承此类"
+
+    class BasePO {
+        «persistence · 持久化基类»
+        - Long id @TableId(ASSIGN_ID)
+        - LocalDateTime createTime
+        - LocalDateTime updateTime
+        - Integer version @Version
+        - Integer deleted @TableLogic
+        + getLockVersion() Integer
+        + setLockVersion(v)
+    }
+    note for BasePO "@SuperBuilder · implements Serializable\n@TableId 雪花算法\n@Version 乐观锁\n@TableLogic 逻辑删除\nPO 仅用于持久化，与 DO 分离"
+
+    class TenantContext {
+        «上下文 · 租户»
+        - ThreadLocal~String~ TENANT_ID
+        + setTenantId(id) String
+        + restoreTenantId(previous)
+        + currentTenantId() Optional~String~
+        + clear()
+        + withTenant(id) Context
+        + withTenant(Mono) Mono
+        + withTenant(Flux) Flux
+        + initializeGlobalHooks()
+    }
+    note for TenantContext "ThreadLocal + Reactor Context 双桥接\nSchedulers hook 自动传播\n租户作用域来自受信任认证上下文"
+
+    class DataScopeContext {
+        «上下文 · 数据权限»
+        - ThreadLocal~Scope~ SCOPE
+        + setDataScope(info)
+        + setDataScope(info, config)
+        + currentDataScope() Optional~DataScopeInfo~
+        + currentScope() Optional~Scope~
+        + install(scope) AutoCloseable
+    }
+
+    class DataSourceContext {
+        «上下文 · 数据源»
+        - ThreadLocal~Deque~String~~ STACK
+        + push(ds)
+        + pop() String
+        + current() String
+        + clear()
+    }
+
+    class BlockingIoSchedulers {
+        «调度器 · 阻塞I/O隔离»
+        - AtomicReference~Scheduler~ JDBC
+        - AtomicReference~Scheduler~ CACHE
+        - AtomicReference~Scheduler~ STORAGE
+        - AtomicReference~Scheduler~ EVENT
+        - AtomicReference~Scheduler~ REMOTE
+        - AtomicReference~Scheduler~ GENERAL
+        + jdbc()$ Scheduler
+        + cache()$ Scheduler
+        + storage()$ Scheduler
+        + event()$ Scheduler
+        + remote()$ Scheduler
+        + general()$ Scheduler
+    }
+    note for BlockingIoSchedulers "六池隔离: jdbc(32) cache(4) storage(8)\nevent(2) remote(16) general(16)\n每池可配 virtual-threads=true\n禁止直接用 Schedulers.boundedElastic()"
+
+    class VirtualThreadBoundedExecutor {
+        «虚拟线程执行器»
+        - int maxConcurrency
+        - Queue~Runnable~ queue
+        + submit(task)
+        + offer(task) boolean
+    }
+
+    %% ---- 异常继承 ----
+    BusinessException --|> BaseException
+
+    %% ---- 响应体系 ----
+    Result~T~ ..> ResultCode : «use»
+    Result~T~ ..> ErrorCode : «use»
+    BaseException ..> ResultCode : «use»
+    BusinessException --|> BaseException
+
+    %% ---- 持久化基类 ----
+    BaseEntity ..> BasePO : «transient 转换»
+
+    %% ---- 上下文体系 ----
+    TenantContext ..> BaseEntity : «租户隔离»
+    DataScopeContext ..> BaseEntity : «数据权限»
+
+    %% ---- 调度器 ----
+    BlockingIoSchedulers ..> VirtualThreadBoundedExecutor : «virtual-threads 模式»
+    BlockingIoSchedulers ..> TenantContext : «Schedulers hook 传播»

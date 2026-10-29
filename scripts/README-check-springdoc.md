@@ -272,11 +272,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
-          distribution: 'oracle'
+          java-version: '21'
+          distribution: 'temurin'
       
       - name: Check SpringDoc Annotations Coverage
         run: |

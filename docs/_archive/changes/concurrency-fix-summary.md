@@ -40,7 +40,7 @@
 
 - [BaseDomainEvent.java](../../../apex-common/src/main/java/com/apex/scaffold/common/event/BaseDomainEvent.java) 新增 `tenantId` 字段并随事件 DTO 传递；
 
-- [EnhancedDomainEventPublisherImpl.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/event/EnhancedDomainEventPublisherImpl.java) 发布前将当前租户注入事件；
+- [EnhancedDomainEventPublisherImpl.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/EnhancedDomainEventPublisherImpl.java) 发布前将当前租户注入事件；
 
 - 监听器用 `Mono.usingWhen` 安装/恢复 `TenantContext`。
 
@@ -50,7 +50,7 @@
 
 **修复**:
 
-- [OperationLogAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java) 与 [ApiCallLogFilter.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/remote/filter/ApiCallLogFilter.java) 在**入口捕获** **`tenantId`** **并显式传入**日志服务；
+- [OperationLogAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java) 与 [ApiCallLogFilter.java](../../../apex-infrastructure-remote/src/main/java/com/apex/scaffold/infrastructure/remote/filter/ApiCallLogFilter.java) 在**入口捕获** **`tenantId`** **并显式传入**日志服务；
 
 - 统一在专用阻塞 Scheduler（`BlockingIoSchedulers.jdbc()`）上受控提交；
 
@@ -60,7 +60,7 @@
 
 ## 二、P1 修复
 
-### H1 LocalCacheService 读写顺序（[LocalCacheService.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java)）
+### H1 LocalCacheService 读写顺序（[LocalCacheService.java](../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java)）
 
 **问题**: `ttlTracker` 与 `cache` 并发读写时存在竞态，可能读到已过期但仍在 cache 的数据，或写入 TTL 后缓存未落位。
 
@@ -70,7 +70,7 @@
 
 - **删除**: 先 `evict(cache)` 再删 `ttlTracker`。
 
-### H2 MQ 幂等状态三态化（[MqConsumerService.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java)）
+### H2 MQ 幂等状态三态化（[MqConsumerService.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java)）
 
 **问题**: 消费异常时直接释放幂等键（CAS 为 `null`），瞬态异常导致的失败会被当作"从未消费"重复处理。
 
@@ -82,7 +82,7 @@
 
 - 仅存在可重试语义时才重新入队。
 
-**测试**: [MqConsumerServiceTest.java](../../../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerServiceTest.java)
+**测试**: [MqConsumerServiceTest.java](../../../apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerServiceTest.java)
 
 ### H3 跨线程上下文桥接（DataScope / DataSource / Tenant）
 

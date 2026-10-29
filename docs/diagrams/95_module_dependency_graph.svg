@@ -82,15 +82,15 @@
 
   <!-- L3 -->
   <rect x="700" y="440" width="180" height="64" rx="8" fill="#0891b2" opacity="0.14" stroke="#0891b2" stroke-width="2.5"/>
-  <text x="790" y="466" class="box-title">apex-application</text>
+  <text x="790" y="466" class="box-title">apex-system</text>
   <text x="790" y="486" class="box-desc">应用服务编排</text>
 
   <!-- L4 -->
   <rect x="920" y="390" width="180" height="64" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2.5"/>
-  <text x="1010" y="416" class="box-title">apex-interfaces</text>
+  <text x="1010" y="416" class="box-title">apex-system</text>
   <text x="1010" y="436" class="box-desc">Handler/Router · Application</text>
   <rect x="920" y="480" width="180" height="64" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2.5"/>
-  <text x="1010" y="506" class="box-title">apex-auth-center</text>
+  <text x="1010" y="506" class="box-title">apex-auth</text>
   <text x="1010" y="526" class="box-desc">独立认证中心</text>
 
   <!-- L5 -->
@@ -103,10 +103,10 @@
   <text x="60" y="680" class="legend" font-weight="600">依赖要点</text>
   <text x="60" y="706" class="legend">• apex-common 为全局基础，被 9 个模块依赖；apex-generator 独立（仅模板引擎，不依赖内部模块）。</text>
   <text x="60" y="730" class="legend">• 依赖方向严格单向：common → domain → infrastructure → application → interfaces，无循环依赖。</text>
-  <text x="60" y="754" class="legend">• apex-workflow 直接依赖 domain/common（不依赖 application），由 apex-interfaces 组合装配。</text>
-  <text x="60" y="778" class="legend">• apex-auth-center 复用 common/infrastructure/application，运行于独立 Spring ApplicationContext（AuthCenterApplication）。</text>
-  <text x="60" y="802" class="legend">• apex-interfaces 为可运行入口（Application），聚合 application/infrastructure/domain/workflow/license-starter。</text>
-  <text x="60" y="826" class="legend">• apex-example 依赖 apex-interfaces，作为脚手架示例独立启动（ExampleApplication）。</text>
+  <text x="60" y="754" class="legend">• apex-workflow 直接依赖 domain/common（不依赖 application），由 apex-system 组合装配。</text>
+  <text x="60" y="778" class="legend">• apex-auth 复用 common/infrastructure/application，运行于独立 Spring ApplicationContext（AuthCenterApplication）。</text>
+  <text x="60" y="802" class="legend">• apex-system 为可运行入口（Application），聚合 application/infrastructure/domain/workflow/license-starter。</text>
+  <text x="60" y="826" class="legend">• apex-example 依赖 apex-system，作为脚手架示例独立启动（ExampleApplication）。</text>
 
   <text x="700" y="878" class="note" text-anchor="middle">颜色：品牌 #4f46e5（基础）· 应用 #0891b2 · 领域 #059669 · 基础设施 #d97706 · 组合/交付 #6366f1/#475569</text>
 </svg>

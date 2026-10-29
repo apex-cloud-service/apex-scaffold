@@ -1,0 +1,39 @@
+{
+  "kind": "p0_consumer_boundary_static_validation",
+  "collected_at": "2026-10-18T11:44:30.076631+00:00",
+  "evidence": "docs/06-testing/jdk21-unified-auth/20261016-p0/table-consumer-boundary-20261018-followup.json",
+  "evidence_sha256": "a33d0758f7bf67ff3cd3222ec3e4e6c167af4b3e2bbd7c8577eafc50b6bdf908",
+  "denominator": 21,
+  "classification_counts": {
+    "system_scan_and_classpath_excluded": 18,
+    "system_sql_consumer_not_found": 1,
+    "unproven_active_sql_consumer": 1,
+    "independent_auth_migration_gap": 1
+  },
+  "evidence_ranges_checked": 376,
+  "evidence_range_mismatches": [],
+  "source_inventory_checked": 1719,
+  "source_inventory_mismatches": [],
+  "assertions": [
+    "21 exact prior keys",
+    "2 mismatch + 19 legacy",
+    "18 system production classpath exclusions",
+    "auth production excludes test-only system",
+    "auth migrations have zero CREATE TABLE jwt_keys/mfa_config",
+    "all serialized file/range hashes match current source"
+  ],
+  "checks": [
+    {
+      "command": "python3 -m unittest discover -s scripts/test -p 'test_collect_table_authority.py' -v",
+      "exit_code": 0,
+      "tests": 8,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "runtime_test_claim": false
+}

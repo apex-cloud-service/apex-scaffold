@@ -1,0 +1,89 @@
+{
+  "title": "V42 clean_predecessor 恢复超时隔离计时复现",
+  "date": "2026-10-20",
+  "observed_at_local": "2026-10-20T08:56:12+08:00",
+  "observed_at_utc": "2026-10-20T00:56:12+00:00",
+  "purpose": "定位 2026-10-20 证据中 clean_predecessor apply 90s 超时的性质：判明是恢复工具/数据库阻塞，还是并发负载放大",
+  "scope": "isolated timing reproduction only; no Flyway baseline credit, no migration coverage increment",
+  "baseline_credit": false,
+  "coverage_before": "500/586",
+  "coverage_after": "500/586",
+  "remaining": 86,
+  "environment": {
+    "python": "3.13.12",
+    "podman": "5.8.5",
+    "mysql_image": "localhost/mysql:8.0",
+    "mysql_version": "8.0.46",
+    "container_network": "none",
+    "container_storage": "tmpfs /var/lib/mysql",
+    "credentials": "synthetic empty root password, isolated container"
+  },
+  "script": {
+    "path": "/tmp/apex-v42-timing-20261020.py",
+    "sha256": "53b57ba09c4830007d7252799fc32478089824ba69c667b06681c80d30b05eb7",
+    "repository_tracked": false,
+    "note": "临时计时脚本，仅隔离复现使用，未加入仓库"
+  },
+  "source_hashes": {
+    "apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py": "4e4184ebb7cd41ccc739822395ab13b66118330387ffaf97fc10d1d2ccbe9c9b",
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "scripts/test/verify_token_v42_recovery.py": "fe3cb12ef8997c246c4529f9f8299a797e4ea42f9ecc123a40ca93e588eeb470",
+    "scripts/test/test_token_v42_recovery.py": "658ffb46d42ec44f7051227b725d7c80ccb5d039779140dfd61efe9497e137f0"
+  },
+  "prior_full_pass_evidence": {
+    "file": "token-v42-recovery-143e4f2373bf-evidence.json",
+    "sha256": "9ede559419e79355c2b1c60b3e96de2560b942574f0ab1a1a0c3b3fb4ac02ca9",
+    "status": "passed",
+    "scenarios": 31,
+    "started_at": "2026-10-19T12:26:12.026614+00:00",
+    "ended_at": "2026-10-19T12:33:57.784648+00:00",
+    "duration_seconds": 465.76,
+    "hashes_match_current_source": true,
+    "unchanged": true
+  },
+  "measurements": {
+    "single_exec_ms_avg": 339.3,
+    "single_exec_samples": 5,
+    "plan_seconds": 3.7,
+    "plan_exit": 0,
+    "planned_statements": 33,
+    "apply_seconds": 17.47,
+    "apply_exit": 0,
+    "apply_stdout_last_line": "structure recovery complete; original V42 replay and Flyway history remain unresolved",
+    "apply_stderr": "",
+    "tables_after_apply": 6,
+    "apply_timeout_headroom_seconds": 72.53
+  },
+  "conclusion": {
+    "root_cause": "isolated load amplification, not tool defect or database lock",
+    "reasoning": [
+      "clean_predecessor apply completes in 17.47s when run alone, versus the 90s per-call limit in verify_token_v42_recovery.py",
+      "single podman exec round trip averages 339.3ms; 33 statements plus preflight/postflight reconcile to the measured duration",
+      "no statement exceeded the per-call limit; the failure was recorded as one whole recovery invocation timing out, not a hung SQL",
+      "current source hashes are identical to the prior 31-scenario full-pass evidence, so the 2026-10-20 timeout is not attributable to a code change"
+    ],
+    "interpretation_limit": "This reproduction shows the tool can complete clean_predecessor on an unloaded host; it does not re-execute the full 31-scenario suite and does not convert the 2026-10-20 partial_failure record into passed"
+  },
+  "what_this_does_not_prove": [
+    "No re-execution of the full 31 recovery scenarios in this run",
+    "No original absent/present/replay migration evidence and no old-ID coverage credit",
+    "No Flyway history validation, checksum coordination or historical upgrade chain replay",
+    "No cryptographic conversion or application token round-trip verification",
+    "No production configuration, remote Nacos or deployment environment validation"
+  ],
+  "cleanup": {
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true
+  },
+  "commands": [
+    "python3 -B /tmp/apex-v42-timing-20261020.py",
+    "shasum -a 256 apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql scripts/test/verify_token_v42_recovery.py scripts/test/test_token_v42_recovery.py"
+  ],
+  "status": "diagnostic_only",
+  "limits": [
+    "Diagnostic timing does not close original migration branches and does not change remaining 86",
+    "Single-host unloaded measurement is not a concurrency or production SLA guarantee",
+    "Existing partial_failure evidence for 2026-10-20 remains valid and unmodified"
+  ]
+}

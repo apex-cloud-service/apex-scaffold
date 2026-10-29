@@ -23,6 +23,8 @@
 
 ---
 
+<a id="一任务背景与目标"></a>
+
 ## 一、任务背景与目标
 
 ### 1.1 问题背景
@@ -47,20 +49,22 @@ Apex Scaffold 采用 Spring WebFlux + Caffeine + Redisson 的多级缓存架构�
 
 ---
 
+<a id="二现状分析"></a>
+
 ## 二、现状分析
 
 ### 2.1 现有缓存架构组件
 
 | 组件 | 路径 | 职责 |
 |---|---|---|
-| `MultiLevelCacheService` | [apex-infrastructure/.../cache/service/MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 多级缓存核心服务：L1+L2 读写、回源、空值标记、Single-Flight |
-| `LocalCacheService` | [apex-infrastructure/.../cache/service/LocalCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) | L1 Caffeine 实现，带独立 TTL 跟踪 |
-| `CacheServiceImpl` | [apex-infrastructure/.../cache/service/CacheServiceImpl.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java) | L2 Redis 单层缓存（实现 `CacheService` 接口） |
-| `CacheConsistencyService` | [apex-infrastructure/.../cache/service/CacheConsistencyService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) | 一致性服务，带 TTL jitter、空值标记、Single-Flight |
-| `InFlightRequestMerge` | [apex-infrastructure/.../cache/support/InFlightRequestMerge.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) | Single-Flight 请求合并器（进程内） |
-| `CacheLockAspect` + `@CacheLock` | [apex-infrastructure/.../cache/aspect/CacheLockAspect.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 基于 Redisson 的分布式锁切面 |
-| `MultiLevelCacheConfig` | [apex-infrastructure/.../cache/config/MultiLevelCacheConfig.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfig.java) | Caffeine CacheManager 配置 |
-| `CacheProperties` | [apex-infrastructure/.../cache/config/CacheProperties.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 读降级配置（`apex.cache.read-degradation`） |
+| `MultiLevelCacheService` | [apex-infrastructure/.../cache/service/MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 多级缓存核心服务：L1+L2 读写、回源、空值标记、Single-Flight |
+| `LocalCacheService` | [apex-infrastructure/.../cache/service/LocalCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) | L1 Caffeine 实现，带独立 TTL 跟踪 |
+| `CacheServiceImpl` | [apex-infrastructure/.../cache/service/CacheServiceImpl.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java) | L2 Redis 单层缓存（实现 `CacheService` 接口） |
+| `CacheConsistencyService` | [apex-infrastructure/.../cache/service/CacheConsistencyService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) | 一致性服务，带 TTL jitter、空值标记、Single-Flight |
+| `InFlightRequestMerge` | [apex-infrastructure/.../cache/support/InFlightRequestMerge.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) | Single-Flight 请求合并器（进程内） |
+| `CacheLockAspect` + `@CacheLock` | [apex-infrastructure/.../cache/aspect/CacheLockAspect.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 基于 Redisson 的分布式锁切面 |
+| `MultiLevelCacheConfig` | [apex-infrastructure/.../cache/config/MultiLevelCacheConfig.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfig.java) | Caffeine CacheManager 配置 |
+| `CacheProperties` | [apex-infrastructure/.../cache/config/CacheProperties.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 读降级配置（`apex.cache.read-degradation`） |
 
 ### 2.2 现有防护机制评估
 
@@ -99,7 +103,7 @@ return Mono.fromCallable(() -> {
 
 **影响**：批量写入相同 TTL 的 key 时，所有 key 在同一时刻过期，可能引发缓存雪崩。
 
-**对比**：`CacheConsistencyService.put()` 已应用 ±10% jitter（[CacheConsistencyService.java#L118](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java#L118)），但 `MultiLevelCacheService` 未对齐。
+**对比**：`CacheConsistencyService.put()` 已应用 ±10% jitter（[CacheConsistencyService.java#L118](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java#L118)），但 `MultiLevelCacheService` 未对齐。
 
 #### 缺陷 2：`MultiLevelCacheService.setEmptyMarker()` 未应用 jitter
 
@@ -129,6 +133,8 @@ public final class InFlightRequestMerge {
 **影响**：N 个实例同时缓存未命中，各自触发一次回源，DB 收到 N 次相同查询。
 
 ---
+
+<a id="三总体架构设计"></a>
 
 ## 三、总体架构设计
 
@@ -179,6 +185,8 @@ public final class InFlightRequestMerge {
 | 启动期冷数据 | 启动瞬间高并发读 | 缓存预热 + 限流回源 |
 
 ---
+
+<a id="四缓存穿透解决方案"></a>
 
 ## 四、缓存穿透解决方案
 
@@ -464,6 +472,8 @@ private String resolveFilterName(String key) {
 
 ---
 
+<a id="五缓存击穿解决方案"></a>
+
 ## 五、缓存击穿解决方案
 
 ### 5.1 现有 Single-Flight 保留
@@ -474,7 +484,7 @@ private String resolveFilterName(String key) {
 - 终态语义明确（成功/空值/错误）
 - `doFinally` 精确移除条目，避免误删
 
-详见 [InFlightRequestMerge.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java)。
+详见 [InFlightRequestMerge.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java)。
 
 ### 5.2 分布式锁增强（多实例场景）
 
@@ -725,6 +735,8 @@ public class HotKeyCacheService {
 | 启动期冷数据 | ❌ | ✅（预热时） | ❌ |
 
 ---
+
+<a id="六缓存雪崩解决方案"></a>
 
 ## 六、缓存雪崩解决方案
 
@@ -998,6 +1010,8 @@ private <T> Mono<T> queryL2AndBackfillL1(String key, Class<T> clazz) {
 
 ---
 
+<a id="七监控告警体系"></a>
+
 ## 七、监控告警体系
 
 ### 7.1 指标体系
@@ -1066,16 +1080,18 @@ public class CacheMetricsCollector {
 
 ---
 
+<a id="八实施步骤"></a>
+
 ## 八、实施步骤
 
 ### Phase 1：核心防护修复（必做）
 
 | 步骤 | 文件 | 改动 |
 |---|---|---|
-| 1.1 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `set()` 与 `setEmptyMarker()` 应用 TTL jitter；新增 `jitter()` 工具方法 |
-| 1.2 | [CacheProperties.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 新增 `jitter`、`empty`、`lock` 配置组 |
+| 1.1 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `set()` 与 `setEmptyMarker()` 应用 TTL jitter；新增 `jitter()` 工具方法 |
+| 1.2 | [CacheProperties.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 新增 `jitter`、`empty`、`lock` 配置组 |
 | 1.3 | [application.yml](../../apex-system/src/main/resources/application.yml) | 补充 `apex.cache.jitter.factor`、`apex.cache.empty.ttl`、`apex.cache.empty.jitter-factor` 默认值 |
-| 1.4 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | L2 操作增加 `onErrorResume` 处理 Redis 异常，切到 L1-only 模式 |
+| 1.4 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | L2 操作增加 `onErrorResume` 处理 Redis 异常，切到 L1-only 模式 |
 
 ### Phase 2：缓存穿透防护
 
@@ -1084,7 +1100,7 @@ public class CacheMetricsCollector {
 | 2.1 | `apex-infrastructure/.../cache/bloom/BloomFilterService.java` | 新建布隆过滤器服务 |
 | 2.2 | `apex-infrastructure/.../cache/bloom/BloomFilterInitializer.java` | 新建启动期预热器 |
 | 2.3 | `apex-infrastructure/.../cache/bloom/BloomFilterDataProvider.java` | 新建数据提供者接口 |
-| 2.4 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 前置接入布隆过滤器 |
+| 2.4 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 前置接入布隆过滤器 |
 | 2.5 | [application.yml](../../apex-system/src/main/resources/application.yml) | 新增 `apex.cache.bloom.*` 配置（容量、误判率、各域开关） |
 
 ### Phase 3：缓存击穿增强
@@ -1092,9 +1108,9 @@ public class CacheMetricsCollector {
 | 步骤 | 文件 | 改动 |
 |---|---|---|
 | 3.1 | `apex-infrastructure/.../cache/support/LogicalExpiryWrapper.java` | 新建逻辑过期包装器 |
-| 3.2 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 叠加分布式锁（多实例互斥） |
+| 3.2 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 叠加分布式锁（多实例互斥） |
 | 3.3 | `apex-infrastructure/.../cache/service/HotKeyCacheService.java` | 新建超热点 key 服务（逻辑过期 + 异步刷新） |
-| 3.4 | [CacheLockAspect.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 增加自旋重试工具方法（供 `MultiLevelCacheService` 复用） |
+| 3.4 | [CacheLockAspect.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 增加自旋重试工具方法（供 `MultiLevelCacheService` 复用） |
 
 ### Phase 4：缓存雪崩防护
 
@@ -1103,7 +1119,7 @@ public class CacheMetricsCollector {
 | 4.1 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmService.java` | 新建预热服务 |
 | 4.2 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmRunner.java` | 新建启动后预热触发器 |
 | 4.3 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmDataProvider.java` | 新建数据提供者接口 |
-| 4.4 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | Redis 故障降级到 L1-only 模式（已在 Phase 1.4 完成） |
+| 4.4 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | Redis 故障降级到 L1-only 模式（已在 Phase 1.4 完成） |
 | 4.5 | [application.yml](../../apex-system/src/main/resources/application.yml) | 新增 `apex.cache.prewarm.*` 配置 |
 
 ### Phase 5：监控告警
@@ -1111,7 +1127,7 @@ public class CacheMetricsCollector {
 | 步骤 | 文件 | 改动 |
 |---|---|---|
 | 5.1 | `apex-infrastructure/.../cache/metrics/CacheMetricsCollector.java` | 新建缓存指标采集器 |
-| 5.2 | [MultiLevelCacheService.java](../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 在各关键节点埋点（命中/未命中/回源/降级） |
+| 5.2 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 在各关键节点埋点（命中/未命中/回源/降级） |
 | 5.3 | [application.yml](../../apex-system/src/main/resources/application.yml) | 告警阈值配置（接入现有 Sentinel/钉钉告警） |
 
 ### Phase 6：测试验证
@@ -1123,7 +1139,7 @@ public class CacheMetricsCollector {
 | 6.3 | `CachePrewarmServiceTest.java` | 预热服务测试 |
 | 6.4 | `HotKeyCacheServiceTest.java` | 逻辑过期 + 异步刷新测试 |
 | 6.5 | `CacheChaosTest.java` | 雪崩场景集成测试（Redis 故障、批量过期） |
-| 6.6 | 扩展 [MultiLevelCacheServiceStampedeTest.java](../../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceStampedeTest.java) | 覆盖分布式锁 + Single-Flight 组合 |
+| 6.6 | 扩展 [MultiLevelCacheServiceStampedeTest.java](../../apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceStampedeTest.java) | 覆盖分布式锁 + Single-Flight 组合 |
 
 ### Phase 7：文档输出
 
@@ -1134,6 +1150,8 @@ public class CacheMetricsCollector {
 | 7.3 | 更新 [multi-level-cache-complete-guide.md](../architecture/advanced-features/multi-level-cache-complete-guide.md) | 同步新增能力 |
 
 ---
+
+<a id="九验证方案"></a>
 
 ## 九、验证方案
 
@@ -1189,6 +1207,8 @@ mvnd -pl apex-infrastructure -am test -Dtest='*ArchTest'
 
 ---
 
+<a id="十关键决策与约束"></a>
+
 ## 十、关键决策与约束
 
 ### 10.1 关键决策
@@ -1216,6 +1236,8 @@ mvnd -pl apex-infrastructure -am test -Dtest='*ArchTest'
 8. **SpringDoc 注解**：新增的 Handler/Router（如有）需补 `@Operation`、`@Schema` 等注解
 
 ---
+
+<a id="十一风险评估与回滚"></a>
 
 ## 十一、风险评估与回滚
 

@@ -16,7 +16,7 @@
     </marker>
   </defs>
   <rect width="1400" height="900" fill="#fff"/>
-  <text x="700" y="40" class="title">模块结构：apex-interfaces</text>
+  <text x="700" y="40" class="title">模块结构：apex-system</text>
   <text x="700" y="64" class="subtitle">com.apex.scaffold.interfaces · 接口层 · Router/Handler/Aspect/治理入口 · v1.3.1</text>
 
   <rect x="40" y="92" width="430" height="740" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
@@ -119,5 +119,5 @@
   <text x="1040" y="718" class="box-desc">· license-starter —— 唯一依赖全部核心模块处</text>
   <text x="1040" y="746" class="note">因此也是唯一可执行入口的承载模块</text>
 
-  <text x="700" y="872" class="note" text-anchor="middle">apex-interfaces 是各层的依赖汇合点与唯一 HTTP 出口，同时承载治理与可观测入口</text>
+  <text x="700" y="872" class="note" text-anchor="middle">apex-system 是各层的依赖汇合点与唯一 HTTP 出口，同时承载治理与可观测入口</text>
 </svg>

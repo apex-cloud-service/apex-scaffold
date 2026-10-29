@@ -129,7 +129,7 @@ DB_DRIVER=com.mysql.cj.jdbc.Driver
 version: '3.8'
 services:
   database:
-    image: mysql:8.0
+    image: mysql:9.0
     ports:
       - "3306:3306"
     environment:
@@ -145,7 +145,7 @@ services:
 - Vite
 
 ### 后端
-- Java 17
+- Java 21
 - Spring Boot 3.5.15
 - Spring WebFlux
 - HikariCP

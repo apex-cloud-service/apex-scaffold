@@ -154,7 +154,7 @@ curl -s 'http://localhost:9090/api/v1/query?query=reactor_netty_eventloop_thread
         "metric": {
           "__name__": "reactor_netty_eventloop_threads",
           "application": "apex-scaffold",
-          "instance": "host.docker.internal:8081",
+          "instance": "host.containers.internal:8081",
           "job": "apex-scaffold",
           "name": "reactor-http"
         },

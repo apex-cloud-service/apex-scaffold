@@ -18,8 +18,15 @@ classDiagram
     }
     note for OfficePlatformApp "@Value 不可变\n仅存 secret 引用名，不落库密钥\n每租户-平台唯一启用配置"
 
+    class OfficePlatform {
+        «enumeration»
+        FEISHU
+        DINGTALK
+        WECOM
+    }
+
     class OfficeMessage {
-        «aggregate root · 办公消息»
+        «aggregate root · 办公消息 @Data»
         - Long id
         - String tenantId
         - OfficePlatform platform
@@ -30,16 +37,18 @@ classDiagram
         - String platformMessageId
         - String failureReason
         - Integer retryCount
+        - LocalDateTime createdAt / sentAt
         - Integer version
         + canSend() boolean
         + markAsSent(platformMessageId)
         + markAsFailed(reason)
         + canRecall() boolean
+        + markAsRecalled()
     }
-    note for OfficeMessage "sendStatus: PENDING/SUCCESS/FAILED/RECALLED\n支持文本/Markdown/卡片消息"
+    note for OfficeMessage "sendStatus: PENDING/SUCCESS/FAILED/RECALLED\n支持文本/Markdown/卡片消息\nState 防重放: Redis setIfAbsent 原子签发"
 
     class MessageContent {
-        «interface»
+        «interface · 消息内容»
         + getType() MessageType
         + getText() String
         + isValid() boolean
@@ -49,8 +58,29 @@ classDiagram
     class MarkdownMessageContent
     class CardMessageContent
 
+    class MessageType {
+        «enumeration»
+        TEXT
+        MARKDOWN
+        CARD
+    }
+
+    class MessageTarget {
+        «value object · 收件目标»
+        - RecipientType recipientType
+        - List~String~ recipientIds
+    }
+
+    class MessageStatus {
+        «enumeration»
+        PENDING
+        SUCCESS
+        FAILED
+        RECALLED
+    }
+
     class ApprovalProcess {
-        «aggregate root · 审批流程»
+        «aggregate root · 审批流程 @Data»
         - Long id
         - Long tenantId
         - String platform
@@ -58,22 +88,22 @@ classDiagram
         - String processInstanceId
         - String templateId
         - String title
-        - String initiatorId
+        - String initiatorId / initiatorName
         - ApprovalStatus status
+        - String formData
         - List~ApprovalRecord~ records
         - String currentApproverIds
-        - Integer version
+        - LocalDateTime initiateTime
         + isCompleted() boolean
         + isCancellable() boolean
         + updateStatus(newStatus)
         + addRecord(record)
     }
-    note for ApprovalProcess "ApprovalStatus 6 态:\nPENDING/IN_PROGRESS/APPROVED/REJECTED/CANCELLED/TRANSFERRED"
+    note for ApprovalProcess "ApprovalStatus: PENDING/IN_PROGRESS/APPROVED/REJECTED/CANCELLED/TRANSFERRED"
 
     class ApprovalRecord {
         «value object · 审批记录»
-        - String approverId
-        - String approverName
+        - String approverId / approverName
         - ApprovalAction action
         - String comment
         - LocalDateTime approvalTime
@@ -81,26 +111,34 @@ classDiagram
         - Integer nodeOrder
     }
 
+    class ApprovalStatus {
+        «enumeration»
+        PENDING
+        IN_PROGRESS
+        APPROVED
+        REJECTED
+        CANCELLED
+        TRANSFERRED
+    }
+
     class CalendarEvent {
-        «aggregate root · 日历事件»
+        «aggregate root · 日历事件 @Data»
         - Long id
         - Long tenantId
         - String platform
         - String platformEventId
         - String title
+        - String description
         - CalendarEventType eventType
-        - LocalDateTime startTime
-        - LocalDateTime endTime
-        - String participantIds
-        - String meetingRoomId
-        - String status
+        - String organizerId / organizerName
+        - LocalDateTime startTime / endTime
         + cancel() / confirm()
         + updateTime(start, end)
         + isTimeRangeValid() boolean
     }
 
     class DocumentInfo {
-        «aggregate root · 文档信息»
+        «aggregate root · 文档信息 @Data»
         - Long id
         - Long tenantId
         - String platform
@@ -114,27 +152,64 @@ classDiagram
         + updatePermission(permission)
     }
 
-    class OfficeMember {
-        «value object · 成员»
-        - String externalUserId
-        - String name
-        - List~String~ deptIds
-        - String status
-        - String position
-        + isActive() boolean
-        + belongsToDept(deptId) boolean
+    class MessagePort {
+        «outbound port · 消息端口»
+        + sendMessage(target, content) Mono~String~
+        + queryMessageStatus(messageId) Mono~String~
+        + recallMessage(messageId) Mono~Boolean~
     }
 
-    class OfficeMessagePort {
-        «outbound port · 消息端口»
+    class ApprovalPort {
+        «outbound port · 审批端口»
+        + createApproval(...) Mono~String~
+        + getApprovalStatus(id) Mono~String~
+        + approveProcess(id, approverId, action, comment) Mono~Boolean~
+        + cancelApproval(id, initiatorId) Mono~Boolean~
+        + getApprovalDetail(id) Mono~Map~
     }
+
+    class CalendarPort {
+        «outbound port · 日历端口»
+        + createEvent(...) Mono~String~
+        + getEventDetail(id) Mono~Map~
+        + updateEvent(...) Mono~Boolean~
+        + cancelEvent(id, organizerId) Mono~Boolean~
+        + deleteEvent(id, organizerId) Mono~Boolean~
+        + listEvents(userId, start, end) Mono~List~
+    }
+
+    class DocumentPort {
+        «outbound port · 文档端口»
+        + createDocument(folderId, title, type) Mono~String~
+        + getDocumentDetail(id) Mono~Map~
+        + updateDocumentTitle(id, newTitle) Mono~Boolean~
+        + moveDocument(id, targetFolderId) Mono~Boolean~
+        + copyDocument(id, targetFolderId, newTitle) Mono~String~
+        + deleteDocument(id) Mono~Boolean~
+    }
+
+    class AbstractOfficeClient {
+        «abstract · 统一 OAuth 基类»
+        + getAccessToken() Mono~String~
+        + refreshAccessToken() Mono~String~
+    }
+    note for AbstractOfficeClient "各平台子类覆盖业务方法\n阻塞 I/O 隔离到 remote() 池\nfeishu/dingtalk/wecom 三个实现"
 
     OfficeMessage *-- MessageContent : content 组合
     OfficeMessage *-- MessageTarget : target 组合
     ApprovalProcess o-- ApprovalRecord : records 聚合
     ApprovalProcess *-- ApprovalStatus : 状态机
+    OfficePlatformApp ..> OfficePlatform : «use» 平台枚举
     MessageContent <|.. TextMessageContent : 实现
     MessageContent <|.. MarkdownMessageContent : 实现
     MessageContent <|.. CardMessageContent : 实现
-    OfficeMessage ..> OfficeMessagePort : «use» 发送/查询/撤回
-    OfficePlatformApp ..> OfficePlatform : «use» 平台枚举
+
+    MessagePort <|.. AbstractOfficeClient : 实现
+    ApprovalPort <|.. AbstractOfficeClient : 实现
+    CalendarPort <|.. AbstractOfficeClient : 实现
+    DocumentPort <|.. AbstractOfficeClient : 实现
+
+    OfficeMessage ..> MessagePort : «use» 发送/查询/撤回
+    ApprovalProcess ..> ApprovalPort : «use» 创建/审批/取消
+    CalendarEvent ..> CalendarPort : «use» 创建/更新/取消
+    DocumentInfo ..> DocumentPort : «use» 创建/移动/删除

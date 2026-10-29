@@ -3,6 +3,8 @@
 ###############################################################################
 # weekly-link-check.sh - 周度文档链接检查并生成 Markdown 报告
 # 用法：./scripts/ops/maintenance/weekly-link-check.sh  无参数；报告写 docs/reports/link-check-YYYYMMDD.md
+# 链接校验统一由 scripts/ci/check-doc-links.sh（Java 实现）承担；原内嵌 Python
+# 粗粒度复查为弱断言重复检查，已按"测试与校验代码用 Java"的规范移除。
 # 作者：Apex Team    创建：2026-10-01
 ###############################################################################
 set -euo pipefail
@@ -29,14 +31,14 @@ log_error() {
 
 run_link_check() {
     log_info "运行文档链接检查..."
-    
+
     cd "$PROJECT_ROOT"
-    
+
     if [ ! -f "$PROJECT_ROOT/scripts/ci/check-doc-links.sh" ]; then
         log_error "链接检查脚本不存在"
         return 1
     fi
-    
+
     if bash "$PROJECT_ROOT/scripts/ci/check-doc-links.sh" >> "$LOG_FILE" 2>&1; then
         log_info "✓ 链接检查通过"
         return 0
@@ -46,66 +48,11 @@ run_link_check() {
     fi
 }
 
-run_python_check() {
-    log_info "运行 Python 链接验证..."
-    
-    python3 << 'EOF' | tee -a "$LOG_FILE"
-import re
-from pathlib import Path
-
-docs_dir = Path("docs")
-broken_links = []
-total_links = 0
-
-for md_file in docs_dir.rglob("*.md"):
-    try:
-        content = md_file.read_text(encoding='utf-8')
-        links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', content)
-        
-        for link_text, link_path in links:
-            if link_path.startswith(('http://', 'https://', 'mailto:', '#')):
-                continue
-            
-            total_links += 1
-            clean_path = link_path.split('#')[0]
-            if not clean_path:
-                continue
-            
-            if clean_path.startswith('/'):
-                target = Path(clean_path[1:])
-            else:
-                target = (md_file.parent / clean_path).resolve()
-            
-            if not target.exists():
-                broken_links.append({
-                    'file': str(md_file),
-                    'path': link_path
-                })
-    except Exception as e:
-        pass
-
-active_broken = [l for l in broken_links if not any(x in l['file'] for x in ['_archive', 'templates', '_templates', 'plans/ai-assisted'])]
-
-print(f"总链接数: {total_links}")
-print(f"断裂链接: {len(broken_links)}")
-print(f"活跃文档断裂链接: {len(active_broken)}")
-print(f"有效率: {((total_links - len(broken_links)) / total_links * 100):.2f}%")
-
-if len(active_broken) > 0:
-    print("\n⚠️ 活跃文档断裂链接:")
-    for link in active_broken[:10]:
-        print(f"  - {Path(link['file']).relative_to(docs_dir)}")
-        print(f"    → {link['path']}")
-
-exit(0 if len(active_broken) == 0 else 1)
-EOF
-}
-
 generate_report() {
     log_info "生成检查报告..."
-    
+
     local status="PASSED"
-    if ! run_link_check || ! run_python_check; then
+    if ! run_link_check; then
         status="FAILED"
     fi
     

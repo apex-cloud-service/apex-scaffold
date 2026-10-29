@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""Explicit offline MySQL V42 structure recovery. No migration-history operations."""
+import argparse
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import sys
+
+SOURCE_HASH = 'df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e'
+FIELDS = {
+    'access_token_hash': ('varchar(64)', 'YES', None, ''),
+    'access_token_encrypted': ('text', 'YES', None, ''),
+    'access_token_iv': ('varchar(32)', 'YES', None, ''),
+    'refresh_token_hash': ('varchar(64)', 'YES', None, ''),
+    'refresh_token_encrypted': ('text', 'YES', None, ''),
+    'refresh_token_iv': ('varchar(32)', 'YES', None, ''),
+    'token_family': ('varchar(64)', 'YES', None, ''),
+    'previous_jti': ('varchar(100)', 'YES', None, ''),
+    'revoked_at': ('datetime', 'YES', None, ''),
+    'rotation_count': ('int', 'YES', '0', ''),
+}
+INDEXES = {f'idx_{name}': [(1, name, None, 'A', 'BTREE', 'YES', None)] for name in (
+    'access_token_hash', 'refresh_token_hash', 'token_family', 'revoked_at')}
+# MySQL 8 canonical VIEW_DEFINITION, with schema qualifiers removed by normalize_view.
+VIEW = """select cast(`oauth2_authorization`.`access_token_issued_at` as date) AS `issue_date`,count(0) AS `total_tokens`,sum((case when (`oauth2_authorization`.`access_token_encrypted` is not null) then 1 else 0 end)) AS `encrypted_tokens`,sum((case when ((`oauth2_authorization`.`revoked_at` is null) and (`oauth2_authorization`.`access_token_expires_at` > now())) then 1 else 0 end)) AS `active_tokens`,sum((case when (`oauth2_authorization`.`revoked_at` is not null) then 1 else 0 end)) AS `revoked_tokens`,sum((case when (`oauth2_authorization`.`rotation_count` > 0) then 1 else 0 end)) AS `rotated_tokens`,avg(`oauth2_authorization`.`rotation_count`) AS `avg_rotation_count`,count(distinct `oauth2_authorization`.`token_family`) AS `active_families` from `oauth2_authorization` where (`oauth2_authorization`.`access_token_issued_at` >= (now() - interval 7 day)) group by cast(`oauth2_authorization`.`access_token_issued_at` as date) order by `issue_date` desc"""
+
+
+class Rejected(ValueError):
+    pass
+
+
+def normalize_view(text, database):
+    # 仅规范化引号外的空白，避免把不同标识符或字符串合并。
+    parts = re.split(r"(`(?:``|[^`])*`|'(?:''|[^'])*')", text.replace('`' + database + '`.', ''))
+    return ''.join(part[1:-1].lower() if re.fullmatch(r'`[A-Za-z0-9_]+`', part)
+                   else part if part.startswith(("'", '`'))
+                   else re.sub(r'\s+', '', part).lower() for part in parts)
+
+
+def source_contract(source):
+    if hashlib.sha256(source.encode()).hexdigest() != SOURCE_HASH:
+        raise Rejected('original V42 hash differs; review tool contract')
+    columns = re.findall(r'^ADD COLUMN (.*?)(?:,|;)$', source, re.M)
+    if len(columns) != 10:
+        raise Rejected('V42 column contract differs')
+    tables = {}
+    for name, body in re.findall(r'CREATE TABLE IF NOT EXISTS (\w+) \((.*?)\) ENGINE=InnoDB[^;]*;', source, re.S):
+        fields, indexes = {}, {}
+        for line in body.splitlines():
+            line = line.strip().rstrip(',')
+            if not line:
+                continue
+            match = re.fullmatch(r'INDEX (\w+) \((\w+)\)', line)
+            if match:
+                indexes[match[1]] = [(1, match[2], None, 'A', 'BTREE', 'YES', None)]
+                continue
+            match = re.match(r'(\w+) (BIGINT|INT|VARCHAR\(\d+\)|TEXT|JSON|DATETIME|BOOLEAN)(.*)', line, re.I)
+            if not match:
+                raise Rejected('unrecognized V42 table definition: ' + line)
+            field, kind, rest = match.groups()
+            kind = {'boolean': 'tinyint(1)'}.get(kind.lower(), kind.lower())
+            default = re.search(r"DEFAULT ('[^']*'|\w+)", rest)
+            value = default[1].strip("'") if default else None
+            if value in ('TRUE', 'FALSE'):
+                value = '1' if value == 'TRUE' else '0'
+            if value == 'CURRENT_TIMESTAMP':
+                value = 'CURRENT_TIMESTAMP'
+            extra = 'auto_increment' if 'AUTO_INCREMENT' in rest else ('DEFAULT_GENERATED' if value == 'CURRENT_TIMESTAMP' else '')
+            nullable = 'NO' if 'NOT NULL' in rest or 'PRIMARY KEY' in rest else 'YES'
+            fields[field] = (kind, nullable, value, extra)
+            if 'PRIMARY KEY' in rest:
+                indexes['PRIMARY'] = [(0, field, None, 'A', 'BTREE', 'YES', None)]
+            if 'UNIQUE' in rest:
+                indexes[field] = [(0, field, None, 'A', 'BTREE', 'YES', None)]
+        tables[name] = (fields, indexes, 'CREATE TABLE ' + name + ' (' + body + ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;')
+    view = re.search(r'CREATE OR REPLACE VIEW v_token_health AS(.*?);', source, re.S)[1]
+    return columns, tables, 'CREATE VIEW v_token_health AS' + view + ';'
+
+
+class Client:
+    def __init__(self, command, database):
+        self.command = command
+        self.database = database
+
+    def execute(self, sql):
+        p = subprocess.run(self.command + ['--batch', '--raw', '--skip-column-names', '--default-character-set=utf8mb4', self.database],
+                           input=sql, text=True, capture_output=True, timeout=90)
+        if p.returncode:
+            # Server errors can contain application data; do not echo them.
+            raise RuntimeError('mysql command failed; inspect server locally (output withheld)')
+        return p.stdout.strip()
+
+    def rows(self, query):
+        text = self.execute(query)
+        return [json.loads(line) for line in text.splitlines()] if text else []
+
+
+def preflight(client, source):
+    columns, tables, view = source_contract(source)
+    objects = {r[0]: r[1:] for r in client.rows("SELECT JSON_ARRAY(table_name,table_type,engine,table_collation) FROM information_schema.tables WHERE table_schema=DATABASE()")}
+    all_columns = client.rows("SELECT JSON_ARRAY(table_name,column_name,column_type,is_nullable,column_default,extra,generation_expression,character_set_name,collation_name) FROM information_schema.columns WHERE table_schema=DATABASE() ORDER BY ordinal_position")
+    all_indexes = client.rows("SELECT JSON_ARRAY(table_name,index_name,non_unique,column_name,sub_part,collation,index_type,is_visible,expression) FROM information_schema.statistics WHERE table_schema=DATABASE() ORDER BY index_name,seq_in_index")
+    plan = []
+
+    def catalog(table):
+        fields = {r[1]: tuple(r[2:6]) for r in all_columns if r[0] == table}
+        indexes = {}
+        for row in all_indexes:
+            if row[0] == table:
+                indexes.setdefault(row[1], []).append(tuple(row[2:]))
+        return fields, indexes
+
+    def check_base(table):
+        if objects[table][0] != 'BASE TABLE' or objects[table][1] != 'InnoDB':
+            raise Rejected(table + ': expected InnoDB base table')
+        if client.rows("SELECT JSON_ARRAY(trigger_name) FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table='" + table + "'"):
+            raise Rejected(table + ': triggers require manual review')
+        if client.rows("SELECT JSON_ARRAY(constraint_name) FROM information_schema.table_constraints WHERE table_schema=DATABASE() AND table_name='" + table + "' AND constraint_type IN ('CHECK','FOREIGN KEY')"):
+            raise Rejected(table + ': CHECK/foreign key constraints require manual review')
+
+    def check_field(table, name, actual, expected):
+        if actual != expected:
+            raise Rejected(table + '.' + name + ': incompatible column type/nullability/default/extra')
+        row = next(r for r in all_columns if r[:2] == [table, name])
+        if row[6]:
+            raise Rejected(table + '.' + name + ': generated column')
+        if expected[0].startswith(('varchar', 'text')) and row[7] != 'utf8mb4':
+            raise Rejected(table + '.' + name + ': expected utf8mb4')
+
+    if 'oauth2_authorization' not in objects:
+        raise Rejected('oauth2_authorization missing')
+    for table in ('oauth2_authorization', 'token'):
+        if table not in objects:
+            continue
+        check_base(table)
+        if not objects[table][2].startswith('utf8mb4_'):
+            raise Rejected(table + ': expected utf8mb4 table')
+        actual_fields, actual_indexes = catalog(table)
+        if table == 'oauth2_authorization':
+            for name in ('access_token_issued_at', 'access_token_expires_at'):
+                if name not in actual_fields or actual_fields[name][0] not in ('datetime', 'timestamp'):
+                    raise Rejected(table + '.' + name + ': missing/incompatible view dependency')
+        for (name, expected), definition in zip(FIELDS.items(), columns):
+            if name in actual_fields:
+                check_field(table, name, actual_fields[name], expected)
+            else:
+                plan.append('ALTER TABLE `' + table + '` ADD COLUMN ' + definition + ';')
+        for name, expected in INDEXES.items():
+            if name in actual_indexes:
+                if actual_indexes[name] != expected:
+                    raise Rejected(table + '.' + name + ': incompatible index')
+            else:
+                plan.append('CREATE INDEX `' + name + '` ON `' + table + '` (`' + expected[0][1] + '`);')
+    for table, (fields, indexes, ddl) in tables.items():
+        if table not in objects:
+            plan.append(ddl)
+            continue
+        check_base(table)
+        if not objects[table][2].startswith('utf8mb4_'):
+            raise Rejected(table + ': expected utf8mb4 table')
+        actual_fields, actual_indexes = catalog(table)
+        if set(actual_fields) != set(fields) or actual_indexes != indexes:
+            raise Rejected(table + ': incompatible column/index set')
+        for name, expected in fields.items():
+            check_field(table, name, actual_fields[name], expected)
+    if 'v_token_health' in objects:
+        if objects['v_token_health'][0] != 'VIEW':
+            raise Rejected('v_token_health: expected view')
+        row = client.rows("SELECT JSON_ARRAY(view_definition,check_option,security_type) FROM information_schema.views WHERE table_schema=DATABASE() AND table_name='v_token_health'")[0]
+        if normalize_view(row[0], client.database) != normalize_view(VIEW, client.database) or row[1:] != ['NONE', 'DEFINER']:
+            raise Rejected('v_token_health: incompatible definition/security/check option')
+    else:
+        plan.append(view)
+    # Insert only if version 1 is absent; never update/reactivate an existing key.
+    if 'encryption_key_version' not in objects or not client.rows('SELECT JSON_ARRAY(key_version) FROM encryption_key_version WHERE key_version=1;'):
+        plan.append("INSERT INTO encryption_key_version(key_version,key_id,active) SELECT 1,'default-key-v1',TRUE WHERE NOT EXISTS (SELECT 1 FROM encryption_key_version WHERE key_version=1);")
+    return plan
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--database', required=True)
+    parser.add_argument('--offline', action='store_true', help='attest all writers and schema changes are stopped and backup verified')
+    parser.add_argument('--apply', action='store_true', help='execute after full preflight; default only prints plan')
+    parser.add_argument('--mysql-command', nargs=argparse.REMAINDER, default=['mysql', '--no-defaults'], help='client command prefix; must be last; credentials via protected client config')
+    args = parser.parse_args()
+    if not args.offline or not re.fullmatch(r'[A-Za-z0-9_]+', args.database):
+        parser.error('--offline and a simple database identifier are required')
+    if not args.mysql_command:
+        parser.error('--mysql-command requires a command')
+    if any(option.split('=', 1)[0] == '--force' or
+           re.match(r'^-[vNst]*f', option)
+           for option in args.mysql_command):
+        parser.error('mysql --force is forbidden')
+    try:
+        source = (pathlib.Path(__file__).resolve().parents[2] / 'migration/mysql/V42__add_token_encryption.sql').read_text()
+        client = Client(args.mysql_command, args.database)
+        if not client.execute('SELECT VERSION();').startswith('8.0.'):
+            raise Rejected('only MySQL 8.0 is supported')
+        plan = preflight(client, source)
+        print(json.dumps({'mode': 'apply' if args.apply else 'plan', 'statements': plan}, ensure_ascii=False))
+        if args.apply:
+            for statement in plan:
+                client.execute(statement)
+            if preflight(client, source):
+                raise Rejected('postflight incomplete: recovery statements remain')
+            client.execute('SELECT * FROM v_token_health LIMIT 0;')
+            print('structure recovery complete; original V42 replay and Flyway history remain unresolved')
+        return 0
+    except (Rejected, RuntimeError, OSError, subprocess.TimeoutExpired) as exc:
+        print('preflight rejected: ' + str(exc) if isinstance(exc, Rejected) else 'recovery stopped: ' + str(exc), file=sys.stderr)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

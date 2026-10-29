@@ -1,0 +1,143 @@
+{
+  "title": "V42 恢复 90 秒超时根因、验证器超时装置修正与 31 场景重跑",
+  "date": "2026-10-20",
+  "observed_at_utc": "2026-10-20T02:32:38+00:00",
+  "purpose": "判定 2026-10-20 早前 clean_predecessor apply 90 秒超时的性质，修正验证器装置超时，并取得一次完整 31 场景恢复回归结果",
+  "scope": "isolated structure recovery and harness timing only; no Flyway baseline credit, no migration coverage increment",
+  "baseline_credit": false,
+  "coverage_before": "500/586",
+  "coverage_after": "500/586",
+  "remaining": 86,
+  "environment": {
+    "python": "3.13.12",
+    "podman": "5.8.5",
+    "mysql_image": "localhost/mysql:8.0",
+    "mysql_version": "8.0.46",
+    "container_network": "none",
+    "container_storage": "tmpfs /var/lib/mysql",
+    "credentials": "synthetic empty root password, isolated container"
+  },
+  "source_hashes": {
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py": "4e4184ebb7cd41ccc739822395ab13b66118330387ffaf97fc10d1d2ccbe9c9b",
+    "scripts/test/verify_token_v42_recovery.py": "70d38665df5103ccf070c343d3dd0fb69dc27d1333c3c8f12778cc1be5138f9e",
+    "scripts/test/test_token_v42_recovery.py": "658ffb46d42ec44f7051227b725d7c80ccb5d039779140dfd61efe9497e137f0"
+  },
+  "unchanged_inputs": {
+    "note": "恢复工具与历史迁移 SQL 未修改；工具 hash 与 2026-10-19 31 场景全通过证据中的值一致",
+    "token_v42_recover_matches_prior_full_pass": true
+  },
+  "prior_diagnostics": [
+    {
+      "file": "mysql-v42-recovery-timeout-isolation-20261020-evidence.json",
+      "sha256": "unmodified",
+      "content": "单次隔离复现：plan 3.70s、apply 17.47s、33 条语句、单条 exec 均值 339.3ms",
+      "retained": true,
+      "superseded_by": "本文件：该轮把根因概括为 isolated load amplification，本次 900 次采样未复现单调累积劣化，改为可复现的往返延迟方差与宿主负载敏感性，并补入完整 31 场景重跑结果"
+    },
+    {
+      "file": "token-v42-recovery-8548f6b5ee86-evidence.json",
+      "content": "早前完整轮次为 partial_failure，30 场景记录，缺 view_invoker，未作为通过证据",
+      "retained": true
+    }
+  ],
+  "measurements": {
+    "harness_timeout_before": {
+      "per_recovery_invocation_seconds": 90,
+      "applies_to": "scripts/test/verify_token_v42_recovery.py 中每次 recover() 调用"
+    },
+    "exec_round_trip_seconds": {
+      "samples": 900,
+      "window_avg_ms": [
+        {"calls": 100, "avg_ms": 262.0, "max_ms": 366.4},
+        {"calls": 200, "avg_ms": 259.1, "max_ms": 530.9},
+        {"calls": 300, "avg_ms": 242.6, "max_ms": 355.0},
+        {"calls": 400, "avg_ms": 260.2, "max_ms": 471.5},
+        {"calls": 500, "avg_ms": 278.0, "max_ms": 420.9},
+        {"calls": 600, "avg_ms": 251.4, "max_ms": 500.0},
+        {"calls": 700, "avg_ms": 223.9, "max_ms": 369.3},
+        {"calls": 800, "avg_ms": 220.8, "max_ms": 447.0},
+        {"calls": 900, "avg_ms": 302.9, "max_ms": 1412.9}
+      ],
+      "worst_ms": 1412.9,
+      "script": "/tmp/apex-exec-latency-20261020.py",
+      "script_sha256": "7347fbfbf9266a7e6b8d9a87e99be8af76daef8c50cb50758d818e435e0a5fa8",
+      "repository_tracked": false,
+      "cleanup_remove_exit_code": 0,
+      "cleanup_exists_exit_code": 1
+    },
+    "suite_wall_clock": {
+      "file": "token-v42-recovery-suite-20261020-evidence.json",
+      "sha256": "2708b858c1b5f41a7a973d4f4e58113072880c1b45d6ba1a100189f1e6fd0bad",
+      "started_at": "2026-10-20T02:21:14.024123+00:00",
+      "ended_at": "2026-10-20T02:32:38.613541+00:00",
+      "duration_seconds": 684.59,
+      "recovery_invocations": 42,
+      "derivation": "3 个正例各 plan/apply/重入 3 次共 9 次，23 个冲突各 1 次，5 个后续对象冲突各 2 次，合计 42 次",
+      "mean_seconds_per_invocation": 16.3
+    }
+  },
+  "harness_fix": {
+    "file": "scripts/test/verify_token_v42_recovery.py",
+    "changes": [
+      "command() 增加 timeout 参数，保留默认 90s 供容器启停等短调用",
+      "recover() 单次调用独立放宽到 300s，断言与 31 场景集合零改动",
+      "finally 中 podman rm 使用 300s、container exists 使用 120s，并捕获 TimeoutExpired 记录 remove_timed_out/exists_timed_out，避免清理超时中断证据落盘"
+    ],
+    "rationale": "单次 recover 调用内部按每条语句一次 podman exec 串行执行，本机观测往返方差大，90s 对整次调用过于贴近；超时属装置预算问题，放宽不改变被测逻辑或判定条件",
+    "assertions_unchanged": true,
+    "scenario_set_unchanged": true
+  },
+  "suite_result": {
+    "status": "passed",
+    "scenarios": 31,
+    "positive_passed": ["actual_v42_failure", "clean_predecessor", "token_absent"],
+    "rejected": 28,
+    "view_invoker_present": true,
+    "cleanup": {"remove_exit_code": 0, "exists_exit_code": 1, "container_and_anonymous_volumes_removed": true},
+    "baseline_credit": false
+  },
+  "unit_tests": {
+    "command": "python3 -B -m unittest scripts.test.test_token_v42_recovery scripts.test.test_mysql_v19_v42_negative_probe -v",
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "duration_seconds": 2.85,
+    "exit_code": 0
+  },
+  "conclusion": {
+    "root_cause": "harness timeout budget too tight for serialized podman exec round trips, not a recovery-logic or database-lock defect",
+    "reasoning": [
+      "恢复工具与历史 SQL 的 hash 与 2026-10-19 31 场景全通过证据完全一致，排除该时间窗内的代码回归",
+      "同一版本工具在 300s 预算下完整跑完 31 场景，42 次恢复调用平均 16.3s，全部通过",
+      "单次 exec 往返本次 900 次采样均值 220.8–302.9ms、最差 1412.9ms；一次恢复调用包含数十次 exec，整次调用耗时对单次往返波动高度敏感",
+      "早前轮次的 90s 失败记录为整次调用超时，没有单条 SQL 卡死或数据库锁证据"
+    ],
+    "not_confirmed": "本次 900 次采样未重现早前会话中 exec 往返随调用次数单调上升的现象；累积劣化不是本次可复现的结论，可复现的只是往返延迟的较大方差与宿主负载敏感性",
+    "interpretation_limit": "超时根因判定与装置修正不改变恢复工具行为，也不把恢复回归转化为 Flyway 原生迁移验收"
+  },
+  "what_this_does_not_prove": [
+    "不证明 V42 原迁移三分支（absent/present/replay）通过，不增加 586 分母内任何覆盖",
+    "不证明 Flyway history/checksum 协调、历史升级链重放或 repair 结果",
+    "不证明 token 明文加密迁移或应用令牌往返",
+    "不证明 PostgreSQL V42、生产数据升级或生产回退",
+    "未执行 Java 构建、全仓 clean verify 或服务启动"
+  ],
+  "history_preserved": [
+    "早前 90s 超时记录与 partial_failure 轮次保持原状，不追认为通过",
+    "token-v42-recovery-143e4f2373bf-evidence.json（31 场景 passed）与其他旧证据未修改",
+    "V40 前置修复、V42 恢复、独立行为诊断均不追认为历史迁移原生成功"
+  ],
+  "commands": [
+    "python3 -B scripts/test/verify_token_v42_recovery.py --output docs/06-testing/jdk21-unified-auth/20261016-p0/token-v42-recovery-suite-20261020-evidence.json",
+    "python3 -B /tmp/apex-exec-latency-20261020.py",
+    "python3 -B -m unittest scripts.test.test_token_v42_recovery scripts.test.test_mysql_v19_v42_negative_probe -v",
+    "shasum -a 256 scripts/test/verify_token_v42_recovery.py apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py"
+  ],
+  "status": "diagnostic_and_harness_fix",
+  "limits": [
+    "诊断与装置修正不关闭任何剩余 86 项，覆盖仍 500/586",
+    "单机空载/轻载测量不构成并发或生产 SLA 保证",
+    "P0 仍未准出，Java 21 未切换"
+  ]
+}

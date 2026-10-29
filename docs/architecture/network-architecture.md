@@ -2,7 +2,7 @@
 
 > 文档版本: v1.0
 > 创建时间: 2026-09-04
-> 适用版本: apex-scaffold v2.5.0+
+> 适用版本: apex-scaffold v1.3.1+
 > 网络模式: VPC + 安全分区隔离
 
 > **配套架构图**:
@@ -35,7 +35,7 @@ DMZ区 (非军事化区)
 |------|---------|---------|---------|
 | **公网区** | 低 | 公开访问 | CDN、DNS、用户浏览器 |
 | **DMZ区** | 中等 | 仅443端口 | WAF、负载均衡器、NAT网关、跳板机 |
-| **应用区** | 高 | 内网白名单 | Apex应用实例、Nacos、Sentinel |
+| **应用区** | 高 | 内网白名单 | Apex应用实例、Nacos（可选）、Sentinel（流控） |
 | **数据区** | 最高 | 应用区白名单 | MySQL、Redis、RocketMQ、MinIO |
 | **运维管理区** | 高 | VPN + 2FA | Prometheus、Grafana、Kibana、Jenkins |
 
@@ -159,7 +159,7 @@ server {
 
 **服务治理**:
 - **Nacos**: `10.0.2.20:8848` (配置中心 + 服务发现)
-- **Sentinel Dashboard**: `10.0.2.21:8858` (流控熔断)
+- **Resilience4j（内置）**: `10.0.2.21:8858` (流控熔断)
 - **Service Mesh (可选)**: Istio Sidecar
 
 #### 2.3.2 防火墙规则 (FW-2: DMZ → Application)

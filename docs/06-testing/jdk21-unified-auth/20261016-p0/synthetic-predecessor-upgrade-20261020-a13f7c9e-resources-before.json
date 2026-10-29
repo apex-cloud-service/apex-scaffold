@@ -1,0 +1,2092 @@
+{
+  "containers": [
+    {
+      "AutoRemove": false,
+      "Command": [
+        "sh",
+        "-c",
+        "redis-server --appendonly yes --requirepass \"${REDIS_PASSWORD}\""
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": 1791262999,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "6379": [
+          "tcp"
+        ]
+      },
+      "Id": "874985f0af1538965a5753624ceae13b85dc9bdf122c1d9c2312a137b3f84a8f",
+      "Image": "localhost/redis:7-alpine",
+      "ImageID": "5509c0097c6064aa8a3b1df58f1d950e67090fffa6678ae8f3f1dc2385f12deb",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "redis",
+        "io.podman.compose.config-hash": "f35ff50a7afc34b36c94e202de9b8e379ee6d5c5cf01735beecd339cf058360f",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "redis",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [
+        "/data"
+      ],
+      "Names": [
+        "apex-scaffold_redis_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 6379,
+          "host_port": 6379,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792221651,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791184137
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "-config.file=/etc/loki/local-config.yaml"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263002,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "3100": [
+          "tcp"
+        ]
+      },
+      "Id": "4646c7b03b35e5035ca78b5a6758ccea114d66977b5428b3587e3c27248592ee",
+      "Image": "localhost/grafana/loki:3.0.0",
+      "ImageID": "b3ac890121a80b80e4d3bab6909a0bf54e75695e0ca71138d4dae8bbd68fc384",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "loki",
+        "io.podman.compose.config-hash": "cff2666dec943f434a1452d5640ff31f4bbf1aa0e05c824d86ed827995307b11",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "loki",
+        "io.podman.compose.version": "1.6.0",
+        "org.opencontainers.image.created": "2024-04-08T19:20:27Z",
+        "org.opencontainers.image.revision": "b4f7181c7aa9484e66976e8a933111a9b85ea8c2",
+        "org.opencontainers.image.source": "https://github.com/grafana/loki.git",
+        "org.opencontainers.image.url": "https://github.com/grafana/loki"
+      },
+      "Mounts": [
+        "/etc/loki/local-config.yaml",
+        "/loki"
+      ],
+      "Names": [
+        "apex-scaffold_loki_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 3100,
+          "host_port": 3100,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791184918,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791184917
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "run",
+        "--server.http.listen-addr=0.0.0.0:12345",
+        "--storage.path=/var/lib/alloy/data",
+        "/etc/alloy/config.alloy"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263001,
+      "ExitCode": 0,
+      "ExposedPorts": null,
+      "Id": "f02c99967a03e3b0112a2b565c1b90e9636655091b3eeab0cc4c35f738dd932c",
+      "Image": "localhost/grafana/alloy:v1.0.0",
+      "ImageID": "9b52c8658804230fff39d8a61a97786b94d7053b504899f1d8c4cc742ca464aa",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "alloy",
+        "io.podman.compose.config-hash": "90e2c40d5c899f08485d6f423a62ff63f74c362fbc80db83242904f05de0d79b",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "alloy",
+        "io.podman.compose.version": "1.6.0",
+        "org.opencontainers.image.ref.name": "ubuntu",
+        "org.opencontainers.image.source": "https://github.com/grafana/alloy",
+        "org.opencontainers.image.version": "23.10"
+      },
+      "Mounts": [
+        "/etc/alloy/config.alloy",
+        "/var/log/apex-scaffold",
+        "/var/lib/alloy"
+      ],
+      "Names": [
+        "apex-scaffold_alloy_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 12345,
+          "host_port": 12345,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791184950,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791184917
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "/bin/sh",
+        "-c",
+        "mkdir -p /home/rocketmq/logs && exec sh mqnamesrv"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": 1791263000,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "10909": [
+          "tcp"
+        ],
+        "10911": [
+          "tcp"
+        ],
+        "10912": [
+          "tcp"
+        ],
+        "9876": [
+          "tcp"
+        ]
+      },
+      "Id": "b90e794bdf7da485bf7470732e683925e386a8e71208217af04e6d36f53ffdfe",
+      "Image": "localhost/apache/rocketmq:5.3.1",
+      "ImageID": "0a6c08fe53901569dc475bffdba2e569dedc14824b80f2618e253d56ae462c32",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "rocketmq-namesrv",
+        "io.podman.compose.config-hash": "646ccddb7dbfd2329f62ad8037f941007a59fbda00e8c7d457bfc73c2f099a8a",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "rocketmq-namesrv",
+        "io.podman.compose.version": "1.6.0",
+        "org.opencontainers.image.ref.name": "ubuntu",
+        "org.opencontainers.image.version": "24.04"
+      },
+      "Mounts": [],
+      "Names": [
+        "apex-scaffold_rocketmq-namesrv_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 9876,
+          "host_port": 9876,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792221651,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791185689
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "/bin/sh",
+        "-c",
+        "mkdir -p /home/rocketmq/logs && exec sh mqbroker -n rocketmq-namesrv:9876"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": 1791263000,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "10909": [
+          "tcp"
+        ],
+        "10911": [
+          "tcp"
+        ],
+        "10912": [
+          "tcp"
+        ],
+        "9876": [
+          "tcp"
+        ]
+      },
+      "Id": "43747cf271899803c38f087f737ee79f309bc25fcb9163290ef97abbff2b1d1d",
+      "Image": "localhost/apache/rocketmq:5.3.1",
+      "ImageID": "0a6c08fe53901569dc475bffdba2e569dedc14824b80f2618e253d56ae462c32",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "rocketmq-broker",
+        "io.podman.compose.config-hash": "74cf35fc03af61db0b7f6b16aba730204d8c0c12db8a651e7bfa1252a5b088ca",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "rocketmq-broker",
+        "io.podman.compose.version": "1.6.0",
+        "org.opencontainers.image.ref.name": "ubuntu",
+        "org.opencontainers.image.version": "24.04"
+      },
+      "Mounts": [],
+      "Names": [
+        "apex-scaffold_rocketmq-broker_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 10909,
+          "host_port": 10909,
+          "range": 1,
+          "protocol": "tcp"
+        },
+        {
+          "host_ip": "",
+          "container_port": 10911,
+          "host_port": 10911,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792221652,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791185690
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": 1791263004,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "3306": [
+          "tcp"
+        ],
+        "33060": [
+          "tcp"
+        ]
+      },
+      "Id": "eb469f6635d8a93fa7661f60419d026a3479ef87cf9097b5fbfb2fc05c97890d",
+      "Image": "localhost/mysql:8.0",
+      "ImageID": "6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "mysql",
+        "io.podman.compose.config-hash": "ad4498d9a979409956748d0238be58f48fce9e4d30ffa3a7a59e0f598759d371",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "mysql",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [
+        "/var/lib/mysql"
+      ],
+      "Names": [
+        "apex-scaffold_mysql_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 3306,
+          "host_port": 3306,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792221650,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791186839
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": 1791263003,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "8848": [
+          "tcp"
+        ]
+      },
+      "Id": "4650df0033431c317423fdef22df21da1b5a0610455eb05bcab1257d83920206",
+      "Image": "localhost/nacos/nacos-server:v2.3.2",
+      "ImageID": "d3063c1db2bb923c190de1f01073abb861ef697be8f48cf822f9e1255ac2a7da",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.infra.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "nacos",
+        "io.podman.compose.config-hash": "b870ca1f6e3afab72b79cbd77797dbf859e129967e48b5195351233078a9d21f",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "nacos",
+        "io.podman.compose.version": "1.6.0",
+        "maintainer": "pader <huangmnlove@163.com>",
+        "org.label-schema.build-date": "20201113",
+        "org.label-schema.license": "GPLv2",
+        "org.label-schema.name": "CentOS Base Image",
+        "org.label-schema.schema-version": "1.0",
+        "org.label-schema.vendor": "CentOS",
+        "org.opencontainers.image.created": "2024-04-03T07:38:47.508Z",
+        "org.opencontainers.image.description": "This project contains a Docker image meant to facilitate the deployment of Nacos .",
+        "org.opencontainers.image.licenses": "",
+        "org.opencontainers.image.revision": "c150bce691f4996871203b5897dd357f6d8a0e24",
+        "org.opencontainers.image.source": "https://github.com/nacos-group/nacos-docker",
+        "org.opencontainers.image.title": "nacos-docker",
+        "org.opencontainers.image.url": "https://github.com/nacos-group/nacos-docker",
+        "org.opencontainers.image.vendor": "CentOS",
+        "org.opencontainers.image.version": "v2.3.2"
+      },
+      "Mounts": [
+        "/home/nacos/data",
+        "/home/nacos/logs"
+      ],
+      "Names": [
+        "apex-infra-nacos"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-infra"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 8848,
+          "host_port": 18848,
+          "range": 1,
+          "protocol": "tcp"
+        },
+        {
+          "host_ip": "",
+          "container_port": 9848,
+          "host_port": 19848,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792221652,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791188622
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "/bin/sh",
+        "-c",
+        "exec java -Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/sentinel_heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xloggc:/tmp/sentinel_gc.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom -Dserver.port=8858 -Dcsp.sentinel.api.port=8719 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard -jar /app.jar\n"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263003,
+      "ExitCode": 143,
+      "ExposedPorts": {
+        "8858": [
+          "tcp"
+        ]
+      },
+      "Id": "4bc5c8149080a9fa5f99adb4eed8894fce39f55c2a2f796ebd0e5ce49b24e0d4",
+      "Image": "registry.cn-hangzhou.aliyuncs.com/zhengqing/sentinel-dashboard:1.8.2",
+      "ImageID": "c5f50215ef428227acce937a85d5cca8d54c6a034293466e06ad90cd41b0fd72",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.infra.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "sentinel-dashboard",
+        "io.podman.compose.config-hash": "d111fb86af55da2102ecb6aea4c56c484a90eccdca6c507ab30048615b482419",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "sentinel-dashboard",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [],
+      "Names": [
+        "apex-infra-sentinel"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-infra"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 8719,
+          "host_port": 8719,
+          "range": 1,
+          "protocol": "tcp"
+        },
+        {
+          "host_ip": "",
+          "container_port": 8858,
+          "host_port": 8858,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188654,
+      "State": "exited",
+      "Status": "Exited (143) 13 days ago",
+      "Created": 1791188652
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263004,
+      "ExitCode": 143,
+      "ExposedPorts": {
+        "9410": [
+          "tcp"
+        ],
+        "9411": [
+          "tcp"
+        ]
+      },
+      "Id": "fbeef1ad62927aaee6d3daf2d7e1da70852529f9945671bae9c5784d5884b17c",
+      "Image": "localhost/openzipkin/zipkin:3.4",
+      "ImageID": "4f80c5497c7e16c8fd169c182a3c2176477a6bb25f4741619b49a36eccdff5f1",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "alpine-version": "3.20.3",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.infra.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "zipkin",
+        "io.podman.compose.config-hash": "7c9fc585974c521444720459c2da1dd895046bfb30c8ffbb047a69aeae361b6c",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "zipkin",
+        "io.podman.compose.version": "1.6.0",
+        "java-home": "/usr/lib/jvm/java-21-openjdk",
+        "java-version": "21.0.5_p11",
+        "maintainer": "OpenZipkin https://gitter.im/openzipkin/zipkin",
+        "maven-version": "3.9.9",
+        "org.opencontainers.image.authors": "OpenZipkin https://gitter.im/openzipkin/zipkin",
+        "org.opencontainers.image.created": "2025-02-03",
+        "org.opencontainers.image.description": "Zipkin full distribution on OpenJDK and Alpine Linux",
+        "org.opencontainers.image.revision": "43f88ea"
+      },
+      "Mounts": [],
+      "Names": [
+        "apex-infra-zipkin"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-infra"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 9411,
+          "host_port": 9411,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188654,
+      "State": "exited",
+      "Status": "Exited (143) 13 days ago",
+      "Created": 1791188652
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "--config.file=/etc/prometheus/prometheus.yml",
+        "--storage.tsdb.path=/prometheus",
+        "--storage.tsdb.retention.time=15d"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263000,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "9090": [
+          "tcp"
+        ]
+      },
+      "Id": "724131de39896fc3b841aaabd510461e31eddf930431370e1175312aa81242d4",
+      "Image": "localhost/prom/prometheus:v2.53.0",
+      "ImageID": "b74abbcc4eacb3d527068947f32a07fb952f32cf7a0c5ad01cae5313e544b527",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.infra.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "prometheus",
+        "io.podman.compose.config-hash": "27cf23d953b71301fd53a7a2b7f4229ddc334d1c9bdd51226fb6d6fea291ecc0",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "prometheus",
+        "io.podman.compose.version": "1.6.0",
+        "maintainer": "The Prometheus Authors <prometheus-developers@googlegroups.com>"
+      },
+      "Mounts": [
+        "/etc/prometheus/prometheus.yml",
+        "/etc/prometheus/alert-rules.yml",
+        "/prometheus"
+      ],
+      "Names": [
+        "apex-infra-prometheus"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-infra"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 9090,
+          "host_port": 9090,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188656,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791188653
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263001,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "3000": [
+          "tcp"
+        ]
+      },
+      "Id": "e01f8d68982247bc39ba8cb14032bf34313b150a0cca0e124363260e403ea1bd",
+      "Image": "localhost/grafana/grafana:11.1.0",
+      "ImageID": "c42c21cd0ebcba484f61742f2e9367473bdf052b3d688a391008fa3bc997d1f6",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.infra.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "grafana",
+        "io.podman.compose.config-hash": "1354270f95bf8645b4eb0e01f98346a288b21303bbfe267d496d6576653b6193",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "grafana",
+        "io.podman.compose.version": "1.6.0",
+        "maintainer": "Grafana Labs <hello@grafana.com>"
+      },
+      "Mounts": [
+        "/var/lib/grafana/dashboards",
+        "/etc/grafana/provisioning",
+        "/var/lib/grafana"
+      ],
+      "Names": [
+        "apex-infra-grafana"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-infra"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 3000,
+          "host_port": 3200,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188657,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791188653
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "--config.file=/etc/blackbox_exporter/config.yml"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791262999,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "9115": [
+          "tcp"
+        ]
+      },
+      "Id": "f243bb04736f696aa3d97a1d6a3367c5a8c9cf61256d646ac42a8804ca9266f0",
+      "Image": "localhost/prom/blackbox-exporter:v0.25.0",
+      "ImageID": "9b4bb468d49e5b11a88a8c9f95fb8bbf7ebf8ab0943a36a1c138b1577e61dd32",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.infra.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "blackbox-exporter",
+        "io.podman.compose.config-hash": "1058993a1b08f425e38dd6ff704f31bb856b5266a2af0db0e30ff95c230d353b",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "blackbox-exporter",
+        "io.podman.compose.version": "1.6.0",
+        "maintainer": "The Prometheus Authors <prometheus-developers@googlegroups.com>"
+      },
+      "Mounts": [],
+      "Names": [
+        "apex-infra-blackbox"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-infra"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 9115,
+          "host_port": 9115,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188658,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791188653
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "postgres"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791190321,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "5432": [
+          "tcp"
+        ]
+      },
+      "Id": "883ec8acbc45df465eac240cc229d9f80717f23c4cc4a5a74da8720082670801",
+      "Image": "localhost/postgres:17-alpine",
+      "ImageID": "79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-sonar.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-sonar",
+        "com.docker.compose.project.config_files": "docker-compose.sonar.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "postgres",
+        "io.podman.compose.config-hash": "6430375b72783ee118b76eda3d75154e4ce3208930a6143bf8eccc525ec29cfa",
+        "io.podman.compose.project": "apex-sonar",
+        "io.podman.compose.service": "postgres",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [
+        "/var/lib/postgresql/data"
+      ],
+      "Names": [
+        "apex-sonar_postgres_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-sonar_default"
+      ],
+      "Pid": 0,
+      "Pod": "91acebfe3bc2f8adb9f04e8013976150ebdb8f54b907859d7aa2b3259df12cfe",
+      "PodName": "pod_apex-sonar",
+      "Ports": null,
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791189542,
+      "State": "exited",
+      "Status": "Exited (0) 2 weeks ago",
+      "Created": 1791188699
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791190320,
+      "ExitCode": 130,
+      "ExposedPorts": {
+        "9000": [
+          "tcp"
+        ]
+      },
+      "Id": "ee65c3dc7f135d5c19deef98d0e40a8904c1570cd8b00c022466a813c1933b26",
+      "Image": "localhost/sonarqube:10.6-community",
+      "ImageID": "2433ac783140f6153874adca40e138aee5292aff56e776ac26197bbe0e7c8cff",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-sonar.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-sonar",
+        "com.docker.compose.project.config_files": "docker-compose.sonar.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "sonarqube",
+        "io.podman.compose.config-hash": "5a4b6ce20b6cf95f327b38fd3fea5cc6cf9e69d14fc163e41cb6eef85a09cf8f",
+        "io.podman.compose.project": "apex-sonar",
+        "io.podman.compose.service": "sonarqube",
+        "io.podman.compose.version": "1.6.0",
+        "org.opencontainers.image.ref.name": "ubuntu",
+        "org.opencontainers.image.url": "https://github.com/SonarSource/docker-sonarqube",
+        "org.opencontainers.image.version": "22.04"
+      },
+      "Mounts": [
+        "/opt/sonarqube/data",
+        "/opt/sonarqube/extensions",
+        "/opt/sonarqube/logs"
+      ],
+      "Names": [
+        "apex-sonar_sonarqube_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-sonar_default"
+      ],
+      "Pid": 0,
+      "Pod": "91acebfe3bc2f8adb9f04e8013976150ebdb8f54b907859d7aa2b3259df12cfe",
+      "PodName": "pod_apex-sonar",
+      "Ports": [
+        {
+          "host_ip": "127.0.0.1",
+          "container_port": 9000,
+          "host_port": 9000,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791189544,
+      "State": "exited",
+      "Status": "Exited (130) 2 weeks ago",
+      "Created": 1791188700
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "nginx",
+        "-g",
+        "daemon off;"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791262999,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "80": [
+          "tcp"
+        ]
+      },
+      "Id": "108bf94934a0f205e042e8896ff583fa2fd9d0bfb0ab376f5c56e91a35d8538b",
+      "Image": "localhost/excalidraw/excalidraw:latest",
+      "ImageID": "77887c2fb1884b55542a7da30e9f1beaf49b69bce09515ece0c28448cb04d47f",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@excalidraw.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "excalidraw",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/docker/excalidraw",
+        "com.docker.compose.service": "excalidraw",
+        "io.podman.compose.config-hash": "b7c8818168ef46fcc9b28146183dd69c3888789f0bbac51f2f93585303ec3506",
+        "io.podman.compose.project": "excalidraw",
+        "io.podman.compose.service": "excalidraw",
+        "io.podman.compose.version": "1.6.0",
+        "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+      },
+      "Mounts": [],
+      "Names": [
+        "excalidraw"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "excalidraw_default"
+      ],
+      "Pid": 0,
+      "Pod": "c47dc2814bfaa68868cecbc05ca37e18735b899fc03d62c1235f47a2fe6bd50c",
+      "PodName": "pod_excalidraw",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 80,
+          "host_port": 3980,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188772,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791188771
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "eswrapper"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263002,
+      "ExitCode": 143,
+      "ExposedPorts": {
+        "9200": [
+          "tcp"
+        ],
+        "9300": [
+          "tcp"
+        ]
+      },
+      "Id": "e75caf6bdf0dfb91e929d2b6f064f72c06204569015d085ec27cd4bf4673166c",
+      "Image": "registry.cn-hangzhou.aliyuncs.com/zhengqing/elasticsearch:7.14.1",
+      "ImageID": "f287f2cfc393dfd1753034320bed67bc3205f0c3c8a0cbf473f37c3ec8330b72",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@920-es.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "920-es",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/docker/docker-compose/gitee/docker-compose/Linux/skywalking/9.2.0-es",
+        "com.docker.compose.service": "elasticsearch",
+        "io.podman.compose.config-hash": "d5515b594f7032ec0e5d2d7b25dd13466aa0eeb50c4d0dd9a4cf9718ee9009c3",
+        "io.podman.compose.project": "920-es",
+        "io.podman.compose.service": "elasticsearch",
+        "io.podman.compose.version": "1.6.0",
+        "org.label-schema.build-date": "2021-08-26T09:01:05.390870785Z",
+        "org.label-schema.license": "Elastic-License-2.0",
+        "org.label-schema.name": "Elasticsearch",
+        "org.label-schema.schema-version": "1.0",
+        "org.label-schema.url": "https://www.elastic.co/products/elasticsearch",
+        "org.label-schema.usage": "https://www.elastic.co/guide/en/elasticsearch/reference/index.html",
+        "org.label-schema.vcs-ref": "66b55ebfa59c92c15db3f69a335d500018b3331e",
+        "org.label-schema.vcs-url": "https://github.com/elastic/elasticsearch",
+        "org.label-schema.vendor": "Elastic",
+        "org.label-schema.version": "7.14.1",
+        "org.opencontainers.image.created": "2021-08-26T09:01:05.390870785Z",
+        "org.opencontainers.image.documentation": "https://www.elastic.co/guide/en/elasticsearch/reference/index.html",
+        "org.opencontainers.image.licenses": "Elastic-License-2.0",
+        "org.opencontainers.image.revision": "66b55ebfa59c92c15db3f69a335d500018b3331e",
+        "org.opencontainers.image.source": "https://github.com/elastic/elasticsearch",
+        "org.opencontainers.image.title": "Elasticsearch",
+        "org.opencontainers.image.url": "https://www.elastic.co/products/elasticsearch",
+        "org.opencontainers.image.vendor": "Elastic",
+        "org.opencontainers.image.version": "7.14.1"
+      },
+      "Mounts": [
+        "/usr/share/elasticsearch/config/elasticsearch.yml",
+        "/usr/share/elasticsearch/plugins/ik",
+        "/usr/share/elasticsearch/data",
+        "/usr/share/elasticsearch/logs"
+      ],
+      "Names": [
+        "oap-es"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "920-es_skywalking"
+      ],
+      "Pid": 0,
+      "Pod": "49cce008052a77da58c3da9e045164110941215cf3e9906d729a00bfcb600149",
+      "PodName": "pod_920-es",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 9200,
+          "host_port": 9200,
+          "range": 1,
+          "protocol": "tcp"
+        },
+        {
+          "host_ip": "",
+          "container_port": 9300,
+          "host_port": 9300,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791189932,
+      "State": "exited",
+      "Status": "Exited (143) 13 days ago",
+      "Created": 1791188873
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263001,
+      "ExitCode": 143,
+      "ExposedPorts": {
+        "11800": [
+          "tcp"
+        ],
+        "1234": [
+          "tcp"
+        ],
+        "12800": [
+          "tcp"
+        ]
+      },
+      "Id": "e3762d693e3805492b9abd11fbe357936be3a10351af5d47b96c8875e49628af",
+      "Image": "registry.cn-hangzhou.aliyuncs.com/zhengqing/skywalking-oap-server:9.2.0",
+      "ImageID": "05b923b3fde285e0f98ad43491b360effa28c43af16282ec2a6f47ef4bb7fd5b",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@920-es.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "920-es",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/docker/docker-compose/gitee/docker-compose/Linux/skywalking/9.2.0-es",
+        "com.docker.compose.service": "oap",
+        "io.podman.compose.config-hash": "af8c5fcefea96d6b4fa25ec1be1ea266e97b24a91225c7b8ac6702af2b9cf606",
+        "io.podman.compose.project": "920-es",
+        "io.podman.compose.service": "oap",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [],
+      "Names": [
+        "oap"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "920-es_skywalking"
+      ],
+      "Pid": 0,
+      "Pod": "49cce008052a77da58c3da9e045164110941215cf3e9906d729a00bfcb600149",
+      "PodName": "pod_920-es",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 11800,
+          "host_port": 11800,
+          "range": 1,
+          "protocol": "tcp"
+        },
+        {
+          "host_ip": "",
+          "container_port": 12800,
+          "host_port": 12800,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188994,
+      "State": "exited",
+      "Status": "Exited (143) 13 days ago",
+      "Created": 1791188873
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263003,
+      "ExitCode": 143,
+      "ExposedPorts": {
+        "8080": [
+          "tcp"
+        ]
+      },
+      "Id": "443a9f5446e637813fc63d9703eeaaf793ea16a7c69981344ae0417c2ed2dc44",
+      "Image": "registry.cn-hangzhou.aliyuncs.com/zhengqing/skywalking-ui:9.2.0",
+      "ImageID": "b496260a99da2c558cfcb58df6f10aa91645c406cffb4b576a9cc1c79f234f10",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@920-es.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "920-es",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/docker/docker-compose/gitee/docker-compose/Linux/skywalking/9.2.0-es",
+        "com.docker.compose.service": "oap-ui",
+        "io.podman.compose.config-hash": "6de0f2966be0296efe773358533817a8a33c961376386c4ba546a35dccdb3beb",
+        "io.podman.compose.project": "920-es",
+        "io.podman.compose.service": "oap-ui",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [],
+      "Names": [
+        "oap-ui"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "920-es_skywalking"
+      ],
+      "Pid": 0,
+      "Pod": "49cce008052a77da58c3da9e045164110941215cf3e9906d729a00bfcb600149",
+      "PodName": "pod_920-es",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 8080,
+          "host_port": 18080,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791188877,
+      "State": "exited",
+      "Status": "Exited (143) 13 days ago",
+      "Created": 1791188873
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "start-dev",
+        "--http-enabled=true"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263003,
+      "ExitCode": 143,
+      "ExposedPorts": {
+        "8080": [
+          "tcp"
+        ],
+        "8443": [
+          "tcp"
+        ],
+        "9000": [
+          "tcp"
+        ]
+      },
+      "Id": "de7cc002e189f11c1a5c993e03b847d7d86136ff51e6b61d193a9027d097f338",
+      "Image": "quay.io/keycloak/keycloak:26.0.7",
+      "ImageID": "469d050236bb5aa652a4ae97d5dbcf02c1af4c15bbb2ea088f7d30802f67fcf5",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "architecture": "x86_64",
+        "build-date": "2024-12-02T07:58:58Z",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "keycloak",
+        "com.redhat.build-host": "",
+        "com.redhat.component": "",
+        "com.redhat.license_terms": "",
+        "description": "Keycloak Server Image",
+        "distribution-scope": "public",
+        "io.buildah.version": "1.38.0-dev",
+        "io.k8s.description": "Keycloak Server Image",
+        "io.k8s.display-name": "Keycloak Server",
+        "io.openshift.expose-services": "",
+        "io.openshift.tags": "keycloak security identity",
+        "io.podman.compose.config-hash": "d7b48274be003edf0f07ebd86a831d3cfe511a522dd63e4b2c9d610d940bfb8d",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "keycloak",
+        "io.podman.compose.version": "1.6.0",
+        "maintainer": "https://www.keycloak.org/",
+        "name": "keycloak",
+        "org.opencontainers.image.created": "2024-12-03T07:16:32.656Z",
+        "org.opencontainers.image.description": "",
+        "org.opencontainers.image.documentation": "https://www.keycloak.org/documentation",
+        "org.opencontainers.image.licenses": "Apache-2.0",
+        "org.opencontainers.image.revision": "9dc36e6787c902eff4e74369e6a5fd3cd3798e1d",
+        "org.opencontainers.image.source": "https://github.com/keycloak-rel/keycloak-rel",
+        "org.opencontainers.image.title": "keycloak-rel",
+        "org.opencontainers.image.url": "https://github.com/keycloak-rel/keycloak-rel",
+        "org.opencontainers.image.version": "26.0.7",
+        "release": "",
+        "summary": "Keycloak Server Image",
+        "url": "https://www.keycloak.org/",
+        "vcs-ref": "",
+        "vcs-type": "git",
+        "vendor": "https://www.keycloak.org/",
+        "version": "26.0.7"
+      },
+      "Mounts": [
+        "/opt/keycloak/data"
+      ],
+      "Names": [
+        "apex-scaffold_keycloak_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 8080,
+          "host_port": 8180,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791189069,
+      "State": "exited",
+      "Status": "Exited (143) 13 days ago",
+      "Created": 1791189068
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263009,
+      "ExitCode": 137,
+      "ExposedPorts": {
+        "8080": [
+          "tcp"
+        ],
+        "8081": [
+          "tcp"
+        ]
+      },
+      "Id": "43144531cd8349e937d001a7b9140639993dc02ffc27b13782e21d5c79597e36",
+      "Image": "localhost/apex-scaffold:latest",
+      "ImageID": "c4527f71b1d5f5c067d42f39332cdfb384f9949845a61940cce09ec296469261",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "apex-scaffold",
+        "io.podman.compose.config-hash": "9354087df16b68e3366d364af193467b985730d1672713df4624b12991a17767",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "apex-scaffold",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [],
+      "Names": [
+        "apex-scaffold_apex-scaffold_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 8080,
+          "host_port": 8080,
+          "range": 2,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791190643,
+      "State": "exited",
+      "Status": "Exited (137) 13 days ago",
+      "Created": 1791190642
+    },
+    {
+      "AutoRemove": false,
+      "Command": null,
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791263000,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "80": [
+          "tcp"
+        ]
+      },
+      "Id": "4515cffe3ab949f508ca4a002ca259141ebb4577401e9972b79db77cd8124be8",
+      "Image": "localhost/apex-admin-web:latest",
+      "ImageID": "0e62a443f9c9d3d929148db24ef299d699d0780d1ad51cf0cdec000b86082d2c",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "apex-admin-web",
+        "com.docker.compose.version": "5.1.2",
+        "io.podman.compose.config-hash": "f1214f236e4e4ab09179e3c20fcfe60f54937ef622ca20964d74cc1dfb469a9b",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "apex-admin-web",
+        "io.podman.compose.version": "1.6.0",
+        "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>"
+      },
+      "Mounts": [],
+      "Names": [
+        "apex-admin-web"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 80,
+          "host_port": 80,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791190644,
+      "State": "exited",
+      "Status": "Exited (0) 13 days ago",
+      "Created": 1791190643
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "/bin/sh",
+        "-c",
+        "/bin/meilisearch"
+      ],
+      "CreatedAt": "2 weeks ago",
+      "CIDFile": "",
+      "Exited": true,
+      "ExitedAt": 1791262999,
+      "ExitCode": 143,
+      "ExposedPorts": {
+        "7700": [
+          "tcp"
+        ]
+      },
+      "Id": "bff44203501a151062571a96a5a6d4daf74f77a0969e976d24f2f81dedf85c1c",
+      "Image": "localhost/getmeili/meilisearch:v1.10",
+      "ImageID": "56549cb516ff79de0f68333ca1a6900cca3829d2b7cae8560c15b5b844d4488c",
+      "IsInfra": false,
+      "Labels": {
+        "PODMAN_SYSTEMD_UNIT": "podman-compose@apex-scaffold.service",
+        "com.docker.compose.container-number": "1",
+        "com.docker.compose.project": "apex-scaffold",
+        "com.docker.compose.project.config_files": "docker-compose.yml",
+        "com.docker.compose.project.working_dir": "/Users/work/apex-scaffold",
+        "com.docker.compose.service": "meilisearch",
+        "io.podman.compose.config-hash": "f73f5810edcf032199c5218085a78b2313f8f9fb34b4a5f17dd95b0edb6e7531",
+        "io.podman.compose.project": "apex-scaffold",
+        "io.podman.compose.service": "meilisearch",
+        "io.podman.compose.version": "1.6.0"
+      },
+      "Mounts": [
+        "/meili_data"
+      ],
+      "Names": [
+        "apex-scaffold_meilisearch_1"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "apex-scaffold_apex-network"
+      ],
+      "Pid": 0,
+      "Pod": "8b1d58437aabf59113138509f95d6b4510af2e8aa9cfea8dc4dedf35ada9e184",
+      "PodName": "pod_apex-scaffold",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 7700,
+          "host_port": 7700,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1791194111,
+      "State": "exited",
+      "Status": "Exited (143) 13 days ago",
+      "Created": 1791194110
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "mysqld"
+      ],
+      "CreatedAt": "3 days ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": -62135596800,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "3306": [
+          "tcp"
+        ],
+        "33060": [
+          "tcp"
+        ]
+      },
+      "Id": "a617294c506bd3cb5e30b053ef3ef4ce5d23ee396836895b931b9d57348135d1",
+      "Image": "localhost/mysql:8.0",
+      "ImageID": "6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+      "IsInfra": false,
+      "Labels": null,
+      "Mounts": [
+        "/var/lib/mysql"
+      ],
+      "Names": [
+        "apex-p0-gate-mysql-20261017"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "podman"
+      ],
+      "Pid": 0,
+      "Pod": "",
+      "PodName": "",
+      "Ports": [
+        {
+          "host_ip": "127.0.0.1",
+          "container_port": 3306,
+          "host_port": 13317,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792312809,
+      "State": "exited",
+      "Status": "Exited (0) 292 years ago",
+      "Created": 1792191822
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "postgres"
+      ],
+      "CreatedAt": "3 days ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": -62135596800,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "5432": [
+          "tcp"
+        ]
+      },
+      "Id": "f86694caedd5d0d4e748049d34f2a5a90dcf7ec2d6bfe749354c2aa145841bc0",
+      "Image": "localhost/postgres:17-alpine",
+      "ImageID": "79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537",
+      "IsInfra": false,
+      "Labels": null,
+      "Mounts": [
+        "/var/lib/postgresql/data"
+      ],
+      "Names": [
+        "apex-p0-pg-b1ddd1785ccf"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "podman"
+      ],
+      "Pid": 0,
+      "Pod": "",
+      "PodName": "",
+      "Ports": [
+        {
+          "host_ip": "127.0.0.1",
+          "container_port": 5432,
+          "host_port": 41187,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792312809,
+      "State": "exited",
+      "Status": "Exited (0) 292 years ago",
+      "Created": 1792197610
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "mysqld"
+      ],
+      "CreatedAt": "2 days ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": -62135596800,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "3306": [
+          "tcp"
+        ],
+        "33060": [
+          "tcp"
+        ]
+      },
+      "Id": "b929e1a1eafa8f3f7b14445389e41571ead4356d92569377a13181be38535af6",
+      "Image": "localhost/mysql:8.0",
+      "ImageID": "6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+      "IsInfra": false,
+      "Labels": {
+        "org.testcontainers": "true",
+        "org.testcontainers.lang": "java",
+        "org.testcontainers.sessionId": "dcc4c7c0-5ebc-445f-98b7-eb4f1a058c19",
+        "org.testcontainers.version": "1.20.0"
+      },
+      "Mounts": [
+        "/var/lib/mysql"
+      ],
+      "Names": [
+        "nostalgic_elgamal"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "podman"
+      ],
+      "Pid": 0,
+      "Pod": "",
+      "PodName": "",
+      "Ports": [
+        {
+          "host_ip": "",
+          "container_port": 3306,
+          "host_port": 38565,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792230814,
+      "State": "exited",
+      "Status": "Exited (0) 292 years ago",
+      "Created": 1792230813
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "postgres"
+      ],
+      "CreatedAt": "37 hours ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": -62135596800,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "5432": [
+          "tcp"
+        ]
+      },
+      "Id": "48b0ef80a1a56e5752e703972ed2797aa47a8608bb6a1a1109f96a14c259d2d7",
+      "Image": "localhost/postgres:17-alpine",
+      "ImageID": "79bd7c99e923138f136f8009d6bffa66e21e9d4fda5c0c561b00fc9c90cfe537",
+      "IsInfra": false,
+      "Labels": null,
+      "Mounts": [
+        "/var/lib/postgresql/data"
+      ],
+      "Names": [
+        "apex-outbox-pg-20261018"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "podman"
+      ],
+      "Pid": 0,
+      "Pod": "",
+      "PodName": "",
+      "Ports": [
+        {
+          "host_ip": "127.0.0.1",
+          "container_port": 5432,
+          "host_port": 15438,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792332782,
+      "State": "exited",
+      "Status": "Exited (0) 292 years ago",
+      "Created": 1792332781
+    },
+    {
+      "AutoRemove": false,
+      "Command": [
+        "mysqld"
+      ],
+      "CreatedAt": "37 hours ago",
+      "CIDFile": "",
+      "Exited": false,
+      "ExitedAt": -62135596800,
+      "ExitCode": 0,
+      "ExposedPorts": {
+        "3306": [
+          "tcp"
+        ],
+        "33060": [
+          "tcp"
+        ]
+      },
+      "Id": "6dea2bcfcd259d8dbd350e29b1381919f86a405be367a368f8d7898a40ed1e75",
+      "Image": "localhost/mysql:8.0",
+      "ImageID": "6cd09145362dfe6831b14545de3d5fd6cc75c37cfd6ef8561429c1fc73518b39",
+      "IsInfra": false,
+      "Labels": null,
+      "Mounts": [
+        "/var/lib/mysql"
+      ],
+      "Names": [
+        "apex-outbox-mysql-20261018"
+      ],
+      "Namespaces": {},
+      "Networks": [
+        "podman"
+      ],
+      "Pid": 0,
+      "Pod": "",
+      "PodName": "",
+      "Ports": [
+        {
+          "host_ip": "127.0.0.1",
+          "container_port": 3306,
+          "host_port": 13328,
+          "range": 1,
+          "protocol": "tcp"
+        }
+      ],
+      "Restarts": 0,
+      "Size": null,
+      "StartedAt": 1792332782,
+      "State": "exited",
+      "Status": "Exited (0) 292 years ago",
+      "Created": 1792332782
+    }
+  ],
+  "volumes": [
+    {
+      "Name": "apex-scaffold_mysql-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_mysql-data/_data",
+      "CreatedAt": "2026-10-05T14:57:12.040512405+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 0
+    },
+    {
+      "Name": "apex-scaffold_redis-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_redis-data/_data",
+      "CreatedAt": "2026-10-05T14:57:27.505191418+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 1
+    },
+    {
+      "Name": "apex-scaffold_meilisearch-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_meilisearch-data/_data",
+      "CreatedAt": "2026-10-05T14:57:29.340192564+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 2
+    },
+    {
+      "Name": "apex-scaffold_loki-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_loki-data/_data",
+      "CreatedAt": "2026-10-05T14:57:30.669599001+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 3
+    },
+    {
+      "Name": "apex-scaffold_alloy-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_alloy-data/_data",
+      "CreatedAt": "2026-10-05T14:57:32.290877032+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 4
+    },
+    {
+      "Name": "apex-scaffold_keycloak-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_keycloak-data/_data",
+      "CreatedAt": "2026-10-05T14:57:33.562058898+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "UID": 1000,
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 5
+    },
+    {
+      "Name": "apex-scaffold_nacos-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_nacos-data/_data",
+      "CreatedAt": "2026-10-05T14:57:34.852074825+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 6
+    },
+    {
+      "Name": "apex-scaffold_nacos-logs",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_nacos-logs/_data",
+      "CreatedAt": "2026-10-05T14:57:44.511447964+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 7
+    },
+    {
+      "Name": "apex-scaffold_prometheus-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_prometheus-data/_data",
+      "CreatedAt": "2026-10-05T14:58:07.841956041+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 8
+    },
+    {
+      "Name": "apex-scaffold_grafana-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_grafana-data/_data",
+      "CreatedAt": "2026-10-05T14:58:16.759641525+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 9
+    },
+    {
+      "Name": "apex-scaffold_rocketmq-broker-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_rocketmq-broker-data/_data",
+      "CreatedAt": "2026-10-05T14:58:18.134543813+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 10
+    },
+    {
+      "Name": "apex-scaffold_rocketmq-broker-logs",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_rocketmq-broker-logs/_data",
+      "CreatedAt": "2026-10-05T14:58:19.528195439+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 11
+    },
+    {
+      "Name": "apex-scaffold_rocketmq-namesrv-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-scaffold_rocketmq-namesrv-data/_data",
+      "CreatedAt": "2026-10-05T14:58:20.818255648+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 12
+    },
+    {
+      "Name": "apex-sonar_postgres_data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar_postgres_data/_data",
+      "CreatedAt": "2026-10-05T14:58:22.20004017+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 13
+    },
+    {
+      "Name": "apex-sonar_sonar_data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar_sonar_data/_data",
+      "CreatedAt": "2026-10-05T14:58:32.094825791+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 14
+    },
+    {
+      "Name": "apex-sonar_sonar_extensions",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar_sonar_extensions/_data",
+      "CreatedAt": "2026-10-05T14:58:35.268816925+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 15
+    },
+    {
+      "Name": "apex-sonar_sonar_logs",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar_sonar_logs/_data",
+      "CreatedAt": "2026-10-05T14:58:36.651662628+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 16
+    },
+    {
+      "Name": "apex-sonar-data-106",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar-data-106/_data",
+      "CreatedAt": "2026-10-05T14:58:38.171868197+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 17
+    },
+    {
+      "Name": "apex-sonar-extensions-106",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar-extensions-106/_data",
+      "CreatedAt": "2026-10-05T14:59:15.981637211+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 18
+    },
+    {
+      "Name": "apex-sonar-logs-106",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar-logs-106/_data",
+      "CreatedAt": "2026-10-05T14:59:20.797229656+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 19
+    },
+    {
+      "Name": "apex-sonar-postgres-data-106",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/apex-sonar-postgres-data-106/_data",
+      "CreatedAt": "2026-10-05T14:59:22.62000855+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 20
+    },
+    {
+      "Name": "bias-mysql-local-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/bias-mysql-local-data/_data",
+      "CreatedAt": "2026-10-05T14:59:35.623666067+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 21
+    },
+    {
+      "Name": "bias-redis-local-data",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/bias-redis-local-data/_data",
+      "CreatedAt": "2026-10-05T14:59:48.040049611+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 22
+    },
+    {
+      "Name": "aee48ef49383931a51b7d338c917c45bed84c7e9db41e212c470fe27d09c0020",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/aee48ef49383931a51b7d338c917c45bed84c7e9db41e212c470fe27d09c0020/_data",
+      "CreatedAt": "2026-10-05T14:59:49.72488969+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 23
+    },
+    {
+      "Name": "8acef0eeed94d3a04e7f73dc90df4d280078d2762a2fd036c7bb1d1ed66d0297",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/8acef0eeed94d3a04e7f73dc90df4d280078d2762a2fd036c7bb1d1ed66d0297/_data",
+      "CreatedAt": "2026-10-17T07:03:42.521801334+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "Anonymous": true,
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "LockNumber": 66
+    },
+    {
+      "Name": "7b9f4b151ce5d827658ed7e2f3c0420bc63d36c4c8cc30bda6c971f7a741e53e",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/7b9f4b151ce5d827658ed7e2f3c0420bc63d36c4c8cc30bda6c971f7a741e53e/_data",
+      "CreatedAt": "2026-10-17T17:53:33.504637376+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "Anonymous": true,
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 52
+    },
+    {
+      "Name": "c1ba9301ce586b733797ae69a660c5eee0d80ca2340258ec1c26ce38ff0f8a3c",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/c1ba9301ce586b733797ae69a660c5eee0d80ca2340258ec1c26ce38ff0f8a3c/_data",
+      "CreatedAt": "2026-10-18T22:13:01.973667735+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "Anonymous": true,
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 53
+    },
+    {
+      "Name": "992dcd872e49ac6bb72290d731771a84fe27303a01b7f6b357725bf6258660b4",
+      "Driver": "local",
+      "Mountpoint": "/var/lib/containers/storage/volumes/992dcd872e49ac6bb72290d731771a84fe27303a01b7f6b357725bf6258660b4/_data",
+      "CreatedAt": "2026-10-18T22:13:02.392700817+08:00",
+      "Labels": {},
+      "Scope": "local",
+      "Options": {},
+      "Anonymous": true,
+      "MountCount": 0,
+      "NeedsCopyUp": true,
+      "NeedsChown": true,
+      "LockNumber": 55
+    }
+  ]
+}

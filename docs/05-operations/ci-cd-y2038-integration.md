@@ -316,7 +316,7 @@ private Long expireAt;       // 会触发 ArchUnit 测试失败
 
 如果需要修改架构测试规则:
 
-1. 编辑 `apex-infrastructure/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java`
+1. 编辑 `apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java`
 2. 本地运行测试验证
 3. 提交代码后自动应用到 CI/CD
 
@@ -333,7 +333,7 @@ private Long expireAt;       // 会触发 ArchUnit 测试失败
 - **开发规范**: [AGENTS.md#持久化、迁移与租户隔离](../../AGENTS.md#持久化迁移与租户隔离)
 - **Y2038 分析报告**: [Y2038-timestamp-analysis-report.md](../_archive/trae-documents/Y2038-timestamp-analysis-report.md)
 - **检查脚本**: [check-flyway-timestamp-usage.sh](../../scripts/dev/check/check-flyway-timestamp-usage.sh)
-- **架构测试**: [TimeFieldArchTest.java](../../apex-infrastructure/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java)
+- **架构测试**: [TimeFieldArchTest.java](../../apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java)
 - **CI/CD 配置**: [ci-cd.yml](../../.github/workflows/ci-cd.yml)
 
 ---

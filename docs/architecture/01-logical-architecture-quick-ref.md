@@ -1,6 +1,6 @@
 # Apex Scaffold DDD 四层逻辑架构快速参考
 
-> 适用基线：Apex Scaffold `1.2.0`，Java 17，Spring Boot 3.5.15
+> 适用基线：Apex Scaffold `1.3.1`，Java 21，Spring Boot 3.5.15
 
 ![Apex Scaffold DDD 四层逻辑架构图](../diagrams/01_logical_architecture.svg)
 
@@ -16,8 +16,8 @@
 
 | 模块                    | 放置内容                                 | 不应放置                           |
 | --------------------- | ------------------------------------ | ------------------------------ |
-| `apex-interfaces`     | Router、Handler、安全配置、过滤器、OpenAPI      | 核心业务规则、SQL                     |
-| `apex-application`    | 应用服务、用例编排、DTO/Assembler              | Mapper、PO、HTTP 协议细节            |
+| `apex-system`     | Router、Handler、安全配置、过滤器、OpenAPI      | 核心业务规则、SQL                     |
+| `apex-system`    | 应用服务、用例编排、DTO/Assembler              | Mapper、PO、HTTP 协议细节            |
 | `apex-domain`         | 聚合、实体、值对象、领域服务、Repository/Port       | Spring Web、MyBatis-Plus、具体 SDK |
 | `apex-infrastructure` | RepositoryImpl、Mapper、缓存、MQ、存储、远程适配器 | HTTP Handler、业务流程编排            |
 | `apex-common`         | 跨模块通用类型与基础能力                         | 特定业务域规则                        |
@@ -26,12 +26,12 @@
 
 | 需求           | 首选位置                                              | 示例                                             |
 | ------------ | ------------------------------------------------- | ---------------------------------------------- |
-| 新增 HTTP 端点   | `apex-interfaces`                                 | `ApiRouter`、对应 Handler、`RouterOpenApiConfig`   |
-| 新增业务用例       | `apex-application`                                | `UserService`、`DeptService`、`WorkflowService`  |
+| 新增 HTTP 端点   | `apex-system`                                 | `ApiRouter`、对应 Handler、`RouterOpenApiConfig`   |
+| 新增业务用例       | `apex-system`                                | `UserService`、`DeptService`、`WorkflowService`  |
 | 新增业务不变量      | `apex-domain`                                     | 聚合、实体、值对象或领域服务                                 |
 | 新增数据访问契约     | `apex-domain`                                     | `*Repository` 或技术 Port                         |
 | 新增数据库实现      | `apex-infrastructure`                             | `*RepositoryImpl`、Mapper、PO、Converter          |
-| 修改数据库结构      | `apex-interfaces/src/main/resources/db/migration` | 新增 Flyway 迁移，不修改已发布迁移                          |
+| 修改数据库结构      | `apex-system/src/main/resources/db/migration` | 新增 Flyway 迁移，不修改已发布迁移                          |
 | 新增缓存/存储/消息实现 | `apex-infrastructure`                             | `CacheServiceImpl`、Storage Provider、MQ Adapter |
 
 ## 请求调用链
@@ -56,12 +56,12 @@ Interfaces -> Application -> Domain <- Infrastructure
 
 | 范围  | 技术                                                         |
 | --- | ---------------------------------------------------------- |
-| 运行时 | Java 17、Spring Boot 3.5.15、Spring WebFlux、Reactor、Netty    |
+| 运行时 | Java 21、Spring Boot 3.5.15、Spring WebFlux、Reactor、Netty    |
 | 安全  | Spring Security、JWT、RBAC、租户上下文                             |
 | 数据  | MyBatis-Plus、MyBatis、Druid、Dynamic Datasource、MySQL、Flyway |
 | 缓存  | Caffeine、Redis Reactive、Redisson                           |
 | 集成  | RocketMQ、MinIO、火山云 TOS、Meilisearch、短信/微信适配器                |
-| 治理  | Sentinel、Resilience4j、Bucket4j                             |
+| 治理  | Sentinel（system 流控）、Resilience4j（网关熔断）、本地限流算法                             |
 | 观测  | Actuator、Micrometer、Prometheus、Zipkin Reporter、结构化日志       |
 
 ## Profile 能力矩阵

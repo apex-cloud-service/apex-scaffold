@@ -1,12 +1,18 @@
 #!/bin/bash
 # scan-javadoc-issues.sh
 # 扫描项目中 JavaDoc 注释缺失或不完整的文件
+# 用法：JAVADOC_OUTPUT_DIR=/tmp/javadoc-scan bash scripts/dev/check/scan-javadoc-issues.sh
+# 默认输出到 _tmp/（工作区管理规范 4.1：中间产物不入项目根目录）；方法检查为启发式候选列表，退出码不表示文档门禁结果。
+# 作者：Apex Team
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)" || exit
 source "${SCRIPT_DIR}/../../lib/common.sh" || exit
 setup_error_trap
 PROJECT_ROOT=$(get_project_root)
 cd -- "$PROJECT_ROOT"
+OUTPUT_DIR=${JAVADOC_OUTPUT_DIR:-$PROJECT_ROOT/_tmp}
+mkdir -p -- "$OUTPUT_DIR" || exit
+OUTPUT_DIR=$(CDPATH= cd -- "$OUTPUT_DIR" && pwd -P) || exit
 JAVA_FILES=$(safe_find "apex-*/src/main/java" "*.java")
 
 # 剥离 Java 注释（JavaDoc、块注释、行注释），避免示例代码中的 public 声明被误计
@@ -63,8 +69,8 @@ while IFS= read -r file; do
     ' "$file" 2>/dev/null; then
         printf '%s\n' "$file"
     fi
-done <<< "$JAVA_FILES" > javadoc-issues-class.txt
-CLASS_COUNT=$(safe_count '' javadoc-issues-class.txt)
+done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-class.txt"
+CLASS_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-class.txt")
 echo "    发现 ${CLASS_COUNT} 个类缺少类级 JavaDoc"
 
 # 2. 查找 JavaDoc 缺少 @author 的
@@ -78,8 +84,8 @@ while IFS= read -r file; do
     if safe_gt "$DOC_COUNT" 0 && safe_eq "$AUTHOR_TAG_COUNT" 0; then
         printf '%s\n' "$file"
     fi
-done <<< "$JAVA_FILES" > javadoc-issues-author.txt
-AUTHOR_COUNT=$(safe_count '' javadoc-issues-author.txt)
+done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-author.txt"
+AUTHOR_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-author.txt")
 echo "    发现 ${AUTHOR_COUNT} 个文件缺少 @author"
 
 # 3. 查找 JavaDoc 缺少 @since 的
@@ -96,8 +102,8 @@ while IFS= read -r file; do
             printf '%s\n' "$file"
         fi
     fi
-done <<< "$JAVA_FILES" > javadoc-issues-since.txt
-SINCE_COUNT=$(safe_count '' javadoc-issues-since.txt)
+done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-since.txt"
+SINCE_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-since.txt")
 echo "    发现 ${SINCE_COUNT} 个文件缺少 @since"
 
 # 4. 查找 public 方法可能缺少 JavaDoc 的文件（简化检查）
@@ -115,8 +121,8 @@ while IFS= read -r file; do
     if safe_gt "$PUBLIC_METHOD_COUNT" 3 && safe_lt "$PARAM_COUNT" 3; then
         printf '%s\n' "$file"
     fi
-done <<< "$JAVA_FILES" > javadoc-issues-method.txt
-METHOD_COUNT=$(safe_count '' javadoc-issues-method.txt)
+done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-method.txt"
+METHOD_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-method.txt")
 echo "    发现 ${METHOD_COUNT} 个文件可能缺少方法级 JavaDoc"
 
 echo ""
@@ -134,8 +140,8 @@ TOTAL=$((CLASS_COUNT + AUTHOR_COUNT + SINCE_COUNT + METHOD_COUNT))
 echo "  总计: ${TOTAL} 个问题项（文件可能重复计数）"
 echo ""
 echo "详细结果已保存到："
-echo "  - javadoc-issues-class.txt"
-echo "  - javadoc-issues-author.txt"
-echo "  - javadoc-issues-since.txt"
-echo "  - javadoc-issues-method.txt"
+echo "  - ${OUTPUT_DIR}/javadoc-issues-class.txt"
+echo "  - ${OUTPUT_DIR}/javadoc-issues-author.txt"
+echo "  - ${OUTPUT_DIR}/javadoc-issues-since.txt"
+echo "  - ${OUTPUT_DIR}/javadoc-issues-method.txt"
 echo ""

@@ -1,0 +1,97 @@
+{
+  "recorded_at": "2026-10-18T20:03:00+08:00",
+  "scope": "auth independent database R2DBC mfa_config migration gap",
+  "status": "implemented_and_targeted_tests_passed",
+  "full_p0_clearance_claim": false,
+  "full_reactor_verify_run": false,
+  "environment": {
+    "initialization": "source scripts/build/init-build-env.sh",
+    "java": "17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "mysql_container": "apex-p0-gate-mysql-20261017",
+    "postgresql_container": "apex-p0-pg-b1ddd1785ccf",
+    "databases": "isolated random apex_mfa_ databases, PostgreSQL random matching roles; finally cleanup"
+  },
+  "implementation": {
+    "version_selection": "Scanned both tracked and untracked auth migration files; highest existing version V57; V58 absent before creation.",
+    "files": [
+      "apex-auth-service/src/main/resources/db/migration/mysql/V58__create_reactive_mfa_config.sql",
+      "apex-auth-service/src/main/resources/db/migration/postgresql/V58__create_reactive_mfa_config.sql",
+      "apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMfaMigrationIntegrationTest.java"
+    ],
+    "mapping": "Twelve columns match com.apex.scaffold.auth.domain.model.MfaConfig, separate from MyBatis auth_mfa_config.",
+    "identity": "MySQL AUTO_INCREMENT / PostgreSQL BIGSERIAL supports repository.save without an id.",
+    "uniqueness": "(tenant_id,user_id,type); user_id index also serves existing user-only derived queries; unique index prefix serves tenant queries.",
+    "time_types": "MySQL DATETIME; PostgreSQL TIMESTAMP, matching LocalDateTime.",
+    "ciphertext": "Nullable TEXT secret and backup_codes follow existing EncryptionService string contract; no new IV or encryption scheme invented.",
+    "upgrade_policy": "CREATE TABLE IF NOT EXISTS preserves compatible manually provisioned tables and existing opaque ciphertext. It deliberately does not normalize unknown existing table columns, identity configuration, indexes or constraints.",
+    "historical_system_unique_key": "system historical UNIQUE(user_id,type) differs from new auth tenant-scoped key. Existing manual tables copied with that historical key require separately reviewed alignment; V58 does not remove that key.",
+    "no_data_copy": true,
+    "jwt_keys_unchanged": true,
+    "historical_migrations_unchanged": true,
+    "report_and_plan_unchanged": true,
+    "no_commit_or_push": true
+  },
+  "tdd": {
+    "red": {
+      "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-auth-service -am test -Dtest=AuthMfaMigrationIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false",
+      "result": "BUILD FAILURE",
+      "tests": 4,
+      "failures": 0,
+      "errors": 4,
+      "skipped": 0,
+      "meaningful_failures": [
+        "MySQL: all 14 auth V44-V57 migrations succeeded, SELECT of twelve MfaConfig columns failed because mfa_config did not exist.",
+        "PostgreSQL: all 14 auth V44-V57 migrations succeeded, SELECT failed: relation mfa_config does not exist."
+      ],
+      "additional_errors": "Two compatible-table fixtures reached direct rerun of not-yet-created V58 and failed CannotReadScript; these are not counted as missing-table proof."
+    },
+    "green": {
+      "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-auth-service -am test -Dtest=AuthMfaMigrationIntegrationTest,MfaServiceImplTest -Dsurefire.failIfNoSpecifiedTests=false",
+      "result": "BUILD SUCCESS",
+      "tests": 25,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "test_classes": {
+        "AuthMfaMigrationIntegrationTest": 4,
+        "MfaServiceImplTest": 21
+      },
+      "coverage": [
+        "Explicit auth filesystem migration location avoids system test dependency migration contamination.",
+        "Each vendor: full V44-V57 followed by V58, fifteen applied migrations, validate succeeds, no pending migrations, second migrate executes zero.",
+        "Each vendor: fresh database and compatible manually created table fixture with opaque test ciphertext preserved.",
+        "Each vendor: twelve columns readable, default status/failed attempts/created time, same user/type allowed in two tenants.",
+        "Each vendor: direct SQL script replay succeeds.",
+        "Each vendor: real R2dbcRepositoryFactory MfaConfigRepository generated-id insert, encrypted-string round trip, enum read/update, tenant-scoped derived queries, delete/readback."
+      ]
+    }
+  },
+  "checks": {
+    "spotless": "PASS: source scripts/build/init-build-env.sh && mvnd -B -pl apex-auth-service spotless:apply '-DspotlessFiles=.*AuthMfaMigrationIntegrationTest.java' && mvnd -B -pl apex-auth-service spotless:check '-DspotlessFiles=.*AuthMfaMigrationIntegrationTest.java'; output confirms exactly one Java file formatted/checked. Final formatting followed passing semantic tests and changed layout only.",
+    "spotless_attempt_notes": "Initial relative-path selector matched no files. Subsequent unquoted glob rejected by zsh; quoted glob rejected as invalid regex. Corrected to quoted regex above; successful final check covers one file.",
+    "git_diff_check": "PASS",
+    "cleanup_verified": {
+      "mysql_apex_mfa_database_count": 0,
+      "postgresql_apex_mfa_database_count": 0,
+      "postgresql_apex_mfa_role_count": 0
+    }
+  },
+  "sha256": {
+    "apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/MfaConfig.java": "bc827202fd0569cc82b4ca003f7c476367be4c0497467d30e6b2109ae982ad9a",
+    "apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/MfaConfigRepository.java": "522a7fee243ba87935a31807a44520cf43c85b518ec512d99c186158c2cb7257",
+    "apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/service/MfaServiceImpl.java": "c0d757edf96247d3a8847fc1e24207f79a4f9dfb45d1eaa8b31ed6b05d6e4363",
+    "apex-auth-service/src/main/resources/db/migration/mysql/V58__create_reactive_mfa_config.sql": "bc0c5776b3fe181352f6a6d1a210754e196eabfc01e3ce633125fc5cb8f53ef5",
+    "apex-auth-service/src/main/resources/db/migration/postgresql/V58__create_reactive_mfa_config.sql": "aecd9e879df815142a193aab729ba373d2ad8f3f8fb617a0d5a937d3c4cac2b2",
+    "apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMfaMigrationIntegrationTest.java": "854f76a83d7688e06c0f00eef9b4c0bdd9f759081fcac9e6e6e750eee91da681"
+  },
+  "limitations": [
+    "No production auth database inspected or modified. Unknown manually provisioned incompatible tables are not repaired by CREATE IF NOT EXISTS.",
+    "PostgreSQL R2DBC driver available through apex-system test dependency; auth production POM lacks direct PostgreSQL R2DBC runtime driver. Tests prove SQL/mapping compatibility, not PostgreSQL production boot readiness.",
+    "No full Spring application start, HTTP MFA flow, real TOTP encryption/decryption, SMS/email delivery or external production key configuration verified.",
+    "Opaque test strings exercise persistence only; they are not real EncryptionService ciphertext or proof of cryptographic correctness.",
+    "Existing unscoped repository methods and overall tenant/security behavior were not changed or audited by this migration task.",
+    "No full clean verify, PMD or complete regression claim; historical gate results are not reused as this change's results.",
+    "Existing user changes and deleted caches preserved; report and implementation plan not edited."
+  ]
+}

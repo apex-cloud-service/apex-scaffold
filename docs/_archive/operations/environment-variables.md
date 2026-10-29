@@ -388,6 +388,8 @@ MEILISEARCH_INDEX_PREFIX=apex_
 
 ---
 
+<a id="48-服务治理配置"></a>
+
 ### 4.8 服务治理配置
 
 #### Apex Governance（优雅关停）

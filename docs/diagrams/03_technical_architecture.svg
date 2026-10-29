@@ -139,7 +139,7 @@
     <rect x="950" y="130" width="800" height="680" rx="12" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="3"/>
     <rect x="950" y="130" width="800" height="60" rx="12" fill="#059669"/>
     <text x="980" y="165" class="section-title">后端核心技术栈 (Backend Core)</text>
-    <text x="980" y="185" class="section-desc">Spring Boot 3.5.15 · WebFlux 响应式 · Java 17</text>
+    <text x="980" y="185" class="section-desc">Spring Boot 3.5.15 · WebFlux 响应式 · Java 21</text>
 
     <!-- 核心框架 -->
     <text x="980" y="230" class="category-label">核心框架</text>
@@ -151,7 +151,7 @@
 
     <rect x="1340" y="245" width="360" height="90" rx="8" fill="#ffffff" stroke="#d1fae5" stroke-width="2"/>
     <text x="1360" y="270" class="tech-name">Spring WebFlux</text>
-    <text x="1360" y="290" class="tech-version">Reactor 3.6.13</text>
+    <text x="1360" y="290" class="tech-version">Reactor 3.6.x</text>
     <text x="1360" y="310" class="tech-desc">响应式非阻塞 Web</text>
     <text x="1360" y="328" class="tech-desc">Mono/Flux 响应式流</text>
 
@@ -283,7 +283,7 @@
     <text x="1000" y="1075" class="tech-name">Spring Cloud Alibaba</text>
     <text x="1000" y="1095" class="tech-version">2025.0.0.0</text>
     <text x="1000" y="1115" class="tech-desc">Nacos 服务发现/配置中心</text>
-    <text x="1000" y="1133" class="tech-desc">Sentinel Dashboard 集成</text>
+    <text x="1000" y="1133" class="tech-desc">Resilience4j (内置) 集成</text>
 
     <rect x="1340" y="1050" width="360" height="90" rx="8" fill="#ffffff" stroke="#cffafe" stroke-width="2"/>
     <text x="1360" y="1075" class="tech-name">Zipkin + Micrometer</text>
@@ -352,7 +352,7 @@
   <!-- 版本信息 -->
   <rect x="50" y="1480" width="1700" height="80" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
   <text x="80" y="1510" class="category-label">构建工具与版本管理</text>
-  <text x="80" y="1535" class="tech-desc">• Maven 3.9+ / mvnd 2.0.0-rc-3 (推荐)  • Java 17.0.12-oracle (SDKMAN管理)</text>
+  <text x="80" y="1535" class="tech-desc">• Maven 3.9+ / mvnd 2.0.0-rc-3 (推荐)  • Java 21.0.12-oracle (SDKMAN管理)</text>
   <text x="80" y="1553" class="tech-desc">• npm 9+ / pnpm 8+  • Node.js 20.x LTS  • Podman + podman-compose</text>
 
   <text x="900" y="1590" class="tech-desc" text-anchor="middle">© 2026 Apex Team · 技术架构全景 v3.0 · 基于 pom.xml 和 package.json 实际版本生成</text>

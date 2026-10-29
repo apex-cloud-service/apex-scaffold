@@ -48,7 +48,7 @@
 #### 优化项
 
 1. **BloomFilter 防穿透**
-   - 文件: [BloomFilterService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterService.java)
+   - 文件: [BloomFilterService.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/filter/BloomFilterService.java)
    - 效果: 100万元素仅需1.2MB内存，O(k)时间复杂度
 
 2. **Sentinel 规则外部化**
@@ -100,12 +100,12 @@
 #### 优化项
 
 1. **敏感信息脱敏**
-   - 文件: [SensitiveDataMasker.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
+   - 文件: [SensitiveDataMasker.java](../apex-infrastructure-remote/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
    - 支持格式: JSON、XML、URL 参数
    - 性能开销: < 1ms
 
 2. **日志采样**
-   - 文件: [LogSampler.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
+   - 文件: [LogSampler.java](../apex-infrastructure-remote/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
    - 策略: 时间窗口采样
    - ERROR 日志: 强制输出，不采样
 

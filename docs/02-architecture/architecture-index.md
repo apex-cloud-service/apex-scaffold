@@ -3,7 +3,7 @@
 > 文档版本: v2.7\
 > 最后更新: 2026-09-11\
 > 适用版本: apex-scaffold v1.3.1+\
-> 技术栈版本: Spring Boot 3.5.15 | Java 17 | Reactor 3.6.13 | Vue 3.5.13
+> 技术栈版本: Spring Boot 3.5.15 | Java 21 | Reactor 3.6.13 | Vue 3.5.13
 
 **🔍 快速搜索**: [打开文档搜索工具](../doc-search.html) - 支持关键词搜索、分类过滤、实时预览
 
@@ -33,8 +33,8 @@
 
 | 图表范围         | 生成日期       | 处理内容                                           |
 | ------------ | ---------- | ---------------------------------------------- |
-| **01-07 号**  | 2026-09-10 | 核心架构图+业务流程图,基于实际代码统计(32 Handler/34 Service) |
-| **08-12 号**  | 2026-09-10 | 基础设施图,展示40+表ER关系、多级缓存、限流熔断、数据权限、安全防护         |
+| **01-07 号**  | 2026-10-28 | 核心架构图+业务流程图,基于实际代码统计(86 Handler/159 Service/50 Router/90 Repository) |
+| **08-12 号**  | 2026-10-28 | 基础设施图,展示全仓117张表ER关系(system域97张)、多级缓存、限流熔断、数据权限、安全防护         |
 | **13-18 号**  | 2026-09-10 | 部署与微服务图,Podman Compose/K8s/CI/CD/Nacos/Zipkin  |
 | **19-23 号**  | 2026-09-10 | 前端技术栈图,Vue 3/Axios/WebFlux/i18n/OpenAPI        |
 | **24-29 号**  | 2026-09-10 | 监控+高级架构,66个Grafana面板、Loki日志、容灾、MQ、Meilisearch |
@@ -86,7 +86,7 @@
 | -- | ------------ | -------------------------------------------------------------------------- | ----------------------- |
 | 04 | JWT 登录认证流程图  | [04\_login\_authentication\_flow.svg](../diagrams/04_login_authentication_flow.svg)               | 展示用户登录、Token生成、刷新、登出全流程 |
 | 05 | RBAC 权限校验流程图 | [05\_permission\_check\_flow.svg](../diagrams/05_permission_check_flow.svg)   | 展示角色权限校验和数据权限过滤流程       |
-| 06 | 三级审批工作流图     | [06\_workflow\_approval\_flow.svg](../diagrams/06_workflow_approval_flow.svg) | 展示BPMN工作流引擎的流程发起、审批、流转  |
+| 06 | 三级审批工作流图     | [06\_workflow\_approval\_flow.svg](../diagrams/06_workflow_approval_flow.svg) | 展示DAG JSON 工作流引擎的流程发起、审批、流转  |
 | 07 | 文件分片上传流程图    | [07\_file\_upload\_flow.svg](../diagrams/07_file_upload_flow.svg)             | 展示大文件分片上传、断点续传、秒传流程     |
 
 ### 基础设施图 (5张)
@@ -95,7 +95,7 @@
 | -- | ------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------- |
 | 08 | 数据库ER图        | [08\_database\_er\_diagram.svg](../diagrams/08_database_er_diagram.svg)                                   | 展示核心业务表结构和关系                    |
 | 09 | 多级缓存架构图       | [09\_multi\_level\_cache\_architecture.svg](../diagrams/09_multi_level_cache_architecture.svg)            | 展示Caffeine L1 + Redis L2 两级缓存架构 |
-| 10 | Sentinel流控熔断图 | [10\_rate\_limit\_circuit\_breaker.svg](../diagrams/10_rate_limit_circuit_breaker.svg)                   | 展示Sentinel流控规则和熔断降级策略           |
+| 10 | 限流熔断机制图 | [10\_rate\_limit\_circuit\_breaker.svg](../diagrams/10_rate_limit_circuit_breaker.svg)                   | 展示Sentinel限流+Resilience4j熔断双引擎策略           |
 | 11 | 数据权限过滤图       | [11\_data\_permission\_filter.svg](../diagrams/11_data_permission_filter.svg)                            | 展示数据权限过滤和@DataScope注解实现       |
 | 12 | 安全防护体系图       | [12\_security\_protection\_system.svg](../diagrams/12_security_protection_system.svg)                     | 展示认证、授权、加密、审计等安全机制              |
 
@@ -142,6 +142,7 @@
 
 | 入口 | 说明 |
 | --- | --- |
+| [JDK21统一认证多租户实施方案](jdk21-unified-auth-multitenancy-implementation-plan.md) | Java 21迁移、多端统一认证授权、个性化权限、资源数据权限、全业务多租户隔离、租户功能扩展方案；当前状态待评审/待确认，P0尚未准出，不代表已完成改造 |
 | [业务流程与统一授权时序](../architecture/business-flows.md) | 当前主应用 JWT 身份认证与 HTTPS 远程授权链路；Mermaid 尚未重新渲染 |
 | [统一授权 ADR](../architecture/system-architecture.md) | ADR-AUTH-CENTER-001，独立容器、显式映射和失败拒绝策略 |
 | [统一授权配置](../05-operations/configuration.md#认证中心统一授权) | 默认关闭、HTTPS、读取账号 Token、0–30 秒 TTL、3 秒超时与默认熔断 |
@@ -284,7 +285,7 @@
 | **自动重试策略**       | [architecture/advanced-features/auto-retry-strategy.md](../architecture/advanced-features/auto-retry-strategy.md)                                 | HTTP、MQ、定时任务的重试策略       |
 | **多级缓存架构**       | [architecture/advanced-features/multi-level-cache-architecture.md](../architecture/advanced-features/multi-level-cache-architecture.md)           | Caffeine + Redis 两级缓存设计 |
 | **安全防护体系**       | [architecture/advanced-features/security-protection-system.md](../architecture/advanced-features/security-protection-system.md)                   | JWT认证、RBAC权限、数据加密、审计日志  |
-| **Sentinel流控熔断** | [architecture/advanced-features/sentinel-rate-limit-circuit-breaker.md](../architecture/advanced-features/sentinel-rate-limit-circuit-breaker.md) | Sentinel规则配置和熔断降级       |
+| **限流熔断（Sentinel+Resilience4j）** | [architecture/advanced-features/sentinel-rate-limit-circuit-breaker.md](../architecture/advanced-features/sentinel-rate-limit-circuit-breaker.md) | Sentinel规则配置和熔断降级       |
 
 ### 运维文档
 
@@ -351,7 +352,7 @@
 
 1. [监控指南](../_archive/operations/monitoring.md) - 查看监控指标
 2. [微服务治理架构图](../diagrams/43_spi_plugin_architecture.svg) - 服务调用链
-3. [Sentinel流控熔断图](../diagrams/10_rate_limit_circuit_breaker.svg) - 限流熔断
+3. [限流熔断机制图](../diagrams/10_rate_limit_circuit_breaker.svg) - 限流熔断
 4. [数据权限过滤图](../diagrams/11_data_permission_filter.svg) - 权限过滤机制
 
 ### 场景5: 功能开发 - 实现新业务功能
@@ -442,7 +443,7 @@
 | **工作流**          | 三级审批工作流图、业务流程文档                                        |
 | **文件上传**         | 文件分片上传流程图、业务流程文档                                       |
 | **数据库**          | 数据库ER图、数据库设计文档                                         |
-| **限流熔断**         | Sentinel流控熔断图、微服务治理架构图                                 |
+| **限流熔断**         | 限流熔断机制图、微服务治理架构图                                 |
 | **重试**           | 自动重试策略流程图                                              |
 | **DDD**          | DDD四层逻辑架构图、系统架构设计文档                                    |
 | **Spring Boot**  | 后端技术栈架构图、后端技术栈文档                                       |

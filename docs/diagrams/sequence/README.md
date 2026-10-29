@@ -1,3 +1,5 @@
+<a id="apex-scaffold-时序图集"></a>
+
 # Apex Scaffold 时序图集
 
 > **版本**: v1.0  

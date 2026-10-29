@@ -131,7 +131,7 @@ done
 
 echo ""
 echo "🔧 正在处理 PO 类..."
-find apex-infrastructure/src/main/java -name "*PO.java" | while read file; do
+find apex-infrastructure-persistence/src/main/java -name "*PO.java" | while read file; do
     add_constructors_to_po "$file"
 done
 

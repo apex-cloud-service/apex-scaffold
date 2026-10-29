@@ -1,0 +1,367 @@
+import copy
+import importlib.util
+import json
+import pathlib
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts/ci'))
+SPEC = importlib.util.spec_from_file_location('pg_p0_dynamic_probe', ROOT / 'scripts/ci/pg_p0_dynamic_probe.py')
+
+
+class PostgreSQLProbeTest(unittest.TestCase):
+    def setUp(self):
+        self.assertIsNotNone(SPEC.loader)
+        self.assertTrue(pathlib.Path(SPEC.origin).exists(), 'independent PostgreSQL probe is missing')
+        self.probe = importlib.util.module_from_spec(SPEC)
+        SPEC.loader.exec_module(self.probe)
+
+    def test_final_four_bind_exact_ids_and_reject_incomplete_claims(self):
+        plan = self.probe.plan_final_four()
+        self.assertEqual([562, 563, 584, 585], [g['target']['number'] for g in plan['groups']])
+        for group in plan['groups']:
+            statement = group['statements'][0]
+            self.assertEqual(statement['sql'], (ROOT / group['source']).read_text()[statement['start_offset']:statement['end_offset']])
+            group['results'] = dict.fromkeys(self.probe.final_cases(group['target']['number']), True)
+        plan['status'] = 'passed'
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        self.probe.finalize_final_four(plan)
+        self.assertEqual([], self.probe.verified_final_four_ids(plan))
+
+    def test_final_four_revalidates_state_errors_replay_and_binding(self):
+        plan = self.probe.plan_final_four()
+        group = plan['groups'][0]
+        base = dict(tables={'sys_dept': [{'id': 2, 'tenant_id': 'tenant-b'}],
+                            'sys_user': [{'id': 2, 'dept_id': 2}], 'sys_role_dept': [{'id': 2, 'dept_id': 2}]},
+                    columns=[], constraints=[], indexes=[], triggers=[], functions=[])
+        for case in self.probe.final_cases(562):
+            before = copy.deepcopy(base)
+            after = copy.deepcopy(before)
+            if case == 'seed':
+                before['tables']['sys_dept'].insert(0, {'id': 1, 'tenant_id': None})
+                before['tables']['sys_user'].insert(0, {'id': 1, 'dept_id': 1})
+                after = copy.deepcopy(before)
+                after['tables']['sys_dept'].pop(0)
+                after['tables']['sys_user'][0]['dept_id'] = None
+            group['results'][case] = True
+            group['observations'][case] = dict(before=before, after=after,
+                fixture_sql=self.probe.final_fixture(562, 'no_seed' if case == 'replay' else case),
+                executed_sql=group['statements'][0]['sql'] + ';', assertions_passed=True,
+                error=self.probe.final_error(562, case))
+        plan['status'] = 'partial_diagnostic'
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        plan['container'] = {'isolation_verified': True}
+        plan['server_version'] = 'PostgreSQL 17.6'
+        self.probe.finalize_final_four(plan)
+        self.assertEqual(['old-sql-0562'], self.probe.verified_final_four_ids(plan))
+        for mutation in ('data', 'replay', 'error', 'binding', 'cleanup', 'fixture', 'source', 'version', 'isolation'):
+            changed = copy.deepcopy(plan)
+            g = changed['groups'][0]
+            if mutation in ('data', 'replay'):
+                g['observations']['seed' if mutation == 'data' else 'replay']['after']['tables']['sys_user'][0]['dept_id'] = 999
+            elif mutation == 'error':
+                g['observations']['late_error']['error'] = None
+            elif mutation == 'binding':
+                g['statement_ids'] = [['invalid']]
+            elif mutation == 'cleanup':
+                changed['cleanup']['container_and_anonymous_volumes_removed'] = False
+            elif mutation == 'fixture':
+                g['observations']['seed']['fixture_sql'] = 'SELECT 1'
+            elif mutation == 'source':
+                changed['sources'][0]['source_sha256'] = 'invalid'
+            elif mutation == 'version':
+                changed['server_version'] = 'PostgreSQL 16.9'
+            else:
+                changed['container']['isolation_verified'] = False
+            self.assertEqual([], self.probe.verified_final_four_ids(changed), mutation)
+
+    def test_final_four_union_dispatches_strict_validator(self):
+        import auth_v45_dynamic_probe_20261018 as auth
+        import pg_p0_dynamic_probe as pg
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / 'dynamic-four-evidence.json'
+            path.write_text(json.dumps({'probe_kind': 'postgresql_p0_final_four'}))
+            with patch.object(auth, 'P0', pathlib.Path(directory)), patch.object(pg, 'verified_final_four_ids', return_value=['old-sql-0562']) as validator:
+                ids, hashes, denominator = auth.verified_union()
+            self.assertEqual(['old-sql-0562'], ids)
+            validator.assert_called_once()
+
+    def test_final_four_validator_rejects_mutated_runtime_observations(self):
+        import subprocess
+        def failed_start(args, text=None, timeout=45):
+            return subprocess.CompletedProcess(args, int(args[1] == 'start' or args[1:3] == ['container', 'exists']), 'owned', 'injected')
+        plan = self.probe.plan_final_four()
+        with patch.object(self.probe, 'command', side_effect=failed_start):
+            self.probe.run(plan)
+        self.assertEqual('failed', plan['status'])
+        self.assertTrue(plan['cleanup']['container_and_anonymous_volumes_removed'])
+        self.assertEqual([], self.probe.verified_final_four_ids(plan))
+
+    def test_all_31_old_ids_are_bound_to_original_offsets_and_hashes(self):
+        plan = self.probe.plan()
+        self.assertEqual(31, len(plan['groups']))
+        self.assertEqual(list(range(530, 561)), [int(g['old_ids'][0].split('-')[-1]) for g in plan['groups']])
+        for group in plan['groups']:
+            statement = group['statements'][0]
+            text = (ROOT / group['source']).read_text()
+            self.assertEqual(statement['sql'], text[statement['start_offset']:statement['end_offset']])
+            self.assertEqual([statement['statement_id']], group['statement_ids'][0])
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+
+    def test_remaining_batch_binds_23_ids_without_changing_original_plan(self):
+        plan = self.probe.plan_remaining()
+        self.assertEqual(23, len(plan['items']))
+        self.assertEqual(15, len(plan['groups']))
+        self.assertEqual(31, len(self.probe.plan()['items']))
+        ids = {i['id'] for i in plan['items']}
+        self.assertEqual({f'old-sql-{n:04d}' for n in (561, 564, *range(565, 584), 586, 587)}, ids)
+        for group in plan['groups']:
+            for statement in group['statements']:
+                text = (ROOT / group['source']).read_text()
+                self.assertEqual(statement['sql'], text[statement['start_offset']:statement['end_offset']])
+
+    def test_remaining_batch_rejects_empty_observations_even_with_true_flags(self):
+        plan = self.probe.plan_remaining()
+        plan['status'] = 'passed'
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in plan['groups']:
+            group['results'] = dict.fromkeys(self.probe.REMAINING_BRANCHES, True)
+        self.probe.finalize_remaining(plan)
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+        self.assertEqual([], self.probe.verified_remaining_ids(plan))
+
+    def test_remaining_batch_rejects_boolean_only_snapshot_claims(self):
+        plan = self.probe.plan_remaining()
+        plan['status'] = 'partial_diagnostic'
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in plan['groups']:
+            group['results'] = dict.fromkeys(self.probe.REMAINING_BRANCHES, True)
+            group['observations'] = {k: {'assertions_passed': True} for k in self.probe.REMAINING_BRANCHES}
+        self.probe.finalize_remaining(plan)
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+
+    def test_remaining_validator_checks_nonempty_state_replay_and_binding(self):
+        plan = self.probe.plan_remaining()
+        group = plan['groups'][0]
+        snapshot = dict(tables={'sys_role': [{'id': 1, 'data_scope': None}]},
+                        constraints=[], columns=[{'column_name': 'data_scope'}],
+                        indexes=[], triggers=[], functions=[])
+        after = copy.deepcopy(snapshot)
+        after['constraints'] = self.probe.expected_constraints(561)
+        body = ';\n'.join(s['sql'] for s in group['statements']) + ';'
+        for branch in self.probe.REMAINING_BRANCHES:
+            group['results'][branch] = True
+            group['observations'][branch] = dict(before=copy.deepcopy(after), after=copy.deepcopy(after),
+                executed_sql=body, assertions_passed=True, error='violates check constraint')
+        group['observations']['present']['before'] = snapshot
+        plan['status'] = 'partial_diagnostic'
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        self.probe.finalize_remaining(plan)
+        self.assertEqual(['old-sql-0561'], self.probe.verified_remaining_ids(plan))
+        for mutation in ('empty', 'replay', 'definition', 'binding', 'cleanup'):
+            changed = copy.deepcopy(plan)
+            g = changed['groups'][0]
+            if mutation == 'empty':
+                g['observations']['present']['before']['tables']['sys_role'] = []
+            elif mutation == 'replay':
+                g['observations']['replay']['after']['tables']['sys_role'][0]['data_scope'] = 5
+            elif mutation == 'definition':
+                g['observations']['present']['after']['constraints'][0]['definition'] = 'CHECK (true)'
+            elif mutation == 'binding':
+                g['statement_ids'] = [['tampered']]
+            else:
+                changed['cleanup']['container_and_anonymous_volumes_removed'] = False
+            self.assertEqual([], self.probe.verified_remaining_ids(changed), mutation)
+
+    def test_union_dispatches_remaining_evidence_to_strict_validator(self):
+        import auth_v45_dynamic_probe_20261018 as auth
+        import pg_p0_dynamic_probe as pg
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / 'dynamic-remaining-evidence.json'
+            path.write_text(json.dumps({'probe_kind': 'postgresql_p0_remaining'}))
+            with patch.object(auth, 'P0', pathlib.Path(directory)), patch.object(
+                    pg, 'verified_remaining_ids', return_value=['old-sql-0561']) as validator:
+                ids, hashes, denominator = auth.verified_union()
+            self.assertEqual(['old-sql-0561'], ids)
+            validator.assert_called_once()
+            self.assertEqual(586, denominator)
+            self.assertIn(path.name, hashes)
+
+    def test_remaining_container_failure_finally_cleanup(self):
+        import subprocess
+        def command(args, text=None, timeout=45):
+            code = 1 if args[1] == 'start' or args[1:3] == ['container', 'exists'] else 0
+            return subprocess.CompletedProcess(args, code, 'owned', 'injected')
+        plan = self.probe.plan_remaining()
+        with patch.object(self.probe, 'command', side_effect=command):
+            self.probe.run(plan)
+        self.assertEqual('failed', plan['status'])
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+        self.assertTrue(plan['cleanup']['container_and_anonymous_volumes_removed'])
+
+    def test_remaining_batch_rejects_binding_and_source_drift(self):
+        baseline = json.loads(self.probe.BASELINE.read_text())
+        item = next(i for i in baseline['baseline_audit']['old_sql_items'] if i['id'] == 'old-sql-0570')
+        item['statement_ids'] = ['tampered']
+        with self.assertRaisesRegex(ValueError, 'binding'):
+            self.probe.plan_remaining(baseline)
+        with patch.object(self.probe, 'source_text', return_value='invalid'):
+            with self.assertRaisesRegex(ValueError, 'source hash'):
+                self.probe.plan_remaining()
+
+    def test_source_drift_is_rejected(self):
+        with patch.object(self.probe, 'source_text', return_value='DO $$ BEGIN NULL; END $$;'):
+            with self.assertRaisesRegex(ValueError, 'source hash'):
+                self.probe.plan()
+
+    def test_baseline_statement_id_drift_is_rejected(self):
+        baseline = json.loads(self.probe.BASELINE.read_text())
+        baseline['baseline_audit']['old_sql_items'][530]['statement_ids'] = ['stmt-invalid']
+        with self.assertRaisesRegex(ValueError, 'offset/hash'):
+            self.probe.plan(baseline=baseline)
+
+    def test_unrecognized_guard_cannot_be_silently_accepted(self):
+        with self.assertRaisesRegex(ValueError, 'unsupported guard'):
+            self.probe.guard_target('DO $$ BEGIN NULL; END $$')
+
+    def test_v16_composite_index_column_order(self):
+        targets = [g['target'] for g in self.probe.plan()['groups']]
+        self.assertEqual(['tenant_id', 'status'], targets[-3]['columns'])
+        self.assertEqual(['tenant_id', 'job_id', 'start_time'], targets[-1]['columns'])
+
+    def test_every_branch_and_cleanup_are_required_before_counting(self):
+        plan = self.probe.plan()
+        plan['status'] = 'passed'
+        for group in plan['groups']:
+            group['results'] = dict.fromkeys(self.probe.BRANCHES, True)
+        self.probe.finalize(plan)
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        self.probe.finalize(plan)
+        self.assertEqual(31, len(plan['coverage']['verified_old_ids']))
+        plan['groups'][0]['results'].pop('existing_index')
+        self.probe.finalize(plan)
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+
+    def test_union_rejects_tampered_source_statement_and_old_id(self):
+        plan = self.probe.plan()
+        plan['status'] = 'passed'
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in plan['groups']:
+            group['results'] = dict.fromkeys(self.probe.BRANCHES, True)
+        self.probe.finalize(plan)
+        self.assertEqual(31, len(self.probe.verified_ids(plan)))
+        for field in ('old_ids', 'statement_ids', 'statements', 'target'):
+            altered = copy.deepcopy(plan)
+            altered['groups'][0][field] = []
+            self.assertEqual([], self.probe.verified_ids(altered), field)
+        altered = copy.deepcopy(plan)
+        altered['sources'][0]['source_sha256'] = 'bad'
+        self.assertEqual([], self.probe.verified_ids(altered))
+
+    def test_evidence_is_exclusive_and_never_overwrites(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / 'new.json'
+            self.probe.save({'status': 'first'}, path)
+            with self.assertRaises(FileExistsError):
+                self.probe.save({'status': 'second'}, path)
+            self.assertEqual('first', json.loads(path.read_text())['status'])
+
+    def test_container_failure_is_cleaned_and_never_counts(self):
+        calls = []
+        def command(args, text=None, timeout=45):
+            import subprocess
+            calls.append(args)
+            if args[1] == 'create':
+                return subprocess.CompletedProcess(args, 0, 'owned-id', '')
+            if args[1] == 'start':
+                return subprocess.CompletedProcess(args, 1, '', 'injected start failure')
+            if args[1:3] == ['container', 'exists']:
+                return subprocess.CompletedProcess(args, 1, '', '')
+            return subprocess.CompletedProcess(args, 0, '', '')
+        plan = self.probe.plan()
+        with patch.object(self.probe, 'command', side_effect=command):
+            self.probe.run(plan)
+        self.assertEqual('failed', plan['status'])
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+        self.assertTrue(plan['cleanup']['container_and_anonymous_volumes_removed'])
+        create = next(c for c in calls if c[1] == 'create')
+        self.assertIn('none', create)
+        self.assertIn('--tmpfs', create)
+        self.assertIn('--volumes', next(c for c in calls if c[1] == 'rm'))
+
+    def test_podman_hostconfig_tmpfs_representation(self):
+        inspection = {'HostConfig': {'NetworkMode': 'none', 'PortBindings': {},
+                                    'Tmpfs': {'/var/lib/postgresql/data': 'rw,rprivate,nosuid,nodev,tmpcopyup'}},
+                      'Mounts': []}
+        self.assertTrue(self.probe.isolated(inspection))
+        inspection['HostConfig']['Tmpfs'] = {}
+        self.assertFalse(self.probe.isolated(inspection))
+
+    def test_cleanup_failure_invalidates_completed_branches(self):
+        plan = self.probe.plan()
+        plan['status'] = 'passed'
+        for group in plan['groups']:
+            group['results'] = dict.fromkeys(self.probe.BRANCHES, True)
+        plan['cleanup'] = {'container_and_anonymous_volumes_removed': False}
+        self.probe.finalize(plan)
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+
+
+class TriggerBehaviorTest(unittest.TestCase):
+    setUp = PostgreSQLProbeTest.setUp
+    def test_behavior_plan_binds_full_sources_without_old_credit(self):
+        plan = self.probe.plan_trigger_behavior()
+        self.assertEqual(7, len(plan['sources']))
+        self.assertEqual(8, len(plan['groups']))
+        self.assertEqual(16, len(plan['items']))
+        self.assertEqual([], plan['coverage']['verified_old_ids'])
+        for source in plan['sources']:
+            self.assertEqual(source['sql'], (ROOT / source['source']).read_text())
+            self.assertEqual(source['source_sha256'], self.probe.digest(source['sql'].encode()))
+        with patch.object(self.probe, 'source_text', return_value='changed'):
+            with self.assertRaisesRegex(ValueError, 'source hash'):
+                self.probe.plan_trigger_behavior()
+
+    def test_behavior_assertion_rejects_wrong_timestamp_sentinel_and_catalog(self):
+        target = dict(table='example', column='updated_at', payload='title')
+        before = dict(tables={'example': [dict(id=9001, title='original', updated_at='2001-01-01T00:00:00'),
+                                         dict(id=9002, title='sentinel', updated_at='2001-01-01T00:00:00')]},
+                      constraints=[], columns=[], indexes=[], functions=[], triggers=[])
+        after = copy.deepcopy(before)
+        after['tables']['example'][0].update(title='changed', updated_at='2026-10-19T10:20:30')
+        obs = dict(before=before, after=after, transaction_time='2026-10-19T10:20:30')
+        self.probe.assert_trigger_behavior(target, 'update', obs)
+        for mutation in ('timestamp', 'sentinel', 'catalog'):
+            changed = copy.deepcopy(obs)
+            if mutation == 'timestamp':
+                changed['after']['tables']['example'][0]['updated_at'] = '2001-01-01T00:00:00'
+            elif mutation == 'sentinel':
+                changed['after']['tables']['example'][1]['title'] = 'lost'
+            else:
+                changed['after']['indexes'] = ['unexpected']
+            with self.assertRaises(AssertionError):
+                self.probe.assert_trigger_behavior(target, 'update', changed)
+        rollback = dict(before=before, after=before, error='division by zero')
+        self.probe.assert_trigger_behavior(target, 'data_rollback', rollback)
+        rollback['error'] = None
+        with self.assertRaises(AssertionError):
+            self.probe.assert_trigger_behavior(target, 'data_rollback', rollback)
+
+    def test_behavior_flags_without_observations_never_pass(self):
+        plan = self.probe.plan_trigger_behavior()
+        plan['status'] = 'passed'
+        plan['cleanup']['container_and_anonymous_volumes_removed'] = True
+        for group in plan['groups']:
+            group['results'] = dict.fromkeys(self.probe.TRIGGER_CASES, True)
+        self.probe.finalize_trigger_behavior(plan)
+        self.assertEqual('failed', plan['status'])
+        self.assertEqual(0, plan['coverage']['new_verified_count'])
+        self.assertEqual([], plan['behavior']['validated_old_ids'])
+
+
+if __name__ == '__main__':
+    unittest.main()

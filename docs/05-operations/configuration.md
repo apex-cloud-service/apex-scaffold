@@ -6,7 +6,9 @@
 
 ## 📁 配置文件位置
 
-主配置文件: `apex-interfaces/src/main/resources/application.yml`
+当前配置入口为各运行模块的 `src/main/resources/application*.yml`；system 还加载 `apex-system/src/main/resources/` 中的配置。原 apex-interfaces 已退出 reactor。
+
+服务增强配置详见 [XXL-JOB 接入](xxl-job-integration.md)、[数据脱敏](data-masking.md)、[Seata 接入](seata-integration.md)。任务代理默认 8095、脱敏默认 8096；中心通过 Compose `xxl-job` / `seata` profile 单独选择，业务执行器和 AT 仍须独立配置。脱敏使用 `masking` profile，启动前填写 JWT issuer、JWKS、audience 和允许租户。共享基础设施已拆分为 persistence、cache、messaging、remote、integration 五个能力 JAR，配置前缀和 Java 包名保持兼容；office 站内信的安全与路由变量见[站内信说明](in-app-messaging.md)。
 
 环境特定配置:
 - `application-dev.yml` - 开发环境
@@ -20,31 +22,43 @@ mvnd spring-boot:run -Dspring-boot.run.profiles=prod
 
 ## 🔐 安全认证配置
 
+### office 注解权限与审计
+
+office-service 在订阅时执行本地 `@RequirePermission` 检查，权限码直接来自 Handler 注解，逗号分隔权限沿用 AND/OR 语义。角色名称本身不提供绕过；管理员也必须在授权快照中拥有声明的权限。
+
+`office.security.authorization.shared-user-namespace`（`OFFICE_AUTHORIZATION_SHARED_USER_NAMESPACE`）默认 `false`。只有部署者确认已验签 office JWT 的 `userId`、`tenantId` 与 auth 用户及租户命名空间相同才可开启；`accountId` 不能代替 `userId`，异构身份部署需先实现可信显式映射。`base-url`（`OFFICE_AUTHORIZATION_BASE_URL`）必须是 HTTPS auth 中心地址，`timeout`（`OFFICE_AUTHORIZATION_TIMEOUT`）默认 `3s`，范围为大于零至 `30s`。
+
+通过安全配置中心或 `SPRING_APPLICATION_JSON` 注入 `office.security.authorization.reader-tokens` 映射，键为精确租户 ID，值为该租户的专用 reader 访问 JWT。reader 必须满足 auth 的 `auth-center.authorization-reader-user-id` 及有效账号校验；端点只能读取 reader 自身租户，无法用请求头切换租户。需由部署方为每个租户提供有效 reader，并负责凭据续期；当前 auth reader 的全局用户 ID 配置可能限制多租户部署，无法配置的租户保持拒绝。调用 `GET /auth/v1/authorization/users/{userId}` 后还会校验返回业务码 `0` 与用户、租户一致，缺配置、过期、远端错误或超时均拒绝。`.env` 不会自动注入 Java 进程或全部 Compose 变量。
+
+本地 `AuditLogService` 输出可检索的 `OFFICE_AUDIT` 应用日志，不保证可靠持久化。`@OperationLog` 仅采集注解和 HTTP 元数据，正文、参数、身份头、凭据、异常消息均不采集；`saveRequest=false` / `saveResponse=false` 进一步关闭对应 HTTP 元数据。`HTTP_RESPONSE_READY` 只表示 Handler 已生成响应，不表示响应已发送或业务成功（包括 Handler 吞错、`Result<Boolean>` 为 `false` 的情况）。
+
 ### 凭据加密密钥
 
 数据源密码和认证中心 TOTP 密钥、备份码及已消费备份码使用 `apex.security.data-encryption-key`，由 `APEX_DATA_ENCRYPTION_KEY` 注入，值为 Base64 编码的 32 字节随机密钥，可用 `openssl rand -base64 32` 生成。必须跨实例和重启保持一致；缺失、非法 Base64 或长度错误会拒绝初始化。原先由临时随机密钥加密的数据需要使用原密钥解密后重新加密，无法通过新密钥恢复。
 
-TOTP 仓储只读取加密格式，不会在解密失败时回退为明文。升级前需备份 `auth_totp`，使用部署的稳定数据密钥将历史明文 `secret`、`backup_codes`、`used_backup_codes` 转换为当前 AES-GCM 格式，或安排用户重新绑定 MFA；可用 `scripts/utils/local_deployment.py prepare` 离线生成候选快照、备份和审查报告；工具不连接数据库，不自动执行迁移。更换密钥前也必须先完成旧密钥到新密钥的数据迁移。
+TOTP 仓储只读取加密格式，不会在解密失败时回退为明文。升级前需备份 `auth_totp`，使用部署的稳定数据密钥将历史明文 `secret`、`backup_codes`、`used_backup_codes` 转换为当前 AES-GCM 格式，或安排用户重新绑定 MFA；可用 `bash scripts/utils/local-deployment.sh prepare` 离线生成候选快照、备份和审查报告；工具不连接数据库，不自动执行迁移。更换密钥前也必须先完成旧密钥到新密钥的数据迁移。
 
 公共配置加密使用 `security.config.encryption.key`（`CONFIG_ENCRYPTION_KEY`），要求 UTF-8 编码后恰好 32 字节且不为全空白。认证中心独立配置加密使用 `apex.security.config-encryption-key`（`APEX_CONFIG_ENCRYPTION_KEY`），要求 Base64 解码后恰好 32 字节。两者格式不同，不能直接共用同一个字符串；均不再提供默认或临时密钥。
 
 Token 存储加密使用 `security.encryption.key`（环境变量 `SECURITY_ENCRYPTION_KEY`）；认证中心也支持 `security.token.encryption.key`（`TOKEN_ENCRYPTION_KEY`），前者优先。密钥必须为 Base64 编码的 32 字节，跨实例和重启保持一致；缺失或长度错误会拒绝启动，不再生成临时密钥。旧临时密钥加密的 Token 需要保留原密钥迁移，否则必须重新登录。
 
-Compose 强制注入 `APEX_DATA_ENCRYPTION_KEY`、`SECURITY_ENCRYPTION_KEY`、`CONFIG_ENCRYPTION_KEY`、`APEX_CONFIG_ENCRYPTION_KEY` 和 `JWT_SECRET`，缺失或为空时拒绝渲染。一次性 `security-key-check` 服务使用 Python 3.13 镜像校验格式，成功后才允许启动应用；四类加密密钥必须独立生成并安全保存，不应每次启动重新生成。三个 Base64 密钥可分别用 `openssl rand -base64 32` 生成；公共配置密钥可用 `openssl rand -hex 16` 生成（结果是 32 字节 ASCII）。`.env.example` 仅保留空值。环境变量仍可被具有 Podman 管理权限的用户查看。
+Compose 强制注入 `APEX_DATA_ENCRYPTION_KEY`、`SECURITY_ENCRYPTION_KEY`、`CONFIG_ENCRYPTION_KEY`、`APEX_CONFIG_ENCRYPTION_KEY` 和 `JWT_SECRET`，缺失或为空时拒绝渲染。一次性 `security-key-check` 服务使用 Java 21 JRE 镜像和预构建的离线工具 JAR 校验格式，成功后才允许启动应用；四类加密密钥必须独立生成并安全保存，不应每次启动重新生成。三个 Base64 密钥可分别用 `openssl rand -base64 32` 生成；公共配置密钥可用 `openssl rand -hex 16` 生成（结果是 32 字节 ASCII）。`.env.example` 仅保留空值。环境变量仍可被具有 Podman 管理权限的用户查看。
 
 安全检查命令（捕获渲染结果，不把展开后的密钥打印到终端）：
 
 ```bash
-python3 scripts/utils/local_deployment.py compose --env-file .env
+source scripts/build/init-build-env.sh
+mvnd -B -pl apex-tools-deployment -am verify
+bash scripts/utils/local-deployment.sh compose --env-file .env
 ```
 
 离线 TOTP 迁移准备与回滚：
 
 ```bash
-python3 -m venv /tmp/apex-totp-tools
-/tmp/apex-totp-tools/bin/pip install -r scripts/utils/local-deployment-requirements.txt
-/tmp/apex-totp-tools/bin/python scripts/utils/local_deployment.py prepare --input /secure/auth_totp.json --output /secure/totp-review
-/tmp/apex-totp-tools/bin/python scripts/utils/local_deployment.py rollback --bundle /secure/totp-review --output /secure/auth_totp-restored.json
+source scripts/build/init-build-env.sh
+mvnd -B -pl apex-tools-deployment -am verify
+bash scripts/utils/local-deployment.sh prepare --input /secure/auth_totp.json --output /secure/totp-review
+bash scripts/utils/local-deployment.sh rollback --bundle /secure/totp-review --output /secure/auth_totp-restored.json
 ```
 
 运行前通过安全环境注入 `APEX_DATA_ENCRYPTION_KEY`；如需轮换，另注入 `TOTP_OLD_DATA_ENCRYPTION_KEY`，不将值写进命令行。输入为完整 `auth_totp` 行的 JSON 数组，必须包含 `id`、`tenant_id`、`version`、`secret`、`backup_codes`、`used_backup_codes`，包括逻辑删除行。工具只转换后三个敏感字段，保留其他字段。历史明文只接受当前生成器的 32 字符大写 Base32 secret 及逗号分隔的 8 位数字备份码；允许空备份码和 NULL 备份码。当前密文为裸 `Base64(12 字节 IV + AES-256-GCM 密文 + 16 字节标签)`，不是 `ENC(...)`；必须认证解密成功且明文格式正确才能跳过。旧密钥密文在提供原密钥时重加密，未知格式、损坏密文、身份重复或错误密钥会阻止生成迁移包。
@@ -83,6 +97,14 @@ jwt:
 - ⚠️ 生产环境务必通过环境变量设置 `JWT_SECRET`
 - 使用强随机字符串生成器: `openssl rand -base64 48`
 - 定期轮换密钥
+
+### workflow-service 独立 JWT 验签
+
+workflow-service 从 `Authorization: Bearer` 独立验签，身份只读取已签名的 `userId`、`tenantId`、`clientType`，不信任 `X-User-Id` / `X-Tenant-Id` / `X-Client-Type`。必须包含有效 `exp`、`tokenType=ACCESS`、正数用户 ID 和非空白字符串租户。当前 auth 签发 RS256，设置 `WORKFLOW_JWT_PUBLIC_KEY_BASE64`（`workflow.security.jwt-public-key-base64`）为对应活跃 RSA 公钥的 X509 DER Base64，不能填写 PEM 或 JWKS JSON，也不能用共享 `JWT_SECRET` 验证 RS256。
+
+历史 HMAC 签发方须同时显式设置 `WORKFLOW_JWT_HMAC_ENABLED=true` 和至少 32 字节的 `WORKFLOW_JWT_SECRET`，对应 `workflow.security.jwt-hmac-enabled` / `jwt-secret`；默认关闭。配置 RSA 后只接受 RS256，不因签名失败而降级到 HMAC；非法 RSA 配置拒绝启动，缺失验签密钥时不建立认证。
+
+`.env.example` 提供以上变量，`podman-compose.yml` 在 workflow 容器中显式注入；直接启动 Java 进程时仍须导出环境变量或通过安全配置注入。当前不自动拉取 JWKS，auth 轮换后须同步公钥并重启 workflow。服务只做本地签名与声明校验，不检查会话撤销、账号停用或令牌黑名单；`/internal/v1/**` 仍在现有安全链中 `permitAll`，内部接口鉴权需另行治理。
 
 ### 多端统一账户与微信渠道（多端对接改造新增）
 
@@ -127,6 +149,8 @@ wechat:
 - 认证中心库执行 V55 迁移（`auth_user.account_id`）
 - 存量账户映射按 `scripts/data/backfill_auth_user_account_id.sql` 人工回填（两库独立，username 精确匹配，幂等）；未映射账户登录后访问主应用业务接口将返回 401
 - `wechat.mp` 网页授权需在公众平台配置网页授权域名；小程序需配置服务器域名白名单
+
+<a id="认证中心统一授权"></a>
 
 ### 认证中心统一授权
 
@@ -295,6 +319,8 @@ mybatis-plus:
 
 ## 🗄️ 缓存配置
 
+<a id="redis配置"></a>
+
 ### Redis配置
 
 ```yaml
@@ -380,6 +406,8 @@ apex:
     # SSE 长连接（Accept: text/event-stream）自动豁免；设为 0s 关闭
     response-timeout: ${APEX_RESPONSE_TIMEOUT:30s}
 ```
+
+<a id="sentinel配置"></a>
 
 ### Sentinel配置
 
@@ -582,53 +610,42 @@ public Mono<Result> refreshCache(String key) {
 
 ### 多存储后端支持
 
+五种类型为 `local`、`minio`、`volcengine`、`aliyun-oss`、`qiniu`，默认 Local；云开关默认关闭，不进行故障降级。完整字段以 [file 主配置](../../apex-file-service/src/main/resources/application.yml)及[环境模板](../../.env.example)为准，接入、凭据、迁移与限制见[对象存储指南](object-storage-integration.md)。
+
 ```yaml
 storage:
-  # 当前使用的存储类型(LOCAL/MINIO/S3/VOLCENGINE_TOS)
-  default-type: LOCAL
-  
-  # 本地存储配置
+  default-type: local
+  bucket-name: apex
+  presigned-url-expire-seconds: 300
   local:
-    # 存储根路径
+    enabled: true
     base-path: /data/uploads
-    
-    # 访问URL前缀
-    url-prefix: /uploads
-  
-  # MinIO配置
   minio:
-    # 服务端点
-    endpoint: http://localhost:9000
-    
-    # Access Key
-    access-key: ${MINIO_ACCESS_KEY:minioadmin}
-    
-    # Secret Key
-    secret-key: ${MINIO_SECRET_KEY:minioadmin}
-    
-    # Bucket名称
-    bucket: apex-files
-    
-    # 是否启用HTTPS
-    secure: false
-  
-  # AWS S3配置
-  s3:
-    # 区域
-    region: cn-north-1
-    
-    # Access Key
-    access-key: ${AWS_ACCESS_KEY:}
-    
-    # Secret Key
-    secret-key: ${AWS_SECRET_KEY:}
-    
-    # Bucket名称
-    bucket: your-bucket-name
-    
-    # CDN域名(可选)
-    cdn-domain: https://cdn.example.com
+    enabled: false
+    endpoint: ${MINIO_ENDPOINT:}
+    access-key: ${MINIO_ACCESS_KEY:}
+    secret-key: ${MINIO_SECRET_KEY:}
+  volcengine:
+    enabled: false
+    endpoint: ${STORAGE_VOLCENGINE_ENDPOINT:}
+    region: ${STORAGE_VOLCENGINE_REGION:}
+    access-key: ${STORAGE_VOLCENGINE_ACCESS_KEY:}
+    secret-key: ${STORAGE_VOLCENGINE_SECRET_KEY:}
+  aliyun-oss:
+    enabled: false
+    endpoint: ${STORAGE_ALIYUN_OSS_ENDPOINT:}
+    access-key: ${STORAGE_ALIYUN_OSS_ACCESS_KEY:}
+    secret-key: ${STORAGE_ALIYUN_OSS_SECRET_KEY:}
+  qiniu:
+    enabled: false
+    region: ${STORAGE_QINIU_REGION:}
+    bucket: ${STORAGE_QINIU_BUCKET:}
+    download-domain: ${STORAGE_QINIU_DOWNLOAD_DOMAIN:}
+    access-key: ${STORAGE_QINIU_ACCESS_KEY:}
+    secret-key: ${STORAGE_QINIU_SECRET_KEY:}
 ```
+
+云桶预创建；七牛区域与 HTTPS 下载域名必须对应配置桶。Local 不提供无认证预签名 URL。旧 `storage.s3`、`storage.local.url-prefix`、`STORAGE_LOCAL_PUBLIC_BASE_URL`、`MINIO_SECURE` 不属于当前 starter 配置。auth 当前签发 RS256，file 必须配置对应 X509 DER Base64 公钥；`JWT_SECRET` 不能替代 RSA 公钥，且 file 不自动拉取 JWKS 或同步轮换。
 
 ## 🧭 Nacos 配置中心（微服务化）
 
@@ -645,8 +662,9 @@ bootstrap.yml
   -> application-{profile}.yml
 ```
 
-优先级：**环境变量 > Nacos 远端配置 > 本地文件默认值**。无 Nacos 部署时通过
-`NACOS_CONFIG_ENABLED=false` 关闭配置中心，应用回退到本地 `application.yml`，行为与单体一致。
+本地占位符可由环境变量供值；最终优先级还须核对实际profile、bootstrap加载及Nacos远端属性源，不能仅按模板推断。上述加载链为部署约定；共享模板是否发布、挂载及映射到Spring属性须按实际部署核验，见[配置链核验记录](../06-testing/jdk21-unified-auth/20261016-p0/report.md)。
+
+无Nacos部署时，分别设置 `NACOS_CONFIG_ENABLED=false`、`NACOS_DISCOVERY_ENABLED=false`、`NACOS_REGISTER_ENABLED=false`；三个开关独立，关闭配置中心不会自动关闭发现和注册。网关 `lb://` 路由同时改为明确HTTP地址，office消息HTTP与WebSocket地址须保持同一实例。仍需验证实际属性源和启动结果。
 
 ### bootstrap.yml 关键项
 
@@ -672,8 +690,13 @@ spring:
         register-enabled: ${NACOS_REGISTER_ENABLED:true}
 ```
 
-> ⚠️ 网关（`apex-gateway`）作为流量入口，`NACOS_CONFIG_ENABLED`/`NACOS_DISCOVERY_ENABLED`/
-> `NACOS_REGISTER_ENABLED` 默认 **true**；业务服务默认 **false**，避免本地未部署 Nacos 时启动失败。
+网关 `application-prod.yml` 的三个开关现均使用上述环境占位符，默认true；`GatewayNacosConfigContractTest`加载真实prod/application/bootstrap YAML并隔离宿主属性源，覆盖八组合及默认，共9项。该契约不启动Spring或Nacos客户端，不证明远端覆盖后的有效值。五业务service的bootstrap默认false，但system-service application及system业务库bootstrap/application另有默认true；须按实际加载资源核验，不将“业务服务默认false”外推到所有配置层。Compose三项默认true、namespace默认public，部分prod文件namespace默认prod，也须明确实际部署取值。
+
+### auth JDBC与R2DBC的TLS核验
+
+[主Compose](../../podman-compose.yml)中auth的 `SPRING_DATASOURCE_URL` 含 `useSSL=false`，按Spring环境绑定覆盖[auth prod配置](../../apex-auth-service/src/main/resources/application-prod.yml) JDBC URL的 `useSSL=true&requireSSL=true`。prod R2DBC URL则由 `DB_HOST`、`DB_PORT`、`DB_NAME` 拼接，设 `sslMode=REQUIRED`；主Compose没有 `SPRING_R2DBC_*` 注入。[JwtKeyRepositoryImpl](../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/JwtKeyRepositoryImpl.java)通过R2DBC `DatabaseClient`读写 `jwt_keys`，该配置存在实际消费链。
+
+这是已确认的静态配置差异，尚未证实生产故障；本轮没有调整TLS策略。部署核验需记录实际运行profile、Compose override及远端/环境/本地配置源、最终DataSource和ConnectionFactory目标与TLS参数，再分别验证JDBC/R2DBC握手及业务访问；配置摘要应脱敏，不输出密码、令牌或密钥。未执行该运行核验前，不能据静态差异声称生产连接失败或双连接配置已一致。
 
 ### Nacos Data ID 清单
 
@@ -701,6 +724,36 @@ spring:
 
 Nacos 远端配置**禁止**出现明文密钥。JWT 私钥、数据库口令、Redis 口令等一律经
 环境变量 / KMS 注入；相关变量名见[环境变量清单](configuration-inventory.md)。
+
+## 🧩 服务增强配置
+
+任务代理、数据脱敏与 Seata 事务的完整约束、前置条件与运维事项见 [XXL-JOB 接入](xxl-job-integration.md)、[数据脱敏](data-masking.md)、[Seata 接入](seata-integration.md)。此处仅列出 Seata 多模式关键配置项，其余接入细节以集成文档为准。
+
+```yaml
+apex:
+  seata:
+    enabled: ${APEX_SEATA_ENABLED:false}          # 默认关闭；关闭时不初始化 TM/RM、不代理数据源
+    mode: ${APEX_SEATA_MODE:AT}                   # AT（默认）/ TCC / SAGA / XA，大小写不敏感，非法值启动失败
+    application-id: apex-system-service           # 每个服务不同
+    transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}   # 须与 TC vgroupMapping 一致
+    timeout-millis: 30000
+    inbound-path-prefix: /internal/seata/
+    propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET}
+    allowed-origins: []                            # 空列表不向任何目标传播 XID
+    saga:                                          # 仅 SAGA 模式读取，其他模式忽略
+      table-prefix: seata_                         # 须与 SAGA 建表脚本表名一致
+      state-machine-resources: []                  # classpath 状态机 JSON；空则仅装配引擎
+```
+
+| 配置项 | 默认 | 适用模式 | 说明 |
+| --- | --- | --- | --- |
+| `apex.seata.enabled` | `false` | 全部 | 关闭时无 TM/RM 初始化、无数据源代理、无传播与 Outbox 切面 |
+| `apex.seata.mode` | `AT` | 全部 | 事务模式选择；决定数据源代理、必需表结构与事务边界写法 |
+| `apex.seata.transaction-service-group` | 空 | 全部 | 事务组，须与 TC `vgroupMapping` 一致 |
+| `apex.seata.saga.table-prefix` | `seata_` | 仅 SAGA | SAGA 存储三表前缀 |
+| `apex.seata.saga.state-machine-resources` | 空数组 | 仅 SAGA | classpath 状态机 JSON 资源模式；留空只装配引擎 |
+
+`mode` 决定的前置条件：**AT** 需业务库 `undo_log`、单 JDBC 数据源；**TCC** 不包装数据源，业务类实现 `@LocalTCC` 三段动作；**SAGA** 需先执行 starter 发布在 `sql/saga/{mysql,postgresql}/seata_state_machine.sql` 的存储三表；**XA** 需数据库支持 XA 且单 JDBC 数据源，无需 `undo_log`。详见 [Seata 接入](seata-integration.md) 的「事务模式选择」章节。
 
 ## 📊 监控告警配置
 
@@ -931,6 +984,46 @@ IP 限流过滤器的速率超限、已封禁请求及封禁触发分别使用�
 
 认证中心文件输出当前使用文本格式，主应用按 profile 配置输出格式；采集规则应与对应应用配置匹配，不能统一假定全部日志为 JSON。
 
+<a id="-阻塞-io-调度器与虚拟线程"></a>
+
+## 🧵 阻塞 I/O 调度器与虚拟线程
+
+`apex.blocking-io` 配置 `BlockingIoSchedulers` 的六个专用阻塞池（`jdbc`、`cache`、`storage`、`event`、`remote`、`general`）。每个池可独立选择平台线程池或虚拟线程执行器，**默认全部关闭虚拟线程**，保持与既有行为一致。
+
+```yaml
+apex:
+  blocking-io:
+    jdbc:
+      threads: 32            # 平台线程模式为线程数；虚拟线程模式为默认并发上限
+      queue-capacity: 128
+      fair: false
+      virtual-threads: false # 开启后该池改用虚拟线程执行器
+      max-concurrency: 32    # 可选，<= 0 或省略时沿用 threads
+```
+
+### 开关语义
+
+| 配置项 | 平台线程模式 | 虚拟线程模式 |
+| --- | --- | --- |
+| `threads` | 最大工作线程数 | 默认最大并发（`max-concurrency` 未设时生效） |
+| `queue-capacity` | 有界队列容量 | 可排队任务上限 |
+| `fair` | 公平模式 | 公平模式（信号量） |
+| `max-concurrency` | 忽略 | 真正的并发闸门，须与下游稀缺资源对齐 |
+| `task-ttl-ms` | 任务 TTL | 仅校验，不生效 |
+
+- 虚拟线程不可池化，`max-concurrency` 才是需要保护的稀缺资源上限。**`jdbc` 池应与数据库连接池最大连接数一致**，`remote` 池应与下游配额一致，不能按 CPU 核数放大。
+- 排队超过 `max-concurrency + queue-capacity` 时提交方收到 `RejectedExecutionException`，与平台线程池队列打满的行为一致，不静默堆积。
+- 建议按池灰度：`jdbc`、`storage`、`remote`、`general` 是"等待远大于计算"的池，收益最明显；`cache` 池任务典型小于 5ms，一般无需开启。
+- 关闭开关后，`BlockingIoSchedulers` 会回收该池残留的虚拟线程执行器，指标不会继续读到旧计数。
+
+### 定时调度
+
+虚拟线程执行器实现了 `ScheduledExecutorService`，因此 `Mono.delay(duration, BlockingIoSchedulers.cache())`、`retryWhen` 和 `Schedulers#schedulePeriodically` 在虚拟线程模式下仍可用：延迟由每个池一条守护线程 `<pool>-timer` 计时，到期后仍交给虚拟线程执行，不占用计时线程。周期任务每次触发都重新走并发闸门，闸门打满时该次触发记录 WARN 并跳过。
+
+### 观测与钉住
+
+`snapshotAll()` 在虚拟线程模式下直接读执行器真实计数，Micrometer Gauge 的并发、排队、完成、拒绝数值不退化。JDK 21 中虚拟线程在 `synchronized` 块内阻塞会钉住（pin）载体线程；怀疑存在钉住时可在启动参数加 `-Djdk.tracePinnedThreads=full` 观测。本项目的阻塞边界已统一收口到 `BlockingIoSchedulers`，切换前仍需确认目标池调用的驱动/客户端不使用 `synchronized` 包裹阻塞 I/O。
+
 ## 📈 性能压测脚本
 
 脚本位置为 `scripts/bench/bench.sh`，依赖 `wrk`。基础用法如下：
@@ -957,6 +1050,91 @@ BENCH_SCENARIO=all BENCH_LOGIN_ENABLED=true BENCH_USERNAME=real-user BENCH_PASSW
 ```
 
 安全要求：默认只执行健康检查，不会使用占位密码执行登录压测。登录场景必须显式设置 `BENCH_LOGIN_ENABLED=true`，并通过环境变量提供真实账号和密码；不要把密码写入脚本、文档、命令历史或提交到版本库。完整脚本说明和失败排查见 `docs/sales/PERFORMANCE_REPORT.md`。
+
+### 虚拟线程压测脚本
+
+`scripts/bench/bench-vt.sh` 用于验证 [阻塞 I/O 调度器与虚拟线程](#-阻塞-io-调度器与虚拟线程)的开关效果：同一接口分别以平台线程与虚拟线程模式压测，输出吞吐/延迟对比，并采集池指标与 JFR `jdk.VirtualThreadStart` 事件证明开关确实生效。脚本只通过 JVM 参数开关，不修改任何配置文件。
+
+```bash
+# 对比模式（默认）：依次启动两个进程，先平台线程后虚拟线程
+./scripts/bench/bench-vt.sh
+
+# 只检查已在运行的服务，不启停进程
+BENCH_MODE=report BENCH_PID=<pid> ./scripts/bench/bench-vt.sh
+
+# 只跑其中一轮
+BENCH_MODE=baseline ./scripts/bench/bench-vt.sh
+BENCH_MODE=virtual  ./scripts/bench/bench-vt.sh
+```
+
+脚本对每个池注入的参数如下，两轮使用相同并发上限，只有线程模型不同：
+
+| 模式 | 注入参数 |
+| --- | --- |
+| `baseline` | `-Dapex.blocking-io.<pool>.threads=<并发上限>` |
+| `virtual` | `-Dapex.blocking-io.<pool>.virtual-threads=true`、`-Dapex.blocking-io.<pool>.max-concurrency=<并发上限>` |
+
+必须使用 `apex.blocking-io.<pool>.*` 前缀：`BlockingIoSchedulers` 会被 Spring 绑定后的 `ApexBlockingIoProperties` 覆盖一次，仅传 `-Dapex.<pool>.virtual-threads=true` 会被 `application.yml` 的默认 `false` 覆盖。
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `BENCH_MODE` | `compare` | `report`、`baseline`、`virtual` 或 `compare` |
+| `BENCH_BASE_URL` | `http://127.0.0.1:8082` | system-service 业务地址 |
+| `BENCH_PATH` | `/api/v1/health` | 压测路径 |
+| `BENCH_ADMIN_URL` | `http://127.0.0.1:8083` | 管理端口，用于读取 `/actuator/prometheus` |
+| `BENCH_DURATION` | `30s` | wrk 时长，最小 10 秒，支持 `30s`/`1m`/纯秒数 |
+| `BENCH_THREADS` | `4` | wrk 线程数 |
+| `BENCH_CONNECTIONS` | `200` | wrk 并发连接数 |
+| `BENCH_POOLS` | `event,cache` | 参与注入与采样的池，逗号分隔 |
+| `BENCH_CONCURRENCY` | `16` | 每池并发上限；`BENCH_CONCURRENCY_<POOL>`（大写）可单独覆盖 |
+| `BENCH_SAMPLE_GUARD` | `true` | 关闭 IP 限流与 Sentinel 系统规则，避免 429/503 污染结果 |
+| `BENCH_TRACE_PINNED` | `false` | 为 `true` 时加 `-Djdk.tracePinnedThreads=full` 观察载体线程钉住 |
+| `BENCH_JAVA_OPTS` | 空 | 追加的 JVM 参数 |
+| `BENCH_JAR` | 自动挑选 | 默认取 `apex-system-service/target/apex-system-service-*.jar` |
+| `BENCH_PID` | 空 | `report` 模式下采集既有进程的池指标与 JFR 虚拟线程启动事件 |
+| `BENCH_OUTPUT_DIR` | `target/bench-vt/<时间戳>` | 产物目录 |
+
+前置条件与限制：
+
+- 需先打包可执行 JAR：`mvnd -T4 -B -pl apex-system-service -am package`；启动时 MySQL 与 Redis 必须可用，业务端口与管理端口不能被占用。
+- `/api/v1/health` 实际只打到 `cache` 与 `event` 池（Redisson 查询、IP 限流与操作日志写入），`jdbc`、`storage`、`remote` 需换成有相应流量的业务接口才有意义；报告会把"采样窗口内完成数为 0"的池标注为不适用于该结论。
+- 判定虚拟线程生效看两点：该池在压测窗口内出现了 `jdk.VirtualThreadStart` 事件（线程名 `apex.<pool>-vt-*`，平台线程模式为 0），且 `apex_blocking_io_max_threads` 等于配置的 `max-concurrency`。`jcmd Thread.dump_to_file -format=text` 的文本格式不含虚拟线程栈（仅有总数汇总），不能用来数虚拟线程，因此证据取自 JFR。
+- 产物目录包含 `results.tsv`、`summary.md`、`wrk-<mode>.txt`、`prom-<mode>-{pre,mid}.txt`、`vt-start-<mode>.jfr`、`threads-<mode>.txt`（平台线程 Dump）、`jvm-args-<mode>.txt` 与 `service-<mode>.log`。
+
+本地以 `dev` 配置启动 system-service 做压测时，脚本以默认参数起进程会遇到以下阻断点；把对应开关放进 `BENCH_JAVA_OPTS` 即可（`KEYCLOAK_ENABLED` 由环境变量传入）：
+
+| 阻断现象 | 需要的开关 |
+| --- | --- |
+| `Failed to determine a suitable R2DBC Connection URL` | `-Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration,org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration` |
+| `必须配置配置加密密钥` | `-Dsecurity.config.encryption.key=<32 字节原文>` |
+| `必须配置数据加密密钥` | `-Dapex.security.data-encryption-key=<Base64 32 字节>` |
+| `必须配置Token加密密钥` | `-Dsecurity.encryption.key=<Base64 32 字节>` |
+| `MailService required a bean of type 'JavaMailSender'` | `-Dspring.mail.host=localhost` |
+| dev 默认关闭 Flyway，空库缺表 | `-Dspring.flyway.enabled=true` |
+| `keycloak.enabled` 默认 `true` | 环境变量 `KEYCLOAK_ENABLED=false` |
+
+依赖可用容器准备（与 `podman-compose.infra.yml` 的默认值一致）：
+
+```bash
+docker run -d --name apex-bench-mysql -e MYSQL_ROOT_PASSWORD=apex-root -e MYSQL_DATABASE=apex_system -p 3306:3306 mysql:9.0
+docker run -d --name apex-bench-redis -p 6379:6379 redis:7-alpine
+```
+
+完整示例（16 并发上限、30 秒、200 连接，双轮对比）：
+
+```bash
+mvnd -T4 -B -pl apex-system-service -am package
+KEYCLOAK_ENABLED=false BENCH_POOLS="event,cache" BENCH_CONCURRENCY=16 \
+BENCH_JAVA_OPTS="-Dspring.flyway.enabled=true -Dspring.datasource.dynamic.p6spy=false \
+  -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration,org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration \
+  -Dapex.security.data-encryption-key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+  -Dsecurity.config.encryption.key=0123456789abcdef0123456789abcdef \
+  -Dsecurity.encryption.key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+  -Dspring.mail.host=localhost" \
+./scripts/bench/bench-vt.sh
+```
+
+上述密钥只用于本地压测进程，不要在共享或生产环境复用。
 
 ## ❓ 常见问题
 
@@ -999,3 +1177,48 @@ spring:
 ---
 
 **提示**: 生产环境部署前,请务必审查所有配置项,特别是安全相关的配置!
+
+## 2026-10-19 auth双客户端绑定核验补充
+
+本节补充前述auth TLS静态记录，保留其历史口径。[主Compose](../../podman-compose.yml)的公共环境锚点已注入 `DB_HOST=mysql`、`DB_PORT=3306`、`DB_USERNAME`、`DB_PASSWORD`，auth合并后另设 `DB_NAME=apex_auth`。没有显式 `SPRING_R2DBC_*` 不代表R2DBC目标错误：真实YAML合并与Spring Binder的离线契约已验证双客户端均指向 `mysql:3306/apex_auth`，用户名及凭据一致。JDBC URL仍由Compose覆盖为 `useSSL=false`，R2DBC仍从prod配置绑定 `sslMode=REQUIRED`；这一TLS静态差异保留，没有修改配置或证实生产故障。
+
+[AuthDataSourceConfigContractTest](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)使用SnakeYAML解析真实Compose合并锚点，移除宿主系统属性与环境源，再通过独立 `SystemEnvironmentPropertySource`、真实prod/application/bootstrap和Spring Binder验证7项；现存Surefire 7项加驱动3项共10项通过，无失败/错误/跳过。JDK固定17.0.12-oracle，mvnd2.0.0-rc-3及相关Spotless通过按本轮交付记录；本次文档收口只读复核Surefire和源码，未重跑Java或连接数据库。
+
+| 输入情况 | 已验证的属性绑定结果 | 解释边界 |
+| --- | --- | --- |
+| 当前Compose合并公共DB变量 | JDBC/R2DBC目标、用户及凭据一致，TLS策略不同 | 不证明TLS握手、认证或业务访问成功 |
+| 直接prod提供DB定位及凭据变量 | 两客户端读取共同DB目标；JDBC启用并要求SSL，R2DBC REQUIRED | 不包含远端属性源覆盖 |
+| 缺少DB定位变量、保留凭据 | 默认localhost:3306/apex_auth，绑定不失败 | 不证明默认目标可用或应用启动 |
+| 缺少凭据 | Binder保留 `${DB_USERNAME}` / `${DB_PASSWORD}`；strict required属性解析抛IllegalArgumentException | 不能由Binder成功推断已满足认证，也不能据此断言完整启动路径的失败时点 |
+| 仅保留SPRING_DATASOURCE变量、移除公共DB变量 | JDBC仍为mysql，R2DBC回到localhost且凭据未解析 | 这是隔离负向输入，不是当前Compose事实 |
+| 显式SPRING_R2DBC_URL/USERNAME/PASSWORD | 覆盖prod的DB变量派生值 | 部署应另核对覆盖后的双客户端目标和TLS |
+
+仍需核验实际profile、Compose override、Nacos远端配置及其优先级、最终DataSource/ConnectionFactory与真实双客户端握手；Flyway历史/checksum未由绑定测试验证。[本轮报告](../06-testing/jdk21-unified-auth/20261016-p0/report.md)另记录PG17.11的72场景行为证据，旧 `verified_union()` 独立复算仍500/586、剩86；PG剩16项行为验证不改变旧三分支计分。未修改配置、原迁移或旧证据，P0仍未准出。
+
+## 2026-10-19 auth真实TLS握手补充
+
+继上述离线绑定核验后，[AuthMySqlTlsContractIntegrationTest](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMySqlTlsContractIntegrationTest.java)已使用真实Compose/prod属性及隔离MySQL8.0.46执行双驱动连接；仅替换隔离目标。Connector/J8.4.0、r2dbc-mysql1.4.2下，最终7项配置契约及3项TLS场景通过，失败、错误和跳过均0，auth-service Spotless通过。详见[保存证据](../06-testing/jdk21-unified-auth/20261016-p0/auth-mysql-tls-contract-20261019-2336-evidence.json)及[阶段报告](../06-testing/jdk21-unified-auth/20261016-p0/report.md)。
+
+| 隔离服务端条件 | 当前Compose JDBC useSSL=false | prod JDBC useSSL=true/requireSSL=true | prod R2DBC sslMode=REQUIRED |
+| --- | --- | --- | --- |
+| TLS可用 | 明文连接成功 | 加密连接成功 | 加密连接成功 |
+| TLS关闭 | 明文连接成功 | 因SSL要求失败 | 因SSL要求失败 |
+| require_secure_transport=ON | 被insecure transport拒绝 | 加密连接成功 | 加密连接成功 |
+
+成功连接均在同一会话确认隔离数据库名和Ssl_cipher/Ssl_version状态：明文两值为空，加密两值非空。未保存具体协商字符串。服务端要求安全传输时，当前Compose JDBC明文覆盖与该要求不兼容；本次保留现有配置，未据隔离测试断言生产故障。部署需核对实际服务端策略及最终覆盖后的双客户端TLS参数。
+
+当前要求SSL的参数证明传输加密，不证明CA信任链或主机名身份校验，未验证VERIFY_IDENTITY。真实profile、Compose override、Nacos远端加载及优先级、完整应用启动与业务访问仍待核验；Flyway历史/checksum也不在握手测试范围。测试容器及网络已清理，镜像标签恢复。未修改生产配置，未执行全仓clean verify，P0仍未准出。
+
+## 2026-10-19 Compose多文件覆盖契约补充
+
+真实主Compose与临时override在podman-compose1.6.0的config渲染中已验证：仅覆盖auth DB_HOST/DB_NAME不会重写原显式SPRING_DATASOURCE_URL，JDBC仍指向mysql:3306/apex_auth，而R2DBC可由DB变量派生其他目标。需要同时核对最终JDBC/R2DBC URL与公共DB变量；显式覆盖双URL的合成测试可使目标对齐，但测试URL不含TLS策略，不应复制为生产模板。合并后公共凭据、安全变量、Redis/Nacos锚点保留，system DB目标不受auth覆盖影响。被测四个DB变量的同名非空宿主值优先于env文件。
+
+[现行 Java 等价测试](../../apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/ConfigPreflightTest.java)保留该4子场景覆盖。2026-10-20 Java/Shell 迁移后，独立离线工具的三组测试共27项通过，失败、错误和跳过均为0。仅使用临时合成输入及config渲染，未读取真实.env、启动服务或连接数据库。现有compose_check预检CLI仍只处理单主文件，不能据本次测试推断它已覆盖实际部署的多文件输入。
+
+旧Nacos链证据的gateway prod字面true描述已过时，当前为环境占位符；app.sh环境文件加载当前在62–66行。collector采集的shared_nacos/DB_HOST_PROD仍静态未知，远端Data ID、namespace/group/revision、实际加载及优先级没有运行证据。详见[本轮证据](../06-testing/jdk21-unified-auth/20261016-p0/compose-override-coverage-audit-20261019-evidence.json)。
+
+## 2026-10-20 Spring Binder覆盖契约补充
+
+[auth配置契约测试](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)新增两项覆盖场景，总计9项通过，无失败、错误或跳过，Spotless检查通过。测试解析真实Compose合并后的环境变量，并使用真实application、prod及bootstrap配置进行隔离的Spring Binder绑定：仅覆盖DB_HOST/DB_NAME时，显式JDBC URL仍指向mysql:3306/apex_auth并保留useSSL=false，R2DBC则派生至覆盖目标并保留sslMode=REQUIRED；显式覆盖双URL时，两客户端目标对齐，合成凭据及JDBC的useSSL=true、requireSSL=true和R2DBC的sslMode=REQUIRED均保留。
+
+本轮仅验证离线配置绑定，未连接数据库、执行TLS握手、访问Nacos或启动应用；远端配置实际加载及优先级仍未知。生产部署仍须核对最终双URL、凭据与TLS策略。完整命令、失败尝试和结果见[绑定证据](../06-testing/jdk21-unified-auth/20261016-p0/auth-compose-binder-override-20261020-evidence.json)。

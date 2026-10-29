@@ -91,7 +91,7 @@ wf_workflow_definition: 2条记录
 **监控指标完整,RocketMQ和Zipkin的"未接入"状态是正常的**
 
 如需启用:
-- **RocketMQ**: 启动RocketMQ服务(Docker或本地)
+- **RocketMQ**: 启动RocketMQ服务(Podman或本地)
 - **Zipkin**: 启动Zipkin服务并配置`trace.zipkin-url`
 
 ## 📋 用户验证清单
@@ -158,13 +158,13 @@ wf_workflow_definition: 2条记录
 **建议方案**:
 1. **启动RocketMQ服务**(推荐用于开发环境):
    ```bash
-   # 使用Docker启动RocketMQ
-   docker run -d --name rocketmq-namesrv \
+   # 使用Podman启动RocketMQ
+   podman run -d --name rocketmq-namesrv \
      -p 9876:9876 \
      apache/rocketmq:4.9.4 \
      sh mqnamesrv
    
-   docker run -d --name rocketmq-broker \
+   podman run -d --name rocketmq-broker \
      -p 10909:10909 -p 10911:10911 \
      -e "NAMESRV_ADDR=localhost:9876" \
      apache/rocketmq:4.9.4 \
@@ -185,7 +185,8 @@ wf_workflow_definition: 2条记录
 **建议方案**:
 1. **启动Zipkin服务**(推荐用于开发环境):
    ```bash
-   docker run -d --name zipkin \
+   # 使用Podman启动Zipkin
+   podman run -d --name zipkin \
      -p 9411:9411 \
      openzipkin/zipkin:latest
    ```

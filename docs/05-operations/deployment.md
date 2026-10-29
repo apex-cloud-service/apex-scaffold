@@ -1,5 +1,32 @@
 # Apex Scaffold 部署使用指南
 
+system 历史库升级至 V40 前须停写、备份并核对 `oauth2_authorization_consent`。MySQL 使用 [consent 前置修复](../../apex-system/src/main/resources/db/upgrade/mysql/consent_before_v40.sql)，通过 `mysql --default-character-set=utf8mb4` 在目标 system 库执行，禁止 `--force`，完成后再运行原 Flyway V40。脚本仅为缺失/空 ID 回填稳定值，保留已有非空 ID、业务键、权限与时间，先保护业务唯一键再换主键；MySQL DDL 隐式提交，失败后可重入，但必须保持停写。发现重复已有 ID、重复业务键或不支持结构时人工处理，不能删除记录或覆盖 ID。
+
+PostgreSQL V40 为无条件 DDL，使用 [事务前置修复](../../apex-system/src/main/resources/db/upgrade/postgresql/consent_before_v40.sql) 后，须通过 [psql 包装器](../../apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql) 执行原 V40，均用 `psql -X -v ON_ERROR_STOP=1 -d <system数据库> -f <脚本路径>`。部署时保留 `db/upgrade/postgresql/` 与 `db/migration/postgresql/` 的相对目录结构，包装器的 `\ir ../../migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql` 相对于包装器文件定位原 V40。隔离 PostgreSQL 已按该结构复制原始前置脚本、包装器与 V40，并实际用 `psql -f` 验证包含及重放。前置脚本遇到已有 `id` 非 `VARCHAR(100)` 时明确拒绝并回滚，须人工核对，不能自动转换。包装器事务内暂存 consent、执行原始 V40 并恢复 ID/数据/时间；异常整体回滚。只支持已审核的旧 V40 源字段齐全结构；其他表已部分重命名、非标准主键名、依赖外键/触发器/扩展列须先人工审阅，不能盲跑。包装器重入时跳过已重命名结构，不表示原 PostgreSQL V40 自身可重放。
+
+这些显式运维脚本不更新 Flyway 历史。历史有 failed V40 时，DBA 必须先审查失败 DDL 与备份，按组织流程协调 V40 执行及历史记录；禁止自动 `repair`、改 checksum 或直接标记成功。PostgreSQL 包装器手工执行完成也不能继续让 Flyway 再执行同一 V40；上线前必须完成历史对账。本路径只验证隔离合成库，未授权执行生产升级。
+
+MySQL V42 实际失败后的结构恢复使用 V42 离线恢复工具 [token-v42-recover.sh](../../scripts/utils/token-v42-recover.sh)（Java 实现，见 [TokenV42Recover.java](../../apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java)）。仅支持 MySQL 9.0，需 JDK 21 与 mysql CLI；先停止全部业务写入、Flyway 和其他 schema 变更，验证备份可恢复。工具从仓库根目录定位 `db/migration/mysql/V42__add_token_encryption.sql` 并核对其 SHA-256。以下命令在仓库根目录执行，数据库名及受保护的客户端配置路径按实际替换，`--mysql-command` 必须最后传入，认证信息不要写入命令行：
+
+```bash
+# 默认仅预检并打印计划
+bash scripts/utils/token-v42-recover.sh \
+  --database system_db --offline \
+  --mysql-command mysql --defaults-extra-file=/secure/mysql-client.cnf
+# 审阅计划并保持离线后显式执行
+bash scripts/utils/token-v42-recover.sh \
+  --database system_db --offline --apply \
+  --mysql-command mysql --defaults-extra-file=/secure/mysql-client.cnf
+```
+
+预检在任何新增 DDL 前检查既有列类型/空值/默认值/生成属性、索引定义、后三表完整列索引集合及 `v_token_health` 定义；缺 oauth2 表或视图依赖时间列、非 InnoDB/utf8mb4、触发器、CHECK/外键及不兼容对象均拒绝，须人工审阅。token 表可缺。工具只补缺失结构，不删除或覆盖 token、已有非空加密数据，也不回填加密内容；密钥版本 1 仅缺失时插入，既有 inactive 状态保留。MySQL DDL 隐式提交，执行中基础设施错误可能留下部分完成状态，应保持停写、核对后重入；这不是事务回滚或在线并发迁移工具。
+
+原 V42 在 token 存在时 PREPARE 1064，之前 OAuth 10 列/4 索引已持久化；原文件重试报 1060。结构恢复**不能使原 V42 可重放**，不执行 Flyway repair、mark success 或 checksum 修改。完成后仍须 DBA 按组织流程单独协调失败迁移/history，禁止直接让 Flyway 再跑原 V42。验证范围是隔离合成 MySQL，未执行生产恢复；本次恢复不计原生覆盖，当前仍为 **489/586，剩97**，详见 [P0 报告](../06-testing/jdk21-unified-auth/20261016-p0/report.md)。
+
+2026-10-19追加复核：上述489/586为前次记录；PG两批新增7+4后有效并集为 **500/586，剩86（MySQL70、PostgreSQL16）**，恢复仍新增0。当前恢复工具在apply后若postflight仍有计划即失败，并实际查询 `v_token_health` 后才输出完成；带空格引用标识符不被规范化为另一名称，force别名及空mysql命令均拒绝。最终MySQL8.0.46隔离证据为31场景（3恢复、28拒绝），验证已有inactive v1与active v2重入保留、清理成功；首轮外键fixture失败和旧22场景证据全部保留，hash及限制见[P0本轮报告](../06-testing/jdk21-unified-auth/20261016-p0/report.md)。恢复单文件当前9个测试方法，旧13项为跨文件组合；这些验证不替代Flyway历史协调、真实旧库升级及生产恢复验收。
+
+文件服务上线前须按[对象存储接入指南](object-storage-integration.md)预创建云桶，配置七牛桶区域/绑定域名及 auth RS256 对应公钥。Compose 显式注入存储变量，并将主机 `./data/storage` 挂载到容器 `/app/data/storage`；请预先校验目录权限与备份。Java 不会自动加载 `.env`。切换默认存储不迁移历史对象，不得删除旧策略配置或直接回退归属迁移。
+
 [查看部署流程图](../diagrams/45_deployment_flow.svg)
 
 > 版本：1.3.1 ｜ 适用：dev / it / prod 全环境
@@ -36,11 +63,13 @@
 
 ---
 
+<a id="1-部署模型与微服务拓扑"></a>
+
 ## 1. 部署模型与微服务拓扑
 
 | 方式 | 适用场景 | 特点 | 依赖 |
 |------|---------|------|------|
-| **java -jar** | 传统服务器 / 已有 MySQL+Redis+Nacos 的机房、云主机 | 最轻量、便于和 systemd/监控代理结合 | JDK 17 + MySQL + Redis + Nacos |
+| **java -jar** | 传统服务器 / 已有 MySQL+Redis+Nacos 的机房、云主机 | 最轻量、便于和 systemd/监控代理结合 | JDK 21 + MySQL + Redis + Nacos |
 | **Podman 单容器** | 已容器化的 K8s 以外的裸容器环境 | 一镜像一服务，多服务互不干扰 | Podman + 外部 MySQL/Redis/Nacos |
 | **Podman Compose** | 一键拉起完整微服务环境（开发/测试/生产单机） | 网关 + 5 微服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak）全部编排 | Podman + podman-compose |
 
@@ -77,6 +106,8 @@
 
 ---
 
+<a id="2-前置条件"></a>
+
 ## 2. 前置条件
 
 | 组件 | 版本要求 | 说明 |
@@ -99,6 +130,8 @@ podman-compose --version
 ```
 
 ---
+
+<a id="3-构建与产物"></a>
 
 ## 3. 构建与产物
 
@@ -149,10 +182,14 @@ SPRING_PROFILES_ACTIVE=dev,standard \
 
 ---
 
+<a id="4-部署方式一java--jar-直接部署"></a>
+
 ## 4. 部署方式一：java -jar 直接部署
 
 > 适合已有 MySQL/Redis/Nacos 的服务器，无需容器运行时。推荐生产使用 systemd 托管（§4.3）。
 > 本方式按微服务逐个启动；请先启动 Nacos 与 MySQL，再依次启动各服务实现网关路由。
+
+<a id="41-最小启动单服务"></a>
 
 ### 4.1 最小启动（单服务）
 
@@ -196,17 +233,19 @@ Netty started on port 8081
 
 > **网关与各服务的端口 / 数据库**见 §1 拓扑。若使用 `SPRING_DATASOURCE_URL/USERNAME/PASSWORD`（Compose 采用的显式 JDBC URL），可覆盖 `DB_HOST/DB_PORT/DB_NAME/USERNAME/PASSWORD`。
 
+<a id="42-守护脚本-appsh"></a>
+
 ### 4.2 守护脚本 app.sh
 
-仓库内置守护脚本，支持单服务后台启动 / 停止 / 重启 / 状态 / 日志（模块经 `APEX_SERVICE_MODULE` 指定，见 `scripts/deploy/service/start.sh`）：
+仓库内置守护脚本，支持单服务后台启动 / 停止 / 重启 / 状态 / 日志（模块经 `APEX_SERVICE_MODULE` 指定，见 `scripts/deploy/service/app.sh`）。`scripts/deploy/service/start.sh` 是 Compose 启动兼容入口。
 
 ```bash
-# 语法: ./scripts/deploy/service/start.sh {start|stop|restart|status|logs|console} [dev|it|prod] [basic|standard|enterprise] [service]
-APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/start.sh start prod enterprise apex-auth-service
-APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/start.sh status
-APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/start.sh logs
-APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/start.sh restart it standard
-APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/start.sh stop
+# 语法: ./scripts/deploy/service/app.sh {start|stop|restart|status|logs|console} [dev|it|prod] [basic|standard|enterprise]
+APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/app.sh start prod enterprise
+APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/app.sh status
+APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/app.sh logs
+APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/app.sh restart it standard
+APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/app.sh stop
 ```
 
 行为说明：
@@ -215,28 +254,29 @@ APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/start.sh stop
 |----|--------|---------|
 | JVM 参数 | `-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<logs>/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=<logs>/gc.log:...（滚动 5×20m） -Dfile.encoding=UTF-8` | `JAVA_OPTS` |
 | GC 日志 / 堆转储 | `<日志根>/gc.log`、`<日志根>/heapdump.hprof`（与 logback 业务日志同目录，`APEX_LOG_DIR` 可整体迁移） | `APEX_LOG_DIR` |
-| 目标微服务模块 | 无（必填） | `APEX_SERVICE_MODULE` |
-| JAR 产物 | `<模块>/target/<模块>-\*.jar` | `APEX_MAIN_JAR` |
-| PID 文件 | `<项目根>/logs/app.pid` | `APP_PID_FILE` |
-| 标准输出日志 | `<项目根>/logs/app.out.log` | `APP_OUT_LOG` |
+| 目标微服务模块 | `apex-gateway` | `APEX_SERVICE_MODULE` |
+| JAR 产物 | `<模块>/target/<模块>-\*.jar` | `APEX_JAR` |
+| PID 文件 | `<项目根>/logs/<模块>.pid` | `APP_PID_FILE` |
+| 标准输出日志 | `<项目根>/logs/<模块>.out.log` | `APP_OUT_LOG` |
 | 环境变量文件 | 无 | `APEX_ENV_FILE=/etc/apex-scaffold/apex.env`（每行 `KEY=VALUE`） |
-| 健康检查端口 | 8080（网关） | `SERVER_PORT` |
+| 业务端口 | 按模块选择，网关为 8080 | `SERVER_PORT` |
+| 健康检查端口 | 默认复用业务端口，system 为 8083 | `MANAGEMENT_PORT` |
+
+<a id="43-systemd-服务化推荐生产"></a>
 
 ### 4.3 systemd 服务化（推荐生产）
 
-仓库已提供模板 `scripts/deploy/apex-scaffold.service`（参数化单服务，`ExecStart` 使用 `APEX_SERVICE_MODULE` 定位 jar）：
+仓库已提供模板 `scripts/deploy/apex-scaffold.service`，`ExecStart` 固定执行 `/opt/apex-scaffold/app.jar`。以下示例部署一个认证服务；同机部署多个服务时，须为每个单元分别调整 `WorkingDirectory`、`ExecStart`、日志路径及 `EnvironmentFile`。
 
 ```bash
 # 1. 放置产物与目录（以认证服务为例）
-sudo mkdir -p /opt/apex-scaffold /etc/apex-scaffold /var/log/apex-scaffold
-sudo cp apex-auth-service/target/apex-auth-service-1.3.1.jar /opt/apex-scaffold/apex-auth-service.jar
+sudo mkdir -p /opt/apex-scaffold/logs /etc/apex-scaffold /var/log/apex-scaffold
+sudo cp apex-auth-service/target/apex-auth-service-1.3.1.jar /opt/apex-scaffold/app.jar
 sudo useradd -r -s /usr/sbin/nologin apex || true
 
 # 2. 创建环境变量文件（敏感值生产必改）
 sudo tee /etc/apex-scaffold/apex.env > /dev/null <<'EOF'
 SPRING_PROFILES_ACTIVE=prod,enterprise
-APEX_SERVICE_MODULE=apex-auth-service
-APEX_MAIN_JAR=/opt/apex-scaffold/apex-auth-service.jar
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_NAME=apex_auth
@@ -250,7 +290,7 @@ NACOS_SERVER_ADDR=127.0.0.1:8848
 APEX_LOG_DIR=/var/log/apex-scaffold
 EOF
 
-# 3. 安装并启用（每个服务单元使用独立 EnvironmentFile + 模块）
+# 3. 安装并启用认证服务单元
 sudo cp scripts/deploy/apex-scaffold.service /etc/systemd/system/apex-auth-service.service
 sudo chown -R apex:apex /opt/apex-scaffold /var/log/apex-scaffold
 sudo systemctl daemon-reload
@@ -262,10 +302,12 @@ journalctl -u apex-auth-service -f        # 日志
 sudo systemctl restart apex-auth-service  # 重启（优雅停机，等待在途请求）
 ```
 
-> 模板已配置：`Restart=on-failure` 崩溃自愈、`TimeoutStopSec=90` 优雅停机等待、`SuccessExitStatus=143` 兼容 SIGTERM 退出码。
-> systemd 单元每个微服务一份（区别在于 `APEX_SERVICE_MODULE` / `APEX_MAIN_JAR` / 端口 / `DB_NAME`）。
+> 模板已配置 `Restart=on-failure` 崩溃重启和 `TimeoutStopSec=105` 停机等待；应用关闭总预算为 90 秒。
+> 每个微服务使用独立单元、JAR、环境文件和日志路径，端口及数据库配置按服务设置。
 
 ---
+
+<a id="5-部署方式二podman-单容器"></a>
 
 ## 5. 部署方式二：Podman 单容器
 
@@ -329,10 +371,14 @@ podman run -d --name apex-auth-service ...（同上参数，镜像换 1.4.0）
 
 ---
 
+<a id="6-部署方式三podman-compose-编排"></a>
+
 ## 6. 部署方式三：Podman Compose 编排
 
 > 一键拉起「网关 + 5 微服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/前端）」，适合本地开发、测试环境与生产单机。
 > 旧单体 `apex-scaffold` 服务已移除（见 `podman-compose.yml` 头部注释）。
+
+<a id="61-一键启动完整微服务栈"></a>
 
 ### 6.1 一键启动完整微服务栈
 
@@ -340,8 +386,10 @@ podman run -d --name apex-auth-service ...（同上参数，镜像换 1.4.0）
 # 1.（可选）按需生成环境变量文件（需先配置全部安全密钥，格式见 docs/05-operations/configuration.md）
 cp .env.example .env
 
-# 2. 校验密钥格式（security-key-check 会在启动前校验，也可本地预检）
-python3 scripts/utils/local_deployment.py compose --env-file .env
+# 2. 构建离线 Java 21 工具并校验格式（启动前 security-key-check 复用同一 JAR）
+source scripts/build/init-build-env.sh
+mvnd -B -pl apex-tools-deployment -am verify
+bash scripts/utils/local-deployment.sh compose --env-file .env
 
 # 3. 先创建观测网络，再构建并启动应用栈
 podman-compose -p apex-infra -f podman-compose.infra.yml up -d skywalking-oap skywalking-ui elasticsearch kibana filebeat
@@ -369,7 +417,7 @@ curl http://localhost:8080/api/v1/health
 | apex-office-service | 本地构建 | `${OFFICE_PORT:-8084}` | apex_office | 组织/办公 |
 | apex-file-service | 本地构建 | `${FILE_PORT:-8085}` | apex_file | 文件/文档 |
 | nacos | nacos/nacos-server:v2.4.3 | `${NACOS_PORT:-8848}` / gRPC `${NACOS_GRPC_PORT:-9848}` | — | 服务发现 + 配置中心 |
-| mysql | mysql:8.0 | `${MYSQL_PORT:-3306}` | apex_system（引导库） | 各服务经 createDatabaseIfNotExist 自建独立库 |
+| mysql | mysql:9.0 | `${MYSQL_PORT:-3306}` | apex_system（引导库） | 各服务经 createDatabaseIfNotExist 自建独立库 |
 | redis | redis:7-alpine | `${REDIS_PORT:-6379}` | — | AOF 持久化 |
 | meilisearch | getmeili/meilisearch:v1.10 | `${MEILISEARCH_PORT:-7700}` | — | 全文搜索 |
 | loki | grafana/loki:3.0.0 | `${LOKI_PORT:-3100}` | — | 日志聚合 |
@@ -384,6 +432,8 @@ curl http://localhost:8080/api/v1/health
 - Redis：密码 `apex-redis-password`（`REDIS_PASSWORD` 可覆盖；prod 配置强制要求非空）
 - Nacos：默认启用（单机版，仅本地起步）；生产接入外部 Nacos 集群后注释 `nacos` 服务
 - 加密密钥：`APEX_DATA_ENCRYPTION_KEY` / `SECURITY_ENCRYPTION_KEY` / `CONFIG_ENCRYPTION_KEY` / `APEX_CONFIG_ENCRYPTION_KEY` / `JWT_SECRET` 均为必填，缺失时 compose 拒绝渲染
+
+<a id="62-生产部署流程"></a>
 
 ### 6.2 生产部署流程
 
@@ -405,6 +455,8 @@ curl http://localhost:8083/actuator/health        # 系统服务管理端口
 ```
 
 > `.env.prod` 请加入 `.gitignore`，避免密钥入库。
+
+<a id="63-启用-rocketmq可选"></a>
 
 ### 6.3 启用 RocketMQ（可选）
 
@@ -431,6 +483,8 @@ podman run -d --name rmq-console --network apex-scaffold_apex-network \
   -p 8180:8080 docker.io/apacherocketmq/rocketmq-dashboard:latest
 ```
 
+<a id="64-集成监控栈"></a>
+
 ### 6.4 集成监控栈
 
 可观测性栈（Prometheus + Grafana + Zipkin）独立编排，与应用栈并存：
@@ -449,6 +503,8 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 > 本地基础设施全家桶（MySQL/Redis/Nacos/RocketMQ/Sentinel/Zipkin/Prometheus/Grafana）见 `podman-compose.infra.yml`，供 java -jar 直连开发复用；其 Nacos 宿主机端口映射为 `18848`/`19848`（本机 8848 被占用时），Redis 无密码（dev 配置默认）。两个编排栈勿同时使用（3306/6379 端口冲突）。
 
 ---
+
+<a id="7-环境变量完整参考表"></a>
 
 ## 7. 环境变量完整参考表
 
@@ -552,6 +608,8 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 
 ---
 
+<a id="8-健康检查与就绪探针"></a>
+
 ## 8. 健康检查与就绪探针
 
 | 端点 | 端口 | 说明 |
@@ -578,6 +636,8 @@ curl -s http://localhost:8083/actuator/health/readiness   # 系统服务
 ```
 
 ---
+
+<a id="9-日志与监控"></a>
 
 ## 9. 日志与监控
 
@@ -614,6 +674,8 @@ journalctl -u apex-<service> -f             # systemd 部署
 
 ---
 
+<a id="10-license-商业授权部署"></a>
+
 ## 10. License 商业授权部署
 
 - 随包内置**基础版授权**（`classpath:license/license-basic.json`），基础功能开箱即用
@@ -640,6 +702,8 @@ podman run ... \
 - 发放工具：`scripts/license/generate-license.sh`；详见 [`docs/LICENSE_MANAGEMENT.md`](../07-commercial/license-management.md)
 
 ---
+
+<a id="11-可选组件接入nacos--rocketmq--sentinel"></a>
 
 ## 11. 可选组件接入（Nacos / RocketMQ / Sentinel）
 
@@ -676,6 +740,8 @@ export SENTINEL_TRANSPORT_PORT=8719   # 同机多实例须唯一
 ```
 
 ---
+
+<a id="12-升级与回滚"></a>
 
 ## 12. 升级与回滚
 
@@ -734,6 +800,8 @@ kubectl apply -f k8s/canary-deployment.yaml   # 金丝雀（默认 10% 流量）
 
 ---
 
+<a id="13-备份与恢复"></a>
+
 ## 13. 备份与恢复
 
 ### 13.1 MySQL
@@ -765,6 +833,8 @@ podman run --rm -v apex-scaffold_redis-data:/data -v "$(pwd)":/backup \
 
 ---
 
+<a id="14-生产安全部署清单"></a>
+
 ## 14. 生产安全部署清单
 
 - [ ] `JWT_SECRET` 使用 `openssl rand -base64 48` 生成，长度 ≥32 字节
@@ -782,6 +852,8 @@ podman run --rm -v apex-scaffold_redis-data:/data -v "$(pwd)":/backup \
 - [ ] 上线后观察各 `logs/error.log` 与 Grafana 大盘，确认告警规则生效
 
 ---
+
+<a id="15-常见问题-faq"></a>
 
 ## 15. 常见问题 FAQ
 
@@ -819,6 +891,8 @@ compose 改 `.env` 的 `APP_PORT/AUTH_PORT/SYSTEM_PORT/SYSTEM_MANAGEMENT_PORT/WO
 MySQL 已强制 utf8mb4（compose 内置）；独立部署请确认库表字符集 `utf8mb4`，并在 JDBC URL 带 `characterEncoding=utf8`。
 
 ---
+
+<a id="16-命令速查表"></a>
 
 ## 16. 命令速查表
 

@@ -1,0 +1,58 @@
+{
+  "started_at": "2026-10-21T01:45:17Z",
+  "ended_at": "2026-10-21T01:47:33Z",
+  "status": "passed",
+  "baseline_credit": false,
+  "tool_implementation": "java",
+  "wrapper": "scripts/utils/token-v42-recover.sh",
+  "scenario_filter": "later_table_wrong_default later_index_wrong later_extra_column view_identifier_space view_invoker",
+  "hashes": {
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "scripts/utils/TokenV42Recover.java": "d9fd7145e6840d21103f823b0e1ee71d5935b4f7ab77eef31ebef8d16669a400",
+    "scripts/utils/token-v42-recover.sh": "2d7f35e5dc4ae571e2316e4bbdc4b024d1a9ead155a6707179fdcb126589289d",
+    "/tmp/v42_verify_v3.sh": "4eb385eff043680aa75e0e4d48130bd7a8da607433577c195f1285600ca58e4d"
+  },
+  "container": {
+    "name": "apex-v42-java-b696496dc02d",
+    "id": "5b5762866a69f5bcdd7488f51e208afcaafe4e5c6e77d73b18a6aa2bc480c8c8",
+    "network": "none",
+    "storage": "tmpfs",
+    "image": "localhost/mysql:8.0"
+  },
+  "mysql_version": "8.0.46",
+  "isolation": "none",
+  "tmpfs": "{\"/var/lib/mysql\":\"rw,rprivate,nosuid,nodev,tmpcopyup\"}",
+  "scope": "isolated structure recovery only; no Flyway baseline credit",
+  "scenarios": {
+    "later_table_wrong_default": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token_security_event.handled: incompatible column type/nullability/default/extra"
+    },
+    "later_index_wrong": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: encryption_key_version: incompatible column/index set"
+    },
+    "later_extra_column": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token_rotation_history: incompatible column/index set"
+    },
+    "view_identifier_space": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: v_token_health: incompatible definition/security/check option"
+    },
+    "view_invoker": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: v_token_health: incompatible definition/security/check option"
+    }
+  },
+  "cleanup": {
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true
+  }
+}

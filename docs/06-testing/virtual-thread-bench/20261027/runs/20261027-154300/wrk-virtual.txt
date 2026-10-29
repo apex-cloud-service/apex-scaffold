@@ -1,0 +1,14 @@
+Running 30s test @ http://127.0.0.1:8082/api/v1/health
+  4 threads and 200 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   732.69ms  491.55ms   2.00s    62.85%
+    Req/Sec    66.72     30.30   181.00     66.95%
+  Latency Distribution
+     50%  694.88ms
+     75%    1.08s 
+     90%    1.42s 
+     99%    1.90s 
+  7897 requests in 30.10s, 6.16MB read
+  Socket errors: connect 0, read 0, write 0, timeout 171
+Requests/sec:    262.39
+Transfer/sec:    209.58KB

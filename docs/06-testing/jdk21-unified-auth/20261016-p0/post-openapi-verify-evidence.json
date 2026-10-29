@@ -1,0 +1,149 @@
+{
+  "recorded_at": "2026-10-17T23:27:05+08:00",
+  "repository": "/Users/work/apex-scaffold",
+  "command_id": "job-8ec35bc23fee40ef9bb004731fb1a3fc",
+  "command": "source scripts/build/init-build-env.sh && mvnd -T4 -B clean verify",
+  "started_at": "2026-10-17T23:01:06+08:00",
+  "shell_finished_at": "2026-10-17T23:19:27+08:00",
+  "natural_exit": true,
+  "exit_code": 1,
+  "result": "MVND_CLIENT_DAEMON_COMMUNICATION_FAILURE",
+  "maven_build_result": null,
+  "maven_finished_at": null,
+  "wall_clock_seconds": 1101,
+  "environment": {
+    "java": "Oracle 17.0.12-oracle",
+    "java_home": "/Users/eric/.sdkman/candidates/java/17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "initialization": "当前shell source scripts/build/init-build-env.sh并验证版本；构建前mvnd --stop清理3个旧daemon；首次初始化因mvnd --version失败，后续初始化成功后才启动构建",
+    "database_username": "root",
+    "database_password_handling": "仅从既有MySQL容器MYSQL_ROOT_PASSWORD读入进程内存环境，未打印；命令退出前unset",
+    "example_database": "jdbc:mysql://127.0.0.1:13317/apex_example_test",
+    "mysql": "apex-p0-gate-mysql-20261017:13317；启动既有容器，schema预检存在",
+    "postgresql": "apex-p0-pg-b1ddd1785ccf:41187；启动既有容器，pg_isready通过",
+    "docker_host": "unix:///var/folders/0x/mpfcvmh560q4rbbvkd43ks280000gn/T/podman/podman-machine-default-api.sock",
+    "testcontainers_socket_override": "/run/podman/podman.sock",
+    "podman_preflight": "machine连接及Docker API _ping通过；VM podman.service active且socket存在",
+    "proxy_runtime_repair": "按container-format-repair-evidence.json显式清空VM systemd manager HTTP_PROXY/HTTPS_PROXY/http_proxy/https_proxy并重启podman.service；未改持久配置",
+    "ryuk_disabled": false,
+    "ryuk_started_log_line": 13915,
+    "skip_flags": [],
+    "sla_weakened": false
+  },
+  "log": {
+    "path": "/Users/eric/.cache/apex-p0-post-openapi-verify-20261017-XXXXXX.log",
+    "filename_note": "先确认/Users/eric/.cache存在；mktemp成功创建的实际文件名保留字面量XXXXXX，本轮使用该新文件，未覆盖旧日志",
+    "sha256": "a3ebf99c9db87742403e082473dc111f43087a4aaa7cb57002262a9240348d0a",
+    "lines": 14922,
+    "reactor_summary_line": null,
+    "build_result_line": null,
+    "failure_goal_line": null,
+    "daemon_exception_line": 14706,
+    "daemon_timeout_line": 14920
+  },
+  "reactor": {
+    "planned_projects": 31,
+    "final_summary_available": false,
+    "final_counts": null,
+    "reason": "mvnd客户端失联退出前未输出Reactor Summary、BUILD SUCCESS/FAILURE或最终失败goal；不得将阶段进度推算为最终SUCCESS/FAILURE数量",
+    "observed_started_projects": ["apex-scaffold","apex-common","apex-services-bom","apex-generator","apex-api-contract","apex-license-spring-boot-starter","apex-storage-spring-boot-starter","apex-domain","apex-seata-spring-boot-starter","apex-infrastructure-remote","apex-infrastructure-persistence","apex-infrastructure-cache","apex-workflow","apex-office","apex-job-spring-boot-starter","apex-infrastructure-messaging","apex-gateway","apex-file","apex-infrastructure-integration","apex-license-tools","apex-system","apex-masking-service","apex-auth","apex-workflow-service","apex-job-service"],
+    "explicit_scheduler_skips": [
+      {"module":"apex-office-service","line":9571,"reason_line":9572},
+      {"module":"apex-infrastructure","line":9576,"reason_line":9577},
+      {"module":"apex-file-service","line":9581,"reason_line":9582}
+    ],
+    "scheduler_skip_reason": "日志原文：was not built because a module it depends on failed to build；紧接workflow-service failsafe:verify之后。保留调度器事实，不推断全部为直接依赖失败",
+    "other_projects_without_observed_start": ["apex-example","apex-system-service","apex-auth-service"],
+    "other_projects_status": "未见启动及最终状态；不能擅自计为Reactor SKIPPED"
+  },
+  "test_counting_method": "按模块跟踪surefire:test及failsafe:integration-test插件标题，仅统计整行Tests run汇总；排除类明细、daemon日志回放与failsafe:verify重复计数。以下为客户端失联前已完成插件汇总的部分统计，不是全仓最终测试总数；system Failsafe已执行部分测试但无插件汇总，未混入合计。",
+  "tests": {
+    "surefire": {"tests":4279,"failures":0,"errors":0,"skipped":0},
+    "failsafe": {"tests":38,"failures":0,"errors":1,"skipped":1},
+    "combined": {"tests":4317,"failures":0,"errors":1,"skipped":1,"passed":4315},
+    "complete_reactor_totals": false
+  },
+  "plugin_summaries": [
+    {"module":"apex-generator","plugin":"surefire","tests":19,"failures":0,"errors":0,"skipped":0,"line":229},
+    {"module":"apex-common","plugin":"surefire","tests":538,"failures":0,"errors":0,"skipped":0,"line":1096},
+    {"module":"apex-domain","plugin":"surefire","tests":9,"failures":0,"errors":0,"skipped":0,"line":1438},
+    {"module":"apex-api-contract","plugin":"surefire","tests":30,"failures":0,"errors":0,"skipped":0,"line":1595},
+    {"module":"apex-storage-spring-boot-starter","plugin":"surefire","tests":11,"failures":0,"errors":0,"skipped":0,"line":1751},
+    {"module":"apex-license-spring-boot-starter","plugin":"surefire","tests":19,"failures":0,"errors":0,"skipped":0,"line":1883},
+    {"module":"apex-seata-spring-boot-starter","plugin":"surefire","tests":24,"failures":0,"errors":0,"skipped":0,"line":2092},
+    {"module":"apex-seata-spring-boot-starter","plugin":"failsafe","tests":1,"failures":0,"errors":0,"skipped":1,"line":2123},
+    {"module":"apex-infrastructure-remote","plugin":"surefire","tests":84,"failures":0,"errors":0,"skipped":0,"line":2315},
+    {"module":"apex-infrastructure-persistence","plugin":"surefire","tests":83,"failures":0,"errors":0,"skipped":0,"line":2710},
+    {"module":"apex-infrastructure-cache","plugin":"surefire","tests":130,"failures":0,"errors":0,"skipped":0,"line":3357},
+    {"module":"apex-workflow","plugin":"surefire","tests":40,"failures":0,"errors":0,"skipped":0,"line":3526},
+    {"module":"apex-infrastructure-cache","plugin":"failsafe","tests":6,"failures":0,"errors":0,"skipped":0,"line":3714},
+    {"module":"apex-job-spring-boot-starter","plugin":"surefire","tests":11,"failures":0,"errors":0,"skipped":0,"line":3727},
+    {"module":"apex-office","plugin":"surefire","tests":69,"failures":0,"errors":0,"skipped":0,"line":4479},
+    {"module":"apex-infrastructure-messaging","plugin":"surefire","tests":77,"failures":0,"errors":0,"skipped":0,"line":4902},
+    {"module":"apex-file","plugin":"surefire","tests":59,"failures":0,"errors":0,"skipped":0,"line":5071},
+    {"module":"apex-infrastructure-messaging","plugin":"failsafe","tests":2,"failures":0,"errors":0,"skipped":0,"line":5271},
+    {"module":"apex-infrastructure-integration","plugin":"surefire","tests":124,"failures":0,"errors":0,"skipped":0,"line":7116},
+    {"module":"apex-gateway","plugin":"surefire","tests":100,"failures":0,"errors":0,"skipped":0,"line":7204},
+    {"module":"apex-masking-service","plugin":"surefire","tests":7,"failures":0,"errors":0,"skipped":0,"line":7365},
+    {"module":"apex-workflow-service","plugin":"surefire","tests":36,"failures":0,"errors":0,"skipped":0,"line":7637},
+    {"module":"apex-gateway","plugin":"failsafe","tests":2,"failures":0,"errors":0,"skipped":0,"line":8268},
+    {"module":"apex-workflow-service","plugin":"failsafe","tests":27,"failures":0,"errors":1,"skipped":0,"line":9398},
+    {"module":"apex-job-service","plugin":"surefire","tests":7,"failures":0,"errors":0,"skipped":0,"line":10819},
+    {"module":"apex-auth","plugin":"surefire","tests":1260,"failures":0,"errors":0,"skipped":0,"line":11372},
+    {"module":"apex-system","plugin":"surefire","tests":1542,"failures":0,"errors":0,"skipped":0,"line":13855}
+  ],
+  "failures": [
+    {
+      "kind": "test_error",
+      "module": "apex-workflow-service",
+      "plugin": "failsafe:3.2.5:integration-test",
+      "test": "WorkflowDatabaseHttpIntegrationTest.pendingTasksUseAuthenticatedAssignee",
+      "test_source": "apex-workflow-service/src/test/java/com/apex/scaffold/workflowservice/interfaces/handler/WorkflowDatabaseHttpIntegrationTest.java:111",
+      "request": "GET /api/v1/workflows/tasks/pending?userId=200&pageNum=1&pageSize=10",
+      "exception": "java.lang.IllegalStateException: Timeout on blocking read for 5000000000 NANOSECONDS",
+      "cause": "java.util.concurrent.TimeoutException: Timeout on blocking read for 5000000000 NANOSECONDS",
+      "log_lines": [8348,8349,8350,8351,8356,8358,9398,9568],
+      "diagnosis": "WebTestClient.exchange等待HTTP响应超过5秒，在响应断言前报错。证据不足以进一步判定服务业务缺陷、数据库阻塞或机器负载；不得直接标为负载flake。未更改超时、断言或业务代码。"
+    },
+    {
+      "kind": "command_terminal_error",
+      "daemon_id": "5ea5fca6",
+      "exception": "org.mvndaemon.mvnd.common.DaemonException$StaleAddressException: Could not receive a message from the daemon.",
+      "cause": "java.io.IOException: No message received within 3000ms, daemon may have crashed. You may want to check its status using mvnd --status",
+      "log_lines": [14706,14707,14920],
+      "daemon_log": "/Users/eric/.m2/mvnd/registry/2.0.0-rc-3/daemon-5ea5fca6.log",
+      "daemon_output": "/Users/eric/.m2/mvnd/registry/2.0.0-rc-3/daemon-5ea5fca6.out.log",
+      "diagnosis": "已证实客户端收消息超时并自然退出1；未证明daemon崩溃的底层原因，日志无OOM结论依据。23:22执行固定环境mvnd --status未列出该daemon，而列出其他ID，不能将其他Busy进程当本轮继续运行。未手动停止本轮或重启构建。"
+    }
+  ],
+  "office_openapi_verification": {
+    "status": "NOT_EXECUTED",
+    "reason": "apex-office-service于9571行被调度器跳过；本轮日志没有OfficeOpenApiContractTest执行记录，不能证明修复通过或失败"
+  },
+  "skips": [
+    {
+      "test": "com.apex.scaffold.seata.SeataAtIntegrationTest",
+      "tests": 1,
+      "reason": "Environment variable [APEX_SEATA_IT] does not exist",
+      "report": "apex-seata-spring-boot-starter/target/failsafe-reports/TEST-com.apex.scaffold.seata.SeataAtIntegrationTest.xml:5",
+      "log_line": 2119,
+      "interpretation": "既有环境门控，未新增跳过参数；真实TC及双库端到端不计为通过"
+    }
+  ],
+  "quality_checks": {
+    "spotless": {"observed_check_modules":24,"interpretation":"这些模块已到后续goal；未见格式失败，非全仓最终验收"},
+    "pmd_p3c": {"observed_check_modules":24,"interpretation":"这些模块已到后续goal；规则兼容性警告及aktStatus文本不等同Maven失败goal"},
+    "jacoco": {"observed_check_modules":25,"check_executions":35,"missing_execution_data_modules":["apex-scaffold","apex-services-bom","apex-license-tools"],"interpretation":"有数据且已完成检查的阶段未见覆盖率失败；system仅到interfaces-coverage-check后进入IT，未完成其verify"},
+    "archunit": "包含在已执行Surefire结果内，不重复计数",
+    "unreached": "system Failsafe未汇总，后续Spotless/PMD/最终JaCoCo未完成；6个未启动项目未验收"
+  },
+  "limitations": [
+    "本轮已等到命令自然终态，但因mvnd失联没有最终Reactor汇总，完整门禁未通过，OfficeOpenApi修复仍未获本轮验证。",
+    "系统Flyway测试的MySQL V61到V62故障注入后repair和重试成功见14684至14694行；不能将预期故障注入孤立视为最终迁移失败。PostgreSQL仅记录到迁移开始，不能声称双库完整通过。",
+    "system的UnifiedAuthorizationServiceIntegrationTest 3项及RealRedisCacheIntegrationTest 2项类级结果通过，未纳入无最终插件汇总的Failsafe合计。",
+    "Flyway提示PostgreSQL17.11超出其最新已测试版本16；未扩大兼容性结论。",
+    "VM代理修复仅为运行时状态；未另做本轮Ryuk退出清理断言。",
+    "仅新增本证据；保留旧证据及用户已有修改，未编辑report或方案，未修改生产或测试代码，未commit或push。"
+  ],
+  "validation": {"git_diff_check":"passed","json_syntax":"python3 -m json.tool通过","log_sha256_recheck":"一致"}
+}

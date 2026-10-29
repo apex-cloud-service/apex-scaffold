@@ -19,18 +19,18 @@
 
 | 组件 | 文件 | 行数 | 功能 |
 |-----|------|------|------|
-| 分布式令牌桶限流器 | [DistributedTokenBucketRateLimiter.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedTokenBucketRateLimiter.java) | ~350 | 基于 Redis + Lua 脚本的原子性限流 |
-| 分布式限流服务 | [DistributedRateLimitService.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitService.java) | ~170 | 规则管理和服务层封装 |
-| 配置属性 | [DistributedRateLimitProperties.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitProperties.java) | ~100 | 分布式限流配置管理 |
-| 预热器 | [DistributedRateLimitWarmer.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitWarmer.java) | ~80 | 应用启动时自动预热令牌桶 |
-| 监控指标 | [DistributedRateLimitMetrics.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitMetrics.java) | ~120 | Prometheus 指标采集 |
+| 分布式令牌桶限流器 | [DistributedTokenBucketRateLimiter.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedTokenBucketRateLimiter.java) | ~350 | 基于 Redis + Lua 脚本的原子性限流 |
+| 分布式限流服务 | [DistributedRateLimitService.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitService.java) | ~170 | 规则管理和服务层封装 |
+| 配置属性 | [DistributedRateLimitProperties.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitProperties.java) | ~100 | 分布式限流配置管理 |
+| 预热器 | [DistributedRateLimitWarmer.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitWarmer.java) | ~80 | 应用启动时自动预热令牌桶 |
+| 监控指标 | [DistributedRateLimitMetrics.java](../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitMetrics.java) | ~120 | Prometheus 指标采集 |
 
 ### 1.2 测试组件
 
 | 测试类 | 文件 | 测试用例 |
 |-------|------|---------|
-| 限流器测试 | [DistributedTokenBucketRateLimiterTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedTokenBucketRateLimiterTest.java) | 12 个 |
-| 服务测试 | [DistributedRateLimitServiceTest.java](../apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitServiceTest.java) | 10 个 |
+| 限流器测试 | [DistributedTokenBucketRateLimiterTest.java](../apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedTokenBucketRateLimiterTest.java) | 12 个 |
+| 服务测试 | [DistributedRateLimitServiceTest.java](../apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/ratelimit/distributed/DistributedRateLimitServiceTest.java) | 10 个 |
 
 ---
 

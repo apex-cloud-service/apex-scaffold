@@ -18,6 +18,8 @@
 
 ---
 
+<a id="基本原则"></a>
+
 ## 基本原则
 
 ### 原则 1: 保持简洁
@@ -97,6 +99,8 @@ users.stream()
 
 ---
 
+<a id="方法引用优先"></a>
+
 ## 方法引用优先
 
 ### 静态方法引用
@@ -160,6 +164,8 @@ public Mono<List<UserDTO>> listUsers() {
 ```
 
 ---
+
+<a id="stream-api-最佳实践"></a>
 
 ## Stream API 最佳实践
 
@@ -278,6 +284,8 @@ public void init() {
 
 ---
 
+<a id="optional-链式操作"></a>
+
 ## Optional 链式操作
 
 ### 基本用法
@@ -361,6 +369,8 @@ Optional.ofNullable(user).ifPresentOrElse(
 ```
 
 ---
+
+<a id="响应式编程reactor"></a>
 
 ## 响应式编程（Reactor）
 
@@ -490,6 +500,8 @@ public Mono<Boolean> set(String key, String value, Duration ttl) {
 
 ---
 
+<a id="常见反模式"></a>
+
 ## 常见反模式
 
 ### 反模式 1: forEach 副作用
@@ -587,6 +599,8 @@ public Mono<User> findById(Long id) {
 
 ---
 
+<a id="性能考量"></a>
+
 ## 性能考量
 
 ### 何时使用并行 Stream
@@ -649,7 +663,7 @@ long count = users.stream()
 **优秀实践参考**:
 - 配置验证批处理: [ApexBlockingIoProperties.java](../../../apex-common/src/main/java/com/apex/scaffold/common/config/ApexBlockingIoProperties.java#L194-L213)
 - 策略自动注册: [LoginStrategyProvider.java](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/LoginStrategyProvider.java)
-- 响应式链式操作: [CacheServiceImpl.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java#L142-L167)
+- 响应式链式操作: [CacheServiceImpl.java](../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java#L142-L167)
 - 阻塞 IO 隔离: [SubscriptionRepositoryImpl.java](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/SubscriptionRepositoryImpl.java)
 
 **待优化代码**:

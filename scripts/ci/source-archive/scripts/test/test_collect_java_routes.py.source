@@ -1,0 +1,188 @@
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "ci" / "collect_java_routes.py"
+IMPORTS = '''import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.RequestPredicates;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
+'''
+
+
+class CollectJavaRoutesTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="apex-routes-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.put("pom.xml", "<project><modules><module>sample</module></modules></project>")
+        self.put("sample/pom.xml", "<project/>")
+
+    def put(self, name, text):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def run_case(self, success=True, *extra):
+        self.assertTrue(SCRIPT.is_file(), "route collector must exist")
+        result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root), *extra],
+                                capture_output=True, text=True, timeout=90)
+        self.assertEqual(result.returncode == 0, success, result.stderr)
+        return result
+
+    def source(self, body):
+        return self.put("sample/src/main/java/Assets.java", IMPORTS + "class Assets {\n" + body + "\n}")
+
+    def test_chain_all_verbs_nested_paths_and_handler_positions(self):
+        self.source('''Object routes() { return RouterFunctions.route()
+            .path("/api", b -> b.GET("/a", h::read).POST("/a", h::create)
+                .path("/sub", c -> c.PUT("/{id}", h::update).DELETE("/{id}", h::delete)))
+            .PATCH("/p", h::patch).HEAD("/h", h::head).OPTIONS("/o", h::options).build(); }''')
+        data = json.loads(self.run_case().stdout)
+        routes = data["routes"]
+        self.assertEqual({(r["method"], r["path"]) for r in routes}, {
+            ("GET", "/api/a"), ("POST", "/api/a"), ("PUT", "/api/sub/{id}"),
+            ("DELETE", "/api/sub/{id}"), ("PATCH", "/p"), ("HEAD", "/h"), ("OPTIONS", "/o")})
+        row = next(r for r in routes if r["method"] == "GET")
+        self.assertEqual(row["handler"], "h::read")
+        self.assertEqual(row["declaration"], "Assets#routes()")
+        self.assertGreater(row["position"]["line"], 1)
+        self.assertGreater(row["position"]["end_offset"], row["position"]["offset"])
+        self.assertEqual(row["evidence"], "syntactic-webflux")
+        self.assertFalse(data["semantic_validation"])
+
+    def test_predicate_routes_nest_and_static_import(self):
+        self.source('''Object routes() { return RouterFunctions.nest(path("/v1"),
+            RouterFunctions.route(RequestPredicates.GET("/a").and(accept(JSON)), h::a)
+                .andRoute(POST("/b"), h::b)); }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual([(r["method"], r["path"]) for r in data["routes"]],
+                         [("GET", "/v1/a"), ("POST", "/v1/b")])
+
+    def test_dynamic_prefix_path_predicate_and_helpers_remain_unresolved(self):
+        self.source('''Object routes() { return RouterFunctions.route()
+            .GET(BASE, h::a).path(prefix(), b -> b.GET("/x", h::x))
+            .nest(accept(JSON), b -> b.POST("/y", h::y))
+            .path("/delegated", b -> addRoutes(b)).build(); }
+            Object other() { return RouterFunctions.route(GET("/a").or(POST("/b")), h::a); }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual(data["routes"], [])
+        expressions = " ".join(r["expression"] for r in data["unresolved"])
+        for expression in ("BASE", "prefix()", "accept(JSON)", "addRoutes(b)", '.or('):
+            self.assertIn(expression, expressions)
+
+    def test_all_main_sources_hash_repeatability_and_no_fake_routes(self):
+        text = IMPORTS + '''class Assets {
+            // RouterFunctions.route().GET("/comment", h::x);
+            String fake = "GET(\\\"/string\\\", h::x)";
+            Object routes() { ordinary.GET("/ordinary", h::x);
+                return RouterFunctions.route().GET("/real", h::x).build(); }
+        }'''
+        path = self.put("sample/src/main/java/UnusuallyNamed.java", text)
+        self.put("sample/src/main/java/Empty.java", "class Empty {}")
+        self.put("sample/src/test/java/Broken.java", "class {")
+        self.put("retired/src/main/java/Broken.java", "class {")
+        self.put("sample/src/main/java/target/Broken.java", "class {")
+        (path.parent / "Linked.java").symlink_to(path)
+        first = json.loads(self.run_case().stdout)
+        self.assertEqual(first, json.loads(self.run_case().stdout))
+        self.assertEqual(len(first["files"]), 2)
+        row = next(r for r in first["files"] if r["path"].endswith("UnusuallyNamed.java"))
+        self.assertEqual(row["sha256"], hashlib.sha256(text.encode()).hexdigest())
+        self.assertEqual(first["summary"]["routes"], 1)
+        self.assertEqual(first["routes"][0]["source_sha256"], row["sha256"])
+        self.assertTrue(any(r["reason"] == "receiver_not_proven_webflux" for r in first["unresolved"]))
+        self.assertNotIn("/comment", self.run_case().stdout)
+        path.write_text(text + "\n", encoding="utf-8")
+        second = json.loads(self.run_case().stdout)
+        self.assertNotEqual(first["routes"][0]["source_sha256"], second["routes"][0]["source_sha256"])
+        self.assertFalse(list(self.root.rglob("*.class")))
+
+    def test_builder_variables_and_unknown_helper_parameter_context(self):
+        self.source('''Object routes() { RouterFunctions.Builder b = RouterFunctions.route();
+            b.GET("/root", h::root); return b.build(); }
+            Object helper(RouterFunctions.Builder b) { return b.GET("/relative", h::x); }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual([r["path"] for r in data["routes"]], ["/root"])
+        self.assertTrue(any(r["reason"] == "unknown_enclosing_prefix" for r in data["unresolved"]))
+
+    def test_reassigned_builder_is_not_confirmed_and_static_route_import_works(self):
+        self.put("sample/src/main/java/Assets.java", IMPORTS + '''
+            import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+            class Assets {
+                Object routes() { Object b = RouterFunctions.route(); b = ordinary;
+                    b.GET("/fake", h::x); return route(GET("/real"), h::x); }
+            }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual([r["path"] for r in data["routes"]], ["/real"])
+        self.assertTrue(any(r["reason"] == "receiver_not_proven_webflux" for r in data["unresolved"]))
+
+    def test_unsupported_mapping_candidates_and_tool_scope(self):
+        self.source('''@GetMapping("/annotated") Object annotated() { return null; }
+            Object gateway() { return gatewayBuilder.routes().route("id", r -> r.path("/g").uri("lb://x")).build(); }
+            SimpleUrlHandlerMapping socket() { return new SimpleUrlHandlerMapping(); }''')
+        data = json.loads(self.run_case().stdout)
+        reasons = {r["reason"] for r in data["unresolved"]}
+        self.assertTrue({"annotation_mapping_unsupported", "gateway_dsl_unsupported", "url_handler_mapping_unsupported"} <= reasons)
+        self.assertIn("tool", data)
+        self.assertIn("scope", data)
+        self.assertIn("YAML", " ".join(data["limitations"]))
+
+    def test_class_constants_and_springdoc_handler_argument(self):
+        self.put("sample/src/main/java/Assets.java", IMPORTS + '''
+            import org.springdoc.webflux.core.fn.SpringdocRouteBuilder;
+            class Assets {
+                private static final String BASE = "/base";
+                Object routes() { return RouterFunctions.route().path(BASE, b ->
+                    b.GET(BASE + "/x", h::read)).build(); }
+                Object docs() { return SpringdocRouteBuilder.route()
+                    .GET("/docs", h::read, ops -> ops.operationId("readDocs")).build(); }
+            }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual({r["path"] for r in data["routes"]}, {"/base/base/x", "/docs"})
+        docs = next(r for r in data["routes"] if r["path"] == "/docs")
+        self.assertEqual(docs["handler"], "h::read")
+        self.assertIn("readDocs", docs["openapi_expression"])
+
+    def test_private_builder_helpers_expand_each_call_prefix(self):
+        self.source('''Object routes() { return RouterFunctions.route()
+            .path("/a", b -> add(b, actual)).path("/b", b -> add(b, other)).build(); }
+            private RouterFunctions.Builder add(RouterFunctions.Builder b, Handler h) {
+                return b.path("/inner", x -> leaf(x, h)); }
+            private RouterFunctions.Builder leaf(RouterFunctions.Builder b, Handler h) {
+                return b.GET("/x", h::read); }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual({(r["path"], r["handler"]) for r in data["routes"]},
+                         {("/a/inner/x", "actual::read"), ("/b/inner/x", "other::read")})
+
+    def test_constants_do_not_leak_across_classes_or_shadow_parameters(self):
+        self.source('''static final String BASE = "/safe";
+            Object routes(String BASE) { return RouterFunctions.route().GET(BASE, h::read).build(); }
+            static class Other { Object routes() {
+                return RouterFunctions.route().GET(BASE, h::read).build(); } }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual(data["routes"], [])
+
+    def test_local_shadowing_does_not_resolve_class_constant(self):
+        self.source('''static final String BASE = "/safe";
+            Object routes() { String BASE = dynamic();
+                return RouterFunctions.route().GET(BASE, h::read).build(); }''')
+        data = json.loads(self.run_case().stdout)
+        self.assertEqual(data["routes"], [])
+
+    def test_parse_failure_does_not_replace_output(self):
+        self.source('void broken( { "SECRET"; }')
+        output = self.put("routes.json", "previous result")
+        result = self.run_case(False, "--output", str(output))
+        self.assertIn("parse", result.stderr)
+        self.assertNotIn("SECRET", result.stderr + result.stdout)
+        self.assertEqual(output.read_text(), "previous result")
+
+
+if __name__ == "__main__":
+    unittest.main()

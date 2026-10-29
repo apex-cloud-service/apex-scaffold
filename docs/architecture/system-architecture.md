@@ -1,13 +1,12 @@
 # Apex Scaffold 系统架构设计文档
 
-> 文档版本: v1.0\
+> 文档版本: v1.1\
 > 创建时间: 2026-09-03\
-> 适用版本: apex-scaffold v1.2.0+\
-> 架构模式: DDD (领域驱动设计)
+> 最近更新: 2026-10-28（按当前代码实现修正运行拓扑、端口与图表）\
+> 适用版本: apex-scaffold v1.3.1+\
+> 架构模式: DDD (领域驱动设计) + 网关微服务拆分
 
 > **配套架构图**:
->
-> - [i18n 消息处理链路](../diagrams/69_i18n_message_flow.svg)
 >
 > - [DDD 四层逻辑架构图](../diagrams/01_logical_architecture.svg)
 >
@@ -17,29 +16,25 @@
 >
 > - [部署架构拓扑图](../diagrams/45_deployment_flow.svg)
 >
-> - [网络架构图](../diagrams/02_physical_architecture.svg)
->
 > - [数据流转架构图](../diagrams/62_data_flow_consistency.svg)
 >
 > - [RocketMQ消息队列架构图](../diagrams/61_message_queue_reliability.svg)
 >
-> - [监控体系架构图](../diagrams/48_monitoring_configuration.svg)
->
-> - [微服务治理架构图](../diagrams/43_spi_plugin_architecture.svg)
->
-> - [后端技术栈架构图](../diagrams/29_technology_stack_overview.svg)
->
-> - [基础设施组件架构图](../diagrams/46_configuration_hierarchy.svg)
->
-> - [技术生态全景图](../diagrams/29_technology_stack_overview.svg)
->
-> - [前端技术栈架构图](../diagrams/29_technology_stack_overview.svg)
+> - [i18n 消息处理链路](../diagrams/69_i18n_message_flow.svg)
 >
 > - [前后端交互架构图](../diagrams/58_api_error_response_flow.svg)
 >
-> - **[Grafana监控面板架构图](../diagrams/48_monitoring_configuration.svg)** ⭐ NEW
+> - [微服务治理架构图](../diagrams/43_spi_plugin_architecture.svg)
 >
-> - **[Prometheus监控体系架构图](../diagrams/24_prometheus_grafana_monitoring.svg)** ⭐ NEW
+> - [配置层级图](../diagrams/46_configuration_hierarchy.svg)
+>
+> - [监控体系架构图](../diagrams/48_monitoring_configuration.svg)
+>
+> - [Prometheus监控体系架构图](../diagrams/24_prometheus_grafana_monitoring.svg)
+>
+> - [后端技术栈架构图](../diagrams/29_technology_stack_overview.svg)
+>
+> 上述 SVG 属于历史图集，与当前实现有出入的部分以本文 1.2 节的运行架构图与网关路由表为准。
 
 ***
 
@@ -51,12 +46,134 @@ Apex Scaffold 采用**领域驱动设计(DDD)思想,结合**响应式编程(Reac
 
 | 原则        | 说明          | 实现方式                             |
 | --------- | ----------- | -------------------------------- |
-| **分层解耦**  | 清晰的四层架构边界   | 接口层 → 应用层 → 领域层 → 基础设施层          |
+| **分层解耦**  | 清晰的四层架构边界   | 接口层 → 应用层 → 领域层 → 基础设施层（每个业务服务内部）|
 | **依赖倒置**  | 高层模块不依赖低层模块 | 领域层定义接口,基础设施层实现                  |
+| **服务拆分**  | 网关统一入口,按业务域拆分运行单元 | Spring Cloud Gateway + 五业务服务 + 任务代理/脱敏服务 |
 | **响应式优先** | 非阻塞异步编程     | Spring WebFlux + Project Reactor |
-| **可观测性**  | 全链路监控追踪     | Prometheus + Grafana + Zipkin    |
+| **阻塞隔离**  | 同步 I/O 与事件循环隔离 | `BlockingIoSchedulers` 专用池（jdbc/cache/storage/event/remote/general） |
+| **可观测性**  | 全链路监控追踪     | Prometheus + Grafana + Loki/Alloy（Zipkin/SkyWalking 为可选组件） |
 | **弹性伸缩**  | 水平扩展能力      | 无状态服务 + Redis共享会话                |
 | **安全合规**  | 多租户数据隔离     | tenant\_id + RBAC权限              |
+
+### 1.2 当前运行拓扑（系统架构图）
+
+当前运行架构为**一个网关 + 五个业务服务 + 两个辅助服务**：网关负责 JWT 验签、可信头注入、限流、灰度与熔断回退；各业务服务内部保持 DDD 四层与 WebFlux 函数式路由；任务代理与脱敏服务是轻量侧车，未注册 Nacos，走固定受信地址。
+
+```mermaid
+flowchart TB
+    subgraph client["客户端层"]
+        WEB["Web 管理端（独立前端项目）"]
+        MP["移动端 / 小程序 / H5"]
+    end
+
+    subgraph gw["apex-gateway :8080"]
+        GF["JwtSignatureFilter 统一验签（RS256 JWKS + 过渡期 HMAC）<br>UserContextRelayFilter 注入 X-User-Id / X-Tenant-Id / X-Client-Type<br>限流 / 灰度路由 / Resilience4j 熔断回退"]
+    end
+
+    subgraph services["业务服务层（WebFlux 函数式路由 + DDD 四层）"]
+        AUTH["apex-auth-service :8081<br>认证中心 / 统一授权 / JWKS"]
+        SYSTEM["apex-system-service :8082<br>系统管理（兜底路由）<br>管理端口 :8083 物理隔离"]
+        WF["apex-workflow-service :8083<br>DAG 工作流引擎"]
+        OFFICE["apex-office-service :8084<br>办公协同 + 站内信 WebSocket"]
+        FILE["apex-file-service :8085<br>文件上传 / 分片 / 下载"]
+    end
+
+    subgraph aux["辅助服务"]
+        JOB["apex-job-service :8095<br>仅转发 9 个任务管理接口"]
+        MASK["apex-masking-service :8096<br>启动期脱敏策略（无持久化）"]
+    end
+
+    subgraph middleware["数据与中间件层"]
+        MYSQL[("MySQL")]
+        REDIS[("Redis / Redisson")]
+        MQ[["RocketMQ"]]
+        MEILI[("Meilisearch")]
+        XXL["XXL-Job Admin（可选）"]
+        SEATA["Seata TC（可选，默认关闭）"]
+        NACOS["Nacos（可选，默认可关）"]
+    end
+
+    subgraph storage["对象存储（五后端按配置选择）"]
+        ST["Local / MinIO / OSS / 七牛 / 火山 TOS"]
+    end
+
+    WEB --> GF
+    MP --> GF
+    GF -->|" /auth/v1/** /oauth2/**"| AUTH
+    GF -->|" /api/v1/workflows/** 等"| WF
+    GF -->|" /api/v1/office/** /api/v1/messages/**（含 WS 握手路由）"| OFFICE
+    GF -->|" /api/v1/file/** /api/v1/documents/**"| FILE
+    GF -->|" /admin-api/v1/jobs/**"| JOB
+    GF -->|" /api/v1/masking/**"| MASK
+    GF -->|" 兜底 /api/v1/** /admin-api/v1/**"| SYSTEM
+    AUTH --> MYSQL
+    AUTH --> REDIS
+    SYSTEM --> MYSQL
+    SYSTEM --> REDIS
+    SYSTEM --> MEILI
+    SYSTEM --> MQ
+    WF --> MYSQL
+    WF --> MQ
+    OFFICE --> MYSQL
+    OFFICE --> MQ
+    FILE --> MYSQL
+    FILE --> ST
+    JOB -->|"HTTP 转发"| SYSTEM
+    XXL -.->|"执行器（默认禁用，按需开启）"| SYSTEM
+    XXL -.-> WF
+    SYSTEM -.-> SEATA
+    WF -.-> SEATA
+    services -.->|"可选注册与发现"| NACOS
+```
+
+要点：
+
+- `job-domain`、`masking-domain` 两条路由以及 office 的 WS/HTTP 消息路由使用固定地址，不依赖 Nacos；office 两条路由必须指向同一实例（票据与连接注册表是单实例内存态）。
+- 关闭 Nacos 时，`lb://` 路由须通过 `ROUTE_*` 环境变量改为明确地址；各路由均带 `ROUTE_*` 覆盖能力，可一键回滚。
+- XXL 执行器与 Seata 均默认禁用；Seata 通过 `apex.seata.mode` 选择 AT/TCC/SAGA/XA。
+
+#### 网关路由表
+
+| 路由 id | 匹配路径 | 默认目标 |
+| --- | --- | --- |
+| auth-service | `/auth/v1/**`、`/oauth2/**`、`/.well-known/**`、`/admin-api/v1/auth/**`、`/admin-api/v1/sso/**` | `lb://apex-auth-service` |
+| workflow-domain | `/api/v1/workflows/**`、`/api/v2/workflow-definitions/**`、`/api/workflow/**`、`/admin-api/v1/workflows/**` | `lb://apex-workflow-service` |
+| office-message-websocket | `/api/v1/messages/ws`（要求 `Upgrade: websocket`） | `ws://127.0.0.1:8084` |
+| office-message-http | `/api/v1/messages`、`/api/v1/messages/**` | `http://127.0.0.1:8084` |
+| office-domain | `/api/v1/office/**`、`/api/v1/messages/**`、`/admin-api/v1/office/**`、`/admin-api/v1/org/**`、`/admin-api/v1/message-templates` | `lb://apex-office-service` |
+| file-domain | `/api/v1/file/**`、`/api/v1/files/**`、`/api/v1/documents/**`、`/admin-api/v1/documents/**` | `lb://apex-file-service` |
+| job-domain | `/admin-api/v1/jobs`、`/admin-api/v1/jobs/**` | `http://127.0.0.1:8095` |
+| masking-domain | `/api/v1/masking/**` | `http://127.0.0.1:8096` |
+| system-domain（兜底） | `/api/v1/**`、`/admin-api/v1/**`、`/health`、`/actuator/**` | `lb://apex-system-service` |
+
+来源：`apex-gateway/src/main/resources/application.yml`（生产覆盖见同目录 `application-prod.yml`，该文件重定义 routes 列表，新增路由必须两处同步）。
+
+#### 请求处理链路时序图
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端
+    participant G as apex-gateway
+    participant S as 业务服务安全链
+    participant H as Router/Handler 与业务用例
+    participant P as 仓储与持久化适配
+    participant DB as MySQL / Redis / 对象存储
+
+    C->>G: HTTPS 请求 + Bearer Token
+    G->>G: JwtSignatureFilter 验签（JWKS RS256，过渡期 HMAC 双 kid）
+    G->>G: UserContextRelayFilter 注入 X-User-Id/X-Tenant-Id/X-Client-Type
+    G->>S: 按路由转发（限流/灰度/CircuitBreaker 在此层生效）
+    S->>S: JwtAuthenticationFilter 解析令牌（主应用与认证中心双令牌分支）
+    S->>S: 黑名单校验；接近有效期时经 X-New-Access-Token 滑动续期
+    S->>S: materializeUserContext 装配角色（本地仓库或统一授权快照）
+    S->>H: RouterFunction 命中 Handler
+    H->>H: RequirePermissionAspect 校验 @RequirePermission（AND/OR）
+    H->>P: 调用仓储端口（@DataScope 由 InnerInterceptor 改写 SQL）
+    P->>DB: subscribeOn(BlockingIoSchedulers.jdbc()/cache()/storage()) 隔离阻塞 I/O
+    DB-->>C: Result<T>（code=0 表示成功，含 traceId）
+```
+
+网关只做验签与主体提取，不做授权决策；`/internal/**` 路径在网关直接拒绝公网访问，细粒度权限全部在下游服务完成。
 
 ***
 
@@ -160,7 +277,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)思想,结合**响应式编程(Reac
 
 **4. 工作流引擎模块**
 
-- 流程定义: BPMN建模、流程版本管理
+- 流程定义: DAG JSON 定义、流程版本管理
 
 - 流程实例: 启动流程、挂起/激活、终止
 
@@ -288,6 +405,62 @@ public interface UserRepository {
 
 - ✅ 异常转换,将技术异常转换为领域异常
 
+### 2.3 模块依赖关系
+
+全仓 31 个 Maven 模块的直接内部依赖（完整清单与职责见根 [AGENTS.md](../../AGENTS.md)）：
+
+```mermaid
+flowchart LR
+    COMMON["apex-common<br>响应/异常/上下文/调度器"]
+    DOMAIN["apex-domain<br>基础实体与端口契约"]
+    PERSIST["infrastructure-persistence"]
+    CACHE["infrastructure-cache"]
+    MSG["infrastructure-messaging"]
+    REMOTE["infrastructure-remote"]
+    INTG["infrastructure-integration"]
+    CONTRACT["apex-api-contract"]
+    SYS["apex-system<br>system 业务库"]
+    AUTH["apex-auth<br>认证中心业务库"]
+    WFL["apex-workflow"]
+    FILE["apex-file"]
+    OFFICE["apex-office"]
+    SYSTEMSVC["apex-system-service"]
+    AUTHSVC["apex-auth-service"]
+    WFSVC["apex-workflow-service"]
+    FILESVC["apex-file-service"]
+    OFFICESVC["apex-office-service"]
+    GW["apex-gateway"]
+    JOBSVC["apex-job-service"]
+    MASKSVC["apex-masking-service"]
+
+    DOMAIN --> COMMON
+    PERSIST --> DOMAIN
+    CACHE --> DOMAIN
+    REMOTE --> DOMAIN
+    MSG --> PERSIST
+    INTG --> REMOTE
+    CONTRACT --> COMMON
+    SYS --> PERSIST
+    SYS --> CACHE
+    SYS --> MSG
+    SYS --> INTG
+    AUTH --> INTG
+    AUTH --> CONTRACT
+    FILE -->|"storage-spring-boot-starter 五后端"| COMMON
+    SYSTEMSVC --> SYS
+    AUTHSVC --> AUTH
+    WFSVC --> WFL
+    FILESVC --> FILE
+    OFFICESVC --> OFFICE
+    SYSTEMSVC --> CONTRACT
+    AUTHSVC -->|"api-contract 内部 Feign 契约"| CONTRACT
+    GW --> COMMON
+    JOBSVC --> REMOTE
+    MASKSVC --> COMMON
+```
+
+约束：common、共享 domain/infrastructure、api-contract 不得反向依赖具体业务库；网关只依赖 common，不承载业务四层实现；auth-service 对 system 的依赖仅为 test scope。`apex-infrastructure` 聚合 JAR 仅保留旧坐标兼容。
+
 ***
 
 ## 三、物理架构 - 部署拓扑
@@ -295,63 +468,70 @@ public interface UserRepository {
 ### 3.1 部署架构图
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  客户端层                                                      │
-│  ┌────────────────────┐    ┌────────────────────┐           │
-│  │  Web前端(Vue 3)    │    │  移动端(微信小程序) │           │
-│  │  apex-admin-web    │    │  WeChat MiniProgram│           │
-│  └────────────────────┘    └────────────────────┘           │
-└───────────────┬────────────────────┬─────────────────────────┘
-                │                    │
-┌───────────────┴────────────────────┴─────────────────────────┐
-│  网关与负载均衡层                                              │
-│  ┌──────────────┐         ┌─────────────────────┐           │
-│  │  Nginx/ALB   │   →    │ Spring Cloud Gateway │           │
-│  │  负载均衡    │         │  API网关 (可选)      │           │
-│  └──────────────┘         └─────────────────────┘           │
-└───────────────┬────────────────────────────────────────────┘
-                │
-┌───────────────┴────────────────────────────────────────────┐
-│  应用服务层 (无状态,可水平扩展)                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                │
-│  │ Apex     │  │ Apex     │  │ Apex     │  ...           │
-│  │ Instance1│  │ Instance2│  │ InstanceN│                │
-│  │ :8080    │  │ :8080    │  │ :8080    │                │
-│  └──────────┘  └──────────┘  └──────────┘                │
-└───────┬───────────────┬───────────────────────────────────┘
-        │               │
-        ├───────────────┼───────────────────────────────────┐
-        │               │                                   │
-┌───────┴───────┐  ┌────┴────────┐  ┌────────────────────┴─┐
-│ 数据存储层     │  │ 微服务治理层 │  │ 可观测性平台         │
-│ ┌──────────┐ │  │ ┌─────────┐ │  │ ┌─────────────────┐ │
-│ │ MySQL 8  │ │  │ │ Nacos   │ │  │ │ Prometheus       │ │
-│ │ 主从复制 │ │  │ │ :8848   │ │  │ │ :9090            │ │
-│ └──────────┘ │  │ └─────────┘ │  │ └─────────────────┘ │
-│ ┌──────────┐ │  │ ┌─────────┐ │  │ ┌─────────────────┐ │
-│ │ Redis    │ │  │ │ Sentinel│ │  │ │ Grafana          │ │
-│ │ Cluster  │ │  │ │ :8858   │ │  │ │ :3000            │ │
-│ └──────────┘ │  │ └─────────┘ │  │ └─────────────────┘ │
-│ ┌──────────┐ │  │ ┌─────────┐ │  │ ┌─────────────────┐ │
-│ │ MinIO    │ │  │ │RocketMQ │ │  │ │ Zipkin           │ │
-│ │ TOS      │ │  │ │ :9876   │ │  │ │ :9411            │ │
-│ └──────────┘ │  │ └─────────┘ │  │ └─────────────────┘ │
-└───────────────┘  └─────────────┘  └──────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│  客户端层                                                            │
+│  ┌────────────────────────┐    ┌────────────────────────┐          │
+│  │ Web 管理端              │    │ 移动端/小程序/H5        │          │
+│  │ (apex-admin-web 镜像)   │    │ (统一账户, 多会话)       │          │
+│  └────────────────────────┘    └────────────────────────┘          │
+└────────────────────────────┬────────────────────────────────────────┘
+                             │ HTTPS :8080
+┌────────────────────────────┴────────────────────────────────────────┐
+│  网关层  apex-gateway :8080                                          │
+│  JwtSignatureFilter 验签 → UserContextRelayFilter 可信头             │
+│  限流 / 灰度路由 / Resilience4j 熔断回退 forward:/__gateway/fallback │
+└──┬─────────┬─────────┬─────────┬─────────┬──────────┬──────────────┘
+   │         │         │         │         │          │
+┌──┴──┐  ┌───┴───┐  ┌──┴───┐  ┌──┴───┐  ┌──┴───┐  ┌───┴────────────┐
+│auth │  │system │  │work- │  │office│  │file  │  │ job :8095      │
+│:8081│  │:8082  │  │flow  │  │:8084 │  │:8085 │  │ masking :8096  │
+│认证 │  │系统管 │  │:8083 │  │办公+ │  │文件/ │  │ (未注册 Nacos, │
+│中心 │  │理兜底 │  │工作流│  │站内信│  │分片  │  │  固定受信地址)  │
+└──┬──┘  └───┬───┘  └──┬───┘  └──┬───┘  └──┬───┘  └───┬────────────┘
+   │         │         │         │         │          │
+┌──┴─────────┴─────────┴─────────┴─────────┴──────────┴──────────────┐
+│  数据与中间件层                                                      │
+│  ┌────────┐ ┌─────────┐ ┌──────────┐ ┌──────────────────────────┐  │
+│  │ MySQL  │ │ Redis / │ │RocketMQ  │ │ 对象存储五后端            │  │
+│  │ 3306   │ │Redisson │ │ 9876     │ │ Local/MinIO/OSS/         │  │
+│  │        │ │ 6379    │ │ (Outbox) │ │ 七牛/火山TOS             │  │
+│  └────────┘ └─────────┘ └──────────┘ └──────────────────────────┘  │
+│  ┌─────────────┐ ┌────────────┐ ┌─────────────┐                    │
+│  │ Meilisearch │ │ Nacos      │ │ XXL-Job     │                    │
+│  │ (全文检索)   │ │ 8848 (可选) │ │ Admin :8097 │                    │
+│  └─────────────┘ └────────────┘ └─────────────┘                    │
+│  可选：Seata TC、Keycloak (SSO)、Resilience4j（内置）、Zipkin          │
+└─────────────────────────────────────────────────────────────────────┘
+可观测性：Actuator/Micrometer → Prometheus + Grafana + Alertmanager
+日志聚合：Logback → Loki (Grafana Alloy 采集)
 ```
+
+> 注：`apex-system-service` 管理端口 8083 与业务端口 8082 物理隔离（管理端口默认仅绑定 127.0.0.1）。workflow 容器内端口 8083，同机开发时宿主映射为 8093 避免与 system 管理端口冲突。
 
 ### 3.2 组件职责与端口
 
 | 组件             | 用途                     | 端口                  | 部署方式               |
 | -------------- | ---------------------- | ------------------- | ------------------ |
-| **应用服务**       | apex-scaffold业务应用      | 8080(业务) / 8081(管理) | Podman / K8s       |
-| **MySQL**      | 关系型数据库,主从复制            | 3306                | 独立部署 / RDS         |
-| **Redis**      | 缓存与会话,Cluster/Sentinel | 6379                | 独立部署 / ElastiCache |
-| **Nacos**      | 配置中心与服务发现              | 8848                | Podman / K8s       |
-| **Sentinel**   | 流控熔断Dashboard          | 8858                | Podman             |
-| **RocketMQ**   | 消息队列                   | 9876(NameServer)    | Podman / K8s       |
-| **Prometheus** | 指标采集                   | 9090                | Podman             |
-| **Grafana**    | 监控大盘                   | 3000                | Podman             |
-| **Zipkin**     | 链路追踪                   | 9411                | Podman             |
+| **apex-gateway** | API 网关，JWT 验签与路由分发 | 8080                | Podman / K8s       |
+| **apex-auth-service** | 认证中心，登录/刷新/登出/统一授权 | 8081                | Podman / K8s       |
+| **apex-system-service** | 系统管理（用户/角色/菜单/字典/任务） | 8082 业务 / 8083 管理（仅 127.0.0.1） | Podman / K8s |
+| **apex-workflow-service** | DAG 工作流引擎 | 8083（同机映射 8093）   | Podman / K8s       |
+| **apex-office-service** | 办公协同 + 站内信 WebSocket | 8084                | Podman / K8s       |
+| **apex-file-service** | 文件上传/分片/下载 | 8085                | Podman / K8s       |
+| **apex-job-service** | 任务管理接口代理（9 个接口） | 8095（仅 127.0.0.1）  | Podman / K8s       |
+| **apex-masking-service** | 启动期脱敏策略（无持久化） | 8096（仅 127.0.0.1） | Podman / K8s       |
+| **MySQL**      | 关系型数据库，按业务域独立迁移链 | 3306                | 独立部署 / RDS         |
+| **Redis**      | 缓存与会话，Redisson 客户端 | 6379                | 独立部署 / ElastiCache |
+| **RocketMQ**   | 消息队列，Outbox 可靠投递 | 9876(NameServer)    | Podman / K8s       |
+| **Meilisearch** | 轻量全文检索（system 域使用） | 7700                | Podman             |
+| **Nacos**      | 配置中心与服务发现（默认可关） | 8848                | Podman / K8s       |
+| **XXL-Job Admin** | 任务调度控制台（执行器默认禁用） | 8097→8080           | Podman             |
+| **Seata TC**   | 分布式事务（默认关闭，`apex.seata.mode`） | 8091                | Podman             |
+| **Keycloak**   | SSO/OAuth2 IdP（可选） | 8080→8080           | Podman             |
+| **Loki / Alloy** | 日志聚合与 OTel 采集 | 3100 / 4317         | Podman             |
+| **Prometheus / Grafana / Alertmanager** | 指标采集、大盘与告警 | 9090 / 3000 / 9093  | Podman             |
+
+容器与端口以 [podman-compose.yml](../../podman-compose.yml) 为准；中间件可选组件见 [podman-compose.infra.yml](../../podman-compose.infra.yml)。
 
 ### 3.3 网络拓扑
 
@@ -397,10 +577,10 @@ public interface UserRepository {
 
 | 技术                  | 版本             | 说明         |
 | ------------------- | -------------- | ---------- |
-| **Java**            | 17             | LTS长期支持版本  |
-| **Spring Boot**     | 3.5.15         | 最新稳定版      |
-| **Spring WebFlux**  | Reactor 3.6.13 | 响应式编程      |
-| **Spring Security** | 6.5.0          | JWT+RBAC权限 |
+| **Java**            | 21（SDKMAN `21.0.13.0+9-tem`） | LTS，虚拟线程可选启用 |
+| **Spring Boot**     | 3.5.15         | 父 POM 统一管理版本 |
+| **Spring WebFlux**  | Reactor 3.6.x | 响应式编程，函数式 Router |
+| **Spring Security** | 6.5.x          | JWT+RBAC权限 |
 | **Netty**           | 4.x            | 底层IO运行时    |
 
 #### 4.2.2 数据访问
@@ -409,21 +589,21 @@ public interface UserRepository {
 | ---------------- | -------- | ----------------------- |
 | **MyBatis-Plus** | 3.5.10.1 | ORM框架,代码生成              |
 | **Druid**        | 1.2.25   | 连接池+SQL监控               |
-| **Flyway**       | 10.15.0  | 数据库版本化迁移(V1-V22, 22个脚本) |
-| **MySQL**        | 8.4.0    | 关系型数据库(Connector 8.4.0) |
+| **Flyway**       | 10.15.0  | 数据库版本化迁移（按业务域独立版本链） |
+| **MySQL**        | 9.x      | 关系型数据库                  |
 | **Redis**        | 7.x      | KV缓存,Redisson 3.36.0    |
 | **Caffeine**     | 3.1.8    | 本地缓存                    |
-| **Meilisearch**  | 1.10     | 轻量级全文搜索引擎               |
+| **Meilisearch**  | 1.10     | 轻量级全文搜索引擎（system 域）               |
 
 #### 4.2.3 微服务治理
 
 | 技术               | 版本    | 说明        |
 | ---------------- | ----- | --------- |
-| **Nacos**        | 2.4.3 | 配置中心+服务发现 |
-| **Sentinel**     | 1.8.8 | 流控熔断降级    |
-| **Resilience4j** | 2.2.0 | 熔断器模式     |
-| **RocketMQ**     | 5.3.1 | 消息队列,事务消息 |
-| **Seata**        | 2.2.0 | 分布式事务(可选) |
+| **Nacos**        | 2.4.3 | 配置中心+服务发现（默认可关闭） |
+| **Resilience4j** | 2.2.0 | 熔断器模式（网关路由 CircuitBreaker） |
+| **RocketMQ**     | 5.3.1 | 消息队列,事务消息/Outbox |
+| **Seata**        | 2.2.0 | 分布式事务(默认关闭，AT/TCC/SAGA/XA) |
+| **XXL-Job**      | 3.1.1 | 分布式任务调度（执行器默认禁用） |
 
 #### 4.2.4 可观测性
 
@@ -434,15 +614,17 @@ public interface UserRepository {
 | **Grafana**       | 11.2.0 | 监控大盘,可视化                         |
 | **Grafana Loki**  | 3.0.0  | 日志聚合系统,轻量级Elasticsearch替代        |
 | **Grafana Alloy** | 1.0.0  | OpenTelemetry Collector,统一遥测数据收集 |
-| **Zipkin**        | 2.27.4 | 链路追踪,Span收集                      |
 | **Logback**       | 1.5.12 | 日志框架,异步Appender                  |
+
+> Zipkin/SkyWalking 为可选链路追踪组件（见 `podman-compose.infra.yml`），不作为默认运行栈强制依赖。
 
 #### 4.2.5 对象存储
 
 | 技术                 | 版本     | 说明             |
 | ------------------ | ------ | -------------- |
 | **MinIO**          | 8.5.15 | 自托管对象存储,S3兼容   |
-| **Volcengine TOS** | 2.6.1  | 火山引擎对象存储,云原生方案 |
+| **火山引擎 TOS** | 2.6.1  | 公有云对象存储 |
+| **阿里云 OSS / 七牛** | - | 其余三后端由 `apex-storage-spring-boot-starter` 自动装配 |
 
 #### 4.2.6 安全与认证
 
@@ -485,70 +667,56 @@ public interface UserRepository {
 | ------------------------- | ------------------------------------------ |
 | **WebFlux而非WebMVC**       | 高并发场景下非阻塞性能更优,适合IO密集型应用                    |
 | **MyBatis-Plus而非JPA**     | 更灵活的SQL控制,Lambda条件构造器易用性高                  |
-| **Sentinel+Resilience4j** | Sentinel提供Dashboard可视化,Resilience4j提供熔断器模式 |
-| **Nacos而非Config Server**  | 同时提供配置中心和服务发现,运维成本低                        |
-| **RocketMQ而非Kafka**       | 事务消息支持,更适合业务消息场景                           |
-| **Prometheus+Grafana**    | 云原生监控标准,社区生态丰富                             |
+| **网关 + 业务域服务而非单体** | 按业务域独立部署、独立迁移与扩缩容；网关统一验签与熔断，下游专注业务         |
+| **Resilience4j（网关熔断）** | 纯代码熔断器模式，与 WebFlux 响应式链路天然契合，无需独立 Dashboard |
+| **Nacos（可选）而非Config Server**  | 同时提供配置中心和服务发现，默认可关，关闭时走 `ROUTE_*` 固定地址     |
+| **RocketMQ而非Kafka**       | 事务消息支持,更适合业务消息场景；Outbox 保证与业务写同事务          |
+| **DAG JSON 而非 BPMN 引擎** | 工作流以 `WorkflowDefinitionGraph` 解析 dagJson，轻量可控，满足三级审批等场景 |
+| **Prometheus+Grafana+Loki**    | 云原生监控与日志标准，社区生态丰富；Zipkin/SkyWalking 为可选增强    |
 
 ***
 
 ## 五、架构演进路线
 
-### 5.1 当前架构 (v2.5.0)
+### 5.1 当前架构 (v1.3.x)
 
-- ✅ 单体应用 + DDD分层
+- ✅ 网关 + 五业务服务 + 任务代理/脱敏服务的微服务拆分已完成
 
-- ✅ 响应式编程 (WebFlux)
+- ✅ 各业务服务内部保持 DDD 四层与 WebFlux 函数式路由
 
-- ✅ 微服务治理组件集成 (Nacos/Sentinel)
+- ✅ 响应式编程 (WebFlux) + `BlockingIoSchedulers` 阻塞 I/O 隔离
 
-- ✅ 完善的监控体系 (66个Grafana面板)
+- ✅ 可选治理组件集成 (Nacos/XXL-Job/Seata 均默认可关)
 
-### 5.2 近期优化 (v2.6.0 - v3.0.0)
+- ✅ 统一账户多端登录 + 认证中心独立授权（渐进开关）
+
+- ✅ 可观测性体系 (Prometheus + Grafana + Loki/Alloy)
+
+### 5.2 进行中与近期优化
+
+**功能与可靠性**:
+
+- [ ] office 站内信多实例实时广播（当前票据与连接注册表为单实例内存态）
+
+- [ ] 统一授权跨实例主动失效（当前仅 ≤30s TTL，无主动撤权广播）
+
+- [ ] 生产 `sys_*` 数据迁移至认证中心（开关不迁移数据）
+
+- [ ] Seata 真实 TC 环境下四模式端到端验证
 
 **性能优化**:
 
-- [ ] 引入Caffeine二级缓存,减少Redis访问
-
 - [ ] SQL慢查询优化,索引调优
 
-- [ ] JVM参数调优,GC优化
+- [ ] JVM参数调优,虚拟线程灰度（按池启用 `apex.blocking-io.<pool>.virtual-threads`）
 
-**功能增强**:
-
-- [ ] 集成Elasticsearch全文检索
-
-- [ ] 工作流引擎BPMN 2.0支持
-
-- [ ] 多语言国际化完善
-
-**运维增强**:
-
-- [ ] Kubernetes部署清单
-
-- [ ] Helm Chart打包
-
-- [ ] 金丝雀发布支持
-
-### 5.3 长期规划 (v3.0.0+)
-
-**微服务拆分** (按需):
-
-- 用户中心服务
-
-- 权限管理服务
-
-- 工作流服务
-
-- 文件服务
+### 5.3 长期规划 (v2.0.0+)
 
 **技术升级**:
 
-- Java 21 (虚拟线程)
-
 - Spring Boot 4.x
 
-- GraalVM Native Image
+- GraalVM Native Image（受 MyBatis-Plus/JWT 等反射依赖约束，需评估）
 
 **云原生演进**:
 
@@ -563,6 +731,8 @@ public interface UserRepository {
 ## 六、架构决策记录 (ADR)
 
 正式编号以[逻辑架构 ADR-001](01-logical-architecture-decision.md)、[部署 ADR-002–008](02-physical-architecture-decision.md)及[技术 ADR-009–015](03-technical-architecture-decision.md)为准。下列旧决策摘要不再复用冲突编号，历史性能结果未在本轮重新验证。
+
+<a id="adr-auth-center-001独立认证中心的远程授权集成"></a>
 
 ### ADR-AUTH-CENTER-001：独立认证中心的远程授权集成
 
@@ -587,13 +757,13 @@ public interface UserRepository {
 传统Servlet容器(Tomcat)基于线程池模型,每个请求占用一个线程,在高并发IO密集场景下线程资源受限。
 
 **决策**:\
-采用Spring WebFlux + Netty响应式框架,非阻塞异步处理请求。
+采用Spring WebFlux + Netty响应式框架,非阻塞异步处理请求；同步 JDBC/缓存/存储等阻塞 I/O 经 `BlockingIoSchedulers` 隔离到专用线程池。
 
 **结果**:
 
-- ✅ 单实例并发能力从1000 QPS提升到5000 QPS
+- ✅ 非阻塞主链路适配高并发 IO 密型场景
 
-- ✅ 平均响应时间从200ms降低到80ms
+- ✅ 阻塞 I/O 与事件循环隔离，避免载体线程被钉住
 
 - ⚠️ 学习曲线陡峭,需要团队培训
 
@@ -659,20 +829,22 @@ SaaS场景需要支持多租户,保证数据隔离与安全。
 
 | 指标        | 目标值         | 实际值      |
 | --------- | ----------- | -------- |
-| **QPS**   | 5000 QPS/实例 | 5200 QPS |
-| **P95延迟** | < 200ms     | 180ms    |
-| **P99延迟** | < 500ms     | 450ms    |
-| **可用性**   | 99.9%       | 99.92%   |
+| **QPS**   | 5000 QPS/实例 | 待生产实测 |
+| **P95延迟** | < 200ms     | 待生产实测 |
+| **P99延迟** | < 500ms     | 待生产实测 |
+| **可用性**   | 99.9%       | 待生产实测 |
+
+> 历史文档中的实测数值未在本轮重新验证，登记为"待生产实测"，不作为已达成 SLA 引用。
 
 ### 7.2 扩展性
 
-- ✅ 应用服务无状态,支持水平扩展
+- ✅ 业务服务无状态,支持水平扩展
 
-- ✅ 数据库读写分离,主从复制
+- ✅ 数据库按业务域独立迁移链，可按域读写分离
 
-- ✅ Redis Cluster模式,支持水平扩展
+- ✅ Redis 共享会话与缓存，支持集群模式
 
-- ✅ RocketMQ分布式消息队列
+- ✅ RocketMQ 分布式消息队列（Outbox 与业务写同事务）
 
 ### 7.3 安全性
 
@@ -692,13 +864,11 @@ SaaS场景需要支持多租户,保证数据隔离与安全。
 
 - ✅ 代码分层清晰,职责单一
 
-- ✅ 单元测试覆盖率 > 70%
-
 - ✅ API文档自动生成 (OpenAPI 3)
 
 - ✅ 日志结构化,便于检索
 
-- ✅ 监控告警完善 (66个Grafana面板)
+- ✅ 监控告警体系 (Prometheus + Grafana + Alertmanager)
 
 ***
 

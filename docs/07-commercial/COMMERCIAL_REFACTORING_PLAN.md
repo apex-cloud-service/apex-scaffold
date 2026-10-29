@@ -38,6 +38,8 @@
 
 ---
 
+<a id="1-方案概述"></a>
+
 ## 1. 方案概述
 
 ### 1.1 背景
@@ -73,6 +75,8 @@ Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层�
 | 法律前提 | ✅ 已确认：自有代码，可分发 |
 
 ---
+
+<a id="2-现状盘点"></a>
 
 ## 2. 现状盘点
 
@@ -116,6 +120,8 @@ Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层�
 
 ---
 
+<a id="3-优化策略"></a>
+
 ## 3. 优化策略
 
 ### 3.1 核心原则
@@ -126,6 +132,8 @@ Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层�
 4. **文档先行**：先优化文档，再调整代码注释
 
 ---
+
+<a id="4-目标形态设计"></a>
 
 ## 4. 目标形态设计
 
@@ -192,6 +200,8 @@ apex-interfaces/src/main/resources/db/migration/
 
 ---
 
+<a id="5-重构总原则"></a>
+
 ## 5. 重构总原则
 
 1. **零 业务剥离是最高优先级硬约束**：贯穿全程，每个阶段结束必须全库 grep 验证零命中。不因"改起来麻烦"而保留任何 业务字样。
@@ -204,6 +214,8 @@ apex-interfaces/src/main/resources/db/migration/
 
 ---
 
+<a id="6-分阶段任务分解"></a>
+
 ## 6. 分阶段任务分解
 
 > 复杂度：S=简单（1 个文件级改动）/ M=中等（模块内多处）/ L=大（跨模块）。
@@ -211,6 +223,8 @@ apex-interfaces/src/main/resources/db/migration/
 > 依赖关系：阶段 A → B → C/D（可并行）→ E。
 
 ---
+
+<a id="阶段-a工程基线修复与-业务痕迹消除p0"></a>
 
 ### 阶段 A：工程基线修复与 业务痕迹消除（P0）
 
@@ -306,6 +320,8 @@ apex-interfaces/src/main/resources/db/migration/
 - **验收**: 通用代码与配置中 grep 零命中；业务代码中的 业务痕迹已全部标记，待阶段 B 消除。
 
 ---
+
+<a id="阶段-b去业务化核心重构p1"></a>
 
 ### 阶段 B：去业务化核心重构（P1）
 
@@ -414,6 +430,8 @@ apex-interfaces/src/main/resources/db/migration/
 
 ---
 
+<a id="阶段-c通用产品能力补齐p1-p2"></a>
+
 ### 阶段 C：通用产品能力补齐（P1-P2）
 
 **目标**：让脚手架具备"可买"的完整产品形态。
@@ -480,6 +498,8 @@ apex-interfaces/src/main/resources/db/migration/
 
 ---
 
+<a id="阶段-d商业化机制落地p1"></a>
+
 ### 阶段 D：商业化机制落地（P1）
 
 **目标**：让"三档售卖 + License 保护"真实生效。
@@ -540,6 +560,8 @@ apex-interfaces/src/main/resources/db/migration/
 
 ---
 
+<a id="阶段-e交付物与发布p2"></a>
+
 ### 阶段 E：交付物与发布（P2）
 
 **目标**：对外发布 v1.1.0 商业版本。
@@ -579,6 +601,8 @@ apex-interfaces/src/main/resources/db/migration/
 
 ---
 
+<a id="7-关键决策点需确认"></a>
+
 ## 7. 关键决策点（需确认）
 
 | # | 决策点 | 选项 | 状态 |
@@ -595,6 +619,8 @@ apex-interfaces/src/main/resources/db/migration/
 
 ---
 
+<a id="8-风险与规避"></a>
+
 ## 8. 风险与规避
 
 | 风险 | 等级 | 规避措施 |
@@ -609,6 +635,8 @@ apex-interfaces/src/main/resources/db/migration/
 | **i18n 文件遗漏 业务 条目** | 中 | A5 逐条排查 4 语言文件；B6 再全量 grep 验证 |
 
 ---
+
+<a id="9-验收标准与质量门禁"></a>
 
 ## 9. 验收标准与质量门禁
 
@@ -633,6 +661,8 @@ apex-interfaces/src/main/resources/db/migration/
 - [ ] **全库 grep 业务关键词零命中（最终验证）**
 
 ---
+
+<a id="10-附录业务痕迹全量清单"></a>
 
 ## 10. 附录：业务痕迹全量清单
 
@@ -706,6 +736,8 @@ apex-interfaces/src/main/resources/db/migration/
 | `scripts/copy_*.py`/`fix-author.sh` | 含大量 `com.apex.*` 替换逻辑 | A2 删除 |
 
 ---
+
+<a id="11-附录通用业务代码清单"></a>
 
 ## 11. 附录：通用/业务代码清单
 

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-10-18T16:41:20+08:00",
+  "scope": "P0 两变量发布前置检查：复用既有离线工具，模拟环境及真实 Compose config；不证明生产运行",
+  "baseline": {
+    "path": "config-two-variable-verification-20261018.json",
+    "sha256": "8fdfcc68c2cfd29aa3040078a9575719b1a2232b80fdc70047733670723b8c6b",
+    "preserved": true,
+    "note": "采用本轮实际读取文件的摘要；不覆盖旧证据或主报告。"
+  },
+  "sources": [
+    {"path": "scripts/utils/local_deployment.py", "sha256": "30c687b706e6caa1250f2b682238169dc688cb6c9d51860fc4079081ad77a41e"},
+    {"path": "scripts/test/test_config_preflight.py", "sha256": "b054c93c01b51520af891fd4d7d08683e6a51ab6f20e633dce619e1822e8b5f0"},
+    {"path": "scripts/test/test_local_deployment.py", "sha256": "6cda1657bfa0b94156107c7275806b972384a5cc1a182d94d3ae10169c2bb5ff"},
+    {"path": "config/nacos/apex-datasource-prod.yaml", "sha256": "540bef5af29723d9a660590919f7d1e3e01f1514fba7127c24068b420f0bb3d8"},
+    {"path": "podman-compose.yml", "sha256": "f0a737bec0c6c1b177c05a79aa69117a46794b5f1d52247c73dfa46506be30dd"}
+  ],
+  "findings": {
+    "existing_tool": "local_deployment.py validate 仅检查密钥；compose 捕获渲染且隐藏输出，但原先只验证密钥，不拒绝 Redis 模板回退或空白。",
+    "compose": "REDIS_PASSWORD 在共享应用环境和 redis 环境有相同模板回退；本次不修改模板行为，既有离线 compose 检查会对声明 REDIS_PASSWORD 的渲染环境执行前置校验。security-key-check 只含密钥，不误要求其注入 Redis。",
+    "nacos": "apex-datasource-prod.yaml 的 DB_HOST_PROD 仍为五处无默认引用；没有找到自动发布该模板或已证明的消费链。本次显式 target 为使用模板的发布维护人提供检查，不把它自动接到未知消费者。DB_HOST 不作别名。"
+  },
+  "commands": [
+    {"command": "python3 -B scripts/utils/local_deployment.py preflight --target compose", "input": "当前进程已安全注入 REDIS_PASSWORD；不自动读取 .env", "behavior": "缺失、空、纯空白、已知 Redis 模板回退或未解析占位符返回1；通过返回0；只输出变量名与固定规则，不输出值。仅检查该变量，不替代密钥和整套Compose检查。"},
+    {"command": "python3 -B scripts/utils/local_deployment.py compose --env-file <approved-env-file>", "input": "受控 env-file 与进程环境；生产执行由部署维护人负责", "behavior": "只执行 podman-compose config 并捕获内容，保留密钥格式检查；对渲染后的 REDIS_PASSWORD 拒绝空白、模板回退及未解析占位符。此轮仅复制仓库模板到临时目录，传入 sentinel 文件。"},
+    {"command": "python3 -B scripts/utils/local_deployment.py preflight --target nacos-datasource-prod", "input": "当前进程已安全注入 DB_HOST_PROD", "behavior": "缺失、空、纯空白、未解析占位符返回1；通过返回0；不渲染、发布、联网或验证主机可达性。发布前要求该命令成功，但仓库不存在可证明的自动发布流程，本次未声称已强制接入外部发布。"}
+  ],
+  "tdd": {
+    "red_command": "python3 -B -m unittest scripts.test.test_config_preflight",
+    "red_result": "7 tests, 73.106s, failures=13, errors=1；CLI 因缺少 preflight 失败，实际Compose空白Redis场景原先返回0，证明检查缺失。首次无输入Compose渲染25s超时单独保留，不作功能缺陷依据。",
+    "intermediate": "最小实现首次定向10项运行36.475s，失败2个子场景；原因是security-key-check仅含密钥而无Redis。调整为只检查声明REDIS_PASSWORD的环境后通过，不改测试预期。",
+    "green_command": "python3 -B -m unittest scripts.test.test_config_preflight scripts.test.test_local_deployment.LocalDeploymentTest.test_compose_uses_podman_yaml_and_checks_each_service scripts.test.test_local_deployment.LocalDeploymentTest.test_keys_validate_actual_formats_without_values scripts.test.test_local_deployment.LocalDeploymentTest.test_cli_does_not_echo_bad_secret_or_input",
+    "green_result": {"tests": 10, "seconds": 40.266, "failures": 0, "errors": 0, "skipped": 0, "exit_code": 0},
+    "actual_compose_cases": ["空sentinel文件且无Redis宿主输入：失败，拒绝回退", "文件显式Redis sentinel：通过", "宿主Redis sentinel覆盖文件空输入：通过", "宿主空白覆盖文件Redis sentinel：失败"],
+    "other_cases": ["Redis缺失、空、空白、模板回退、未解析占位符均失败", "只注入Redis即可通过compose单变量前置，不要求DB_HOST_PROD", "Nacos主机缺失、空、空白、未解析占位符均失败；DB_HOST不会补齐", "只注入DB_HOST_PROD即可通过Nacos单变量前置，不要求Redis", "非法target返回2", "不自动加载临时工作目录.env", "输出不含sentinel与密钥值"],
+    "unexecuted": "未执行TOTP迁移相关三项测试；此前缺少cryptography的问题未在本轮解决。未执行Java构建或完整回归。",
+    "whitespace": "git diff --check 退出0；未跟踪的新测试与JSON另作直接格式检查。"
+  },
+  "p0_registration": {
+    "completed": ["两变量引用与现有发布检查能力缺口登记", "可复用离线失败即停命令交付", "真实Compose渲染四场景和CLI隔离验证", "仅使用模拟值的脱敏输出断言"],
+    "REDIS_PASSWORD": {"category": "外部前置", "runtime_injection_verified": false, "responsible_roles": ["部署维护人", "system模块维护人"], "named_owner": null, "required_before_runtime": "提供实际入口/profile及安全凭据渠道，执行完整Compose校验；实际Redis认证、容器注入与Spring属性来源须另行验收。模板回退通过config渲染不等于允许发布。"},
+    "DB_HOST_PROD": {"category": "静态未知；仅模板使用时必填", "runtime_injection_verified": false, "responsible_roles": ["Nacos配置维护人", "部署维护人", "五域模块维护人"], "named_owner": null, "required_before_runtime": "先登记模板实际使用或遗留状态；若使用，明确namespace/group/Data ID、发布入口、消费绑定、注入发生在发布端还是服务端，并让发布流程以preflight成功为前置。当前命令只证明执行进程具备变量，不能证明Nacos发布内容或最终服务环境。"},
+    "acceptance": "本轮可执行配置前置能力与技术登记完成；实际责任人和使用状态仍待业务/部署方确认。P0整体未据此准出，也不声称生产发布已受自动门禁保护。"
+  },
+  "safety": {
+    "real_env_or_secrets_read": false,
+    "production_services_started": false,
+    "java_build_executed": false,
+    "production_host_guessed": false,
+    "production_template_modified": false,
+    "report_or_main_plan_modified": false,
+    "office_workflow_or_migration_modified": false,
+    "commit_or_push": false,
+    "test_environment": "独立临时目录复制已知工具与Compose，子进程环境仅PATH与sentinel/测试格式密钥；只执行config，不执行up/build/run；不连接数据库、Redis或Nacos。"
+  }
+}

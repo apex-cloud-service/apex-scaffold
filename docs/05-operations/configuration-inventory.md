@@ -27,7 +27,7 @@
 | **安全认证** | 18 | JWT + Keycloak + 验证码配置 |
 | **监控追踪** | 10 | Prometheus + Grafana + Zipkin + Loki 配置 |
 | **限流熔断** | 10 | Sentinel 配置 |
-| **存储** | 10 | 本地 + MinIO + 火山引擎 TOS 配置 |
+| **存储** | 以模板为准 | Local / MinIO / TOS / OSS / 七牛及 file 验签配置 |
 | **内容审核** | 4 | 百度 AI 文本/图片审核 |
 | **全文搜索** | 4 | Meilisearch 配置 |
 | **告警通知** | 2 | 钉钉 Webhook 配置 |
@@ -196,27 +196,37 @@
 
 ---
 
-### 2.8 存储配置（Local + MinIO + 火山引擎 TOS）
+### 2.8 存储配置（五后端）
+
+当前字段已列入 `.env.example` 并由 Compose 显式注入 file 容器。完整厂商字段、默认值与认证限制见[对象存储接入指南](object-storage-integration.md)和[file 主配置](../../apex-file-service/src/main/resources/application.yml)。本节仅列关键变量，不能以历史总数代替模板核对。
 
 | 环境变量 | 默认值 | 说明 | Profile | 必填 |
 |---------|--------|------|---------|------|
-| `STORAGE_DEFAULT_TYPE` | `local` | 默认存储实现：local/minio/volcengine | 文件服务 | ❌ |
+| `STORAGE_DEFAULT_TYPE` | `local` | 默认实现：local/minio/volcengine/aliyun-oss/qiniu | 文件服务 | ❌ |
 | `STORAGE_BUCKET_NAME` | `apex` | 默认 Bucket 名称 | 文件服务 | ❌ |
 | `STORAGE_PRESIGNED_URL_EXPIRE_SECONDS` | `300` | 预签名 URL 有效期（秒） | 文件服务 | ❌ |
 | `STORAGE_LOCAL_ENABLED` | `true` | 启用本地存储后端 | 文件服务 | ❌ |
 | `STORAGE_LOCAL_BASE_PATH` | `./data/storage` | 本地存储根目录 | 文件服务 | ❌ |
-| `STORAGE_LOCAL_PUBLIC_BASE_URL` | - | 文件对外访问基础 URL | 文件服务 | ❌ |
+| `FILE_JWT_PUBLIC_KEY_BASE64` | 空 | auth RS256 对应 X509 DER Base64 公钥，不自动同步轮换 | 文件服务 | RS256 必填 |
+| `FILE_JWT_SECRET` | 空 | 仅历史 HMAC 签发方使用，与签名密钥一致且至少 32 字节 | 文件服务 | HMAC 必填 |
 | `MINIO_ENDPOINT` | - | MinIO 端点 | 文件服务 | ❌ |
 | `MINIO_ACCESS_KEY` | - | MinIO AccessKey | 文件服务 | ❌ |
 | `MINIO_SECRET_KEY` | - | MinIO SecretKey | 文件服务 | ❌ |
-| `MINIO_SECURE` | - | 是否使用 HTTPS | 文件服务 | ❌ |
+| `STORAGE_MINIO_ENABLED` | `false` | MinIO 开关；HTTPS 由 endpoint scheme 决定 | 文件服务 | ❌ |
+| `STORAGE_ALIYUN_OSS_ENABLED` | `false` | OSS 开关 | 文件服务 | ❌ |
+| `STORAGE_ALIYUN_OSS_ENDPOINT` | 空 | OSS 端点 | 文件服务 | 启用必填 |
+| `STORAGE_ALIYUN_OSS_ACCESS_KEY` / `STORAGE_ALIYUN_OSS_SECRET_KEY` | 空 | OSS 凭据 | 文件服务 | 启用必填 |
+| `STORAGE_QINIU_ENABLED` | `false` | 七牛开关 | 文件服务 | ❌ |
+| `STORAGE_QINIU_REGION` / `STORAGE_QINIU_BUCKET` | 空 | 桶所属区域及桶名，须与业务桶一致 | 文件服务 | 启用必填 |
+| `STORAGE_QINIU_DOWNLOAD_DOMAIN` | 空 | 绑定同一桶的 HTTPS 域名，无路径/尾斜杠 | 文件服务 | 启用必填 |
+| `STORAGE_QINIU_ACCESS_KEY` / `STORAGE_QINIU_SECRET_KEY` | 空 | 七牛凭据 | 文件服务 | 启用必填 |
 | `STORAGE_VOLCENGINE_ENABLED` | `false` | 启用火山引擎 TOS | 文件服务 | ❌ |
 | `STORAGE_VOLCENGINE_ENDPOINT` | - | TOS 端点 | 文件服务 | ❌ |
 | `STORAGE_VOLCENGINE_REGION` | - | TOS 区域 | 文件服务 | ❌ |
 | `STORAGE_VOLCENGINE_ACCESS_KEY` | - | TOS AccessKey | 文件服务 | ❌ |
-| `STORAGE_VOLCENGINE_SECRET_KEY` | - | TOS SecretKey | 文件服务 | ❌ |
+| `STORAGE_VOLCENGINE_SECRET_KEY` | - | TOS SecretKey | 文件服务 | 启用必填 |
 
-**在 .env.example 中**: ❌ 全部缺失
+**在 .env.example 中**：已提供五后端变量；云桶须预创建。Local 不提供无认证预签名，旧 PUBLIC_BASE_URL、MINIO_SECURE 已移除。
 
 ---
 
@@ -446,7 +456,7 @@ dataId 的权威来源，也是网关路由 `lb://{service}` 的解析目标。�
 | RocketMQ | 100% | ROCKETMQ_NAMESERVER 等 |
 | Keycloak | 100% | KEYCLOAK_PORT, KEYCLOAK_ADMIN_USERNAME 等 |
 | License | 100% | APEX_LICENSE_FILE |
-| 其他配置 | 0% | Sentinel, Meilisearch, Loki, Grafana, 存储, 内容审核等 |
+| 其他配置 | 未整体复核 | 存储变量已补齐；其他类别仍需逐项与模板核对 |
 
 **总体覆盖率**: ~23%
 
@@ -485,13 +495,14 @@ STORAGE_BUCKET_NAME=apex
 STORAGE_PRESIGNED_URL_EXPIRE_SECONDS=300
 STORAGE_LOCAL_ENABLED=true
 STORAGE_LOCAL_BASE_PATH=./data/storage
-STORAGE_LOCAL_PUBLIC_BASE_URL=
+# Local 不提供公开 URL 配置；通过业务授权内容接口下载。
 
 # MinIO
 MINIO_ENDPOINT=
 MINIO_ACCESS_KEY=
 MINIO_SECRET_KEY=
-MINIO_SECURE=false
+STORAGE_MINIO_ENABLED=false
+# HTTPS 由 MINIO_ENDPOINT 的 scheme 控制；其他厂商变量见 .env.example。
 
 # 火山引擎 TOS
 STORAGE_VOLCENGINE_ENABLED=false

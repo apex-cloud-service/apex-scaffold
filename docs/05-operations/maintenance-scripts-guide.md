@@ -19,6 +19,8 @@
 
 ---
 
+<a id="1-概述"></a>
+
 ## 1. 概述
 
 ### 1.1 目的
@@ -47,6 +49,8 @@
 ```
 
 ---
+
+<a id="2-定期维护脚本"></a>
 
 ## 2. 定期维护脚本
 
@@ -196,6 +200,8 @@ find docs/_archive/ -type f -mtime +365 -delete
 
 ---
 
+<a id="3-快速开始"></a>
+
 ## 3. 快速开始
 
 ### 3.1 首次使用
@@ -206,8 +212,8 @@ find docs/_archive/ -type f -mtime +365 -delete
 # 检查 bash 版本
 bash --version  # 应该是 3.2+
 
-# 检查 Python 版本
-python3 --version  # 应该是 3.6+
+# 检查 Java 版本（链接检查由 apex-tools-deployment 的 Java 工具承担）
+java -version  # 应该是 21
 
 # 检查脚本权限
 ls -lh scripts/ops/maintenance/*.sh
@@ -248,6 +254,8 @@ cat docs/reports/archive-summary-*.md
 ```
 
 ---
+
+<a id="4-配置定时任务"></a>
 
 ## 4. 配置定时任务
 
@@ -363,6 +371,8 @@ launchctl unload ~/Library/LaunchAgents/com.apex.maintenance.weekly.plist
 
 ---
 
+<a id="5-日志管理"></a>
+
 ## 5. 日志管理
 
 ### 5.1 日志位置
@@ -432,6 +442,8 @@ grep "开始.*检查" logs/link-check-*.log | wc -l
 
 ---
 
+<a id="6-故障排查"></a>
+
 ## 6. 故障排查
 
 ### 6.1 常见问题
@@ -448,20 +460,17 @@ bash: ./weekly-link-check.sh: Permission denied
 chmod +x scripts/ops/maintenance/*.sh
 ```
 
-#### 问题 2: Python 未找到
+#### 问题 2: 离线运维工具 JAR 未构建
 
 **症状**:
 ```
-python3: command not found
+离线运维工具 JAR 不存在: apex-tools-deployment/target/local-deployment.jar
 ```
 
 **解决**:
 ```bash
-# macOS
-brew install python3
-
-# 或使用系统 Python
-python --version
+source scripts/build/init-build-env.sh
+mvnd -B -pl apex-tools-deployment -am verify
 ```
 
 #### 问题 3: 脚本路径错误
@@ -557,6 +566,8 @@ bash -n ./scripts/ops/maintenance/weekly-link-check.sh
 
 ---
 
+<a id="7-最佳实践"></a>
+
 ## 7. 最佳实践
 
 ### 7.1 执行时间选择
@@ -628,6 +639,8 @@ tar -czf ~/backups/reports-$(date +%Y%m%d).tar.gz docs/reports/
 | 每年 | 评估维护策略，优化执行时间和频率 |
 
 ---
+
+<a id="8-faq"></a>
 
 ## 8. FAQ
 

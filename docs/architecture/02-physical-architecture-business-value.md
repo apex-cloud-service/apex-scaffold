@@ -2,7 +2,7 @@
 
 > 文档版本: v1.0  
 > 创建时间: 2026-09-04  
-> 适用版本: apex-scaffold v1.2.0
+> 适用版本: apex-scaffold v1.3.1
 
 ## 架构图
 
@@ -274,7 +274,7 @@ curl http://localhost:8081/actuator/prometheus
 
 # 3. 监控系统验证
 open http://localhost:3000  # Grafana
-open http://localhost:9090  # Prometheus
+open http://localhost:8083  # Prometheus
 
 # 4. 业务功能验证
 curl -X POST http://localhost:8080/api/v1/auth/login \
@@ -286,17 +286,17 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 ```bash
 # 1. 部署验证
 kubectl apply -f k8s/
-kubectl get pods -l app=apex-application
-kubectl get svc apex-application
+kubectl get pods -l app=apex-system
+kubectl get svc apex-system
 
 # 2. HPA 验证
 kubectl get hpa
 kubectl top pods
 
 # 3. 滚动发布验证
-kubectl set image deployment/apex-application \
+kubectl set image deployment/apex-system \
   apex-app=apex-scaffold:1.2.1
-kubectl rollout status deployment/apex-application
+kubectl rollout status deployment/apex-system
 
 # 4. 故障自愈验证
 kubectl delete pod <pod-name>

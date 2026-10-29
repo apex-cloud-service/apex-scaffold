@@ -2,7 +2,7 @@
 
 > 文档版本: v1.1  
 > 最后更新: 2026-09-05  
-> 适用版本: apex-scaffold v1.2.0+
+> 适用版本: apex-scaffold v1.3.1+
 
 ## 架构图
 
@@ -160,8 +160,8 @@ time (mvn mybatis-plus:generator)
 ### 5. 🛡️ 系统稳定性与可用性
 
 **价值点**:
-- Resilience4j 熔断降级: 防止故障雪崩
-- Sentinel 流量治理: 限流、熔断、热点参数防护
+- Sentinel 流量治理: 限流、热点参数防护
+- Resilience4j 熔断降级: 网关路由级熔断回退，防止故障雪崩
 - 多级缓存: 缓存击穿、雪崩、穿透防护
 - 健康检查: Liveness/Readiness 探针自动故障转移
 
@@ -169,8 +169,8 @@ time (mvn mybatis-plus:generator)
 
 | 机制 | 技术实现 | 故障防护 |
 |------|----------|----------|
-| 熔断降级 | Resilience4j CircuitBreaker | 防止故障雪崩 |
-| 限流 | Sentinel FlowRule | 防止过载 |
+| 流量治理 | Sentinel FlowRule | 防止过载 |
+| 熔断降级 | Resilience4j CircuitBreaker | 网关路由级熔断 |
 | 缓存击穿 | Caffeine + 分布式锁 | 防止大量请求打到 DB |
 | 缓存雪崩 | TTL 随机化 | 防止同时过期 |
 | 缓存穿透 | 布隆过滤器 / 空值缓存 | 防止恶意查询 |
@@ -375,7 +375,7 @@ open http://localhost:3000
 
 # 2. Loki 日志查询
 # 在 Grafana Explore 中查询:
-{app="apex-application"} | json | level="ERROR"
+{app="apex-system"} | json | level="ERROR"
 # 验证: 可查询到日志
 
 # 3. Zipkin 链路追踪

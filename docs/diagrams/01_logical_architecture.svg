@@ -63,11 +63,11 @@
   <rect width="1600" height="1400" fill="#ffffff"/>
 
   <text x="800" y="50" class="title-main">Apex Scaffold DDD 四层逻辑架构</text>
-  <text x="800" y="80" class="title-version">基于 Spring Boot 3.5.15 · Java 17 · WebFlux 响应式架构 · v3.0</text>
+  <text x="800" y="80" class="title-version">基于 Spring Boot 3.5.15 · Java 21 · WebFlux 响应式架构 · v3.0</text>
 
   <g id="interfaces-layer">
     <rect x="100" y="140" width="1400" height="220" rx="12" fill="#4f46e5" stroke="#3730a3" stroke-width="2"/>
-    <text x="120" y="175" class="layer-title">接口层 (apex-interfaces)</text>
+    <text x="120" y="175" class="layer-title">接口层 (apex-system)</text>
     <text x="120" y="200" class="layer-desc">协议适配 · 请求校验 · 安全入口 · OpenAPI</text>
 
     <rect x="130" y="220" width="280" height="120" rx="8" fill="#ffffff" stroke="#e0e7ff" stroke-width="2"/>
@@ -82,7 +82,7 @@
     <text x="460" y="270" class="module-item">• AuthHandler - 认证处理</text>
     <text x="460" y="290" class="module-item">• UserHandler - 用户管理</text>
     <text x="460" y="310" class="module-item">• FileHandler - 文件上传</text>
-    <text x="460" y="330" class="tech-label">32个Handler (权限注解+校验)</text>
+    <text x="460" y="330" class="tech-label">86个Handler (权限注解+校验)</text>
 
     <rect x="750" y="220" width="280" height="120" rx="8" fill="#ffffff" stroke="#e0e7ff" stroke-width="2"/>
     <text x="890" y="245" class="module-title">安全与过滤</text>
@@ -104,7 +104,7 @@
 
   <g id="application-layer">
     <rect x="100" y="410" width="1400" height="220" rx="12" fill="#0891b2" stroke="#0e7490" stroke-width="2"/>
-    <text x="120" y="445" class="layer-title">应用层 (apex-application)</text>
+    <text x="120" y="445" class="layer-title">应用层 (apex-system)</text>
     <text x="120" y="470" class="layer-desc">用例编排 · 事务边界 · DTO转换 · 跨聚合协作</text>
 
     <rect x="130" y="490" width="320" height="120" rx="8" fill="#ffffff" stroke="#cffafe" stroke-width="2"/>
@@ -112,14 +112,14 @@
     <text x="150" y="540" class="module-item">• AuthService - 认证服务</text>
     <text x="150" y="560" class="module-item">• UserService - 用户服务</text>
     <text x="150" y="580" class="module-item">• DeptService - 部门服务</text>
-    <text x="150" y="600" class="tech-label">34个应用服务 (用例编排)</text>
+    <text x="150" y="600" class="tech-label">159个应用服务 (用例编排)</text>
 
     <rect x="480" y="490" width="320" height="120" rx="8" fill="#ffffff" stroke="#cffafe" stroke-width="2"/>
     <text x="640" y="515" class="module-title">工作流服务</text>
     <text x="500" y="540" class="module-item">• WorkflowService - 流程服务</text>
     <text x="500" y="560" class="module-item">• ModerationService - 审核服务</text>
     <text x="500" y="580" class="module-item">• SearchService - 搜索服务</text>
-    <text x="500" y="600" class="tech-label">BPMN工作流 + 全文搜索</text>
+    <text x="500" y="600" class="tech-label">DAG JSON 工作流 + 全文搜索</text>
 
     <rect x="830" y="490" width="320" height="120" rx="8" fill="#ffffff" stroke="#cffafe" stroke-width="2"/>
     <text x="990" y="515" class="module-title">日志与监控服务</text>
@@ -156,7 +156,7 @@
     <text x="500" y="810" class="module-item">• UserRepository</text>
     <text x="500" y="830" class="module-item">• RoleRepository</text>
     <text x="500" y="850" class="module-item">• DeptRepository</text>
-    <text x="500" y="870" class="tech-label">47个Repository接口定义</text>
+    <text x="500" y="870" class="tech-label">90个Repository接口定义</text>
 
     <rect x="830" y="760" width="320" height="120" rx="8" fill="#ffffff" stroke="#d1fae5" stroke-width="2"/>
     <text x="990" y="785" class="module-title">领域服务</text>
@@ -178,7 +178,7 @@
 
   <g id="infrastructure-layer">
     <rect x="100" y="950" width="1400" height="220" rx="12" fill="#d97706" stroke="#b45309" stroke-width="2"/>
-    <text x="120" y="985" class="layer-title">基础设施层 (apex-infrastructure)</text>
+    <text x="120" y="985" class="layer-title">基础设施层 (apex-infrastructure-* 五个能力 JAR)</text>
     <text x="120" y="1010" class="layer-desc">数据持久化 · 缓存实现 · 消息队列 · 对象存储 · 外部服务适配</text>
 
     <rect x="130" y="1030" width="280" height="120" rx="8" fill="#ffffff" stroke="#fed7aa" stroke-width="2"/>
@@ -186,7 +186,7 @@
     <text x="150" y="1080" class="module-item">• UserRepositoryImpl</text>
     <text x="150" y="1100" class="module-item">• MyBatis-Plus Mapper</text>
     <text x="150" y="1120" class="module-item">• PO + Converter</text>
-    <text x="150" y="1140" class="tech-label">MySQL 8.x + Druid连接池</text>
+    <text x="150" y="1140" class="tech-label">MySQL 9.x + Druid连接池</text>
 
     <rect x="440" y="1030" width="280" height="120" rx="8" fill="#ffffff" stroke="#fed7aa" stroke-width="2"/>
     <text x="580" y="1055" class="module-title">缓存实现</text>
@@ -240,9 +240,9 @@
     <text x="120" y="1320" class="module-item">3. 阻塞IO (JDBC/文件) 必须调度到专用线程池 (Schedulers.boundedElastic())</text>
     <text x="120" y="1345" class="module-item">4. 架构规则由 LayeringArchTest 强制校验,构建期违反规则将导致编译失败</text>
 
-    <text x="900" y="1270" class="module-item">Maven模块: 5个核心层 + 3个工具模块</text>
-    <text x="900" y="1295" class="module-item">Handler数量: 32个 | 应用服务: 34个</text>
-    <text x="900" y="1320" class="module-item">Repository接口: 47个 | 工作流引擎: BPMN</text>
+    <text x="900" y="1270" class="module-item">Maven模块: 全仓 31 个（共享基础/领域/设施/契约 + 5 业务库 + 6 运行模块 + 增强/工具）</text>
+    <text x="900" y="1295" class="module-item">Handler: 86个 | 应用服务: 159个 | Router: 50个</text>
+    <text x="900" y="1320" class="module-item">Repository接口: 90个 | 工作流引擎: DAG JSON (非 BPMN)</text>
     <text x="900" y="1345" class="module-item">全文搜索: Meilisearch | 消息队列: RocketMQ</text>
   </g>
 

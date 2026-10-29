@@ -72,7 +72,7 @@ services:
       - apex-network
 
   mysql:
-    image: mysql:8.4
+    image: mysql:9.0
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: keycloak

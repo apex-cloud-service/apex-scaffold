@@ -1,0 +1,103 @@
+{
+  "kind": "p0_84_plus_6_static_consumer_review_validation",
+  "scope": "90 unique domain.table keys selected only from baseline candidate_requires_validation (84) and static_sql_consumer_resolved (6); previous 19 historical copies and 2 mismatches excluded",
+  "artifact": "table-authority-candidates-20261018-review.json",
+  "sha256": {
+    "table-authority-candidates-20261018-review.json": "5d1a0aa02d37f64d1ec06c474e3291df602aeff5f7f68e893556bf120d23f2a3",
+    "table-authority-candidates-20261018-red.log": "2ce551ba5aa33a4a9a47243d407aa3b3bebe28f86f9bfc271db91f7fbd75add4",
+    "table-authority-candidates-20261018-green.log": "06b695a1fae54bdd4e721333b57b7b0992670782712f26aecdaf8f55687e4009",
+    "scripts/ci/review_table_authority_candidates.py": "16ee5887f5a18bf14ce2d6a128f5d225927694f5ec53ea2a30f0ad1d114abcab",
+    "scripts/test/test_review_table_authority_candidates.py": "53a345c02110827df1c9c43fdf7636e0715f44428b7b0944bda3b5307c7a3fc1"
+  },
+  "commands": [
+    {
+      "cwd": "/Users/work/apex-scaffold",
+      "command": "python3 -m unittest scripts/test/test_review_table_authority_candidates.py -v > docs/06-testing/jdk21-unified-auth/20261016-p0/table-authority-candidates-20261018-red.log 2>&1",
+      "exit_code": 1,
+      "tests": 4,
+      "failures": 1,
+      "errors": 0,
+      "expected_failure": "90-item evidence collection missing",
+      "command_id": "job-2dd48a9b2c374a79a5499b1489ba41f4"
+    },
+    {
+      "cwd": "/Users/work/apex-scaffold",
+      "command": "python3 -m unittest scripts/test/test_review_table_authority_candidates.py -v > docs/06-testing/jdk21-unified-auth/20261016-p0/table-authority-candidates-20261018-green.log 2>&1",
+      "exit_code": 0,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "command_id": "job-c50a7c618f724042bce2d0e8e02a6bdc"
+    },
+    {
+      "cwd": "/Users/work/apex-scaffold",
+      "command": "python3 scripts/ci/review_table_authority_candidates.py --output docs/06-testing/jdk21-unified-auth/20261016-p0/table-authority-candidates-20261018-review.json",
+      "exit_code": 0,
+      "command_id": "job-4d9be41636fa41fea44200d7f14c2ed1"
+    },
+    {
+      "cwd": "/Users/work/apex-scaffold",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "command_id": "job-e7929e46c6e04893a7ce4850114fba9f",
+      "scope": "tracked working-tree whitespace; new files are not included by git diff"
+    }
+  ],
+  "independent_reference_check": {
+    "command_id": "job-b9eccb3eda814701a315067c74a9b071",
+    "method": "Re-read each item evidence and service_assembly evidence source as bytes, recompute whole-file SHA-256 and UTF-8 lines[line-1:end_line] SHA-256, assert no failures; also recompute artifact, source and test-log SHA-256.",
+    "references_checked": 181,
+    "unique_reference_sources": 173,
+    "hash_failures": [],
+    "exit_code": 0,
+    "scope_limit": "lexical_candidates_not_call_proof are only discovery hints, never closure evidence; migration-only next_source_entry points into baseline migration observations, not a new migration semantic review"
+  },
+  "conservation": {
+    "denominator": 90,
+    "baseline_automatic": 84,
+    "baseline_explicit_sql": 6,
+    "reviewed": 4,
+    "partial": 67,
+    "unknown": 19,
+    "static_consumer_closed": 4,
+    "remaining_static_consumer": 86,
+    "equations": ["84 + 6 = 90", "4 + 67 + 19 = 90", "4 + 86 = 90"],
+    "runtime_closed": 0,
+    "historical_semantics_closed": 0
+  },
+  "static_closure_keys": [
+    "auth.sys_domain_event_outbox",
+    "file.file_document",
+    "file.file_chart",
+    "system.sys_domain_event_outbox"
+  ],
+  "unknown_keys": [
+    "auth.auth_protocol_config",
+    "system.wf_task_history",
+    "system.wf_rollback_history",
+    "system.oauth2_scope_permission",
+    "system.oauth2_audit_log",
+    "system.sys_user_online",
+    "system.token_rotation_history",
+    "system.token_security_event",
+    "system.encryption_key_version",
+    "system.password_history",
+    "system.security_audit_log",
+    "system.jwt_key_version",
+    "system.oauth2_client_secret_history",
+    "system.login_history",
+    "system.trusted_device",
+    "system.encryption_key",
+    "system.doc_document",
+    "system.doc_chart",
+    "system.sys_gateway_access_log"
+  ],
+  "review_limits": [
+    "Only four concrete source paths were manually traced end to end. Partial entries preserve current entity/Mapper or SQL evidence and a next source entry; no lexical hit is promoted to a call graph.",
+    "Expected schema authority remains the migration domain/default schema, not a resolved deployment DataSource. system biometric_auth/device_trust/ip_access_control bindings point to auth and remain partial.",
+    "Outbox scheduler-to-claim consumers are statically established independently in auth/system. append uses MySQL ON DUPLICATE KEY/IF and claim uses UPDATE ORDER BY LIMIT; PostgreSQL compatibility is not established.",
+    "No Java build, database operation, dynamic probe, production Java/SQL/POM modification, report/plan edit, cache restoration, commit or push was performed.",
+    "No historical tenant, NULL, unique-key semantics or historical data disposition is closed. P0 is not approved."
+  ]
+}

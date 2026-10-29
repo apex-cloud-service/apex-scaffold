@@ -49,8 +49,8 @@ flowchart TB
     end
 
     subgraph SERVICES["应用层 · 两套独立 Spring Boot 服务"]
-        MAIN["主应用 apex-interfaces :8080<br/>WebFlux 响应式 · 8 种登录策略<br/>多会话令牌 · RBAC / 数据权限"]
-        AUTH["认证中心 apex-auth-center :8081<br/>PC 管理端登录 · MFA / TOTP<br/>设备信任 · 暴力破解防护"]
+        MAIN["主应用 apex-system :8080<br/>WebFlux 响应式 · 8 种登录策略<br/>多会话令牌 · RBAC / 数据权限"]
+        AUTH["认证中心 apex-auth :8081<br/>PC 管理端登录 · MFA / TOTP<br/>设备信任 · 暴力破解防护"]
     end
 
     subgraph DATA["数据层"]
@@ -135,7 +135,7 @@ flowchart TB
         TOKEN["TokenServiceImpl<br/>多会话令牌（sid 多槽）"]
     end
 
-    subgraph AUTHC["认证中心 apex-auth-center"]
+    subgraph AUTHC["认证中心 apex-auth"]
         ALOGIN["/auth/v1/login<br/>buildClaims：tokenType=ACCESS<br/>+ accountId + username + clientType"]
     end
 
@@ -160,8 +160,8 @@ flowchart TB
     subgraph IDC["部署环境（可容器化或主机部署）"]
         NG["Nginx / Ingress :443<br/>TLS 终止 · 反向代理"]
         subgraph APPCLUSTER["应用集群（无状态，水平扩容）"]
-            MAINPOD["apex-interfaces 实例 x N<br/>:8080"]
-            AUTHPOD["apex-auth-center 实例 x N<br/>:8081"]
+            MAINPOD["apex-system 实例 x N<br/>:8080"]
+            AUTHPOD["apex-auth 实例 x N<br/>:8081"]
         end
         subgraph STORE["存储层"]
             MAINDB[("主库<br/>MySQL 或 PostgreSQL")]
@@ -463,7 +463,7 @@ sequenceDiagram
 | 5 | PC 管理端接入认证中心：auth_user.account_id、统一账户 claims、主应用令牌分支（claims 区分，见 4.5 偏差说明）、存量映射回填脚本 | 双侧 test + spotless + pmd | ✅ 完成 |
 | 6 | 配套、文档与验收：PASSWORD 登录 username 维度防爆破、docs 更新、四端联调清单 | 全量测试 + 迁移完整性校验 | ✅ 完成 |
 
-**实施过程中顺带修复的存量质量债**：apex-infrastructure 51 处、apex-auth-center 18 处接口 Javadoc 缺失（PMD 存量违规清零）；apex-application 排除 MapStruct 生成代码的 PMD 检查（与 infrastructure 模块对齐）。
+**实施过程中顺带修复的存量质量债**：apex-infrastructure 51 处、apex-auth 18 处接口 Javadoc 缺失（PMD 存量违规清零）；apex-system 排除 MapStruct 生成代码的 PMD 检查（与 infrastructure 模块对齐）。
 
 每批按 Conventional Commits 分主题提交，不触碰无关 WIP。
 

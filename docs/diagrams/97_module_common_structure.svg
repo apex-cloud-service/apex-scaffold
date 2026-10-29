@@ -101,8 +101,8 @@
   <text x="520" y="644" class="box-desc">4. 上下文使用 ThreadLocal + Reactor Context 双通道，兼容 WebFlux 异步链路。</text>
   <text x="520" y="672" class="box-desc">5. 事件/SPI 作为领域与基础设施的解耦契约，不含具体实现。</text>
   <text x="520" y="712" class="box-title" font-size="14">典型引用方</text>
-  <text x="520" y="742" class="box-desc">apex-domain · apex-infrastructure · apex-application · apex-workflow · apex-interfaces</text>
-  <text x="520" y="768" class="box-desc">apex-auth-center · apex-example · apex-license-spring-boot-starter</text>
+  <text x="520" y="742" class="box-desc">apex-domain · apex-infrastructure · apex-system · apex-workflow · apex-system</text>
+  <text x="520" y="768" class="box-desc">apex-auth · apex-example · apex-license-spring-boot-starter</text>
   <text x="520" y="806" class="note">唯一不依赖 apex-common 的内部模块：apex-generator（独立模板引擎）</text>
 
   <text x="700" y="872" class="note" text-anchor="middle">apex-common 是全局依赖根（L0），承载通用能力/上下文/限流算法/持久化与事件契约</text>

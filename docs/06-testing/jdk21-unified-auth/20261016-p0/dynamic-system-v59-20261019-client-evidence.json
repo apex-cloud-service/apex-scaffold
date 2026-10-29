@@ -1,0 +1,1495 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+  "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "items": [
+    {
+      "id": "old-sql-0513",
+      "baseline_index": 513,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 15,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-3e7d74a5df3b445a6409b0d8"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0514",
+      "baseline_index": 514,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 23,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b78e14e1e897c72f32e11d61"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0515",
+      "baseline_index": 515,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 24,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-12c4fd9e87af7122ad8956ff"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0516",
+      "baseline_index": 516,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 25,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f451134bc842dde0a836abe8"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0517",
+      "baseline_index": 517,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 28,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-5307f281e477e516c50ba27f"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0518",
+      "baseline_index": 518,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 34,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-cd6bca29179b9639d7fff97a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0519",
+      "baseline_index": 519,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 35,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-c2da551fcb20d0e5abd91061"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0520",
+      "baseline_index": 520,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 36,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e08f62e03350f8dd38a80f32"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0521",
+      "baseline_index": 521,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 72,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-ad42097f1b742cfd9beece22"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0522",
+      "baseline_index": 522,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 80,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e5fb7e06fde15bf5eff99d75"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0523",
+      "baseline_index": 523,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 81,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1762f3a0d00f757de507946c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0524",
+      "baseline_index": 524,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 82,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-6df6ebe0dc5194d0dbcf7465"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0525",
+      "baseline_index": 525,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 84,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-1d9b28e8ef78f89ef4b9341f"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0526",
+      "baseline_index": 526,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 92,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e4cc3a801184a0b65c51d29a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0527",
+      "baseline_index": 527,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 93,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9e15b4b1fd952f2972432a55"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0528",
+      "baseline_index": 528,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V59__multi_client_account.sql",
+      "migration_unresolved_index": 15,
+      "original": {
+        "line": 94,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-a2902f6cdf0addb7d379309c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    }
+  ],
+  "groups": [
+    {
+      "target": {
+        "table": "sys_user",
+        "kind": "column",
+        "name": "register_channel"
+      },
+      "variable": "ddl_register_channel",
+      "absent_sql": "ALTER TABLE `sys_user` ADD COLUMN `register_channel` VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN' COMMENT '注册来源(UNKNOWN/SYSTEM/PC_WEB/PC_ADMIN/APP_ANDROID/APP_IOS/APP_HARMONY/MINI_PROGRAM/WECHAT_MP/H5)'",
+      "present_sql": "SELECT 1",
+      "statements": [
+        {
+          "line": 15,
+          "end_line": 22,
+          "sql": "SET @ddl_register_channel = (SELECT IF(\n    EXISTS (SELECT 1 FROM information_schema.TABLES\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_user')\n    AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_user'\n              AND COLUMN_NAME = 'register_channel'),\n    'ALTER TABLE `sys_user` ADD COLUMN `register_channel` VARCHAR(32) NOT NULL DEFAULT ''UNKNOWN'' COMMENT ''注册来源(UNKNOWN/SYSTEM/PC_WEB/PC_ADMIN/APP_ANDROID/APP_IOS/APP_HARMONY/MINI_PROGRAM/WECHAT_MP/H5)''',\n    'SELECT 1'))",
+          "start_offset": 665,
+          "end_offset": 1240,
+          "category": "dynamic_sql",
+          "statement_sha256": "3537bb8cbf94408959c5aedef19ec6e2e1e9fcad1524624d2a649fd2266448e0",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user",
+              "line": 21,
+              "end_line": 21,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "comment",
+                "default",
+                "not",
+                "null",
+                "register_channel",
+                "sys_user",
+                "table",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE `sys_user` ADD COLUMN `register_channel` VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN' COMMENT '注册来源(UNKNOWN/SYSTEM/PC_WEB/PC_ADMIN/APP_ANDROID/APP_IOS/APP_HARMONY/MINI_PROGRAM/WECHAT_MP/H5)'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 15
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 15,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 23,
+          "end_line": 23,
+          "sql": "PREPARE stmt FROM @ddl_register_channel",
+          "start_offset": 1242,
+          "end_offset": 1281,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "e54aec1bc7995ad7eca8b050deab96a28947c9ca26fde3fa0dfea596d0ce002d",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            15
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 23,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 24,
+          "end_line": 24,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1283,
+          "end_offset": 1295,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            15
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 24,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 25,
+          "end_line": 25,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1297,
+          "end_offset": 1320,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            15
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 25,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "old_ids": [
+        "old-sql-0513",
+        "old-sql-0514",
+        "old-sql-0515",
+        "old-sql-0516"
+      ],
+      "statement_ids": [
+        [
+          "stmt-3e7d74a5df3b445a6409b0d8"
+        ],
+        [
+          "stmt-b78e14e1e897c72f32e11d61"
+        ],
+        [
+          "stmt-12c4fd9e87af7122ad8956ff"
+        ],
+        [
+          "stmt-f451134bc842dde0a836abe8"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY); INSERT INTO sys_user(id) VALUES(1);",
+          "catalog_before": "",
+          "catalog_after": "varchar(32)\tNO\tUNKNOWN",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "ALTER TABLE `sys_user` ADD COLUMN `register_channel` VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN' COMMENT '注册来源(UNKNOWN/SYSTEM/PC_WEB/PC_ADMIN/APP_ANDROID/APP_IOS/APP_HARMONY/MINI_PROGRAM/WECHAT_MP/H5)'",
+          "client_output": "ALTER TABLE `sys_user` ADD COLUMN `register_channel` VARCHAR(32) NOT NULL DEFAULT 'UNKNOWN' COMMENT '注册来源(UNKNOWN/SYSTEM/PC_WEB/PC_ADMIN/APP_ANDROID/APP_IOS/APP_HARMONY/MINI_PROGRAM/WECHAT_MP/H5)'"
+        },
+        "replay": {
+          "fixture_sql": "reuse absent result",
+          "catalog_before": "varchar(32)\tNO\tUNKNOWN",
+          "catalog_after": "varchar(32)\tNO\tUNKNOWN",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "present": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY, register_channel VARCHAR(7) NULL); INSERT INTO sys_user(id) VALUES(1);",
+          "catalog_before": "varchar(7)\tYES\t<NULL>",
+          "catalog_after": "varchar(7)\tYES\t<NULL>",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user;",
+          "table_still_absent": true
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "sys_user",
+        "kind": "index",
+        "name": "idx_sys_user_register_channel"
+      },
+      "variable": "ddl_user_channel_idx",
+      "absent_sql": "CREATE INDEX idx_sys_user_register_channel ON `sys_user` (`register_channel`)",
+      "present_sql": "SELECT 1",
+      "statements": [
+        {
+          "line": 28,
+          "end_line": 33,
+          "sql": "SET @ddl_user_channel_idx = (SELECT IF(\n    NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_user'\n              AND INDEX_NAME = 'idx_sys_user_register_channel'),\n    'CREATE INDEX idx_sys_user_register_channel ON `sys_user` (`register_channel`)',\n    'SELECT 1'))",
+          "start_offset": 1367,
+          "end_offset": 1705,
+          "category": "dynamic_sql",
+          "statement_sha256": "e33c78b70807f166bf9a2114e317828c8409648c6c50687746f737087a3b586b",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user",
+              "line": 32,
+              "end_line": 32,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "idx_sys_user_register_channel",
+                "index",
+                "on",
+                "register_channel",
+                "sys_user"
+              ],
+              "sql": "CREATE INDEX idx_sys_user_register_channel ON `sys_user` (`register_channel`)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 28
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 28,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 34,
+          "end_line": 34,
+          "sql": "PREPARE stmt FROM @ddl_user_channel_idx",
+          "start_offset": 1707,
+          "end_offset": 1746,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "abd762a2c30c7fd36597a69ccc9a25b58625f15d3da8170626198aafb765a34f",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            28
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 34,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 35,
+          "end_line": 35,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1748,
+          "end_offset": 1760,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            28
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 35,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 36,
+          "end_line": 36,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1762,
+          "end_offset": 1785,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            28
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 36,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "old_ids": [
+        "old-sql-0517",
+        "old-sql-0518",
+        "old-sql-0519",
+        "old-sql-0520"
+      ],
+      "statement_ids": [
+        [
+          "stmt-5307f281e477e516c50ba27f"
+        ],
+        [
+          "stmt-cd6bca29179b9639d7fff97a"
+        ],
+        [
+          "stmt-c2da551fcb20d0e5abd91061"
+        ],
+        [
+          "stmt-e08f62e03350f8dd38a80f32"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY, register_channel VARCHAR(32)); INSERT INTO sys_user(id) VALUES(1);",
+          "catalog_before": "",
+          "catalog_after": "idx_sys_user_register_channel\t1\t1\tregister_channel\tBTREE",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "CREATE INDEX idx_sys_user_register_channel ON `sys_user` (`register_channel`)",
+          "client_output": "CREATE INDEX idx_sys_user_register_channel ON `sys_user` (`register_channel`)"
+        },
+        "replay": {
+          "fixture_sql": "reuse absent result",
+          "catalog_before": "idx_sys_user_register_channel\t1\t1\tregister_channel\tBTREE",
+          "catalog_after": "idx_sys_user_register_channel\t1\t1\tregister_channel\tBTREE",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "present": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY, register_channel VARCHAR(32), UNIQUE INDEX idx_sys_user_register_channel(id)); INSERT INTO sys_user(id) VALUES(1);",
+          "catalog_before": "idx_sys_user_register_channel\t0\t1\tid\tBTREE",
+          "catalog_after": "idx_sys_user_register_channel\t0\t1\tid\tBTREE",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "missing_table": {
+          "status": "expected_failure",
+          "passed": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 8: Table 'probe.sys_user' doesn't exist\n",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user;",
+          "table_still_absent": true
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "sys_login_log",
+        "kind": "column",
+        "name": "client_type"
+      },
+      "variable": "ddl_login_log_client",
+      "absent_sql": "ALTER TABLE `sys_login_log` ADD COLUMN `client_type` VARCHAR(32) DEFAULT NULL COMMENT '客户端类型(PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5/UNKNOWN)'",
+      "present_sql": "SELECT 1",
+      "statements": [
+        {
+          "line": 72,
+          "end_line": 79,
+          "sql": "SET @ddl_login_log_client = (SELECT IF(\n    EXISTS (SELECT 1 FROM information_schema.TABLES\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_login_log')\n    AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_login_log'\n              AND COLUMN_NAME = 'client_type'),\n    'ALTER TABLE `sys_login_log` ADD COLUMN `client_type` VARCHAR(32) DEFAULT NULL COMMENT ''客户端类型(PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5/UNKNOWN)''',\n    'SELECT 1'))",
+          "start_offset": 3602,
+          "end_offset": 4148,
+          "category": "dynamic_sql",
+          "statement_sha256": "4d1fcd65712b0a6b6d2c5686d755c3b31ed966b1b35fefd5b8f0eafa38425311",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_login_log",
+              "line": 78,
+              "end_line": 78,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "client_type",
+                "column",
+                "comment",
+                "default",
+                "null",
+                "sys_login_log",
+                "table",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE `sys_login_log` ADD COLUMN `client_type` VARCHAR(32) DEFAULT NULL COMMENT '客户端类型(PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5/UNKNOWN)'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 72
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 72,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 80,
+          "end_line": 80,
+          "sql": "PREPARE stmt FROM @ddl_login_log_client",
+          "start_offset": 4150,
+          "end_offset": 4189,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7ebc7253e39220370ba3c8c3e9ec6c01dbaa07a6de655ddaa0d3d2948394b379",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            72
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 80,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 81,
+          "end_line": 81,
+          "sql": "EXECUTE stmt",
+          "start_offset": 4191,
+          "end_offset": 4203,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            72
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 81,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 82,
+          "end_line": 82,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 4205,
+          "end_offset": 4228,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            72
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 82,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "old_ids": [
+        "old-sql-0521",
+        "old-sql-0522",
+        "old-sql-0523",
+        "old-sql-0524"
+      ],
+      "statement_ids": [
+        [
+          "stmt-ad42097f1b742cfd9beece22"
+        ],
+        [
+          "stmt-e5fb7e06fde15bf5eff99d75"
+        ],
+        [
+          "stmt-1762f3a0d00f757de507946c"
+        ],
+        [
+          "stmt-6df6ebe0dc5194d0dbcf7465"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_login_log; CREATE TABLE sys_login_log(id BIGINT PRIMARY KEY); INSERT INTO sys_login_log(id) VALUES(1);",
+          "catalog_before": "",
+          "catalog_after": "varchar(32)\tYES\t<NULL>",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "ALTER TABLE `sys_login_log` ADD COLUMN `client_type` VARCHAR(32) DEFAULT NULL COMMENT '客户端类型(PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5/UNKNOWN)'",
+          "client_output": "ALTER TABLE `sys_login_log` ADD COLUMN `client_type` VARCHAR(32) DEFAULT NULL COMMENT '客户端类型(PC_ADMIN/PC_WEB/WECHAT_MP/MINI_PROGRAM/APP_ANDROID/APP_IOS/H5/UNKNOWN)'"
+        },
+        "replay": {
+          "fixture_sql": "reuse absent result",
+          "catalog_before": "varchar(32)\tYES\t<NULL>",
+          "catalog_after": "varchar(32)\tYES\t<NULL>",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "present": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_login_log; CREATE TABLE sys_login_log(id BIGINT PRIMARY KEY, client_type VARCHAR(7) NULL); INSERT INTO sys_login_log(id) VALUES(1);",
+          "catalog_before": "varchar(7)\tYES\t<NULL>",
+          "catalog_after": "varchar(7)\tYES\t<NULL>",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_login_log;",
+          "table_still_absent": true
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "sys_login_log",
+        "kind": "column",
+        "name": "platform"
+      },
+      "variable": "ddl_login_log_platform",
+      "absent_sql": "ALTER TABLE `sys_login_log` ADD COLUMN `platform` VARCHAR(32) DEFAULT NULL COMMENT '客户端平台(android/ios/h5/harmony/wechat)'",
+      "present_sql": "SELECT 1",
+      "statements": [
+        {
+          "line": 84,
+          "end_line": 91,
+          "sql": "SET @ddl_login_log_platform = (SELECT IF(\n    EXISTS (SELECT 1 FROM information_schema.TABLES\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_login_log')\n    AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS\n            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_login_log'\n              AND COLUMN_NAME = 'platform'),\n    'ALTER TABLE `sys_login_log` ADD COLUMN `platform` VARCHAR(32) DEFAULT NULL COMMENT ''客户端平台(android/ios/h5/harmony/wechat)''',\n    'SELECT 1'))",
+          "start_offset": 4231,
+          "end_offset": 4733,
+          "category": "dynamic_sql",
+          "statement_sha256": "43bd6d5f52f8b82c0e3a158ab9aa09b96e05ca949196201bb697a029a8caa505",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_login_log",
+              "line": 90,
+              "end_line": 90,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "comment",
+                "default",
+                "null",
+                "platform",
+                "sys_login_log",
+                "table",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE `sys_login_log` ADD COLUMN `platform` VARCHAR(32) DEFAULT NULL COMMENT '客户端平台(android/ios/h5/harmony/wechat)'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 84
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 84,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 92,
+          "end_line": 92,
+          "sql": "PREPARE stmt FROM @ddl_login_log_platform",
+          "start_offset": 4735,
+          "end_offset": 4776,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7944413f3c332dd64d2d59dfa662f0978b8bc05100d9e3b9004798fde7ef925c",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            84
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 92,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 93,
+          "end_line": 93,
+          "sql": "EXECUTE stmt",
+          "start_offset": 4778,
+          "end_offset": 4790,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            84
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 93,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 94,
+          "end_line": 94,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 4792,
+          "end_offset": 4815,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            84
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 94,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "old_ids": [
+        "old-sql-0525",
+        "old-sql-0526",
+        "old-sql-0527",
+        "old-sql-0528"
+      ],
+      "statement_ids": [
+        [
+          "stmt-1d9b28e8ef78f89ef4b9341f"
+        ],
+        [
+          "stmt-e4cc3a801184a0b65c51d29a"
+        ],
+        [
+          "stmt-9e15b4b1fd952f2972432a55"
+        ],
+        [
+          "stmt-a2902f6cdf0addb7d379309c"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_login_log; CREATE TABLE sys_login_log(id BIGINT PRIMARY KEY); INSERT INTO sys_login_log(id) VALUES(1);",
+          "catalog_before": "",
+          "catalog_after": "varchar(32)\tYES\t<NULL>",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "ALTER TABLE `sys_login_log` ADD COLUMN `platform` VARCHAR(32) DEFAULT NULL COMMENT '客户端平台(android/ios/h5/harmony/wechat)'",
+          "client_output": "ALTER TABLE `sys_login_log` ADD COLUMN `platform` VARCHAR(32) DEFAULT NULL COMMENT '客户端平台(android/ios/h5/harmony/wechat)'"
+        },
+        "replay": {
+          "fixture_sql": "reuse absent result",
+          "catalog_before": "varchar(32)\tYES\t<NULL>",
+          "catalog_after": "varchar(32)\tYES\t<NULL>",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "present": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_login_log; CREATE TABLE sys_login_log(id BIGINT PRIMARY KEY, platform VARCHAR(7) NULL); INSERT INTO sys_login_log(id) VALUES(1);",
+          "catalog_before": "varchar(7)\tYES\t<NULL>",
+          "catalog_after": "varchar(7)\tYES\t<NULL>",
+          "data_before": "1",
+          "data_after": "1",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_login_log;",
+          "table_still_absent": true
+        }
+      },
+      "semantic_verified": true
+    }
+  ],
+  "status": "failed_or_environment_unavailable",
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true,
+    "database_lifetime": "only inside removed tmpfs container"
+  },
+  "limits": [
+    "Synthetic fixtures only; not production multitenant safety proof",
+    "Only selected MySQL guards; no PostgreSQL or full historical upgrade chain",
+    "Existing names accept incompatible definitions; no equivalence claim",
+    "Index guard and full file fail without sys_user (1146); these scenarios are not passed",
+    "Global (channel,open_id) uniqueness and NOT EXISTS omit tenant scope; no production tenant isolation claim",
+    "No PostgreSQL, full upgrade chain, Flyway, concurrency, privileges or rollback verification"
+  ],
+  "previous_verified_ids": [
+    "old-sql-0000",
+    "old-sql-0001",
+    "old-sql-0002",
+    "old-sql-0003",
+    "old-sql-0004",
+    "old-sql-0005",
+    "old-sql-0006",
+    "old-sql-0007",
+    "old-sql-0008",
+    "old-sql-0009",
+    "old-sql-0010",
+    "old-sql-0011",
+    "old-sql-0012",
+    "old-sql-0013",
+    "old-sql-0014",
+    "old-sql-0015",
+    "old-sql-0016",
+    "old-sql-0017",
+    "old-sql-0018",
+    "old-sql-0019",
+    "old-sql-0020",
+    "old-sql-0021",
+    "old-sql-0022",
+    "old-sql-0023",
+    "old-sql-0024",
+    "old-sql-0025",
+    "old-sql-0026",
+    "old-sql-0027",
+    "old-sql-0028",
+    "old-sql-0029",
+    "old-sql-0030",
+    "old-sql-0031",
+    "old-sql-0032",
+    "old-sql-0033",
+    "old-sql-0034",
+    "old-sql-0035",
+    "old-sql-0036",
+    "old-sql-0037",
+    "old-sql-0038",
+    "old-sql-0039",
+    "old-sql-0040",
+    "old-sql-0041",
+    "old-sql-0042",
+    "old-sql-0043",
+    "old-sql-0044",
+    "old-sql-0045",
+    "old-sql-0046",
+    "old-sql-0047",
+    "old-sql-0048",
+    "old-sql-0049",
+    "old-sql-0050",
+    "old-sql-0051",
+    "old-sql-0052",
+    "old-sql-0053",
+    "old-sql-0054",
+    "old-sql-0055",
+    "old-sql-0056",
+    "old-sql-0057",
+    "old-sql-0058",
+    "old-sql-0059",
+    "old-sql-0060",
+    "old-sql-0061",
+    "old-sql-0062",
+    "old-sql-0063",
+    "old-sql-0064",
+    "old-sql-0065",
+    "old-sql-0066",
+    "old-sql-0067",
+    "old-sql-0068",
+    "old-sql-0069",
+    "old-sql-0070",
+    "old-sql-0071",
+    "old-sql-0072",
+    "old-sql-0073",
+    "old-sql-0074",
+    "old-sql-0075",
+    "old-sql-0076",
+    "old-sql-0077",
+    "old-sql-0078",
+    "old-sql-0079",
+    "old-sql-0080",
+    "old-sql-0081",
+    "old-sql-0082",
+    "old-sql-0083",
+    "old-sql-0084",
+    "old-sql-0085",
+    "old-sql-0086",
+    "old-sql-0087",
+    "old-sql-0088",
+    "old-sql-0089",
+    "old-sql-0090",
+    "old-sql-0091",
+    "old-sql-0092",
+    "old-sql-0093",
+    "old-sql-0094",
+    "old-sql-0095",
+    "old-sql-0096",
+    "old-sql-0097",
+    "old-sql-0098",
+    "old-sql-0099",
+    "old-sql-0100",
+    "old-sql-0101",
+    "old-sql-0102",
+    "old-sql-0103",
+    "old-sql-0104",
+    "old-sql-0105",
+    "old-sql-0106",
+    "old-sql-0107",
+    "old-sql-0108",
+    "old-sql-0109",
+    "old-sql-0110",
+    "old-sql-0111",
+    "old-sql-0112",
+    "old-sql-0113",
+    "old-sql-0114",
+    "old-sql-0115",
+    "old-sql-0116",
+    "old-sql-0117",
+    "old-sql-0118",
+    "old-sql-0119",
+    "old-sql-0120",
+    "old-sql-0121",
+    "old-sql-0122",
+    "old-sql-0123",
+    "old-sql-0124",
+    "old-sql-0125",
+    "old-sql-0126",
+    "old-sql-0127",
+    "old-sql-0128",
+    "old-sql-0129",
+    "old-sql-0130",
+    "old-sql-0131",
+    "old-sql-0132",
+    "old-sql-0133",
+    "old-sql-0134",
+    "old-sql-0135",
+    "old-sql-0136",
+    "old-sql-0137",
+    "old-sql-0138",
+    "old-sql-0139",
+    "old-sql-0140",
+    "old-sql-0141",
+    "old-sql-0142",
+    "old-sql-0143",
+    "old-sql-0144",
+    "old-sql-0145",
+    "old-sql-0146",
+    "old-sql-0147",
+    "old-sql-0148",
+    "old-sql-0149",
+    "old-sql-0150",
+    "old-sql-0151",
+    "old-sql-0152",
+    "old-sql-0153",
+    "old-sql-0154",
+    "old-sql-0155",
+    "old-sql-0156",
+    "old-sql-0157",
+    "old-sql-0158",
+    "old-sql-0159",
+    "old-sql-0160",
+    "old-sql-0161",
+    "old-sql-0162",
+    "old-sql-0163",
+    "old-sql-0164",
+    "old-sql-0165",
+    "old-sql-0166",
+    "old-sql-0167",
+    "old-sql-0168",
+    "old-sql-0169",
+    "old-sql-0170",
+    "old-sql-0171",
+    "old-sql-0172",
+    "old-sql-0173",
+    "old-sql-0174",
+    "old-sql-0175",
+    "old-sql-0176",
+    "old-sql-0177",
+    "old-sql-0178",
+    "old-sql-0179",
+    "old-sql-0180",
+    "old-sql-0181",
+    "old-sql-0182",
+    "old-sql-0183",
+    "old-sql-0184",
+    "old-sql-0185",
+    "old-sql-0186",
+    "old-sql-0187",
+    "old-sql-0188",
+    "old-sql-0189",
+    "old-sql-0190",
+    "old-sql-0191",
+    "old-sql-0192",
+    "old-sql-0193",
+    "old-sql-0194",
+    "old-sql-0195",
+    "old-sql-0196",
+    "old-sql-0197",
+    "old-sql-0198",
+    "old-sql-0199",
+    "old-sql-0200",
+    "old-sql-0201",
+    "old-sql-0202",
+    "old-sql-0203",
+    "old-sql-0204",
+    "old-sql-0205",
+    "old-sql-0206",
+    "old-sql-0207",
+    "old-sql-0208",
+    "old-sql-0209",
+    "old-sql-0210",
+    "old-sql-0211",
+    "old-sql-0212",
+    "old-sql-0213",
+    "old-sql-0214",
+    "old-sql-0215",
+    "old-sql-0216",
+    "old-sql-0217",
+    "old-sql-0218",
+    "old-sql-0219",
+    "old-sql-0220",
+    "old-sql-0221",
+    "old-sql-0222",
+    "old-sql-0223",
+    "old-sql-0224",
+    "old-sql-0225",
+    "old-sql-0226",
+    "old-sql-0227",
+    "old-sql-0228",
+    "old-sql-0229",
+    "old-sql-0230",
+    "old-sql-0231",
+    "old-sql-0232",
+    "old-sql-0233",
+    "old-sql-0234",
+    "old-sql-0235",
+    "old-sql-0236",
+    "old-sql-0237",
+    "old-sql-0238",
+    "old-sql-0239",
+    "old-sql-0240",
+    "old-sql-0241",
+    "old-sql-0242",
+    "old-sql-0243",
+    "old-sql-0244",
+    "old-sql-0245",
+    "old-sql-0246",
+    "old-sql-0247",
+    "old-sql-0248",
+    "old-sql-0249",
+    "old-sql-0250",
+    "old-sql-0251",
+    "old-sql-0252",
+    "old-sql-0253",
+    "old-sql-0254",
+    "old-sql-0255",
+    "old-sql-0256",
+    "old-sql-0257",
+    "old-sql-0258",
+    "old-sql-0259",
+    "old-sql-0260",
+    "old-sql-0261",
+    "old-sql-0262",
+    "old-sql-0263",
+    "old-sql-0264",
+    "old-sql-0265",
+    "old-sql-0266",
+    "old-sql-0267",
+    "old-sql-0268",
+    "old-sql-0269",
+    "old-sql-0270",
+    "old-sql-0271",
+    "old-sql-0272",
+    "old-sql-0273",
+    "old-sql-0274",
+    "old-sql-0275",
+    "old-sql-0276",
+    "old-sql-0277",
+    "old-sql-0278",
+    "old-sql-0279",
+    "old-sql-0280",
+    "old-sql-0281",
+    "old-sql-0282",
+    "old-sql-0283",
+    "old-sql-0284",
+    "old-sql-0285",
+    "old-sql-0286",
+    "old-sql-0287",
+    "old-sql-0288",
+    "old-sql-0289",
+    "old-sql-0290",
+    "old-sql-0291",
+    "old-sql-0292",
+    "old-sql-0293",
+    "old-sql-0294",
+    "old-sql-0295",
+    "old-sql-0296",
+    "old-sql-0297",
+    "old-sql-0298",
+    "old-sql-0299",
+    "old-sql-0300",
+    "old-sql-0301",
+    "old-sql-0302",
+    "old-sql-0303",
+    "old-sql-0304",
+    "old-sql-0305",
+    "old-sql-0306",
+    "old-sql-0307",
+    "old-sql-0308",
+    "old-sql-0309",
+    "old-sql-0310",
+    "old-sql-0311",
+    "old-sql-0312",
+    "old-sql-0313",
+    "old-sql-0314",
+    "old-sql-0315",
+    "old-sql-0316",
+    "old-sql-0317",
+    "old-sql-0318",
+    "old-sql-0319",
+    "old-sql-0320",
+    "old-sql-0321",
+    "old-sql-0322",
+    "old-sql-0323",
+    "old-sql-0324",
+    "old-sql-0325",
+    "old-sql-0326",
+    "old-sql-0327",
+    "old-sql-0328",
+    "old-sql-0329",
+    "old-sql-0330",
+    "old-sql-0331",
+    "old-sql-0332",
+    "old-sql-0333",
+    "old-sql-0334",
+    "old-sql-0335",
+    "old-sql-0336",
+    "old-sql-0337",
+    "old-sql-0338",
+    "old-sql-0339",
+    "old-sql-0340",
+    "old-sql-0341",
+    "old-sql-0342",
+    "old-sql-0343",
+    "old-sql-0344",
+    "old-sql-0345",
+    "old-sql-0346",
+    "old-sql-0347",
+    "old-sql-0348",
+    "old-sql-0349",
+    "old-sql-0350",
+    "old-sql-0351",
+    "old-sql-0352",
+    "old-sql-0353",
+    "old-sql-0354",
+    "old-sql-0355",
+    "old-sql-0356",
+    "old-sql-0357",
+    "old-sql-0358",
+    "old-sql-0359",
+    "old-sql-0360",
+    "old-sql-0361",
+    "old-sql-0362"
+  ],
+  "remaining_before": 223,
+  "previous_evidence_hashes": {
+    "dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "dynamic-auth-v52-catalog-regression-evidence.json": "286fd56716171a547cd65a78e5912e61f548a777ac37a57c9589628e65c4d4d1",
+    "dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "dynamic-auth-v55-client-evidence.json": "88b811c98334d55235d8a9282b38a091adbd08fe227e270ec83713f2e72e6fac",
+    "dynamic-system-v14-20261018-client-evidence.json": "bf978a17c42edab2d00ffa055bf34de3cd1695e3d8c69a8c7a27f2db856634ff",
+    "dynamic-system-v15-20261019-rerun-evidence.json": "37e4821b20ce16058ff0836d2f88d465ff474bc851df5f027a7d460b895fb303",
+    "dynamic-system-v15-20261019-rerun-subagent-evidence.json": "c66df02e6c26616bc0f5bc0a07904babbbc7215555261b8c20a69a1924a8ed6a",
+    "dynamic-system-v16-20261019-client-evidence.json": "ee97ae2bb94a4d82a8de8e139cde76b37a1a6c1711431d401dc42bc2f7db0fad"
+  },
+  "baseline_dynamic_denominator": 586,
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v59-20261019-client-evidence.json",
+  "updated_at": "2026-10-19T03:04:50.729895+00:00",
+  "container": {
+    "name": "apex-v45-probe-d8206451626a",
+    "image": "localhost/mysql:8.0",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "none; empty root only inside network-disabled disposable container",
+    "id": "842d99b1576098224d59edf4f90e3a4bce54f8a2ab236cfd613c084383b73fc4"
+  },
+  "mysql_version": "8.0.46",
+  "full_file": {
+    "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user_social,sys_user,sys_login_log;\nCREATE TABLE sys_user(id BIGINT PRIMARY KEY,tenant_id VARCHAR(64),open_id VARCHAR(100),union_id VARCHAR(100),deleted INT DEFAULT 0,create_time DATETIME);\nCREATE TABLE sys_login_log(id BIGINT PRIMARY KEY);\nINSERT INTO sys_login_log VALUES(1),(2);\nINSERT INTO sys_user VALUES\n(1,'tenant-a','o-valid-a','union-a',0,'2021-02-03 04:05:06'),\n(2,'tenant-b','o-valid-b',NULL,0,'2022-03-04 05:06:07'),\n(3,'tenant-a','PHONE_123','phone-union',0,NULL),\n(4,'tenant-b',NULL,'null-union',0,NULL),\n(5,'tenant-c','o-deleted','deleted-union',1,NULL),\n(6,NULL,'o-null-time','union-six',0,NULL),\n(7,'tenant-c','PHONEXvalid','union-seven',0,'2026-01-02 03:04:05'),\n(8,'tenant-b','o-existing','replacement-union',0,NULL);\nCREATE TABLE IF NOT EXISTS `sys_user_social` (\n  `id`          BIGINT       NOT NULL COMMENT '主键ID(雪花算法)',\n  `tenant_id`   VARCHAR(64)  DEFAULT NULL COMMENT '租户ID(多租户隔离)',\n  `user_id`     BIGINT       NOT NULL COMMENT '用户ID(sys_user.id)',\n  `channel`     VARCHAR(32)  NOT NULL COMMENT '社交渠道(WECHAT_APP/WECHAT_MINI/WECHAT_MP)',\n  `open_id`     VARCHAR(100) NOT NULL COMMENT '该渠道下的OpenID',\n  `union_id`    VARCHAR(100) DEFAULT NULL COMMENT '微信UnionID',\n  `status`      INT(1)       NOT NULL DEFAULT 1 COMMENT '状态(0-解绑,1-正常)',\n  `bound_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '绑定时间',\n  `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',\n  `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',\n  `version`     INT(10)      NOT NULL DEFAULT 0 COMMENT '版本号(乐观锁)',\n  `deleted`     INT(1)       NOT NULL DEFAULT 0 COMMENT '逻辑删除(0-未删,1-已删)',\n  PRIMARY KEY (`id`),\n  -- 渠道+OpenID 唯一：同一渠道同一微信身份只能绑定一个用户\n  UNIQUE KEY `uk_channel_openid` (`channel`, `open_id`),\n  KEY `idx_user_id` (`user_id`),\n  KEY `idx_union_id` (`union_id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户社交身份绑定表(多端微信OpenID)';\nINSERT INTO sys_user_social(id,tenant_id,user_id,channel,open_id,union_id,status,bound_at,version,deleted) VALUES\n(90,'original-tenant',900,'WECHAT_APP','o-existing','original-union',0,'2020-01-01 00:00:00',7,1),\n(91,'mini-tenant',901,'WECHAT_MINI','o-valid-a','mini-union',1,'2020-01-01 00:00:00',0,0);\n",
+    "execution_prefix": "USE probe; SET time_zone='+00:00'; SET timestamp=1767323045;\n",
+    "counts_as_branch_proof": false,
+    "before_initial": {
+      "columns": "sys_login_log\tid\tbigint\tNO\t<NULL>\t\t1\nsys_user\tid\tbigint\tNO\t<NULL>\t\t1\nsys_user\ttenant_id\tvarchar(64)\tYES\t<NULL>\t\t2\nsys_user\topen_id\tvarchar(100)\tYES\t<NULL>\t\t3\nsys_user\tunion_id\tvarchar(100)\tYES\t<NULL>\t\t4\nsys_user\tdeleted\tint\tYES\t0\t\t5\nsys_user\tcreate_time\tdatetime\tYES\t<NULL>\t\t6\nsys_user_social\tid\tbigint\tNO\t<NULL>\t\t1\nsys_user_social\ttenant_id\tvarchar(64)\tYES\t<NULL>\t\t2\nsys_user_social\tuser_id\tbigint\tNO\t<NULL>\t\t3\nsys_user_social\tchannel\tvarchar(32)\tNO\t<NULL>\t\t4\nsys_user_social\topen_id\tvarchar(100)\tNO\t<NULL>\t\t5\nsys_user_social\tunion_id\tvarchar(100)\tYES\t<NULL>\t\t6\nsys_user_social\tstatus\tint\tNO\t1\t\t7\nsys_user_social\tbound_at\tdatetime\tNO\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED\t8\nsys_user_social\tcreate_time\tdatetime\tNO\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED\t9\nsys_user_social\tupdate_time\tdatetime\tNO\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\t10\nsys_user_social\tversion\tint\tNO\t0\t\t11\nsys_user_social\tdeleted\tint\tNO\t0\t\t12",
+      "indexes": "sys_login_log\tPRIMARY\t0\t1\tid\tBTREE\nsys_user\tPRIMARY\t0\t1\tid\tBTREE\nsys_user_social\tidx_union_id\t1\t1\tunion_id\tBTREE\nsys_user_social\tidx_user_id\t1\t1\tuser_id\tBTREE\nsys_user_social\tPRIMARY\t0\t1\tid\tBTREE\nsys_user_social\tuk_channel_openid\t0\t1\tchannel\tBTREE\nsys_user_social\tuk_channel_openid\t0\t2\topen_id\tBTREE",
+      "data": {
+        "sys_user": "1\ttenant-a\to-valid-a\tunion-a\t0\t2021-02-03 04:05:06\n2\ttenant-b\to-valid-b\tNULL\t0\t2022-03-04 05:06:07\n3\ttenant-a\tPHONE_123\tphone-union\t0\tNULL\n4\ttenant-b\tNULL\tnull-union\t0\tNULL\n5\ttenant-c\to-deleted\tdeleted-union\t1\tNULL\n6\tNULL\to-null-time\tunion-six\t0\tNULL\n7\ttenant-c\tPHONEXvalid\tunion-seven\t0\t2026-01-02 03:04:05\n8\ttenant-b\to-existing\treplacement-union\t0\tNULL",
+        "sys_login_log": "1\n2",
+        "sys_user_social": "90\toriginal-tenant\t900\tWECHAT_APP\to-existing\toriginal-union\t0\t2020-01-01 00:00:00\t2026-01-02 03:04:05\t2026-01-02 03:04:05\t7\t1\n91\tmini-tenant\t901\tWECHAT_MINI\to-valid-a\tmini-union\t1\t2020-01-01 00:00:00\t2026-01-02 03:04:05\t2026-01-02 03:04:05\t0\t0"
+      }
+    }
+  },
+  "error": "mysql client failed: ERROR 1267 (HY000) at line 61: Illegal mix of collations (utf8mb4_unicode_ci,IMPLICIT) and (utf8mb4_0900_ai_ci,IMPLICIT) for operation '='\n",
+  "coverage": {
+    "verified_old_ids": [],
+    "verified_old_id_count": 0,
+    "remaining_of_586": 223,
+    "passed_branch_runs": 12,
+    "planned_branch_runs": 12,
+    "definition": "distinct baseline IDs whose bound quartet passed absent + present + replay; no credit for full-file success",
+    "remaining_before": 223,
+    "new_unique_passed_count": 0,
+    "remaining_after": 223,
+    "cumulative_verified_count": 363
+  }
+}

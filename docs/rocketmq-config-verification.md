@@ -102,10 +102,10 @@ apex:
 
 | 序号 | 组件名称 | 文件路径 | 状态 |
 |-----|---------|---------|------|
-| 1 | MqLagMonitor | [MqLagMonitor.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/monitor/MqLagMonitor.java) | ✅ 已创建 |
-| 2 | DeadLetterQueueProcessor | [DeadLetterQueueProcessor.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java) | ✅ 已创建 |
-| 3 | MqAlertManager | [MqAlertManager.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/alert/MqAlertManager.java) | ✅ 已创建 |
-| 4 | AlertNotificationSender | [AlertNotificationSender.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/alert/AlertNotificationSender.java) | ✅ 已创建 |
+| 1 | MqLagMonitor | [MqLagMonitor.java](../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/monitor/MqLagMonitor.java) | ✅ 已创建 |
+| 2 | DeadLetterQueueProcessor | [DeadLetterQueueProcessor.java](../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/listener/DeadLetterQueueProcessor.java) | ✅ 已创建 |
+| 3 | MqAlertManager | [MqAlertManager.java](../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/alert/MqAlertManager.java) | ✅ 已创建 |
+| 4 | AlertNotificationSender | [AlertNotificationSender.java](../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/alert/AlertNotificationSender.java) | ✅ 已创建 |
 | 5 | MqAutoHandlerConfig | MqAutoHandlerConfig.java（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/config/MqAutoHandlerConfig.java`） | ✅ 已创建 |
 
 **验证结果**: ✅ **所有核心组件已创建**

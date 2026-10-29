@@ -2,7 +2,7 @@
 
 > 文档版本: v1.1  
 > 最后更新: 2026-09-05  
-> 适用版本: apex-scaffold v1.2.0+
+> 适用版本: apex-scaffold v1.3.1+
 
 ## 架构图
 
@@ -27,7 +27,7 @@
 
 | 技术 | 版本 | 查看方式 |
 |------|------|----------|
-| Java | 17 LTS | `java -version` |
+| Java | 21 LTS | `java -version` |
 | Spring Boot | 3.5.15 | `pom.xml` |
 | Spring Security | 6.5.0 | `pom.xml` |
 | MyBatis-Plus | 3.5.10.1 | `pom.xml` |
@@ -38,7 +38,7 @@
 
 | 组件 | 版本 | 镜像 |
 |------|------|------|
-| MySQL | 8.4.0 | `mysql:8.4.0` |
+| MySQL | 9.0 | `mysql:9.0` |
 | Redis | 7-alpine | `redis:7-alpine` |
 | MinIO | RELEASE.2024-08-17T01-24-54Z | `minio/minio:latest` |
 | RocketMQ | 5.3.1 | `apache/rocketmq:5.3.1` |
@@ -57,10 +57,10 @@
 | 层级 | 核心技术 | 职责 |
 |------|----------|------|
 | 💻 **前端层** | Vue 3 + TypeScript + Vite | UI 渲染、状态管理、路由 |
-| 🌐 **接入层** | Nginx + Sentinel + JWT | 负载均衡、限流熔断、认证 |
+| 🌐 **接入层** | Nginx + Sentinel + Resilience4j + JWT | 负载均衡、流控、熔断回退、认证 |
 | ☕ **后端核心** | Spring Boot + WebFlux + DDD | 业务逻辑、响应式编排 |
 | 💾 **数据层** | MySQL + Redis + MinIO + Meilisearch | 持久化、缓存、对象存储、全文搜索 |
-| 🐳 **基础设施** | JDK 17 + Podman + K8s | 运行时、容器编排 |
+| 🐳 **基础设施** | JDK 21 + Podman + K8s | 运行时、容器编排 |
 | 🔍 **可观测性** | Prometheus + Grafana + Loki + Alloy | 指标、日志、链路追踪 |
 
 ---
@@ -128,13 +128,13 @@ podman-compose -f podman-compose.yml down
 kubectl apply -f k8s/
 
 # 查看状态
-kubectl get pods -l app=apex-application
+kubectl get pods -l app=apex-system
 
 # 查看日志
-kubectl logs -f deployment/apex-application
+kubectl logs -f deployment/apex-system
 
 # 端口转发
-kubectl port-forward svc/apex-application 8080:80
+kubectl port-forward svc/apex-system 8080:80
 ```
 
 ---
@@ -186,7 +186,7 @@ kubectl port-forward svc/apex-application 8080:80
 |---------|----------|----------|
 | **basic** | Spring Boot + MySQL + Caffeine | MVP 快速验证 |
 | **standard** | basic + Redis + MinIO + Meilisearch + 监控 | 标准生产环境 |
-| **enterprise** | standard + RocketMQ + Nacos + Sentinel | 企业级生产 |
+| **enterprise** | standard + RocketMQ + Nacos + Resilience4j | 企业级生产 |
 
 **切换 Profile**:
 ```bash

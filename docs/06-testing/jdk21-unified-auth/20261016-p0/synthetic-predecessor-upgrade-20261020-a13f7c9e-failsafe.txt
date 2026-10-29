@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.apex.scaffold.interfaces.test.SystemDualDatabaseMigrationIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 133.7 s -- in com.apex.scaffold.interfaces.test.SystemDualDatabaseMigrationIntegrationTest

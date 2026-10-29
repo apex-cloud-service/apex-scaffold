@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "recorded_date": "2026-10-19",
+  "kind": "persistent_environment_and_run_summary",
+  "run": {
+    "provenance": "Completed run supplied in handoff; unittest summary and module names independently checked against the temporary log. Tests were not rerun during documentation closeout.",
+    "original_command": null,
+    "original_command_note": "The temporary log contains test output but no invocation line; the exact original command is not recoverable from this evidence and is not inferred.",
+    "working_directory": "/Users/work/apex-scaffold",
+    "tests": 188,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": 540.834,
+    "summary_lines": ["Ran 188 tests in 540.834s", "OK"],
+    "module_count": 17,
+    "modules_observed_in_log": [
+      "test_auth_v45_dynamic_probe_20261018",
+      "test_collect_database_schema",
+      "test_collect_gateway_config",
+      "test_collect_java_declarations",
+      "test_collect_java_routes",
+      "test_collect_migration_tables",
+      "test_collect_p0_dependency_disposition",
+      "test_collect_route_dispositions",
+      "test_collect_table_authority",
+      "test_collect_table_facts",
+      "test_collect_upgrade_baseline",
+      "test_config_preflight",
+      "test_consent_v40_upgrade",
+      "test_init_build_env",
+      "test_link_upgrade_assets",
+      "test_local_deployment",
+      "test_review_table_authority_candidates"
+    ]
+  },
+  "environment": {
+    "venv": "/tmp/apex-p0-python-20261019",
+    "python": "3.13.12",
+    "packages": {"cryptography": "46.0.7", "PyYAML": "6.0.3", "cffi": "2.1.1", "pycparser": "3.11"},
+    "version_provenance": "Handoff versions independently rechecked in the existing venv during documentation closeout using sys.version and importlib.metadata.version.",
+    "pip_check": {
+      "command": "/tmp/apex-p0-python-20261019/bin/python -m pip check",
+      "exit_code": 0,
+      "stdout": "No broken requirements found.",
+      "provenance": "Passed in original handoff and independently rerun during documentation closeout; this check does not rerun the test suite."
+    },
+    "requirements_modified": false
+  },
+  "temporary_log": {
+    "path": "/tmp/apex-p0-python-full-20261019.log",
+    "sha256": "9dc11042b7c02cd72d226e28ed32ed1bc1d8cac167641dc6a18bd087425eabe7",
+    "hash_independently_rechecked": true,
+    "copied_to_evidence_directory": false,
+    "retention": "Temporary /tmp log and venv may disappear. This persistent summary and hash do not preserve or replace the original full log; after its loss the full output cannot be independently reconstructed from this summary."
+  },
+  "limits": [
+    "188 tests cover only the 17 modules observed at execution time; later source changes and newly added test modules are not covered by this run.",
+    "No source snapshot hash was recorded for the run; this is not proof for the final shared-workspace state.",
+    "The earlier missing-cryptography full-suite failure remains historical evidence; the successful isolated run closes that environment failure only within this recorded scope.",
+    "No Java gate, Java 21 switch, production deployment or P0 acceptance is established by this summary."
+  ]
+}

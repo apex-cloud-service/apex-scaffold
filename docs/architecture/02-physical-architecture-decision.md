@@ -2,7 +2,7 @@
 
 > 文档版本: v1.0  
 > 创建时间: 2026-09-04  
-> 适用版本: apex-scaffold v1.2.0
+> 适用版本: apex-scaffold v1.3.1
 
 ## 架构图
 
@@ -224,7 +224,7 @@ management:
 apiVersion: v1
 kind: Service
 metadata:
-  name: apex-application
+  name: apex-system
 spec:
   ports:
   - name: http
@@ -254,7 +254,7 @@ spec:
 
 | 标识 | 含义 | 示例 |
 |------|------|------|
-| ✅ **默认启用** | Compose 默认启动 | MySQL 8.0, Redis, Meilisearch |
+| ✅ **默认启用** | Compose 默认启动 | MySQL 9.0, Redis, Meilisearch |
 | 🔧 **可选启用** | 需修改配置启用 | RocketMQ 消费者, Nacos 服务发现 |
 | 🚀 **建议拓扑** | 需环境验证 | K8s 多实例, HPA, MySQL 主从 |
 
@@ -364,7 +364,7 @@ spec:
 
 ### 决策
 
-Compose 提供 MySQL 8.0 单实例,生产环境推荐使用:
+Compose 提供 MySQL 9.0 单实例,生产环境推荐使用:
 1. **云数据库**: 云厂商 RDS (阿里云/腾讯云/AWS)
 2. **自建集群**: MySQL MGR / Galera Cluster
 3. **主从复制**: 1 主 2 从 + Sentinel / ProxySQL

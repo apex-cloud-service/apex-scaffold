@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""真实隔离双库 consent 升级回归；证据为新文件，拒绝覆盖。"""
+import datetime
+import hashlib
+import importlib.util
+import json
+import pathlib
+import subprocess
+import time
+import uuid
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+P0 = ROOT / 'docs/06-testing/jdk21-unified-auth/20261016-p0'
+
+
+def command(args, text=None):
+    return subprocess.run(args, input=text, text=True, capture_output=True, timeout=90)
+
+
+def postgresql_file(name, path):
+    p = command(['podman', 'exec', name, 'psql', '-X', '-U', 'postgres', '-d', 'postgres',
+                 '-v', 'ON_ERROR_STOP=1', '-At', '-f', str(path)])
+    assert p.returncode == 0, p.stderr
+    return p.stdout.strip()
+
+
+def verify():
+    result = {'status': 'running', 'started_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'baseline_credit': False, 'databases': {}, 'cleanup': {}}
+    output = P0 / ('consent-v40-repair-' + uuid.uuid4().hex[:12] + '-evidence.json')
+    assert not output.exists()
+    try:
+        for dialect, image, storage, environment in (
+                ('mysql', 'localhost/mysql:8.0', '/var/lib/mysql', 'MYSQL_ALLOW_EMPTY_PASSWORD=yes'),
+                ('postgresql', 'localhost/postgres:17-alpine', '/var/lib/postgresql/data', 'POSTGRES_HOST_AUTH_METHOD=trust')):
+            name = 'apex-consent-v40-' + uuid.uuid4().hex[:12]
+            owned = False
+            evidence = result['databases'][dialect] = {'name': name, 'image': image, 'network': 'none', 'storage': 'tmpfs', 'scenarios': {}}
+
+            def sql(text, success=True):
+                client = (['mysql', '--no-defaults', '-uroot', '--default-character-set=utf8mb4', '--batch', '--raw', '--skip-column-names', 'probe']
+                          if dialect == 'mysql' else ['psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'])
+                p = command(['podman', 'exec', '-i', name] + client, text)
+                if success and p.returncode:
+                    raise AssertionError(p.stderr)
+                if not success:
+                    assert p.returncode != 0, 'expected original V40 / duplicate write to fail'
+                    return p.stderr
+                return p.stdout.strip()
+
+            try:
+                p = command(['podman', 'create', '--name', name, '--network', 'none', '--pull=never', '--tmpfs', storage + ':rw', '-e', environment, image])
+                assert p.returncode == 0, p.stderr
+                owned = True
+                evidence['container_id'] = p.stdout.strip()
+                assert command(['podman', 'start', name]).returncode == 0
+                for _ in range(60):
+                    ready = (['mysqladmin', '--no-defaults', '-uroot', '--protocol=TCP', '-h127.0.0.1', 'ping'] if dialect == 'mysql'
+                             else ['pg_isready', '-U', 'postgres'])
+                    if command(['podman', 'exec', name] + ready).returncode == 0:
+                        break
+                    time.sleep(1)
+                else:
+                    raise AssertionError('database readiness timeout')
+                if dialect == 'mysql':
+                    p = command(['podman', 'exec', name, 'mysql', '--no-defaults', '-uroot', '-e', 'CREATE DATABASE probe CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'])
+                    assert p.returncode == 0, p.stderr
+                evidence['version'] = sql('SELECT VERSION();')
+                source = ROOT / f'apex-system/src/main/resources/db/migration/{dialect}/V40__fix_schema_inconsistencies_based_on_po.sql'
+                repair = ROOT / f'apex-system/src/main/resources/db/upgrade/{dialect}/consent_before_v40.sql'
+                if dialect == 'postgresql':
+                    container_root = pathlib.PurePosixPath('/tmp/consent-upgrade')
+                    wrapper_path = ROOT / 'apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql'
+                    resource_root = ROOT / 'apex-system/src/main/resources/db'
+                    evidence['copied_files'] = []
+                    for path in (repair, wrapper_path, source):
+                        target = container_root / path.relative_to(resource_root)
+                        p = command(['podman', 'exec', name, 'mkdir', '-p', str(target.parent)])
+                        assert p.returncode == 0, p.stderr
+                        p = command(['podman', 'cp', str(path), f'{name}:{target}'])
+                        assert p.returncode == 0, p.stderr
+                        checksum = command(['podman', 'exec', name, 'sha256sum', str(target)])
+                        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                        assert checksum.returncode == 0 and checksum.stdout.split()[0] == digest
+                        evidence['copied_files'].append({'source': str(path.relative_to(ROOT)), 'target': str(target), 'sha256': digest})
+                    repair_file = container_root / repair.relative_to(resource_root)
+                    wrapper_file = container_root / wrapper_path.relative_to(resource_root)
+                original = source.read_text()
+                consent = original.split('-- 2. Fix wf_workflow_definition')[0]
+                evidence['source_sha256'] = hashlib.sha256(source.read_bytes()).hexdigest()
+                evidence['repair_sha256'] = hashlib.sha256(repair.read_bytes()).hexdigest()
+                ddl = ('CREATE TABLE oauth2_authorization_consent(registered_client_id VARCHAR(100) NOT NULL,'
+                       'principal_name VARCHAR(200) NOT NULL,authorities VARCHAR(1000) NOT NULL,PRIMARY KEY(registered_client_id,principal_name));')
+                rows = "INSERT INTO oauth2_authorization_consent VALUES ('a','b:c','read'),('a:b','c','write'),('a','用户','read,write'),('b','用户','profile');"
+                payload = "SELECT registered_client_id,principal_name,authorities FROM oauth2_authorization_consent ORDER BY registered_client_id,principal_name;"
+                snapshot = 'SELECT id,registered_client_id,principal_name,authorities,created_at,updated_at FROM oauth2_authorization_consent ORDER BY registered_client_id,principal_name;'
+                for scenario in ('legacy', 'partial', 'no_primary_key', 'existing_ids'):
+                    sql('DROP TABLE IF EXISTS oauth2_authorization_consent; ' + ddl + rows)
+                    before = sql(payload)
+                    item = evidence['scenarios'][scenario] = {'before': before}
+                    if scenario == 'legacy':
+                        item['original_failure'] = sql(consent, success=False)
+                        # PostgreSQL direct client DDL has already dropped the primary key.
+                    if scenario in ('partial', 'existing_ids'):
+                        sql('ALTER TABLE oauth2_authorization_consent ADD COLUMN id VARCHAR(100);'
+                            "ALTER TABLE oauth2_authorization_consent ADD COLUMN created_at TIMESTAMP DEFAULT '2020-01-02 03:04:05';"
+                            "ALTER TABLE oauth2_authorization_consent ADD COLUMN updated_at TIMESTAMP DEFAULT '2021-02-03 04:05:06';")
+                        if scenario == 'existing_ids':
+                            sql("UPDATE oauth2_authorization_consent SET id='keep-this-id' WHERE registered_client_id='a' AND principal_name='用户';")
+                    if scenario == 'no_primary_key':
+                        sql('ALTER TABLE oauth2_authorization_consent ' + ('DROP PRIMARY KEY;' if dialect == 'mysql' else 'DROP CONSTRAINT oauth2_authorization_consent_pkey;'))
+                    if dialect == 'postgresql':
+                        postgresql_file(name, repair_file)
+                    else:
+                        sql(repair.read_text())
+                    assert sql(payload) == before, 'payload changed'
+                    first = sql(snapshot)
+                    assert sql('SELECT COUNT(*),COUNT(DISTINCT id) FROM oauth2_authorization_consent;').replace('|', '\t') == '4\t4'
+                    assert sql("SELECT COUNT(*) FROM oauth2_authorization_consent WHERE id IS NULL OR id='';") == '0'
+                    if scenario == 'existing_ids':
+                        assert sql("SELECT id FROM oauth2_authorization_consent WHERE registered_client_id='a' AND principal_name='用户';") == 'keep-this-id'
+                    if scenario in ('partial', 'existing_ids'):
+                        assert sql("SELECT COUNT(*) FROM oauth2_authorization_consent WHERE created_at='2020-01-02 03:04:05' AND updated_at='2021-02-03 04:05:06';") == '4'
+                    if dialect == 'postgresql':
+                        postgresql_file(name, repair_file)
+                    else:
+                        sql(repair.read_text())
+                    assert sql(snapshot) == first, 'repair replay changed ids or timestamps'
+                    item['business_duplicate_rejected'] = bool(sql("INSERT INTO oauth2_authorization_consent(id,registered_client_id,principal_name,authorities) VALUES ('new-id','a','用户','other');", success=False))
+                    item['id_duplicate_rejected'] = bool(sql("INSERT INTO oauth2_authorization_consent(id,registered_client_id,principal_name,authorities) SELECT id,'new-client','new-user','other' FROM oauth2_authorization_consent LIMIT 1;", success=False))
+                    if dialect == 'mysql':
+                        sql(consent)
+                        sql(consent)
+                        assert sql(snapshot) == first
+                        item['original_consent_v40_after_repair_and_replay'] = True
+                    item.update(after=first, passed=True)
+                if dialect == 'postgresql':
+                    evidence['unexpected_id_types'] = {}
+                    for id_type in ('VARCHAR(50)', 'VARCHAR(101)', 'TEXT', 'BIGINT'):
+                        sql('DROP TABLE oauth2_authorization_consent; ' + ddl + rows +
+                            f'ALTER TABLE oauth2_authorization_consent ADD COLUMN id {id_type};')
+                        before = sql(payload)
+                        p = command(['podman', 'exec', name, 'psql', '-X', '-U', 'postgres', '-d', 'postgres',
+                                     '-v', 'ON_ERROR_STOP=1', '-At', '-f', str(repair_file)])
+                        assert p.returncode != 0 and 'unexpected consent id type' in p.stderr
+                        assert sql(payload) == before
+                        assert sql('SELECT COUNT(*) FROM oauth2_authorization_consent WHERE id IS NOT NULL;') == '0'
+                        assert sql("SELECT COUNT(*) FROM pg_constraint WHERE conrelid='oauth2_authorization_consent'::regclass AND contype='p';") == '1'
+                        assert sql("SELECT COUNT(*) FROM information_schema.columns WHERE table_name='oauth2_authorization_consent' AND column_name='created_at';") == '0'
+                        evidence['unexpected_id_types'][id_type] = {'rejected': True, 'rollback_verified': True, 'error': p.stderr}
+                    sql('DROP TABLE oauth2_authorization_consent; ' + ddl + rows)
+                    postgresql_file(name, repair_file)
+                # Full unmodified MySQL V40 and replay after explicit preflight.
+                if dialect == 'mysql':
+                    sql('CREATE TABLE wf_workflow_definition(id BIGINT PRIMARY KEY,node_config_json TEXT NOT NULL,status VARCHAR(20) NOT NULL);'
+                        'CREATE TABLE wf_process_instance(id BIGINT PRIMARY KEY,context_json TEXT);'
+                        'CREATE TABLE office_message(id BIGINT PRIMARY KEY,message_type VARCHAR(50),recipient_type VARCHAR(50) NOT NULL,recipient_ids TEXT,status VARCHAR(50),result_message TEXT);')
+                    before = sql(snapshot)
+                    sql(original)
+                    sql(original)
+                    assert sql(snapshot) == before
+                    evidence['unmodified_full_v40_after_preflight_and_replay'] = True
+                else:
+                    sql('CREATE TABLE wf_workflow_definition(id BIGINT PRIMARY KEY,node_config_json TEXT NOT NULL,status VARCHAR(20) NOT NULL);'
+                        'CREATE TABLE wf_process_instance(id BIGINT PRIMARY KEY,context_json TEXT);'
+                        'CREATE TABLE office_message(id BIGINT PRIMARY KEY,message_type VARCHAR(50),recipient_type VARCHAR(50) NOT NULL,recipient_ids TEXT,status VARCHAR(50),result_message TEXT);')
+                    wrapper_path = ROOT / 'apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql'
+                    wrapper = wrapper_path.read_text().replace('\\ir ../../migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql', original)
+                    evidence['wrapper_sha256'] = hashlib.sha256(wrapper_path.read_bytes()).hexdigest()
+                    before = sql(snapshot)
+                    broken = wrapper.replace('COMMIT;', "SELECT 1/0;\nCOMMIT;")
+                    evidence['injected_failure'] = sql(broken, success=False)
+                    assert sql(snapshot) == before, 'transaction failure lost consent data'
+                    assert sql("SELECT COUNT(*) FROM information_schema.columns WHERE table_name='wf_workflow_definition' AND column_name='node_config_json';") == '1'
+                    evidence['transaction_rollback_verified'] = True
+                    evidence['injected_failure_scope'] = 'stdin with only the V40 include expanded and division by zero before COMMIT; rollback only, separate from original-file include verification'
+                    evidence['wrapper_file_first_output'] = postgresql_file(name, wrapper_file)
+                    evidence['wrapper_file_replay_output'] = postgresql_file(name, wrapper_file)
+                    evidence['wrapper_file_command'] = ['podman', 'exec', name, 'psql', '-X', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At', '-f', str(wrapper_file)]
+                    evidence['original_wrapper_relative_include_verified'] = True
+                    assert sql(snapshot) == before
+                    evidence['unmodified_full_v40_via_transactional_wrapper_and_replay'] = True
+                    evidence['limitation'] = 'psql operational wrapper only; no Flyway history repair/marking. Wrapper replay skips already renamed source columns; original PostgreSQL V40 itself is not idempotent.'
+            finally:
+                if owned:
+                    p = command(['podman', 'rm', '-f', '--volumes', name])
+                    removed = p.returncode == 0 and command(['podman', 'container', 'exists', name]).returncode == 1
+                    result['cleanup'][dialect] = {'container_and_anonymous_volumes_removed': removed}
+                    assert removed
+        result['status'] = 'passed_with_postgresql_upgrade_limitation'
+    except Exception as exc:
+        result['status'] = 'failed'
+        result['error'] = str(exc)
+        raise
+    finally:
+        spec = importlib.util.spec_from_file_location('probe', ROOT / 'scripts/ci/auth_v45_dynamic_probe_20261018.py')
+        probe = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(probe)
+        ids, _, denominator = probe.verified_union()
+        result['verified_union'] = {'verified': len(ids), 'denominator': denominator, 'remaining': denominator - len(ids)}
+        result['ended_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+        print(str(output))
+        print('sha256=' + hashlib.sha256(output.read_bytes()).hexdigest())
+
+
+if __name__ == '__main__':
+    verify()

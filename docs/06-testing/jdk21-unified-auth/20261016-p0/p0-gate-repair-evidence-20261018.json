@@ -1,0 +1,352 @@
+{
+  "repository": "/Users/work/apex-scaffold",
+  "date": "2026-10-18",
+  "result": "FULL_VERIFY_PASSED_P0_OTHER_ACCEPTANCE_PENDING",
+  "environment": {
+    "java": "Oracle 17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "initialization": "source scripts/build/init-build-env.sh before each build",
+    "full_verify_parallelism": "-T2",
+    "password_handling": "MySQL container environment read into memory only; unset on exit",
+    "test_timeout_changed": false,
+    "assertions_weakened": false,
+    "ryuk_disabled": false
+  },
+  "old_build_cleanup": {
+    "observation": "Old apex-example Surefire main thread blocked in DruidDataSource.takeLast/getConnection, called by Flyway during Spring startup; over four hours elapsed",
+    "action": "mvnd --stop after fixed environment initialization; old daemon and Surefire PIDs no longer present",
+    "limitation": "This is not proof of the historical workflow timeout root cause"
+  },
+  "system_spotless": {
+    "command": "mvnd -T1 -B -pl apex-system '-DspotlessFiles=.*(RouterOpenApiCoverageTest|OpenApiDocumentationCustomizerTest|OAuth2AuthorizationHandler|SocialLoginHandler|OAuth2RouterConfig|KeycloakRouterConfig|OpenApiDocumentationCustomizer)\\.java' spotless:apply spotless:check",
+    "exit_code": 0,
+    "result": "BUILD SUCCESS",
+    "files": 7,
+    "changed_by_formatter": 0,
+    "finished_at": "2026-10-18T06:25:25+08:00"
+  },
+  "new_compile_blocker": {
+    "cause": "Seven non-repeatable OperationLog annotations duplicated on existing WorkflowHandler write methods",
+    "fix": "Removed only seven duplicate annotations, retaining existing Chinese operation declarations; formatted WorkflowHandler",
+    "lombok_errors": "Missing generated getters/log/constructor disappeared after duplicate annotation removal",
+    "failed_log": "/Users/eric/.cache/apex-p0-workflow-diagnosis-20261018.log",
+    "sha256": "b16edec09ae4a5308d54fe2c781d206cb99061c7942f10be694eeb5fe5302b6b",
+    "exit_code": 1
+  },
+  "workflow_targeted": {
+    "command_id": "job-4998187070094a04878b51a3d6c6477f",
+    "command": "mvnd -T1 -B -pl apex-workflow-service -am -Dit.test=WorkflowDatabaseHttpIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false -Dlogging.level.org.springframework.web.server.adapter.HttpWebHandlerAdapter=DEBUG -Dlogging.level.com.apex.scaffold.workflow.infrastructure.persistence.mapper=DEBUG -Dlogging.level.org.springframework.jdbc.datasource.DataSourceUtils=DEBUG test-compile failsafe:integration-test failsafe:verify",
+    "exit_code": 0,
+    "natural_exit": true,
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "log": "/Users/eric/.cache/apex-p0-workflow-diagnosis-fixed-20261018.log",
+    "sha256": "63450a3377c2286e4b65cd2fbd10ba7fa4ede215343ba926802f8fba22fc6554",
+    "timing": {
+      "first_request_received": "06:30:07.313",
+      "jdbc_thread_connection_request": "06:30:08.507",
+      "count_sql_preparing": "06:30:08.521",
+      "count_result": "06:30:08.831",
+      "page_sql_preparing": "06:30:08.861",
+      "page_result": "06:30:08.944",
+      "response_ready": "06:30:08.982",
+      "http_200_completed": "06:30:09.358",
+      "request_to_completed_ms": 2045,
+      "second_request_to_completed_ms": 27
+    },
+    "conclusion": "Historical 5-second timeout did not reproduce after clearing old build. JDBC work observed on apex.jdbc-2; no connection or SQL error. Request-to-connection interval includes routing/security/initialization/scheduling and cannot be attributed solely to scheduler queue. No claim that duplicate annotations caused the historical timeout."
+  },
+  "full_verify": {
+    "command_id": "job-40491ecd657f43aabffcf58fb5e1b020",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-20261018.log",
+    "status": "BUILD FAILURE",
+    "natural_exit": true,
+    "exit_code": 1,
+    "finished_at": "2026-10-18T06:35:56+08:00",
+    "sha256": "889de057e0062eac03fe623bb6e3a8c42753a07fe6883e0d462a4f300848abcd",
+    "reactor": {"success": 17, "failure": 1, "skipped": 13},
+    "cause": "Fourteen duplicate non-repeatable OperationLog annotations in six system Handlers; compile failed before system tests",
+    "repair": "Removed duplicate single-line declarations, retaining declarations that disable request/response capture; SSO callback retains LOGIN classification",
+    "spotless_six_files": "BUILD SUCCESS, 0 changes, 2026-10-18T06:37:53+08:00"
+  },
+  "full_verify_after_system_repair": {
+    "command_id": "job-e2de47d383864a65976e3ea97d1a038b",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-repaired-20261018.log",
+    "status": "BUILD FAILURE",
+    "natural_exit": true,
+    "exit_code": 1,
+    "finished_at": "2026-10-18T06:49:59+08:00",
+    "sha256": "2553d27a9aa2dd0bda2b1bb3f1dc6dcf8a4504c54c5616d12ce5e01845e1e941",
+    "cause": "WorkflowOperationLogAspectTest expects whitelist httpMethod/httpStatus but completeTask disables metadata flags",
+    "repair": "Enabled metadata flags only on completeTask; local aspect only reads HTTP method/status and never request/response bodies; original assertions retained",
+    "system": "BUILD SUCCESS including Spotless and both protected migration tests"
+  },
+  "workflow_audit_targeted": {
+    "command": "mvnd -T1 -B -pl apex-workflow-service -am -Dtest=WorkflowOperationLogAspectTest -Dsurefire.failIfNoSpecifiedTests=false -DspotlessFiles=.*WorkflowHandler\\.java spotless:check test",
+    "result": "BUILD SUCCESS",
+    "exit_code": 0,
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "finished_at": "2026-10-18T06:51:54+08:00",
+    "log": "/Users/eric/.cache/apex-p0-workflow-audit-repair-20261018.log",
+    "sha256": "37ee2713084f164730ac427763d6fbaf83baab77fb4d77aeed60524c954cfeb9"
+  },
+  "full_verify_after_audit_repair": {
+    "command_id": "job-e653ca04fe594c8b9d1db4359849662d",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-audit-repaired-20261018.log",
+    "status": "BUILD FAILURE",
+    "exit_code": 1,
+    "natural_exit": true,
+    "finished_at": "2026-10-18T06:53:59+08:00",
+    "sha256": "de48be0aef3971daf809e8b6b9cba62d478395c8cf3912e8b00587bc03b50d04",
+    "cause": "common DateUtil.java extra blank line after imports; this module had passed in prior full run",
+    "repair": "Targeted DateUtil spotless:apply/check passed at 06:54:55, one file changed"
+  },
+  "full_verify_after_date_format": {
+    "command_id": "job-4307187514014b699ffad7cd6a31c4fa",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-date-repaired-20261018.log",
+    "status": "BUILD FAILURE",
+    "exit_code": 1,
+    "natural_exit": true,
+    "finished_at": "2026-10-18T07:06:36+08:00",
+    "sha256": "ea80a2349dcd6591645c17ce82e8d598a3d884cba47e4600c7c3558e4e4b86be",
+    "reactor": {"success": 25, "failure": 1, "skipped": 5},
+    "surefire": {"tests": 4647, "failures": 0, "errors": 0, "skipped": 0},
+    "failsafe": {"tests": 53, "failures": 0, "errors": 0, "skipped": 1},
+    "cause": "system MonitorMetricsCollector.java import ordering; system passed Spotless in prior full run",
+    "repair": "Only targeted MonitorMetricsCollector spotless:apply/check, one file changed, passed at 07:08:05"
+  },
+  "full_verify_after_monitor_format": {
+    "command_id": "job-4825641abecf4b87ac997ea8da8a29d7",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-monitor-repaired-20261018.log",
+    "status": "BUILD FAILURE",
+    "exit_code": 1,
+    "natural_exit": true,
+    "finished_at": "2026-10-18T07:16:36+08:00",
+    "sha256": "4a4ecbab4bda81a02b6ab55924f69e82e2f59539bba08fb4fdd9004a4ed4959f",
+    "reactor": {"success": 17, "failure": 1, "skipped": 13},
+    "cause": "office ApprovalStatus.java extra blank line; already absent when inspected after failure, no edit made by this agent",
+    "system": "BUILD SUCCESS"
+  },
+  "format_preflight": {
+    "command": "mvnd -T2 -B spotless:check",
+    "exit_code": 0,
+    "log": "/Users/eric/.cache/apex-p0-format-preflight-20261018.log",
+    "sha256": "d00d6c380151601b5548523ae2f1b01c2c25cf10f5464b3ed7ed7af1c884770b"
+  },
+  "full_verify_after_preflight": {
+    "command_id": "job-171969a7fbdd46f788b800120ac64df7",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-preflight-20261018.log",
+    "status": "BUILD FAILURE",
+    "exit_code": 1,
+    "natural_exit": true,
+    "finished_at": "2026-10-18T07:25:44+08:00",
+    "sha256": "be43edd1b62fd0754e67baea9cbfc26db290bfe6099671039bcead5e928bc1e5",
+    "reactor": {"success": 24, "failure": 1, "skipped": 6},
+    "cause": "LicenseGenerator.java formatter reports unused RequiredArgsConstructor import; later source uses the annotation and targeted apply/check changes zero files",
+    "system_workflow_office_services": "BUILD SUCCESS"
+  },
+  "later_format_preflights": [
+    {"log": "/Users/eric/.cache/apex-p0-format-preflight-second-20261018.log", "sha256": "a94b26959206c2d196c364e52c1f377810727e4222a897ec9b6431e03de6b04c", "exit_code": 1, "repair": "Only formatted LeakyBucket and ApexBlockingIoProperties, two files changed"},
+    {"log": "/Users/eric/.cache/apex-p0-format-preflight-third-20261018.log", "sha256": "bdf10e5af4693533c0eead3dee5d1d89d025f7ab111ce6ca94b54480713b407e", "exit_code": 1, "repair": "Only formatted LicenseVersion and ApiCallLogProperties, two files changed"},
+    {"log": "/Users/eric/.cache/apex-p0-format-preflight-fourth-20261018.log", "sha256": "2abf7c601cc824a21c1971ed007931a63ce9269d8ac229dbfe6701a1a2b050b0", "exit_code": 0}
+  ],
+  "full_verify_after_latest_format": {
+    "command_id": "job-be2827190216420282e5f9ddfeb72bd1",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-format-stable-20261018.log",
+    "status": "BUILD FAILURE",
+    "natural_exit": true,
+    "exit_code": 1,
+    "finished_at": "2026-10-18T07:28:38+08:00",
+    "sha256": "d6d920276cb80925aefa2b06996bd6d0a604b84416661bd2dd703e27999e4ebe",
+    "reactor": {"success": 9, "failure": 1, "skipped": 21},
+    "cause": "TokenBlacklistServiceImpl duplicate constructor; explicit constructor already absent when inspected after failure; no edit made by this agent"
+  },
+  "cache_compile_confirmation": {
+    "command": "mvnd -T1 -B -pl apex-infrastructure-cache -am compile",
+    "status": "BUILD SUCCESS",
+    "exit_code": 0,
+    "natural_exit": true,
+    "finished_at": "2026-10-18T07:30:20+08:00",
+    "log": "/Users/eric/.cache/apex-p0-cache-compile-20261018.log",
+    "sha256": "e0bb055abb0b1e54b51658f9fa120df36706bf65959ea946c75bcdd35905375f"
+  },
+  "full_verify_after_cache_confirmation": {
+    "command_id": "job-a587e235b85a4040972cec41fb4fc473",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-cache-confirmed-20261018.log",
+    "status": "BUILD FAILURE",
+    "natural_exit": true,
+    "exit_code": 1,
+    "finished_at": "2026-10-18T07:33:03+08:00",
+    "sha256": "23352d22652584cc359b25b2b7618ef8ae974510f9df2fde1ef9e447f626c764",
+    "reactor": {"success": 3, "failure": 1, "skipped": 27},
+    "cause": "common TokenBucket, SlidingWindow and BasePO extra blank lines",
+    "repair": "Targeted spotless:apply/check passed; preserved existing Lombok refactoring",
+    "repair_log": "/Users/eric/.cache/apex-p0-common-format-eighth-20261018.log",
+    "repair_sha256": "184b95f09550e3cae607cad906e1d91f24d7c6a4575c3cd7450e946429d1d879"
+  },
+  "full_verify_after_common_confirmation": {
+    "command_id": "job-b634503c775642689d197f886f0b680f",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-common-confirmed-20261018.log",
+    "status": "BUILD FAILURE",
+    "natural_exit": true,
+    "exit_code": 1,
+    "finished_at": "2026-10-18T07:35:01+08:00",
+    "sha256": "d19d8a12f7b5172d8260749a5365ee68bc523fc52774299265d3339b8cd600b0",
+    "reactor": {"success": 5, "failure": 1, "skipped": 25},
+    "cause": "domain RemoteApiException extra blank line",
+    "repair": "Targeted formatter passed; subsequent preflights found LicenseValidator and ChuanglanProperties/ChuanglanApiException formatting; targeted formatter passed for each"
+  },
+  "ninth_round_format_logs": [
+    {"log": "/Users/eric/.cache/apex-p0-domain-format-ninth-20261018.log", "sha256": "9cfc84e1b6f92732ac9224ac294e9e123af7fdbaaf5a04cf89ce4dfa3e8e3365", "exit_code": 0},
+    {"log": "/Users/eric/.cache/apex-p0-format-preflight-fifth-20261018.log", "sha256": "f89aedc0c0f950fa4110c84cf7094b4e69aa4c4224a2d1f8d4bd47e8b4ba4a12", "exit_code": 1},
+    {"log": "/Users/eric/.cache/apex-p0-license-format-ninth-20261018.log", "sha256": "06e9fbf5d0875be8b22c3745d912dc2a27c976957b33a0c10520315c9dc44cfc", "exit_code": 0},
+    {"log": "/Users/eric/.cache/apex-p0-format-preflight-sixth-20261018.log", "sha256": "c98c061cd185338d59527c4c95be4a56bbe0e56b6c5e3bf4c01a107f67ff4280", "exit_code": 1},
+    {"log": "/Users/eric/.cache/apex-p0-integration-format-ninth-20261018.log", "sha256": "ef412332f640e4b1eb67b7a577fd6e217a2330d9614a179b1094a46c971c82b7", "exit_code": 0},
+    {"log": "/Users/eric/.cache/apex-p0-format-preflight-seventh-20261018.log", "sha256": "6fbbef53ce1ed4a5ac886fb7c3254dd087c4e430c3ba211f4b0a9eaec15289cc", "exit_code": 0}
+  ],
+  "full_verify_after_seventh_preflight": {
+    "command_id": "job-128af5ea140c4b49a7cb4dea7032a452",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-preflight-seventh-20261018.log",
+    "status": "BUILD FAILURE",
+    "natural_exit": true,
+    "exit_code": 1,
+    "finished_at": "2026-10-18T07:37:57+08:00",
+    "sha256": "8ed0398746e83984233dcc1cd2f3eaeaf8f63cdf809a093456bfe7b7e67ea5f8",
+    "reactor": {"success": 7, "failure": 1, "skipped": 23},
+    "cause": "RemoteRequest.Builder and ApiCallLogFilter constructor compilation failures; current source already has Lombok constructor annotations; no source edit made",
+    "confirmation": {"command": "mvnd -T1 -B -pl apex-infrastructure-remote -am compile", "exit_code": 0, "finished_at": "2026-10-18T07:39:11+08:00", "log": "/Users/eric/.cache/apex-p0-remote-compile-20261018.log", "sha256": "dc90091df17690f790d4516035cd5bd82c293e509407cc98b74fbfdab5f9d4a8"}
+  },
+  "full_verify_after_remote_confirmation": {
+    "command_id": "job-d8f3acbcb0d448b992d27eb322027eb5",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-remote-confirmed-20261018.log",
+    "status": "BUILD FAILURE",
+    "natural_exit": true,
+    "exit_code": 1,
+    "finished_at": "2026-10-18T07:52:20+08:00",
+    "sha256": "5aa9daab0a381b4d07677e69ae4a6ece2786c5bd3bcda6f3c9fd51e2b852f8a0",
+    "reactor": {"success": 30, "failure": 1, "skipped": 0},
+    "plugin_totals": {
+      "surefire": {"tests": 4790, "failures": 0, "errors": 0, "skipped": 0},
+      "failsafe": {"tests": 300, "failures": 1, "errors": 0, "skipped": 1},
+      "skipped_condition": "Real Seata TC environment unavailable"
+    },
+    "cause": "ExampleCapabilityIntegrationTest.idempotentDemoShouldEchoIdempotencyKey returned 409; response reports Required to bind 2 arguments, but only bound 1 (JoinPointMatch was NOT bound in invocation)",
+    "repair_under_verification": "OperationLogAspect obtains annotation from most-specific target method instead of relying on thread-bound JoinPointMatch after asynchronous idempotency advice; original integration assertions unchanged"
+  },
+  "example_aop_targeted": {
+    "fix_file": "apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java",
+    "tests": 7, "failures": 0, "errors": 0, "skipped": 0,
+    "result": "BUILD SUCCESS",
+    "log": "/Users/eric/.cache/apex-p0-example-aop-confirmed-20261018.log",
+    "sha256": "297d646501b853e2aed61d15956a480fc10169157b23eb105f9f5dcc90506f91",
+    "format_sha256": "eac6c8d61bf3956b77f2be7334ee7507d13aca5ad7bee439ef399b6a308c947c",
+    "preceding_compile_failure": {
+      "cause": "BlacklistStatus duplicate constructor; explicit constructor absent when subsequently read; entity not edited",
+      "log": "/Users/eric/.cache/apex-p0-example-aop-repair-20261018.log",
+      "sha256": "96f9bd76c3e230185175d6f1bdae3f96a3bdda4cb780afb9d51566486d9f5849"
+    }
+  },
+  "full_verify_after_aop_repair": {
+    "command_id": "job-b370ffd62b5f4d62b7282b3e960787c3",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-aop-repaired-20261018.log",
+    "status": "BUILD FAILURE",
+    "exit_code": 1,
+    "natural_exit": true,
+    "finished_at": "2026-10-18T08:10:44+08:00",
+    "sha256": "364fcf25d9fed6f3ca9788a5c388e5f44d7d7d2480a1914533fcc04bc09a7bc3",
+    "reactor": {"success": 18, "failure": 2, "skipped": 11},
+    "plugin_totals": {
+      "surefire": {"tests": 2976, "failures": 0, "errors": 0, "skipped": 0},
+      "failsafe": {"tests": 25, "failures": 0, "errors": 0, "skipped": 1},
+      "skipped_condition": "Real Seata TC environment unavailable"
+    },
+    "cause": "Spotless blank lines in file ChartEntity/DocumentEntity and eight system entity/exception files",
+    "repair": "Targeted formatting only; existing Lombok changes retained; apply/check exit 0",
+    "repair_log": "/Users/eric/.cache/apex-p0-entity-format-20261018.log",
+    "repair_sha256": "54ee809301fde1e35fd14c795f5976ead0c7905c4b6abb84590ec2b360acf54a",
+    "operation_log_unit_tests": {"tests": 6, "failures": 0, "errors": 0, "skipped": 0}
+  },
+  "full_verify_after_entity_format": {
+    "command_id": "job-5ad54e54e1e54d91a83d0302071d1b2d",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-entity-formatted-20261018.log",
+    "status": "BUILD FAILURE", "exit_code": 1, "natural_exit": true,
+    "finished_at": "2026-10-18T08:15:40+08:00",
+    "sha256": "be5df8ae2d333a68310de67765bcecc4d7d76a127fd517b7333356b9f6ff8974",
+    "reactor": {"success": 15, "failure": 2, "skipped": 14},
+    "cause": "SubscriptionEntity duplicate no-arg constructor and six office entity blank-line format violations",
+    "repair": "Office six files and SubscriptionEntity targeted formatting passed. Explicit constructors already absent on read; no semantic entity edit. First compile then failed on duplicate SubscriptionStatus constructor, also absent on next read. Current system dependency compile exit 0.",
+    "format_log": "/Users/eric/.cache/apex-p0-office-entity-format-20261018.log",
+    "format_sha256": "803ee583e3ae647f932ad34afbe665d9d4eb604f049a46d4bdb67ad3e522cd47",
+    "intermediate_compile_log": "/Users/eric/.cache/apex-p0-subscription-compile-20261018.log",
+    "intermediate_compile_sha256": "a8a9e2cb7e8ccd257af356084c181ec6391282bb04f2bf82f420f213cc095c6b",
+    "current_compile_log": "/Users/eric/.cache/apex-p0-subscription-current-compile-20261018.log",
+    "current_compile_sha256": "d7cb705f1f43a95d51a10a2c9b6bd55e501ae54acbc209152ae13026c998a412",
+    "final_format_log": "/Users/eric/.cache/apex-p0-subscription-format-final-20261018.log",
+    "final_format_sha256": "0f3147756f040dd28473a471a99513a1138b0da0850d81c99252e90525a76a0c"
+  },
+  "full_verify_after_office_format": {
+    "command_id": "job-59aeba1abccf4f7d968c886f5f279b8d",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-office-formatted-20261018.log",
+    "status": "BUILD FAILURE", "exit_code": 1, "natural_exit": true,
+    "finished_at": "2026-10-18T08:27:26+08:00",
+    "sha256": "c9ce1177106da1ce89897b86b4722d04800110e5099f4b291d4a7c65b9a86a28",
+    "reactor": {"success": 19, "failure": 2, "skipped": 10},
+    "plugin_totals": {
+      "surefire": {"tests": 4236, "failures": 0, "errors": 0, "skipped": 0},
+      "failsafe": {"tests": 25, "failures": 0, "errors": 0, "skipped": 1}
+    },
+    "cause": "Spotless blank lines in auth TokenBlacklistService, DeviceTrust, ResourcePermissionService, SecurityMonitoringService and system RoleEntity, LoginLogEntity",
+    "repair": "Targeted formatting/check of six files exit 0; existing Lombok changes retained",
+    "repair_log": "/Users/eric/.cache/apex-p0-auth-system-format-20261018.log",
+    "repair_sha256": "26529ec53957b8bfd416c697be865332a241dbe054a1e5d9302460ee1b9216b7"
+  },
+  "full_verify_after_auth_format": {
+    "command_id": "job-a847bf88e77e44c4b5fa550494961b6f",
+    "command": "mvnd -T2 -B clean verify",
+    "log": "/Users/eric/.cache/apex-p0-full-verify-auth-formatted-20261018.log",
+    "status": "BUILD SUCCESS", "exit_code": 0, "natural_exit": true,
+    "finished_at": "2026-10-18T08:51:31+08:00", "duration": "19:15",
+    "sha256": "d8e02918875b7465b44d679550a6dcb9eaf4e7c3296e1120c99ed99cda79ada3",
+    "reactor": {"success": 31, "failure": 0, "skipped": 0},
+    "plugin_totals": {
+      "surefire": {"tests": 4790, "failures": 0, "errors": 0, "skipped": 0},
+      "failsafe": {"tests": 300, "failures": 0, "errors": 0, "skipped": 1},
+      "skipped_condition": "Real Seata TC environment unavailable"
+    },
+    "quality": {
+      "spotless_modules": 31, "pmd_check_modules": 31,
+      "jacoco_check_modules": 31, "jacoco_check_executions": 42,
+      "jacoco_checks_passed": 38,
+      "jacoco_checks_missing_data": ["apex-scaffold", "apex-services-bom", "apex-license-tools", "apex-infrastructure"]
+    },
+    "checks": {"json_valid": true, "git_diff_check": "passed", "markdown_files": 663, "local_links": 2779, "broken_links": 0},
+    "limitation": "Shared workspace changed during preceding rounds; success applies to this execution, not a frozen commit. Historical workflow timeout and old mvnd failure remain unexplained. P0 acceptance beyond build gate remains pending."
+  },
+  "remaining_p0": [
+    "Historical workflow timeout and mvnd communication failure root causes not proven",
+    "Declaration/Javadoc semantics and current complete inventory",
+    "Runtime routes, all-service configuration and dependency/environment correlation",
+    "Dual-database type/default/index semantics",
+    "Existing-data upgrade and production rollback",
+    "Real Seata TC validation"
+  ]
+}

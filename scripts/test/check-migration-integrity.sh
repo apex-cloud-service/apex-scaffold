@@ -45,18 +45,13 @@ check_fail() {
 echo -e "${YELLOW}[1/9] 检查 MySQL 迁移文件...${NC}"
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
-# 参与逐服务校验的微服务清单（迁移方案 §9.3 / §12：每服务独立 V1 版本链）
-# apex-auth-service：Phase 2（V44~V56，apex_auth 库）
-# apex-workflow-service：Phase 3（V1 起，apex_workflow 库）
-# apex-file-service：Phase 4（V1 起，apex_file 库）
-# apex-office-service：Phase 5（V1 起，apex_office 库）
-# apex-system-service：Phase 6（V1 起，apex_system 库，骨架阶段迁移目录可能为空）
+# 各业务域独立 Flyway 版本链；system 迁移资源由业务库提供。
 MIGRATION_SERVICES=(
     "apex-auth-service"
     "apex-workflow-service"
     "apex-file-service"
     "apex-office-service"
-    "apex-system-service"
+    "apex-system"
 )
 
 # 各业务服务独立库的 V1 迁移脚本（每服务独立 Flyway 链，方案 §7 风险 7）
@@ -192,17 +187,36 @@ for svc in "${MIGRATION_SERVICES[@]}"; do
             continue
         fi
 
-        # 提取每个迁移文件的版本号（V 前缀后的数字），统计重复项
-        DUPLICATED_VERSIONS=$(ls "$MIGRATION_DIR" 2>/dev/null \
-            | grep -oE '^V[0-9]+' \
-            | sort \
-            | uniq -d)
+        # 保留完整版本，并按 Flyway 规则归一化分隔符、前导零和尾部零。
+        VERSIONS=$(
+            for migration_file in "$MIGRATION_DIR"/V*__*.sql; do
+                [ -f "$migration_file" ] || continue
+                migration_name=${migration_file##*/}
+                version=${migration_name%%__*}
+                version=${version#V}
+                [[ "$version" =~ ^[0-9]+([._][0-9]+)*$ ]] || continue
+                printf '%s\n' "$version"
+            done | awk '
+                {
+                    gsub(/_/, ".")
+                    count = split($0, parts, /[.]/)
+                    for (i = 1; i <= count; i++) {
+                        sub(/^0+/, "", parts[i])
+                        if (parts[i] == "") parts[i] = "0"
+                    }
+                    while (count > 1 && parts[count] == "0") count--
+                    version = "V" parts[1]
+                    for (i = 2; i <= count; i++) version = version "." parts[i]
+                    print version
+                }'
+        )
+        DUPLICATED_VERSIONS=$(printf '%s\n' "$VERSIONS" | sort | uniq -d)
 
         if [ -n "$DUPLICATED_VERSIONS" ]; then
             echo "  ✗ ${svc}（${dialect}）存在重复版本号：$(echo "$DUPLICATED_VERSIONS" | tr '\n' ' ')"
             DUPLICATE_FOUND=true
         else
-            VERSION_COUNT=$(ls "$MIGRATION_DIR" 2>/dev/null | grep -cE '^V[0-9]+' || true)
+            VERSION_COUNT=$(printf '%s\n' "$VERSIONS" | grep -c '^V' || true)
             if [ "${VERSION_COUNT:-0}" -eq 0 ]; then
                 echo "  - ${svc}（${dialect}）暂无迁移脚本，跳过"
             else
@@ -239,16 +253,17 @@ else
     check_fail "业务服务独立 Flyway V1 链缺失"
 fi
 
-# 7. 检查测试脚本
+# 7. 检查双库迁移回归测试
 echo ""
-echo -e "${YELLOW}[7/9] 检查测试脚本...${NC}"
+echo -e "${YELLOW}[7/9] 检查双库迁移回归测试...${NC}"
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
-if [ -x "scripts/test/test-mysql-migration.sh" ] && \
-   [ -x "scripts/test/test-postgresql-migration.sh" ]; then
-    check_pass "迁移测试脚本存在且可执行"
+DUAL_DB_TEST="apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java"
+
+if [ -f "$DUAL_DB_TEST" ]; then
+    check_pass "双库迁移回归测试存在（Testcontainers，由 Failsafe 执行）"
 else
-    check_fail "迁移测试脚本缺失或无执行权限"
+    check_fail "双库迁移回归测试缺失：$DUAL_DB_TEST"
 fi
 
 # 8. 检查文档
@@ -316,15 +331,16 @@ echo -e "${RED}失败: $FAILED_CHECKS${NC}"
 echo ""
 
 if [ $FAILED_CHECKS -eq 0 ]; then
-    echo -e "${GREEN}✓ 所有检查通过！可以进行迁移测试。${NC}"
+    echo -e "${GREEN}✓ 所有检查通过！可以执行迁移回归测试。${NC}"
     echo ""
-    echo "下一步："
-    echo "  1. 运行 MySQL 迁移测试：./scripts/test/test-mysql-migration.sh"
-    echo "  2. 运行 PostgreSQL 迁移测试：./scripts/test/test-postgresql-migration.sh"
+    echo "下一步：执行双库迁移回归测试（Testcontainers）"
+    echo "  cd apex-system && mvnd -T4 -B test-compile failsafe:integration-test failsafe:verify \\"
+    echo "    -Dit.test=SystemDualDatabaseMigrationIntegrationTest"
+    echo "  或在根目录执行完整门禁：mvnd -T4 -B clean verify"
     echo ""
     exit 0
 else
-    echo -e "${RED}✗ 发现 $FAILED_CHECKS 个问题，请修复后再进行迁移测试。${NC}"
+    echo -e "${RED}✗ 发现 $FAILED_CHECKS 个问题，请修复后再执行迁移回归测试。${NC}"
     echo ""
     exit 1
 fi

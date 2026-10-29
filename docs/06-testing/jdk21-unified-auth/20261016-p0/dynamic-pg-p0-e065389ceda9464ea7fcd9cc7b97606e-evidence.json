@@ -1,0 +1,3727 @@
+{
+  "schema_version": 1,
+  "probe_kind": "postgresql_p0_do_guard",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "baseline_dynamic_denominator": 586,
+  "sources": [
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "source_sha256": "344ed0c461f60629457f97e29e6d09b3c66e80ef6c933153c4b47d2ab2538f26"
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f"
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "source_sha256": "9f913456ce98b24c456d2d4466e847ea75bb3c791e088aa55306852d8ae4e390"
+    }
+  ],
+  "groups": [
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "target": {
+        "table": "sys_user",
+        "index": "idx_sys_user_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 2,
+          "end_line": 2,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_user') IS NOT NULL THEN\n        ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_sys_user_tenant_id ON sys_user (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 52,
+          "end_offset": 303,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "beed11f531a1c6511cb3ba36d455f5443a26b171a06d41d3db0563e4434d2a67",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user",
+              "line": 5,
+              "end_line": 5,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_user",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 2
+            },
+            {
+              "table": "sys_user",
+              "line": 6,
+              "end_line": 6,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_sys_user_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_user",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_sys_user_tenant_id ON sys_user (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 2
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 2,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-2be3681e533ddba455b01278"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0530"
+      ],
+      "statement_ids": [
+        [
+          "stmt-2be3681e533ddba455b01278"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "target": {
+        "table": "sys_user_role",
+        "index": "idx_user_role_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 9,
+          "end_line": 9,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_user_role') IS NOT NULL THEN\n        ALTER TABLE sys_user_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_user_role_tenant_id ON sys_user_role (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 305,
+          "end_offset": 572,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "2e8bcafb2d986969bd628a2c5ac6162fab6e29ddd9a575e3043368b4d4a3f72e",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user_role",
+              "line": 12,
+              "end_line": 12,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_user_role",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_user_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 9
+            },
+            {
+              "table": "sys_user_role",
+              "line": 13,
+              "end_line": 13,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_user_role_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_user_role",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_user_role_tenant_id ON sys_user_role (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 9
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 9,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-7d9d0c5d1922f9703cb684ba"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0531"
+      ],
+      "statement_ids": [
+        [
+          "stmt-7d9d0c5d1922f9703cb684ba"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "target": {
+        "table": "sys_operation_log",
+        "index": "idx_sys_operation_log_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 16,
+          "end_line": 16,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_operation_log') IS NOT NULL THEN\n        ALTER TABLE sys_operation_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_sys_operation_log_tenant_id ON sys_operation_log (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 574,
+          "end_offset": 861,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "b1f10b0667b74646ff3dfe3a22ab2cf94ba5949a999128559096fecb326a1536",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_operation_log",
+              "line": 19,
+              "end_line": 19,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_operation_log",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_operation_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 16
+            },
+            {
+              "table": "sys_operation_log",
+              "line": 20,
+              "end_line": 20,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_sys_operation_log_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_operation_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_sys_operation_log_tenant_id ON sys_operation_log (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 16
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 16,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-4161be176a55e928aaca57e8"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0532"
+      ],
+      "statement_ids": [
+        [
+          "stmt-4161be176a55e928aaca57e8"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "target": {
+        "table": "biz_system_message",
+        "index": "idx_biz_system_message_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 23,
+          "end_line": 23,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_system_message') IS NOT NULL THEN\n        ALTER TABLE biz_system_message ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_system_message_tenant_id ON biz_system_message (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 863,
+          "end_offset": 1154,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "d90c1b978956f1f2f19671fda1f7e41398b541d248ea1afbc9995a7aba12c244",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_system_message",
+              "line": 26,
+              "end_line": 26,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_system_message",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_system_message ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 23
+            },
+            {
+              "table": "biz_system_message",
+              "line": 27,
+              "end_line": 27,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_system_message",
+                "create",
+                "exists",
+                "idx_biz_system_message_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_system_message_tenant_id ON biz_system_message (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 23
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 23,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-bb7298adb693faaddfd89e6b"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0533"
+      ],
+      "statement_ids": [
+        [
+          "stmt-bb7298adb693faaddfd89e6b"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_credit_tx",
+        "index": "idx_biz_credit_tx_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 3,
+          "end_line": 3,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_credit_tx') IS NOT NULL THEN\n        ALTER TABLE biz_credit_tx ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_credit_tx_tenant_id ON biz_credit_tx (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 53,
+          "end_offset": 324,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "f39a2dbef764617cd31a71b26815792f223fc7d37029494f52a72c902dd4b3fd",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_credit_tx",
+              "line": 6,
+              "end_line": 6,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_credit_tx",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_credit_tx ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 3
+            },
+            {
+              "table": "biz_credit_tx",
+              "line": 7,
+              "end_line": 7,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_credit_tx",
+                "create",
+                "exists",
+                "idx_biz_credit_tx_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_credit_tx_tenant_id ON biz_credit_tx (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 3
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 3,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-e6444fa07a6a0f5bc451834d"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0534"
+      ],
+      "statement_ids": [
+        [
+          "stmt-e6444fa07a6a0f5bc451834d"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "sys_operation_log",
+        "index": "idx_v15_sys_operation_log_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 11,
+          "end_line": 11,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_operation_log') IS NOT NULL THEN\n        ALTER TABLE sys_operation_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_v15_sys_operation_log_tenant_id ON sys_operation_log (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 327,
+          "end_offset": 618,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "358d69dc7da2827a29a8e99d66d2bb02d8e4009d01be6a70f7d9045d5ea26a58",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_operation_log",
+              "line": 14,
+              "end_line": 14,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_operation_log",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_operation_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 11
+            },
+            {
+              "table": "sys_operation_log",
+              "line": 15,
+              "end_line": 15,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_v15_sys_operation_log_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_operation_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_v15_sys_operation_log_tenant_id ON sys_operation_log (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 11
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 11,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-2dd2be11c235f0e27dd8be70"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0535"
+      ],
+      "statement_ids": [
+        [
+          "stmt-2dd2be11c235f0e27dd8be70"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_sample",
+        "index": "idx_biz_sample_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 19,
+          "end_line": 19,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_sample') IS NOT NULL THEN\n        ALTER TABLE biz_sample ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_sample_tenant_id ON biz_sample (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 621,
+          "end_offset": 880,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7f74a31a4e824380b820b2aafd86236186a66e7c64c52b5e3e89b1048eaf33f8",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_sample",
+              "line": 22,
+              "end_line": 22,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_sample",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_sample ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 19
+            },
+            {
+              "table": "biz_sample",
+              "line": 23,
+              "end_line": 23,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_sample",
+                "create",
+                "exists",
+                "idx_biz_sample_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_sample_tenant_id ON biz_sample (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 19
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 19,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-339f3a6a62f10372298f3c0a"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0536"
+      ],
+      "statement_ids": [
+        [
+          "stmt-339f3a6a62f10372298f3c0a"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_system_message",
+        "index": "idx_v15_biz_system_message_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 27,
+          "end_line": 27,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_system_message') IS NOT NULL THEN\n        ALTER TABLE biz_system_message ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_v15_biz_system_message_tenant_id ON biz_system_message (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 883,
+          "end_offset": 1178,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "347f17a000322760a4a353dcf92ad1a112b388d734061bcfb448ba788daab77e",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_system_message",
+              "line": 30,
+              "end_line": 30,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_system_message",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_system_message ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 27
+            },
+            {
+              "table": "biz_system_message",
+              "line": 31,
+              "end_line": 31,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_system_message",
+                "create",
+                "exists",
+                "idx_v15_biz_system_message_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_v15_biz_system_message_tenant_id ON biz_system_message (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 27
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 27,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-59b4921bc640ff7d6a3e51b5"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0537"
+      ],
+      "statement_ids": [
+        [
+          "stmt-59b4921bc640ff7d6a3e51b5"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "sys_user_role",
+        "index": "idx_v15_user_role_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 35,
+          "end_line": 35,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_user_role') IS NOT NULL THEN\n        ALTER TABLE sys_user_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_v15_user_role_tenant_id ON sys_user_role (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 1181,
+          "end_offset": 1452,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "e1e567ce752db22c24e9608e20842e3d9f4e8bb3136f6af80b0a427d4ff246bc",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user_role",
+              "line": 38,
+              "end_line": 38,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_user_role",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_user_role ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 35
+            },
+            {
+              "table": "sys_user_role",
+              "line": 39,
+              "end_line": 39,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_v15_user_role_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_user_role",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_v15_user_role_tenant_id ON sys_user_role (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 35
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 35,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-b8392b9e65511943ded87f93"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0538"
+      ],
+      "statement_ids": [
+        [
+          "stmt-b8392b9e65511943ded87f93"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "sys_account_deletion_task",
+        "index": "idx_sys_account_deletion_task_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 43,
+          "end_line": 43,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_account_deletion_task') IS NOT NULL THEN\n        ALTER TABLE sys_account_deletion_task ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_sys_account_deletion_task_tenant_id ON sys_account_deletion_task (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 1455,
+          "end_offset": 1774,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "687a00422d5fef490a307070c876dc78736753e2066e252174546be8ece226f2",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_account_deletion_task",
+              "line": 46,
+              "end_line": 46,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_account_deletion_task",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_account_deletion_task ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 43
+            },
+            {
+              "table": "sys_account_deletion_task",
+              "line": 47,
+              "end_line": 47,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_sys_account_deletion_task_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_account_deletion_task",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_sys_account_deletion_task_tenant_id ON sys_account_deletion_task (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 43
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 43,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-6d3790d89987bb51c48e68f0"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0539"
+      ],
+      "statement_ids": [
+        [
+          "stmt-6d3790d89987bb51c48e68f0"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_credit_account",
+        "index": "idx_biz_credit_account_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 51,
+          "end_line": 51,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_credit_account') IS NOT NULL THEN\n        ALTER TABLE biz_credit_account ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_credit_account_tenant_id ON biz_credit_account (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 1777,
+          "end_offset": 2068,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "4469a4181282103749a287971c3b35f6a7b2ca179651f512bd49b595eac93b42",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_credit_account",
+              "line": 54,
+              "end_line": 54,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_credit_account",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_credit_account ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 51
+            },
+            {
+              "table": "biz_credit_account",
+              "line": 55,
+              "end_line": 55,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_credit_account",
+                "create",
+                "exists",
+                "idx_biz_credit_account_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_credit_account_tenant_id ON biz_credit_account (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 51
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 51,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-08e3fff239a3b26174bf4025"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0540"
+      ],
+      "statement_ids": [
+        [
+          "stmt-08e3fff239a3b26174bf4025"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_user_consent",
+        "index": "idx_biz_user_consent_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 59,
+          "end_line": 59,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_user_consent') IS NOT NULL THEN\n        ALTER TABLE biz_user_consent ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_user_consent_tenant_id ON biz_user_consent (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 2071,
+          "end_offset": 2354,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "9a4f023c09598da17b25340e6aa53b8647e531caf8a0becd17b3862c37bbdda4",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_user_consent",
+              "line": 62,
+              "end_line": 62,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_user_consent",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_user_consent ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 59
+            },
+            {
+              "table": "biz_user_consent",
+              "line": 63,
+              "end_line": 63,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_user_consent",
+                "create",
+                "exists",
+                "idx_biz_user_consent_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_user_consent_tenant_id ON biz_user_consent (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 59
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 59,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-06c43f658bf3892051308bb0"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0541"
+      ],
+      "statement_ids": [
+        [
+          "stmt-06c43f658bf3892051308bb0"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "sys_api_call_log",
+        "index": "idx_sys_api_call_log_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 67,
+          "end_line": 67,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_api_call_log') IS NOT NULL THEN\n        ALTER TABLE sys_api_call_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_sys_api_call_log_tenant_id ON sys_api_call_log (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 2357,
+          "end_offset": 2640,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "f3a797dac2b8467ca0793949cbc47ae42e05c7c1f79485073e55beb0795d180a",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_api_call_log",
+              "line": 70,
+              "end_line": 70,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_api_call_log",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_api_call_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 67
+            },
+            {
+              "table": "sys_api_call_log",
+              "line": 71,
+              "end_line": 71,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_sys_api_call_log_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_api_call_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_sys_api_call_log_tenant_id ON sys_api_call_log (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 67
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 67,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-489a9dcb9b880fbfbb5bd991"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0542"
+      ],
+      "statement_ids": [
+        [
+          "stmt-489a9dcb9b880fbfbb5bd991"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_content_moderation_review",
+        "index": "idx_biz_content_moderation_review_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 75,
+          "end_line": 75,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_content_moderation_review') IS NOT NULL THEN\n        ALTER TABLE biz_content_moderation_review ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_content_moderation_review_tenant_id ON biz_content_moderation_review (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 2643,
+          "end_offset": 2978,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "9fb1ab11ae9439ba2b0df1bce1ce1f46d2281f1854052107455e8cf320ffce29",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_content_moderation_review",
+              "line": 78,
+              "end_line": 78,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_content_moderation_review",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_content_moderation_review ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 75
+            },
+            {
+              "table": "biz_content_moderation_review",
+              "line": 79,
+              "end_line": 79,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_content_moderation_review",
+                "create",
+                "exists",
+                "idx_biz_content_moderation_review_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_content_moderation_review_tenant_id ON biz_content_moderation_review (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 75
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 75,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-f7510fc1481e232fdc486782"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0543"
+      ],
+      "statement_ids": [
+        [
+          "stmt-f7510fc1481e232fdc486782"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_quiz_question",
+        "index": "idx_biz_quiz_question_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 83,
+          "end_line": 83,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_quiz_question') IS NOT NULL THEN\n        ALTER TABLE biz_quiz_question ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_quiz_question_tenant_id ON biz_quiz_question (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 2981,
+          "end_offset": 3268,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "b594e116294183d93bb062d0154646082f859e77d66a8835f38a173671a8d6aa",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_quiz_question",
+              "line": 86,
+              "end_line": 86,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_quiz_question",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_quiz_question ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 83
+            },
+            {
+              "table": "biz_quiz_question",
+              "line": 87,
+              "end_line": 87,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_quiz_question",
+                "create",
+                "exists",
+                "idx_biz_quiz_question_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_quiz_question_tenant_id ON biz_quiz_question (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 83
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 83,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-33c571add7dcd2fe825b9225"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0544"
+      ],
+      "statement_ids": [
+        [
+          "stmt-33c571add7dcd2fe825b9225"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_report_ticket",
+        "index": "idx_biz_report_ticket_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 91,
+          "end_line": 91,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_report_ticket') IS NOT NULL THEN\n        ALTER TABLE biz_report_ticket ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_report_ticket_tenant_id ON biz_report_ticket (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 3271,
+          "end_offset": 3558,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "3ac8e4da3e5543c43ba80bd90eec021255a521cd12241b8f8c9ef2017060a8bd",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_report_ticket",
+              "line": 94,
+              "end_line": 94,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_report_ticket",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_report_ticket ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 91
+            },
+            {
+              "table": "biz_report_ticket",
+              "line": 95,
+              "end_line": 95,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_report_ticket",
+                "create",
+                "exists",
+                "idx_biz_report_ticket_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_report_ticket_tenant_id ON biz_report_ticket (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 91
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 91,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-f0e16703712364f3be973395"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0545"
+      ],
+      "statement_ids": [
+        [
+          "stmt-f0e16703712364f3be973395"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "sys_user",
+        "index": "idx_v15_sys_user_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 99,
+          "end_line": 99,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_user') IS NOT NULL THEN\n        ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_v15_sys_user_tenant_id ON sys_user (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 3561,
+          "end_offset": 3816,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "2f92c5ae0833b86770533e5d5827aa66eda59abc7e699b5d8bcdf426b52e2829",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user",
+              "line": 102,
+              "end_line": 102,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_user",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_user ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 99
+            },
+            {
+              "table": "sys_user",
+              "line": 103,
+              "end_line": 103,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_v15_sys_user_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_user",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_v15_sys_user_tenant_id ON sys_user (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 99
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 99,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-73470450b37b288f1c563266"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0546"
+      ],
+      "statement_ids": [
+        [
+          "stmt-73470450b37b288f1c563266"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_user_compliance",
+        "index": "idx_biz_user_compliance_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 107,
+          "end_line": 107,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_user_compliance') IS NOT NULL THEN\n        ALTER TABLE biz_user_compliance ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_user_compliance_tenant_id ON biz_user_compliance (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 3819,
+          "end_offset": 4114,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c3620fcb8be355d47143ae0fb0db22bd304707d96d0de091db8ab34a66ca6288",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_user_compliance",
+              "line": 110,
+              "end_line": 110,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_user_compliance",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_user_compliance ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 107
+            },
+            {
+              "table": "biz_user_compliance",
+              "line": 111,
+              "end_line": 111,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_user_compliance",
+                "create",
+                "exists",
+                "idx_biz_user_compliance_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_user_compliance_tenant_id ON biz_user_compliance (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 107
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 107,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-1024ac99dff5d7e120113a20"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0547"
+      ],
+      "statement_ids": [
+        [
+          "stmt-1024ac99dff5d7e120113a20"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_policy_version",
+        "index": "idx_biz_policy_version_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 115,
+          "end_line": 115,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_policy_version') IS NOT NULL THEN\n        ALTER TABLE biz_policy_version ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_policy_version_tenant_id ON biz_policy_version (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 4117,
+          "end_offset": 4408,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "d662f06675bf054aea27a4012a8337beb1b7106aa06b18be10d855a4c5b6babe",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_policy_version",
+              "line": 118,
+              "end_line": 118,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_policy_version",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_policy_version ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 115
+            },
+            {
+              "table": "biz_policy_version",
+              "line": 119,
+              "end_line": 119,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_policy_version",
+                "create",
+                "exists",
+                "idx_biz_policy_version_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_policy_version_tenant_id ON biz_policy_version (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 115
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 115,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-d8f2995b6c6f39e44ed1e106"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0548"
+      ],
+      "statement_ids": [
+        [
+          "stmt-d8f2995b6c6f39e44ed1e106"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_subscription",
+        "index": "idx_biz_subscription_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 123,
+          "end_line": 123,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_subscription') IS NOT NULL THEN\n        ALTER TABLE biz_subscription ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_subscription_tenant_id ON biz_subscription (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 4411,
+          "end_offset": 4694,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "5774633819cec988f862109cee9b566b07456ebee7cbdf731190e290d67d720f",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_subscription",
+              "line": 126,
+              "end_line": 126,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_subscription",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_subscription ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 123
+            },
+            {
+              "table": "biz_subscription",
+              "line": 127,
+              "end_line": 127,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_subscription",
+                "create",
+                "exists",
+                "idx_biz_subscription_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_subscription_tenant_id ON biz_subscription (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 123
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 123,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-acb2e870b5ad5964729cef62"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0549"
+      ],
+      "statement_ids": [
+        [
+          "stmt-acb2e870b5ad5964729cef62"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_blacklist",
+        "index": "idx_biz_blacklist_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 131,
+          "end_line": 131,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_blacklist') IS NOT NULL THEN\n        ALTER TABLE biz_blacklist ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_blacklist_tenant_id ON biz_blacklist (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 4697,
+          "end_offset": 4968,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "952c8a77fd3a56f6c9007f3ca4c5db256ab5c724324d982924f9f9a94acdb429",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_blacklist",
+              "line": 134,
+              "end_line": 134,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_blacklist",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_blacklist ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 131
+            },
+            {
+              "table": "biz_blacklist",
+              "line": 135,
+              "end_line": 135,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_blacklist",
+                "create",
+                "exists",
+                "idx_biz_blacklist_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_blacklist_tenant_id ON biz_blacklist (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 131
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 131,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-c1a049cdc8f77882d3f34a6d"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0550"
+      ],
+      "statement_ids": [
+        [
+          "stmt-c1a049cdc8f77882d3f34a6d"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_user_profile",
+        "index": "idx_biz_user_profile_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 139,
+          "end_line": 139,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_user_profile') IS NOT NULL THEN\n        ALTER TABLE biz_user_profile ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_user_profile_tenant_id ON biz_user_profile (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 4971,
+          "end_offset": 5254,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "59d33937e584760bc2a39e05e21d12150849c751a11c030c57dad7d58736f758",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_user_profile",
+              "line": 142,
+              "end_line": 142,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_user_profile",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_user_profile ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 139
+            },
+            {
+              "table": "biz_user_profile",
+              "line": 143,
+              "end_line": 143,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_user_profile",
+                "create",
+                "exists",
+                "idx_biz_user_profile_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_user_profile_tenant_id ON biz_user_profile (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 139
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 139,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-85d0e1457a74357515ce4763"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0551"
+      ],
+      "statement_ids": [
+        [
+          "stmt-85d0e1457a74357515ce4763"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_admin_review_reason",
+        "index": "idx_biz_admin_review_reason_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 147,
+          "end_line": 147,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_admin_review_reason') IS NOT NULL THEN\n        ALTER TABLE biz_admin_review_reason ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_admin_review_reason_tenant_id ON biz_admin_review_reason (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 5257,
+          "end_offset": 5568,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "18e791723ca9718d9a5950b83301ce5e97f9dc7ea22e61a47066de67718d3863",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_admin_review_reason",
+              "line": 150,
+              "end_line": 150,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_admin_review_reason",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_admin_review_reason ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 147
+            },
+            {
+              "table": "biz_admin_review_reason",
+              "line": 151,
+              "end_line": 151,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_admin_review_reason",
+                "create",
+                "exists",
+                "idx_biz_admin_review_reason_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_admin_review_reason_tenant_id ON biz_admin_review_reason (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 147
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 147,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-5a54812d209939d74983f043"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0552"
+      ],
+      "statement_ids": [
+        [
+          "stmt-5a54812d209939d74983f043"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_report",
+        "index": "idx_biz_report_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 155,
+          "end_line": 155,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_report') IS NOT NULL THEN\n        ALTER TABLE biz_report ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_report_tenant_id ON biz_report (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 5571,
+          "end_offset": 5830,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "58cf21ead766d33c57c6938fbce44469adde5e85fa3c2308f09e0fd3c54025af",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_report",
+              "line": 158,
+              "end_line": 158,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_report",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_report ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 155
+            },
+            {
+              "table": "biz_report",
+              "line": 159,
+              "end_line": 159,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_report",
+                "create",
+                "exists",
+                "idx_biz_report_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_report_tenant_id ON biz_report (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 155
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 155,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-7f612e659a169c91d3345e5a"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0553"
+      ],
+      "statement_ids": [
+        [
+          "stmt-7f612e659a169c91d3345e5a"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "sys_file",
+        "index": "idx_sys_file_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 163,
+          "end_line": 163,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_file') IS NOT NULL THEN\n        ALTER TABLE sys_file ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_sys_file_tenant_id ON sys_file (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 5833,
+          "end_offset": 6084,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "aecc067874321526cbce016d3700eba231598c32d554f93b99509b646e01ccdc",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_file",
+              "line": 166,
+              "end_line": 166,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_file",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_file ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 163
+            },
+            {
+              "table": "sys_file",
+              "line": 167,
+              "end_line": 167,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_sys_file_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_file",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_sys_file_tenant_id ON sys_file (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 163
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 163,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-9017ba6b2fd26df88670c20a"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0554"
+      ],
+      "statement_ids": [
+        [
+          "stmt-9017ba6b2fd26df88670c20a"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "sys_login_log",
+        "index": "idx_sys_login_log_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 171,
+          "end_line": 171,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_login_log') IS NOT NULL THEN\n        ALTER TABLE sys_login_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_sys_login_log_tenant_id ON sys_login_log (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 6087,
+          "end_offset": 6358,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "90f7f4d3a743dd0f29411ce91c20da128822e36fac0fe967eb646e8a50a9245b",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_login_log",
+              "line": 174,
+              "end_line": 174,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_login_log",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_login_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 171
+            },
+            {
+              "table": "sys_login_log",
+              "line": 175,
+              "end_line": 175,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_sys_login_log_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_login_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_sys_login_log_tenant_id ON sys_login_log (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 171
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 171,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-4eeae1209c1ca267ff921f33"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0555"
+      ],
+      "statement_ids": [
+        [
+          "stmt-4eeae1209c1ca267ff921f33"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "target": {
+        "table": "biz_admin_review_audit",
+        "index": "idx_biz_admin_review_audit_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 179,
+          "end_line": 179,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('biz_admin_review_audit') IS NOT NULL THEN\n        ALTER TABLE biz_admin_review_audit ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_biz_admin_review_audit_tenant_id ON biz_admin_review_audit (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 6361,
+          "end_offset": 6668,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "4f5f9f2e5fb80566f98abd36783950703ee978b98a4747770f6dfc8028e35313",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "biz_admin_review_audit",
+              "line": 182,
+              "end_line": 182,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "biz_admin_review_audit",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE biz_admin_review_audit ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 179
+            },
+            {
+              "table": "biz_admin_review_audit",
+              "line": 183,
+              "end_line": 183,
+              "operation": "create_index",
+              "identifiers": [
+                "biz_admin_review_audit",
+                "create",
+                "exists",
+                "idx_biz_admin_review_audit_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_biz_admin_review_audit_tenant_id ON biz_admin_review_audit (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 179
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 179,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-33d3c8dc04dfbcd060725b19"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0556"
+      ],
+      "statement_ids": [
+        [
+          "stmt-33d3c8dc04dfbcd060725b19"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "target": {
+        "table": "sys_job",
+        "index": "idx_job_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 2,
+          "end_line": 2,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_job') IS NOT NULL THEN\n        ALTER TABLE sys_job ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_job_tenant_id ON sys_job (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 67,
+          "end_offset": 310,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "296de952281efa8c11f942e08d00d7cd0a32ae9d21fbbb90e8f65be54422af2f",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job",
+              "line": 5,
+              "end_line": 5,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_job",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_job ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 2
+            },
+            {
+              "table": "sys_job",
+              "line": 6,
+              "end_line": 6,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_job_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_job",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_job_tenant_id ON sys_job (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 2
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 2,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-d6e7043c291d1bf817e7a1d3"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0557"
+      ],
+      "statement_ids": [
+        [
+          "stmt-d6e7043c291d1bf817e7a1d3"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "target": {
+        "table": "sys_job",
+        "index": "idx_job_tenant_status",
+        "columns": [
+          "tenant_id",
+          "status"
+        ]
+      },
+      "statements": [
+        {
+          "line": 9,
+          "end_line": 9,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_job') IS NOT NULL THEN\n        ALTER TABLE sys_job ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_job_tenant_status ON sys_job (tenant_id, status);\n    END IF;\nEND $$",
+          "start_offset": 312,
+          "end_offset": 567,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "ad271ede5680ec9bdb20d2cba9bd2d584c875a6e2e798ccf307e4f9d2c046ff4",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job",
+              "line": 12,
+              "end_line": 12,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_job",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_job ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 9
+            },
+            {
+              "table": "sys_job",
+              "line": 13,
+              "end_line": 13,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_job_tenant_status",
+                "if",
+                "index",
+                "not",
+                "on",
+                "status",
+                "sys_job",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_job_tenant_status ON sys_job (tenant_id, status)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 9
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 9,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-b5a4ad2d3ed972d5464766ec"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0558"
+      ],
+      "statement_ids": [
+        [
+          "stmt-b5a4ad2d3ed972d5464766ec"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "target": {
+        "table": "sys_job_log",
+        "index": "idx_job_log_tenant_id",
+        "columns": [
+          "tenant_id"
+        ]
+      },
+      "statements": [
+        {
+          "line": 16,
+          "end_line": 16,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_job_log') IS NOT NULL THEN\n        ALTER TABLE sys_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_job_log_tenant_id ON sys_job_log (tenant_id);\n    END IF;\nEND $$",
+          "start_offset": 569,
+          "end_offset": 828,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "9f309128536b49bc71f02f7dc7112c50626eaa51b7e231bb734b13f499c8e9a6",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job_log",
+              "line": 19,
+              "end_line": 19,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_job_log",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 16
+            },
+            {
+              "table": "sys_job_log",
+              "line": 20,
+              "end_line": 20,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_job_log_tenant_id",
+                "if",
+                "index",
+                "not",
+                "on",
+                "sys_job_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_job_log_tenant_id ON sys_job_log (tenant_id)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 16
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 16,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-2c043f90a75d1df6f24ba544"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0559"
+      ],
+      "statement_ids": [
+        [
+          "stmt-2c043f90a75d1df6f24ba544"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "target": {
+        "table": "sys_job_log",
+        "index": "idx_job_log_tenant_job_start",
+        "columns": [
+          "tenant_id",
+          "job_id",
+          "start_time"
+        ]
+      },
+      "statements": [
+        {
+          "line": 23,
+          "end_line": 23,
+          "sql": "DO $$\nBEGIN\n    IF to_regclass('sys_job_log') IS NOT NULL THEN\n        ALTER TABLE sys_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL;\n        CREATE INDEX IF NOT EXISTS idx_job_log_tenant_job_start ON sys_job_log (tenant_id, job_id, start_time);\n    END IF;\nEND $$",
+          "start_offset": 830,
+          "end_offset": 1116,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "9b894f4e5d4fb6f0c484fb6a1b76fd80ba82677d56bbe5cc8d2cf4cb89362e11",
+          "disposition": "procedural_body_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job_log",
+              "line": 26,
+              "end_line": 26,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "default",
+                "exists",
+                "if",
+                "not",
+                "null",
+                "sys_job_log",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_job_log ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(64) DEFAULT NULL",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 23
+            },
+            {
+              "table": "sys_job_log",
+              "line": 27,
+              "end_line": 27,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "exists",
+                "idx_job_log_tenant_job_start",
+                "if",
+                "index",
+                "job_id",
+                "not",
+                "on",
+                "start_time",
+                "sys_job_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX IF NOT EXISTS idx_job_log_tenant_job_start ON sys_job_log (tenant_id, job_id, start_time)",
+              "parser_issues": [],
+              "scope": "procedural_body_static_candidate",
+              "semantic_verified": false,
+              "container_line": 23
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 23,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-4962f0ba59f3e58c74473f2e"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0560"
+      ],
+      "statement_ids": [
+        [
+          "stmt-4962f0ba59f3e58c74473f2e"
+        ]
+      ],
+      "results": {},
+      "observations": {}
+    }
+  ],
+  "items": [
+    {
+      "id": "old-sql-0530",
+      "baseline_index": 530,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 2,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "344ed0c461f60629457f97e29e6d09b3c66e80ef6c933153c4b47d2ab2538f26",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-2be3681e533ddba455b01278"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0531",
+      "baseline_index": 531,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 9,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "344ed0c461f60629457f97e29e6d09b3c66e80ef6c933153c4b47d2ab2538f26",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-7d9d0c5d1922f9703cb684ba"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0532",
+      "baseline_index": 532,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 16,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "344ed0c461f60629457f97e29e6d09b3c66e80ef6c933153c4b47d2ab2538f26",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4161be176a55e928aaca57e8"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0533",
+      "baseline_index": 533,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V14__add_tenant_id_to_core_tables.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 23,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "344ed0c461f60629457f97e29e6d09b3c66e80ef6c933153c4b47d2ab2538f26",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-bb7298adb693faaddfd89e6b"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0534",
+      "baseline_index": 534,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 3,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e6444fa07a6a0f5bc451834d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0535",
+      "baseline_index": 535,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 11,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-2dd2be11c235f0e27dd8be70"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0536",
+      "baseline_index": 536,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 19,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-339f3a6a62f10372298f3c0a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0537",
+      "baseline_index": 537,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 27,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-59b4921bc640ff7d6a3e51b5"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0538",
+      "baseline_index": 538,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 35,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b8392b9e65511943ded87f93"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0539",
+      "baseline_index": 539,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 43,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-6d3790d89987bb51c48e68f0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0540",
+      "baseline_index": 540,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 51,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-08e3fff239a3b26174bf4025"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0541",
+      "baseline_index": 541,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 59,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-06c43f658bf3892051308bb0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0542",
+      "baseline_index": 542,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 67,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-489a9dcb9b880fbfbb5bd991"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0543",
+      "baseline_index": 543,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 75,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f7510fc1481e232fdc486782"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0544",
+      "baseline_index": 544,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 83,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-33c571add7dcd2fe825b9225"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0545",
+      "baseline_index": 545,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 91,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f0e16703712364f3be973395"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0546",
+      "baseline_index": 546,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 99,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-73470450b37b288f1c563266"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0547",
+      "baseline_index": 547,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 107,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1024ac99dff5d7e120113a20"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0548",
+      "baseline_index": 548,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 115,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-d8f2995b6c6f39e44ed1e106"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0549",
+      "baseline_index": 549,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 15,
+      "original": {
+        "line": 123,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-acb2e870b5ad5964729cef62"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0550",
+      "baseline_index": 550,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 16,
+      "original": {
+        "line": 131,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-c1a049cdc8f77882d3f34a6d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0551",
+      "baseline_index": 551,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 17,
+      "original": {
+        "line": 139,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-85d0e1457a74357515ce4763"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0552",
+      "baseline_index": 552,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 18,
+      "original": {
+        "line": 147,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5a54812d209939d74983f043"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0553",
+      "baseline_index": 553,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 19,
+      "original": {
+        "line": 155,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-7f612e659a169c91d3345e5a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0554",
+      "baseline_index": 554,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 20,
+      "original": {
+        "line": 163,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9017ba6b2fd26df88670c20a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0555",
+      "baseline_index": 555,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 21,
+      "original": {
+        "line": 171,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4eeae1209c1ca267ff921f33"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0556",
+      "baseline_index": 556,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V15__complete_tenant_isolation_schema.sql",
+      "migration_unresolved_index": 22,
+      "original": {
+        "line": 179,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "cc1b89f556b699ad7951221f949f76ebb405d0e78a4d8525f34b6b8de161430f",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-33d3c8dc04dfbcd060725b19"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0557",
+      "baseline_index": 557,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 2,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "9f913456ce98b24c456d2d4466e847ea75bb3c791e088aa55306852d8ae4e390",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-d6e7043c291d1bf817e7a1d3"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0558",
+      "baseline_index": 558,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 9,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "9f913456ce98b24c456d2d4466e847ea75bb3c791e088aa55306852d8ae4e390",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b5a4ad2d3ed972d5464766ec"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0559",
+      "baseline_index": 559,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 16,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "9f913456ce98b24c456d2d4466e847ea75bb3c791e088aa55306852d8ae4e390",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-2c043f90a75d1df6f24ba544"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    },
+    {
+      "id": "old-sql-0560",
+      "baseline_index": 560,
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 23,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "9f913456ce98b24c456d2d4466e847ea75bb3c791e088aa55306852d8ae4e390",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "procedural_body_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4962f0ba59f3e58c74473f2e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "present",
+        "replay",
+        "existing_column",
+        "existing_index",
+        "existing_both"
+      ]
+    }
+  ],
+  "status": "failed",
+  "cleanup": {
+    "attempted": true,
+    "container_and_anonymous_volumes_removed": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1
+  },
+  "coverage": {
+    "verified_old_ids": [],
+    "new_verified_count": 0
+  },
+  "branch_meanings": {
+    "absent": "outer guard false: table missing",
+    "present": "outer guard true: nonempty table, column/index missing",
+    "replay": "repeat exact DO after present with nonempty tenant values",
+    "existing_column": "incompatible same-name column retained, index created",
+    "existing_index": "same-name index on id retained, column created",
+    "existing_both": "both incompatible same-name objects retained"
+  },
+  "limits": [
+    "Synthetic nonempty fixtures on PostgreSQL 17 only; not production or full upgrade chain",
+    "Existing incompatible names are accepted by historical guards; no schema equivalence claim",
+    "No Flyway startup/history, privilege denial, concurrency, other schemas/search_path or rollback validation",
+    "Only 31 frozen PostgreSQL V14/V15/V16 IDs; no MySQL or other PostgreSQL statement coverage"
+  ],
+  "started_at": "2026-10-19T06:41:54.397877+00:00",
+  "container": {
+    "name": "apex-pg-p0-35adb3d8fd204052",
+    "image": "localhost/postgres:17-alpine",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "trust inside network-none disposable container",
+    "id": "cc2c27d421a7678cd6623d11a476a80aefc9b03d32ada6d470ac1650a17320dc"
+  },
+  "error": "container isolation mismatch",
+  "finished_at": "2026-10-19T06:42:02.822103+00:00",
+  "probe_sha256": "d71005db2410a0030a64649e4ea74998c2753f0abd43c82ed2d67590ea21f6e6",
+  "test_sha256": "f66848b18fb1d960980b96ed779a3c3b39915210d7b3238e9ce06e8d59924c36"
+}

@@ -1,0 +1,1052 @@
+#!/usr/bin/env python3
+"""Execute frozen PostgreSQL V14/V15/V16 DO guards in disposable storage."""
+import argparse
+import copy
+import datetime
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import sys
+import time
+import uuid
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts/ci'))
+from collect_table_facts import statement_inventory
+
+P0 = ROOT / 'docs/06-testing/jdk21-unified-auth/20261016-p0'
+BASELINE = P0 / 'table-source-facts-20261018-itemized-1905.json'
+SOURCES = tuple('apex-system/src/main/resources/db/migration/postgresql/' + name for name in (
+    'V14__add_tenant_id_to_core_tables.sql', 'V15__complete_tenant_isolation_schema.sql',
+    'V16__add_tenant_id_to_job_tables.sql'))
+BRANCHES = ('absent', 'present', 'replay', 'existing_column', 'existing_index', 'existing_both')
+GUARD = re.compile(
+    r"DO \$\$\s+BEGIN\s+IF to_regclass\('(?P<table>[a-z_]+)'\) IS NOT NULL THEN\s+"
+    r"ALTER TABLE (?P=table) ADD COLUMN IF NOT EXISTS tenant_id VARCHAR\(64\) DEFAULT NULL;\s+"
+    r"CREATE INDEX IF NOT EXISTS (?P<index>[a-z0-9_]+) ON (?P=table) \((?P<columns>[a-z_, ]+)\);\s+"
+    r"END IF;\s+END \$\$", re.ASCII)
+
+
+def digest(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def source_text(source):
+    return (ROOT / source).read_text()
+
+
+def guard_target(sql):
+    match = GUARD.fullmatch(sql)
+    if not match:
+        raise ValueError('unsupported guard shape')
+    target = match.groupdict()
+    target['columns'] = [c.strip() for c in target['columns'].split(',')]
+    if target['columns'][0] != 'tenant_id' or not set(target['columns']) <= {'tenant_id', 'status', 'job_id', 'start_time'}:
+        raise ValueError('unsupported guard index columns')
+    return target
+
+
+def plan(baseline=None):
+    baseline = json.loads(BASELINE.read_text()) if baseline is None else baseline
+    groups, items, sources = [], [], []
+    for source, count in zip(SOURCES, (4, 23, 4)):
+        text = source_text(source)
+        sha = digest(text.encode())
+        bound = [copy.deepcopy(i) for i in baseline['baseline_audit']['old_sql_items']
+                 if i['source'] == source and i['category'] in ('dynamic_sql', 'procedure_or_prepared_control')]
+        if len(bound) != count or any(i['source_sha256'] != sha or not i['source_matches_baseline'] for i in bound):
+            raise ValueError('source hash differs from frozen old ID baseline')
+        inventory = statement_inventory(text, 'postgresql')
+        if len(inventory) != count:
+            raise ValueError('unexpected statement inventory size')
+        for item, statement in zip(bound, inventory):
+            identity = f"{source}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+            statement['statement_id'] = 'stmt-' + digest(identity.encode())[:24]
+            if item['original']['line'] != statement['line'] or item['statement_ids'] != [statement['statement_id']]:
+                raise ValueError('statement binding differs from baseline offset/hash')
+            groups.append({'source': source, 'target': guard_target(statement['sql']),
+                           'statements': [statement], 'old_ids': [item['id']],
+                           'statement_ids': [item['statement_ids']], 'results': {}, 'observations': {}})
+        items.extend(bound)
+        sources.append({'source': source, 'source_sha256': sha})
+    if len({i['id'] for i in items}) != 31:
+        raise ValueError('duplicate old ID binding')
+    return {'schema_version': 1, 'probe_kind': 'postgresql_p0_do_guard',
+            'baseline_sha256': digest(BASELINE.read_bytes()), 'baseline_dynamic_denominator': 586,
+            'sources': sources, 'groups': groups, 'items': items, 'status': 'planned_not_run',
+            'cleanup': {'attempted': False}, 'coverage': {'verified_old_ids': []},
+            'branch_meanings': {'absent': 'outer guard false: table missing',
+                                'present': 'outer guard true: nonempty table, column/index missing',
+                                'replay': 'repeat exact DO after present with nonempty tenant values',
+                                'existing_column': 'incompatible same-name column retained, index created',
+                                'existing_index': 'same-name index on id retained, column created',
+                                'existing_both': 'both incompatible same-name objects retained'},
+            'limits': ['Synthetic nonempty fixtures on PostgreSQL 17 only; not production or full upgrade chain',
+                       'Existing incompatible names are accepted by historical guards; no schema equivalence claim',
+                       'No Flyway startup/history, privilege denial, concurrency, other schemas/search_path or rollback validation',
+                       'Only 31 frozen PostgreSQL V14/V15/V16 IDs; no MySQL or other PostgreSQL statement coverage']}
+
+
+def closed(group):
+    return all(group.get('results', {}).get(branch) is True for branch in BRANCHES)
+
+
+def finalize(result):
+    passed = (result['status'] == 'passed' and
+              result['cleanup'].get('container_and_anonymous_volumes_removed') is True and
+              all(closed(g) for g in result['groups']))
+    ids = sorted(i for g in result['groups'] for i in g['old_ids']) if passed else []
+    result['coverage'] = {'verified_old_ids': ids, 'new_verified_count': len(ids)}
+    for item in result['items']:
+        item['verified_in_this_probe'] = item['id'] in ids
+        item['unpassed_branches'] = [] if item['id'] in ids else list(BRANCHES)
+
+
+def verified_ids(evidence):
+    expected = plan()
+    if (evidence.get('probe_kind') != expected['probe_kind'] or evidence.get('schema_version') != 1 or
+            evidence.get('status') != 'passed' or evidence.get('baseline_sha256') != expected['baseline_sha256'] or
+            evidence.get('sources') != expected['sources'] or
+            evidence.get('cleanup', {}).get('container_and_anonymous_volumes_removed') is not True):
+        return []
+    fields = ('source', 'target', 'statements', 'old_ids', 'statement_ids')
+    signature = lambda groups: [{k: g.get(k) for k in fields} for g in groups]
+    if signature(evidence.get('groups', [])) != signature(expected['groups']):
+        return []
+    items = [{k: v for k, v in i.items() if k not in ('verified_in_this_probe', 'unpassed_branches')}
+             for i in evidence.get('items', [])]
+    if items != expected['items'] or not all(closed(g) for g in evidence['groups']):
+        return []
+    ids = sorted(i['id'] for i in expected['items'])
+    if evidence.get('coverage', {}).get('verified_old_ids') != ids or not all(
+            i.get('verified_in_this_probe') is True for i in evidence['items']):
+        return []
+    return ids
+
+
+def save(result, path):
+    with pathlib.Path(path).open('x') as stream:
+        json.dump(result, stream, ensure_ascii=False, indent=2)
+        stream.write('\n')
+
+
+def command(args, text=None, timeout=45):
+    return subprocess.run(args, input=text, text=True, capture_output=True, timeout=timeout)
+
+
+def fixture(target, branch):
+    table, index = target['table'], target['index']
+    setup = f'DROP SCHEMA IF EXISTS probe CASCADE; CREATE SCHEMA probe; SET search_path TO probe;'
+    if branch == 'absent':
+        return setup
+    setup += (f'CREATE TABLE {table}(id BIGINT PRIMARY KEY, payload TEXT, status INTEGER, job_id BIGINT, start_time TIMESTAMP);'
+              f"INSERT INTO {table} VALUES(1,'中文保留',3,101,'2020-01-02 03:04:05'),(2,'a/b:c',4,102,NULL);")
+    if branch in ('existing_column', 'existing_both'):
+        setup += f"ALTER TABLE {table} ADD COLUMN tenant_id VARCHAR(7) NOT NULL DEFAULT 'legacy';"
+    if branch in ('existing_index', 'existing_both'):
+        setup += f'CREATE INDEX {index} ON {table}(id);'
+    return setup
+
+
+def snapshot(sql, target):
+    table = target['table']
+    catalog = json.loads(sql("""SELECT json_build_object(
+'columns',COALESCE((SELECT json_agg(json_build_array(a.attname,format_type(a.atttypid,a.atttypmod),a.attnotnull,
+pg_get_expr(d.adbin,d.adrelid),a.attnum) ORDER BY a.attnum)
+FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace
+LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
+WHERE n.nspname='probe' AND c.relname='%s' AND a.attnum>0 AND NOT a.attisdropped),'[]'::json),
+'indexes',COALESCE((SELECT json_agg(json_build_array(ic.relname,am.amname,i.indisunique,i.indisprimary,
+ARRAY(SELECT pg_get_indexdef(i.indexrelid,k,true) FROM generate_series(1,i.indnkeyatts) k),
+i.indisvalid,i.indisready,pg_get_expr(i.indpred,i.indrelid),pg_get_expr(i.indexprs,i.indrelid)) ORDER BY ic.relname)
+FROM pg_index i JOIN pg_class t ON t.oid=i.indrelid JOIN pg_namespace n ON n.oid=t.relnamespace
+JOIN pg_class ic ON ic.oid=i.indexrelid JOIN pg_am am ON am.oid=ic.relam
+WHERE n.nspname='probe' AND t.relname='%s'),'[]'::json),
+'relations',(SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='probe'));
+""" % (table, table)))
+    catalog['data'] = json.loads(sql(f'SELECT COALESCE(json_agg(t ORDER BY id),\'[]\'::json) FROM {table} t;')) if catalog['columns'] else []
+    return catalog
+
+
+def expected_snapshot(target, branch, replay=False):
+    if branch == 'absent':
+        return {'columns': [], 'indexes': [], 'relations': 0, 'data': []}
+    table = target['table']
+    legacy_column = branch in ('existing_column', 'existing_both')
+    legacy_index = branch in ('existing_index', 'existing_both')
+    columns = [['id', 'bigint', True, None, 1], ['payload', 'text', False, None, 2],
+               ['status', 'integer', False, None, 3], ['job_id', 'bigint', False, None, 4],
+               ['start_time', 'timestamp without time zone', False, None, 5],
+               ['tenant_id', 'character varying(7)' if legacy_column else 'character varying(64)',
+                legacy_column, "'legacy'::character varying" if legacy_column else 'NULL::character varying', 6]]
+    indexes = [[table + '_pkey', 'btree', True, True, ['id'], True, True, None, None],
+               [target['index'], 'btree', False, False, ['id'] if legacy_index else target['columns'], True, True, None, None]]
+    rows = [{'id': 1, 'payload': '中文保留', 'status': 3, 'job_id': 101, 'start_time': '2020-01-02T03:04:05',
+             'tenant_id': 'tenant-a' if replay else ('legacy' if legacy_column else None)},
+            {'id': 2, 'payload': 'a/b:c', 'status': 4, 'job_id': 102, 'start_time': None,
+             'tenant_id': 'tenant-b' if replay else ('legacy' if legacy_column else None)}]
+    return {'columns': columns, 'indexes': sorted(indexes), 'relations': 3, 'data': rows}
+
+
+def verify_group(group, sql):
+    body = group['statements'][0]['sql'] + ';'
+    target = group['target']
+    for branch in BRANCHES:
+        if branch == 'replay':
+            setup = f"UPDATE {target['table']} SET tenant_id=CASE id WHEN 1 THEN 'tenant-a' ELSE 'tenant-b' END;"
+        else:
+            setup = fixture(target, branch)
+        sql(setup)
+        before = snapshot(sql, target)
+        sql(body)
+        after = snapshot(sql, target)
+        expected = expected_snapshot(target, branch, replay=branch == 'replay')
+        if after != expected:
+            raise AssertionError(json.dumps({'old_ids': group['old_ids'], 'branch': branch,
+                                             'expected': expected, 'actual': after}, ensure_ascii=False))
+        if branch in ('absent', 'replay', 'existing_both') and before != after:
+            raise AssertionError('no-op/replay changed catalog or nonempty data')
+        group['observations'][branch] = {'fixture_sql': setup, 'executed_sql': body, 'before': before, 'after': after}
+        group['results'][branch] = True
+
+
+def isolated(inspection):
+    config = inspection['HostConfig']
+    tmpfs = config.get('Tmpfs', {})
+    mounted = '/var/lib/postgresql/data' in tmpfs or any(
+        m['Type'] == 'tmpfs' and m['Destination'] == '/var/lib/postgresql/data'
+        for m in inspection.get('Mounts', []))
+    return config['NetworkMode'] == 'none' and not config.get('PortBindings') and mounted
+
+
+def run(result):
+    name = 'apex-pg-p0-' + uuid.uuid4().hex[:16]
+    result['container'] = {'name': name, 'image': 'localhost/postgres:17-alpine', 'network': 'none',
+                           'published_ports': [], 'storage': 'tmpfs', 'credentials': 'trust inside network-none disposable container'}
+    owned = False
+    def sql(text):
+        process = command(['podman', 'exec', '-i', name, 'psql', '-X', '-U', 'postgres', '-d', 'postgres',
+                           '-v', 'ON_ERROR_STOP=1', '-Atq'], 'SET search_path TO probe;\n' + text)
+        if process.returncode:
+            raise RuntimeError('psql failed: ' + process.stderr[:1800])
+        return process.stdout.strip()
+    def checked(args):
+        process = command(args)
+        if process.returncode:
+            raise RuntimeError('container operation failed: ' + process.stderr[:1000])
+        return process
+    try:
+        created = checked(['podman', 'create', '--name', name, '--network', 'none', '--pull=never',
+                           '--tmpfs', '/var/lib/postgresql/data:rw', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust',
+                           'localhost/postgres:17-alpine'])
+        owned = True
+        result['container']['id'] = created.stdout.strip()
+        checked(['podman', 'start', name])
+        inspection = json.loads(checked(['podman', 'inspect', name]).stdout)[0]
+        if not isolated(inspection):
+            raise RuntimeError('container isolation mismatch')
+        result['container']['isolation_verified'] = True
+        result['container']['image_id'] = inspection['Image']
+        for attempt in range(60):
+            ready = command(['podman', 'exec', name, 'pg_isready', '-U', 'postgres'], timeout=10)
+            if ready.returncode == 0:
+                break
+            time.sleep(1)
+        else:
+            raise RuntimeError('PostgreSQL readiness timeout')
+        result['server_version'] = sql('SELECT version();')
+        remaining = result.get('probe_kind') == 'postgresql_p0_remaining'
+        final_four = result.get('probe_kind') == 'postgresql_p0_final_four'
+        behavior = result.get('probe_kind') == 'postgresql_p0_trigger_behavior'
+        if (final_four or behavior) and not result['server_version'].startswith('PostgreSQL 17.'):
+            raise RuntimeError('PostgreSQL 17 required')
+        for group in result['groups']:
+            if behavior:
+                try:
+                    verify_trigger_behavior_group(group, sql)
+                except Exception as exc:
+                    group['error'] = str(exc)
+                continue
+            if final_four:
+                try:
+                    verify_final_four_group(group, sql)
+                except Exception as exc:
+                    group['error'] = str(exc)
+                continue
+            if remaining:
+                try:
+                    verify_remaining_group(group, sql)
+                except Exception as exc:
+                    group['error'] = str(exc)
+            else:
+                verify_group(group, sql)
+        result['status'] = ('partial_diagnostic' if
+                            (remaining and any(not remaining_closed(g) for g in result['groups'])) or
+                            (final_four and any(not final_four_closed(g) for g in result['groups'])) else 'passed')
+    except Exception as exc:
+        result['status'] = 'failed'
+        result['error'] = str(exc)
+    finally:
+        if owned:
+            result['cleanup'] = {'attempted': True, 'container_and_anonymous_volumes_removed': False}
+            try:
+                removed = command(['podman', 'rm', '-f', '--volumes', name], timeout=60)
+                absent = command(['podman', 'container', 'exists', name])
+                result['cleanup'].update(remove_exit_code=removed.returncode, exists_exit_code=absent.returncode,
+                    container_and_anonymous_volumes_removed=removed.returncode == 0 and absent.returncode == 1)
+            except Exception as exc:
+                result['cleanup']['error'] = str(exc)
+        if result.get('probe_kind') == 'postgresql_p0_trigger_behavior':
+            finalize_trigger_behavior(result)
+        elif result.get('probe_kind') == 'postgresql_p0_final_four':
+            finalize_final_four(result)
+        elif result.get('probe_kind') == 'postgresql_p0_remaining':
+            finalize_remaining(result)
+        else:
+            finalize(result)
+    if result.get('probe_kind') == 'postgresql_p0_trigger_behavior':
+        return result['status'] == 'passed'
+    return bool(result['coverage']['verified_old_ids'])
+
+
+REMAINING_BRANCHES = ('absent', 'present', 'replay', 'error')
+REMAINING_NUMBERS = (561, 564, *range(565, 584), 586, 587)
+
+
+def plan_remaining(baseline=None):
+    baseline = json.loads(BASELINE.read_text()) if baseline is None else baseline
+    items = [copy.deepcopy(i) for i in baseline['baseline_audit']['old_sql_items']
+             if i['id'] in {f'old-sql-{n:04d}' for n in REMAINING_NUMBERS}]
+    groups, sources = [], []
+    for source in dict.fromkeys(i['source'] for i in items):
+        text = source_text(source)
+        sha = digest(text.encode())
+        bound = [i for i in items if i['source'] == source]
+        if any(i['source_sha256'] != sha or not i['source_matches_baseline'] for i in bound):
+            raise ValueError('source hash differs from baseline')
+        sources.append({'source': source, 'source_sha256': sha})
+        inventory = statement_inventory(text, 'postgresql')
+        statements = []
+        for item in bound:
+            matches = [s for s in inventory if s['line'] == item['original']['line']]
+            if len(matches) != 1:
+                raise ValueError('ambiguous statement binding')
+            statement = matches[0]
+            identity = f"{source}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+            statement['statement_id'] = 'stmt-' + digest(identity.encode())[:24]
+            if item['statement_ids'] != [statement['statement_id']]:
+                raise ValueError('statement binding differs from baseline')
+            statements.append(statement)
+        if 'CREATE OR REPLACE FUNCTION' in statements[0]['sql']:
+            for trigger_index, trigger_statement in enumerate(statements):
+                if 'CREATE TRIGGER' not in trigger_statement['sql']:
+                    continue
+                function_name = re.search(r'EXECUTE (?:FUNCTION|PROCEDURE) (\w+)\(', trigger_statement['sql'])[1]
+                function_index = next(n for n, s in enumerate(statements)
+                                      if re.search(r'FUNCTION ' + function_name + r'\(\)', s['sql']))
+                indices = (function_index, trigger_index)
+                pair = [statements[n] for n in indices]
+                trigger = re.search(r'CREATE TRIGGER (\w+)\s+BEFORE UPDATE ON (\w+)', pair[1]['sql'])
+                column = re.search(r'NEW\.(\w+) = CURRENT_TIMESTAMP', pair[0]['sql'])[1]
+                function = re.search(r'FUNCTION (\w+)\(\)', pair[0]['sql'])[1]
+                target = {'kind': 'trigger_pair', 'trigger': trigger[1], 'table': trigger[2],
+                          'column': column, 'function': function}
+                groups.append({'source': source, 'target': target, 'statements': pair,
+                               'old_ids': [bound[n]['id'] for n in indices],
+                               'statement_ids': [bound[n]['statement_ids'] for n in indices],
+                               'results': {}, 'observations': {}})
+        else:
+            for item, statement in zip(bound, statements):
+                groups.append({'source': source, 'target': {'kind': 'constraint', 'number': int(item['id'][-4:])},
+                               'statements': [statement], 'old_ids': [item['id']],
+                               'statement_ids': [item['statement_ids']], 'results': {}, 'observations': {}})
+    if len(items) != 23:
+        raise ValueError('incomplete remaining old ID inventory')
+    return {'schema_version': 1, 'probe_kind': 'postgresql_p0_remaining',
+            'baseline_sha256': digest(BASELINE.read_bytes()), 'sources': sources,
+            'baseline_dynamic_denominator': 586, 'groups': groups, 'items': items,
+            'status': 'planned_not_run', 'cleanup': {'attempted': False},
+            'coverage': {'verified_old_ids': []},
+            'limits': ['Exact frozen statements on synthetic nonempty minimal fixtures, PostgreSQL 17 only',
+                       'Not full-file migrations, Flyway history, production or historical upgrade chain',
+                       'Trigger duplicate replay is retained as diagnostic failure and does not count the pair',
+                       'V19/V41/V44 excluded; no privilege/concurrency/other-schema validation']}
+
+
+def remaining_closed(group):
+    if group['target']['kind'] != 'constraint':
+        return False
+    observations = group.get('observations', {})
+    body = ';\n'.join(s['sql'] for s in group['statements']) + ';'
+    keys = {'tables', 'constraints', 'columns', 'indexes', 'triggers', 'functions'}
+    for branch in REMAINING_BRANCHES:
+        obs = observations.get(branch, {})
+        if (group.get('results', {}).get(branch) is not True or obs.get('assertions_passed') is not True
+                or obs.get('executed_sql') != body):
+            return False
+        before, after = obs.get('before', {}), obs.get('after', {})
+        if set(before) != keys or set(after) != keys or not before['tables']:
+            return False
+        if any(not rows for rows in before['tables'].values()):
+            return False
+        if branch != 'present':
+            if before != after:
+                return False
+        else:
+            if any(before[k] != after[k] for k in keys - {'constraints'}):
+                return False
+            number = group['target']['number']
+            if number >= 565:
+                name = FK_TARGETS[number - 565][1]
+                expected = [c for c in before['constraints'] if c['name'] != name]
+                if len(expected) != len(before['constraints']) - 1 or after['constraints'] != expected:
+                    return False
+            else:
+                added = [c for c in after['constraints'] if c not in before['constraints']]
+                if any(c not in after['constraints'] for c in before['constraints']):
+                    return False
+                if added != expected_constraints(number):
+                    return False
+        if branch == 'error' and not obs.get('error'):
+            return False
+    return True
+
+
+def finalize_remaining(result):
+    clean = (result['status'] in ('passed', 'partial_diagnostic') and
+             result['cleanup'].get('container_and_anonymous_volumes_removed') is True)
+    ids = sorted(i for g in result['groups'] if clean and remaining_closed(g) for i in g['old_ids'])
+    result['coverage'] = {'verified_old_ids': ids, 'new_verified_count': len(ids)}
+    for item in result['items']:
+        item['verified_in_this_probe'] = item['id'] in ids
+        item['unpassed_branches'] = [] if item['id'] in ids else list(REMAINING_BRANCHES)
+
+
+def verified_remaining_ids(evidence):
+    expected = plan_remaining()
+    if (evidence.get('status') not in ('passed', 'partial_diagnostic') or
+            evidence.get('probe_kind') != expected['probe_kind'] or evidence.get('schema_version') != 1 or
+            evidence.get('baseline_sha256') != expected['baseline_sha256'] or
+            evidence.get('sources') != expected['sources'] or
+            evidence.get('cleanup', {}).get('container_and_anonymous_volumes_removed') is not True):
+        return []
+    fields = ('source', 'target', 'statements', 'old_ids', 'statement_ids')
+    if [{k: g.get(k) for k in fields} for g in evidence.get('groups', [])] != [
+            {k: g[k] for k in fields} for g in expected['groups']]:
+        return []
+    items = [{k: v for k, v in i.items() if k not in ('verified_in_this_probe', 'unpassed_branches')}
+             for i in evidence.get('items', [])]
+    if items != expected['items']:
+        return []
+    checked = copy.deepcopy(evidence)
+    finalize_remaining(checked)
+    if checked['coverage'] != evidence.get('coverage') or checked['items'] != evidence['items']:
+        return []
+    return checked['coverage']['verified_old_ids']
+
+
+def remaining_snapshot(sql):
+    tables = json.loads(sql("SELECT COALESCE(json_agg(tablename ORDER BY tablename),'[]') FROM pg_tables WHERE schemaname='probe';"))
+    return {'tables': {t: json.loads(sql(f"SELECT COALESCE(json_agg(x ORDER BY id),'[]') FROM {t} x;")) for t in tables},
+            'constraints': json.loads(sql("SELECT COALESCE(json_agg(x ORDER BY rel,name),'[]') FROM (SELECT c.conrelid::regclass::text rel,c.conname name,c.contype,pg_get_constraintdef(c.oid) definition,c.convalidated FROM pg_constraint c JOIN pg_namespace n ON n.oid=c.connamespace WHERE n.nspname='probe') x;")),
+            'triggers': json.loads(sql("SELECT COALESCE(json_agg(x ORDER BY name),'[]') FROM (SELECT t.tgname name,pg_get_triggerdef(t.oid) definition,t.tgenabled FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='probe' AND NOT t.tgisinternal) x;")),
+            'functions': json.loads(sql("SELECT COALESCE(json_agg(x ORDER BY name),'[]') FROM (SELECT p.proname name,pg_get_functiondef(p.oid) definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='probe') x;")),
+            'columns': json.loads(sql("SELECT COALESCE(json_agg(x ORDER BY table_name,ordinal_position),'[]') FROM (SELECT table_name,column_name,data_type,is_nullable,column_default,ordinal_position FROM information_schema.columns WHERE table_schema='probe') x;")),
+            'indexes': json.loads(sql("SELECT COALESCE(json_agg(x ORDER BY indexname),'[]') FROM (SELECT tablename,indexname,indexdef FROM pg_indexes WHERE schemaname='probe') x;"))}
+
+
+RESET = 'DROP SCHEMA IF EXISTS probe CASCADE; CREATE SCHEMA probe; SET search_path TO probe;'
+FK_TARGETS = [('sys_role_dept', 'fk_sys_role_dept_tenant_dept'),
+              ('wf_process_instance', 'fk_process_workflow_def'), ('wf_task', 'fk_task_process_instance'),
+              ('wf_approval_record', 'fk_approval_process_instance'), ('wf_approval_record', 'fk_approval_task')]
+
+
+def expected_constraints(number):
+    if number == 561:
+        return [dict(rel='sys_role', name='chk_sys_role_data_scope', contype='c',
+                     definition='CHECK (((data_scope IS NULL) OR ((data_scope >= 1) AND (data_scope <= 5))))',
+                     convalidated=True)]
+    definitions = [
+        ('wf_approval_record', 'fk_approval_process_instance', 'process_instance_id', 'wf_process_instance'),
+        ('wf_approval_record', 'fk_approval_task', 'task_id', 'wf_task'),
+        ('wf_process_instance', 'fk_process_workflow_def', 'workflow_definition_id', 'wf_workflow_definition'),
+        ('wf_task', 'fk_task_process_instance', 'process_instance_id', 'wf_process_instance')]
+    return [dict(rel=table, name=name, contype='f',
+                 definition=f'FOREIGN KEY ({column}) REFERENCES {parent}(id)', convalidated=True)
+            for table, name, column, parent in definitions]
+
+
+def assert_equal(actual, expected):
+    if actual != expected:
+        raise AssertionError(json.dumps({'actual': actual, 'expected': expected}, ensure_ascii=False))
+
+
+def expect_error(sql, body, fragment):
+    try:
+        sql(body)
+    except RuntimeError as exc:
+        if fragment not in str(exc):
+            raise
+        return str(exc)
+    raise AssertionError('expected PostgreSQL error: ' + fragment)
+
+
+def verify_remaining_group(group, sql):
+    target = group['target']
+    body = ';\n'.join(s['sql'] for s in group['statements']) + ';'
+    def observe(branch, before, after, **extra):
+        group['observations'][branch] = dict(before=before, after=after, executed_sql=body,
+                                             assertions_passed=True, **extra)
+        group['results'][branch] = True
+    if target['kind'] == 'trigger_pair':
+        table, col = target['table'], target['column']
+        setup = RESET + f"CREATE TABLE {table}(id BIGINT PRIMARY KEY,payload TEXT,{col} TIMESTAMP NOT NULL);INSERT INTO {table} VALUES(1,'中文','2001-01-01'),(2,'sentinel','2002-01-01');"
+        group['fixture_sql'] = setup
+        sql(setup)
+        before = remaining_snapshot(sql)
+        sql(group['statements'][0]['sql'] + ';')
+        sql(f"UPDATE {table} SET payload='before-trigger' WHERE id=1;")
+        after = remaining_snapshot(sql)
+        assert_equal(after['tables'][table], [{'id': 1, 'payload': 'before-trigger', col: '2001-01-01T00:00:00'}, {'id': 2, 'payload': 'sentinel', col: '2002-01-01T00:00:00'}])
+        assert_equal(after['triggers'], [])
+        observe('absent', before, after)
+        before = after
+        sql(group['statements'][1]['sql'] + ';')
+        # Same statement transaction makes timestamp equality deterministic without sleeps.
+        updated = sql(f"WITH changed AS (UPDATE {table} SET payload='after-trigger' WHERE id=1 RETURNING *) SELECT ({col}=CURRENT_TIMESTAMP AND payload='after-trigger') FROM changed;")
+        assert_equal(updated, 't')
+        after = remaining_snapshot(sql)
+        assert_equal(after['tables'][table][1], before['tables'][table][1])
+        assert_equal(after['triggers'][0]['name'], target['trigger'])
+        assert_equal(after['triggers'][0]['tgenabled'], 'O')
+        assert_equal(len(after['triggers']), 1)
+        assert_equal(len(after['functions']), 1)
+        assert_equal(after['columns'], before['columns'])
+        assert_equal(after['indexes'], before['indexes'])
+        assert_equal(after['constraints'], before['constraints'])
+        observe('present', before, after, update_timestamp_equals_transaction_time=True)
+        before = after
+        # Function replay succeeds, original trigger replay does not. Keep the entire pair uncounted.
+        sql(group['statements'][0]['sql'] + ';')
+        error = expect_error(sql, group['statements'][1]['sql'] + ';', 'already exists')
+        after = remaining_snapshot(sql)
+        assert_equal(after, before)
+        observe('replay', before, after, error=error)
+        group['results']['replay'] = False
+        sql(f'DROP TRIGGER {target["trigger"]} ON {table}; DROP TABLE {table};')
+        before = remaining_snapshot(sql)
+        error = expect_error(sql, group['statements'][1]['sql'] + ';', 'does not exist')
+        after = remaining_snapshot(sql)
+        assert_equal(after, before)
+        observe('error', before, after, error=error)
+        return
+    number = target['number']
+    if number == 561:
+        setup = RESET + 'CREATE TABLE sys_role(id BIGINT PRIMARY KEY,data_scope INT);INSERT INTO sys_role VALUES(1,NULL),(2,1),(3,5);'
+        name = 'chk_sys_role_data_scope'
+        invalid = 'UPDATE sys_role SET data_scope=6 WHERE id=2;'
+    elif number == 564:
+        setup = RESET + ('CREATE TABLE wf_workflow_definition(id BIGINT PRIMARY KEY);'
+            'CREATE TABLE wf_process_instance(id BIGINT PRIMARY KEY,workflow_definition_id BIGINT);'
+            'CREATE TABLE wf_task(id BIGINT PRIMARY KEY,process_instance_id BIGINT);'
+            'CREATE TABLE wf_approval_record(id BIGINT PRIMARY KEY,process_instance_id BIGINT,task_id BIGINT);'
+            'INSERT INTO wf_workflow_definition VALUES(1);INSERT INTO wf_process_instance VALUES(2,1);'
+            'INSERT INTO wf_task VALUES(3,2);INSERT INTO wf_approval_record VALUES(4,2,3);')
+        name = None
+        invalid = 'UPDATE wf_task SET process_instance_id=999 WHERE id=3;'
+    else:
+        table, name = FK_TARGETS[number - 565]
+        setup = RESET + f'CREATE TABLE parent(id BIGINT PRIMARY KEY);CREATE TABLE {table}(id BIGINT PRIMARY KEY,ref BIGINT);INSERT INTO parent VALUES(1);INSERT INTO {table} VALUES(2,1);'
+        invalid = None
+    group['fixture_sql'] = setup
+    sql(setup)
+    before = remaining_snapshot(sql)
+    if number >= 565:
+        sql(body)
+        after = remaining_snapshot(sql)
+        assert_equal(after, before)
+        observe('absent', before, after)
+        sql(f'ALTER TABLE {table} ADD CONSTRAINT {name} FOREIGN KEY(ref) REFERENCES parent(id);')
+        before = remaining_snapshot(sql)
+    sql(body)
+    after = remaining_snapshot(sql)
+    assert_equal(after['tables'], before['tables'])
+    for key in ('columns', 'indexes', 'triggers', 'functions'):
+        assert_equal(after[key], before[key])
+    if number >= 565:
+        expected = copy.deepcopy(before)
+        expected['constraints'] = [c for c in expected['constraints'] if c['name'] != name]
+        assert_equal(after, expected)
+    else:
+        added = [c for c in after['constraints'] if c not in before['constraints']]
+        assert_equal(added, expected_constraints(number))
+    observe('present', before, after)
+    before = after
+    sql(body)
+    after = remaining_snapshot(sql)
+    assert_equal(after, before)
+    observe('replay', before, after)
+    if number < 565:
+        observe('absent', before, after, meaning='constraint already exists: guard false')
+        invalid_statements = [invalid] if number == 561 else [
+            'UPDATE wf_process_instance SET workflow_definition_id=999 WHERE id=2;',
+            invalid,
+            'UPDATE wf_approval_record SET process_instance_id=999 WHERE id=4;',
+            'UPDATE wf_approval_record SET task_id=999 WHERE id=4;']
+        errors = []
+        for invalid_statement in invalid_statements:
+            errors.append(expect_error(sql, invalid_statement, 'violates'))
+            assert_equal(remaining_snapshot(sql), before)
+        error = '\n'.join(errors)
+        after = remaining_snapshot(sql)
+    else:
+        # Catalog name guard true but target table missing: raw migration must fail without side effects.
+        sql(f'ALTER TABLE {table} RENAME TO decoy;ALTER TABLE decoy ADD CONSTRAINT {name} FOREIGN KEY(ref) REFERENCES parent(id);')
+        fragment = 'does not exist'
+        before = remaining_snapshot(sql)
+        error = expect_error(sql, body, fragment)
+        after = remaining_snapshot(sql)
+        assert_equal(after, before)
+    observe('error', before, after, error=error,
+            error_sql=invalid_statements if number < 565 else [body])
+
+
+FINAL_NUMBERS = (562, 563, 584, 585)
+
+
+def plan_final_four(baseline=None):
+    baseline = json.loads(BASELINE.read_text()) if baseline is None else baseline
+    items = [copy.deepcopy(i) for i in baseline['baseline_audit']['old_sql_items']
+             if i['id'] in {f'old-sql-{n:04d}' for n in FINAL_NUMBERS}]
+    groups, sources = [], []
+    for item in items:
+        source = item['source']
+        text = source_text(source)
+        sha = digest(text.encode())
+        if item['source_sha256'] != sha or not item['source_matches_baseline']:
+            raise ValueError('source hash differs from baseline')
+        matches = [s for s in statement_inventory(text, 'postgresql') if s['line'] == item['original']['line']]
+        if len(matches) != 1:
+            raise ValueError('ambiguous statement binding')
+        statement = matches[0]
+        identity = f"{source}:{statement['start_offset']}:{statement['end_offset']}:{statement['statement_sha256']}"
+        statement['statement_id'] = 'stmt-' + digest(identity.encode())[:24]
+        if item['statement_ids'] != [statement['statement_id']]:
+            raise ValueError('statement binding differs from baseline')
+        entry = dict(source=source, source_sha256=sha)
+        if entry not in sources:
+            sources.append(entry)
+        groups.append(dict(source=source, target=dict(kind='final_four', number=int(item['id'][-4:])),
+                           statements=[statement], old_ids=[item['id']], statement_ids=[item['statement_ids']],
+                           results={}, observations={}))
+    if [g['target']['number'] for g in groups] != list(FINAL_NUMBERS):
+        raise ValueError('incomplete final four inventory')
+    return dict(schema_version=1, probe_kind='postgresql_p0_final_four',
+                baseline_sha256=digest(BASELINE.read_bytes()), baseline_dynamic_denominator=586,
+                items=items, groups=groups, sources=sources, status='planned_not_run',
+                cleanup={'attempted': False}, coverage={'verified_old_ids': []},
+                limits=['Exact frozen DO statements on synthetic nonempty minimal PG17 fixtures only',
+                        'No full migration chain, Flyway history, production, privilege or concurrency validation',
+                        'Replay compares business state; CURRENT_TIMESTAMP audit refresh is allowed',
+                        'Historical trigger duplicate diagnostics remain uncounted'])
+
+
+def final_cases(number):
+    return {562: ('seed', 'no_seed', 'ambiguous_admin', 'other_reference', 'role_reference', 'unassigned', 'late_error', 'replay'),
+            563: ('missing', 'existing', 'orphan', 'replay'),
+            584: ('admin', 'no_admin', 'existing_seed', 'collision', 'replay'),
+            585: ('new', 'existing', 'other_tenant', 'duplicate_tenant', 'no_admin', 'duplicate_admin',
+                  'unassigned_user', 'root_conflict', 'unassigned_dept', 'unassigned_role',
+                  'unassigned_role_dept', 'id_collision', 'replay')}[number]
+
+
+def final_fixture(number, case):
+    if number == 562:
+        setup = RESET + ("CREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors TEXT,name TEXT,tenant_id TEXT);"
+            "CREATE TABLE sys_user(id BIGINT PRIMARY KEY,open_id TEXT,username TEXT,dept_id BIGINT);"
+            "CREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,dept_id BIGINT);"
+            "INSERT INTO sys_dept VALUES(2,0,'0','sentinel','tenant-b');"
+            "INSERT INTO sys_user VALUES(2,'other','other',2);INSERT INTO sys_role_dept VALUES(2,2);")
+        if case != 'no_seed':
+            setup += "INSERT INTO sys_dept VALUES(1,0,'0','Apex 科技',NULL);INSERT INTO sys_user VALUES(1,'admin-openid','admin',1);"
+        setup += {'ambiguous_admin': "UPDATE sys_user SET open_id='custom' WHERE id=1;",
+                  'other_reference': 'UPDATE sys_user SET dept_id=1 WHERE id=2;',
+                  'role_reference': 'UPDATE sys_role_dept SET dept_id=1 WHERE id=2;',
+                  'unassigned': "DELETE FROM sys_dept WHERE id=1;UPDATE sys_dept SET tenant_id=NULL WHERE id=2;",
+                  'late_error': 'UPDATE sys_dept SET tenant_id=NULL WHERE id=2;'}.get(case, '')
+        return setup
+    if number == 563:
+        setup = RESET + ("CREATE TABLE sys_dept(id BIGINT PRIMARY KEY,tenant_id TEXT NOT NULL,UNIQUE(tenant_id,id));"
+            "CREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,tenant_id TEXT,dept_id BIGINT);"
+            "INSERT INTO sys_dept VALUES(1,'tenant-a'),(2,'tenant-b');"
+            "INSERT INTO sys_role_dept VALUES(1,'tenant-a',1),(2,'tenant-b',2);")
+        if case == 'existing':
+            setup += 'ALTER TABLE sys_role_dept ADD CONSTRAINT fk_sys_role_dept_tenant_dept FOREIGN KEY(tenant_id,dept_id) REFERENCES sys_dept(tenant_id,id);'
+        if case == 'orphan':
+            setup += "UPDATE sys_role_dept SET tenant_id='wrong' WHERE id=2;"
+        return setup
+    if number == 584:
+        setup = RESET + ("CREATE TABLE sys_role(id BIGINT PRIMARY KEY,code TEXT);"
+            "CREATE TABLE sys_menu(id BIGINT PRIMARY KEY,parent_id BIGINT,menu_name TEXT,menu_type INT,path TEXT,component TEXT,perms TEXT,icon TEXT,sort INT,visible INT,status INT,create_time TIMESTAMP,update_time TIMESTAMP,deleted INT);"
+            "CREATE TABLE sys_permission(id BIGINT PRIMARY KEY,name TEXT,code TEXT,description TEXT,type INT,status INT,create_time TIMESTAMP,update_time TIMESTAMP,deleted INT);"
+            "CREATE TABLE sys_role_permission(id BIGINT PRIMARY KEY,role_id BIGINT,permission_id BIGINT,UNIQUE(role_id,permission_id));"
+            "INSERT INTO sys_role VALUES(9,'OTHER');INSERT INTO sys_menu(id,menu_name) VALUES(9,'sentinel');"
+            "INSERT INTO sys_permission(id,name,code,status,deleted) VALUES(9,'sentinel','other',1,0);"
+            "INSERT INTO sys_role_permission VALUES(9,9,9);")
+        if case != 'no_admin':
+            setup += "INSERT INTO sys_role VALUES(1,'SUPER_ADMIN');"
+        if case == 'existing_seed':
+            setup += "INSERT INTO sys_menu(id,menu_name,visible,status) VALUES(4000,'old',7,8);INSERT INTO sys_permission(id,name,code,status,deleted) VALUES(3000,'old','system:generator:view',0,0);"
+        if case == 'collision':
+            setup += 'INSERT INTO sys_role_permission VALUES(413000,9,9+1);'
+        return setup
+    setup = RESET + ("CREATE TABLE sys_tenant(id BIGINT PRIMARY KEY,tenant_code TEXT,tenant_name TEXT,status TEXT,create_time TIMESTAMP,update_time TIMESTAMP,version INT,deleted INT,admin_user_id TEXT);"
+        "CREATE TABLE sys_user(id BIGINT PRIMARY KEY,username TEXT,deleted INT,status INT,tenant_id TEXT,dept_id BIGINT,update_time TIMESTAMP);"
+        "CREATE TABLE sys_dept(id BIGINT PRIMARY KEY,parent_id BIGINT,ancestors TEXT,name TEXT,order_num INT,status INT,tenant_id TEXT,create_time TIMESTAMP,update_time TIMESTAMP,version INT,deleted INT);"
+        "CREATE TABLE sys_user_role(id BIGINT PRIMARY KEY,user_id BIGINT,role_id BIGINT,tenant_id TEXT,deleted INT,update_time TIMESTAMP);"
+        "CREATE TABLE sys_role_dept(id BIGINT PRIMARY KEY,role_id BIGINT,dept_id BIGINT,tenant_id TEXT,create_time TIMESTAMP,update_time TIMESTAMP,version INT,deleted INT);"
+        "INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(9,'archived',1);"
+        "INSERT INTO sys_user VALUES(1,'admin',0,1,NULL,NULL,NULL),(2,'sentinel',0,1,'tenant-b',2,NULL);"
+        "INSERT INTO sys_dept(id,parent_id,ancestors,name,tenant_id,deleted) VALUES(2,0,'0','sentinel','tenant-b',0);"
+        "INSERT INTO sys_user_role VALUES(1,1,1,NULL,0,NULL),(2,2,2,'tenant-b',0,NULL);"
+        "INSERT INTO sys_role_dept(id,role_id,dept_id,tenant_id,deleted) VALUES(2,2,2,'tenant-b',0);")
+    return setup + {
+        'existing': "INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(5,'apex-default',0);INSERT INTO sys_dept(id,parent_id,ancestors,name,tenant_id) VALUES(1,0,'0','Apex 科技','apex-default');INSERT INTO sys_role_dept(id,role_id,dept_id,tenant_id,deleted) VALUES(3,1,1,NULL,0);",
+        'other_tenant': "INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(5,'other',0);",
+        'duplicate_tenant': "INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(5,'apex-default',0),(6,'apex-default',0);",
+        'no_admin': 'DELETE FROM sys_user WHERE id=1;',
+        'duplicate_admin': "INSERT INTO sys_user(id,username,deleted,status) VALUES(3,'admin',0,1);",
+        'unassigned_user': 'UPDATE sys_user SET tenant_id=NULL WHERE id=2;',
+        'root_conflict': "INSERT INTO sys_dept(id,parent_id,ancestors,name,tenant_id) VALUES(1,0,'0','custom','tenant-b');",
+        'unassigned_dept': 'UPDATE sys_dept SET tenant_id=NULL WHERE id=2;',
+        'unassigned_role': 'UPDATE sys_user_role SET tenant_id=NULL WHERE id=2;',
+        'unassigned_role_dept': 'UPDATE sys_role_dept SET tenant_id=NULL WHERE id=2;',
+        'id_collision': "INSERT INTO sys_tenant(id,tenant_code,deleted) VALUES(1,'deleted',1);"}.get(case, '')
+
+
+def final_error(number, case):
+    return {562: {'ambiguous_admin': 'references are ambiguous', 'other_reference': 'references are ambiguous',
+                  'role_reference': 'references are ambiguous', 'unassigned': 'explicit tenant_id', 'late_error': 'explicit tenant_id'},
+            563: {'orphan': 'violates foreign key constraint'},
+            584: {'collision': 'duplicate key value'},
+            585: {'other_tenant': 'another active tenant', 'duplicate_tenant': 'duplicate active',
+                  'no_admin': 'exactly one active admin', 'duplicate_admin': 'exactly one active admin',
+                  'unassigned_user': 'unassigned non-admin', 'root_conflict': 'default root',
+                  'unassigned_dept': 'unassigned departments', 'unassigned_role': 'unassigned roles',
+                  'unassigned_role_dept': 'ambiguous role department', 'id_collision': 'duplicate key value'}}[number].get(case)
+
+
+def business_snapshot(snapshot):
+    result = copy.deepcopy(snapshot)
+    for rows in result['tables'].values():
+        for row in rows:
+            for key in ('update_time',):
+                if row.get(key) is not None:
+                    row[key] = '<timestamp>'
+    return result
+
+
+def assert_final_observation(number, case, before, after, error):
+    keys = {'tables', 'constraints', 'columns', 'indexes', 'triggers', 'functions'}
+    assert_equal(set(before), keys)
+    assert_equal(set(after), keys)
+    if not before['tables'] or any(not rows for rows in before['tables'].values()):
+        raise AssertionError('nonempty fixtures required')
+    fragment = final_error(number, case)
+    if fragment:
+        if not error or fragment not in error:
+            raise AssertionError('missing expected error')
+        assert_equal(after, before)
+        return
+    if error:
+        raise AssertionError('unexpected error')
+    if case == 'replay':
+        assert_equal(business_snapshot(after), business_snapshot(before))
+        return
+    if number == 562:
+        expected = copy.deepcopy(before)
+        if case == 'seed':
+            expected['tables']['sys_dept'] = [r for r in expected['tables']['sys_dept'] if r['id'] != 1]
+            expected['tables']['sys_user'][0]['dept_id'] = None
+        assert_equal(after, expected)
+    elif number == 563:
+        expected = copy.deepcopy(before)
+        if case == 'missing':
+            expected['constraints'] = sorted(expected['constraints'] + [dict(rel='sys_role_dept', name='fk_sys_role_dept_tenant_dept', contype='f', definition='FOREIGN KEY (tenant_id, dept_id) REFERENCES sys_dept(tenant_id, id)', convalidated=True)], key=lambda c: (c['rel'], c['name']))
+        assert_equal(after, expected)
+    else:
+        for key in keys - {'tables'}:
+            assert_equal(after[key], before[key])
+        tables = after['tables']
+        # Every unrelated sentinel must survive byte-for-byte.
+        for table, rows in before['tables'].items():
+            for row in rows:
+                if (number == 584 and row['id'] == 9) or (number == 585 and row['id'] in (2, 9)):
+                    assert_equal(next(r for r in tables[table] if r['id'] == row['id']), row)
+        if number == 584:
+            assert_equal(len(tables['sys_menu']), 4)
+            assert_equal(len(tables['sys_permission']), 38)
+            assert_equal(len(tables['sys_role_permission']), 1 if case == 'no_admin' else 38)
+            assert_equal([r['id'] for r in tables['sys_menu']], [9, 4000, 5000, 6000])
+            assert_equal([r['perms'] for r in tables['sys_menu'][1:]], ['system:generator:view', 'system:authconfig:view', 'system:sso:view'])
+            if case == 'existing_seed':
+                assert_equal([tables['sys_menu'][1]['visible'], tables['sys_menu'][1]['status']], [7, 8])
+            for row in tables['sys_permission'][1:]:
+                assert_equal(row['status'], 1)
+            for row in tables['sys_role_permission'][1:]:
+                assert_equal(row['role_id'], 1)
+                assert_equal(row['id'], 410000 + row['permission_id'])
+        else:
+            tenant = next(r for r in tables['sys_tenant'] if r['tenant_code'] == 'apex-default')
+            assert_equal([tenant['id'], tenant['tenant_name'], tenant['status'], tenant['admin_user_id']],
+                         [5 if case == 'existing' else 1, 'Apex 默认租户', 'ACTIVE', '1'])
+            assert_equal(len(tables['sys_tenant']), 2)
+            admin = tables['sys_user'][0]
+            assert_equal([admin['tenant_id'], admin['dept_id']], ['apex-default', 1])
+            assert_equal(tables['sys_user_role'][0]['tenant_id'], 'apex-default')
+            root = tables['sys_dept'][0]
+            assert_equal([root['id'], root['name'], root['tenant_id']], [1, 'Apex 科技', 'apex-default'])
+            links = [r for r in tables['sys_role_dept'] if r['dept_id'] == 1]
+            assert_equal(len(links), 1)
+            assert_equal([links[0]['role_id'], links[0]['tenant_id']], [1, 'apex-default'])
+
+
+def verify_final_four_group(group, sql):
+    number = group['target']['number']
+    body = group['statements'][0]['sql'] + ';'
+    for case in final_cases(number):
+        setup = '' if case == 'replay' else final_fixture(number, case)
+        if case == 'replay':
+            # Fresh applicable success followed by the exact frozen statement, never duplicate DDL.
+            setup = final_fixture(number, 'missing' if number == 563 else 'no_seed' if number == 562 else 'admin' if number == 584 else 'new')
+            sql(setup)
+            sql(body)
+        else:
+            sql(setup)
+        before = remaining_snapshot(sql)
+        fragment = final_error(number, case)
+        error = expect_error(sql, body, fragment) if fragment else None
+        if not fragment:
+            sql(body)
+        after = remaining_snapshot(sql)
+        assert_final_observation(number, case, before, after, error)
+        group['observations'][case] = dict(fixture_sql=setup, executed_sql=body, before=before, after=after,
+                                           error=error, assertions_passed=True)
+        group['results'][case] = True
+
+
+def final_four_closed(group):
+    try:
+        number = group['target']['number']
+        for case in final_cases(number):
+            obs = group['observations'][case]
+            if group['results'].get(case) is not True or obs.get('assertions_passed') is not True:
+                return False
+            if obs['executed_sql'] != group['statements'][0]['sql'] + ';':
+                return False
+            expected_case = ('missing' if number == 563 else 'no_seed' if number == 562 else 'admin' if number == 584 else 'new') if case == 'replay' else case
+            if obs['fixture_sql'] != final_fixture(number, expected_case):
+                return False
+            assert_final_observation(number, case, obs['before'], obs['after'], obs.get('error'))
+        return True
+    except (KeyError, TypeError, ValueError, AssertionError, StopIteration):
+        return False
+
+
+def finalize_final_four(result):
+    clean = result['status'] in ('passed', 'partial_diagnostic') and result['cleanup'].get('container_and_anonymous_volumes_removed') is True
+    ids = sorted(i for g in result['groups'] if clean and final_four_closed(g) for i in g['old_ids'])
+    result['coverage'] = dict(verified_old_ids=ids, new_verified_count=len(ids))
+    for item in result['items']:
+        item['verified_in_this_probe'] = item['id'] in ids
+        item['unpassed_branches'] = [] if item['id'] in ids else list(final_cases(int(item['id'][-4:])))
+
+
+def verified_final_four_ids(evidence):
+    expected = plan_final_four()
+    if (not evidence.get('server_version', '').startswith('PostgreSQL 17.') or
+            evidence.get('container', {}).get('isolation_verified') is not True):
+        return []
+    for field in ('probe_kind', 'schema_version', 'baseline_sha256', 'sources'):
+        if evidence.get(field) != expected[field]:
+            return []
+    fields = ('source', 'target', 'statements', 'old_ids', 'statement_ids')
+    if [{k: g.get(k) for k in fields} for g in evidence.get('groups', [])] != [{k: g[k] for k in fields} for g in expected['groups']]:
+        return []
+    items = [{k: v for k, v in i.items() if k not in ('verified_in_this_probe', 'unpassed_branches')} for i in evidence.get('items', [])]
+    if items != expected['items']:
+        return []
+    checked = copy.deepcopy(evidence)
+    finalize_final_four(checked)
+    if checked['coverage'] != evidence.get('coverage') or checked['items'] != evidence['items']:
+        return []
+    return checked['coverage']['verified_old_ids']
+
+
+TRIGGER_CASES = ('first_execution', 'insert', 'update', 'explicit_timestamp', 'zero_update',
+                 'delete', 'data_rollback', 'ddl_rollback', 'duplicate_replay')
+
+
+def plan_trigger_behavior():
+    original = plan_remaining()
+    groups = [g for g in original['groups'] if g['target']['kind'] == 'trigger_pair']
+    sources = []
+    for source in dict.fromkeys(g['source'] for g in groups):
+        text = source_text(source)
+        sources.append(dict(source=source, source_sha256=digest(text.encode()), sql=text))
+    ids = {i for g in groups for i in g['old_ids']}
+    return dict(schema_version=1, probe_kind='postgresql_p0_trigger_behavior',
+                baseline_sha256=original['baseline_sha256'], sources=sources, groups=groups,
+                items=[i for i in original['items'] if i['id'] in ids],
+                baseline_dynamic_denominator=586, status='planned_not_run', cleanup={'attempted': False},
+                coverage=dict(verified_old_ids=[], new_verified_count=0),
+                behavior=dict(validated_old_ids=[], scenario_count=0),
+                limits=['Independent once-only migration behavior evidence; never original verified_union credit',
+                        'Exact full source in fresh synthetic PG17 schema; not Flyway history or full upgrade chain',
+                        'No production secrets, privilege denial, concurrent transactions or application delivery validation'])
+
+
+def trigger_insert(target, columns, row_id, payload):
+    values = dict(id=str(row_id), **{target['column']: "'2001-01-01'", target['payload']: "'" + payload + "'"})
+    for column in columns:
+        name = column['column_name']
+        if name in values or column['is_nullable'] != 'NO' or column['column_default'] is not None:
+            continue
+        kind = column['data_type']
+        values[name] = ("'2000-01-01'" if 'timestamp' in kind else '1' if kind in ('bigint', 'integer', 'smallint')
+                        else 'false' if kind == 'boolean' else "'probe-" + str(row_id) + "'")
+    return f"INSERT INTO {target['table']} ({','.join(values)}) VALUES ({','.join(values.values())});"
+
+
+def assert_trigger_behavior(target, case, obs):
+    before, after = obs['before'], obs['after']
+    if case in ('ddl_rollback', 'data_rollback', 'duplicate_replay'):
+        if not obs.get('error'):
+            raise AssertionError('expected transaction/replay error')
+        assert_equal(after, before)
+        return
+    if case == 'first_execution':
+        if not after['tables'] or not after['columns'] or not after['indexes'] or not after['triggers'] or not after['functions']:
+            raise AssertionError('incomplete migration catalog')
+        return
+    expected = copy.deepcopy(before)
+    rows = expected['tables'][target['table']]
+    if case in ('update', 'explicit_timestamp'):
+        row = next(r for r in rows if r['id'] == 9001)
+        row[target['payload']] = 'changed' if case == 'update' else 'explicit'
+        if not obs.get('transaction_time') or obs['transaction_time'] == '2001-01-01T00:00:00':
+            raise AssertionError('missing transaction timestamp')
+        row[target['column']] = obs['transaction_time']
+    elif case == 'insert':
+        inserted = next(r for r in after['tables'][target['table']] if r['id'] == 9003)
+        assert_equal(inserted[target['column']], '2001-01-01T00:00:00')
+        assert_equal(inserted[target['payload']], 'insert-only')
+        rows.append(inserted)
+    elif case == 'delete':
+        expected['tables'][target['table']] = [r for r in rows if r['id'] != 9003]
+    assert_equal(after, expected)
+
+
+def verify_trigger_behavior_group(group, sql):
+    text = source_text(group['source'])
+    target = group['target']
+    table, col = target['table'], target['column']
+    target['payload'] = {'jwt_keys': 'remark', 'doc_chart': 'chart_name', 'sys_message_outbox': 'payload'}.get(table, 'title')
+    def record(case, body, error_fragment=None):
+        before = remaining_snapshot(sql)
+        error = expect_error(sql, body, error_fragment) if error_fragment else None
+        output = None if error_fragment else sql(body)
+        after = remaining_snapshot(sql)
+        obs = dict(before=before, after=after, executed_sql=body, error=error, assertions_passed=True)
+        if case in ('update', 'explicit_timestamp'):
+            obs['transaction_time'] = json.loads(output)
+        assert_trigger_behavior(target, case, obs)
+        group['observations'][case] = obs
+        group['results'][case] = True
+        return after
+    sql(RESET + 'CREATE TABLE rollback_sentinel(id BIGINT PRIMARY KEY,note TEXT); INSERT INTO rollback_sentinel VALUES(1,\'preserved\');')
+    record('ddl_rollback', 'BEGIN;\n' + text + '\nSELECT 1/0; COMMIT;', 'division by zero')
+    sql(RESET)
+    after = record('first_execution', 'BEGIN;\n' + text + '\nCOMMIT;')
+    expected_tables = re.findall(r'CREATE TABLE (?:IF NOT EXISTS )?(\w+)', text)
+    assert_equal(sorted(after['tables']), sorted(expected_tables))
+    expected_indexes = re.findall(r'CREATE INDEX (?:IF NOT EXISTS )?(\w+)', text)
+    actual_indexes = [i['indexname'] for i in after['indexes']]
+    for name in expected_indexes:
+        if name not in actual_indexes:
+            raise AssertionError('missing source index: ' + name)
+    validity = sql("SELECT bool_and(indisvalid AND indisready)::text FROM pg_index WHERE indrelid IN (SELECT oid FROM pg_class WHERE relnamespace='probe'::regnamespace);")
+    assert_equal(validity, 'true')
+    binding = json.loads(sql("SELECT json_agg(json_build_object('trigger',t.tgname,'table',c.relname,'function',p.proname,'type',t.tgtype,'enabled',t.tgenabled) ORDER BY t.tgname) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_proc p ON p.oid=t.tgfoid WHERE c.relnamespace='probe'::regnamespace AND NOT t.tgisinternal;"))
+    expected_binding = []
+    for g in plan_trigger_behavior()['groups']:
+        if g['source'] == group['source']:
+            t = g['target']
+            expected_binding.append(dict(trigger=t['trigger'], table=t['table'], function=t['function'], type=19, enabled='O'))
+    assert_equal(binding, sorted(expected_binding, key=lambda b: b['trigger']))
+    group['observations']['first_execution']['trigger_binding'] = binding
+    group['observations']['first_execution']['source_indexes'] = expected_indexes
+    columns = [c for c in after['columns'] if c['table_name'] == table]
+    setup = trigger_insert(target, columns, 9001, 'original') + trigger_insert(target, columns, 9002, 'sentinel')
+    sql(setup)
+    group['fixture_sql'] = setup
+    record('insert', trigger_insert(target, columns, 9003, 'insert-only'))
+    for case, value in (('update', 'changed'), ('explicit_timestamp', 'explicit')):
+        override = '' if case == 'update' else f", {col}='1999-01-01'"
+        record(case, f"BEGIN; UPDATE {table} SET {target['payload']}='{value}'{override} WHERE id=9001; SELECT to_json(CURRENT_TIMESTAMP::timestamp); COMMIT;")
+    record('zero_update', f"UPDATE {table} SET {target['payload']}='unmatched' WHERE id=-1;")
+    record('delete', f'DELETE FROM {table} WHERE id=9003;')
+    record('data_rollback', f"BEGIN; UPDATE {table} SET {target['payload']}='rolled-back' WHERE id=9001; CREATE TABLE rollback_marker(id BIGINT); SELECT 1/0; COMMIT;", 'division by zero')
+    pair = ';\n'.join(s['sql'] for s in group['statements']) + ';'
+    record('duplicate_replay', 'BEGIN;\n' + pair + '\nCOMMIT;', 'already exists')
+
+
+def finalize_trigger_behavior(result):
+    valid = []
+    count = 0
+    clean = result['cleanup'].get('container_and_anonymous_volumes_removed') is True
+    for group in result['groups']:
+        try:
+            for case in TRIGGER_CASES:
+                obs = group['observations'][case]
+                assert_equal(group['results'][case], True)
+                assert_trigger_behavior(group['target'], case, obs)
+            if clean:
+                valid.extend(group['old_ids'])
+                count += len(TRIGGER_CASES)
+        except (KeyError, TypeError, AssertionError, StopIteration):
+            pass
+    result['coverage'] = dict(verified_old_ids=[], new_verified_count=0)
+    result['behavior'] = dict(validated_old_ids=sorted(valid), scenario_count=count)
+    if len(valid) != 16 or result['status'] != 'passed':
+        result['status'] = 'failed'
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=pathlib.Path)
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--remaining', action='store_true')
+    modes.add_argument('--final-four', action='store_true')
+    modes.add_argument('--trigger-behavior', action='store_true')
+    args = parser.parse_args()
+    output = args.output or P0 / ('dynamic-pg-p0-' + uuid.uuid4().hex + '-evidence.json')
+    if output.exists():
+        raise FileExistsError(output)
+    result = (plan_trigger_behavior() if args.trigger_behavior else plan_final_four() if args.final_four
+              else plan_remaining() if args.remaining else plan())
+    result['started_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    passed = run(result)
+    result['finished_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    result['probe_sha256'] = digest(pathlib.Path(__file__).read_bytes())
+    result['test_sha256'] = digest((ROOT / 'scripts/test/test_pg_p0_dynamic_probe.py').read_bytes())
+    save(result, output)
+    print(json.dumps({'evidence': str(output), 'sha256': digest(output.read_bytes()), 'status': result['status'],
+                      'coverage': result['coverage'], 'cleanup': result['cleanup']}, ensure_ascii=False))
+    return 0 if passed else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

@@ -1,0 +1,2075 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+  "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "baseline_dynamic_denominator": 586,
+  "groups": [
+    {
+      "target": {
+        "table": "sys_job",
+        "kind": "column",
+        "name": "tenant_id"
+      },
+      "condition_sql": "SELECT EXISTS (SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job') AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND COLUMN_NAME = 'tenant_id')",
+      "absent_sql": "ALTER TABLE `sys_job` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+      "present_sql": "SELECT 1",
+      "variable": "sql",
+      "prepared_name": "stmt",
+      "guard_shape": "exists_gate",
+      "statements": [
+        {
+          "line": 3,
+          "end_line": 3,
+          "sql": "SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job') AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND COLUMN_NAME = 'tenant_id'), 'ALTER TABLE `sys_job` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT ''租户ID（多租户隔离）'' AFTER `deleted`', 'SELECT 1')",
+          "start_offset": 80,
+          "end_offset": 474,
+          "category": "dynamic_sql",
+          "statement_sha256": "37dd487cee5c21e7a5dfa4dd2a19eb4fc3e7be5ba3d774e7e48806e59fce52c6",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job",
+              "line": 3,
+              "end_line": 3,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "after",
+                "alter",
+                "column",
+                "comment",
+                "default",
+                "deleted",
+                "null",
+                "sys_job",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE `sys_job` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 3
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 3,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 4,
+          "end_line": 4,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 476,
+          "end_offset": 498,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            3
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 4,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 5,
+          "end_line": 5,
+          "sql": "EXECUTE stmt",
+          "start_offset": 500,
+          "end_offset": 512,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            3
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 5,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 6,
+          "end_line": 6,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 514,
+          "end_offset": 537,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            3
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 6,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "semantic_verified": true,
+      "preconditions": [
+        "current database is the isolated fixture",
+        "gated table must exist before the DDL can run",
+        "ADD dependencies and privileges must be satisfied",
+        "name existence does not establish definition equivalence"
+      ],
+      "old_ids": [
+        "old-sql-0339",
+        "old-sql-0340",
+        "old-sql-0341",
+        "old-sql-0342"
+      ],
+      "statement_ids": [
+        [
+          "stmt-d9403c4128be5684ba8d8cbd"
+        ],
+        [
+          "stmt-4efb8ed9286a71440ffa3b7f"
+        ],
+        [
+          "stmt-4539ef01515230b77a3c90a2"
+        ],
+        [
+          "stmt-15d15bf385892e94f9731381"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "selected_sql": "ALTER TABLE `sys_job` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+          "client_output": "ALTER TABLE `sys_job` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+          "catalog_before": "",
+          "catalog_after": "varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job; CREATE TABLE sys_job (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME); INSERT INTO sys_job (id) VALUES (1);"
+        },
+        "replay": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3",
+          "catalog_after": "varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "varchar(7)\tYES\t<NULL>\t\t\t6",
+          "catalog_after": "varchar(7)\tYES\t<NULL>\t\t\t6",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job; CREATE TABLE sys_job (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(7) NULL); INSERT INTO sys_job (id) VALUES (1);"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "table_still_absent": true
+        }
+      }
+    },
+    {
+      "target": {
+        "table": "sys_job",
+        "kind": "index",
+        "name": "idx_job_tenant_id"
+      },
+      "condition_sql": "SELECT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND INDEX_NAME = 'idx_job_tenant_id')",
+      "absent_sql": "CREATE INDEX `idx_job_tenant_id` ON `sys_job` (`tenant_id`)",
+      "present_sql": "SELECT 1",
+      "variable": "sql",
+      "prepared_name": "stmt",
+      "guard_shape": "exists_gate",
+      "statements": [
+        {
+          "line": 7,
+          "end_line": 7,
+          "sql": "SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND INDEX_NAME = 'idx_job_tenant_id'), 'CREATE INDEX `idx_job_tenant_id` ON `sys_job` (`tenant_id`)', 'SELECT 1')",
+          "start_offset": 539,
+          "end_offset": 924,
+          "category": "dynamic_sql",
+          "statement_sha256": "ba0b0d6de9acfc59a3912b3173dfaa5fdecb624e616e8b3eb71f6f56782d13be",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job",
+              "line": 7,
+              "end_line": 7,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "idx_job_tenant_id",
+                "index",
+                "on",
+                "sys_job",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX `idx_job_tenant_id` ON `sys_job` (`tenant_id`)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 7
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 7,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 8,
+          "end_line": 8,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 926,
+          "end_offset": 948,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            7
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 8,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 9,
+          "end_line": 9,
+          "sql": "EXECUTE stmt",
+          "start_offset": 950,
+          "end_offset": 962,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            7
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 9,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 10,
+          "end_line": 10,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 964,
+          "end_offset": 987,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            7
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 10,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "semantic_verified": true,
+      "preconditions": [
+        "current database is the isolated fixture",
+        "gated table must exist before the DDL can run",
+        "ADD dependencies and privileges must be satisfied",
+        "name existence does not establish definition equivalence"
+      ],
+      "old_ids": [
+        "old-sql-0343",
+        "old-sql-0344",
+        "old-sql-0345",
+        "old-sql-0346"
+      ],
+      "statement_ids": [
+        [
+          "stmt-8ea8c9b10fbe0e8d53a31e2d"
+        ],
+        [
+          "stmt-b1076812c9ba6d8123634efb"
+        ],
+        [
+          "stmt-0e41af4106a2c1dfc5a61ad4"
+        ],
+        [
+          "stmt-882389e3223fbd51c156d7d0"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "selected_sql": "CREATE INDEX `idx_job_tenant_id` ON `sys_job` (`tenant_id`)",
+          "client_output": "CREATE INDEX `idx_job_tenant_id` ON `sys_job` (`tenant_id`)",
+          "catalog_before": "",
+          "catalog_after": "idx_job_tenant_id\t1\t1\ttenant_id\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job; CREATE TABLE sys_job (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL); INSERT INTO sys_job (id) VALUES (1);"
+        },
+        "replay": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_tenant_id\t1\t1\ttenant_id\tBTREE",
+          "catalog_after": "idx_job_tenant_id\t1\t1\ttenant_id\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_tenant_id\t0\t1\tid\tBTREE",
+          "catalog_after": "idx_job_tenant_id\t0\t1\tid\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job; CREATE TABLE sys_job (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL, UNIQUE INDEX idx_job_tenant_id (id)); INSERT INTO sys_job (id) VALUES (1);"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "table_still_absent": true
+        }
+      }
+    },
+    {
+      "target": {
+        "table": "sys_job",
+        "kind": "index",
+        "name": "idx_job_tenant_status"
+      },
+      "condition_sql": "SELECT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND INDEX_NAME = 'idx_job_tenant_status')",
+      "absent_sql": "CREATE INDEX `idx_job_tenant_status` ON `sys_job` (`tenant_id`, `status`)",
+      "present_sql": "SELECT 1",
+      "variable": "sql",
+      "prepared_name": "stmt",
+      "guard_shape": "exists_gate",
+      "statements": [
+        {
+          "line": 11,
+          "end_line": 11,
+          "sql": "SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job' AND INDEX_NAME = 'idx_job_tenant_status'), 'CREATE INDEX `idx_job_tenant_status` ON `sys_job` (`tenant_id`, `status`)', 'SELECT 1')",
+          "start_offset": 989,
+          "end_offset": 1392,
+          "category": "dynamic_sql",
+          "statement_sha256": "b2aef6925ff65eba71c6ead2e8a77aa670180b663788eb48e74a89b0c1399e26",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job",
+              "line": 11,
+              "end_line": 11,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "idx_job_tenant_status",
+                "index",
+                "on",
+                "status",
+                "sys_job",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX `idx_job_tenant_status` ON `sys_job` (`tenant_id`, `status`)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 11
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 11,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 12,
+          "end_line": 12,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 1394,
+          "end_offset": 1416,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            11
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 12,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 13,
+          "end_line": 13,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1418,
+          "end_offset": 1430,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            11
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 13,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 14,
+          "end_line": 14,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1432,
+          "end_offset": 1455,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            11
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 14,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "semantic_verified": true,
+      "preconditions": [
+        "current database is the isolated fixture",
+        "gated table must exist before the DDL can run",
+        "ADD dependencies and privileges must be satisfied",
+        "name existence does not establish definition equivalence"
+      ],
+      "old_ids": [
+        "old-sql-0347",
+        "old-sql-0348",
+        "old-sql-0349",
+        "old-sql-0350"
+      ],
+      "statement_ids": [
+        [
+          "stmt-72eff3dd588c10012c09b8dc"
+        ],
+        [
+          "stmt-b1a60f29bf86ba109f17d653"
+        ],
+        [
+          "stmt-c86a5cc026febc023e6e75d8"
+        ],
+        [
+          "stmt-04640bdc50a502549583c44c"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "selected_sql": "CREATE INDEX `idx_job_tenant_status` ON `sys_job` (`tenant_id`, `status`)",
+          "client_output": "CREATE INDEX `idx_job_tenant_status` ON `sys_job` (`tenant_id`, `status`)",
+          "catalog_before": "",
+          "catalog_after": "idx_job_tenant_status\t1\t1\ttenant_id\tBTREE\nidx_job_tenant_status\t1\t2\tstatus\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job; CREATE TABLE sys_job (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL); INSERT INTO sys_job (id) VALUES (1);"
+        },
+        "replay": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_tenant_status\t1\t1\ttenant_id\tBTREE\nidx_job_tenant_status\t1\t2\tstatus\tBTREE",
+          "catalog_after": "idx_job_tenant_status\t1\t1\ttenant_id\tBTREE\nidx_job_tenant_status\t1\t2\tstatus\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_tenant_status\t0\t1\tid\tBTREE",
+          "catalog_after": "idx_job_tenant_status\t0\t1\tid\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job; CREATE TABLE sys_job (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL, UNIQUE INDEX idx_job_tenant_status (id)); INSERT INTO sys_job (id) VALUES (1);"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "table_still_absent": true
+        }
+      }
+    },
+    {
+      "target": {
+        "table": "sys_job_log",
+        "kind": "column",
+        "name": "tenant_id"
+      },
+      "condition_sql": "SELECT EXISTS (SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log') AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND COLUMN_NAME = 'tenant_id')",
+      "absent_sql": "ALTER TABLE `sys_job_log` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+      "present_sql": "SELECT 1",
+      "variable": "sql",
+      "prepared_name": "stmt",
+      "guard_shape": "exists_gate",
+      "statements": [
+        {
+          "line": 16,
+          "end_line": 16,
+          "sql": "SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log') AND NOT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND COLUMN_NAME = 'tenant_id'), 'ALTER TABLE `sys_job_log` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT ''租户ID（多租户隔离）'' AFTER `deleted`', 'SELECT 1')",
+          "start_offset": 1458,
+          "end_offset": 1864,
+          "category": "dynamic_sql",
+          "statement_sha256": "813adeb2a80d6106f013e8f93b146acd3c805da8858879038be641d66fd0ab5b",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job_log",
+              "line": 16,
+              "end_line": 16,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "after",
+                "alter",
+                "column",
+                "comment",
+                "default",
+                "deleted",
+                "null",
+                "sys_job_log",
+                "table",
+                "tenant_id",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE `sys_job_log` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 16
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 16,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 17,
+          "end_line": 17,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 1866,
+          "end_offset": 1888,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            16
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 17,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 18,
+          "end_line": 18,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1890,
+          "end_offset": 1902,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            16
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 18,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 19,
+          "end_line": 19,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1904,
+          "end_offset": 1927,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            16
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 19,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "semantic_verified": true,
+      "preconditions": [
+        "current database is the isolated fixture",
+        "gated table must exist before the DDL can run",
+        "ADD dependencies and privileges must be satisfied",
+        "name existence does not establish definition equivalence"
+      ],
+      "old_ids": [
+        "old-sql-0351",
+        "old-sql-0352",
+        "old-sql-0353",
+        "old-sql-0354"
+      ],
+      "statement_ids": [
+        [
+          "stmt-c29e2f280439801c129a8c5f"
+        ],
+        [
+          "stmt-1a957e9143bde65ca2acebcb"
+        ],
+        [
+          "stmt-4250e243f27737802fdcc5b7"
+        ],
+        [
+          "stmt-749bf9a3a9b072d33bac17b6"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "selected_sql": "ALTER TABLE `sys_job_log` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+          "client_output": "ALTER TABLE `sys_job_log` ADD COLUMN `tenant_id` VARCHAR(64) DEFAULT NULL COMMENT '租户ID（多租户隔离）' AFTER `deleted`",
+          "catalog_before": "",
+          "catalog_after": "varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job_log; CREATE TABLE sys_job_log (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME); INSERT INTO sys_job_log (id) VALUES (1);"
+        },
+        "replay": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3",
+          "catalog_after": "varchar(64)\tYES\t<NULL>\t\t租户ID（多租户隔离）\t3",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "varchar(7)\tYES\t<NULL>\t\t\t6",
+          "catalog_after": "varchar(7)\tYES\t<NULL>\t\t\t6",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job_log; CREATE TABLE sys_job_log (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(7) NULL); INSERT INTO sys_job_log (id) VALUES (1);"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "table_still_absent": true
+        }
+      }
+    },
+    {
+      "target": {
+        "table": "sys_job_log",
+        "kind": "index",
+        "name": "idx_job_log_tenant_id"
+      },
+      "condition_sql": "SELECT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND INDEX_NAME = 'idx_job_log_tenant_id')",
+      "absent_sql": "CREATE INDEX `idx_job_log_tenant_id` ON `sys_job_log` (`tenant_id`)",
+      "present_sql": "SELECT 1",
+      "variable": "sql",
+      "prepared_name": "stmt",
+      "guard_shape": "exists_gate",
+      "statements": [
+        {
+          "line": 20,
+          "end_line": 20,
+          "sql": "SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND INDEX_NAME = 'idx_job_log_tenant_id'), 'CREATE INDEX `idx_job_log_tenant_id` ON `sys_job_log` (`tenant_id`)', 'SELECT 1')",
+          "start_offset": 1929,
+          "end_offset": 2334,
+          "category": "dynamic_sql",
+          "statement_sha256": "92d2b0a51cfe6872691b39adef7eaf34ea3e149077aa61f7977a511560c8b4a7",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job_log",
+              "line": 20,
+              "end_line": 20,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "idx_job_log_tenant_id",
+                "index",
+                "on",
+                "sys_job_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX `idx_job_log_tenant_id` ON `sys_job_log` (`tenant_id`)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 20
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 20,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 21,
+          "end_line": 21,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 2336,
+          "end_offset": 2358,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            20
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 21,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 22,
+          "end_line": 22,
+          "sql": "EXECUTE stmt",
+          "start_offset": 2360,
+          "end_offset": 2372,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            20
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 22,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 23,
+          "end_line": 23,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 2374,
+          "end_offset": 2397,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            20
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 23,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "semantic_verified": true,
+      "preconditions": [
+        "current database is the isolated fixture",
+        "gated table must exist before the DDL can run",
+        "ADD dependencies and privileges must be satisfied",
+        "name existence does not establish definition equivalence"
+      ],
+      "old_ids": [
+        "old-sql-0355",
+        "old-sql-0356",
+        "old-sql-0357",
+        "old-sql-0358"
+      ],
+      "statement_ids": [
+        [
+          "stmt-84d3e72348f1bba979528d0b"
+        ],
+        [
+          "stmt-a405d15cb8d31b5a42e448e1"
+        ],
+        [
+          "stmt-4c11be76997864bb6e2ab40a"
+        ],
+        [
+          "stmt-18afe18187142148caf30462"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "selected_sql": "CREATE INDEX `idx_job_log_tenant_id` ON `sys_job_log` (`tenant_id`)",
+          "client_output": "CREATE INDEX `idx_job_log_tenant_id` ON `sys_job_log` (`tenant_id`)",
+          "catalog_before": "",
+          "catalog_after": "idx_job_log_tenant_id\t1\t1\ttenant_id\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job_log; CREATE TABLE sys_job_log (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL); INSERT INTO sys_job_log (id) VALUES (1);"
+        },
+        "replay": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_log_tenant_id\t1\t1\ttenant_id\tBTREE",
+          "catalog_after": "idx_job_log_tenant_id\t1\t1\ttenant_id\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_log_tenant_id\t0\t1\tid\tBTREE",
+          "catalog_after": "idx_job_log_tenant_id\t0\t1\tid\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job_log; CREATE TABLE sys_job_log (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL, UNIQUE INDEX idx_job_log_tenant_id (id)); INSERT INTO sys_job_log (id) VALUES (1);"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "table_still_absent": true
+        }
+      }
+    },
+    {
+      "target": {
+        "table": "sys_job_log",
+        "kind": "index",
+        "name": "idx_job_log_tenant_job_start"
+      },
+      "condition_sql": "SELECT EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND INDEX_NAME = 'idx_job_log_tenant_job_start')",
+      "absent_sql": "CREATE INDEX `idx_job_log_tenant_job_start` ON `sys_job_log` (`tenant_id`, `job_id`, `start_time`)",
+      "present_sql": "SELECT 1",
+      "variable": "sql",
+      "prepared_name": "stmt",
+      "guard_shape": "exists_gate",
+      "statements": [
+        {
+          "line": 24,
+          "end_line": 24,
+          "sql": "SET @sql = IF(EXISTS (SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND COLUMN_NAME = 'tenant_id') AND NOT EXISTS (SELECT 1 FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_job_log' AND INDEX_NAME = 'idx_job_log_tenant_job_start'), 'CREATE INDEX `idx_job_log_tenant_job_start` ON `sys_job_log` (`tenant_id`, `job_id`, `start_time`)', 'SELECT 1')",
+          "start_offset": 2399,
+          "end_offset": 2842,
+          "category": "dynamic_sql",
+          "statement_sha256": "38ae3a04df20f815cb7c3eb1888e0027d8efd18da1949b593a57b02a2e9ec9b8",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_job_log",
+              "line": 24,
+              "end_line": 24,
+              "operation": "create_index",
+              "identifiers": [
+                "create",
+                "idx_job_log_tenant_job_start",
+                "index",
+                "job_id",
+                "on",
+                "start_time",
+                "sys_job_log",
+                "tenant_id"
+              ],
+              "sql": "CREATE INDEX `idx_job_log_tenant_job_start` ON `sys_job_log` (`tenant_id`, `job_id`, `start_time`)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 24
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 24,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 25,
+          "end_line": 25,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 2844,
+          "end_offset": 2866,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            24
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 25,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 26,
+          "end_line": 26,
+          "sql": "EXECUTE stmt",
+          "start_offset": 2868,
+          "end_offset": 2880,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            24
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 26,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        },
+        {
+          "line": 27,
+          "end_line": 27,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 2882,
+          "end_offset": 2905,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            24
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 27,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ]
+        }
+      ],
+      "semantic_verified": true,
+      "preconditions": [
+        "current database is the isolated fixture",
+        "gated table must exist before the DDL can run",
+        "ADD dependencies and privileges must be satisfied",
+        "name existence does not establish definition equivalence"
+      ],
+      "old_ids": [
+        "old-sql-0359",
+        "old-sql-0360",
+        "old-sql-0361",
+        "old-sql-0362"
+      ],
+      "statement_ids": [
+        [
+          "stmt-35c129338ede48e7142c5bc2"
+        ],
+        [
+          "stmt-5f858889c845e153b29c1f62"
+        ],
+        [
+          "stmt-ee9f8d144ad5e265450995e6"
+        ],
+        [
+          "stmt-2aa9da13729966efa2bcc38f"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "selected_sql": "CREATE INDEX `idx_job_log_tenant_job_start` ON `sys_job_log` (`tenant_id`, `job_id`, `start_time`)",
+          "client_output": "CREATE INDEX `idx_job_log_tenant_job_start` ON `sys_job_log` (`tenant_id`, `job_id`, `start_time`)",
+          "catalog_before": "",
+          "catalog_after": "idx_job_log_tenant_job_start\t1\t1\ttenant_id\tBTREE\nidx_job_log_tenant_job_start\t1\t2\tjob_id\tBTREE\nidx_job_log_tenant_job_start\t1\t3\tstart_time\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job_log; CREATE TABLE sys_job_log (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL); INSERT INTO sys_job_log (id) VALUES (1);"
+        },
+        "replay": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_log_tenant_job_start\t1\t1\ttenant_id\tBTREE\nidx_job_log_tenant_job_start\t1\t2\tjob_id\tBTREE\nidx_job_log_tenant_job_start\t1\t3\tstart_time\tBTREE",
+          "catalog_after": "idx_job_log_tenant_job_start\t1\t1\ttenant_id\tBTREE\nidx_job_log_tenant_job_start\t1\t2\tjob_id\tBTREE\nidx_job_log_tenant_job_start\t1\t3\tstart_time\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "catalog_before": "idx_job_log_tenant_job_start\t0\t1\tid\tBTREE",
+          "catalog_after": "idx_job_log_tenant_job_start\t0\t1\tid\tBTREE",
+          "data_before": "1\t0",
+          "data_after": "1\t0",
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_job_log; CREATE TABLE sys_job_log (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME, tenant_id VARCHAR(64) NULL, UNIQUE INDEX idx_job_log_tenant_job_start (id)); INSERT INTO sys_job_log (id) VALUES (1);"
+        },
+        "missing_table": {
+          "status": "noop",
+          "selected_sql": "SELECT 1",
+          "client_output": "1\nSELECT 1",
+          "table_still_absent": true
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "old-sql-0339",
+      "baseline_index": 339,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 3,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-d9403c4128be5684ba8d8cbd"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0340",
+      "baseline_index": 340,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 4,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4efb8ed9286a71440ffa3b7f"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0341",
+      "baseline_index": 341,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 5,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4539ef01515230b77a3c90a2"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0342",
+      "baseline_index": 342,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 6,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-15d15bf385892e94f9731381"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0343",
+      "baseline_index": 343,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 7,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-8ea8c9b10fbe0e8d53a31e2d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0344",
+      "baseline_index": 344,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 8,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b1076812c9ba6d8123634efb"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0345",
+      "baseline_index": 345,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 9,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-0e41af4106a2c1dfc5a61ad4"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0346",
+      "baseline_index": 346,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 10,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-882389e3223fbd51c156d7d0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0347",
+      "baseline_index": 347,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 11,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-72eff3dd588c10012c09b8dc"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0348",
+      "baseline_index": 348,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 12,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b1a60f29bf86ba109f17d653"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0349",
+      "baseline_index": 349,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 13,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-c86a5cc026febc023e6e75d8"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0350",
+      "baseline_index": 350,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 14,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-04640bdc50a502549583c44c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0351",
+      "baseline_index": 351,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 16,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-c29e2f280439801c129a8c5f"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0352",
+      "baseline_index": 352,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 17,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1a957e9143bde65ca2acebcb"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0353",
+      "baseline_index": 353,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 18,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4250e243f27737802fdcc5b7"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0354",
+      "baseline_index": 354,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 15,
+      "original": {
+        "line": 19,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-749bf9a3a9b072d33bac17b6"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0355",
+      "baseline_index": 355,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 16,
+      "original": {
+        "line": 20,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-84d3e72348f1bba979528d0b"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0356",
+      "baseline_index": 356,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 17,
+      "original": {
+        "line": 21,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-a405d15cb8d31b5a42e448e1"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0357",
+      "baseline_index": 357,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 18,
+      "original": {
+        "line": 22,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4c11be76997864bb6e2ab40a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0358",
+      "baseline_index": 358,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 19,
+      "original": {
+        "line": 23,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-18afe18187142148caf30462"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0359",
+      "baseline_index": 359,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 20,
+      "original": {
+        "line": 24,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-35c129338ede48e7142c5bc2"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0360",
+      "baseline_index": 360,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 21,
+      "original": {
+        "line": 25,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5f858889c845e153b29c1f62"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0361",
+      "baseline_index": 361,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 22,
+      "original": {
+        "line": 26,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-ee9f8d144ad5e265450995e6"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0362",
+      "baseline_index": 362,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V16__add_tenant_id_to_job_tables.sql",
+      "migration_unresolved_index": 23,
+      "original": {
+        "line": 27,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "00460e1037bc2871686b3633d5eb7eb00977b53509f58440f99297d35ec9c21e",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-2aa9da13729966efa2bcc38f"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    }
+  ],
+  "status": "passed",
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true,
+    "database_lifetime": "only inside removed tmpfs container"
+  },
+  "limits": [
+    "Synthetic job fixtures only; no full historical upgrade chain or production data",
+    "Only MySQL V16; no PostgreSQL, Java or Flyway parser verification",
+    "Existing-name guards accept incompatible column/index definitions; no equivalence claim",
+    "Nullable tenant defaults and AFTER deleted checked on synthetic tables only",
+    "No concurrency, privilege denial, rollback or application tenant isolation verification"
+  ],
+  "previous_verified_ids": [
+    "old-sql-0000",
+    "old-sql-0001",
+    "old-sql-0002",
+    "old-sql-0003",
+    "old-sql-0004",
+    "old-sql-0005",
+    "old-sql-0006",
+    "old-sql-0007",
+    "old-sql-0008",
+    "old-sql-0009",
+    "old-sql-0010",
+    "old-sql-0011",
+    "old-sql-0012",
+    "old-sql-0013",
+    "old-sql-0014",
+    "old-sql-0015",
+    "old-sql-0016",
+    "old-sql-0017",
+    "old-sql-0018",
+    "old-sql-0019",
+    "old-sql-0020",
+    "old-sql-0021",
+    "old-sql-0022",
+    "old-sql-0023",
+    "old-sql-0024",
+    "old-sql-0025",
+    "old-sql-0026",
+    "old-sql-0027",
+    "old-sql-0028",
+    "old-sql-0029",
+    "old-sql-0030",
+    "old-sql-0031",
+    "old-sql-0032",
+    "old-sql-0033",
+    "old-sql-0034",
+    "old-sql-0035",
+    "old-sql-0036",
+    "old-sql-0037",
+    "old-sql-0038",
+    "old-sql-0039",
+    "old-sql-0040",
+    "old-sql-0041",
+    "old-sql-0042",
+    "old-sql-0043",
+    "old-sql-0044",
+    "old-sql-0045",
+    "old-sql-0046",
+    "old-sql-0047",
+    "old-sql-0048",
+    "old-sql-0049",
+    "old-sql-0050",
+    "old-sql-0051",
+    "old-sql-0052",
+    "old-sql-0053",
+    "old-sql-0054",
+    "old-sql-0055",
+    "old-sql-0056",
+    "old-sql-0057",
+    "old-sql-0058",
+    "old-sql-0059",
+    "old-sql-0060",
+    "old-sql-0061",
+    "old-sql-0062",
+    "old-sql-0063",
+    "old-sql-0064",
+    "old-sql-0065",
+    "old-sql-0066",
+    "old-sql-0067",
+    "old-sql-0068",
+    "old-sql-0069",
+    "old-sql-0070",
+    "old-sql-0071",
+    "old-sql-0072",
+    "old-sql-0073",
+    "old-sql-0074",
+    "old-sql-0075",
+    "old-sql-0076",
+    "old-sql-0077",
+    "old-sql-0078",
+    "old-sql-0079",
+    "old-sql-0080",
+    "old-sql-0081",
+    "old-sql-0082",
+    "old-sql-0083",
+    "old-sql-0084",
+    "old-sql-0085",
+    "old-sql-0086",
+    "old-sql-0087",
+    "old-sql-0088",
+    "old-sql-0089",
+    "old-sql-0090",
+    "old-sql-0091",
+    "old-sql-0092",
+    "old-sql-0093",
+    "old-sql-0094",
+    "old-sql-0095",
+    "old-sql-0096",
+    "old-sql-0097",
+    "old-sql-0098",
+    "old-sql-0099",
+    "old-sql-0100",
+    "old-sql-0101",
+    "old-sql-0102",
+    "old-sql-0103",
+    "old-sql-0104",
+    "old-sql-0105",
+    "old-sql-0106",
+    "old-sql-0107",
+    "old-sql-0108",
+    "old-sql-0109",
+    "old-sql-0110",
+    "old-sql-0111",
+    "old-sql-0112",
+    "old-sql-0113",
+    "old-sql-0114",
+    "old-sql-0115",
+    "old-sql-0116",
+    "old-sql-0117",
+    "old-sql-0118",
+    "old-sql-0119",
+    "old-sql-0120",
+    "old-sql-0121",
+    "old-sql-0122",
+    "old-sql-0123",
+    "old-sql-0124",
+    "old-sql-0125",
+    "old-sql-0126",
+    "old-sql-0127",
+    "old-sql-0128",
+    "old-sql-0129",
+    "old-sql-0130",
+    "old-sql-0131",
+    "old-sql-0132",
+    "old-sql-0133",
+    "old-sql-0134",
+    "old-sql-0135",
+    "old-sql-0136",
+    "old-sql-0137",
+    "old-sql-0138",
+    "old-sql-0139",
+    "old-sql-0140",
+    "old-sql-0141",
+    "old-sql-0142",
+    "old-sql-0143",
+    "old-sql-0144",
+    "old-sql-0145",
+    "old-sql-0146",
+    "old-sql-0147",
+    "old-sql-0148",
+    "old-sql-0149",
+    "old-sql-0150",
+    "old-sql-0151",
+    "old-sql-0152",
+    "old-sql-0153",
+    "old-sql-0154",
+    "old-sql-0155",
+    "old-sql-0156",
+    "old-sql-0157",
+    "old-sql-0158",
+    "old-sql-0159",
+    "old-sql-0160",
+    "old-sql-0161",
+    "old-sql-0162",
+    "old-sql-0163",
+    "old-sql-0164",
+    "old-sql-0165",
+    "old-sql-0166",
+    "old-sql-0167",
+    "old-sql-0168",
+    "old-sql-0169",
+    "old-sql-0170",
+    "old-sql-0171",
+    "old-sql-0172",
+    "old-sql-0173",
+    "old-sql-0174",
+    "old-sql-0175",
+    "old-sql-0176",
+    "old-sql-0177",
+    "old-sql-0178",
+    "old-sql-0179",
+    "old-sql-0180",
+    "old-sql-0181",
+    "old-sql-0182",
+    "old-sql-0183",
+    "old-sql-0184",
+    "old-sql-0185",
+    "old-sql-0186",
+    "old-sql-0187",
+    "old-sql-0188",
+    "old-sql-0189",
+    "old-sql-0190",
+    "old-sql-0191",
+    "old-sql-0192",
+    "old-sql-0193",
+    "old-sql-0194",
+    "old-sql-0195",
+    "old-sql-0196",
+    "old-sql-0197",
+    "old-sql-0198",
+    "old-sql-0199",
+    "old-sql-0200",
+    "old-sql-0201",
+    "old-sql-0202",
+    "old-sql-0203",
+    "old-sql-0204",
+    "old-sql-0205",
+    "old-sql-0206",
+    "old-sql-0207",
+    "old-sql-0208",
+    "old-sql-0209",
+    "old-sql-0210",
+    "old-sql-0211",
+    "old-sql-0212",
+    "old-sql-0213",
+    "old-sql-0214",
+    "old-sql-0215",
+    "old-sql-0216",
+    "old-sql-0217",
+    "old-sql-0218",
+    "old-sql-0219",
+    "old-sql-0220",
+    "old-sql-0221",
+    "old-sql-0222",
+    "old-sql-0223",
+    "old-sql-0224",
+    "old-sql-0225",
+    "old-sql-0226",
+    "old-sql-0227",
+    "old-sql-0228",
+    "old-sql-0229",
+    "old-sql-0230",
+    "old-sql-0231",
+    "old-sql-0232",
+    "old-sql-0233",
+    "old-sql-0234",
+    "old-sql-0235",
+    "old-sql-0236",
+    "old-sql-0237",
+    "old-sql-0238",
+    "old-sql-0239",
+    "old-sql-0240",
+    "old-sql-0241",
+    "old-sql-0242",
+    "old-sql-0243",
+    "old-sql-0244",
+    "old-sql-0245",
+    "old-sql-0246",
+    "old-sql-0247",
+    "old-sql-0248",
+    "old-sql-0249",
+    "old-sql-0250",
+    "old-sql-0251",
+    "old-sql-0252",
+    "old-sql-0253",
+    "old-sql-0254",
+    "old-sql-0255",
+    "old-sql-0256",
+    "old-sql-0257",
+    "old-sql-0258",
+    "old-sql-0259",
+    "old-sql-0260",
+    "old-sql-0261",
+    "old-sql-0262",
+    "old-sql-0263",
+    "old-sql-0264",
+    "old-sql-0265",
+    "old-sql-0266",
+    "old-sql-0267",
+    "old-sql-0268",
+    "old-sql-0269",
+    "old-sql-0270",
+    "old-sql-0271",
+    "old-sql-0272",
+    "old-sql-0273",
+    "old-sql-0274",
+    "old-sql-0275",
+    "old-sql-0276",
+    "old-sql-0277",
+    "old-sql-0278",
+    "old-sql-0279",
+    "old-sql-0280",
+    "old-sql-0281",
+    "old-sql-0282",
+    "old-sql-0283",
+    "old-sql-0284",
+    "old-sql-0285",
+    "old-sql-0286",
+    "old-sql-0287",
+    "old-sql-0288",
+    "old-sql-0289",
+    "old-sql-0290",
+    "old-sql-0291",
+    "old-sql-0292",
+    "old-sql-0293",
+    "old-sql-0294",
+    "old-sql-0295",
+    "old-sql-0296",
+    "old-sql-0297",
+    "old-sql-0298",
+    "old-sql-0299",
+    "old-sql-0300",
+    "old-sql-0301",
+    "old-sql-0302",
+    "old-sql-0303",
+    "old-sql-0304",
+    "old-sql-0305",
+    "old-sql-0306",
+    "old-sql-0307",
+    "old-sql-0308",
+    "old-sql-0309",
+    "old-sql-0310",
+    "old-sql-0311",
+    "old-sql-0312",
+    "old-sql-0313",
+    "old-sql-0314",
+    "old-sql-0315",
+    "old-sql-0316",
+    "old-sql-0317",
+    "old-sql-0318",
+    "old-sql-0319",
+    "old-sql-0320",
+    "old-sql-0321",
+    "old-sql-0322",
+    "old-sql-0323",
+    "old-sql-0324",
+    "old-sql-0325",
+    "old-sql-0326",
+    "old-sql-0327",
+    "old-sql-0328",
+    "old-sql-0329",
+    "old-sql-0330",
+    "old-sql-0331",
+    "old-sql-0332",
+    "old-sql-0333",
+    "old-sql-0334",
+    "old-sql-0335",
+    "old-sql-0336",
+    "old-sql-0337",
+    "old-sql-0338"
+  ],
+  "remaining_before": 247,
+  "previous_evidence_hashes": {
+    "dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "dynamic-auth-v52-catalog-regression-evidence.json": "286fd56716171a547cd65a78e5912e61f548a777ac37a57c9589628e65c4d4d1",
+    "dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "dynamic-auth-v55-client-evidence.json": "88b811c98334d55235d8a9282b38a091adbd08fe227e270ec83713f2e72e6fac",
+    "dynamic-system-v14-20261018-client-evidence.json": "bf978a17c42edab2d00ffa055bf34de3cd1695e3d8c69a8c7a27f2db856634ff",
+    "dynamic-system-v15-20261019-rerun-evidence.json": "37e4821b20ce16058ff0836d2f88d465ff474bc851df5f027a7d460b895fb303",
+    "dynamic-system-v15-20261019-rerun-subagent-evidence.json": "c66df02e6c26616bc0f5bc0a07904babbbc7215555261b8c20a69a1924a8ed6a"
+  },
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v16-20261019-client-evidence.json",
+  "updated_at": "2026-10-19T02:47:33.805341+00:00",
+  "container": {
+    "name": "apex-v45-probe-15ceb8c4df19",
+    "image": "localhost/mysql:8.0",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "none; empty root only inside network-disabled disposable container",
+    "id": "f0674ddcb3ac8a949444a01f885c6dd57da4ec39a0d508ca695042e738660652"
+  },
+  "mysql_version": "8.0.46",
+  "full_file": {
+    "initial_execution": true,
+    "replay": true,
+    "catalog_equal": true,
+    "tenant_columns_created": 2,
+    "tenant_indexes_created": 4,
+    "catalog": "sys_job\tid\tbigint\tNO\t<NULL>\t1\nsys_job\tdeleted\ttinyint\tYES\t0\t2\nsys_job\ttenant_id\tvarchar(64)\tYES\t<NULL>\t3\nsys_job\tstatus\tint\tYES\t<NULL>\t4\nsys_job\tjob_id\tbigint\tYES\t<NULL>\t5\nsys_job\tstart_time\tdatetime\tYES\t<NULL>\t6\nsys_job_log\tid\tbigint\tNO\t<NULL>\t1\nsys_job_log\tdeleted\ttinyint\tYES\t0\t2\nsys_job_log\ttenant_id\tvarchar(64)\tYES\t<NULL>\t3\nsys_job_log\tstatus\tint\tYES\t<NULL>\t4\nsys_job_log\tjob_id\tbigint\tYES\t<NULL>\t5\nsys_job_log\tstart_time\tdatetime\tYES\t<NULL>\t6",
+    "index_catalog": "sys_job\tidx_job_tenant_id\t1\t1\ttenant_id\tBTREE\nsys_job\tidx_job_tenant_status\t1\t1\ttenant_id\tBTREE\nsys_job\tidx_job_tenant_status\t1\t2\tstatus\tBTREE\nsys_job_log\tidx_job_log_tenant_id\t1\t1\ttenant_id\tBTREE\nsys_job_log\tidx_job_log_tenant_job_start\t1\t1\ttenant_id\tBTREE\nsys_job_log\tidx_job_log_tenant_job_start\t1\t2\tjob_id\tBTREE\nsys_job_log\tidx_job_log_tenant_job_start\t1\t3\tstart_time\tBTREE",
+    "data_before_replay": {
+      "sys_job": "1\t0\ttenant-a\t1\t7\t2026-01-02 03:04:05",
+      "sys_job_log": "1\t0\ttenant-a\t1\t7\t2026-01-02 03:04:05"
+    },
+    "data_after_replay": {
+      "sys_job": "1\t0\ttenant-a\t1\t7\t2026-01-02 03:04:05",
+      "sys_job_log": "1\t0\ttenant-a\t1\t7\t2026-01-02 03:04:05"
+    },
+    "nullable_tenant_default_checked": true,
+    "fixture_sql": "USE probe;\nDROP TABLE IF EXISTS sys_job; CREATE TABLE sys_job (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME); INSERT INTO sys_job (id,status,job_id,start_time) VALUES (1,1,7,'2026-01-02 03:04:05');\nDROP TABLE IF EXISTS sys_job_log; CREATE TABLE sys_job_log (id BIGINT PRIMARY KEY, deleted TINYINT DEFAULT 0, status INT, job_id BIGINT, start_time DATETIME); INSERT INTO sys_job_log (id,status,job_id,start_time) VALUES (1,1,7,'2026-01-02 03:04:05');",
+    "counts_as_branch_proof": false,
+    "missing_tables": {
+      "status": "noop",
+      "client_output": "1\n1\n1\n1\n1\n1",
+      "table_still_absent": true
+    }
+  },
+  "scenario_status": "branches_passed_and_missing_table_noop",
+  "coverage": {
+    "verified_old_ids": [
+      "old-sql-0339",
+      "old-sql-0340",
+      "old-sql-0341",
+      "old-sql-0342",
+      "old-sql-0343",
+      "old-sql-0344",
+      "old-sql-0345",
+      "old-sql-0346",
+      "old-sql-0347",
+      "old-sql-0348",
+      "old-sql-0349",
+      "old-sql-0350",
+      "old-sql-0351",
+      "old-sql-0352",
+      "old-sql-0353",
+      "old-sql-0354",
+      "old-sql-0355",
+      "old-sql-0356",
+      "old-sql-0357",
+      "old-sql-0358",
+      "old-sql-0359",
+      "old-sql-0360",
+      "old-sql-0361",
+      "old-sql-0362"
+    ],
+    "verified_old_id_count": 24,
+    "remaining_of_586": 223,
+    "passed_branch_runs": 18,
+    "planned_branch_runs": 18,
+    "definition": "distinct baseline IDs whose bound quartet passed absent + present + replay; no credit for full-file success",
+    "remaining_before": 247,
+    "new_unique_passed_count": 24,
+    "remaining_after": 223,
+    "cumulative_verified_count": 363
+  }
+}

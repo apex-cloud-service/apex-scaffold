@@ -141,8 +141,8 @@
   <rect x="70" y="365" width="270" height="120" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
   <text x="90" y="388" class="step-label">Step 1: 清理过期桶</text>
   <text x="90" y="408" class="code-label">long windowStart = now - windowMs;</text>
-  <text x="90" y="423" class="code-label">for (int i = 0; i < bucketCount; i++) {</text>
-  <text x="95" y="438" class="code-label">  if (bucketStartTimes[i] < windowStart) {</text>
+  <text x="90" y="423" class="code-label">for (int i = 0; i &lt; bucketCount; i++) {</text>
+  <text x="95" y="438" class="code-label">  if (bucketStartTimes[i] &lt; windowStart) {</text>
   <text x="100" y="453" class="code-label">    buckets[i] = 0; // 清零过期桶</text>
   <text x="100" y="468" class="code-label">    bucketStartTimes[i] = now;</text>
   <text x="95" y="480" class="code-label">  } else total += buckets[i];</text>

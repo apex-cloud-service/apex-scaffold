@@ -1,0 +1,151 @@
+{
+  "recorded_at": "2026-10-18T00:10:26+08:00",
+  "repository": "/Users/work/apex-scaffold",
+  "result": "BUILD_FAILURE_P0_NOT_APPROVED",
+  "environment": {
+    "java": "Oracle 17.0.12-oracle",
+    "java_home": "/Users/eric/.sdkman/candidates/java/17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "initialization": "每次构建在当前shell source scripts/build/init-build-env.sh并通过固定版本检查",
+    "parallelism": "-T1；资源探测显示高负载和swap使用，因此降低本次Maven并行度，未改测试SLA",
+    "mysql": "既有apex-p0-gate-mysql-20261017，127.0.0.1:13317，apex_example_test",
+    "postgresql": "既有apex-p0-pg-b1ddd1785ccf，127.0.0.1:41187",
+    "password_handling": "MySQL root密码从既有容器读入内存环境，未打印或写入证据；完整命令退出前unset",
+    "docker_host": "unix:///var/folders/0x/mpfcvmh560q4rbbvkd43ks280000gn/T/podman/podman-machine-default-api.sock",
+    "testcontainers_socket_override": "/run/podman/podman.sock",
+    "docker_api_ping": "OK",
+    "skip_flags": [],
+    "sla_weakened": false,
+    "database_deleted": false
+  },
+  "prior_failure": {
+    "evidence": "post-openapi-verify-evidence.json",
+    "log_sha256_rechecked": "a3ebf99c9db87742403e082473dc111f43087a4aaa7cb57002262a9240348d0a",
+    "daemon": "5ea5fca6",
+    "daemon_log": "/Users/eric/.m2/mvnd/registry/2.0.0-rc-3/daemon-5ea5fca6.log",
+    "daemon_log_sha256": "b5b88539ec45bb3e28c6d38868ed532db2911587086923d02c898e417c00c943",
+    "last_line": "24523: 23:19:24.022 I Dispatch message: KeepAlive",
+    "client_exit": "2026-10-17T23:19:27+08:00；3000ms收消息超时",
+    "diagnosis": "daemon最后仍在system PostgreSQL Flyway阶段并发送keepalive；daemon输出仅启动参数，无OOM或自然BUILD终态。仓库hs_err及指定DiagnosticReports搜索无匹配不证明没有崩溃。通信失联底层原因仍未证明，不能认定OOM或负载flake。"
+  },
+  "workflow_reproduction": {
+    "command_id": "job-e8399bf2ab86480b89fc437bbea810b0",
+    "command": "source scripts/build/init-build-env.sh && mvnd -T1 -B -pl apex-workflow-service -am -Dit.test=WorkflowDatabaseHttpIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false test-compile failsafe:integration-test failsafe:verify",
+    "daemon": "32d01e08",
+    "request_received_at": "2026-10-17T23:43:22.918+08:00",
+    "maven_finished_at": "2026-10-17T23:45:53+08:00",
+    "natural_exit": true,
+    "exit_code": 1,
+    "maven_result": "BUILD FAILURE",
+    "reactor": {"success": 8, "failure": 1, "skipped": 0},
+    "failsafe": {"tests": 3, "failures": 0, "errors": 1, "skipped": 0, "passed": 2, "summary_line": 330},
+    "surefire_executed": false,
+    "log": {"path": "/Users/eric/.cache/apex-p0-workflow-retry-20261017.log", "sha256": "ddf44128cf7eaf91ef8276324274caf41aa6e1db74a4206ce59f28f7ec6b2d7e", "reactor_summary_line": 335, "build_result_line": 347, "failure_goal_line": 352},
+    "failed_test": "WorkflowDatabaseHttpIntegrationTest.pendingTasksUseAuthenticatedAssignee:111",
+    "error": "Timeout on blocking read for 5000000000 NANOSECONDS",
+    "error_lines": [312, 313, 314, 318, 322, 328],
+    "database": "H2内存库workflow-http-it，MySQL mode；并非外部MySQL",
+    "observations": "Hikari已连接，Netty随机端口57219，Spring启动69.707秒；另两项通过。Handler使用可信身份，QueryService惰性MyBatis分页并subscribeOn专用jdbc调度器。无SQL异常、连接池耗尽或请求分段耗时证据。",
+    "diagnosis": "-T1仍复现相同5秒超时；但同期独立system构建重叠，不能声称全过程隔离，不能区分初始化、调度、SQL或其他耗时。未修改业务、超时、断言或跳过条件；本次定向客户端正常获得Maven终态，未复现失联。"
+  },
+  "baseline_retry": {
+    "command_id": "job-5e7a5fabd7214dfbb231542ee79d0453",
+    "command": "source scripts/build/init-build-env.sh && mvnd -T1 -B clean verify",
+    "daemon": "039e5a07",
+    "daemon_pid": 2379,
+    "started_at": "2026-10-17T23:48:06+08:00",
+    "maven_finished_at": "2026-10-18T00:08:06+08:00",
+    "shell_finished_at": "2026-10-18T00:08:06+08:00",
+    "wall_clock_seconds": 1200,
+    "maven_total_time": "19:51 min",
+    "natural_exit": true,
+    "exit_code": 1,
+    "maven_result": "BUILD FAILURE",
+    "daemon_communication_failure_reproduced": false,
+    "log": {"path": "/Users/eric/.cache/apex-p0-baseline-retry-20261017.log", "sha256": "5d1a081891ffc06353a155183b82121e273bf936df4950a809035d90da1483b9", "reactor_summary_line": 8863, "build_result_line": 8897, "finished_at_line": 8900, "failure_goal_line": 8902},
+    "reactor": {
+      "projects": 31, "success": 13, "failure": 1, "skipped": 17,
+      "successful_modules": ["apex-scaffold", "apex-common", "apex-storage-spring-boot-starter", "apex-license-spring-boot-starter", "apex-domain", "apex-infrastructure-persistence", "apex-infrastructure-cache", "apex-infrastructure-messaging", "apex-infrastructure-remote", "apex-infrastructure-integration", "apex-workflow", "apex-services-bom", "apex-api-contract"],
+      "failed_modules": ["apex-system"],
+      "skipped_modules": ["apex-license-tools", "apex-infrastructure", "apex-example", "apex-generator", "apex-gateway", "apex-seata-spring-boot-starter", "apex-job-spring-boot-starter", "apex-workflow-service", "apex-file", "apex-file-service", "apex-office", "apex-office-service", "apex-system-service", "apex-auth", "apex-auth-service", "apex-job-service", "apex-masking-service"]
+    },
+    "test_counting_method": "只计本轮独立日志整行插件汇总，按此前surefire:test或failsafe:integration-test标题归属；不累加类明细、failsafe:verify或其他构建target报告。这是失败前已完成范围，不是31项目全量测试数。",
+    "tests": {"surefire": {"tests": 2694, "failures": 0, "errors": 0, "skipped": 0}, "failsafe": {"tests": 22, "failures": 0, "errors": 0, "skipped": 0}, "combined": {"tests": 2716, "failures": 0, "errors": 0, "skipped": 0, "passed": 2716}, "complete_reactor_test_coverage": false},
+    "plugin_summaries": [
+      {"module": "apex-common", "plugin": "surefire", "tests": 538, "failures": 0, "errors": 0, "skipped": 0, "line": 1005},
+      {"module": "apex-domain", "plugin": "surefire", "tests": 9, "failures": 0, "errors": 0, "skipped": 0, "line": 1197},
+      {"module": "apex-storage-spring-boot-starter", "plugin": "surefire", "tests": 11, "failures": 0, "errors": 0, "skipped": 0, "line": 1337},
+      {"module": "apex-infrastructure-remote", "plugin": "surefire", "tests": 84, "failures": 0, "errors": 0, "skipped": 0, "line": 1523},
+      {"module": "apex-infrastructure-persistence", "plugin": "surefire", "tests": 83, "failures": 0, "errors": 0, "skipped": 0, "line": 1748},
+      {"module": "apex-infrastructure-cache", "plugin": "surefire", "tests": 130, "failures": 0, "errors": 0, "skipped": 0, "line": 2725},
+      {"module": "apex-infrastructure-cache", "plugin": "failsafe", "tests": 6, "failures": 0, "errors": 0, "skipped": 0, "line": 2754},
+      {"module": "apex-license-spring-boot-starter", "plugin": "surefire", "tests": 19, "failures": 0, "errors": 0, "skipped": 0, "line": 2931},
+      {"module": "apex-infrastructure-messaging", "plugin": "surefire", "tests": 77, "failures": 0, "errors": 0, "skipped": 0, "line": 3575},
+      {"module": "apex-infrastructure-messaging", "plugin": "failsafe", "tests": 2, "failures": 0, "errors": 0, "skipped": 0, "line": 3681},
+      {"module": "apex-infrastructure-integration", "plugin": "surefire", "tests": 124, "failures": 0, "errors": 0, "skipped": 0, "line": 4747},
+      {"module": "apex-api-contract", "plugin": "surefire", "tests": 30, "failures": 0, "errors": 0, "skipped": 0, "line": 4929},
+      {"module": "apex-workflow", "plugin": "surefire", "tests": 40, "failures": 0, "errors": 0, "skipped": 0, "line": 5119},
+      {"module": "apex-system", "plugin": "surefire", "tests": 1549, "failures": 0, "errors": 0, "skipped": 0, "line": 7706},
+      {"module": "apex-system", "plugin": "failsafe", "tests": 14, "failures": 0, "errors": 0, "skipped": 0, "line": 8771}
+    ],
+    "failure": {
+      "goal": "com.diffplug.spotless:spotless-maven-plugin:2.43.0:check (spotless-check)",
+      "module": "apex-system",
+      "format_violations": 7,
+      "files_relative_to_module": ["src/test/java/com/apex/scaffold/interfaces/config/RouterOpenApiCoverageTest.java", "src/test/java/com/apex/scaffold/interfaces/config/OpenApiDocumentationCustomizerTest.java", "src/main/java/com/apex/scaffold/interfaces/handler/OAuth2AuthorizationHandler.java", "src/main/java/com/apex/scaffold/interfaces/handler/SocialLoginHandler.java", "src/main/java/com/apex/scaffold/interfaces/config/OAuth2RouterConfig.java", "src/main/java/com/apex/scaffold/interfaces/config/KeycloakRouterConfig.java", "src/main/java/com/apex/scaffold/interfaces/config/OpenApiDocumentationCustomizer.java"],
+      "file_lines": [8903, 8928, 8955, 8956, 8957, 8958, 8959],
+      "handling": "保留失败，不执行格式修复或第二次完整门禁；并发来源曾执行格式化，但不能据此断定其造成此次失败。"
+    },
+    "quality_checks": {
+      "spotless": {"modules_reached": 14, "passed_modules": 13, "failed_modules": ["apex-system"]},
+      "pmd_p3c": {"modules_reached": 13, "system_reached": false, "note": "规则兼容警告及aktStatus文本存在，但不是本轮失败goal"},
+      "jacoco": {"modules_reached": 14, "check_executions": 22, "missing_execution_data_modules": ["apex-scaffold", "apex-services-bom"], "note": "20次有数据check输出通过，2次缺数据跳过；system仅前置interfaces检查，未完成最终verify覆盖率检查。并发构建可能污染target数据，不能扩大为可重复的全仓覆盖率结论。"},
+      "archunit": "已执行部分包含在Surefire内，不重复计数"
+    },
+    "ryuk": {"started": true, "log_line": 7767, "exit_cleanup_independently_asserted": false},
+    "workflow_http": "NOT_EXECUTED：workflow-service为Reactor SKIPPED，不能用业务库40项单测替代HTTP复验",
+    "office_openapi": "NOT_EXECUTED：office-service为Reactor SKIPPED，保留此前局部两项通过历史",
+    "seata": "本轮starter为Reactor SKIPPED，无环境门控测试结果；历史APEX_SEATA_IT缺失跳过1项不能移入本轮统计，真实TC仍未验收"
+  },
+  "isolation_and_resources": {
+    "initial_cleanup": "停止当时Idle的旧daemon c067343b/e2e75ce9；某检查瞬间无残留Java，不代表全过程隔离",
+    "independent_daemon": "4ff79feb，PID252；非本次启动，未终止",
+    "independent_daemon_log": "/Users/eric/.m2/mvnd/registry/2.0.0-rc-3/daemon-4ff79feb.log",
+    "overlap": [
+      {"start": "2026-10-17T23:43:01.467+08:00", "idle": "2026-10-17T23:47:20.948+08:00", "request_line": 41, "command": "-T4 -B -pl apex-system -am test -Dtest=OpenApiDocumentationCustomizerTest,RouterOpenApiCoverageTest -Dsurefire.failIfNoSpecifiedTests=false", "impact": "与workflow定向执行重叠"},
+      {"start": "2026-10-17T23:54:22.733+08:00", "idle": "2026-10-17T23:56:15.527+08:00", "request_line": 3279, "command": "相同system定向-T4命令", "impact": "与完整门禁重叠"},
+      {"start": "2026-10-17T23:56:35.372+08:00", "idle": "2026-10-17T23:56:36.401+08:00", "request_line": 4850, "command": "-T4 -B spotless:apply -DspotlessFiles=<10个指定Java文件模式>", "impact": "同工作区并发格式操作；不能宣称源码快照冻结或target产物专属本轮"}
+    ],
+    "samples": [
+      {"time": "2026-10-17T23:47:08+08:00", "load_1_5_15": [241.33, 260.93, 293.19], "swap_used_mb": 8092.25},
+      {"time": "2026-10-17T23:54:39+08:00", "load_1_5_15": [219.80, 242.35, 270.39], "swap_used_mb": 7259.25},
+      {"time": "2026-10-18T00:06:16+08:00", "load_1_5_15": [160.71, 175.00, 215.71]},
+      {"time": "2026-10-18T00:09:19+08:00", "load_1_5_15": [184.70, 183.30, 211.47]}
+    ],
+    "other_load": "观察到独立Homebrew LLVM cmake/ninja/clang编译，未干预。vm_stat累计swap计数不代表瞬时换页率。",
+    "conclusion": "资源竞争和共享工作区干扰是已观察限制；没有请求分段或JVM停顿证据，不能证明其为原超时或失联的确切根因。日志独立不等于构建完全隔离，未使用共享target XML补计结果。"
+  },
+  "validation": {
+    "json_parse": "PASS",
+    "independent_log_recount": "PASS：逐项匹配15条插件汇总及行号、两份日志SHA-256、31项Reactor与质量检查次数；Surefire2694、Failsafe22、JaCoCo22次（20通过、2缺数据跳过）",
+    "documentation_links": "PASS：663份Markdown、2777条链接、0断链",
+    "whitespace": "PASS：git diff --check，另直接检查三份交付文件行尾空白与末尾换行，覆盖未跟踪文件"
+  },
+  "completion": {
+    "started_build_commands_terminal": true,
+    "workflow_exit": 1,
+    "baseline_exit": 1,
+    "baseline_shell_pid_2234_absent_after_exit": true,
+    "retries_after_final_failure": 0,
+    "production_or_test_source_changed_by_this_round": false,
+    "commit_or_push": false,
+    "p0_approved": false,
+    "next_executable_p0_work": "先协调同工作区构建/格式操作并冻结源码快照，核对本轮system七文件格式差异；为workflow HTTP链采集调度、连接获取、SQL和响应阶段耗时，再进行一次有判别力的定向验证。独立清单补齐可继续，不进入Java21依赖阶段。"
+  },
+  "limitations": [
+    "旧daemon失联底层原因、workflow超时根因均未闭合；本轮完整命令已正常收到Maven失败终态，不等于旧通信问题已修复。",
+    "Flyway提示PostgreSQL17.11超出已测试版本16；本轮system集成汇总通过不能替代全部双库业务语义或生产升级回退验收。",
+    "声明/Javadoc分母、五域表与运行映射、148旧路由候选、全业务配置、有效依赖关联、存量checksum及回退演练仍为P0待完成项。",
+    "只更新本证据与两份现有文档，保留所有历史失败和其他工作区修改；未切换Java21。"
+  ]
+}

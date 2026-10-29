@@ -2,6 +2,10 @@
 
 本文档整理了 Apex Scaffold 项目所有 API 路由配置，包括 HTTP 方法、路径、Handler 方法、权限要求等信息。
 
+## 文件接口安全与存储约束
+
+文件接口要求 Bearer ACCESS Token，经独立验签后使用可信租户/用户上下文校验记录归属；`X-User-Id`、`X-Tenant-Id` 不能替代认证。云预签名地址仍须先通过业务授权，且签名有效期为 1—604800 秒。Local 不提供无认证预签名地址，使用授权的 `/api/v1/file/content`、`/api/v1/file/preview` 内容接口；参数必须定位已授权记录，不能任意拼接对象路径。未知历史归属拒绝访问，详见[迁移与接入说明](../05-operations/object-storage-integration.md)。
+
 ## 文档说明
 
 - **路由前缀**：
@@ -27,6 +31,8 @@
 8. [内部服务化接口（/internal/v1/**）](#8-内部服务化接口internalv1)
 
 ---
+
+<a id="1-认证与授权"></a>
 
 ## 1. 认证与授权
 
@@ -76,6 +82,8 @@
 
 ---
 
+<a id="2-用户管理"></a>
+
 ## 2. 用户管理
 
 ### 2.1 用户信息（UserHandler）
@@ -107,22 +115,42 @@
 
 ---
 
+<a id="3-文件管理"></a>
+
 ## 3. 文件管理
 
 ### 3.1 文件操作（FileHandler）
 
 **路由前缀**：`/api/v1/file` 和 `/api/v1/files`
 
+以下路径均为完整路径，由 apex-file-service 注册。
+
 | HTTP 方法 | 路径 | Handler 方法 | 权限要求 | 说明 |
 |-----------|------|--------------|----------|------|
-| POST | `/file/upload` | `upload` | 无 | 上传图片（已过时，兼容入口） |
-| POST | `/files/generic` | `uploadGenericFile` | 无 | 上传普通图片（推荐使用） |
-| GET | `/file/url` | `getUrl` | 无 | 获取文件访问 URL |
-| GET | `/file/content` | `content` | 无 | 读取本地存储文件内容 |
-| DELETE | `/file/delete` | `delete` | 无 | 删除文件 |
-| GET | `/file/exists` | `exists` | 无 | 检查文件是否存在 |
+| POST | `/api/v1/file/upload` | `upload` | ACCESS Token | 上传图片（已过时，兼容入口） |
+| POST | `/api/v1/files/generic` | `uploadGenericFile` | ACCESS Token | 上传普通图片（推荐使用） |
+| GET | `/api/v1/file/url` | `getUrl` | ACCESS Token + 记录归属 | 获取访问 URL；Local 的 expiresIn=0 表示签名 TTL 不适用，访问仍须授权 |
+| GET | `/api/v1/file/content` | `content` | ACCESS Token + 记录归属 | 授权流式读取文件内容 |
+| GET | `/api/v1/file/preview` | `preview` | ACCESS Token + 记录归属 | inline 内容预览 |
+| DELETE | `/api/v1/file/delete` | `delete` | ACCESS Token + 记录归属 | 确认对象删除后清理记录 |
+| GET | `/api/v1/file/exists` | `exists` | ACCESS Token + 记录归属 | 检查已授权文件是否存在 |
+| POST | `/api/v1/file/orphan/{fileId}/retry` | `retryOrphanCleanup` | ACCESS Token + 记录归属 | 仅 ORPHANED；data=true 为确认清理，false 为未确认，异常传播 |
+
+### 3.2 分片操作（ChunkHandler）
+
+| HTTP 方法 | 完整路径 | Handler 方法 | 权限要求 | 说明 |
+| --- | --- | --- | --- | --- |
+| POST | `/api/v1/file/chunk/init` | `init` | ACCESS Token | JSON 初始化归属明确的会话 |
+| POST | `/api/v1/file/chunk/upload` | `uploadChunk` | ACCESS Token + 会话归属 | 二进制请求体，fileId/chunkIndex 为查询参数 |
+| POST | `/api/v1/file/chunk/merge` | `merge` | ACCESS Token + 会话归属 | JSON 合并全部分片，缺片拒绝 |
+| GET | `/api/v1/file/chunk/status/{fileId}` | `status` | ACCESS Token + 会话归属 | 查询分片进度 |
+| POST | `/api/v1/file/chunk/cleanup/{fileId}/retry` | `retryCleanup` | ACCESS Token + 会话归属 | 仅 STORED；data=true 代表尝试已执行，清理失败保留分片元数据 |
+
+两类清理重试均无请求体，以 fileId 定位记录，校验同租户、同用户。业务成功包装 code=0。MERGING 不由清理接口自动恢复，需受控人工核查；参见[恢复说明](../05-operations/object-storage-integration.md)。
 
 ---
+
+<a id="4-系统管理"></a>
 
 ## 4. 系统管理
 
@@ -210,6 +238,8 @@
 
 ---
 
+<a id="5-工作流管理"></a>
+
 ## 5. 工作流管理
 
 ### 5.1 工作流业务接口（WorkflowHandler）
@@ -246,6 +276,8 @@
 | GET | `/statistics/trend` | `getTrend` | 需登录 | 获取工作流趋势数据 |
 
 ---
+
+<a id="6-监控与日志"></a>
 
 ## 6. 监控与日志
 
@@ -338,6 +370,14 @@
 
 ---
 
+### 6.11 Office 站内信 HTTP 与 WebSocket
+
+office 站内信使用独立的 HTTP 消息路由和 WebSocket 握手路由，不套用 SSE 或普通 JSON 端点的响应/认证假设。HTTP 端点包括 `POST /api/v1/messages/ws-ticket`、`GET /api/v1/messages/inbox`、`GET /api/v1/messages/unread/count` 及消息详情、发送、已读接口；WebSocket 地址为 `/api/v1/messages/ws?ticket=...`。访问 JWT 只用于获取一次性 30 秒票据，票据在握手时消费一次；连接建立后只推送消息 ID，正文通过 HTTP 查询。HTTP/WS 网关目标必须指向同一 office 实例，单实例内存票据和连接状态不提供跨实例广播，断线通过收件箱和未读数补偿。完整协议与限制见[站内信说明](../05-operations/in-app-messaging.md)。
+
+---
+
+<a id="7-健康检查"></a>
+
 ## 7. 健康检查
 
 ### 7.1 健康检查（HealthHandler）
@@ -351,6 +391,8 @@
 | GET | `/api/v1/info` | `info` | 无 | 系统信息（版本、环境等） |
 
 ---
+
+<a id="8-内部服务化接口internalv1"></a>
 
 ## 8. 内部服务化接口（/internal/v1/**）
 

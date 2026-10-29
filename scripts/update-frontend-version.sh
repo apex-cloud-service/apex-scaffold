@@ -1,41 +1,9 @@
 #!/bin/bash
-# ============================================================
-# 前端版本号更新脚本
-# ============================================================
-# Purpose: 将前端 package.json 版本号从 v1.1.4 更新到 v1.2.0
-# Usage: cd /Users/work/apex-admin-web && bash update-version.sh
-# Date: 2026-09-17
-# ============================================================
-
-set -e
-
-FRONTEND_DIR="/Users/work/apex-admin-web"
-TARGET_VERSION="1.2.0"
-
-echo "========================================"
-echo "前端版本号更新脚本"
-echo "========================================"
-
-cd "$FRONTEND_DIR"
-
-# 备份原文件
-cp package.json package.json.backup
-
-# 更新版本号
-sed -i '' 's/"version": "1.1.4"/"version": "1.2.0"/' package.json
-
-# 验证更新
-CURRENT_VERSION=$(grep '"version":' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
-
-if [ "$CURRENT_VERSION" = "$TARGET_VERSION" ]; then
-    echo "✅ 版本号更新成功：v1.1.4 → v$TARGET_VERSION"
-    rm -f package.json.backup
-else
-    echo "❌ 版本号更新失败，恢复备份"
-    mv package.json.backup package.json
-    exit 1
-fi
-
-echo "========================================"
-echo "更新完成"
-echo "========================================"
+###############################################################################
+# update-frontend-version.sh - 历史一次性前端版本号更新工具归档转发入口
+# 用法：bash scripts/update-frontend-version.sh [参数透传归档/目标脚本]
+# 作者：Apex Team    创建：2026-10-01
+###############################################################################
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" || exit 1
+printf '%s\n' '历史一次性工具，转交 scripts/archive/frontend/update-frontend-version.sh；执行前请核对归档内容。' >&2
+exec bash "$SCRIPT_DIR/archive/frontend/update-frontend-version.sh" "$@"

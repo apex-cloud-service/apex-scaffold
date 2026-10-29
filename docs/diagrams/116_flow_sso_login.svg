@@ -183,7 +183,7 @@
   <text x="760" y="950" class="node-sub" text-anchor="start">apex-m2m-service(客户端凭据) · apex-mobile-app(强制 PKCE)</text>
 
   <!-- Footer -->
-  <text x="60" y="1010" class="note">数据源：apex-auth-center（AuthenticationRouter/Handler · TokenService · JwtKeyRotationService · RefreshTokenRotationService · MfaRouter/MfaServiceImpl/TotpService · BiometricAuthServiceImpl · DeviceTrustServiceImpl · IpAccessControlServiceImpl/Filter · OauthEndpoint/OauthToken/OauthMetadataRouter）；apex-interfaces（SecurityConfig · JwtAuthenticationFilter · OAuth2ResourceServerFilter · OidcAuthenticationSuccessHandler · KeycloakUserSyncService · SocialLoginHandler）；apex-application（AuthService · LoginStrategyProvider · SmsLoginStrategy · AbstractPhoneLoginStrategy）</text>
+  <text x="60" y="1010" class="note">数据源：apex-auth（AuthenticationRouter/Handler · TokenService · JwtKeyRotationService · RefreshTokenRotationService · MfaRouter/MfaServiceImpl/TotpService · BiometricAuthServiceImpl · DeviceTrustServiceImpl · IpAccessControlServiceImpl/Filter · OauthEndpoint/OauthToken/OauthMetadataRouter）；apex-system（SecurityConfig · JwtAuthenticationFilter · OAuth2ResourceServerFilter · OidcAuthenticationSuccessHandler · KeycloakUserSyncService · SocialLoginHandler）；apex-system（AuthService · LoginStrategyProvider · SmsLoginStrategy · AbstractPhoneLoginStrategy）</text>
   <text x="60" y="1040" class="note">迁移：V25 OAuth2 四表 · V26 jwt_keys · V27 mfa_config · V37/V51 keycloak_sub · V42 token 加密/轮换 · V48 安全增强 · V50 权限码 · V52/V58 撤销追踪 · V53 IP · V55 生物识别 · V56 设备信任</text>
 
   <!-- Legend -->

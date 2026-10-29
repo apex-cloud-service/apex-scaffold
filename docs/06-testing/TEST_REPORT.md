@@ -6,7 +6,7 @@
 **测试日期**: 2026-10-05  
 **测试人员**: 开发团队  
 **版本**: 1.3.1  
-**执行环境**: macOS（Java 17 + Maven Daemon 2.0.0-rc-3）
+**执行环境**: macOS 15.8.2 x86_64（Temurin JDK `21.0.13` + Maven Daemon 2.0.0-rc-3）
 
 ---
 
@@ -396,11 +396,85 @@ mvnd -pl apex-auth-center -am verify
 
 ---
 
+## ☕ JDK 21 + MySQL 9.0 升级回归段（2026-10-26）
+
+> 归属：本轮运行时基线升级（JDK 17 → 21，MySQL 8.0 → 9.0）后的完整回归验证。
+> Seata 四模式专项证据见 [seata-real-modes-test-report.md](./seata-real-modes-test-report.md) 与 [seata-integration-summary-report-20261026.md](./seata-integration-summary-report-20261026.md)。
+
+### 执行环境（实测）
+
+| 项 | 实测值 |
+|------|--------|
+| 宿主 | macOS 15.8.2（x86_64） |
+| JDK | Temurin `21.0.13`（SDKMAN `21.0.13.0+9-tem`，`.sdkmanrc` 固定，未使用 `java/current`） |
+| 构建工具 | Apache Maven Daemon `2.0.0-rc-3`（内置 Maven 4.0.0-rc-3，无 `mvn` 回退） |
+| 容器运行时 | podman `5.8.9` / crun `5.8.7` |
+| MySQL | `docker.io/library/mysql:9.0`，服务端 `9.0.1`，容器 `apex-infra-mysql` |
+
+### 门禁结果
+
+```bash
+source scripts/build/init-build-env.sh
+mvnd -T4 -B clean verify
+```
+
+| 项目 | 结果 |
+|------|------|
+| 反应堆结果 | ✅ `BUILD SUCCESS`（exit=0，`15:21 min`，`Finished at: 2026-10-26T23:37:30+08:00`） |
+| 模块 | 30 个模块全部 `BUILD SUCCESS` |
+| 测试汇总 | 37 个 `Results:` 块 → **5400 项 / 0 失败 / 0 错误 / 28 跳过** |
+| Spotless / PMD(p3c) / ArchUnit / JaCoCo | ✅ 全部通过，门禁未因升级失效 |
+
+第一轮门禁（`2026-10-26T23:16:35+08:00`）曾 `BUILD FAILURE`，唯一根因是 `apex-system` 的 `SqlScriptCommentContractTest`：新增的 SAGA 双库测试脚本缺少首行 `--` 注释。补上首行注释后第二轮通过，无其他阻塞项。
+
+### Seata 真实四模式回归
+
+```bash
+APEX_SEATA_IT=true mvnd -B -f apex-seata-spring-boot-starter/pom.xml verify
+```
+
+| 项目 | 结果 |
+|------|------|
+| 构建 | ✅ `BUILD SUCCESS`（exit=0，`03:13 min`，`Finished at: 2026-10-26T23:48:36+08:00`） |
+| 集成测试 | **8 项通过**（`failures=0 / errors=0 / skipped=0`） |
+| 单元测试 | 21 项通过 |
+| JaCoCo | ✅ `Analyzed bundle 'apex-seata-spring-boot-starter' with 14 classes` → `All coverage checks have been met.` |
+
+| 测试类 | 用例数 | 耗时 |
+|--------|-------|------|
+| `SeataAtIntegrationTest` | 1 | 51.427s |
+| `SeataTccIntegrationTest` | 4 | 41.165s |
+| `SeataSagaIntegrationTest` | 1 | 42.601s |
+| `SeataXaIntegrationTest` | 2 | 35.944s |
+
+> 边界说明：该组测试中 TC 与 MySQL 为真实容器，但 AT/TCC 分支的 HTTP 服务与 SAGA 引擎运行在测试 JVM 内，**不等同于五个业务服务全部容器化启动**的验证。
+
+### 独立工具工程测试
+
+| 工程 | 命令 | 结果 |
+|------|------|------|
+| `apex-tools-deployment` | `mvnd -B -pl apex-tools-deployment -am clean test` | ✅ `BUILD SUCCESS`（`52.273 s`），**38 项 / 0 失败 / 0 错误 / 0 跳过**，`javac [debug release 21]` |
+
+> 说明：本轮升级期间曾存在临时工具工程 `scripts/ci/java`（`ci-java-tools`），它从未纳入版本管理、不在 reactor 内，也不参与 Spotless/PMD/JaCoCo 门禁，曾使 `check-doc-links.sh` 等已提交脚本依赖未入库产物。该工程已按仓库规范移除，相关脚本恢复为仓库内的 Bash/Python 实现；`scripts/ci` 下现存的已提交脚本仍可直接运行。下表不再保留其测试记录。
+
+### 已知限制与非回归项
+
+1. **PMD 6.55.0 DFA 内部缺陷**：本轮门禁日志出现 `aktStatus is NULL: maximum Iterations exceeded, abort 0`（共 257 条），去重后覆盖 1635 个 `.java` 文件（Seata 模块 7 个 `PMDException`：`SeataProperties`、`SeataOutboxGuard`、`SagaReportOwnership`、`SeataTransactionExecutor`、`SeataXidPropagation`、`SagaExecutor`、`SeataAutoConfiguration`）。这些是 PMD 分析器自身的 `SEVERE` 日志，`maven-pmd-plugin` 3.21.2 默认 `skipPmdError=true`，不导致构建失败。已用一次性最小复现工程在 **Java 17.0.12 + PMD 6.49.0** 离线复现同一缺陷（该复现工程当时未入库，已随本轮清理移除，结论不受影响），属既有问题，**不是 JDK 21 迁移引入的回归**。根因是 `ASTSwitchExpression` 未纳入 `StatementAndBraceFinder` 的 switch 边界处理。
+2. **Flyway 对 MySQL 9.0 的兼容告警**：Flyway 10.15.0 输出 `MySQL 9.0 is newer than this version of Flyway and support has not been tested`，属告警不阻塞，本轮全部 Flyway 迁移测试通过。
+3. **`TokenV42Recover` 仍限定 MySQL 8.0**：`apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java` 因绑定 MySQL 8 的 `information_schema` canonical 文本与 `SOURCE_HASH`，保留 `only MySQL 8.0 is supported` 断言。该工具**未覆盖 MySQL 9**，需在 MySQL 8 实例上使用。
+4. **PMD `targetJdk=20`**：`p3c-pmd 2.1.1` 基于 PMD6 API，无法在 PMD7 加载，因此锁定插件 3.21.2 + PMD 6.55.0 + `pmd.targetJdk=20`。这是分析器语言能力上限，编译与运行仍为 Java 21，非项目降级。
+
+### 本节结论
+
+JDK 21 与 MySQL 9.0 升级未引入测试回归：全仓 30 模块门禁、Seata 四模式真实环境、`apex-tools-deployment` 工具模块均实测通过（临时工程 `scripts/ci/java` 已移除，不计入结论）。上述 PMD/Flyway/工具限定项为既有已知限制，已在报告中如实标注，不计为本次升级的失败。
+
+---
+
 ## 📞 联系方式
 
 如有测试相关问题，请联系开发团队。
 
 ---
 
-**报告生成时间**: 2026-10-05（2026-10-08 追加网关段、契约模块段、Phase 1 验收段；2026-10-10 追加 Phase 2.7 全链路集成测试段、Phase 3 工作流服务段、Phase 4 文件服务段）
+**报告生成时间**: 2026-10-05（2026-10-08 追加网关段、契约模块段、Phase 1 验收段；2026-10-10 追加 Phase 2.7 全链路集成测试段、Phase 3 工作流服务段、Phase 4 文件服务段；2026-10-26 追加 JDK 21 + MySQL 9.0 升级回归段）
 **报告维护者**: 开发团队

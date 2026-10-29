@@ -762,7 +762,7 @@ mvnd pmd:check
 **设计模式应用**:
 - 策略模式: [LoginStrategyProvider.java](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/LoginStrategyProvider.java)
 - SPI 机制: StorageProvider.java（历史文件已移除）
-- 适配器模式: [CacheServiceImpl.java](../../../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java)
+- 适配器模式: [CacheServiceImpl.java](../../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java)
 
 **Lambda 表达式应用**:
 - 配置验证: [ApexBlockingIoProperties.java](../../../apex-common/src/main/java/com/apex/scaffold/common/config/ApexBlockingIoProperties.java)

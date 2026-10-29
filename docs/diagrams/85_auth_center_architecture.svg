@@ -8,7 +8,7 @@
         <dc:creator>Apex Team</dc:creator>
         <dc:date>2026-09-25</dc:date>
         <dc:version>1.0</dc:version>
-        <dc:description>展示apex-auth-center独立认证中心的DDD四层架构、核心功能模块和技术选型</dc:description>
+        <dc:description>展示apex-auth独立认证中心的DDD四层架构、核心功能模块和技术选型</dc:description>
       </rdf:Description>
     </rdf:RDF>
   </metadata>
@@ -290,7 +290,7 @@
     <rect x="820" y="1250" width="700" height="110" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
     <text x="840" y="1280" class="module-title">部署信息</text>
     <text x="840" y="1305" class="tech-label">端口: 8081 (独立于主应用8080)</text>
-    <text x="840" y="1325" class="tech-label">启动: mvnd -pl apex-auth-center -am spring-boot:run</text>
+    <text x="840" y="1325" class="tech-label">启动: mvnd -pl apex-auth -am spring-boot:run</text>
     <text x="840" y="1345" class="tech-label">API文档: http://localhost:8081/doc.html</text>
   </g>
 

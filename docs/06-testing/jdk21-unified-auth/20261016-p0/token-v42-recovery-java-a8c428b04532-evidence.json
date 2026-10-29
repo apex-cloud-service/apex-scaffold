@@ -1,0 +1,110 @@
+{
+  "started_at": "2026-10-21T01:26:38Z",
+  "ended_at": "2026-10-21T01:28:25Z",
+  "status": "passed",
+  "baseline_credit": false,
+  "tool_implementation": "java",
+  "wrapper": "scripts/utils/token-v42-recover.sh",
+  "scenario_filter": "compound_index column_charset check_constraint foreign_key wrong_engine history_table security_table key_table wrong_view table_instead_of_view view_instead_of_token",
+  "hashes": {
+    "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql": "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e",
+    "scripts/utils/TokenV42Recover.java": "d9fd7145e6840d21103f823b0e1ee71d5935b4f7ab77eef31ebef8d16669a400",
+    "scripts/utils/token-v42-recover.sh": "2d7f35e5dc4ae571e2316e4bbdc4b024d1a9ead155a6707179fdcb126589289d",
+    "/tmp/v42_verify_v3.sh": "4eb385eff043680aa75e0e4d48130bd7a8da607433577c195f1285600ca58e4d"
+  },
+  "container": {
+    "name": "apex-v42-java-a8c428b04532",
+    "id": "a7b82d1c857d659b20f9e52f5fa0c1c380facbe8d99eddcbc75a7b1f2d4b1e19",
+    "network": "none",
+    "storage": "tmpfs",
+    "image": "localhost/mysql:8.0"
+  },
+  "mysql_version": "8.0.46",
+  "isolation": "none",
+  "tmpfs": "{\"/var/lib/mysql\":\"rw,rprivate,nosuid,nodev,tmpcopyup\"}",
+  "scope": "isolated structure recovery only; no Flyway baseline credit",
+  "scenarios": {
+    "compound_index": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.idx_access_token_hash: incompatible index",
+      "before_sha256": "e38180be71e2f96b8056c140b367eee67d9606de3b117ff307947ef959cfc145",
+      "after_sha256": "e38180be71e2f96b8056c140b367eee67d9606de3b117ff307947ef959cfc145"
+    },
+    "column_charset": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token.access_token_hash: expected utf8mb4",
+      "before_sha256": "68068bc4f309c8149e4afbc13c8153b2afda234629ad2b334dcd4fc281626ffc",
+      "after_sha256": "68068bc4f309c8149e4afbc13c8153b2afda234629ad2b334dcd4fc281626ffc"
+    },
+    "check_constraint": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token: CHECK/foreign key constraints require manual review",
+      "before_sha256": "e72ccebbbfdc7f0d8273aef66ae7123ab8eae69cbf774f28f43263c8bb2bf12c",
+      "after_sha256": "e72ccebbbfdc7f0d8273aef66ae7123ab8eae69cbf774f28f43263c8bb2bf12c"
+    },
+    "foreign_key": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token: CHECK/foreign key constraints require manual review",
+      "before_sha256": "7afea7947c1510a109b7fc0468743587e86e27791949abd42095346405508073",
+      "after_sha256": "7afea7947c1510a109b7fc0468743587e86e27791949abd42095346405508073"
+    },
+    "wrong_engine": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token: expected InnoDB base table",
+      "before_sha256": "96ef8ec05100b4e630b95d33192c9e969175694d1a405981f80eef95aa9713bc",
+      "after_sha256": "96ef8ec05100b4e630b95d33192c9e969175694d1a405981f80eef95aa9713bc"
+    },
+    "history_table": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token_rotation_history: incompatible column/index set",
+      "before_sha256": "e08753a5b32584df8448ef3ef3a5241fdd0bebfbc7ebaab39947a497b3cb0a2a",
+      "after_sha256": "e08753a5b32584df8448ef3ef3a5241fdd0bebfbc7ebaab39947a497b3cb0a2a"
+    },
+    "security_table": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token_security_event: incompatible column/index set",
+      "before_sha256": "b7198070b76df7c6364e1f12ee2e9502409c5ef4503b628b90be93eba694a6f1",
+      "after_sha256": "b7198070b76df7c6364e1f12ee2e9502409c5ef4503b628b90be93eba694a6f1"
+    },
+    "key_table": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: encryption_key_version: incompatible column/index set",
+      "before_sha256": "2ef6d9cc4ae846982cbef013ba8bc612c723388ccf578561fd9466562bf19eeb",
+      "after_sha256": "2ef6d9cc4ae846982cbef013ba8bc612c723388ccf578561fd9466562bf19eeb"
+    },
+    "wrong_view": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: v_token_health: incompatible definition/security/check option",
+      "before_sha256": "d80a74f905a79329a9a645bd6cf87d39fc3dd4fab592547355e07ba9b436ff68",
+      "after_sha256": "d80a74f905a79329a9a645bd6cf87d39fc3dd4fab592547355e07ba9b436ff68"
+    },
+    "table_instead_of_view": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: v_token_health: expected view",
+      "before_sha256": "47597ba9d49b10d98b7670d8806a184a37570385cba8c53cb73e0195766aef8b",
+      "after_sha256": "47597ba9d49b10d98b7670d8806a184a37570385cba8c53cb73e0195766aef8b"
+    },
+    "view_instead_of_token": {
+      "rejected": true,
+      "unchanged": true,
+      "error": "preflight rejected: token: expected InnoDB base table",
+      "before_sha256": "cfa7e081afa417278529f0d973034af68b3fea9c3fe3a56ebe9f7970a2350459",
+      "after_sha256": "cfa7e081afa417278529f0d973034af68b3fea9c3fe3a56ebe9f7970a2350459"
+    }
+  },
+  "cleanup": {
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true
+  }
+}

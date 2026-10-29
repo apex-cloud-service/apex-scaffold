@@ -3,7 +3,7 @@
 
 > 文档版本: v1.0
 > 创建时间: 2026-09-04
-> 适用版本: apex-scaffold v2.5.0+
+> 适用版本: apex-scaffold v1.3.1+
 > 数据流模式: 同步 + 异步 + 最终一致性
 
 > **配套架构图**:
@@ -16,6 +16,8 @@
 ## 一、数据流概览
 
 Apex Scaffold 系统中存在多种数据流模式，根据业务场景选择合适的数据流方式，平衡一致性、性能和可用性。
+
+当前共享基础设施拆分为 persistence、cache、messaging、remote、integration 五个本地 JAR（根 reactor 共 30 个模块），旧 `apex-infrastructure` 仅为兼容聚合；messaging 单向依赖 persistence，integration 单向依赖 remote，业务数据库和 Flyway 归属不变。office 站内信先以同一 JDBC 事务写入消息与收件人，提交后发送本实例 WebSocket 消息 ID 提示；票据、连接与提示不跨实例共享，HTTP/WS 网关地址必须指向同一实例，客户端通过 HTTP 收件箱/未读数补偿，不应将其视为持久化可靠消息投递。实现边界见[拆分方案](../08-project-management/plans/infrastructure-modularization-plan.md)与[站内信协议](../05-operations/in-app-messaging.md)。
 
 ### 1.1 数据流分类
 
@@ -566,7 +568,7 @@ resilience4j:
 
 ### 6.2 熔断降级
 
-**Sentinel熔断规则**:
+**Sentinel限流 + Resilience4j熔断配置**:
 ```java
 @SentinelResource(
     value = "external-api-call",
@@ -614,7 +616,7 @@ FlowRuleManager.loadRules(Arrays.asList(
 
 **实现方式**:
 - 数据库事务 (ACID保证)
-- 分布式事务 (Seata AT模式)
+- 分布式事务 (Seata，支持 AT/TCC/SAGA/XA 多模式，默认 AT。详见 [Seata 接入](../05-operations/seata-integration.md))
 
 **示例**:
 ```java

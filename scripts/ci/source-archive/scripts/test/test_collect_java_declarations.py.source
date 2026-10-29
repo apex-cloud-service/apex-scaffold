@@ -1,0 +1,166 @@
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "ci" / "collect_java_declarations.py"
+
+
+class CollectJavaDeclarationsTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="apex-declarations-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.put("pom.xml", "<project><modules><module>sample</module></modules></project>")
+        self.put("sample/pom.xml", "<project/>")
+
+    def put(self, name, text):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def run_case(self, success=True, *extra):
+        self.assertTrue(SCRIPT.is_file(), "AST collector must exist")
+        result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root),
+                                 *extra], capture_output=True, text=True, timeout=90)
+        if success:
+            self.assertEqual(result.returncode, 0, result.stderr)
+        else:
+            self.assertNotEqual(result.returncode, 0)
+        return result
+
+    def test_ast_declarations_docs_positions_visibility_and_no_body_false_positives(self):
+        text = '''package fixture;
+/** Outer docs.\n * @author Fixture\n */
+public class Outer<T> {
+    /** Field docs. */
+    private String field = "class Fake { void invented() {} }";
+    /** Creates. @since ignored-inline */
+    public Outer() {}
+    private class Hidden {
+        /** Runs.\n         * @param value input\n         * @return output\n         * @throws IllegalStateException problem\n         */
+        public String run(String value) throws IllegalStateException { return value; }
+        void run(int value) { int local = 1; }
+    }
+    // public void commentFake() {}
+    public MissingDependency unresolved(MissingDependency arg) { return arg; }
+}
+'''
+        path = self.put("sample/src/main/java/Outer.java", text)
+        self.put("sample/src/test/java/Empty.java", "")
+        self.put("retired/src/main/java/Bad.java", "class { invalid")
+        self.put("sample/src/main/java/target/Bad.java", "class { invalid")
+        (path.parent / "Linked.java").symlink_to(path)
+        result = self.run_case()
+        data = json.loads(result.stdout)
+        self.assertEqual(data["mode"], "javac-parse-only")
+        self.assertFalse(data["semantic_validation"])
+        self.assertFalse(data["javadoc_coverage_acceptance"])
+        self.assertEqual(len(data["files"]), 2)
+        file = data["files"][0]
+        self.assertEqual((file["module"], file["scope"]), ("sample", "main"))
+        self.assertEqual(file["sha256"], hashlib.sha256(text.encode()).hexdigest())
+        rows = file["declarations"]
+        self.assertEqual([r["name"] for r in rows],
+                         ["Outer", "field", "Outer", "Hidden", "run", "run", "unresolved"])
+        self.assertEqual(rows[2]["kind"], "CONSTRUCTOR")
+        self.assertEqual(rows[3]["visibility"], "private")
+        self.assertEqual(rows[4]["effective_visibility"], "private")
+        self.assertEqual(rows[4]["visibility"], "public")
+        self.assertNotEqual(rows[4]["signature"], rows[5]["signature"])
+        self.assertEqual(rows[0]["position"]["line"], 5)
+        self.assertGreater(rows[0]["position"]["end_offset"], rows[0]["position"]["offset"])
+        self.assertEqual(rows[4]["javadoc"]["tag_names"], ["param", "return", "throws"])
+        self.assertEqual(rows[4]["javadoc"]["status"], "present")
+        self.assertEqual(rows[5]["javadoc"]["status"], "absent")
+        self.assertEqual(rows[4]["javadoc"]["tag_validation"], "unresolved")
+        self.assertNotIn("class Fake", result.stdout)
+        self.assertEqual(data["files"][1]["declarations"], [])
+        self.assertFalse(list(self.root.rglob("*.class")))
+
+    def test_record_enum_annotation_interface_and_package_info(self):
+        self.put("sample/src/main/java/Shapes.java", '''package fixture;
+/** Data. @param value inline */
+record Shape(String value) { Shape {} }
+enum Choice { /** First. */ FIRST, SECOND; private Choice() {} }
+@interface Marker { /** Value. */ String value() default "x"; }
+interface Contract { int VALUE = 1; void call(); class Nested {} }
+''')
+        self.put("sample/src/main/java/package-info.java",
+                 "/** Package docs.\n * @since 1\n */\npackage fixture;\n")
+        data = json.loads(self.run_case().stdout)
+        rows = data["files"][0]["declarations"]
+        kinds = {row["kind"] for row in rows}
+        self.assertTrue({"RECORD", "ENUM", "ANNOTATION_TYPE", "INTERFACE",
+                         "CONSTRUCTOR", "ENUM_CONSTANT", "RECORD_COMPONENT"} <= kinds)
+        constants = [row for row in rows if row["kind"] == "ENUM_CONSTANT"]
+        self.assertEqual([row["name"] for row in constants], ["FIRST", "SECOND"])
+        self.assertEqual(constants[0]["javadoc"]["status"], "present")
+        self.assertEqual(constants[1]["javadoc"]["status"], "absent")
+        components = [row for row in rows if row["kind"] == "RECORD_COMPONENT"]
+        self.assertEqual([row["name"] for row in components], ["value"])
+        for row in rows:
+            if row["owner"] == "fixture.Contract":
+                self.assertEqual(row["visibility"], "public")
+        package = data["files"][1]["declarations"][0]
+        self.assertEqual(package["kind"], "PACKAGE")
+        self.assertEqual(package["javadoc"]["tag_names"], ["since"])
+        self.assertIn("record implicit members", " ".join(data["limitations"]))
+
+    def test_record_compact_constructor_signatures_use_enclosing_components(self):
+        self.put("sample/src/main/java/Records.java", '''package fixture;
+record Compact<T>(T value, java.util.List<String> labels, int[] counts) {
+    static record Nested(String name, long... ids) { Nested {} }
+    Compact {}
+    Compact() { this(null, null, null); }
+    Compact(T value) { this(value, null, null); }
+}
+record Explicit(String value) {
+    Explicit(String value) { this.value = value; }
+    Explicit() { this(""); }
+}
+record Empty() { Empty {} }
+class Ordinary {
+    Ordinary() {}
+    Ordinary(String value, int count) {}
+}
+''')
+        rows = json.loads(self.run_case().stdout)["files"][0]["declarations"]
+        constructors = [row["signature"] for row in rows if row["kind"] == "CONSTRUCTOR"]
+        self.assertEqual(constructors, [
+            " fixture.Compact.Nested#Nested(String, long[])",
+            " fixture.Compact#Compact(T, java.util.List<String>, int[])",
+            " fixture.Compact#Compact()",
+            " fixture.Compact#Compact(T)",
+            " fixture.Explicit#Explicit(String)",
+            " fixture.Explicit#Explicit()",
+            " fixture.Empty#Empty()",
+            " fixture.Ordinary#Ordinary()",
+            " fixture.Ordinary#Ordinary(String, int)",
+        ])
+
+    def test_parse_error_fails_without_replacing_output_or_leaking_source(self):
+        self.put("sample/src/main/java/Broken.java", 'class Broken { void bad( { "SECRET"; }')
+        output = self.put("declarations.json", "previous result")
+        result = self.run_case(False, "--output", str(output))
+        self.assertIn("parse", result.stderr)
+        self.assertNotIn("SECRET", result.stdout + result.stderr)
+        self.assertEqual(output.read_text(), "previous result")
+
+    def test_repeatable_output_and_sha_changes(self):
+        path = self.put("sample/src/test/java/A.java", "class A {}")
+        first = json.loads(self.run_case().stdout)
+        self.assertEqual(first, json.loads(self.run_case().stdout))
+        path.write_text("class A { int x; }", encoding="utf-8")
+        second = json.loads(self.run_case().stdout)
+        self.assertNotEqual(first["files"][0]["sha256"], second["files"][0]["sha256"])
+        self.assertEqual(second["files"][0]["scope"], "test")
+
+
+if __name__ == "__main__":
+    unittest.main()

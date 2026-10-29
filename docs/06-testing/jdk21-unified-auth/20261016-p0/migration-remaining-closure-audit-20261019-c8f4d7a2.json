@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "audit_kind": "remaining_frozen_ids_disposition_not_branch_evidence",
+  "date": "2026-10-19",
+  "status": "diagnostic_inventory_closed_acceptance_open",
+  "baseline": {
+    "path": "docs/06-testing/jdk21-unified-auth/20261016-p0/table-source-facts-20261018-itemized-1905.json",
+    "sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+    "denominator": 586
+  },
+  "recomputed": {
+    "method": "scripts/ci/auth_v45_dynamic_probe_20261018.py:verified_union()",
+    "verified": 500,
+    "verified_mysql": 458,
+    "verified_postgresql": 42,
+    "eligible_evidence_files": 22,
+    "remaining": 86,
+    "remaining_mysql": 70,
+    "remaining_postgresql": 16,
+    "new_credit": 0,
+    "all_remaining_source_hashes_match_frozen_baseline": true,
+    "all_remaining_ids_bound_to_existing_diagnostic_items": true
+  },
+  "evidence_directory": "docs/06-testing/jdk21-unified-auth/20261016-p0",
+  "diagnostic_evidence": {
+    "mysql_v19": {
+      "file": "dynamic-system-v19-20261019-negative-evidence.json",
+      "sha256": "e66cdc70955faf0db7bb164c02f454b37c1d5a131f6914f27245f1e94f6320a4",
+      "status": "diagnostic_expected_failures_confirmed",
+      "cleanup_confirmed": true,
+      "reason": "原始完整文件首次成功；seed存在/不存在及过程重入已有观察，跨租户外键拒绝1452、同租户接受、NULL租户拒绝1048；完整文件直接重放1061 duplicate uk_sys_dept_tenant_id_id。诊断证据明确不提供absent/present/replay分支闭合，status不是passed，因此16项均不计分。不得将一次性DDL重放失败直接认定迁移缺陷。",
+      "next_action": "保留首次执行和约束行为诊断；若采用一次迁移验收，应由主方案明确验收口径并单独设计验证，不修改现有计分规则。"
+    },
+    "mysql_v40": {
+      "file": "dynamic-system-v40-20261019-client-evidence.json",
+      "sha256": "e4d4a36271dee34ac07d8e9d2f9c8279cfc70051704dfb03adab2f7392a6a57d",
+      "status": "partial_failure",
+      "cleanup_confirmed": true,
+      "reason": "consent非空两行添加主键列触发1062 Duplicate entry空字符串；第一组0394–0398 absent/replay=false、present=true，其余8组40项三分支虽true，整轮partial_failure仍全部排除，不拆出40项追认计分。",
+      "next_action": "保留历史迁移和原失败；已有consent前置修复证据不能计作原生闭合。生产存量前置修复与Flyway历史协调属于另行验收。"
+    },
+    "mysql_v42": {
+      "file": "dynamic-system-v42-20261019-partial-commit-82e3c165-evidence.json",
+      "sha256": "3d23cbfc10eab19fabc50e1d2e13021a131f67bad6c88c9105209dfd511cc4f7",
+      "status": "diagnostic_expected_failures_confirmed",
+      "cleanup_confirmed": true,
+      "reason": "token存在时列/索引guard实际1064；单语句PREPARE对照成功，IF NOT EXISTS和多语句PREPARE对照失败。token不存在完整初次成功，但重放1060；已验证失败前DDL隐式提交及残留状态重放1060。诊断status和分支失败均不满足原生计分。",
+      "next_action": "已有显式离线恢复不代表原V42可重放，不自动加密或协调Flyway历史；不重复相同失败运行。"
+    },
+    "pg_trigger_pairs": {
+      "file": "dynamic-pg-p0-448d208aed8d4db585be12204edfedac-evidence.json",
+      "sha256": "aeedf6bbad091a9c3300ab36c535772f486c9c90e81a862c21173787a9143631",
+      "status": "partial_diagnostic",
+      "cleanup_confirmed": true,
+      "isolation_verified_in_saved_evidence": true,
+      "reason": "8个函数/触发器配对均absent=true,present=true,error=true,replay=false；原函数重放可成功，原CREATE TRIGGER重放already exists，整个配对不计分。remaining_closed显式仅接受constraint，因此即使改布尔值也不能给触发器配对计分。所有保存观察assertions_passed=true不能代替replay成功。",
+      "next_action": "按一次迁移语义的首次创建/触发行为/依赖错误已有诊断；无新事实不重跑。直接重复CREATE TRIGGER不是Flyway版本迁移必须满足的要求，后续若改变验收口径须显式决策，当前16项保留未验收。"
+    }
+  },
+  "remaining_by_source": [
+    {
+      "source": "apex-system/src/main/resources/db/migration/mysql/V19__enforce_department_tenant_integrity.sql",
+      "diagnostic": "mysql_v19",
+      "count": 16,
+      "ids": ["old-sql-0363", "old-sql-0364", "old-sql-0365", "old-sql-0366", "old-sql-0367", "old-sql-0368", "old-sql-0369", "old-sql-0370", "old-sql-0371", "old-sql-0372", "old-sql-0373", "old-sql-0374", "old-sql-0375", "old-sql-0376", "old-sql-0377", "old-sql-0378"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "diagnostic": "mysql_v40",
+      "count": 45,
+      "ids": ["old-sql-0394", "old-sql-0395", "old-sql-0396", "old-sql-0397", "old-sql-0398", "old-sql-0399", "old-sql-0400", "old-sql-0401", "old-sql-0402", "old-sql-0403", "old-sql-0404", "old-sql-0405", "old-sql-0406", "old-sql-0407", "old-sql-0408", "old-sql-0409", "old-sql-0410", "old-sql-0411", "old-sql-0412", "old-sql-0413", "old-sql-0414", "old-sql-0415", "old-sql-0416", "old-sql-0417", "old-sql-0418", "old-sql-0419", "old-sql-0420", "old-sql-0421", "old-sql-0422", "old-sql-0423", "old-sql-0424", "old-sql-0425", "old-sql-0426", "old-sql-0427", "old-sql-0428", "old-sql-0429", "old-sql-0430", "old-sql-0431", "old-sql-0432", "old-sql-0433", "old-sql-0434", "old-sql-0435", "old-sql-0436", "old-sql-0437", "old-sql-0438"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql",
+      "diagnostic": "mysql_v42",
+      "count": 9,
+      "ids": ["old-sql-0439", "old-sql-0440", "old-sql-0441", "old-sql-0442", "old-sql-0443", "old-sql-0444", "old-sql-0445", "old-sql-0446", "old-sql-0447"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V26__create_jwt_keys_table.sql",
+      "diagnostic": "pg_trigger_pairs",
+      "count": 2,
+      "ids": ["old-sql-0570", "old-sql-0571"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql",
+      "diagnostic": "pg_trigger_pairs",
+      "count": 4,
+      "ids": ["old-sql-0572", "old-sql-0573", "old-sql-0574", "old-sql-0575"],
+      "pair_ids": [["old-sql-0572", "old-sql-0574"], ["old-sql-0573", "old-sql-0575"]]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V31__create_office_message_table.sql",
+      "diagnostic": "pg_trigger_pairs",
+      "count": 2,
+      "ids": ["old-sql-0576", "old-sql-0577"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V32__create_office_approval_process_table.sql",
+      "diagnostic": "pg_trigger_pairs",
+      "count": 2,
+      "ids": ["old-sql-0578", "old-sql-0579"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V34__create_office_calendar_event_table.sql",
+      "diagnostic": "pg_trigger_pairs",
+      "count": 2,
+      "ids": ["old-sql-0580", "old-sql-0581"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V35__create_office_document_info_table.sql",
+      "diagnostic": "pg_trigger_pairs",
+      "count": 2,
+      "ids": ["old-sql-0582", "old-sql-0583"]
+    },
+    {
+      "source": "apex-system/src/main/resources/db/migration/postgresql/V45__add_message_outbox.sql",
+      "diagnostic": "pg_trigger_pairs",
+      "count": 2,
+      "ids": ["old-sql-0586", "old-sql-0587"]
+    }
+  ],
+  "execution_limits": [
+    "本JSON是逐项诊断处置审计，不是新增数据库运行或原生分支通过证据，不匹配dynamic-*-evidence.json计分扫描。",
+    "本轮初始只读列出Podman容器和卷；已有其他容器/卷属于现存环境，未删除或接入。",
+    "剩余86项均有已保存诊断，因此按用户授权不重复相同数据库运行。本轮没有新建容器或卷，无本轮资源需要清理。",
+    "没有改计分脚本、历史SQL、旧证据、两个方案/report或配置契约代理文件。",
+    "诊断清单闭合不代表P0准出、Java21切换、生产升级、Flyway历史协调、完整升级链或生产数据验收完成。"
+  ]
+}

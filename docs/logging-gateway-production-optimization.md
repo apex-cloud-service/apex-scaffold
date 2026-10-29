@@ -98,7 +98,7 @@
 
 #### 优化 1: 敏感信息脱敏
 
-**文件**: [SensitiveDataMasker.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
+**文件**: [SensitiveDataMasker.java](../apex-infrastructure-remote/src/main/java/com/apex/scaffold/infrastructure/logging/SensitiveDataMasker.java)
 
 **功能**:
 - 自动识别并脱敏敏感字段（password、idCard、mobile、bankCard）
@@ -113,7 +113,7 @@ log.info(maskedLog);
 
 #### 优化 2: 日志采样器
 
-**文件**: [LogSampler.java](../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
+**文件**: [LogSampler.java](../apex-infrastructure-remote/src/main/java/com/apex/scaffold/infrastructure/logging/LogSampler.java)
 
 **功能**:
 - 高频日志自动采样（如循环中的日志）

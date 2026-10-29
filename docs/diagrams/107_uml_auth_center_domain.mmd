@@ -1,150 +1,326 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 classDiagram
     direction TB
+
     class UserEntity {
-        <<aggregate root>>
-        -Long id
-        -String tenantId
-        -String username
-        -String passwordHash
-        -Integer status
-        -Integer failedLoginAttempts
-        -LocalDateTime lockedUntil
-        +isActive() boolean
-        +isLocked() boolean
-        +recordLoginFailure()
-        +recordLoginSuccess(ip)
-        +unlock()
-        +disable() / enable()
+        «aggregate root · 用户认证»
+        - Long id
+        - String tenantId
+        - String username
+        - String email
+        - String phone
+        - String passwordHash
+        - String openId
+        - Long accountId
+        - Integer status
+        - LocalDateTime lastLoginAt
+        - String lastLoginIp
+        - Integer failedLoginAttempts
+        - LocalDateTime lockedUntil
+        - LocalDateTime createdAt
+        - LocalDateTime updatedAt
+        - Integer deleted
+        + isActive() boolean
+        + isLocked() boolean
+        + recordLoginFailure()
+        + recordLoginSuccess(clientIp)
+        + unlock()
+        + disable()
+        + enable()
     }
+    note for UserEntity "status: 1=正常 0=禁用 2=锁定 3=待激活\n失败 5 次自动锁定 30 分钟\naccountId 关联主应用 sys_user.id（v3.3.0 统一账户）\n密码 BCrypt/Argon2，租户内用户名唯一"
+
     class RoleEntity {
-        <<entity>>
-        -Long id
-        -String tenantId
-        -String code
-        -String name
-        -String dataScope
-        -Boolean enabled
-        -Set~Long~ permissionIds
-        +addPermission(id)
-        +removePermission(id)
-        +hasPermission(id) boolean
-        +isSuperRole() boolean
+        «entity · 角色»
+        - Long id
+        - String tenantId
+        - String code
+        - String name
+        - String description
+        - String dataScope
+        - Integer sortOrder
+        - Boolean enabled
+        - Set~Long~ permissionIds
+        - LocalDateTime createdAt / updatedAt
+        - Long createdBy / updatedBy
+        - Boolean deleted
+        - Integer version
+        + isValid() boolean
+        + enable() / disable()
+        + addPermission(id)
+        + removePermission(id)
+        + hasPermission(id) boolean
+        + isSuperRole() boolean
     }
+    note for RoleEntity "dataScope: ALL/DEPT_AND_SUB/DEPT/SELF\nSUPER_ADMIN 或 SYSTEM_ADMIN 为超管角色"
+
     class PermissionEntity {
-        <<entity>>
-        -Long id
-        -String tenantId
-        -String code
-        -String name
-        -String resourceType
-        -String resourceIdentifier
-        -String action
-        +matchesAction(action) boolean
-        +matchesResource(res) boolean
-        +isValid() boolean
+        «entity · 权限»
+        - Long id
+        - String tenantId
+        - String code
+        - String name
+        - String description
+        - String resourceType
+        - String resourceIdentifier
+        - String action
+        - Boolean enabled
+        - LocalDateTime createdAt / updatedAt
+        - Long createdBy / updatedBy
+        - Boolean deleted
+        - Integer version
+        + isValid() boolean
+        + enable() / disable()
+        + matchesAction(action) boolean
+        + matchesResource(res) boolean
     }
+    note for PermissionEntity "code 格式: {资源}:{操作} 如 user:read\nresourceType: API/MENU/BUTTON/DATA"
+
     class TokenEntity {
-        <<aggregate root>>
-        -Long id
-        -String tenantId
-        -Long userId
-        -String tokenType
-        -String jti
-        -String tokenFamily
-        -LocalDateTime expiresAt
-        -Integer revoked
-        -Integer rotationCount
-        +isExpired() boolean
-        +isRevoked() boolean
-        +isValid() boolean
-        +revoke(by, reason)
-        +recordUsage()
+        «aggregate root · 令牌»
+        - Long id
+        - String tenantId
+        - Long userId
+        - String tokenType
+        - String tokenValue
+        - String jti
+        - String tokenFamily
+        - String previousJti
+        - Integer rotationCount
+        - LocalDateTime expiresAt
+        - Integer revoked
+        - LocalDateTime revokedAt
+        - String revokedBy
+        - String revokeReason
+        - LocalDateTime lastUsedAt
+        - Integer useCount
+        - String deviceId
+        - String clientIp
+        - String userAgent
+        - String tokenHash
+        - String tokenIv
+        - LocalDateTime createdAt
+        + isExpired() boolean
+        + isRevoked() boolean
+        + isValid() boolean
+        + revoke()
+        + revoke(revokedBy, reason)
+        + recordUsage()
     }
+    note for TokenEntity "tokenType: ACCESS(2h) / REFRESH(7d)\ntokenFamily 追踪轮换链，重放检测撤销全家族\ntokenHash=SHA-256，tokenIv=AES-GCM IV\nrevokedBy: userId/system/admin:{id}"
+
     class SessionEntity {
-        <<entity>>
-        -Long id
-        -String tenantId
-        -Long userId
-        -String sessionId
-        -String deviceInfo
-        -String clientIp
-        -LocalDateTime expiresAt
-        +isExpired() boolean
-        +touch()
+        «entity · 会话»
+        - Long id
+        - String tenantId
+        - Long userId
+        - Long tokenId
+        - String sessionId
+        - String deviceType
+        - String deviceId
+        - String deviceName
+        - String ipAddress
+        - String userAgent
+        - String location
+        - String status
+        - LocalDateTime createdAt
+        - LocalDateTime lastActiveAt
+        - LocalDateTime expiresAt
+        - String metadata
+        - Boolean deleted
+        - Integer version
+        + isActive() boolean
+        + isExpired() boolean
+        + updateLastActive()
+        + terminate()
+        + kickOut()
+        + markExpired()
+        + isMobileDevice() boolean
+        + isWebDevice() boolean
     }
+    note for SessionEntity "status: ACTIVE/EXPIRED/TERMINATED/KICKED_OUT\ndeviceType: WEB/MOBILE_IOS/MOBILE_ANDROID/DESKTOP"
+
     class JwtKeyEntity {
-        <<entity>>
-        -String kid
-        -String algorithm
-        -String publicKey
-        -String privateKey
-        -Boolean active
-        +rotate()
-        +activate() / deactivate()
+        «entity · JWT 密钥 @Table(jwt_keys)»
+        - Long id
+        - String keyVersion
+        - String encryptedSecret
+        - String algorithm
+        - String status
+        - LocalDateTime activatedAt
+        - LocalDateTime expiresAt
+        - LocalDateTime deprecatedAt
+        - LocalDateTime revokedAt
+        - String rotationReason
+        - Long operatorUserId
+        - String operatorUsername
+        - LocalDateTime createdAt / updatedAt
+        - String remark
+        + isActive() boolean
+        + isUsableForVerification() boolean
+        + isExpired() boolean
+        + isExpiringSoon() boolean
     }
+    note for JwtKeyEntity "encryptedSecret: AES-256 加密（KEY_ENCRYPTION_KEY）\nalgorithm: HS256 / RS256\nstatus: PENDING→ACTIVE→ROTATING→DEPRECATED→REVOKED\n90 天定期轮换，ROTATING 过渡期验证旧 Token"
+
     class MfaConfigEntity {
-        <<entity>>
-        -Long userId
-        -String tenantId
-        -String mfaType
-        -Boolean enabled
-        -Boolean verified
-        +enable() / disable()
+        «entity · MFA 配置»
+        - Long id
+        - String tenantId
+        - Long userId
+        - String mfaType
+        - Boolean enabled
+        - Boolean required
+        - Integer priority
+        - String metadata
+        - LocalDateTime createdAt / updatedAt
+        - Integer version
+        - Boolean deleted
+        + enable() / disable()
+        + makeRequired() / makeOptional()
+        + isEnabled() boolean
+        + isRequired() boolean
+        + isMfaType(type) boolean
+        + isMfaType(MfaType) boolean
     }
+    note for MfaConfigEntity "MfaType: TOTP/SMS/EMAIL/WEBAUTHN\nrequired 由租户强制，无法禁用\npriority 越小优先级越高"
+
     class TotpEntity {
-        <<entity>>
-        -Long userId
-        -String secret
-        -List~String~ recoveryCodes
-        -Boolean enabled
-        +verify(code) boolean
+        «entity · TOTP»
+        - Long id
+        - String tenantId
+        - Long userId
+        - String secret
+        - Boolean verified
+        - String backupCodes
+        - String usedBackupCodes
+        - Boolean enabled
+        - LocalDateTime lastVerifiedAt
+        - LocalDateTime createdAt / updatedAt
+        - Integer version
+        - Boolean deleted
+        + verify(code) boolean
+        + markAsVerified()
+        + enable() / disable()
+        + useBackupCode(code) boolean
+        + isEnabled() boolean
+        + getRemainingBackupCodes() int
     }
+    note for TotpEntity "secret AES-256-GCM 加密存储\nbackupCodes 逗号分隔 String\nenable 前须 verified=true"
+
     class AuditLogEntity {
-        <<entity>>
-        -String eventType
-        -Long userId
-        -String tenantId
-        -String detail
-        +toRecord() AuditLogRecord
+        «entity · 安全审计日志»
+        - Long id
+        - String tenantId
+        - Long userId
+        - String username
+        - String eventType
+        - String eventStatus
+        - String resourceType
+        - String resourceId
+        - String action
+        - String ipAddress
+        - String userAgent
+        - String location
+        - String details
+        - String failureReason
+        - String riskLevel
+        - LocalDateTime eventTime
+        - LocalDateTime createdAt
+        + isSuccess() boolean
+        + isFailure() boolean
+        + isHighRisk() boolean
+        + isLoginRelated() boolean
+        + isTokenRelated() boolean
+        + isPermissionRelated() boolean
+        + markAsHighRisk()
+        + markAsCriticalRisk()
     }
+    note for AuditLogEntity "eventType: LOGIN/LOGOUT/TOKEN_ISSUED/TOKEN_REFRESHED...\neventStatus: SUCCESS/FAILURE/PARTIAL_SUCCESS\nriskLevel: LOW/MEDIUM/HIGH/CRITICAL"
+
     class AuthConfigEntity {
-        <<entity>>
-        -String tenantId
-        -String configKey
-        -String configValue
-        -Boolean enabled
-        +apply()
+        «entity · 认证配置»
+        - Long id
+        - String tenantId
+        - String configType
+        - String configKey
+        - String configValue
+        - String description
+        - Boolean enabled
+        - Boolean isDefault
+        - Integer version
+        - LocalDateTime createdAt / updatedAt
+        - Long createdBy / updatedBy
+        + isEnabled() boolean
+        + isPasswordPolicy() boolean
+        + isSessionPolicy() boolean
+        + isOauth2Client() boolean
+        + isSecurityPolicy() boolean
+        + isMfaPolicy() boolean
+        + isDefaultConfig() boolean
+        + enable() / disable()
+        + incrementVersion()
     }
+    note for AuthConfigEntity "configType: PASSWORD_POLICY/SESSION_POLICY/OAUTH2_CLIENT/SECURITY_POLICY/MFA_POLICY\nconfigValue JSON 格式，支持热更新"
+
+    class PasswordRecoveryEntity {
+        «aggregate root · 密码找回»
+        - String id
+        - Long userId
+        - String tenantId
+        - String username
+        - String channel
+        - String contactHash
+        - String status
+        - Integer attemptCount
+        - String requestIpHash
+        - LocalDateTime expiresAt
+        - LocalDateTime createdAt / updatedAt
+    }
+    note for PasswordRecoveryEntity "状态机: REQUESTED→VERIFIED→CONSUMED\n异常: EXPIRED / MANUAL_REQUIRED\nchannel: EMAIL / SMS\ncontactHash: SHA-256 不存明文"
+
     class TokenPair {
-        <<value object>>
-        +String accessToken
-        +String refreshToken
-        +Long expiresIn
+        «value object»
+        + String accessToken
+        + String refreshToken
+        + String refreshTokenJti
+        + Long expiresIn
+        + String tokenType
     }
+
     class AuthDomainServices {
-        <<domain service>>
+        «domain service»
         AuthenticationProtocol
         MfaService
         TokenService
+        TokenEncryptionService
         JwtKeyRotationService
+        JwtKeyMaterialService
         BruteForceProtectionService
         DeviceTrustService
-        IpAccessControl
+        IpAccessControlService
         PasswordPolicyService
         ResourcePermissionService
         SecurityMonitoringService
+        UnifiedAuditService
+        BiometricAuthService
+        ClientSecretRotationService
+        SsoConfigEncryptionService
+        SSOSessionCleanupService
+        RecoveryChallengeSender
+        RecoveryCredentialStore
+        TokenTtlStrategy
     }
+    note for AuthDomainServices "领域层服务，仅表达业务规则\n不依赖持久化与框架实现（DDD 约束）\n共 ~20 个域服务"
 
     UserEntity "1" --> "*" TokenEntity : 拥有
     UserEntity "1" --> "*" SessionEntity : 建立会话
     UserEntity "1" --> "0..1" MfaConfigEntity : 启用
     UserEntity "1" --> "0..1" TotpEntity : 绑定
+    UserEntity "1" --> "0..1" PasswordRecoveryEntity : 找回
     RoleEntity "1" o-- "*" PermissionEntity : 聚合
     TokenEntity ..> JwtKeyEntity : «use» 签发/校验
+    SessionEntity ..> TokenEntity : «use» 关联
     AuthDomainServices ..> UserEntity : 编排
     AuthDomainServices ..> TokenEntity : 编排
-
-    note for UserEntity "连续登录失败 5 次自动锁定 30 分钟；租户内用户名唯一；密码 BCrypt/Argon2"
-    note for TokenEntity "访问令牌 2h / 刷新令牌 7d；tokenFamily 追踪轮换；SHA-256 哈希存储"
-    note for AuthDomainServices "领域层服务，仅表达业务规则，不依赖持久化与框架实现（DDD 约束）"
+    AuthDomainServices ..> PasswordRecoveryEntity : 编排

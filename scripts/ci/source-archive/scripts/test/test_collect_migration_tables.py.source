@@ -1,0 +1,170 @@
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "ci" / "collect_migration_tables.py"
+
+
+class CollectMigrationTablesTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="apex-migration-tables-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        modules = ["apex-system", "apex-auth-service", "apex-workflow-service",
+                   "apex-file-service", "apex-office-service"]
+        self.put("pom.xml", "<project><modules>" + "".join(
+            f"<module>{module}</module>" for module in modules) + "</modules></project>")
+
+    def put(self, name, content):
+        path = self.root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def migration(self, sql, dialect="mysql", version="1", module="apex-system"):
+        return self.put(f"{module}/src/main/resources/db/migration/{dialect}/"
+                        f"V{version}__fixture.sql", sql)
+
+    def run_case(self, *args, success=True):
+        self.assertTrue(SCRIPT.is_file(), "migration table collector must exist")
+        result = subprocess.run([sys.executable, str(SCRIPT), "--root", str(self.root),
+                                 *args], capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode == 0, success, result.stderr)
+        return result
+
+    def data(self):
+        return json.loads(self.run_case().stdout)
+
+    def test_quotes_comments_and_multiple_statements(self):
+        self.migration("""-- CREATE TABLE fake1(x int);
+# DROP TABLE fake2;
+/* ALTER TABLE fake3 ADD x int; /* nested */ */
+INSERT INTO log VALUES ('CREATE TABLE fake4(x int); it''s fine',
+ 'escaped\\\' ; DROP TABLE fake5;', '/* hi */');
+CREATE TABLE `real``name` (x text DEFAULT '; DROP TABLE fake6;');
+ALTER TABLE `real``name` ADD y int; DROP TABLE IF EXISTS gone, `other`;
+""")
+        row = self.data()["migrations"][0]
+        self.assertEqual([(e["operation"], e["table"]["normalized"], e["line"])
+                          for e in row["events"]], [
+            ("create_table", "real`name", 6), ("alter_table", "real`name", 7),
+            ("drop_table", "gone", 7), ("drop_table", "other", 7)])
+        self.assertEqual(row["events"][0]["table"]["raw"], "`real``name`")
+        self.assertEqual(row["unresolved"], [])
+
+    def test_dollar_quotes_and_postgresql_identifier_case(self):
+        self.migration('''SELECT $tag$ CREATE TABLE fake(x int); $tag$;
+SELECT $$DROP TABLE fake;$$, 'double '' quote';
+CREATE TABLE "My.Schema" . "Ta""ble" (x int);
+CREATE TABLE PUBLIC.Mixed (x int);
+''', dialect="postgresql")
+        events = self.data()["migrations"][0]["events"]
+        self.assertEqual([e["table"]["parts"] for e in events],
+                         [["My.Schema", 'Ta"ble'], ["public", "mixed"]])
+        self.assertEqual(events[0]["table"]["raw"], '"My.Schema" . "Ta""ble"')
+        self.assertEqual(events[0]["line"], 3)
+
+    def test_indexes_and_rename_targets(self):
+        self.migration('''CREATE UNIQUE INDEX IF NOT EXISTS ix ON ONLY "S".t USING btree (x);
+DROP INDEX IF EXISTS ix;
+ALTER INDEX ix RENAME TO ix2;
+ALTER TABLE ONLY "S".t RENAME TO "New";
+ALTER TABLE "New" RENAME COLUMN x TO y;
+''', dialect="postgresql")
+        row = self.data()["migrations"][0]
+        self.assertEqual([e["operation"] for e in row["events"]],
+                         ["create_index", "alter_table", "rename_table", "alter_table"])
+        self.assertEqual(row["events"][0]["table"]["parts"], ["S", "t"])
+        self.assertEqual(row["events"][2]["new_table"]["raw"], '"New"')
+        self.assertEqual(len(row["unresolved"]), 2)
+        self.migration('''DROP INDEX ix ON `db`.`T`;
+RENAME TABLE `db`.`T` TO db.U, db.U TO db.V;
+ALTER TABLE db.V RENAME AS db.W;
+''', version="2")
+        events = self.data()["migrations"][0]["events"]
+        self.assertEqual([e["operation"] for e in events],
+                         ["drop_index", "rename_table", "rename_table", "alter_table", "rename_table"])
+        self.assertEqual(events[0]["table"]["raw"], '`db`.`T`')
+        self.assertEqual(events[2]["new_table"]["normalized"], "db.v")
+
+    def test_unsupported_dynamic_and_conditional_are_explicit(self):
+        self.migration('''/*!80000 CREATE TABLE conditional_t(x int) */;
+SET @ddl = 'CREATE TABLE secret_fake(x int)';
+PREPARE stmt FROM @ddl; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+CREATE VIEW v AS SELECT 1;
+DO $$ BEGIN EXECUTE 'DROP TABLE hidden'; END $$;
+DELIMITER //
+''')
+        row = self.data()["migrations"][0]
+        self.assertEqual(row["events"], [])
+        reasons = [r["reason"] for r in row["unresolved"]]
+        self.assertIn("conditional_execution_comment", reasons)
+        self.assertIn("dynamic_or_procedural_sql", reasons)
+        self.assertIn("unsupported_ddl", reasons)
+        self.assertNotIn("secret_fake", json.dumps(row["unresolved"]))
+
+    def test_malformed_sql_is_unresolved_and_never_invents_tables(self):
+        for sql in ("CREATE TABLE;", "DROP TABLE;", "RENAME TABLE a TO;",
+                    "CREATE TABLE 'fake' (x int);", "CREATE TABLE x (",
+                    "CREATE TABLE x (s text DEFAULT 'unterminated);",
+                    "CREATE TABLE x (x int); /* open", "SELECT $tag$open",
+                    'CREATE TABLE "open'):
+            with self.subTest(sql=sql):
+                self.migration(sql)
+                row = self.data()["migrations"][0]
+                self.assertTrue(row["unresolved"])
+                if not sql.startswith("CREATE TABLE x (x int);"):
+                    self.assertEqual(row["events"], [])
+
+    def test_scanning_hashes_stability_and_differences(self):
+        sql = "CREATE TABLE t(x int);\r\n"
+        source = self.migration(sql)
+        self.migration("ALTER TABLE t ADD y int;", dialect="postgresql")
+        for module in ("apex-auth-service", "apex-workflow-service",
+                       "apex-file-service", "apex-office-service"):
+            self.migration("", module=module, version="2_1")
+        for path in ("apex-system/src/test/resources/db/migration/mysql/V9__test.sql",
+                     "retired/src/main/resources/db/migration/mysql/V9__old.sql",
+                     "apex-system/src/main/resources/db/migration/mysql/build/V9__bad.sql",
+                     "apex-system/src/main/resources/db/migration/mysql/R__repeat.sql"):
+            self.put(path, "CREATE TABLE ignored(x int);")
+        (source.parent / "V99__linked.sql").symlink_to(source)
+        data = self.data()
+        self.assertEqual(data, self.data())
+        rows = data["migrations"]
+        self.assertEqual(len(rows), 6)
+        row = next(r for r in rows if r["domain"] == "system" and r["dialect"] == "mysql")
+        self.assertEqual(row["sha256"], hashlib.sha256(source.read_bytes()).hexdigest())
+        self.assertEqual(row["size"], len(source.read_bytes()))
+        self.assertEqual(row["scope"], "main")
+        self.assertTrue(data["migration_version_differences"])
+        diff = next(d for d in data["table_event_differences"] if d["domain"] == "system")
+        self.assertTrue(diff["mysql_only"])
+        self.assertTrue(diff["postgresql_only"])
+        self.assertIn("not_final_schema", data["limitations"])
+
+    def test_output_and_input_failures_do_not_replace_existing_output(self):
+        source = self.migration("CREATE TABLE t(x int);")
+        output = self.put("result.json", "previous")
+        result = self.run_case("--output", str(output))
+        self.assertEqual(result.stdout, "")
+        self.assertTrue(json.loads(output.read_text())["migrations"])
+        previous = output.read_bytes()
+        source.write_bytes(b"\xff")
+        result = self.run_case("--output", str(output), success=False)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(output.read_bytes(), previous)
+        self.migration("SELECT 1;")
+        self.run_case("--output", str(self.root / "missing/result.json"), success=False)
+        self.assertFalse((self.root / "missing").exists())
+        self.put("pom.xml", "<broken")
+        self.run_case(success=False)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -4,7 +4,7 @@
 
 ## 当前物理边界（2026-10-12）
 
-system 的接口、应用、业务领域与专属持久化已迁入 `apex-system`，Java 包名保持不变；启动由 `apex-system-service` 装配。原 `apex-interfaces`、`apex-application` 已退休。共享 domain 保留 BaseEntity、Token/SMS/Event/缓存/远程调用契约；共享 infrastructure 保留通用配置、缓存、MQ、Outbox、审计、加密、邮件及 HTTP 客户端，不反向依赖 system。HTTP 观测数据通过 ApiCallObservation/ApiCallLogSink 桥接，数据库业务实体留在 system。auth-service 的 system 依赖仅用于 test-scope parity 测试，example 编译使用 system 库。
+system 的接口、应用、业务领域与专属持久化已迁入 `apex-system`，Java 包名保持不变；启动由 `apex-system-service` 装配。原 `apex-system`、`apex-system` 已退休。共享 domain 保留 BaseEntity、Token/SMS/Event/缓存/远程调用契约；共享 infrastructure 保留通用配置、缓存、MQ、Outbox、审计、加密、邮件及 HTTP 客户端，不反向依赖 system。HTTP 观测数据通过 ApiCallObservation/ApiCallLogSink 桥接，数据库业务实体留在 system。auth-service 的 system 依赖仅用于 test-scope parity 测试，example 编译使用 system 库。
 
 本批 application/domain/infrastructure 共 683 个文件迁入 system（281/180/222；main 560、test 123，含资源）；共享层及兄弟服务 801 个生产 Java 文件无 system 类型的直接导入。构建与测试结果以验收清单的本批验证记录为准。
 
@@ -16,12 +16,12 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 
 ```
 ┌─────────────────────────────────────────┐
-│         apex-interfaces (接口层)         │
+│         apex-system (接口层)         │
 │  HTTP端点 | 安全配置 | 过滤器 | 切面      │
 └──────────────┬──────────────────────────┘
                │ 调用
 ┌──────────────▼──────────────────────────┐
-│      apex-application (应用层)           │
+│      apex-system (应用层)           │
 │  用例编排 | 事务管理 | DTO转换            │
 └──────────────┬──────────────────────────┘
                │ 调用
@@ -75,7 +75,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 - 定义聚合根、值对象、领域服务
 - 定义仓储接口（由基础设施层实现）
 
-#### apex-application (应用层)
+#### apex-system (应用层)
 - **用例编排**，协调领域对象完成业务用例
 - 处理事务边界
 - DTO 与领域对象的转换
@@ -86,7 +86,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 - 缓存、消息队列、外部服务集成
 - 提供通用的基础设施组件（缓存、限流、熔断等）
 
-#### apex-interfaces (接口层)
+#### apex-system (接口层)
 - **协议适配**，将 HTTP 请求转换为应用层调用
 - 安全配置（JWT、CORS、Spring Security）
 - WebFlux 过滤器链
@@ -159,8 +159,8 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 
 1. 在 `apex-domain` 中定义聚合根和仓储接口
 2. 在 `apex-infrastructure` 中实现仓储（Mapper + PO + Converter）
-3. 在 `apex-application` 中编写应用服务
-4. 在 `apex-interfaces` 中创建 Handler 和路由
+3. 在 `apex-system` 中编写应用服务
+4. 在 `apex-system` 中创建 Handler 和路由
 
 ### 添加新的基础设施组件
 

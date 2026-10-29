@@ -1,0 +1,207 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fffbeb','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+classDiagram
+    direction TB
+
+    class BaseEntity {
+        «abstract · 领域基类»
+        # Long id
+        # LocalDateTime createTime
+        # LocalDateTime updateTime
+        # Integer lockVersion
+        # Integer deleted
+    }
+
+    class FileEntity {
+        «aggregate root · 文件»
+        - String tenantId
+        - String storageType
+        - Integer totalChunks
+        - Long chunkSize
+        - String fileName / originalName
+        - String filePath / fileUrl
+        - Long fileSize
+        - String fileType / contentType
+        - String bucketName
+        - String md5 / sha256
+        - Long userId
+        - String businessType
+        - String storageStatus
+    }
+    note for FileEntity "businessType: GENERIC/VOTE_PHOTO\nstorageStatus: STORED/ORPHANED/DELETED\nmd5 秒传去重, sha256 完整性校验"
+
+    class FileChunkEntity {
+        «entity · 分片»
+        - String tenantId
+        - String storageType
+        - Long fileId
+        - Integer chunkIndex
+        - Long chunkSize
+        - Integer totalChunks
+        - String md5
+        - String objectName
+        - String bucketName
+        - String storageStatus
+        - Long userId
+        + stored(...)$
+    }
+    note for FileChunkEntity "chunkIndex 从 0 开始\n断点续传: 已存分片跳过"
+
+    class FileShareEntity {
+        «aggregate root · 文件分享»
+        - Long fileId
+        - String tenantId
+        - Long creatorId
+        - String tokenHash
+        - LocalDateTime expireAt
+        - String status
+        + isExpired(now) boolean
+        + isRedeemable(now) boolean
+    }
+    note for FileShareEntity "status: ACTIVE/REVOKED\ntokenHash=SHA-256(token), 明文仅返回一次\n2026-10-28 新增, 时间限只读分享"
+
+    class DocumentEntity {
+        «aggregate root · 文档»
+        - String title
+        - String docType
+        - String category
+        - String content
+        - String fileUrl
+        - Long fileSize
+        - Long authorId / authorName
+        - Integer status
+        - List~String~ tags
+        - Integer viewCount / downloadCount
+        - String tenantId
+        + create(...)$
+        + updateInfo(title, docType, category, content, tags)
+        + attachFile(fileUrl, fileSize)
+        + publish() / archive()
+        + incrementViewCount() / incrementDownloadCount()
+        + isDraft() / isNormal() / isArchived() boolean
+    }
+    note for DocumentEntity "status: DRAFT/NORMAL/ARCHIVED\ntags 标签列表\ncontracts/reports/proposals/manuals"
+
+    class ChartEntity {
+        «aggregate root · 图表»
+        - String chartName
+        - String chartType
+        - String category
+        - String description
+        - String dataSource
+        - Map~String,Object~ config
+        - Integer status
+        - Long creatorId / creatorName
+        - Integer viewCount
+        - String tenantId
+        + create(...)$
+        + updateInfo(...)
+        + publish() / revertToDraft()
+        + incrementViewCount()
+        + isDraft() / isNormal() boolean
+    }
+    note for ChartEntity "ChartStatus: DRAFT/NORMAL\nChartType: LINE/BAR/PIE/SCATTER/RADAR\nconfig: ECharts JSON 配置"
+
+    class StorageService {
+        «interface · 存储端口»
+        + upload(bucket, object, stream, contentType) Mono~String~
+        + download(bucket, object) Mono~InputStream~
+        + delete(bucket, object) Mono~Boolean~
+        + getPresignedUrl(bucket, object, expiry) Mono~String~
+        + exists(bucket, object) Mono~Boolean~
+        + getPhotoUrlPrefix() String
+    }
+    note for StorageService "五后端: Local/MinIO/OSS/七牛/TOS\n响应式 Mono 返回\n阻塞 I/O 隔离到 storage() 池"
+
+    class StorageServiceProvider {
+        «策略工厂»
+        - Map~StorageType,StorageService~ services
+        - StorageService defaultService
+        + getStorageService(StorageType) StorageService
+        + getStorageService(String) StorageService
+        + getDefaultStorageService() StorageService
+    }
+
+    class TenantStatusPort {
+        «interface · 租户状态端口»
+        + isActive(tenantId) boolean
+    }
+    note for TenantStatusPort "文件域不拥有租户数据\n默认实现基于启动配置\n分享兑换时校验租户可用性"
+
+    class StorageType {
+        «enumeration»
+        MINIO
+        VOLCENGINE
+        LOCAL
+        ALIYUN_OSS
+        QINIU
+    }
+
+    class FileRepository {
+        «repository»
+        + save(FileEntity) Mono~FileEntity~
+        + claimMerge(file) Mono~Boolean~
+        + releaseMerge(file) Mono~Boolean~
+        + findById(id) Mono~FileEntity~
+        + findByMd5(md5) Mono~FileEntity~
+        + findByStorageLocation(bucket, name) Mono~FileEntity~
+        + deleteById(id) Mono~Void~
+        + findByUserId(userId) Flux~FileEntity~
+    }
+
+    class FileChunkRepository {
+        «repository»
+        + save(chunk) Mono~FileChunkEntity~
+        + findByFileIdAndIndex(fileId, index) Mono~FileChunkEntity~
+        + findByFileIdOrderByIndex(fileId) Flux~FileChunkEntity~
+        + countByFileId(fileId) Mono~Long~
+        + deleteByFileId(fileId) Mono~Void~
+    }
+
+    class FileShareRepository {
+        «repository»
+        + save(share) Mono~FileShareEntity~
+        + findById(id) Mono~FileShareEntity~
+        + findByTokenHash(hash) Mono~FileShareEntity~
+        + markRevoked(id, tenantId, creatorId, now) Mono~Boolean~
+    }
+
+    class DocumentRepository {
+        «repository»
+        + save(entity) Mono~DocumentEntity~
+        + findById(id) Mono~DocumentEntity~
+        + findAll(tenantId) Flux~DocumentEntity~
+        + deleteById(id, tenantId) Mono~Void~
+        + count(tenantId) Mono~Long~
+    }
+
+    class ChartRepository {
+        «repository»
+        + save(entity) Mono~ChartEntity~
+        + findById(id) Mono~ChartEntity~
+        + findAll(tenantId) Flux~ChartEntity~
+        + deleteById(id, tenantId) Mono~Void~
+        + count(tenantId) Mono~Long~
+    }
+
+    %% ---- 继承 ----
+    FileEntity --|> BaseEntity
+    FileChunkEntity --|> BaseEntity
+    FileShareEntity --|> BaseEntity
+    DocumentEntity --|> BaseEntity
+    ChartEntity --|> BaseEntity
+
+    %% ---- 文件-分片聚合 ----
+    FileEntity "1" --> "*" FileChunkEntity : "fileId 分片"
+    FileEntity "1" --> "*" FileShareEntity : "fileId 分享"
+
+    %% ---- 策略模式 ----
+    StorageServiceProvider --> StorageService : 选择策略
+    StorageServiceProvider ..> StorageType : «use»
+    TenantStatusPort ..> FileShareEntity : «use» 校验
+
+    %% ---- 仓储端口 ----
+    FileRepository ..> FileEntity : «manages»
+    FileChunkRepository ..> FileChunkEntity : «manages»
+    FileShareRepository ..> FileShareEntity : «manages»
+    DocumentRepository ..> DocumentEntity : «manages»
+    ChartRepository ..> ChartEntity : «manages»

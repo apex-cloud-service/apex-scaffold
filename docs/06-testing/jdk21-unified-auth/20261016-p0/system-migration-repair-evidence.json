@@ -1,0 +1,83 @@
+{
+  "date": "2026-10-17",
+  "status": "system fresh-database regression passed; P0 not accepted",
+  "head": "0c506a7ee0f94a07b359edda8ebbab4aac60dab3",
+  "scope": "Evidence update only. No code or SQL changes performed by this evidence task.",
+  "limitations": [
+    "Earlier 5050-test clean verify ended at 2026-10-17T07:18:25+08:00, before these SQL changes; it does not validate the changed SQL.",
+    "No clean verify, existing-database upgrade, Flyway repair, production upgrade or rollback was performed in this round.",
+    "No new complete schema or Flyway history/checksum export was collected. Existing schema evidence files remain the original failure snapshots.",
+    "File SHA-256 values below are not Flyway checksums. Actual old/new Flyway checksum values were not measured.",
+    "Editing already-applied versioned migrations risks checksum validation failures; repair does not execute changed DDL or reconcile schema/data.",
+    "PostgreSQL V27 uses the simple text search configuration, which does not provide Chinese word segmentation.",
+    "Flyway logs warn that PostgreSQL 17.11 is newer than its tested support (PostgreSQL 16). Passing this run does not establish general compatibility."
+  ],
+  "logs": [
+    {"path": "/tmp/system-dual-red.log", "bytes": 89136, "sha256": "2eed31d6b70b49522169bcdf524861631a59b7a54776d58af9f7eb463eb8332b", "build": "BUILD FAILURE", "finished_at": "2026-10-17T10:51:36+08:00", "summary": {"tests": 2, "failures": 0, "errors": 2, "skipped": 0}, "line_references": [719, 721, 723, 727, 729, 731, 736, 752, 755]},
+    {"path": "/tmp/system-dual-final.log", "bytes": 234877, "sha256": "eb011d3048de6ac095f8b46508d95cab72778e8b48930cd56b9039d34b6fcf8b", "build": "BUILD SUCCESS", "finished_at": "2026-10-17T12:28:45+08:00", "reactor_projects_success": 10, "summary": {"tests": 12, "failures": 0, "errors": 0, "skipped": 0}, "line_references": [757, 759, 1134, 1135, 1138, 1139, 1216, 1218, 1223, 1347, 1349, 1353, 1387, 1390]},
+    {"path": "/tmp/system-dual-spotless-final.log", "bytes": 14778, "sha256": "86b6b556feab4ccc537cde0441122581fff356aaf425090c212413616ad10383", "build": "BUILD SUCCESS", "finished_at": "2026-10-17T12:28:47+08:00", "reactor_projects_success": 10, "line_references": [55, 128, 129, 142, 151, 153, 156]}
+  ],
+  "log_retention": "Only original /tmp paths, file hashes, counters and reviewed noncredential line references retained; full logs and XML properties were not copied. Original command process exit codes are not recoverable from these files alone.",
+  "tests": {
+    "report_directory": "apex-system/target/surefire-reports",
+    "java_version": "17.0.12",
+    "java_home": "/Users/eric/.sdkman/candidates/java/17.0.12-oracle",
+    "suites": [
+      {"class": "com.apex.scaffold.interfaces.test.FlywayMigrationStartupTest", "tests": 6, "failures": 0, "errors": 0, "skipped": 0, "time_seconds": 58.017, "xml_sha256": "2c6aca1e5e4a3cb8d31eaa2a9851a4df3cfa68467ac54d3566f5f9502d6cb3b0"},
+      {"class": "com.apex.scaffold.interfaces.test.SystemDualDatabaseMigrationIntegrationTest", "tests": 2, "failures": 0, "errors": 0, "skipped": 0, "time_seconds": 61.685, "xml_sha256": "084537f89fb4ffa8d3ecee2ecb0769ff13d97e5a4e1f07796e4aed62d9e1218c"},
+      {"class": "com.apex.scaffold.interfaces.test.FlywayMigrationVersionTest", "tests": 4, "failures": 0, "errors": 0, "skipped": 0, "time_seconds": 0.03, "xml_sha256": "c8849687eb033bd3205bb19b2a8c7c6bcf2059ee5df548b01f4f840bafcf36ad"}
+    ],
+    "assertion_source": "apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java",
+    "assertion_lines": [37, 41, 62, 63, 64, 65, 66, 68, 69],
+    "assertion_scope": "CREATE DATABASE, migrate=61, validate, pending empty, second migrate=0, applied=61 with ordered V1-V61 applied states; selected config/permission/menu/column/social seed checks. This is not a full schema comparison or an existing production-data upgrade."
+  },
+  "databases": [
+    {"vendor": "mysql", "database": "apex_reg_a119e67144b444eda161e2bb227f89e9", "endpoint": "127.0.0.1:13317", "migrations_executed": 61, "version": "61", "validate": "passed", "pending": 0, "second_migrate_executed": 0, "applied": 61, "basis": "final log lines 759-1138 and passing parameterized test assertions"},
+    {"vendor": "postgresql", "database": "apex_reg_4547f75e60664165892a25c64c5db0c8", "schema": "public", "endpoint": "127.0.0.1:41187", "migrations_executed": 61, "version": "61", "validate": "passed", "pending": 0, "second_migrate_executed": 0, "applied": 61, "basis": "final log lines 1139-1223 and passing parameterized test assertions"}
+  ],
+  "unchanged_failure_snapshots": [
+    {"path": "mysql-schema-evidence.json", "sha256": "5d1cbb2176cee831f1c6824ca4002d7b73763dd0638b6c82f0c8447eba587ea1", "system_failure": "V21 missing wf_definition; partial MySQL DDL committed"},
+    {"path": "postgresql-schema-evidence.json", "sha256": "96f1d91cf09ae92ff081e12f56dd3efb87b8c80fd784223fd7509beb4b3275fe", "system_failure": "V1 duplicate uk_user_id; transaction rolled back"}
+  ],
+  "migration_hash_collection": {
+    "selection_command": "git diff --name-only -- apex-system/src/main/resources/db/migration/mysql apex-system/src/main/resources/db/migration/postgresql",
+    "old_bytes_source": "git show HEAD:<migration-directory>/<file>",
+    "current_bytes_source": "current working-tree file bytes",
+    "base_directory": "apex-system/src/main/resources/db/migration",
+    "algorithm": "SHA-256",
+    "count": 29,
+    "vendor_counts": {"mysql": 14, "postgresql": 15},
+    "entry_columns": ["vendor", "file", "head_sha256", "current_sha256"],
+    "entries": [
+      ["mysql", "V21__enhance_workflow_tables.sql", "1d1ba7d0adf17c546f23876be403c1482e3ae8ac763de4529e7da2a73e17b3d3", "83c8608b90a2d686cf2fbaa707647ea961584d94e994b31f19985117db1ec0a8"],
+      ["mysql", "V23__add_database_config_menu.sql", "363d8f19433a14c172bf9f6f24a495d58e95c2f0a6f888e561b18e344adf8497", "93d459758ea295ada958046366b4cdda128b01696777e6adeec33ff3f607dc16"],
+      ["mysql", "V24__remove_foreign_keys.sql", "25ca0e3617314271ff3f3f676d1d46153e4d744605242770486e085de4a40413", "1aadb1210296454d12e92a3438a103cb46b0b014dc84b1517d1dde195f93af04"],
+      ["mysql", "V25__oauth2_authorization_server_schema.sql", "4103cd58543885a4fd342650535420ffc2f67f7c1f59e7410086314b16785522", "428b4b5082e5a74a598d223f53e5a66d0cdec49ee250ba22957fe870cd3fe23e"],
+      ["mysql", "V28__add_job_query_menu_and_permissions.sql", "48b7cb7bbd9e2e8487d429618100dad6fdbb03a2bdd5743eb55f1b5249777022", "e44c17de4efb61df86e689c13225eaa095ff472caa4a2ef59dc428594941020e"],
+      ["mysql", "V30__add_office_admin_permissions.sql", "c14d070c66203902b4b44a1d040348d7940a6caa73fe6eda21e0d291d521da8f", "74aadaf732711ecb839b301c74103face2fc40647cccc25fc3847f54b8745975"],
+      ["mysql", "V33__add_office_platform_menus.sql", "1cc75d2162f86e318f0764f1c644cfa9dbf2426781160655ad5244c60cd1e74a", "c077052f92289f14411ca9e3a3785caad6793a1a433814e486ce34ac8a47a3b4"],
+      ["mysql", "V36__add_office_message_menu_and_permissions.sql", "9e7ea3f7defed68a83f1b4ccc787dfd329fe146f6bd6a6c7c083c1acf87777af", "0ab2de82b2007a7590f78db59de0ce8d2875330631a9e2c380807667269bdf9f"],
+      ["mysql", "V42__add_token_encryption.sql", "8f3754d32fec52a20408c375cf4f862125e6678bcfa36e2d582b29fa2c889126", "df9a7c3a20b21a3be1c80ab8d2c11be37c155fee9ca5001eb1c9ceb02b75299e"],
+      ["mysql", "V48__security_enhancements.sql", "efad99b9f6a495aa2d4f50c882a0daccffd0834c1e42daa893d9172a0f187808", "a45c144693b32e5bd9e711e1d3ed4474fe9e6381cf152bf70ead7c4a9f114867"],
+      ["mysql", "V51__add_keycloak_fields.sql", "c3891d1979f97b8014ca9c05aaa67a8659ed9c1fb989d99d1930aa88c9401d22", "5bcce0eec1a75873b724e3c3c5bacbada38c4e90c391aca11018a2e5bd416e38"],
+      ["mysql", "V52__add_token_revocation_tracking.sql", "372c433cc744cf2fa0360a0e08fa33a82697b89f1d5c2a97bab8fbce2781243a", "e1ef7fce809a07442484e87ab7c8fd4e5f461b92841617c5a3a216b0b398b9c4"],
+      ["mysql", "V58__add_token_revocation_tracking.sql", "35ae8382a60a93c4cee6539149e4b40c9a5d556bd11d9be33efc92a5dce7dbf2", "7ee27811bfc618c8fa08a4d516cb6681af597cbaa3995a90f72d6c77dd41a5f0"],
+      ["mysql", "V59__multi_client_account.sql", "f194bffbc73613efad24a0707c768bd2ab694a0c936ef4bd3f06dcc631dff42b", "7f61aee0c9ad3a2dae03d1869800936e317806a35ab19b20ee18ace0a7699b82"],
+      ["postgresql", "V1__init_schema.sql", "2ef0fafbaab89825be0c26054ace6b854a40a65079e45ebc61cddc3599a2f1fb", "4f3ec3eb40fa82fe4ec0f6a994f3675d8b83281a1a3e195c48a68c47b3f415a6"],
+      ["postgresql", "V21__enhance_workflow_tables.sql", "8468646ff0088ca63be120cc1812c362cdd1b97173eca1fd47a5eac94a4ea30c", "b4544cc778887d65c1fa048f7b7f4725447325dc71d3e89d4918ddf2eba44ed5"],
+      ["postgresql", "V23__add_database_config_menu.sql", "3f690aa256443a86763aa6c3584c7889257d50c5a8f4a3571bb1c85b25d2662c", "f7ef37ff2bafb75dee594c8728e5772f61af43a0de9b87144e95e8375956c328"],
+      ["postgresql", "V25__oauth2_authorization_server_schema.sql", "41092fd0f2d672c2bbcb3f4b4a210a7624c1db5fd80cee07f663a860be031a9b", "e6aca5e17bd39a0a114b793fe335092e47b1abb197405764a3f82a0b86d70f12"],
+      ["postgresql", "V27__create_document_and_chart_tables.sql", "7d59a2041506aa3126e69cc8d74f8d61f73ec7f0bb2ab2d162f0cff3cc734ebe", "dbee671db6be9356125bb3684c24545069f64bc1b3fad188014ea973840f7335"],
+      ["postgresql", "V28__add_job_query_menu_and_permissions.sql", "571c8a906d125ac55913067a66441396541054d6bef8602ef505a591a5972256", "e44c17de4efb61df86e689c13225eaa095ff472caa4a2ef59dc428594941020e"],
+      ["postgresql", "V30__add_office_admin_permissions.sql", "551164aa4dc25787fd4e8ea8b40b06d4cb6cc5ad6858edcd7e1e5de5c575634a", "74aadaf732711ecb839b301c74103face2fc40647cccc25fc3847f54b8745975"],
+      ["postgresql", "V33__add_office_platform_menus.sql", "8b6b65a62ca5be30dfc5095b0e3d6e418d4f05f024b6a3a5c311bcf77b12219b", "c077052f92289f14411ca9e3a3785caad6793a1a433814e486ce34ac8a47a3b4"],
+      ["postgresql", "V36__add_office_message_menu_and_permissions.sql", "5331191d07d29df571390cbab0a57217c48eb720942e8f75586d0570616241fb", "0ab2de82b2007a7590f78db59de0ce8d2875330631a9e2c380807667269bdf9f"],
+      ["postgresql", "V40__fix_schema_inconsistencies_based_on_po.sql", "d960877ba17da6b94fd0b69619a9068374bdba69fa31a40ef74ccb4864f1fbd9", "57dd197ca93ddaa54871d221f9ab7550916968810683c7ac6d48535fac8c9481"],
+      ["postgresql", "V41__add_generator_auth_sso_office_tables.sql", "a717e12f8ba0ae379c3280520d954a0e434c6c5072ef18efac63e42e5067f8cc", "dd544e8b530ce37fadb74341ce6ac97d58a33d634d8be40a61c61dd51c364552"],
+      ["postgresql", "V42__add_office_platform_tables.sql", "357af37e1efcfc8080f34175dc6f0824c57846ba9f7f54526a061069ced8b01e", "57f1c30600e40949d452ce8b818e4f107ef665fd5081a6d0c2891a3815b733a5"],
+      ["postgresql", "V47__add_token_revocation_tracking.sql", "952dc9201c85f83748816f2cf67457a921a58229514bce91eb3e17d9bc48d67c", "336f31f88437b2b9143168047bef7b0fc53e81547b65824f0dc5f627c78465b8"],
+      ["postgresql", "V50__register_module_permission_codes.sql", "ba926c1d1a2406af741db244b3400cbafa98df1e8a8e321ecebfe2f69452effc", "72357909da88e4945c27eee944c5a0e0ff15cc3da79aa8c643bd3e34dae22a77"],
+      ["postgresql", "V59__multi_client_account.sql", "bd35ba735764c69a2bf3ec2f6c51f8d2a002f9468c819806bdeab985bd7c044d", "d2e975f2658188b4b730bf7caa7c8ca7a79ac6a6a3ae2e48d36c6fe642896dda"]
+    ]
+  }
+}

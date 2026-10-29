@@ -103,7 +103,7 @@
   <text x="520" y="746" class="box-desc">3. 聚合内强一致，聚合间通过领域事件解耦。</text>
   <text x="786" y="660" class="box-title" font-size="14">典型引用方</text>
   <text x="786" y="690" class="box-desc">apex-infrastructure（实现仓储/端口）</text>
-  <text x="786" y="718" class="box-desc">apex-application · apex-workflow · apex-interfaces</text>
+  <text x="786" y="718" class="box-desc">apex-system · apex-workflow · apex-system</text>
   <text x="786" y="746" class="note">apex-common 提供基类与契约，本模块扩展领域语义</text>
 
   <text x="700" y="872" class="note" text-anchor="middle">apex-domain 承载业务规则与反向外依赖，是 DDD 的中心内核（依赖深度 L1）</text>

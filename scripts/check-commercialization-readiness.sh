@@ -7,7 +7,24 @@
 # 日期: 2026-09-09
 # ============================================================================
 
-set -e
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)" || exit
+source "${SCRIPT_DIR}/lib/common.sh" || exit
+set -eo pipefail
+
+# 缺失文件属于检查未通过；实际读取错误必须中止并保留退出码。
+matches_file() {
+    local status
+    [[ -f "$2" ]] || return 1
+    if grep -q -e "$1" -- "$2"; then
+        return 0
+    else
+        status=$?
+        if [[ $status == 1 ]]; then
+            return 1
+        fi
+        exit "$status"
+    fi
+}
 
 # 颜色定义
 RED='\033[0;31m'
@@ -31,19 +48,19 @@ print_header() {
 # 打印成功信息
 print_success() {
     echo -e "${GREEN}✓ $1${NC}"
-    ((PASSED++))
+    PASSED=$((PASSED + 1))
 }
 
 # 打印失败信息
 print_error() {
     echo -e "${RED}✗ $1${NC}"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
 }
 
 # 打印警告信息
 print_warning() {
     echo -e "${YELLOW}⚠ $1${NC}"
-    ((WARNING++))
+    WARNING=$((WARNING + 1))
 }
 
 # 打印信息
@@ -58,20 +75,20 @@ check_code_generality() {
     print_header "检查1: 代码通用性"
     
     # 检查Sample/Report实体是否有说明
-    if grep -q "模块说明" apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SampleEntity.java; then
+    if matches_file "模块说明" apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SampleEntity.java; then
         print_success "Sample实体已添加通用说明"
     else
         print_error "Sample实体缺少通用说明"
     fi
     
-    if grep -q "模块说明" apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/ReportEntity.java; then
+    if matches_file "模块说明" apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/ReportEntity.java; then
         print_success "Report实体已添加通用说明"
     else
         print_error "Report实体缺少通用说明"
     fi
     
     # 检查微信集成标注
-    if grep -q "可选集成" apex-domain/src/main/java/com/apex/scaffold/domain/gateway/WeChatGateway.java; then
+    if matches_file "可选集成" apex-domain/src/main/java/com/apex/scaffold/domain/gateway/WeChatGateway.java; then
         print_success "微信集成已标注为可选模块"
     else
         print_error "微信集成未标注可选性"
@@ -85,13 +102,13 @@ check_documentation() {
     print_header "检查2: 文档通用性"
     
     # 检查商业化文档是否更新
-    if grep -q "v3.*2026-09-09" docs/COMMERCIAL_OPTIMIZATION_PROPOSAL.md; then
+    if matches_file "v3.*2026-09-09" docs/COMMERCIAL_OPTIMIZATION_PROPOSAL.md; then
         print_success "COMMERCIAL_OPTIMIZATION_PROPOSAL.md已更新"
     else
         print_warning "COMMERCIAL_OPTIMIZATION_PROPOSAL.md可能未更新"
     fi
     
-    if grep -q "项目已基本完成通用化" docs/COMMERCIAL_REFACTORING_PLAN.md; then
+    if matches_file "项目已基本完成通用化" docs/COMMERCIAL_REFACTORING_PLAN.md; then
         print_success "COMMERCIAL_REFACTORING_PLAN.md已更新"
     else
         print_warning "COMMERCIAL_REFACTORING_PLAN.md可能未更新"
@@ -118,14 +135,14 @@ check_database_scripts() {
     print_header "检查3: 数据库迁移脚本"
     
     # 检查V9脚本注释
-    if grep -q "通用用户属性" apex-system/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql; then
+    if matches_file "通用用户属性" apex-system/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql; then
         print_success "V9迁移脚本注释已优化"
     else
         print_error "V9迁移脚本注释未优化"
     fi
     
     # 统计迁移脚本数量
-    MIGRATION_COUNT=$(find apex-system/src/main/resources/db/migration/mysql -name "V*.sql" | wc -l)
+    MIGRATION_COUNT=$(safe_find apex-system/src/main/resources/db/migration/mysql 'V*.sql' | wc -l)
     print_info "Flyway迁移脚本总数: $MIGRATION_COUNT"
 }
 
@@ -136,7 +153,7 @@ check_module_structure() {
     print_header "检查4: 模块结构"
     
     # 检查核心模块
-    MODULES=("apex-common" "apex-domain" "apex-application" "apex-workflow" "apex-infrastructure" "apex-system" "apex-example" "apex-generator")
+    MODULES=("apex-common" "apex-domain" "apex-workflow" "apex-infrastructure-persistence" "apex-infrastructure-cache" "apex-infrastructure-messaging" "apex-infrastructure-remote" "apex-infrastructure-integration" "apex-system" "apex-example" "apex-generator")
     
     for module in "${MODULES[@]}"; do
         if [ -d "$module" ]; then
@@ -184,7 +201,9 @@ check_license_mechanism() {
     fi
     
     # 检查FeatureGate注解
-    if find apex-common/src -name "FeatureGate.java" | grep -q .; then
+    local feature_files
+    feature_files=$(safe_find apex-common/src 'FeatureGate.java')
+    if [[ -n "$feature_files" ]]; then
         print_success "FeatureGate注解存在"
     else
         print_error "FeatureGate注解不存在"
@@ -198,9 +217,9 @@ check_profiles() {
     print_header "检查7: 三档Profile配置"
     
     # 检查pom.xml中的profile
-    if grep -q "<id>basic</id>" pom.xml && \
-       grep -q "<id>standard</id>" pom.xml && \
-       grep -q "<id>enterprise</id>" pom.xml; then
+    if matches_file "<id>basic</id>" pom.xml && \
+       matches_file "<id>standard</id>" pom.xml && \
+       matches_file "<id>enterprise</id>" pom.xml; then
         print_success "三档Profile配置存在"
     else
         print_error "三档Profile配置不完整"
@@ -214,7 +233,7 @@ check_tests() {
     print_header "检查8: 测试覆盖"
     
     # 统计测试文件数量
-    TEST_COUNT=$(find . -name "*Test.java" -not -path "./target/*" | wc -l)
+    TEST_COUNT=$(safe_find . '*Test.java' | wc -l)
     print_info "测试文件总数: $TEST_COUNT"
     
     if [ "$TEST_COUNT" -gt 200 ]; then

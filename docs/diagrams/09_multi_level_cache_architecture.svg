@@ -126,7 +126,7 @@
   <!-- 数据库层 -->
   <rect x="50" y="700" width="1500" height="240" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
   <rect x="50" y="700" width="1500" height="50" rx="12" fill="#d97706"/>
-  <text x="80" y="730" class="layer-title">数据源层 (MySQL 8.x + MyBatis-Plus)</text>
+  <text x="80" y="730" class="layer-title">数据源层 (MySQL 9.x + MyBatis-Plus)</text>
   <text x="80" y="748" class="note-text" fill="white">持久化存储 · 最终数据源 · 缓存未命中回源</text>
 
   <rect x="80" y="780" width="450" height="140" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>

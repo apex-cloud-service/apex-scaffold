@@ -1,0 +1,172 @@
+{
+  "status": "passed_with_postgresql_upgrade_limitation",
+  "started_at": "2026-10-19T05:25:37.310708+00:00",
+  "baseline_credit": false,
+  "databases": {
+    "mysql": {
+      "name": "apex-consent-v40-e2d45f7125f6",
+      "image": "localhost/mysql:8.0",
+      "network": "none",
+      "storage": "tmpfs",
+      "scenarios": {
+        "legacy": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "original_failure": "ERROR 1062 (23000) at line 25: Duplicate entry '' for key 'oauth2_authorization_consent.PRIMARY'\n",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2026-10-19 05:26:11\t2026-10-19 05:26:11\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659\ta\t用户\tread,write\t2026-10-19 05:26:11\t2026-10-19 05:26:11\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2026-10-19 05:26:11\t2026-10-19 05:26:11\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2026-10-19 05:26:11\t2026-10-19 05:26:11",
+          "passed": true
+        },
+        "partial": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659\ta\t用户\tread,write\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2020-01-02 03:04:05\t2021-02-03 04:05:06",
+          "passed": true
+        },
+        "no_primary_key": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2026-10-19 05:26:29\t2026-10-19 05:26:29\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659\ta\t用户\tread,write\t2026-10-19 05:26:29\t2026-10-19 05:26:29\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2026-10-19 05:26:29\t2026-10-19 05:26:29\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2026-10-19 05:26:29\t2026-10-19 05:26:29",
+          "passed": true
+        },
+        "existing_ids": {
+          "before": "a\tb:c\tread\na\t用户\tread,write\na:b\tc\twrite\nb\t用户\tprofile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "original_consent_v40_after_repair_and_replay": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f\ta\tb:c\tread\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nkeep-this-id\ta\t用户\tread,write\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d\ta:b\tc\twrite\t2020-01-02 03:04:05\t2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f\tb\t用户\tprofile\t2020-01-02 03:04:05\t2021-02-03 04:05:06",
+          "passed": true
+        }
+      },
+      "container_id": "a810597633ae0357651d6e42aabd67a9c93cfde65fc7a44203292635a85c06d2",
+      "version": "8.0.46",
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "repair_sha256": "243510a4aef34dd5a2ccbc8c9a10dd601102cef8064685fa1d7f5019aba9f532",
+      "unmodified_full_v40_after_preflight_and_replay": true
+    },
+    "postgresql": {
+      "name": "apex-consent-v40-d3e2edf3106e",
+      "image": "localhost/postgres:17-alpine",
+      "network": "none",
+      "storage": "tmpfs",
+      "scenarios": {
+        "legacy": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "original_failure": "ERROR:  column \"id\" of relation \"oauth2_authorization_consent\" contains null values\n",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2026-10-19 05:27:03.117649|2026-10-19 05:27:03.117649\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659|a|用户|read,write|2026-10-19 05:27:03.117649|2026-10-19 05:27:03.117649\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2026-10-19 05:27:03.117649|2026-10-19 05:27:03.117649\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2026-10-19 05:27:03.117649|2026-10-19 05:27:03.117649",
+          "passed": true
+        },
+        "partial": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659|a|用户|read,write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2020-01-02 03:04:05|2021-02-03 04:05:06",
+          "passed": true
+        },
+        "no_primary_key": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2026-10-19 05:27:16.085025|2026-10-19 05:27:16.085025\nlegacy:e9c72ffe81ab6d20d9405ff517539d2ca3fc69094dd37a00bd5ba3fd4058b659|a|用户|read,write|2026-10-19 05:27:16.085025|2026-10-19 05:27:16.085025\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2026-10-19 05:27:16.085025|2026-10-19 05:27:16.085025\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2026-10-19 05:27:16.085025|2026-10-19 05:27:16.085025",
+          "passed": true
+        },
+        "existing_ids": {
+          "before": "a|b:c|read\na|用户|read,write\na:b|c|write\nb|用户|profile",
+          "business_duplicate_rejected": true,
+          "id_duplicate_rejected": true,
+          "after": "legacy:068729163d37b78609133cb4d137048b820766defd2abb58f9f0587215607a5f|a|b:c|read|2020-01-02 03:04:05|2021-02-03 04:05:06\nkeep-this-id|a|用户|read,write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:ee9f9f7a7e3b4933faaf1b4394f6b83e2eaaba981795c9cb95b476f60b89352d|a:b|c|write|2020-01-02 03:04:05|2021-02-03 04:05:06\nlegacy:efccc07ba81a9107c5f3d5fbc6d68a4dac0a1743a38b44b0445a4eda165eb02f|b|用户|profile|2020-01-02 03:04:05|2021-02-03 04:05:06",
+          "passed": true
+        }
+      },
+      "container_id": "c47b24bef54782ee5eb8e14c34e6e286ed6da990d1eddaf2c9f15f67ce0a7f33",
+      "version": "PostgreSQL 17.11 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "copied_files": [
+        {
+          "source": "apex-system/src/main/resources/db/upgrade/postgresql/consent_before_v40.sql",
+          "target": "/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql",
+          "sha256": "eac19e40fd3d7120157fcf35d4f43620fe5dd7476dafcde90b1391816d41b80f"
+        },
+        {
+          "source": "apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql",
+          "target": "/tmp/consent-upgrade/upgrade/postgresql/run_v40_with_consent_backup.sql",
+          "sha256": "b247861ead65d2601c1813ee893a8d4200acf74b40278d185f243d39ff41586b"
+        },
+        {
+          "source": "apex-system/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql",
+          "target": "/tmp/consent-upgrade/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql",
+          "sha256": "57dd197ca93ddaa54871d221f9ab7550916968810683c7ac6d48535fac8c9481"
+        }
+      ],
+      "source_sha256": "57dd197ca93ddaa54871d221f9ab7550916968810683c7ac6d48535fac8c9481",
+      "repair_sha256": "eac19e40fd3d7120157fcf35d4f43620fe5dd7476dafcde90b1391816d41b80f",
+      "unexpected_id_types": {
+        "VARCHAR(50)": {
+          "rejected": true,
+          "rollback_verified": true,
+          "error": "psql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:6: NOTICE:  column \"id\" of relation \"oauth2_authorization_consent\" already exists, skipping\npsql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:14: ERROR:  unexpected consent id type; VARCHAR(100) required; manual review required\nCONTEXT:  PL/pgSQL function inline_code_block line 6 at RAISE\n"
+        },
+        "VARCHAR(101)": {
+          "rejected": true,
+          "rollback_verified": true,
+          "error": "psql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:6: NOTICE:  column \"id\" of relation \"oauth2_authorization_consent\" already exists, skipping\npsql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:14: ERROR:  unexpected consent id type; VARCHAR(100) required; manual review required\nCONTEXT:  PL/pgSQL function inline_code_block line 6 at RAISE\n"
+        },
+        "TEXT": {
+          "rejected": true,
+          "rollback_verified": true,
+          "error": "psql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:6: NOTICE:  column \"id\" of relation \"oauth2_authorization_consent\" already exists, skipping\npsql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:14: ERROR:  unexpected consent id type; VARCHAR(100) required; manual review required\nCONTEXT:  PL/pgSQL function inline_code_block line 6 at RAISE\n"
+        },
+        "BIGINT": {
+          "rejected": true,
+          "rollback_verified": true,
+          "error": "psql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:6: NOTICE:  column \"id\" of relation \"oauth2_authorization_consent\" already exists, skipping\npsql:/tmp/consent-upgrade/upgrade/postgresql/consent_before_v40.sql:14: ERROR:  unexpected consent id type; VARCHAR(100) required; manual review required\nCONTEXT:  PL/pgSQL function inline_code_block line 6 at RAISE\n"
+        }
+      },
+      "wrapper_sha256": "b247861ead65d2601c1813ee893a8d4200acf74b40278d185f243d39ff41586b",
+      "injected_failure": "ERROR:  division by zero\n",
+      "transaction_rollback_verified": true,
+      "injected_failure_scope": "stdin with only the V40 include expanded and division by zero before COMMIT; rollback only, separate from original-file include verification",
+      "wrapper_file_first_output": "BEGIN\nLOCK TABLE\nSELECT 4\nTRUNCATE TABLE\nALTER TABLE\nDROP INDEX\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nALTER TABLE\nCREATE INDEX\nCOMMENT\nCOMMENT\nCOMMENT\nALTER TABLE\nCOMMENT\nALTER TABLE\nCOMMENT\nALTER TABLE\nCOMMENT\nALTER TABLE\nCOMMENT\nALTER TABLE\nCOMMENT\nALTER TABLE\nCOMMENT\nALTER TABLE\nCOMMENT\nALTER TABLE\nCOMMENT\nINSERT 0 4\nCOMMIT",
+      "wrapper_file_replay_output": "BEGIN\nLOCK TABLE\nV40 source columns absent; review existing schema/history before proceeding\nCOMMIT",
+      "wrapper_file_command": [
+        "podman",
+        "exec",
+        "apex-consent-v40-d3e2edf3106e",
+        "psql",
+        "-X",
+        "-U",
+        "postgres",
+        "-d",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-At",
+        "-f",
+        "/tmp/consent-upgrade/upgrade/postgresql/run_v40_with_consent_backup.sql"
+      ],
+      "original_wrapper_relative_include_verified": true,
+      "unmodified_full_v40_via_transactional_wrapper_and_replay": true,
+      "limitation": "psql operational wrapper only; no Flyway history repair/marking. Wrapper replay skips already renamed source columns; original PostgreSQL V40 itself is not idempotent."
+    }
+  },
+  "cleanup": {
+    "mysql": {
+      "container_and_anonymous_volumes_removed": true
+    },
+    "postgresql": {
+      "container_and_anonymous_volumes_removed": true
+    }
+  },
+  "verified_union": {
+    "verified": 403,
+    "denominator": 586,
+    "remaining": 183
+  },
+  "ended_at": "2026-10-19T05:27:50.789531+00:00"
+}

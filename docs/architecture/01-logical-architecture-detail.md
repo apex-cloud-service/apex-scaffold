@@ -1,8 +1,10 @@
 # Apex Scaffold DDD 四层逻辑架构详解
 
-> 图表版本：2.0\
-> 项目基线：根 POM `1.2.0`，Java 17，Spring Boot 3.5.15\
-> 更新日期：2026-09-04
+> 图表版本：2.1\
+> 项目基线：根 POM `1.3.1`，Java 21，Spring Boot 3.5.15\
+> 更新日期：2026-10-28
+
+> **⚠️ 模块演进说明**：原 `apex-system` 已承接原 `apex-system`（interfaces/application 源码已迁入）、`apex-auth`（原认证中心入口）等业务库模块。当前全仓 31 个 Maven 模块的完整清单与依赖关系以根 [AGENTS.md](../../AGENTS.md) 和 [system-architecture.md](system-architecture.md) §2.3 为准。本文中出现的 `apex-system` 指代当前的 system 业务库（含 interfaces/application/domain/infrastructure 四层），不再指代已退役的独立 interfaces/application 模块。
 
 ![Apex Scaffold DDD 四层逻辑架构图](../diagrams/01_logical_architecture.svg)
 
@@ -22,14 +24,14 @@
 
 | 层次    | Maven 模块              | 核心职责                        | 允许的主要依赖             |
 | ----- | --------------------- | --------------------------- | ------------------- |
-| 接口层   | `apex-interfaces`     | 协议适配、请求校验、安全入口、响应转换、OpenAPI | 应用层、领域层；启动装配时接入基础设施 |
-| 应用层   | `apex-application`    | 用例编排、事务边界协调、DTO 转换、跨聚合协作    | 领域层、公共模块            |
+| 接口层   | `apex-system`     | 协议适配、请求校验、安全入口、响应转换、OpenAPI | 应用层、领域层；启动装配时接入基础设施 |
+| 应用层   | `apex-system`    | 用例编排、事务边界协调、DTO 转换、跨聚合协作    | 领域层、公共模块            |
 | 领域层   | `apex-domain`         | 聚合、实体、值对象、领域服务、端口接口         | 公共模块及必要的基础类型        |
 | 基础设施层 | `apex-infrastructure` | 数据库、缓存、消息、存储、搜索、第三方服务的适配器   | 领域层、公共模块            |
 
 源码依赖规则由 `LayeringArchTest` 固化：领域层不得依赖接口层或基础设施层，应用层不得导入接口层或基础设施实现，基础设施层不得依赖接口层，领域层不得依赖 MyBatis-Plus。测试还禁止在返回 `Mono` 或 `Flux` 的方法上直接使用普通 JDBC `@Transactional`。
 
-当前 `apex-application/pom.xml` 仍声明了 `apex-infrastructure` Maven 依赖，而源码规则禁止应用代码导入基础设施包。两者含义不同：前者属于构建类路径，后者约束源码依赖方向。后续演进应继续评估是否可移除该构建依赖，使模块描述与源码规则完全一致。
+当前 `apex-system/pom.xml` 仍声明了 `apex-infrastructure` Maven 依赖，而源码规则禁止应用代码导入基础设施包。两者含义不同：前者属于构建类路径，后者约束源码依赖方向。后续演进应继续评估是否可移除该构建依赖，使模块描述与源码规则完全一致。
 
 ## 3. 接口层
 
@@ -119,7 +121,7 @@
 | 对象存储  | Local、MinIO、火山云 TOS                                                  | 多实现可选，实际 Provider 由配置决定               |
 | 搜索    | Meilisearch 适配能力                                                     | 依赖和搜索端口存在，运行可用性取决于配置与外部服务             |
 | 外部服务  | 微信、短信、受管远程 API 客户端                                                   | 按业务模块和配置启用                            |
-| 治理与监控 | Actuator、Micrometer、Prometheus、Sentinel、Resilience4j、Zipkin Reporter | 监控在标准版默认启用；链路追踪在企业版默认启用               |
+| 治理与监控 | Actuator、Micrometer、Prometheus、Sentinel（流控）、Resilience4j（熔断）、Zipkin Reporter | 监控在标准版默认启用；链路追踪在企业版默认启用               |
 
 基础设施层中的 `UserRepositoryImpl`、`RoleRepositoryImpl`、`DeptRepositoryImpl`、工作流 RepositoryImpl 等实现领域仓储接口；`CacheServiceImpl`、`LocalStorageServiceImpl`、`MinioServiceImpl`、`VolcEngineStorageServiceImpl` 等实现可替换技术能力。
 

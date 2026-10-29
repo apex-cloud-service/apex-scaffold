@@ -40,9 +40,9 @@
 
 ### 2.2 已有优雅关机能力
 
-`apex-interfaces/src/main/resources/application.yml` 已配置 `server.shutdown: graceful`。
+`apex-system/src/main/resources/application.yml` 已配置 `server.shutdown: graceful`。
 
-`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java` 已实现 `SmartLifecycle`:
+`apex-system/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java` 已实现 `SmartLifecycle`:
 
 - 参与 Spring 容器生命周期回调。
 - RocketMQ 消费者停止后固定等待 15 秒。
@@ -53,7 +53,7 @@
 
 ### 2.3 已有降级、限流和熔断能力
 
-`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java` 已配置:
+`apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java` 已配置:
 
 - 约 43 条流控规则,覆盖认证、文件、用户、媒体、排行等资源。
 - 约 30 条降级规则,包含异常比例和慢调用比例。
@@ -497,19 +497,19 @@ Kubernetes 是最终推荐方案:
 
 代码实施阶段建议优先在以下既有文件和相邻测试目录内增量修改:
 
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java`:保留为生命周期入口,逐步委托给新的关停协调器。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/config/GovernanceProperties.java`:绑定部署模式、自动检测、注册方式和失败策略配置。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolver.java`:按显式配置、Kubernetes、Compose、standalone 的固定优先级解析一次运行模式。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategy.java`:声明平台无关的流量准备、摘除、恢复和能力查询契约。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategyRegistry.java`:注册策略并保证每个进程唯一选择。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/standalone/StandaloneGovernanceStrategy.java`:处理普通 JAR 环境的 readiness 与可选 Nacos 联动。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/compose/ComposeGovernanceStrategy.java`:处理 Compose 健康检查、Nacos/代理能力声明,不直接操作容器管理 API。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/platform/kubernetes/KubernetesGovernanceStrategy.java`:通过 Spring Availability/readiness 与 Kubernetes Service 协作,不在应用内操作 Deployment/HPA。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/GracefulShutdownCoordinator.java`:以模板方法固定摘流、传播等待、停止新工作、排空和退出顺序。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleStateMachine.java`:维护合法生命周期迁移和幂等操作。
-- `apex-interfaces/src/main/resources/application.yml`:增加 `apex.governance` 配置并保留生命周期、探针和指标参数。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java`:规则边界、动态配置和统一降级指标。
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SentinelNacosDataSourceConfig.java`:动态规则加载、版本和失败策略,以实际文件存在情况为准。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/config/GracefulShutdownManager.java`:保留为生命周期入口,逐步委托给新的关停协调器。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/config/GovernanceProperties.java`:绑定部署模式、自动检测、注册方式和失败策略配置。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentModeResolver.java`:按显式配置、Kubernetes、Compose、standalone 的固定优先级解析一次运行模式。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategy.java`:声明平台无关的流量准备、摘除、恢复和能力查询契约。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/DeploymentGovernanceStrategyRegistry.java`:注册策略并保证每个进程唯一选择。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/standalone/StandaloneGovernanceStrategy.java`:处理普通 JAR 环境的 readiness 与可选 Nacos 联动。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/compose/ComposeGovernanceStrategy.java`:处理 Compose 健康检查、Nacos/代理能力声明,不直接操作容器管理 API。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/platform/kubernetes/KubernetesGovernanceStrategy.java`:通过 Spring Availability/readiness 与 Kubernetes Service 协作,不在应用内操作 Deployment/HPA。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/GracefulShutdownCoordinator.java`:以模板方法固定摘流、传播等待、停止新工作、排空和退出顺序。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/governance/lifecycle/ServiceLifecycleStateMachine.java`:维护合法生命周期迁移和幂等操作。
+- `apex-system/src/main/resources/application.yml`:增加 `apex.governance` 配置并保留生命周期、探针和指标参数。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java`:规则边界、动态配置和统一降级指标。
+- `apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelNacosDataSourceConfig.java`:动态规则加载、版本和失败策略,以实际文件存在情况为准。
 - `k8s/deployment.yaml`:探针、滚动更新、termination grace period、PDB/HPA 配套配置。
 - `podman-compose.yml`:healthcheck、stop grace period、资源限制和多副本验证所需配置。
 - 现有执行器、RocketMQ 监听器、WebFilter 和异常处理类:仅在排空计数和降级语义确有归属时修改。

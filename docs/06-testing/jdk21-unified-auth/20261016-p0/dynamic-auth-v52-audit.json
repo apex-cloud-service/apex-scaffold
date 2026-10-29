@@ -1,0 +1,19 @@
+{
+  "scope": "V52 synthetic MySQL client branch probe; no Java build, production DB, full upgrade chain or PostgreSQL validation",
+  "test_runs": [
+    {"command": "python3 -B -m unittest scripts/test/test_auth_v45_dynamic_probe_20261018.py", "exit_code": 1, "tests": 6, "failures": 2, "expected_reason": "missing plan_next and expected_v52_catalog", "log": "dynamic-auth-v52-red.log"},
+    {"command": "python3 -B -m unittest scripts/test/test_auth_v45_dynamic_probe_20261018.py scripts/test/test_collect_table_facts.py", "exit_code": 0, "tests": 41, "failures": 0, "log": "dynamic-auth-v52-green.log"}
+  ],
+  "runtime": {"command": "python3 -B scripts/ci/auth_v45_dynamic_probe_20261018.py --source apex-auth-service/src/main/resources/db/migration/mysql/V52__align_auth_token_fields.sql --output docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-auth-v52-client-evidence.json --run", "exit_code": 0, "log": "dynamic-auth-v52-run.log", "mysql_version": "8.0.46", "branch_runs": 27, "new_unique_ids": 36, "previous_remaining": 490, "remaining": 454},
+  "post_checks": {"git_diff_check_exit_code": 0, "podman_ps_owned_prefix_exit_code": 0, "podman_ps_owned_prefix_output": "", "container_exists_exit_code": 1, "remove_with_volumes_exit_code": 0},
+  "sha256": {
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-auth-v52-red.log": "d5f68516461aeb9ed607da9e72fab77e93c9e55f418f6e6dcb18a475593a0a9b",
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-auth-v52-green.log": "fb3b65052afe54c2214f35ddd4c8c6785db1509c25025c86789a8eebf57cae80",
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-auth-v52-run.log": "ed738394f374572f6548e1b76971a3dec5278dd4b2bf4a5c4af19f1f5c338c19",
+    "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "scripts/ci/auth_v45_dynamic_probe_20261018.py": "78e5a47b06bd0a275052e33a75c6006f1e9bf4493e0ec57015fe806cb2147c72",
+    "scripts/test/test_auth_v45_dynamic_probe_20261018.py": "abdc19beeff57b33cc258e3b1f50a7c6c1f4b3958f0752eb79710330bb72996f"
+  },
+  "limits": ["Existing target fixture uses VARCHAR(7) intentionally: verifies name-based no-op only, not definition equivalence", "Absent and replay fixtures verify explicit expected type/nullability/default/extra and row data", "Full-file initial/replay success earns no extra old ID coverage", "Prior 39-test Python run has no retroactively generated log; this round records its own 41-test run", "No changes to report, plan, production SQL, Java or POM; no commit or push"]
+}

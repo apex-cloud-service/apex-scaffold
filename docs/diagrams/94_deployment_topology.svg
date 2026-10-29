@@ -18,7 +18,7 @@
 
   <rect width="1400" height="900" fill="#fff"/>
   <text x="700" y="40" class="title">Apex Scaffold 部署拓扑（本地一键 / 生产 K8s）</text>
-  <text x="700" y="64" class="subtitle">podman-compose.infra.yml · Nacos · RocketMQ · Sentinel · Prometheus/Grafana/Zipkin · v1.3.1</text>
+  <text x="700" y="64" class="subtitle">podman-compose.infra.yml · Nacos · RocketMQ · Prometheus/Grafana/Zipkin · v1.3.1</text>
 
   <!-- Access Layer -->
   <rect x="40" y="90" width="1320" height="76" rx="10" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
@@ -49,9 +49,9 @@
   <rect x="185" y="200" width="230" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
   <text x="198" y="222" class="box-title">apex 主应用</text>
   <text x="198" y="240" class="box-desc">:8081 · Jetty/Netty 响应式</text>
-  <text x="198" y="256" class="code">Application (apex-interfaces)</text>
+  <text x="198" y="256" class="code">Application (apex-system)</text>
   <rect x="425" y="200" width="230" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
-  <text x="438" y="222" class="box-title">apex-auth-center</text>
+  <text x="438" y="222" class="box-title">apex-auth</text>
   <text x="438" y="240" class="box-desc">独立认证中心上下文</text>
   <text x="438" y="256" class="code">AuthCenterApplication</text>
   <rect x="665" y="200" width="230" height="68" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
@@ -79,7 +79,7 @@
   <text x="198" y="356" class="box-desc">服务发现 + 配置中心 · Raft 集群</text>
   <text x="198" y="371" class="code">:18848 (mapped) / :8848</text>
   <rect x="495" y="316" width="300" height="60" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
-  <text x="508" y="338" class="box-title">Sentinel Dashboard 1.8.2</text>
+  <text x="508" y="338" class="box-title">Resilience4j (内置) 1.8.2</text>
   <text x="508" y="356" class="box-desc">流控 · 熔断降级 · 热点参数</text>
   <text x="508" y="371" class="code">:8858 · api :8719</text>
   <rect x="805" y="316" width="260" height="60" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
@@ -99,7 +99,7 @@
   <text x="105" y="448" class="layer-title" text-anchor="middle">中间件</text>
   <text x="105" y="468" class="layer-sub" text-anchor="middle">Middleware</text>
   <rect x="185" y="424" width="215" height="68" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
-  <text x="198" y="446" class="box-title">MySQL 8.0</text>
+  <text x="198" y="446" class="box-title">MySQL 9.x</text>
   <text x="198" y="464" class="box-desc">apex_data / apex_test</text>
   <text x="198" y="480" class="code">:3306 · utf8mb4</text>
   <rect x="410" y="424" width="215" height="68" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
@@ -130,7 +130,7 @@
   <text x="200" y="560" class="box-title">Keycloak</text>
   <text x="200" y="578" class="box-desc">OIDC/SSO 身份提供方 · Realm/Client · User Sync</text>
   <rect x="555" y="540" width="360" height="52" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
-  <text x="570" y="560" class="box-title">apex-auth-center 统一授权</text>
+  <text x="570" y="560" class="box-title">apex-auth 统一授权</text>
   <text x="570" y="578" class="box-desc">OAuth2 授权服务器 · 远程权限校验（HTTPS）</text>
   <rect x="925" y="540" width="419" height="52" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
   <text x="940" y="560" class="box-title">Token 生命周期</text>
@@ -146,7 +146,7 @@
   <rect x="185" y="640" width="255" height="60" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
   <text x="198" y="662" class="box-title">Prometheus v2.53</text>
   <text x="198" y="680" class="box-desc">指标采集 · 保留 15d</text>
-  <text x="198" y="695" class="code">:9090 · alert-rules.yml</text>
+  <text x="198" y="695" class="code">:8083 · alert-rules.yml</text>
   <rect x="450" y="640" width="255" height="60" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
   <text x="463" y="662" class="box-title">Grafana 11.1</text>
   <text x="463" y="680" class="box-desc">可视化大盘 · 告警</text>

@@ -1,0 +1,1508 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+  "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "items": [
+    {
+      "id": "old-sql-0379",
+      "baseline_index": 379,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 4,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-7b90fb2561b79a7fb065d2e3"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0380",
+      "baseline_index": 380,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 11,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-1b167f4f174953cf7fe676d5"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0381",
+      "baseline_index": 381,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 14,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9a38b456dccd8f8947fff845"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0382",
+      "baseline_index": 382,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 15,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-8a712215624eedac412aa865"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0383",
+      "baseline_index": 383,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 16,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-c7f9903813db8975a90360e0"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0384",
+      "baseline_index": 384,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 19,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-3fcae90d6eecea24bbcf1fa2"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0385",
+      "baseline_index": 385,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 26,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-34ce15f0af145c4cd011d5ad"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0386",
+      "baseline_index": 386,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 29,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-d911b8b7b260009c8539df22"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0387",
+      "baseline_index": 387,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 30,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-e4ac3bfdefd52db3661c4a57"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0388",
+      "baseline_index": 388,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 31,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-39e1b78b3a564de86fb6cdf1"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0389",
+      "baseline_index": 389,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 34,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5c189aeaf0ac17cd6d1e18b5"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0390",
+      "baseline_index": 390,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 41,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-172827cce89b0d9cb53e03e1"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0391",
+      "baseline_index": 391,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 44,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5a7ec3ca85d147d1294eaa02"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0392",
+      "baseline_index": 392,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 45,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-2ae98a72ffeadded132a669c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0393",
+      "baseline_index": 393,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V37__add_email_and_keycloak_sub_to_sys_user.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 46,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "f9cdc7d9d061a1141385dbc584fdb5885e7e06fdf9e6f041a34d293903087495",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-fe5058f7c43d731f4cb1312c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": true,
+      "unpassed_branches": []
+    }
+  ],
+  "groups": [
+    {
+      "target": {
+        "table": "sys_user",
+        "kind": "column",
+        "name": "email"
+      },
+      "statements": [
+        {
+          "line": 4,
+          "end_line": 4,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 77,
+          "end_offset": 96,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 4,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-7b90fb2561b79a7fb065d2e3"
+        },
+        {
+          "line": 11,
+          "end_line": 13,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT ''用户邮箱'' AFTER phone',\n    'SELECT ''Column email already exists'' AS result')",
+          "start_offset": 259,
+          "end_offset": 438,
+          "category": "dynamic_sql",
+          "statement_sha256": "028768ccbdebd7c69f1d914ed420e14a6ff3e7cef48c37a347b49437088a1b4a",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user",
+              "line": 12,
+              "end_line": 12,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "after",
+                "alter",
+                "column",
+                "comment",
+                "email",
+                "null",
+                "phone",
+                "sys_user",
+                "table",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT '用户邮箱' AFTER phone",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 11
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 11,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-1b167f4f174953cf7fe676d5"
+        },
+        {
+          "line": 14,
+          "end_line": 14,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 440,
+          "end_offset": 462,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            11
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 14,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-9a38b456dccd8f8947fff845"
+        },
+        {
+          "line": 15,
+          "end_line": 15,
+          "sql": "EXECUTE stmt",
+          "start_offset": 464,
+          "end_offset": 476,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            11
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 15,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-8a712215624eedac412aa865"
+        },
+        {
+          "line": 16,
+          "end_line": 16,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 478,
+          "end_offset": 501,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            11
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 16,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-c7f9903813db8975a90360e0"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0379",
+        "old-sql-0380",
+        "old-sql-0381",
+        "old-sql-0382",
+        "old-sql-0383"
+      ],
+      "statement_ids": [
+        [
+          "stmt-7b90fb2561b79a7fb065d2e3"
+        ],
+        [
+          "stmt-1b167f4f174953cf7fe676d5"
+        ],
+        [
+          "stmt-9a38b456dccd8f8947fff845"
+        ],
+        [
+          "stmt-8a712215624eedac412aa865"
+        ],
+        [
+          "stmt-c7f9903813db8975a90360e0"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept');",
+          "executed_sql": "SET @col_exists = 0;\nSELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND COLUMN_NAME = 'email';\n\nSET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT ''用户邮箱'' AFTER phone',\n    'SELECT ''Column email already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        },
+        "replay": {
+          "fixture_sql": "reuse absent result",
+          "executed_sql": "SET @col_exists = 0;\nSELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND COLUMN_NAME = 'email';\n\nSET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT ''用户邮箱'' AFTER phone',\n    'SELECT ''Column email already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        },
+        "present": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept'); ALTER TABLE sys_user ADD COLUMN email VARCHAR(7) NOT NULL DEFAULT 'legacy';",
+          "executed_sql": "SET @col_exists = 0;\nSELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND COLUMN_NAME = 'email';\n\nSET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT ''用户邮箱'' AFTER phone',\n    'SELECT ''Column email already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(7)\tNO\tlegacy\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(7)\tNO\tlegacy\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        }
+      }
+    },
+    {
+      "target": {
+        "table": "sys_user",
+        "kind": "column",
+        "name": "keycloak_sub"
+      },
+      "statements": [
+        {
+          "line": 19,
+          "end_line": 19,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 533,
+          "end_offset": 552,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 19,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-3fcae90d6eecea24bbcf1fa2"
+        },
+        {
+          "line": 26,
+          "end_line": 28,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT ''Keycloak用户唯一标识'' AFTER email',\n    'SELECT ''Column keycloak_sub already exists'' AS result')",
+          "start_offset": 722,
+          "end_offset": 925,
+          "category": "dynamic_sql",
+          "statement_sha256": "71d1089dba0b1bfbd6fe6400073f4be9a2dab5ad55c54bcdd0403165247bcf1f",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user",
+              "line": 27,
+              "end_line": 27,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "after",
+                "alter",
+                "column",
+                "comment",
+                "email",
+                "keycloak_sub",
+                "null",
+                "sys_user",
+                "table",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT 'Keycloak用户唯一标识' AFTER email",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 26
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 26,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-34ce15f0af145c4cd011d5ad"
+        },
+        {
+          "line": 29,
+          "end_line": 29,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 927,
+          "end_offset": 949,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            26
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 29,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-d911b8b7b260009c8539df22"
+        },
+        {
+          "line": 30,
+          "end_line": 30,
+          "sql": "EXECUTE stmt",
+          "start_offset": 951,
+          "end_offset": 963,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            26
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 30,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-e4ac3bfdefd52db3661c4a57"
+        },
+        {
+          "line": 31,
+          "end_line": 31,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 965,
+          "end_offset": 988,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            26
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 31,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-39e1b78b3a564de86fb6cdf1"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0384",
+        "old-sql-0385",
+        "old-sql-0386",
+        "old-sql-0387",
+        "old-sql-0388"
+      ],
+      "statement_ids": [
+        [
+          "stmt-3fcae90d6eecea24bbcf1fa2"
+        ],
+        [
+          "stmt-34ce15f0af145c4cd011d5ad"
+        ],
+        [
+          "stmt-d911b8b7b260009c8539df22"
+        ],
+        [
+          "stmt-e4ac3bfdefd52db3661c4a57"
+        ],
+        [
+          "stmt-39e1b78b3a564de86fb6cdf1"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept'); ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT '用户邮箱' AFTER phone;",
+          "executed_sql": "SET @col_exists = 0;\nSELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND COLUMN_NAME = 'keycloak_sub';\n\nSET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT ''Keycloak用户唯一标识'' AFTER email',\n    'SELECT ''Column keycloak_sub already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        },
+        "replay": {
+          "fixture_sql": "reuse absent result",
+          "executed_sql": "SET @col_exists = 0;\nSELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND COLUMN_NAME = 'keycloak_sub';\n\nSET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT ''Keycloak用户唯一标识'' AFTER email',\n    'SELECT ''Column keycloak_sub already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        },
+        "present": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept'); ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT '用户邮箱' AFTER phone; ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(7) NOT NULL DEFAULT 'legacy';",
+          "executed_sql": "SET @col_exists = 0;\nSELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND COLUMN_NAME = 'keycloak_sub';\n\nSET @sql = IF(@col_exists = 0, \n    'ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT ''Keycloak用户唯一标识'' AFTER email',\n    'SELECT ''Column keycloak_sub already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(7)\tNO\tlegacy\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(7)\tNO\tlegacy\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        }
+      }
+    },
+    {
+      "target": {
+        "table": "sys_user",
+        "kind": "index",
+        "name": "uk_keycloak_sub"
+      },
+      "statements": [
+        {
+          "line": 34,
+          "end_line": 34,
+          "sql": "SET @idx_exists = 0",
+          "start_offset": 1022,
+          "end_offset": 1041,
+          "category": "dynamic_sql",
+          "statement_sha256": "0fa5af46befcf9450b111acc126170145fb0f4608a6dd2121df5f6e3fbc23352",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 34,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-5c189aeaf0ac17cd6d1e18b5"
+        },
+        {
+          "line": 41,
+          "end_line": 43,
+          "sql": "SET @sql = IF(@idx_exists = 0, \n    'ALTER TABLE sys_user ADD UNIQUE INDEX uk_keycloak_sub (keycloak_sub)',\n    'SELECT ''Index uk_keycloak_sub already exists'' AS result')",
+          "start_offset": 1216,
+          "end_offset": 1388,
+          "category": "dynamic_sql",
+          "statement_sha256": "275177ce5396dd81d169ad121ec216b2aee4c8be6af01107513fddebb4a21be1",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "sys_user",
+              "line": 42,
+              "end_line": 42,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "index",
+                "keycloak_sub",
+                "sys_user",
+                "table",
+                "uk_keycloak_sub",
+                "unique"
+              ],
+              "sql": "ALTER TABLE sys_user ADD UNIQUE INDEX uk_keycloak_sub (keycloak_sub)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 41
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 41,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-172827cce89b0d9cb53e03e1"
+        },
+        {
+          "line": 44,
+          "end_line": 44,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 1390,
+          "end_offset": 1412,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            41
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 44,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-5a7ec3ca85d147d1294eaa02"
+        },
+        {
+          "line": 45,
+          "end_line": 45,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1414,
+          "end_offset": 1426,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            41
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 45,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-2ae98a72ffeadded132a669c"
+        },
+        {
+          "line": 46,
+          "end_line": 46,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1428,
+          "end_offset": 1451,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            41
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 46,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-fe5058f7c43d731f4cb1312c"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0389",
+        "old-sql-0390",
+        "old-sql-0391",
+        "old-sql-0392",
+        "old-sql-0393"
+      ],
+      "statement_ids": [
+        [
+          "stmt-5c189aeaf0ac17cd6d1e18b5"
+        ],
+        [
+          "stmt-172827cce89b0d9cb53e03e1"
+        ],
+        [
+          "stmt-5a7ec3ca85d147d1294eaa02"
+        ],
+        [
+          "stmt-2ae98a72ffeadded132a669c"
+        ],
+        [
+          "stmt-fe5058f7c43d731f4cb1312c"
+        ]
+      ],
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept'); ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT '用户邮箱' AFTER phone; ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT 'Keycloak用户唯一标识' AFTER email;",
+          "executed_sql": "SET @idx_exists = 0;\nSELECT COUNT(*) INTO @idx_exists \nFROM information_schema.STATISTICS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND INDEX_NAME = 'uk_keycloak_sub';\n\nSET @sql = IF(@idx_exists = 0, \n    'ALTER TABLE sys_user ADD UNIQUE INDEX uk_keycloak_sub (keycloak_sub)',\n    'SELECT ''Index uk_keycloak_sub already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE\nuk_keycloak_sub\t0\t1\tkeycloak_sub\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        },
+        "replay": {
+          "fixture_sql": "reuse absent result",
+          "executed_sql": "SET @idx_exists = 0;\nSELECT COUNT(*) INTO @idx_exists \nFROM information_schema.STATISTICS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND INDEX_NAME = 'uk_keycloak_sub';\n\nSET @sql = IF(@idx_exists = 0, \n    'ALTER TABLE sys_user ADD UNIQUE INDEX uk_keycloak_sub (keycloak_sub)',\n    'SELECT ''Index uk_keycloak_sub already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE\nuk_keycloak_sub\t0\t1\tkeycloak_sub\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE\nuk_keycloak_sub\t0\t1\tkeycloak_sub\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        },
+        "present": {
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept'); ALTER TABLE sys_user ADD COLUMN email VARCHAR(100) NULL COMMENT '用户邮箱' AFTER phone; ALTER TABLE sys_user ADD COLUMN keycloak_sub VARCHAR(100) NULL COMMENT 'Keycloak用户唯一标识' AFTER email; ALTER TABLE sys_user ADD UNIQUE INDEX uk_keycloak_sub(id);",
+          "executed_sql": "SET @idx_exists = 0;\nSELECT COUNT(*) INTO @idx_exists \nFROM information_schema.STATISTICS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'sys_user' \n  AND INDEX_NAME = 'uk_keycloak_sub';\n\nSET @sql = IF(@idx_exists = 0, \n    'ALTER TABLE sys_user ADD UNIQUE INDEX uk_keycloak_sub (keycloak_sub)',\n    'SELECT ''Index uk_keycloak_sub already exists'' AS result');\nPREPARE stmt FROM @sql;\nEXECUTE stmt;\nDEALLOCATE PREPARE stmt;",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE\nuk_keycloak_sub\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE\nuk_keycloak_sub\t0\t1\tid\tBTREE",
+            "data": "1\t中文电话\n2\tkept"
+          }
+        }
+      }
+    }
+  ],
+  "status": "passed",
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true,
+    "database_lifetime": "only inside removed tmpfs container"
+  },
+  "limits": [
+    "Synthetic nonempty fixtures; not a historical upgrade chain",
+    "Only selected MySQL guards; no PostgreSQL or full historical upgrade chain",
+    "No Flyway startup, concurrent migration, privileges or production verification"
+  ],
+  "previous_verified_ids": [
+    "old-sql-0000",
+    "old-sql-0001",
+    "old-sql-0002",
+    "old-sql-0003",
+    "old-sql-0004",
+    "old-sql-0005",
+    "old-sql-0006",
+    "old-sql-0007",
+    "old-sql-0008",
+    "old-sql-0009",
+    "old-sql-0010",
+    "old-sql-0011",
+    "old-sql-0012",
+    "old-sql-0013",
+    "old-sql-0014",
+    "old-sql-0015",
+    "old-sql-0016",
+    "old-sql-0017",
+    "old-sql-0018",
+    "old-sql-0019",
+    "old-sql-0020",
+    "old-sql-0021",
+    "old-sql-0022",
+    "old-sql-0023",
+    "old-sql-0024",
+    "old-sql-0025",
+    "old-sql-0026",
+    "old-sql-0027",
+    "old-sql-0028",
+    "old-sql-0029",
+    "old-sql-0030",
+    "old-sql-0031",
+    "old-sql-0032",
+    "old-sql-0033",
+    "old-sql-0034",
+    "old-sql-0035",
+    "old-sql-0036",
+    "old-sql-0037",
+    "old-sql-0038",
+    "old-sql-0039",
+    "old-sql-0040",
+    "old-sql-0041",
+    "old-sql-0042",
+    "old-sql-0043",
+    "old-sql-0044",
+    "old-sql-0045",
+    "old-sql-0046",
+    "old-sql-0047",
+    "old-sql-0048",
+    "old-sql-0049",
+    "old-sql-0050",
+    "old-sql-0051",
+    "old-sql-0052",
+    "old-sql-0053",
+    "old-sql-0054",
+    "old-sql-0055",
+    "old-sql-0056",
+    "old-sql-0057",
+    "old-sql-0058",
+    "old-sql-0059",
+    "old-sql-0060",
+    "old-sql-0061",
+    "old-sql-0062",
+    "old-sql-0063",
+    "old-sql-0064",
+    "old-sql-0065",
+    "old-sql-0066",
+    "old-sql-0067",
+    "old-sql-0068",
+    "old-sql-0069",
+    "old-sql-0070",
+    "old-sql-0071",
+    "old-sql-0072",
+    "old-sql-0073",
+    "old-sql-0074",
+    "old-sql-0075",
+    "old-sql-0076",
+    "old-sql-0077",
+    "old-sql-0078",
+    "old-sql-0079",
+    "old-sql-0080",
+    "old-sql-0081",
+    "old-sql-0082",
+    "old-sql-0083",
+    "old-sql-0084",
+    "old-sql-0085",
+    "old-sql-0086",
+    "old-sql-0087",
+    "old-sql-0088",
+    "old-sql-0089",
+    "old-sql-0090",
+    "old-sql-0091",
+    "old-sql-0092",
+    "old-sql-0093",
+    "old-sql-0094",
+    "old-sql-0095",
+    "old-sql-0096",
+    "old-sql-0097",
+    "old-sql-0098",
+    "old-sql-0099",
+    "old-sql-0100",
+    "old-sql-0101",
+    "old-sql-0102",
+    "old-sql-0103",
+    "old-sql-0104",
+    "old-sql-0105",
+    "old-sql-0106",
+    "old-sql-0107",
+    "old-sql-0108",
+    "old-sql-0109",
+    "old-sql-0110",
+    "old-sql-0111",
+    "old-sql-0112",
+    "old-sql-0113",
+    "old-sql-0114",
+    "old-sql-0115",
+    "old-sql-0116",
+    "old-sql-0117",
+    "old-sql-0118",
+    "old-sql-0119",
+    "old-sql-0120",
+    "old-sql-0121",
+    "old-sql-0122",
+    "old-sql-0123",
+    "old-sql-0124",
+    "old-sql-0125",
+    "old-sql-0126",
+    "old-sql-0127",
+    "old-sql-0128",
+    "old-sql-0129",
+    "old-sql-0130",
+    "old-sql-0131",
+    "old-sql-0132",
+    "old-sql-0133",
+    "old-sql-0134",
+    "old-sql-0135",
+    "old-sql-0136",
+    "old-sql-0137",
+    "old-sql-0138",
+    "old-sql-0139",
+    "old-sql-0140",
+    "old-sql-0141",
+    "old-sql-0142",
+    "old-sql-0143",
+    "old-sql-0144",
+    "old-sql-0145",
+    "old-sql-0146",
+    "old-sql-0147",
+    "old-sql-0148",
+    "old-sql-0149",
+    "old-sql-0150",
+    "old-sql-0151",
+    "old-sql-0152",
+    "old-sql-0153",
+    "old-sql-0154",
+    "old-sql-0155",
+    "old-sql-0156",
+    "old-sql-0157",
+    "old-sql-0158",
+    "old-sql-0159",
+    "old-sql-0160",
+    "old-sql-0161",
+    "old-sql-0162",
+    "old-sql-0163",
+    "old-sql-0164",
+    "old-sql-0165",
+    "old-sql-0166",
+    "old-sql-0167",
+    "old-sql-0168",
+    "old-sql-0169",
+    "old-sql-0170",
+    "old-sql-0171",
+    "old-sql-0172",
+    "old-sql-0173",
+    "old-sql-0174",
+    "old-sql-0175",
+    "old-sql-0176",
+    "old-sql-0177",
+    "old-sql-0178",
+    "old-sql-0179",
+    "old-sql-0180",
+    "old-sql-0181",
+    "old-sql-0182",
+    "old-sql-0183",
+    "old-sql-0184",
+    "old-sql-0185",
+    "old-sql-0186",
+    "old-sql-0187",
+    "old-sql-0188",
+    "old-sql-0189",
+    "old-sql-0190",
+    "old-sql-0191",
+    "old-sql-0192",
+    "old-sql-0193",
+    "old-sql-0194",
+    "old-sql-0195",
+    "old-sql-0196",
+    "old-sql-0197",
+    "old-sql-0198",
+    "old-sql-0199",
+    "old-sql-0200",
+    "old-sql-0201",
+    "old-sql-0202",
+    "old-sql-0203",
+    "old-sql-0204",
+    "old-sql-0205",
+    "old-sql-0206",
+    "old-sql-0207",
+    "old-sql-0208",
+    "old-sql-0209",
+    "old-sql-0210",
+    "old-sql-0211",
+    "old-sql-0212",
+    "old-sql-0213",
+    "old-sql-0214",
+    "old-sql-0215",
+    "old-sql-0216",
+    "old-sql-0217",
+    "old-sql-0218",
+    "old-sql-0219",
+    "old-sql-0220",
+    "old-sql-0221",
+    "old-sql-0222",
+    "old-sql-0223",
+    "old-sql-0224",
+    "old-sql-0225",
+    "old-sql-0226",
+    "old-sql-0227",
+    "old-sql-0228",
+    "old-sql-0229",
+    "old-sql-0230",
+    "old-sql-0231",
+    "old-sql-0232",
+    "old-sql-0233",
+    "old-sql-0234",
+    "old-sql-0235",
+    "old-sql-0236",
+    "old-sql-0237",
+    "old-sql-0238",
+    "old-sql-0239",
+    "old-sql-0240",
+    "old-sql-0241",
+    "old-sql-0242",
+    "old-sql-0243",
+    "old-sql-0244",
+    "old-sql-0245",
+    "old-sql-0246",
+    "old-sql-0247",
+    "old-sql-0248",
+    "old-sql-0249",
+    "old-sql-0250",
+    "old-sql-0251",
+    "old-sql-0252",
+    "old-sql-0253",
+    "old-sql-0254",
+    "old-sql-0255",
+    "old-sql-0256",
+    "old-sql-0257",
+    "old-sql-0258",
+    "old-sql-0259",
+    "old-sql-0260",
+    "old-sql-0261",
+    "old-sql-0262",
+    "old-sql-0263",
+    "old-sql-0264",
+    "old-sql-0265",
+    "old-sql-0266",
+    "old-sql-0267",
+    "old-sql-0268",
+    "old-sql-0269",
+    "old-sql-0270",
+    "old-sql-0271",
+    "old-sql-0272",
+    "old-sql-0273",
+    "old-sql-0274",
+    "old-sql-0275",
+    "old-sql-0276",
+    "old-sql-0277",
+    "old-sql-0278",
+    "old-sql-0279",
+    "old-sql-0280",
+    "old-sql-0281",
+    "old-sql-0282",
+    "old-sql-0283",
+    "old-sql-0284",
+    "old-sql-0285",
+    "old-sql-0286",
+    "old-sql-0287",
+    "old-sql-0288",
+    "old-sql-0289",
+    "old-sql-0290",
+    "old-sql-0291",
+    "old-sql-0292",
+    "old-sql-0293",
+    "old-sql-0294",
+    "old-sql-0295",
+    "old-sql-0296",
+    "old-sql-0297",
+    "old-sql-0298",
+    "old-sql-0299",
+    "old-sql-0300",
+    "old-sql-0301",
+    "old-sql-0302",
+    "old-sql-0303",
+    "old-sql-0304",
+    "old-sql-0305",
+    "old-sql-0306",
+    "old-sql-0307",
+    "old-sql-0308",
+    "old-sql-0309",
+    "old-sql-0310",
+    "old-sql-0311",
+    "old-sql-0312",
+    "old-sql-0313",
+    "old-sql-0314",
+    "old-sql-0315",
+    "old-sql-0316",
+    "old-sql-0317",
+    "old-sql-0318",
+    "old-sql-0319",
+    "old-sql-0320",
+    "old-sql-0321",
+    "old-sql-0322",
+    "old-sql-0323",
+    "old-sql-0324",
+    "old-sql-0325",
+    "old-sql-0326",
+    "old-sql-0327",
+    "old-sql-0328",
+    "old-sql-0329",
+    "old-sql-0330",
+    "old-sql-0331",
+    "old-sql-0332",
+    "old-sql-0333",
+    "old-sql-0334",
+    "old-sql-0335",
+    "old-sql-0336",
+    "old-sql-0337",
+    "old-sql-0338",
+    "old-sql-0339",
+    "old-sql-0340",
+    "old-sql-0341",
+    "old-sql-0342",
+    "old-sql-0343",
+    "old-sql-0344",
+    "old-sql-0345",
+    "old-sql-0346",
+    "old-sql-0347",
+    "old-sql-0348",
+    "old-sql-0349",
+    "old-sql-0350",
+    "old-sql-0351",
+    "old-sql-0352",
+    "old-sql-0353",
+    "old-sql-0354",
+    "old-sql-0355",
+    "old-sql-0356",
+    "old-sql-0357",
+    "old-sql-0358",
+    "old-sql-0359",
+    "old-sql-0360",
+    "old-sql-0361",
+    "old-sql-0362",
+    "old-sql-0379",
+    "old-sql-0380",
+    "old-sql-0381",
+    "old-sql-0382",
+    "old-sql-0383",
+    "old-sql-0384",
+    "old-sql-0385",
+    "old-sql-0386",
+    "old-sql-0387",
+    "old-sql-0388",
+    "old-sql-0389",
+    "old-sql-0390",
+    "old-sql-0391",
+    "old-sql-0392",
+    "old-sql-0393",
+    "old-sql-0449",
+    "old-sql-0450",
+    "old-sql-0451",
+    "old-sql-0452",
+    "old-sql-0453",
+    "old-sql-0454",
+    "old-sql-0455",
+    "old-sql-0456",
+    "old-sql-0457",
+    "old-sql-0458",
+    "old-sql-0459",
+    "old-sql-0460",
+    "old-sql-0461",
+    "old-sql-0462",
+    "old-sql-0463",
+    "old-sql-0464",
+    "old-sql-0465",
+    "old-sql-0466",
+    "old-sql-0467",
+    "old-sql-0468",
+    "old-sql-0469",
+    "old-sql-0470",
+    "old-sql-0471",
+    "old-sql-0472",
+    "old-sql-0473",
+    "old-sql-0474",
+    "old-sql-0475",
+    "old-sql-0476",
+    "old-sql-0477",
+    "old-sql-0478",
+    "old-sql-0479",
+    "old-sql-0480",
+    "old-sql-0481",
+    "old-sql-0482",
+    "old-sql-0483",
+    "old-sql-0484",
+    "old-sql-0485",
+    "old-sql-0486",
+    "old-sql-0487",
+    "old-sql-0488",
+    "old-sql-0489",
+    "old-sql-0490",
+    "old-sql-0491",
+    "old-sql-0492",
+    "old-sql-0493",
+    "old-sql-0494",
+    "old-sql-0495",
+    "old-sql-0496",
+    "old-sql-0497",
+    "old-sql-0498",
+    "old-sql-0499",
+    "old-sql-0500",
+    "old-sql-0501",
+    "old-sql-0502",
+    "old-sql-0503",
+    "old-sql-0504",
+    "old-sql-0505",
+    "old-sql-0506",
+    "old-sql-0507",
+    "old-sql-0508",
+    "old-sql-0509",
+    "old-sql-0510",
+    "old-sql-0511",
+    "old-sql-0512",
+    "old-sql-0513",
+    "old-sql-0514",
+    "old-sql-0515",
+    "old-sql-0516",
+    "old-sql-0517",
+    "old-sql-0518",
+    "old-sql-0519",
+    "old-sql-0520",
+    "old-sql-0521",
+    "old-sql-0522",
+    "old-sql-0523",
+    "old-sql-0524",
+    "old-sql-0525",
+    "old-sql-0526",
+    "old-sql-0527",
+    "old-sql-0528"
+  ],
+  "remaining_before": 128,
+  "previous_evidence_hashes": {
+    "dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "dynamic-auth-v52-catalog-regression-evidence.json": "286fd56716171a547cd65a78e5912e61f548a777ac37a57c9589628e65c4d4d1",
+    "dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "dynamic-auth-v55-client-evidence.json": "88b811c98334d55235d8a9282b38a091adbd08fe227e270ec83713f2e72e6fac",
+    "dynamic-system-v14-20261018-client-evidence.json": "bf978a17c42edab2d00ffa055bf34de3cd1695e3d8c69a8c7a27f2db856634ff",
+    "dynamic-system-v15-20261019-rerun-evidence.json": "37e4821b20ce16058ff0836d2f88d465ff474bc851df5f027a7d460b895fb303",
+    "dynamic-system-v15-20261019-rerun-subagent-evidence.json": "c66df02e6c26616bc0f5bc0a07904babbbc7215555261b8c20a69a1924a8ed6a",
+    "dynamic-system-v16-20261019-client-evidence.json": "ee97ae2bb94a4d82a8de8e139cde76b37a1a6c1711431d401dc42bc2f7db0fad",
+    "dynamic-system-v37-20261019-597E34B9-739D-48C1-A6B6-1C63FCB92ED3-evidence.json": "d73bbf4c809ad2dcca866eb9a4c0d0a226cef0e56b01125ddd28685de8a18201",
+    "dynamic-system-v43-20261019-client-evidence.json": "4c76fefb305913982111e346ee4c258805b0b5f7101fc14f5f18675521514918",
+    "dynamic-system-v44-20261019-6C27507B-8B93-4E56-923A-E37B38A3A982-evidence.json": "a6015eb8285c6a13dc2d58d924d49da67433a29f12c37c8dce3eabae16769255",
+    "dynamic-system-v44-20261019-DB7748D3-0F64-42DA-AB1D-8970207F73B2-evidence.json": "414fce91aabd0e10ce9898f970d611d1d9a1bffe6b4f06cc882876f9ec892230",
+    "dynamic-system-v51-20261019-7b2ec947-evidence.json": "5be00f8da636d88e0dfad1b715326e691cc444a901142c3368200d59af7468f0",
+    "dynamic-system-v59-20261019-client-compatible-evidence.json": "663a39c2fe7b433468beb65ed4fd8bfd7a7ace6e176b70c3f687036168b60f85",
+    "dynamic-system-v59-20261019-client-final-evidence.json": "ba135b0fdfaa02aad4a554f68d0b0a4c662f0b58d040942eaa0b1132944c3e66"
+  },
+  "baseline_dynamic_denominator": 586,
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v37-20261019-01366F20-D516-4307-B133-6D9B7DE5E904-evidence.json",
+  "updated_at": "2026-10-19T06:32:49.885016+00:00",
+  "container": {
+    "name": "apex-v45-probe-7ea052b3e43a",
+    "image": "localhost/mysql:8.0",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "none; empty root only inside network-disabled disposable container",
+    "id": "3fc54318f73a2b49e80f800f98e0de8bdbe6d7c167ba4d9d1357575b6a06745d"
+  },
+  "mysql_version": "8.0.46",
+  "full_file": {
+    "fixture_sql": "USE probe; DROP TABLE IF EXISTS sys_user; CREATE TABLE sys_user(id BIGINT PRIMARY KEY,phone VARCHAR(64)); INSERT INTO sys_user VALUES(1,'中文电话'),(2,'kept');",
+    "initial_execution": true,
+    "replay": true,
+    "before_replay": {
+      "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+      "indexes": "PRIMARY\t0\t1\tid\tBTREE\nuk_keycloak_sub\t0\t1\tkeycloak_sub\tBTREE",
+      "data": "1\t中文电话\tperson@example.test\tretained-sub\n2\tkept\tNULL\tNULL"
+    },
+    "after_replay": {
+      "columns": "id\tbigint\tNO\t<NULL>\t1\t\nphone\tvarchar(64)\tYES\t<NULL>\t2\t\nemail\tvarchar(100)\tYES\t<NULL>\t3\t用户邮箱\nkeycloak_sub\tvarchar(100)\tYES\t<NULL>\t4\tKeycloak用户唯一标识",
+      "indexes": "PRIMARY\t0\t1\tid\tBTREE\nuk_keycloak_sub\t0\t1\tkeycloak_sub\tBTREE",
+      "data": "1\t中文电话\tperson@example.test\tretained-sub\n2\tkept\tNULL\tNULL"
+    }
+  },
+  "coverage": {
+    "verified_old_ids": [
+      "old-sql-0379",
+      "old-sql-0380",
+      "old-sql-0381",
+      "old-sql-0382",
+      "old-sql-0383",
+      "old-sql-0384",
+      "old-sql-0385",
+      "old-sql-0386",
+      "old-sql-0387",
+      "old-sql-0388",
+      "old-sql-0389",
+      "old-sql-0390",
+      "old-sql-0391",
+      "old-sql-0392",
+      "old-sql-0393"
+    ],
+    "verified_old_id_count": 15,
+    "remaining_of_586": 128,
+    "passed_branch_runs": 9,
+    "planned_branch_runs": 9,
+    "definition": "Entire source only after every bound group, full original file execution/replay and cleanup; V37 three guards/nine branch runs; V44 two tenant paths, both full-file replays and eight refusal guards",
+    "remaining_before": 128,
+    "new_unique_passed_count": 0,
+    "remaining_after": 128,
+    "cumulative_verified_count": 458
+  }
+}

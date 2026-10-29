@@ -2,7 +2,7 @@
 
 > 文档版本: v1.0  
 > 创建时间: 2026-09-03  
-> 数据库版本: MySQL 8.0  
+> 数据库版本: MySQL 9.0
 > 字符集: utf8mb4 / utf8mb4_unicode_ci
 
 > **配套 E-R 图**: [核心表数据库关系图](../diagrams/08_database_er_diagram.svg)
@@ -478,7 +478,7 @@
 
 ### 4.1 wf\_definition (流程定义表)
 
-**表说明**: 存储工作流流程定义,支持BPMN 2.0
+**表说明**: 存储工作流流程定义,支持 DAG JSON 定义
 
 **字段设计**:
 
@@ -489,7 +489,7 @@
 | `key`         | VARCHAR  | 100 | NOT NULL | -                            | 流程标识       |
 | `category`    | VARCHAR  | 50  | NULL     | -                            | 流程分类       |
 | `version`     | INT      | -   | NOT NULL | 1                            | 版本号        |
-| `bpmn_xml`    | LONGTEXT | -   | NULL     | -                            | BPMN XML定义 |
+| `bpmn_xml`    | LONGTEXT | -   | NULL     | -                            | DAG JSON 定义 (dagJson) |
 | `form_id`     | BIGINT   | -   | NULL     | -                            | 关联表单ID     |
 | `status`      | INT      | -   | NOT NULL | 1                            | 状态(0停用1启用) |
 | `tenant_id`   | VARCHAR  | 64  | NULL     | -                            | 租户ID       |
@@ -823,7 +823,7 @@ spring:
 
 ### 9.2 外部参考
 
-- [MySQL 8.0官方文档](https://dev.mysql.com/doc/refman/8.0/en/)
+- [MySQL 9.0官方文档](https://dev.mysql.com/doc/refman/9.0/en/)
 
 - [Flyway官方文档](https://flywaydb.org/documentation/)
 

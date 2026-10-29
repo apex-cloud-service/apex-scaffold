@@ -7,7 +7,7 @@
         <dc:creator>Apex Team</dc:creator>
         <dc:date>2026-09-10</dc:date>
         <dc:version>3.0</dc:version>
-        <dc:description>展示40+张表的完整ER关系:用户/角色/权限/租户/工作流/日志审计</dc:description>
+        <dc:description>展示全仓117张表的ER关系（system域97张）:用户/角色/权限/租户/工作流/日志审计</dc:description>
       </rdf:Description>
     </rdf:RDF>
   </metadata>
@@ -31,7 +31,7 @@
   <rect width="1800" height="1400" fill="#ffffff"/>
 
   <text x="900" y="50" class="title-main">Apex Scaffold 数据库 ER 图</text>
-  <text x="900" y="80" class="title-version">MySQL 8.0 · utf8mb4 · 40+张表 · Flyway V1-V26迁移 · apex_data数据库 · v3.0</text>
+  <text x="900" y="80" class="title-version">MySQL 9.x · utf8mb4 · 117张表 · Flyway V1-V64（按域独立版本链）· v3.1</text>
 
   <!-- 核心RBAC业务表 -->
   <rect x="50" y="110" width="850" height="550" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
@@ -351,7 +351,7 @@
   <text x="1380" y="1181" class="field-name">  普通索引: tenant_id/dept_id/status</text>
   <text x="1380" y="1198" class="field-name">  联合唯一: (role_key, tenant_id)</text>
   <text x="1380" y="1215" class="field-name">外键约束: V24已移除 (业务层保证)</text>
-  <text x="1380" y="1250" class="field-type">表总数: 40+ 张</text>
+  <text x="1380" y="1250" class="field-type">表总数: 117 张（system 97）</text>
   <text x="1380" y="1267" class="field-type">核心RBAC: 7张</text>
   <text x="1380" y="1284" class="field-type">工作流: 4张 | 日志: 5张 | OAuth2: 3张</text>
   <text x="1380" y="1301" class="field-type">文档: docs/architecture/database-design.md</text>

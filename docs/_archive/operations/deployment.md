@@ -289,6 +289,8 @@ docker compose down -v
 
 ---
 
+<a id="25-apex-governance-优雅关停机制-"></a>
+
 ### 2.5 Apex Governance 优雅关停机制 ⭐
 
 Apex Scaffold 内置了完善的服务治理机制（Apex Governance），实现应用的优雅关停和无损上下线。

@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""Recompute an independent local acceptance inventory without granting branch credit."""
+import argparse
+from collections import Counter
+import hashlib
+import json
+import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+P0 = pathlib.Path('docs/06-testing/jdk21-unified-auth/20261016-p0')
+AUDIT = P0 / 'migration-remaining-closure-audit-20261019-c8f4d7a2.json'
+LEDGER = P0 / 'migration-one-time-acceptance-20261020.json'
+AUDIT_HASH = '2cb79a786bf728a399f26f016500ea0a3079ca2da88d4763d8a65064905916b5'
+EXTRA = {
+    'residue': ('mysql-v19-failure-residue-20261019-1850-evidence.json', '15f680eebf3710b1e7c50a558271953b906c147f7203583f0ad5908c350ed031'),
+    'repair': ('consent-v40-repair-cd38593bac32-evidence.json', '71fc8aa09dcda8efd968db7f20817b0b40a159c6b71d1105830b1460cf26acff'),
+    'recovery': ('token-v42-recovery-suite-20261020-evidence.json', '2708b858c1b5f41a7a973d4f4e58113072880c1b45d6ba1a100189f1e6fd0bad'),
+    'behavior': ('dynamic-pg-p0-b04da714fb6a403994cbc858ffd79299-evidence.json', '50e03a27f273a7631b4e9bfd115fc1e9f4109d87bf312f6e9e171f56d8b3ea6c'),
+}
+
+
+def load(path):
+    return json.loads((ROOT / path).read_text())
+
+
+def checked(path, expected_sha256):
+    try:
+        data = (ROOT / path).read_bytes()
+    except OSError as exc:
+        raise ValueError(f'missing input: {path}') from exc
+    if hashlib.sha256(data).hexdigest() != expected_sha256:
+        raise ValueError(f'hash mismatch: {path}')
+    return data
+
+
+def pointer(document, location):
+    value = document
+    try:
+        for key in location.split('/')[1:]:
+            key = key.replace('~1', '/').replace('~0', '~')
+            value = value[int(key)] if isinstance(value, list) else value[key]
+    except (KeyError, IndexError, ValueError, TypeError) as exc:
+        raise ValueError(f'missing observation: {location}') from exc
+    if value is None or value == {} or value == []:
+        raise ValueError(f'empty observation: {location}')
+    return value
+
+
+def build():
+    audit = json.loads(checked(AUDIT, AUDIT_HASH))
+    baseline = json.loads(checked(audit['baseline']['path'], audit['baseline']['sha256']))
+    originals = {x['id']: x for x in baseline['baseline_audit']['old_sql_items']}
+    evidence = {}
+    for key, entry in audit['diagnostic_evidence'].items():
+        evidence[key] = (P0 / entry['file'], entry['sha256'])
+    evidence.update({key: (P0 / name, digest) for key, (name, digest) in EXTRA.items()})
+    documents = {key: json.loads(checked(path, digest)) for key, (path, digest) in evidence.items()}
+
+    def ref(key, location):
+        value = pointer(documents[key], location)
+        path, digest = evidence[key]
+        return {'path': str(path), 'sha256': digest, 'pointer': location,
+                'observation_sha256': hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()}
+
+    def scenario(key, label):
+        matches = [i for i, row in enumerate(documents[key]['scenarios']) if row['label'] == label]
+        if len(matches) != 1:
+            raise ValueError(f'missing or duplicate scenario: {label}')
+        return ref(key, f'/scenarios/{matches[0]}')
+
+    # Bind the repair implementations to the hashes recorded by the saved executions.
+    repair = documents['repair']['databases']['mysql']
+    checked('apex-system/src/main/resources/db/upgrade/mysql/consent_before_v40.sql', repair['repair_sha256'])
+    for path, digest in documents['recovery']['hashes'].items():
+        checked(path, digest)
+    rows = []
+    for group in audit['remaining_by_source']:
+        kind = group['diagnostic']
+        for old_id in group['ids']:
+            original = originals[old_id]
+            checked(original['source'], original['source_sha256'])
+            if original['source'] != group['source']:
+                raise ValueError(f'source binding mismatch: {old_id}')
+            diagnostic_items = documents[kind]['items']
+            diagnostic = next((i for i, x in enumerate(diagnostic_items) if x['id'] == old_id), None)
+            if diagnostic is None or diagnostic_items[diagnostic]['source_sha256'] != original['source_sha256']:
+                raise ValueError(f'diagnostic binding mismatch: {old_id}')
+            row = {key: original[key] for key in ('id', 'source', 'source_sha256', 'original', 'statement_ids')}
+            row.update(diagnostic=ref(kind, f'/items/{diagnostic}'),
+                       classification='local_first_execution_verified', full_upgrade='unverified',
+                       repair_or_recovery={'status': 'not_required_for_observed_first_execution'},
+                       baseline_credit=False)
+            if kind == 'mysql_v19':
+                row['first_execution'] = [scenario(kind, 'full_file_initial')]
+                row['failure_residue'] = [scenario('residue', label) for label in (
+                    'v19_fk_failure_autocommit', 'v19_fk_replay_autocommit',
+                    'v19_fk_failure_transaction', 'v19_fk_replay_transaction',
+                    'v19_signal_autocommit', 'v19_signal_transaction')]
+                row['scope'] = 'Synthetic predecessor: first full file succeeds; 1452/1644 residue and 1061 replay remain diagnostic; no full Flyway chain.'
+            elif kind == 'mysql_v40':
+                index = next(i for i, x in enumerate(documents[kind]['groups']) if old_id in x['old_ids'])
+                row['first_execution'] = [ref(kind, f'/groups/{index}/observations/absent')]
+                row['failure_residue'] = [ref(kind, '/groups/0/observations/absent'), ref(kind, '/groups/0/observations/replay')]
+                row['repair_or_recovery'] = [ref('repair', '/databases/mysql')]
+                row['classification'] = 'local_preflight_repair_verified'
+                row['scope'] = 'Consent 1062 keeps observed table/data unchanged; other 40 local branches succeed but original run is partial_failure. Full unmodified V40 succeeds only after explicit consent preflight; no full Flyway chain.'
+            elif kind == 'mysql_v42':
+                row['first_execution'] = [scenario(kind, label) for label in ('full_file_token_absent_initial', 'full_file_token_present_initial')]
+                row['failure_residue'] = [scenario(kind, label) for label in ('v42_failure_after_implicit_commit', 'v42_partial_state_replay_duplicate_column')]
+                row['repair_or_recovery'] = [ref('recovery', '/scenarios'), ref('recovery', '/hashes')]
+                row['classification'] = 'local_structure_recovery_verified'
+                row['scope'] = 'Token absent first execution succeeds; token present fails 1064 after implicit commits, retry 1060. 31 recovery scenarios validate structure only; original replay, history/checksum and token encryption unresolved.'
+            else:
+                index = next(i for i, x in enumerate(documents['behavior']['groups']) if old_id in x['old_ids'])
+                row['first_execution'] = [ref('behavior', f'/groups/{index}/observations/first_execution'), ref('behavior', f'/groups/{index}/results')]
+                row['failure_residue'] = [ref('behavior', f'/groups/{index}/observations/duplicate_replay')]
+                row['scope'] = 'Full source first execution and trigger behavior in synthetic PG17 schema; expected duplicate trigger error preserves snapshot. No full Flyway chain.'
+            rows.append(row)
+    return {'schema_version': 1, 'kind': 'independent_one_time_local_acceptance',
+            'status': 'local_evidence_bound_full_upgrade_open', 'baseline_credit': False,
+            'audit': {'path': str(AUDIT), 'sha256': AUDIT_HASH}, 'baseline': audit['baseline'],
+            'p0_released': False, 'java21_switched': False,
+            'blockers': ['Actual old release artifacts and full Flyway predecessor-to-current upgrade chain have not been exercised for these 86 IDs.',
+                         'V40 requires explicit preflight; V42 requires structure recovery and separate Flyway history/checksum coordination.',
+                         'Historical token plaintext encryption, production data reconciliation and upgrade/rollback remain unverified.'],
+            'items': rows}
+
+
+def validate(ledger):
+    expected = build()
+    if ledger != expected:
+        raise ValueError('ledger differs from frozen evidence reconstruction (IDs, hashes, observations or acceptance boundary)')
+    sys.path.insert(0, str(ROOT / 'scripts/ci'))
+    from auth_v45_dynamic_probe_20261018 import verified_union
+    verified, _, denominator = verified_union()
+    baseline = load(expected['baseline']['path'])
+    dynamic = {x['id'] for x in baseline['baseline_audit']['old_sql_items']
+               if x['category'] in ('dynamic_sql', 'procedure_or_prepared_control')}
+    remaining = dynamic - set(verified)
+    ids = [x['id'] for x in ledger['items']]
+    if len(ids) != 86 or len(set(ids)) != 86 or set(ids) != remaining or len(verified) != 500 or denominator != 586:
+        raise ValueError('original coverage or exact remaining set changed')
+    return {'items': len(ids), 'original_verified': len(verified), 'original_denominator': denominator,
+            'original_remaining': len(remaining), 'new_credit': 0, 'full_upgrade_unverified': len(ids),
+            'classification': dict(Counter(x['classification'] for x in ledger['items']))}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--write', action='store_true', help='write the independently reconstructed ledger')
+    args = parser.parse_args()
+    try:
+        ledger = build() if args.write else load(LEDGER)
+        summary = validate(ledger)
+        if args.write:
+            (ROOT / LEDGER).write_text(json.dumps(ledger, ensure_ascii=False, indent=2) + '\n')
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+    except (ValueError, OSError) as exc:
+        parser.exit(1, f'{exc}\n')
+
+
+if __name__ == '__main__':
+    main()

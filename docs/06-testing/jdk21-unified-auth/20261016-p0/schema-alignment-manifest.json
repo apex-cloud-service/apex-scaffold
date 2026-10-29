@@ -1,0 +1,21 @@
+{
+  "test_only": true,
+  "containers": {
+    "mysql": "apex-p0-gate-mysql-20261017",
+    "postgresql": "apex-p0-pg-b1ddd1785ccf"
+  },
+  "domains": [
+    {
+      "vendor": "mysql",
+      "domain": "system",
+      "database": "apex_reg_2978ee5c95cb4bb9b4e612c3aeafe881",
+      "location": "apex-system/src/main/resources/db/migration/mysql"
+    },
+    {
+      "vendor": "postgresql",
+      "domain": "system",
+      "database": "apex_reg_0efab5650a6e4183b58a5b37e34d2ee0",
+      "location": "apex-system/src/main/resources/db/migration/postgresql"
+    }
+  ]
+}

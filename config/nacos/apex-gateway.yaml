@@ -52,10 +52,27 @@ spring:
 
         # ---- 办公域（Phase 5 已切为 apex-office-service） ----
         # 💡 可用 ROUTE_OFFICE_URI 环境变量临时指回单体地址以一键回滚。
+        # ⚠️ 本文件同样整表覆盖 routes（列表不逐元素合并）：站内信 WebSocket/HTTP 路由
+        #    必须在此显式声明并排在 office-domain 之前，否则生产 WS 升级会被 office-domain 抢走。
+        # 🔒 生产必须通过环境变量显式指定真实 office 实例地址，勿沿用回环默认值。
+        - id: office-message-websocket
+          uri: ${ROUTE_OFFICE_WS_URI:ws://127.0.0.1:8084}
+          predicates:
+            - Path=/api/v1/messages/ws
+            - Header=Upgrade, (?i)websocket
+        - id: office-message-http
+          uri: ${ROUTE_OFFICE_MESSAGE_URI:http://127.0.0.1:8084}
+          predicates:
+            - Path=/api/v1/messages,/api/v1/messages/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: officeService
+                fallbackUri: forward:/__gateway/fallback
         - id: office-domain
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
+            - Path=/api/v1/office/**,/api/v2/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
           filters:
             - name: CircuitBreaker
               args:
@@ -66,7 +83,7 @@ spring:
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
-            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/api/v2/files/**,/api/v2/file-shares/**
           filters:
             - name: CircuitBreaker
               args:

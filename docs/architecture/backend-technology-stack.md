@@ -27,6 +27,8 @@
 
 ---
 
+<a id="1-核心框架层"></a>
+
 ## 1. 核心框架层
 
 ### 1.1 Spring Boot 3.5.15
@@ -148,7 +150,7 @@ public List<User> listUsers() {
 
 ---
 
-### 1.4 Java 17 LTS
+### 1.4 Java 21 LTS
 
 **关键特性**:
 
@@ -220,6 +222,8 @@ public interface UserConverter {
 | MapStruct | 快 (编译期) | ✅ | 高 (可查看生成代码) |
 
 ---
+
+<a id="2-数据持久化层"></a>
 
 ## 2. 数据持久化层
 
@@ -297,7 +301,7 @@ public class MyBatisPlusConfig {
 
 ---
 
-### 2.2 MySQL 8.4.0 + Druid 1.2.25
+### 2.2 MySQL 9.0 + Druid 1.2.25
 
 **职责**: 关系型数据库 + 连接池
 
@@ -417,7 +421,7 @@ public Mono<Void> deductInventory(Long productId, int quantity) {
 
 ---
 
-### 2.5 Meilisearch 0.17.1
+### 2.5 Meilisearch SDK 0.17.1 / Server 1.10
 
 **职责**: 全文搜索引擎
 
@@ -441,6 +445,8 @@ public class SearchService {
 ```
 
 ---
+
+<a id="3-微服务治理层"></a>
 
 ## 3. 微服务治理层
 
@@ -470,7 +476,9 @@ spring:
             refresh: true
 ```
 
-#### 3.1.3 Sentinel 流控熔断
+#### 3.1.3 Sentinel 流控（system 域）
+> system 域通过 `SentinelConfig.java` / `SentinelNacosDataSourceConfig.java` 配置流控、熔断和系统保护规则，与网关的 Resilience4j 熔断器并行运作。
+
 ```java
 @SentinelResource(value = "getUserById", 
     blockHandler = "handleBlock", 
@@ -488,7 +496,7 @@ public Mono<User> handleFallback(Long id, Throwable ex) {
 }
 ```
 
-**Sentinel 规则配置**:
+**Sentinel 规则配置**（Nacos 动态数据源）:
 ```json
 [
   {
@@ -545,7 +553,7 @@ public Mono<Result> createPost(@RequestBody PostRequest request) {
 
 ---
 
-### 3.4 RocketMQ 2.3.3
+### 3.4 RocketMQ 5.3.1 (starter 2.3.3)
 
 **职责**: 消息队列
 
@@ -576,6 +584,8 @@ public class OrderService {
 
 ---
 
+<a id="4-可观测性层"></a>
+
 ## 4. 可观测性层
 
 ### 4.1 Prometheus + Micrometer 1.14.3
@@ -584,7 +594,7 @@ public class OrderService {
 
 **指标暴露**:
 ```
-http://localhost:9090/actuator/prometheus
+http://localhost:8083/actuator/prometheus
 
 # HELP jvm_memory_used_bytes Used bytes of a given JVM memory area
 # TYPE jvm_memory_used_bytes gauge
@@ -626,7 +636,7 @@ TraceID: a1b2c3d4e5f67890
 
 **架构设计**:
 ```
-应用日志 → Logstash Encoder (JSON格式)
+应用日志 → Loki Encoder (JSON格式)
           ↓
        Alloy 1.0.0 (日志采集器)
           ↓
@@ -658,6 +668,8 @@ TraceID: a1b2c3d4e5f67890
 
 ---
 
+<a id="5-三方集成层"></a>
+
 ## 5. 三方集成层
 
 ### 5.1 MinIO 8.5.15 / Volcengine TOS 2.6.1
@@ -680,6 +692,8 @@ TraceID: a1b2c3d4e5f67890
 （详细内容见完整文档）
 
 ---
+
+<a id="6-ddd-架构设计"></a>
 
 ## 6. DDD 架构设计
 
@@ -704,6 +718,8 @@ TraceID: a1b2c3d4e5f67890
 ```
 
 ---
+
+<a id="7-技术选型理由"></a>
 
 ## 7. 技术选型理由
 
@@ -731,6 +747,8 @@ TraceID: a1b2c3d4e5f67890
 **结论**: 中国团队更熟悉 MyBatis，且需要精细 SQL 控制。
 
 ---
+
+<a id="8-性能优化策略"></a>
 
 ## 8. 性能优化策略
 
@@ -763,4 +781,4 @@ TraceID: a1b2c3d4e5f67890
 
 **最后更新**: 2026-09-04  
 **维护者**: Apex Team  
-**版本**: 1.2.0
+**版本**: 1.3.1

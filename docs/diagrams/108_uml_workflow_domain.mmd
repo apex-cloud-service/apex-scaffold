@@ -1,84 +1,132 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 classDiagram
     direction TB
+
     class WorkflowDefinition {
-        <<aggregate root · 流程模板>>
-        -Long id
-        -String workflowCode
-        -String workflowName
-        -Integer version
-        -String dagJson
-        -Integer enabled
-        -Long createBy / updateBy
-        +instantiate(businessKey) ProcessInstance
-        +isPublished() boolean
+        «aggregate root · 流程模板 @Data»
+        - Long id
+        - String workflowCode
+        - String workflowName
+        - String description
+        - Integer version
+        - String dagJson
+        - Integer enabled
+        - WorkflowDefinitionStatus status
+        - LocalDateTime publishedAt
+        - Long publishedBy
+        - LocalDateTime createTime / updateTime
+        - Long createBy / updateBy
+        - Integer deleted
+        + isDraft() boolean
+        + isPublished() boolean
+        + isEditable() boolean
+        + publish(operatorId, now)
     }
+    note for WorkflowDefinition "dagJson: WorkflowDefinitionGraph DAG 定义\nstatus: DRAFT/ACTIVE/ARCHIVED\nenabled 与 status 双控发布"
+
+    class WorkflowDefinitionStatus {
+        «enumeration»
+        DRAFT
+        ACTIVE
+        ARCHIVED
+    }
+
     class ProcessInstance {
-        <<aggregate root · 运行实例>>
-        -Long id
-        -Long workflowDefinitionId
-        -String businessKey
-        -String currentNodeKey
-        -String status
-        -Long initiatorId
-        -String contextJson
-        -Boolean suspended
-        +start() / advance()
-        +suspend() / resume()
-        +complete() / reject(reason)
-        +terminate()
+        «aggregate root · 运行实例 @Data»
+        - Long id
+        - Long workflowDefinitionId
+        - String businessKey
+        - String currentNodeKey
+        - String status
+        - Long initiatorId
+        - String contextJson
+        - LocalDateTime startTime / endTime
+        - LocalDateTime createTime / updateTime
+        - Integer deleted
+        - Boolean suspended
     }
+    note for ProcessInstance "status: RUNNING/SUSPENDED/COMPLETED/REJECTED/CANCELLED\nsuspended 挂起标志\ncontextJson 流程上下文"
+
     class Task {
-        <<entity · 任务>>
-        -Long id
-        -Long processInstanceId
-        -String nodeKey / nodeCode / nodeName
-        -Long assigneeId
-        -String status
-        -LocalDateTime dueDate / timeoutAt
-        -String timeoutStrategy
-        -Long transferredFrom
-        +approve() / reject(comment)
-        +transfer(to) / delegate(to)
-        +rollback() / cancel()
-        +hasTimeoutPolicy() boolean
+        «entity · 任务 @Data @Version»
+        - String tenantId
+        - Long id
+        - Integer version
+        - Long processInstanceId
+        - String nodeKey / nodeCode / nodeName
+        - Long assigneeId
+        - String status
+        - LocalDateTime dueDate / completedTime
+        - LocalDateTime timeoutAt
+        - String timeoutStrategy
+        - Long transferredFrom
+        - LocalDateTime createTime / updateTime
+        - Integer deleted
     }
+    note for Task "status: PENDING/COMPLETED/REJECTED/CANCELLED/TRANSFERRED\ntimeoutStrategy: AUTO_APPROVE/AUTO_REJECT/REMIND\nversion 乐观锁条件更新"
+
     class ApprovalRecord {
-        <<entity · 审批留痕>>
-        -Long id
-        -Long processInstanceId / taskId
-        -Long approverId
-        -String action
-        -String comment
-        +toSnapshot() String
+        «entity · 审批留痕 @Data»
+        - Long id
+        - Long processInstanceId
+        - Long taskId
+        - Long approverId
+        - String action
+        - String comment
+        - LocalDateTime createTime
+        - Integer deleted
     }
-    class WorkflowRepositories {
-        <<repository contract>>
-        WorkflowDefinitionRepository
-        ProcessInstanceRepository
-        TaskRepository
-        +findByCode(code, version)
-        +findById(id) / findByBusinessKey(key)
-        +save(entity) / update(entity)
-    }
-    class DagRule {
-        <<domain rule>>
-        DAG nodes + edges (JSON)
-        版本化定义实例化
-        每节点生成 Task
-        contextJson 条件判定
-        超时策略 ESCALATE/AUTO_COMPLETE/NOTIFY
+    note for ApprovalRecord "action: APPROVE/REJECT/TRANSFER/CANCEL\n纯留痕记录，不可变"
+
+    class WorkflowDefinitionRepository {
+        «repository»
+        + findById(id) Mono~WorkflowDefinition~
+        + findByCode(code) Mono~WorkflowDefinition~
+        + findVersions(code) Mono~List~
+        + save(def) Mono~WorkflowDefinition~
     }
 
-    WorkflowDefinition "1" --> "*" ProcessInstance : 实例化
-    ProcessInstance "1" --> "1..*" Task : 生成
-    Task --> ApprovalRecord : 审批留痕
-    WorkflowRepositories ..> WorkflowDefinition : 持久化契约
-    WorkflowRepositories ..> ProcessInstance : 持久化契约
-    WorkflowRepositories ..> Task : 持久化契约
-    ProcessInstance ..> DagRule : 遵循
+    class ProcessInstanceRepository {
+        «repository»
+        + findById(id) Mono~ProcessInstance~
+        + findByBusinessKey(key) Mono~ProcessInstance~
+        + findByInitiator(id) Mono~List~
+        + save(instance) Mono~ProcessInstance~
+    }
 
-    note for ProcessInstance "状态机：RUNNING → SUSPENDED → COMPLETED / REJECTED / TERMINATED"
-    note for Task "状态机：PENDING → COMPLETED / REJECTED / ROLLED_BACK / DELEGATED / CANCELLED"
-    note for WorkflowRepositories "接口定义在领域层，实现下沉到 apex-infrastructure（PO/Mapper/Converter）"
-    note for DagRule "纯领域模型 @Data，无持久化与 Web 依赖（DDD 领域层约束）"
+    class TaskRepository {
+        «repository»
+        + findById(id) Mono~Task~
+        + findByProcessInstanceId(id) Mono~List~
+        + save(task) Mono~Task~
+        + findByAssigneeAndStatus(id, status) Flux~Task~
+    }
+
+    class ApprovalRecordRepository {
+        «repository»
+        + findById(id) Mono~ApprovalRecord~
+        + findByProcessInstanceId(id) Mono~List~
+        + findByTaskId(id) Mono~List~
+        + save(record) Mono~ApprovalRecord~
+    }
+
+    class WorkflowTaskTransaction {
+        «transaction port»
+        + execute(tenant, Consumer~Operations~)
+        + interface Operations
+    }
+
+    WorkflowDefinition "1" --> "*" ProcessInstance : "实例化"
+    ProcessInstance "1" --> "1..*" Task : "生成任务"
+    Task --> ApprovalRecord : "审批留痕"
+    ProcessInstance --> "*" ApprovalRecord : "流程记录"
+
+    WorkflowDefinitionRepository ..> WorkflowDefinition : «manages»
+    ProcessInstanceRepository ..> ProcessInstance : «manages»
+    TaskRepository ..> Task : «manages»
+    ApprovalRecordRepository ..> ApprovalRecord : «manages»
+    WorkflowTaskTransaction ..> Task : «事务边界»
+
+    note for ProcessInstance "流程状态机：RUNNING → SUSPENDED → COMPLETED / REJECTED / CANCELLED"
+    note for Task "任务状态机：PENDING → COMPLETED / REJECTED / CANCELLED / TRANSFERRED"
+    note for WorkflowTaskTransaction "任务完成+审批记录写入需同事务\nexecute 内 Operations 提供原子操作"

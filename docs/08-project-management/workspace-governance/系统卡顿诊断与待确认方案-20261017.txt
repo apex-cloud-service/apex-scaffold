@@ -1,0 +1,105 @@
+系统卡顿诊断与待确认方案
+采集日期：2026-10-17（Asia/Shanghai）
+范围：现存10月11日至17日诊断报告；16:07、16:47—16:48只读资源采样；10:05:30—10:07:30定向统一日志查询。
+状态：仅诊断；未执行修复，未停止服务、卸载驱动、修改配置或重启。
+
+一、结论与证据强度
+
+1. 已证实：WindowServer 无响应及其恢复失败能导致整机 panic。
+现存17份WindowServer .ips，不等于17次独立故障；同一故障可能有多个报告。
+10月17日spin记录：com.apple.WindowServer.HIDEvents队列40秒没有成功checkin。
+主机 /Library/Logs/DiagnosticReports/.contents.panic 的 panic_string：
+userspace watchdog timeout: no successful checkins from WindowServer (2 induced crashes) in 121 seconds
+WindowServer initialization not complete (post IOKitWaitQuiet)
+对应附件：panic-full-2026-10-15-075116.0003.ips。
+同一次panic中logd、remoted、opendirectoryd、configd最近checkin均为0秒；压缩器和swap空间记录为OK。
+说明这次系统panic直接触发原因是WindowServer watchdog，而不是已证明的整机OOM。
+
+10月17日统一日志摘录：
+10:06:49.351 AppleMuxControl2: WindowServer died pid 30761
+10:06:49.580 AppleUSBIORequest: Apple Internal Keyboard / Trackpad endpoint 0x00 status 0xe0005000 (pipe stalled)
+10:07:15.510 AppleMuxControl2: WindowServer started pid 30854
+10:07:16.705 AppleMuxControl2: Active GPU is IGD
+内部键盘/触控板USB错误发生在窗口服务故障附近，尚不能判定是原因还是伴随现象。
+未找到明确指向某个第三方程序或显卡硬件的决定性调用栈。
+
+2. 高度可能参与日常卡顿：16GB内存下，多应用与虚拟机并发导致换页和I/O争用。
+16:07采样：load 18.19/38.54/45.77，CPU idle约58.54%；swap used 4051MB。
+16:47第二帧：load 19.24/18.94/15.23，CPU idle49%，wired3090MB、compressor1339MB、unused41MB。
+该2秒采样区间swapins增加3063页、swapouts126页；4KiB/页，约11.96MiB换入、0.49MiB换出。
+16:48 swap总量6144MB、已用5334.50MB。swap存量本身不等于当前持续抖动，但已观察到区间内换入。
+16:47大进程内存：虚拟机6137MB；Trae Helper约1692MB和611MB；Java922MB；Nexu805MB；Podman Desktop与Helper约560MB。
+进程内存统计不能简单相加当作独占物理内存，仍足以定位主要占用者。
+启动后累计磁盘读179GB、写155GB；累计值不是当前吞吐。
+没有故障时刻的完整资源曲线，不能证明换页直接导致全部WindowServer事件。
+
+3. 已证实资源报告是disk writes，不能误称崩溃或泄漏。
+Java Launcher：15:12:44—15:58:52，约8590MB file-backed memory dirtied/2768秒，平均约3.1MB/s；Action taken none。
+Trae Helper：10:26:24—11:53:37，约2147MB/5234秒；Action taken none。
+VirtualMachine：10月16日22:43—17日09:58，约2147MB/40485秒；Action taken none。
+这些是系统写入预算报告，既不是SSD故障证据，也不代表写入速度已达到磁盘瓶颈。
+
+4. 修正：7份Jetsam不能证明整机OOM。
+全部终止reason均为per-process-limit：
+10-11 knowledgeconstructiond 4215 resident pages
+10-12 duetexpertd 3844 pages
+10-13 knowledgeconstructiond 4832 pages
+10-14 duetexpertd 4787 pages
+10-16 01:04 knowledgeconstructiond 4518 pages
+10-16 11:02 duetexpertd 4439 pages
+10-16 22:04 duetexpertd 3861 pages
+largestProcess均为com.apple.Virtualization.Virtual；最大进程字段不是被终止原因。
+
+5. 暂无充分依据：硬盘空间耗尽、当前热降频、T2硬件故障。
+可用空间约114GiB；pmset无已记录thermal/performance warning，CPU speed/scheduler limit100。
+这不能排除历史过热或未被采样到的硬件故障。
+6份Bridge panic开头为macOS panic detected，是转发的macOS panic记录，不可据此认定T2损坏。
+
+二、当前环境与相关线索
+macOS15.8.2 (24H225)，MacBookPro15,1，Intel，16GB RAM，12逻辑CPU。
+图形：Intel UHD630 + AMD Radeon Pro560X；当前仅内置2880x1800屏幕在线，无Thunderbolt设备连接。
+故障发生时是否接过外设仍未知。
+系统扩展：Little Snitch网络与Endpoint Security扩展；Karabiner DriverKit VirtualHIDDevice1.8.0。
+HID队列超时使Karabiner适合纳入隔离验证，但没有证据可将其直接定为根因。
+Podman：4 CPU、6144MiB，running。
+运行容器（瞬时内存，近似值）：redis4MB、RocketMQ namesrv207MB、broker755MB、MySQL377MB、Nacos653MB、临时gate MySQL511MB、临时PostgreSQL149MB。
+容器合计约2.65GB，不包含完整guest内核/缓存等；不能直接据此认定VM只需要3GB。
+
+三、待确认方案（当前均未执行）
+
+P1：先减少宿主资源争用。
+动作：结束不再使用的gate MySQL和临时PostgreSQL容器；仅停止，不删除容器或卷。执行前再次核对其是否仍被验证任务使用。
+动作：仅在无构建任务时停止空闲mvnd daemon；同一时间只运行一条构建/验证流水线，先采用-T2，必要时-T4，避免-T1C。
+动作：关闭闲置Trae窗口、后台Nexu和不必要的Podman Desktop GUI；保留Podman machine和核心业务容器。记录原运行状态以便恢复。
+影响：暂停临时数据库会中断其连接；关闭应用会影响对应工作会话，须先保存。
+回退：重新启动原容器、应用；恢复原构建并行参数。
+验证：同样开发任务下比较memory pressure、swap增量、交互响应和新增WindowServer报告；不能只看swap存量是否立即下降。
+
+P2：HID链路单变量验证。
+动作：备份Karabiner配置，先退出/暂停其键位重映射并验证虚拟HID活动状态；必要时使用官方方式停用驱动，保存工作后重启。不要手工删除DriverKit系统文件。
+动作：保持内置屏幕和内置输入设备，暂不连接可选USB/蓝牙输入外设；发生故障时记录时间和连接状态。
+影响：自定义键位、宏和虚拟键盘不可用；驱动停用可能需要重启。
+回退：恢复Karabiner原设置及驱动启用状态。
+验证：在相似负载下比较HIDEvents超时与USB pipe stalled是否再次出现。一次无故障不足以证明修复。
+
+P3：图形软件路径逐项验证。
+动作：记录当前设置后，仅关闭Trae的硬件加速，重启Trae并对照；不要同时改多个Electron应用。
+动作：若仍复现，保存工作后安排安全模式/干净用户会话验证，逐项恢复登录项。
+影响：Trae软件渲染可能增加CPU占用；应用重启中断会话。
+回退：恢复原硬件加速设置和登录项。
+验证：对比WindowServer watchdog、GUI响应和CPU负载。当前没有证据支持立即强制独显或关闭系统安全机制。
+
+P4：系统与硬件排查。
+动作：先检查本机官方可用的兼容系统更新，备份后另行确认安装与重启；本次未查询更新目录，不能声称某补丁已可用或能解决此问题。
+动作：若低负载、停用第三方HID、仅内置显示器或安全模式下仍发生同类watchdog，运行Apple Diagnostics；保留panic及发生时间，送检图形/输入/主板链路。
+影响：更新/诊断需停机；系统更新通常无法简单一键回退，需可用备份。
+验证：相同工作负载下不再新增同类panic；诊断码只能作为进一步依据。
+
+暂不建议：直接把Podman从6GB大幅缩到3GB、禁用swap、清空系统缓存/日志、重置所有系统设置或根据Bridge日志直接维修T2。
+若P1后仍有明显换页，可另做6GiB→5GiB对照，但要先检查guest余量和OOM记录；VM调整会中断全部容器，须另行确认。
+
+四、交付与限制
+同目录“系统卡顿关键日志-20261017.tar.gz”保存精选原始诊断文件，便于复查；不是完整sysdiagnose或全量统一日志归档。
+本报告中的统一日志摘录来自有界log show查询；未另行归档完整统一日志数据库。
+没有改动项目业务源码、系统配置、应用设置或容器状态。
+建议先批准P1资源缓解，再逐项批准P2/P3对照，以免多项同时变化导致无法归因。

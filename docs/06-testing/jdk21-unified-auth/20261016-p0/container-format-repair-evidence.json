@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-17",
+  "status": "容器定向测试与 office-service Spotless 检查通过；未执行全仓回归",
+  "scope": "仅格式化指定七个 office-service Java 文件，并修复本机 Podman VM 运行时代理环境。未修改 system SQL、迁移测试、主 report，未提交或推送。",
+  "build_environment": {
+    "initialization": "source scripts/build/init-build-env.sh",
+    "java": "17.0.12-oracle",
+    "mvnd": "2.0.0-rc-3",
+    "advice": "已调用 bl text chat 获取不含仓库内容的一般建议。首次 --no-stream 参数不受支持，去掉后成功。"
+  },
+  "root_cause": {
+    "previous_log": "/Users/eric/.cache/apex-p0-post-repair-verify.log",
+    "previous_log_lines": [18949, 18951, 18956, 18958],
+    "finding": "原测试已成功连接 Podman Docker API，失败发生在拉取 Ryuk 镜像。直接 podman pull 复现：所有 mirror 与 Docker Hub 均尝试经 http://host.containers.internal:12001 代理，解析到 192.168.127.254:12001 后 connection refused。主机该端口无监听；VM 绕过代理直连 Docker Hub 和 DaoCloud 均收到正常认证挑战 HTTP 401。localhost:2375 的后续异常不是实际 TCP endpoint 配错的证据。",
+    "proxy_sources": ["VM /etc/systemd/system.conf.d/default-env.conf", "VM /etc/environment.d/default-env.conf"],
+    "podman_connection": "podman-machine-default-root (default), rootful applehv VM running",
+    "host_socket": "unix:///var/folders/0x/mpfcvmh560q4rbbvkd43ks280000gn/T/podman/podman-machine-default-api.sock",
+    "vm_socket": "/run/podman/podman.sock",
+    "docker_compatible_api": "1.44"
+  },
+  "environment_repair": {
+    "effective_command": "podman machine ssh 'systemctl set-environment HTTP_PROXY= HTTPS_PROXY= http_proxy= https_proxy=; systemctl restart podman.service'",
+    "failed_attempt": "systemctl unset-environment 后默认代理仍由 DefaultEnvironment 继承，未奏效；改为显式空值后成功。",
+    "image_acquisition": "VM 内 env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy podman pull docker.io/testcontainers/ryuk:0.8.1 成功；随后经 /run/podman/podman.sock Docker API POST /v1.44/images/create 再次成功。",
+    "ryuk_image_id": "e1c72b0438b5e617d269397a7d6e8be66c9cc4c1ed01d4e480f20234eb09b507",
+    "test_exports": ["DOCKER_HOST=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')", "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/run/podman/podman.sock"],
+    "ryuk_disabled": false,
+    "persistence": "修复作用于当前 VM systemd manager 的运行时环境；没有改写用户全局代理配置或重启 VM。VM 重启/配置同步后旧默认代理可能恢复，应恢复实际代理服务或再次执行上述命令。现有业务容器保持运行。"
+  },
+  "formatting": {
+    "command": "mvnd -B -pl apex-office-service spotless:apply '-DspotlessFiles=.*/(OfficeCalendarHandler|OfficeDocumentHandler|OfficeOrganizationHandler|OfficeCalendarRouter|OfficeDocumentRouter|OfficeOrganizationRouter|OfficeOpenApiContractTest)\\.java'",
+    "files": [
+      "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/handler/office/OfficeCalendarHandler.java",
+      "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/handler/office/OfficeDocumentHandler.java",
+      "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/handler/office/OfficeOrganizationHandler.java",
+      "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/office/OfficeCalendarRouter.java",
+      "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/office/OfficeDocumentRouter.java",
+      "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/office/OfficeOrganizationRouter.java",
+      "apex-office-service/src/test/java/com/apex/scaffold/officeservice/interfaces/router/OfficeOpenApiContractTest.java"
+    ],
+    "apply_result": "BUILD SUCCESS，精确七文件被格式化；已先阅读源文件及已有 diff，保留原有业务改动。",
+    "check_command": "mvnd -B -pl apex-office-service spotless:check",
+    "check_result": "BUILD SUCCESS，95 个 Java 文件，0 个违规",
+    "attempts": "此前路径列表及 glob 参数未匹配任何文件，apply 虽成功但后续 check 失败；最终确认 spotlessFiles 使用绝对路径正则并成功修复。"
+  },
+  "targeted_test": {
+    "command": "source scripts/build/init-build-env.sh && export DOCKER_HOST=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}') && export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/run/podman/podman.sock && mvnd -T4 -B -pl apex-system -am test-compile failsafe:integration-test failsafe:verify -Dit.test=AccountDeletionUserMapperIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false",
+    "result": "BUILD SUCCESS",
+    "finished_at": "2026-10-17T17:37:34+08:00",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "mysql": "8.0.46，临时 apex_test 数据库成功执行全部 61 个迁移",
+    "ryuk": "日志确认 Ryuk started - will monitor and terminate Testcontainers containers on JVM exit；Ryuk 自身日志确认 Docker daemon is available 和 session label 注册。",
+    "session_id": "3fabceed-faa9-4576-adf8-cc1347d384a2",
+    "cleanup": "JVM 结束后 podman ps -a --filter label=org.testcontainers.sessionId=3fabceed-faa9-4576-adf8-cc1347d384a2 为空；全部 org.testcontainers=true 容器查询也为空。没有人工删除测试容器。",
+    "log_lines": [433, 435, 436, 442, 818, 819, 823, 849, 852],
+    "initialization_retry": "一次并行初始化的 mvnd --version 失败，构建未启动；重新加载指定环境后运行成功。"
+  },
+  "logs": [
+    {"path": "/Users/eric/.cache/apex-container-repair-targeted-test.log", "sha256": "f5bb6094832014657374be7c018dd2c0c9c1eae3a20cb0628ecea8f13d9f6ab9"},
+    {"path": "/Users/eric/.cache/apex-container-format-apply-regex.log", "sha256": "877d5373c2c49ef4d31fec5ff272a9a6829d85564f9adf2bffdd75c81055c6b3"},
+    {"path": "/Users/eric/.cache/apex-container-format-check-regex.log", "sha256": "2989664f81f30207d2d720c51b9e32334af8295959bc7d9aae16c030908b408a"},
+    {"path": "/Users/eric/.cache/apex-container-proxy-repair.log", "sha256": "0d5334c3e3f554f78bfeb00879aa174ebc608a080030704370d488e7c815b85a"},
+    {"path": "/Users/eric/.cache/apex-container-ryuk.log", "sha256": "3acf5203f250416252c40c1344e4ddc263b6d0be8bc496fe0455f10bab132dca"},
+    {"path": "/Users/eric/.cache/apex-container-environment-after.log"},
+    {"path": "/Users/eric/.cache/apex-container-cleanup-after.log", "contents": "empty"}
+  ],
+  "remaining": [
+    "全仓 clean verify 留待主流程统一运行，本记录不构成完整门禁通过。",
+    "运行时代理修复不跨 VM 重启持久化，主流程在同一 VM 当前状态可继续；不要禁用 Ryuk。",
+    "构建仍报告已有 Maven effective-model warnings，本任务没有扩展修复范围。"
+  ],
+  "diff_check": "git diff --check passed"
+}

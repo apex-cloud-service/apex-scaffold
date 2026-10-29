@@ -1,0 +1,118 @@
+{
+  "domain": "system",
+  "scope": "仅归因现有 fresh TEST 库元数据，不证明生产升级路径或业务语义等价",
+  "inputs": ["schema-comparison.json", "final-schema-evidence.json"],
+  "repository_root": "/Users/work/apex-scaffold",
+  "migration_root": "apex-system/src/main/resources/db/migration/",
+  "counts": {"table_presence":15,"missing_base_tables":14,"missing_views":1,"column_presence":193,"derived_columns":167,"shared_table_columns":26,"column_type_normalized":277,"column_default_raw":208,"column_nullability":4,"index_signature_multiset":27},
+  "reference_format": "迁移路径相对 migration_root；列映射值为1起始行号。列证据继承对象的 migration，缺失侧继承 counterpart。每个原始差异由 category+object 唯一定位 schema-comparison.json 的 domains[0].differences；分类规则按顺序首个命中，保留原始 mysql/postgresql 值，不重新归一。",
+  "missing_objects": [
+    {"object":"biometric_auth","kind":"BASE TABLE","migration":"mysql/V55__biometric_auth.sql","create_line":2,"counterpart":"postgresql/V55__mysql_alignment_placeholder.sql","counterpart_line":4,"counterpart_status":"注释占位，无执行DDL","columns":{"created_at":14,"device_id":8,"device_name":9,"failed_attempts":13,"id":3,"last_auth_at":12,"public_key":10,"status":11,"template_id":7,"tenant_id":5,"type":6,"updated_at":15,"user_id":4}},
+    {"object":"device_trust","kind":"BASE TABLE","migration":"mysql/V56__device_trust.sql","create_line":2,"counterpart":"postgresql/V56__mysql_alignment_placeholder.sql","counterpart_line":4,"counterpart_status":"注释占位，无执行DDL","columns":{"auth_count":16,"created_at":20,"device_fingerprint":9,"device_id":6,"device_name":7,"device_type":8,"expires_at":19,"first_auth_at":12,"id":3,"last_auth_at":13,"last_ip":14,"last_location":15,"metadata":18,"risk_score":17,"status":11,"tenant_id":5,"trust_level":10,"updated_at":21,"user_id":4}},
+    {"object":"encryption_key","kind":"BASE TABLE","migration":"mysql/V48__security_enhancements.sql","create_line":157,"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"counterpart_status":"同版本功能不同，仅修改 oauth2_registered_client","columns":{"algorithm":162,"created_at":165,"expires_at":167,"id":158,"is_active":164,"key_data":161,"key_name":159,"key_type":160,"rotated_at":166,"version":163}},
+    {"object":"encryption_key_version","kind":"BASE TABLE","migration":"mysql/V42__add_token_encryption.sql","create_line":145,"counterpart":"postgresql/V42__add_office_platform_tables.sql","counterpart_line":1,"counterpart_status":"同版本为office平台表，未创建此对象","columns":{"active":150,"algorithm":149,"created_at":151,"expires_at":153,"id":146,"key_id":148,"key_version":147,"rotated_at":152}},
+    {"object":"ip_access_control","kind":"BASE TABLE","migration":"mysql/V53__ip_access_control.sql","create_line":2,"counterpart":"postgresql/V53__mysql_alignment_placeholder.sql","counterpart_line":4,"counterpart_status":"注释占位，无执行DDL","columns":{"created_at":11,"created_by":12,"description":7,"enabled":8,"expires_at":10,"id":3,"ip_address":5,"priority":9,"tenant_id":4,"type":6,"updated_at":13,"updated_by":14}},
+    {"object":"jwt_key_version","kind":"BASE TABLE","migration":"mysql/V48__security_enhancements.sql","create_line":62,"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"counterpart_status":"同版本功能不同","columns":{"algorithm":65,"created_at":69,"expires_at":70,"id":63,"is_active":68,"key_data":66,"public_key":67,"rotated_at":71,"version":64}},
+    {"object":"login_history","kind":"BASE TABLE","migration":"mysql/V48__security_enhancements.sql","create_line":95,"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"counterpart_status":"同版本功能不同","columns":{"client_ip":103,"created_at":109,"device_id":105,"device_type":106,"failure_reason":102,"id":96,"is_suspicious":108,"location":107,"login_type":100,"success":101,"tenant_id":99,"user_agent":104,"user_id":97,"username":98}},
+    {"object":"mfa_config","kind":"BASE TABLE","migration":"mysql/V27__mfa_config.sql","create_line":2,"counterpart":"postgresql/V27__create_document_and_chart_tables.sql","counterpart_line":6,"counterpart_status":"同版本创建doc_document等文档图表对象","columns":{"backup_codes":9,"created_at":13,"device_info":10,"failed_attempts":12,"id":3,"last_verified_at":11,"secret":8,"status":7,"tenant_id":5,"type":6,"updated_at":14,"user_id":4}},
+    {"object":"oauth2_client_secret_history","kind":"BASE TABLE","migration":"mysql/V48__security_enhancements.sql","create_line":80,"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"counterpart_status":"客户端轮换字段不等于历史表","columns":{"client_id":82,"created_at":84,"expires_at":85,"id":81,"is_active":87,"rotated_at":86,"secret_hash":83}},
+    {"object":"password_history","kind":"BASE TABLE","migration":"mysql/V48__security_enhancements.sql","create_line":26,"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"counterpart_status":"同版本功能不同","columns":{"created_at":31,"id":27,"password_hash":30,"tenant_id":29,"user_id":28}},
+    {"object":"security_audit_log","kind":"BASE TABLE","migration":"mysql/V48__security_enhancements.sql","create_line":39,"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"counterpart_status":"同版本功能不同","columns":{"additional_info":50,"client_ip":45,"created_at":51,"device_id":47,"event_type":41,"failure_reason":49,"id":40,"success":48,"tenant_id":44,"user_agent":46,"user_id":42,"username":43}},
+    {"object":"token_rotation_history","kind":"BASE TABLE","migration":"mysql/V42__add_token_encryption.sql","create_line":76,"counterpart":"postgresql/V42__add_office_platform_tables.sql","counterpart_line":1,"counterpart_status":"同版本功能不同","columns":{"client_ip":84,"id":77,"new_jti":82,"old_jti":81,"rotated_at":86,"rotation_reason":83,"tenant_id":79,"token_family":80,"user_agent":85,"user_id":78}},
+    {"object":"token_security_event","kind":"BASE TABLE","migration":"mysql/V42__add_token_encryption.sql","create_line":93,"counterpart":"postgresql/V42__add_office_platform_tables.sql","counterpart_line":1,"counterpart_status":"同版本功能不同","columns":{"additional_data":104,"client_ip":102,"description":101,"detected_at":105,"event_type":95,"handled":106,"handled_at":107,"id":94,"jti":100,"severity":96,"tenant_id":98,"token_family":99,"user_agent":103,"user_id":97}},
+    {"object":"trusted_device","kind":"BASE TABLE","migration":"mysql/V48__security_enhancements.sql","create_line":120,"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"counterpart_status":"同版本功能不同","columns":{"device_fingerprint":125,"device_id":124,"device_name":126,"device_type":127,"expires_at":134,"id":121,"is_trusted":131,"last_ip":128,"last_location":129,"last_used_at":133,"tenant_id":123,"trust_score":130,"trusted_at":132,"user_id":122}},
+    {"object":"v_token_health","kind":"VIEW","migration":"mysql/V42__add_token_encryption.sql","create_line":129,"counterpart":"postgresql/V42__add_office_platform_tables.sql","counterpart_line":1,"counterpart_status":"同版本功能不同；视图列为SELECT别名","columns":{"active_families":138,"active_tokens":134,"avg_rotation_count":137,"encrypted_tokens":133,"issue_date":131,"revoked_tokens":135,"rotated_tokens":136,"total_tokens":132}}
+  ],
+  "missing_side_scan": {"scope":"postgresql/V*.sql 全部61脚本","finding":"15对象均未发现可执行创建语句；V53/V55/V56仅注释提及对应MySQL文件。缺失由最终catalog确认，不以注释的已覆盖承诺代替DDL。","negative_evidence_limitation":"未发现语句不是运行语义证明；范围限定system生产迁移"},
+  "shared_column_groups": [
+    {"object":"oauth2_authorization","present_in":"mysql","migration":"mysql/V42__add_token_encryption.sql","alter_line":13,"columns":{"access_token_hash":14,"access_token_encrypted":15,"access_token_iv":16,"refresh_token_hash":17,"refresh_token_encrypted":18,"refresh_token_iv":19,"token_family":20,"previous_jti":21,"rotation_count":23},"counterpart":"postgresql/V42__add_office_platform_tables.sql","counterpart_line":1,"finding":"PG同版本为office表；revoked_at由PG V47建立，故不计缺列"},
+    {"object":"oauth2_authorization","present_in":"mysql","migration":"mysql/V48__security_enhancements.sql","alter_line":144,"columns":{"device_id":145,"device_fingerprint":146,"client_ip":147,"is_revoked":148,"last_used_ip":150,"is_encrypted":151},"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"finding":"PG同版本仅客户端secret轮换字段；last_used_at两库均有"},
+    {"object":"oauth2_authorization","present_in":"mysql","migration":"mysql/V58__add_token_revocation_tracking.sql","alter_line":2,"columns":{"revoked_reason":3},"counterpart":"postgresql/V58__mysql_alignment_placeholder.sql","counterpart_line":4,"finding":"PG V47:5存在revoke_reason，两库共有revoke_reason；新增revoked_reason是另一列，不应按近似名称合并"},
+    {"object":"sys_user","present_in":"mysql","migration":"mysql/V48__security_enhancements.sql","alter_line":10,"columns":{"is_locked":11,"lock_reason":12,"locked_at":13,"locked_until":14,"failed_login_attempts":15,"last_failed_login_at":16,"password_changed_at":17,"password_expires_at":18,"must_change_password":19},"counterpart":"postgresql/V48__add_client_secret_rotation_tracking.sql","counterpart_line":5,"finding":"PG未实施对应用户安全字段DDL"},
+    {"object":"off_sync_history","present_in":"postgresql","migration":"postgresql/V42__add_office_platform_tables.sql","alter_line":130,"columns":{"update_time":143},"counterpart":"mysql/V57__add_office_platform_tables.sql","counterpart_line":124,"finding":"功能对应版本为PG V42/MySQL V57；MySQL建表125至138行没有update_time"}
+  ],
+  "type_classification": {
+    "category":"column_type_normalized",
+    "selection":"对原证据此category的每一项按mysql/postgresql精确值对匹配下列规则；规则外保留unknown。每项身份与原始值保留在输入文件，不复制丢失catalog信息。",
+    "rules":[
+      {"mysql":"datetime(0)","postgresql":"timestamp without time zone(6)","count":190,"class":"temporal_precision_and_range_unverified"},
+      {"mysql":"tinyint","postgresql":"smallint","count":28,"class":"integer_range_differs"},
+      {"mysql":"timestamp(0)","postgresql":"timestamp without time zone(6)","count":20,"class":"temporal_timezone_precision_unverified"},
+      {"mysql":"datetime(6)","postgresql":"timestamp without time zone(6)","count":11,"class":"temporal_range_unverified"},
+      {"mysql":"longtext","postgresql":"text","count":9,"class":"text_capacity_collation_unverified"},
+      {"mysql":"tinyint","postgresql":"boolean","count":9,"class":"boolean_domain_and_conversion_unverified"},
+      {"mysql":"double","postgresql":"double precision","count":4,"class":"floating_dialect_representation_unverified"},
+      {"mysql":"json","postgresql":"jsonb","count":2,"class":"json_storage_and_operators_differ"},
+      {"mysql":"mediumtext","postgresql":"text","count":2,"class":"text_capacity_collation_unverified"},
+      {"mysql":"varchar(255)","postgresql":"varchar(100)","count":1,"class":"length_drift","object":"sys_user.keycloak_sub","references":[["mysql/V51__add_keycloak_fields.sql",11],["postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql",21],["postgresql/V51__mysql_alignment_placeholder.sql",4]]},
+      {"mysql":"longblob","postgresql":"bytea","count":1,"class":"binary_capacity_and_binding_unverified"}
+    ],"unknown_count":0,"semantic_equivalence":"全部未证明；unknown_count为未命中分类数，不代表已证明等价"
+  },
+  "default_classification": {
+    "category":"column_default_raw",
+    "rules":[
+      {"class":"typed_null_catalog_expression","predicate":"mysql is null and postgresql starts with NULL::","count":134},
+      {"class":"sequence_default","predicate":"postgresql starts with nextval(","count":21},
+      {"class":"literal_cast_representation","predicate":"postgresql starts with single_quote + str(mysql) + single_quote + ::","count":40},
+      {"class":"numeric_boolean_representation","predicate":"(mysql,postgresql) in [(0,false),(1,true)] as strings","count":8},
+      {"class":"time_function_or_precision_unverified","objects":["flyway_schema_history.installed_on","sys_message_outbox.created_at","sys_message_outbox.next_attempt_at","sys_message_outbox.updated_at"],"count":4},
+      {"class":"literal_value_drift","objects":["wf_workflow_definition.enabled"],"mysql":"ACTIVE","postgresql":"'DRAFT'::character varying","count":1,"references":[["mysql/V40__fix_schema_inconsistencies_based_on_po.sql",54],["postgresql/V20__create_workflow_engine_tables.sql",12],["postgresql/V40__fix_schema_inconsistencies_based_on_po.sql",50]]}
+    ],"unknown_count":0,"semantic_equivalence":"表达式外观分类，不证明insert/update、序列分配、精度、时区或驱动语义等价"
+  },
+  "nullability_classification": {
+    "category":"column_nullability","class":"mysql_change_drops_not_null_pg_rename_preserves","mysql":"YES","postgresql":"NO",
+    "items":[
+      {"object":"office_message.send_status","references":[["mysql/V40__fix_schema_inconsistencies_based_on_po.sql",132],["postgresql/V31__create_office_message_table.sql",15],["postgresql/V40__fix_schema_inconsistencies_based_on_po.sql",92]]},
+      {"object":"office_message.target_user_ids","references":[["mysql/V40__fix_schema_inconsistencies_based_on_po.sql",118],["postgresql/V31__create_office_message_table.sql",11],["postgresql/V40__fix_schema_inconsistencies_based_on_po.sql",86]]},
+      {"object":"wf_workflow_definition.enabled","references":[["mysql/V40__fix_schema_inconsistencies_based_on_po.sql",54],["postgresql/V20__create_workflow_engine_tables.sql",12],["postgresql/V40__fix_schema_inconsistencies_based_on_po.sql",50]]},
+      {"object":"wf_workflow_definition.node_definition","references":[["mysql/V40__fix_schema_inconsistencies_based_on_po.sql",40],["postgresql/V20__create_workflow_engine_tables.sql",11],["postgresql/V40__fix_schema_inconsistencies_based_on_po.sql",44]]}
+    ]
+  },
+  "index_classification": {
+    "category":"index_signature_multiset","derived_missing_tables":14,"derived_selector":"object in missing_objects and kind == BASE TABLE",
+    "shared_items":[
+      {"object":"biz_system_message","class":"duplicate_signature_inventory","finding":"PG多一个非唯一tenant_id签名；具体历史语句来源unknown"},
+      {"object":"doc_document","class":"fulltext_implementation_differs","finding":"MySQL FULLTEXT(title,content)与PG GIN(to_tsvector(simple,...))；分词、匹配、排序语义未验证"},
+      {"object":"oauth2_authorization","class":"column_drift_and_extra_index","finding":"MySQL多access_token_hash/refresh_token_hash/token_family/device_id/is_revoked/revoked_reason及共有列last_used_at索引","references":[["mysql/V42__add_token_encryption.sql",26],["mysql/V48__security_enhancements.sql",153],["mysql/V58__add_token_revocation_tracking.sql",5]]},
+      {"object":"off_department","class":"migration_order_conditional_skip","finding":"PG多parent_id,status,sort_order及重复sync_source,external_id","references":[["mysql/V43__performance_optimization_indexes.sql",35],["mysql/V43__performance_optimization_indexes.sql",55],["postgresql/V43__performance_optimization_indexes.sql",7]]},
+      {"object":"off_employee","class":"migration_order_conditional_skip","finding":"PG多dept_id,status及employee_code,tenant_id和重复sync_source,external_id","references":[["mysql/V43__performance_optimization_indexes.sql",57],["postgresql/V43__performance_optimization_indexes.sql",11]]},
+      {"object":"off_message","class":"migration_order_conditional_skip","finding":"PG多重复sender_id,send_time","references":[["mysql/V43__performance_optimization_indexes.sql",53],["postgresql/V43__performance_optimization_indexes.sql",3]]},
+      {"object":"off_message_template","class":"migration_order_conditional_skip","finding":"PG多template_code,enabled,tenant_id","references":[["mysql/V43__performance_optimization_indexes.sql",54],["postgresql/V43__performance_optimization_indexes.sql",5]]},
+      {"object":"off_sync_history","class":"migration_order_conditional_skip","finding":"PG多sync_source,start_time及重复sync_status,start_time","references":[["mysql/V43__performance_optimization_indexes.sql",66],["postgresql/V43__performance_optimization_indexes.sql",17]]},
+      {"object":"sys_message_outbox","class":"extra_signature_origin_unknown","finding":"PG多status,next_attempt_at，具体历史语句来源unknown"},
+      {"object":"sys_operation_log","class":"duplicate_signature_inventory","finding":"PG多一个非唯一tenant_id签名，具体历史语句来源unknown"},
+      {"object":"sys_role_dept","class":"extra_signature_origin_unknown","finding":"MySQL多tenant_id,dept_id，具体历史语句来源unknown"},
+      {"object":"sys_user","class":"mixed_column_drift_and_duplicate_inventory","finding":"MySQL多email副本、is_locked、password_expires_at；PG多tenant_id副本；V48安全索引来源已知，其他副本来源unknown","references":[["mysql/V48__security_enhancements.sql",22]]},
+      {"object":"sys_user_role","class":"duplicate_signature_inventory","finding":"PG多一个非唯一tenant_id签名，具体历史语句来源unknown"}
+    ],
+    "order_explanation":"off_*表在PG V42创建、MySQL V57才创建；MySQL V43:35要求表列已存在才执行，故V43时跳过，之后没有补执行这些CALL。",
+    "limitations":"保留原证据有序键、unique、method和重复次数；不把签名相同视为完整DDL等价。谓词、表达式、前缀长度、排序规则等查final-schema-evidence原始indexes；不推断性能等价。"
+  },
+  "persistence_usage": {
+    "search_scope":"全仓 **/src/main/**/*.{java,xml}，对象表名、差异列名及相关PO/Mapper；不包含测试与生成产物；无直接命中不能排除动态SQL或外部客户端",
+    "direct_auth_models":[
+      {"object":"mfa_config","model":"apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/MfaConfig.java","model_line":20,"repository":"apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/MfaConfigRepository.java","repository_line":15},
+      {"object":"biometric_auth","model":"apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/BiometricAuth.java","model_line":20,"repository":"apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/BiometricAuthRepository.java","repository_line":15},
+      {"object":"device_trust","model":"apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/DeviceTrust.java","model_line":20,"repository":"apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/DeviceTrustRepository.java","repository_line":16},
+      {"object":"ip_access_control","model":"apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/IpAccessControl.java","model_line":20,"repository":"apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/IpAccessControlRepository.java","repository_line":17,"query_lines":[45,74]}
+    ],
+    "missing_objects_without_direct_mapping":["encryption_key","encryption_key_version","jwt_key_version","login_history","oauth2_client_secret_history","password_history","security_audit_log","token_rotation_history","token_security_event","trusted_device","v_token_health"],
+    "shared_tables":[
+      {"object":"sys_user","po":"apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java","po_line":58,"mapper":"apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/UserMapper.java","mapper_line":45,"finding":"BaseMapper<UserPO>；九个安全差异列未发现显式映射或直接SQL引用"},
+      {"object":"oauth2_authorization","entity":"apex-system/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2AuthorizationEntity.java","entity_line":13,"finding":"领域实体注释提及表，不是PO/Mapper映射证明；未发现16差异列在system生产Java/XML的直接持久化引用；consent映射是另一张表"},
+      {"object":"off_sync_history","po":"apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/po/OffSyncHistoryPO.java","po_line":84,"mapper":"apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/mapper/OffSyncHistoryMapper.java","mapper_line":73,"base_po":"apex-common/src/main/java/com/apex/scaffold/common/persistence/po/BasePO.java","base_po_line":48,"finding":"PO继承BasePO的update_time映射；说明有列依赖，不能据此声称office新库也缺列"}
+    ],
+    "xml":"未发现15缺失对象及26漂移列的直接XML映射/SQL使用；按字面范围解释",
+    "boundary":"auth生产代码使用不同业务域数据库；这些命中不证明system-service调用缺表。auth_mfa_config不是mfa_config；近似名称不合并。"
+  },
+  "other_categories": [
+    {"category":"column_order","count":73,"classification":"ordinal_inventory_only，业务影响unknown"},
+    {"category":"column_generation","count":1155,"classification":"catalog生成/identity表达差异，未逐项证明语义"},
+    {"category":"index_raw_inventory","count":95,"classification":"原始库存，含命名/方言/缺对象；非95个独立功能缺陷"},
+    {"category":"constraint_kind_counts","count":23,"classification":"结构数量差异，语义unknown"},
+    {"category":"constraint_raw_inventory","count":95,"classification":"原始约束库存，语义unknown"},
+    {"category":"history_checksum","count":56,"classification":"双库不同SQL校验和，不是历史篡改证据"},
+    {"category":"history_script","count":12,"classification":"脚本名/功能错位，版本集合相同不能证明等价"}
+  ],
+  "validation": {"system_migration_source_hashes_matched_final_evidence":122,"table_presence_covered":15,"column_presence_covered":193,"derived_columns":167,"shared_columns":26,"type_rules_total":277,"default_rules_total":208,"nullability_items":4,"index_objects":27,"java_tests_run":false,"database_reexecution":false,"limitations":"仅静态归因；未运行生产升级、真实业务读写、查询计划或跨库语义回归"}
+}

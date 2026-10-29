@@ -1,0 +1,117 @@
+{
+ "kind": "p0_message_outbox_dual_database_repair",
+ "date": "2026-10-19",
+ "status": "confirmed_defect_repaired_targeted_runtime_verified_not_full_p0_acceptance",
+ "changed_files": [
+  {
+   "path": "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/mapper/MessageOutboxMapper.java",
+   "change": "lockMessage 方言修复 NOW(6)->CURRENT_TIMESTAMP(6) 且 CAS 增加 status='PENDING' AND next_attempt_at<=CURRENT_TIMESTAMP(6); releaseExpiredLocks 改为 _databaseId 双分支(MySQL DATE_SUB(NOW(6),INTERVAL)/PG CURRENT_TIMESTAMP(6)-(lock_timeout_seconds*INTERVAL '1 second')),语义保持只清锁不恢复 PENDING(与并行外部修改对齐)"
+  },
+  {
+   "path": "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/dispatcher/MessageOutboxDispatcher.java",
+   "change": "瞬时发送失败一律 markAsFailed(此前未达上限不重投导致消息滞留 PROCESSING); dispatch 由 subscribe 改 blockLast 避免 fixedDelay 重叠调度; sendSync 同步发送切到 BlockingIoSchedulers.remote() 不再占用 jdbc 池"
+  },
+  {
+   "path": "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/service/impl/MessageOutboxServiceImpl.java",
+   "change": "releaseExpiredLocks javadoc 与日志口径同步;实现仍委托 Mapper 单条 UPDATE"
+  },
+  {
+   "path": "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/service/MessageOutboxService.java",
+   "change": "releaseExpiredLocks 接口 javadoc 语义确认:只清除锁字段,不恢复待投递状态"
+  },
+  {
+   "path": "apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java",
+   "change": "新增全局 VendorDatabaseIdProvider Bean(MySQL->mysql, PostgreSQL->postgresql),供 _databaseId 方言分支在真实 SqlSessionFactory 生效(并行外部修改)"
+  },
+  {
+   "path": "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/MessageOutboxDialectTest.java",
+   "change": "新增服务层双库方言测试:lockMessage 状态/时间/CAS、releaseExpiredLocks 只清过期锁、markAsFailed 重试/死信、fetchPendingMessages 到期过滤,种子时间统一取 SELECT CURRENT_TIMESTAMP(6) 避免应用与容器时区偏差"
+  },
+  {
+   "path": "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/MessageOutboxDispatcherTest.java",
+   "change": "新增 Dispatcher Mockito 回归:成功标记 DELIVERED、瞬时失败登记 markAsFailed、未取锁跳过"
+  },
+  {
+   "path": "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/mapper/MessageOutboxDialectTest.java",
+   "change": "并行外部新增 Mapper 层双库测试,使用真实 VendorDatabaseIdProvider 装配"
+  },
+  {
+   "path": "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/mapper/MessageOutboxMapperDialectSqlTest.java",
+   "change": "并行外部新增方言 SQL 断言测试"
+  }
+ ],
+ "findings": [
+  "RED(未修复代码): PG 下 lockMessage 报 function now(integer) does not exist; releaseExpiredLocks 报 DATE_SUB/INTERVAL 语法错误 syntax error at or near lock_timeout_seconds; MySQL 下证实两条现状缺陷:未到 next_attempt_at 的消息可被锁定、释放过期锁不恢复状态(控制台观察,未归档日志)",
+  "GREEN: 两套方言测试类 + SQL 断言 + Dispatcher 单测共 19 项全部通过(含 MySQL 8.0.46 与 PostgreSQL 17.11 各一遍)",
+  "装配条件静态确认: MessageOutboxDispatcher 要求 RocketMQTemplate 类与 Bean、apex.features.message-queue=true、apex.outbox.dispatcher.enabled=true(均 matchIfMissing=true); basic/standard 显式 message-queue: false; FeatureProperties 注释默认值与 matchIfMissing=true 的语义差异未在本轮改动",
+  "事务边界: MessageOutboxServiceImpl.append 在 jdbc 调度器执行且不参与调用方业务事务,与本方案 Outbox 语义一致,未改动"
+ ],
+ "static_schema_scope": {
+  "table": "sys_message_outbox",
+  "migration_sources": [
+   "apex-system/src/main/resources/db/migration/mysql/V45__add_message_outbox.sql",
+   "apex-system/src/main/resources/db/migration/postgresql/V45__add_message_outbox.sql"
+  ],
+  "note": "PG 迁移含 $$ 函数体,测试切分器按 $$ 状态机拆分; 重复初始化先 DROP TRIGGER/FUNCTION/TABLE"
+ },
+ "runtime": {
+  "isolation": "复用本任务已有的专用一次性容器 apex-outbox-mysql-20261018 / apex-outbox-pg-20261018(库 outbox_test),未触碰其他容器或数据",
+  "postgresql": {
+   "container": "apex-outbox-pg-20261018",
+   "host_port": 15438,
+   "database": "outbox_test"
+  },
+  "mysql": {
+   "container": "apex-outbox-mysql-20261018",
+   "host_port": 13328,
+   "database": "outbox_test"
+  },
+  "scenarios_per_database": [
+   "lockMessage: 到期 PENDING 锁定成功(PROCESSING/locked_by/locked_at),二次锁定失败,未到期 PENDING 锁定失败,DELIVERED 锁定失败",
+   "releaseExpiredLocks: 过期(locked_at 早 400s, timeout 300s)清 locked_by/locked_at 且状态保持 PROCESSING, 未过期行不受影响",
+   "markAsFailed: 未达上限 attempts+1 回 PENDING 且 next_attempt_at 指数退避到未来并清锁, 达上限进 DEAD",
+   "fetchPendingMessages: 仅返回到期 PENDING, 不含未来 PENDING 与 PROCESSING"
+  ],
+  "time_limit": "容器数据库默认 UTC 而应用 JVM 为 Asia/Shanghai; 测试种子与断言全部以 SELECT CURRENT_TIMESTAMP(6) 数据库时钟为基准。生产 fetchPendingMessages/markAsFailed 使用 LocalDateTime.now() 应用时钟与 DATETIME 朴素列比较,应用与数据库时区不一致时的正确性未在本轮修复或建立"
+ },
+ "commands": [
+  {
+   "phase": "green_targeted",
+   "command": "source scripts/build/init-build-env.sh && OUTBOX_DUAL_DB=true [isolated DB env] mvnd -pl apex-infrastructure-messaging -B test -Dtest=MessageOutboxDialectTest,MessageOutboxDispatcherTest,MessageOutboxMapperDialectSqlTest -Dsurefire.failIfNoSpecifiedTests=false -Dspotless.check.skip=true -Dpmd.skip=true -Djacoco.skip=true test",
+   "exit_code": 0,
+   "tests": 19,
+   "failures": 0,
+   "errors": 0,
+   "log": "message-outbox-dualdb-20261019-green.log"
+  },
+  {
+   "phase": "green_module_verify",
+   "command": "source scripts/build/init-build-env.sh && OUTBOX_DUAL_DB=true [isolated DB env] mvnd -pl apex-infrastructure-messaging -B verify",
+   "exit_code": 0,
+   "tests": "surefire 108 + failsafe 2",
+   "failures": 0,
+   "errors": 0,
+   "log": null,
+   "qualification": "含 DomainEventOutboxDialectTest 12 项双库回归; spotless/PMD(p3c)/JaCoCo 均通过; 控制台 aktStatus 行为 MySQL 服务端 stderr 噪音,非测试失败"
+  }
+ ],
+ "sha256": {
+  "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/mapper/MessageOutboxMapper.java": "0dab83b193f3476b1aa958fa576a8d1d8df99eeae8e87f76068191d537fc28eb",
+  "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/dispatcher/MessageOutboxDispatcher.java": "54dc0afec1f9aa1fd704efa3d6e75f1ddc27318138c434a67785640db5d6807e",
+  "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/service/impl/MessageOutboxServiceImpl.java": "467d4e682753fcc763c70968a4f50871434ef62a969a4f3b06d9b422c3acd7d0",
+  "apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/outbox/service/MessageOutboxService.java": "2d94b60f7d8b5288516c680f189ea6e9a4f428f74b33521744fc19cae7578c57",
+  "apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java": "2b6beca75d9d1090e5f0a2271795d65c07bd3785c91c478fab906ed3c5ae2a60",
+  "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/MessageOutboxDialectTest.java": "903ea6364a44e31d35b13685e89d7dd52b03394246884ba5687311dca3f9c93a",
+  "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/MessageOutboxDispatcherTest.java": "f80c2e8a1aff550220726c723ae8a6059f03dd0063b4cbe2070071c77fdb0e39",
+  "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/mapper/MessageOutboxDialectTest.java": "f5c93f58efa992a3d22a8b1f758e80c05df191d166311ced290a8b120351e32c",
+  "apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/outbox/mapper/MessageOutboxMapperDialectSqlTest.java": "a58199a852909dff638e8f56b8a164107d7393b5b78920b2cad7bacc4fb6c793"
+ },
+ "limits": [
+  "releaseExpiredLocks 保持只清锁不恢复 PENDING 的既有语义: 实例在锁持有期间崩溃且锁过期后,消息停留 PROCESSING,需人工或后续专项修复才能重投(本轮与并行外部修改显式对齐该语义,未擅自改变)",
+  "lockMessage CAS 新增的 status/next_attempt_at 条件在双库各验证负路径(未到期/已终态/已持锁),但未验证毫秒级边界等值",
+  "markAsFailed 的读-改-写无版本条件;并发安全依赖 lockMessage 锁持有者单写语义,未做并发压力验证",
+  "apex.features.message-queue 与 apex.outbox.dispatcher.enabled 的 matchIfMissing=true 与文档默认 false 的语义差异仅静态记录,未改动装配行为",
+  "未运行全仓 clean verify;完整门禁与文档台账同步在 p0-c 单独执行",
+  "未验证真实 RocketMQ 端到端投递;MqProducerService 以 Mockito 替代"
+ ]
+}

@@ -1,0 +1,664 @@
+#!/usr/bin/env python3
+"""Offline source/catalog evidence; never infer business authority from table names."""
+import argparse
+import collections
+import datetime
+import hashlib
+import json
+import pathlib
+import re
+
+from collect_database_schema import compare, index_inventory, write_json
+from collect_migration_tables import lex, parse_statement
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+EVIDENCE = pathlib.Path('docs/06-testing/jdk21-unified-auth/20261016-p0')
+JAVA_TOKEN = re.compile(r'//[^\n]*|/\*[\s\S]*?\*/|"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
+
+
+def mask_java(text):
+    return JAVA_TOKEN.sub(lambda m: ''.join('\n' if c == '\n' else ' ' for c in m[0]), text)
+
+
+def table_mappings(text):
+    masked = mask_java(text)
+    result = []
+    for match in re.finditer(r'@(?:TableName|Table)\s*\(\s*(?:value\s*=\s*)?"([\w.]+)"', text):
+        if masked[match.start()] != '@':
+            continue
+        declaration = re.search(r'\b(?:class|record)\s+(\w+)', masked[match.end():])
+        if declaration:
+            result.append((match[1], declaration[1], text.count('\n', 0, match.start()) + 1))
+    return result
+
+
+def has_tenant_key(keys):
+    return any(key.strip('`" ') == 'tenant_id' for key in keys)
+
+
+def split_statements(sql, dialect):
+    statement = []
+    for token in lex(sql, dialect) + [('symbol', ';', len(sql), len(sql), 0)]:
+        if token[0] == 'symbol' and token[1] == ';':
+            if statement:
+                yield statement
+            statement = []
+        else:
+            statement.append(token)
+
+
+def static_facts(tokens, sql, dialect, scope='top_level_static_target'):
+    events, issues = parse_statement(tokens, sql, dialect)
+    words = [t[1].upper() if t[0] == 'word' else '' for t in tokens]
+    # Reuse the existing identifier parser via synthetic TABLE tokens. Preserve offsets.
+    extra = None
+    if words[:4] == ['CREATE', 'OR', 'REPLACE', 'VIEW']:
+        extra = (4, 'create_view', False)
+    elif words[:2] == ['CREATE', 'VIEW']:
+        extra = (2, 'create_view', False)
+    elif words[:3] in (['COMMENT', 'ON', 'TABLE'], ['COMMENT', 'ON', 'COLUMN']):
+        extra = (3, 'comment_' + words[2].lower(), words[2] == 'COLUMN')
+    elif words[:3] == ['DROP', 'TEMPORARY', 'TABLE']:
+        events, issues = parse_statement([tokens[0]] + tokens[2:], sql, dialect)
+    if extra:
+        start, operation, column = extra
+        end = start
+        while end < len(tokens) and (tokens[end][0] in ('word', 'identifier') if end == start or tokens[end - 1][1] == '.' else tokens[end][1] == '.'):
+            end += 1
+        target = tokens[start:end]
+        if column:
+            target = target[:-2]
+        valid_suffix = end < len(tokens) and words[end] in ('AS', 'IS')
+        if target and valid_suffix:
+            fake = [('word', 'DROP', 0, 0, tokens[0][4]), ('word', 'TABLE', 0, 0, tokens[0][4])] + target
+            events, issues = parse_statement(fake, sql, dialect)
+            for event in events:
+                event['operation'] = operation
+        else:
+            events = []
+    identifiers = sorted({t[1].strip('`"').lower() for t in tokens if t[0] in ('word', 'identifier')})
+    return [{'table': event['table']['normalized'], 'line': tokens[0][4],
+             'end_line': tokens[-1][4], 'operation': event['operation'],
+             'identifiers': identifiers, 'sql': sql[tokens[0][2]:tokens[-1][3]],
+             'parser_issues': issues, 'scope': scope, 'semantic_verified': False}
+            for event in events]
+
+
+def statement_inventory(sql, dialect):
+    rows, variables, prepared = [], {}, {}
+    procedure_depth = None
+    for tokens in split_statements(sql, dialect):
+        text = sql[tokens[0][2]:tokens[-1][3]]
+        words = [t[1].upper() if t[0] == 'word' else '' for t in tokens]
+        if dialect == 'mysql':
+            if any(words[i:i + 2] in (['CREATE', 'PROCEDURE'], ['CREATE', 'FUNCTION']) for i in range(len(words) - 1)):
+                variables.clear()
+                prepared.clear()
+                procedure_depth = 0
+            for i, word in enumerate(words):
+                if word == 'BEGIN' and procedure_depth is not None:
+                    procedure_depth += 1
+                elif word == 'END' and (i + 1 == len(words) or words[i + 1] not in ('IF', 'LOOP', 'WHILE', 'REPEAT', 'CASE')) and procedure_depth:
+                    procedure_depth -= 1
+                    if not procedure_depth:
+                        variables.clear()
+                        prepared.clear()
+                        procedure_depth = None
+            # Embedded assignments are lexical candidates only, never proof that an IF ran.
+            if procedure_depth:
+                for i in range(len(tokens) - 3):
+                    if words[i] == 'SET' and tokens[i + 1][1] == '@' and tokens[i + 2][0] == 'word' and tokens[i + 3][1] == '=':
+                        variables[tokens[i + 2][1].lower()] = tokens[i][4]
+        facts = static_facts(tokens, sql, dialect)
+        _, issues = parse_statement(tokens, sql, dialect)
+        disposition = 'static_target_identified_not_semantic_validation' if facts else 'unknown_requires_statement_review'
+        related = []
+        assignment = re.match(r'SET\s+@(\w+)\s*=', text, re.I)
+        control = re.match(r'(PREPARE|EXECUTE|DEALLOCATE\s+PREPARE)\s+(\w+)', text, re.I)
+        dollar_bodies = [t for t in tokens if t[0] == 'literal' and t[1].startswith('$')]
+        if assignment:
+            variables[assignment[1].lower()] = tokens[0][4]
+            disposition = 'dynamic_expression_requires_runtime_review'
+            # Only complete literal branches; CONCAT fragments are not executable SQL.
+            if 'CONCAT' not in words:
+                for token in tokens:
+                    if token[0] != 'literal' or not token[1].startswith("'"):
+                        continue
+                    body = token[1][1:-1].replace("''", "'")
+                    if not re.match(r'^\s*(ALTER|CREATE|DROP)\s', body, re.I):
+                        continue
+                    for inner in split_statements(body, dialect):
+                        for fact in static_facts(inner, body, dialect, 'conditional_literal_candidate'):
+                            fact.update(line=token[4], end_line=token[4] + token[1].count('\n'), container_line=tokens[0][4])
+                            facts.append(fact)
+                if facts:
+                    disposition = 'dynamic_literal_targets_identified_condition_not_evaluated'
+        elif control:
+            verb, name = control[1].upper(), control[2].lower()
+            if verb == 'PREPARE':
+                variable = re.search(r'\bFROM\s+@(\w+)', text, re.I)
+                prepared[name] = variables.get(variable[1].lower()) if variable else None
+            binding = prepared.get(name)
+            related = [binding] if binding is not None else []
+            disposition = 'prepared_control_bound_requires_runtime_review' if related else 'unbound_prepared_control_requires_review'
+            if related and procedure_depth:
+                disposition = 'prepared_control_lexically_bound_in_procedure_requires_runtime_review'
+            if verb.startswith('DEALLOCATE'):
+                prepared.pop(name, None)
+        elif dollar_bodies:
+            disposition = 'procedural_body_requires_runtime_review'
+            for token in dollar_bodies:
+                delimiter = re.match(r'\$\w*\$', token[1])[0]
+                body = token[1][len(delimiter):-len(delimiter)]
+                inner_tokens = lex(body, dialect)
+                # Look only at actual word tokens; quoted strings and comments cannot become DDL.
+                for i, inner in enumerate(inner_tokens):
+                    if inner[0] != 'word' or inner[1].upper() not in ('ALTER', 'CREATE', 'DROP'):
+                        continue
+                    end = next((j for j in range(i, len(inner_tokens)) if inner_tokens[j][0] == 'symbol' and inner_tokens[j][1] == ';'), len(inner_tokens))
+                    for fact in static_facts(inner_tokens[i:end], body, dialect, 'procedural_body_static_candidate'):
+                        fact.update(line=token[4] + fact['line'] - 1, end_line=token[4] + fact['end_line'] - 1, container_line=tokens[0][4])
+                        facts.append(fact)
+        elif re.match(r'^(?:DROP\s+PROCEDURE|CREATE\s+(?:OR\s+REPLACE\s+)?(?:PROCEDURE|FUNCTION)|CREATE\s+TRIGGER|DELIMITER|CALL|BEGIN|END|DECLARE|IF|ELSE)\b', text, re.I):
+            disposition = 'procedural_definition_or_control_requires_runtime_review'
+        elif words[0] in ('INSERT', 'UPDATE', 'DELETE', 'SELECT', 'SET', 'GRANT', 'REVOKE', 'COMMIT', 'START', 'WITH'):
+            disposition = 'data_query_or_session_statement_not_ddl_proof'
+        if disposition.startswith(('procedural_', 'unbound_prepared', 'prepared_control')):
+            category = 'procedure_or_prepared_control'
+        elif disposition.startswith('dynamic_'):
+            category = 'dynamic_sql'
+        elif facts:
+            category = 'ddl_comment' if all(f['operation'].startswith('comment_') for f in facts) else 'ddl_target_identified'
+        elif words[0] in ('INSERT', 'UPDATE', 'DELETE', 'SELECT', 'WITH'):
+            category = 'data_dml'
+        elif words[0] in ('SET', 'GRANT', 'REVOKE', 'COMMIT', 'START'):
+            category = 'session_setting'
+        else:
+            category = 'unknown'
+        rows.append({'line': tokens[0][4], 'end_line': tokens[-1][4], 'sql': text,
+                     'start_offset': tokens[0][2], 'end_offset': tokens[-1][3], 'category': category,
+                     'statement_sha256': hashlib.sha256(text.encode()).hexdigest(),
+                     'disposition': disposition, 'semantic_verified': False,
+                     'related_assignment_lines': related, 'facts': facts, 'parser_issues': issues})
+    return rows
+
+
+EXISTS_COLUMN_GUARD = re.compile(
+    r"EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+information_schema\.TABLES\s+WHERE\s+"
+    r"TABLE_SCHEMA\s*=\s*DATABASE\(\)\s+AND\s+TABLE_NAME\s*=\s*'(\w+)'\s*\)\s+AND\s+"
+    r"NOT\s+EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+information_schema\.COLUMNS\s+WHERE\s+"
+    r"TABLE_SCHEMA\s*=\s*DATABASE\(\)\s+AND\s+TABLE_NAME\s*=\s*'(\w+)'\s+AND\s+"
+    r"COLUMN_NAME\s*=\s*'(\w+)'\s*\)", re.I)
+
+EXISTS_INDEX_GUARD = re.compile(
+    r"EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+information_schema\.COLUMNS\s+WHERE\s+"
+    r"TABLE_SCHEMA\s*=\s*DATABASE\(\)\s+AND\s+TABLE_NAME\s*=\s*'(\w+)'\s+AND\s+"
+    r"COLUMN_NAME\s*=\s*'(\w+)'\s*\)\s+AND\s+"
+    r"NOT\s+EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+information_schema\.STATISTICS\s+WHERE\s+"
+    r"TABLE_SCHEMA\s*=\s*DATABASE\(\)\s+AND\s+TABLE_NAME\s*=\s*'(\w+)'\s+AND\s+"
+    r"INDEX_NAME\s*=\s*'(\w+)'\s*\)", re.I)
+
+
+def _exists_guard_target(predicate):
+    """Return (table, kind, name) for an exact V15-style EXISTS gate, else None."""
+    column = EXISTS_COLUMN_GUARD.fullmatch(predicate)
+    if column:
+        table, gated_table, name = column.groups()
+        return (table, 'column', name) if table == gated_table else None
+    index = EXISTS_INDEX_GUARD.fullmatch(predicate)
+    if index:
+        table, _, gated_table, name = index.groups()
+        if table != gated_table:
+            return None
+        return (table, 'index', name)
+    return None
+
+
+def _guard_branch_target(literal, table, kind):
+    """Return the DDL target of an absent branch, or None when it does not match the gated object."""
+    alter = re.fullmatch(r'ALTER\s+TABLE\s+`?(\w+)`?\s+ADD\s+(COLUMN|INDEX)\s+`?(\w+)`?[\s\S]*', literal, re.I)
+    if alter:
+        return alter.groups() if alter.group(1).lower() == table.lower() and alter.group(2).lower() == kind else None
+    create = re.fullmatch(r'CREATE\s+INDEX\s+`?(\w+)`?\s+ON\s+`?(\w+)`?[\s\S]*', literal, re.I)
+    if create and kind == 'index' and create.group(2).lower() == table.lower():
+        return (table, 'index', create.group(1))
+    return None
+
+
+def expand_mysql_guards(sql):
+    """Expand contiguous literal COUNT and EXISTS guards; retain SQL for client execution."""
+    rows = statement_inventory(sql, 'mysql')
+    groups = []
+    literal = r"('(?:''|[^'])*')"
+    assignment = re.compile(r'SET\s+@(\w+)\s*=\s*\(\s*SELECT\s+IF\s*\((.*?)\s*,\s*' + literal + r'\s*,\s*' + literal + r'\s*\)\s*(.*?)\s*\)\s*$', re.I | re.S)
+    existence = re.compile(r'SET\s+@(\w+)\s*=\s*IF\s*\(\s*(.*?)\s*,\s*' + literal + r'\s*,\s*' + literal + r'\s*\)\s*$', re.I | re.S)
+    catalog = (r'FROM\s+information_schema\.(columns|statistics)\s+WHERE\s+'
+               r'table_schema\s*=\s*DATABASE\(\)\s+AND\s+table_name\s*=\s*\'(\w+)\'\s+AND\s+'
+               r'(column_name|index_name)\s*=\s*\'(\w+)\'')
+    for i, row in enumerate(rows):
+        gated = existence.fullmatch(row['sql'])
+        if gated:
+            parsed = _exists_guard_target(gated[2])
+            if not parsed or i + 3 >= len(rows):
+                continue
+            table, kind, name = parsed[:3]
+            absent, present = gated[3][1:-1].replace("''", "'"), gated[4][1:-1].replace("''", "'")
+            target = _guard_branch_target(absent, table, kind)
+            if not target or tuple(s.lower() for s in target) != (table.lower(), kind, name.lower()):
+                continue
+            if not re.fullmatch(r"SELECT\s+(?:1|'(?:''|[^'])*'(?:\s+AS\s+message)?)", present, re.I):
+                continue
+            controls = rows[i + 1:i + 4]
+            prepare = re.fullmatch(r'PREPARE\s+(\w+)\s+FROM\s+@' + re.escape(gated[1]), controls[0]['sql'], re.I)
+            if not prepare or not re.fullmatch(r'EXECUTE\s+' + re.escape(prepare[1]), controls[1]['sql'], re.I) or not re.fullmatch(r'DEALLOCATE\s+PREPARE\s+' + re.escape(prepare[1]), controls[2]['sql'], re.I):
+                continue
+            groups.append({'target': {'table': table, 'kind': kind, 'name': name},
+                           'condition_sql': 'SELECT ' + gated[2], 'absent_sql': absent, 'present_sql': present,
+                           'variable': gated[1], 'prepared_name': prepare[1], 'guard_shape': 'exists_gate',
+                           'statements': rows[i:i + 4], 'semantic_verified': False,
+                           'preconditions': ['current database is the isolated fixture',
+                                             'gated table must exist before the DDL can run',
+                                             'ADD dependencies and privileges must be satisfied',
+                                             'name existence does not establish definition equivalence']})
+            continue
+        match = assignment.fullmatch(row['sql'])
+        if not match or i + 3 >= len(rows):
+            continue
+        variable, predicate, absent, present, tail = match.groups()
+        if re.fullmatch(r'COUNT\(\*\)\s*=\s*0', predicate, re.I):
+            guard = re.fullmatch(catalog, tail, re.I | re.S)
+            condition_sql = 'SELECT ' + predicate + ' ' + tail
+        else:
+            guard_match = re.fullmatch(r'\(\s*SELECT\s+COUNT\(\*\)\s+(' + catalog + r')\s*\)\s*=\s*0', predicate, re.I | re.S)
+            guard = re.fullmatch(catalog, guard_match[1], re.I | re.S) if guard_match and not tail else None
+            condition_sql = 'SELECT ' + predicate
+        if not guard:
+            continue
+        relation, table, key, name = guard.groups()
+        kind = 'column' if relation.lower() == 'columns' else 'index'
+        if key.lower() != ('column_name' if kind == 'column' else 'index_name'):
+            continue
+        absent, present = absent[1:-1].replace("''", "'"), present[1:-1].replace("''", "'")
+        target = re.match(r'ALTER\s+TABLE\s+(\w+)\s+ADD\s+(COLUMN|INDEX)\s+(\w+)\s+', absent, re.I)
+        if not target or tuple(s.lower() for s in target.groups()) != (table.lower(), kind, name.lower()):
+            continue
+        if not re.fullmatch(r"SELECT\s+(?:1|'(?:''|[^'])*'(?:\s+AS\s+message)?)", present, re.I):
+            continue
+        controls = rows[i + 1:i + 4]
+        prepare = re.fullmatch(r'PREPARE\s+(\w+)\s+FROM\s+@' + re.escape(variable), controls[0]['sql'], re.I)
+        if not prepare or not re.fullmatch(r'EXECUTE\s+' + re.escape(prepare[1]), controls[1]['sql'], re.I) or not re.fullmatch(r'DEALLOCATE\s+PREPARE\s+' + re.escape(prepare[1]), controls[2]['sql'], re.I):
+            continue
+        groups.append({'target': {'table': table, 'kind': kind, 'name': name},
+                       'condition_sql': condition_sql, 'absent_sql': absent, 'present_sql': present,
+                       'variable': variable, 'prepared_name': prepare[1],
+                       'statements': rows[i:i + 4], 'semantic_verified': False,
+                       'preconditions': ['current database is the isolated fixture', 'target table exists',
+                                         'ADD dependencies and privileges must be satisfied',
+                                         'name existence does not establish definition equivalence']})
+    return groups
+
+
+def sql_facts(sql, dialect):
+    return [fact for row in statement_inventory(sql, dialect) for fact in row['facts']]
+
+
+def difference_sources(domain, difference, inventory):
+    table, _, column = difference['object'].partition('.')
+    if table == 'flyway_schema_history':
+        return [], 'flyway_managed_catalog_object_no_repository_ddl'
+    refs = []
+    history = difference['category'].startswith('history_')
+    for row in inventory:
+        if row['domain'] != domain:
+            continue
+        if history:
+            if row['version'] == difference['object']:
+                refs.append({k: row[k] for k in ('source', 'line', 'end_line', 'dialect', 'statement_sha256', 'statement_id') if k in row})
+        else:
+            for fact in row['facts']:
+                if fact['table'] == table and (not column or column.lower() in fact['identifiers']):
+                    refs.append(dict({k: row[k] for k in ('source', 'dialect', 'statement_sha256', 'statement_id') if k in row},
+                                     **{k: fact[k] for k in ('line', 'end_line', 'operation', 'scope')}))
+    if history:
+        return refs, 'migration_version_statements_not_ddl_only' if refs else 'no_source_statement_found'
+    return refs, 'exact_table_column_tokens_static_or_conditional_target' if refs else 'no_source_statement_found'
+
+
+def baseline_audit(baseline, inventory, hashes, added_paths):
+    by_source = collections.defaultdict(list)
+    for row in inventory:
+        identity = f"{row['source']}:{row['start_offset']}:{row['end_offset']}:{row['statement_sha256']}"
+        row['statement_id'] = 'stmt-' + hashlib.sha256(identity.encode()).hexdigest()[:24]
+        by_source[row['source']].append(row)
+    old_sql = []
+    for index, item in enumerate(baseline['sql_unresolved_dispositions']):
+        matches = [r for r in by_source[item['source']] if r['line'] <= item['original']['line'] <= r['end_line']]
+        exact = [r for r in matches if r['line'] == item['original']['line']]
+        selected = exact or matches
+        unique = len(selected) == 1
+        row = selected[0] if unique else None
+        old_sql.append({'id': f'old-sql-{index:04d}', 'baseline_index': index,
+                        'source': item['source'], 'migration_unresolved_index': item['migration_unresolved_index'],
+                        'original': item['original'], 'source_sha256': hashes[item['source']],
+                        'source_matches_baseline': baseline.get('source_sha256', {}).get(item['source']) == hashes[item['source']],
+                        'category': row['category'] if row else 'unknown',
+                        'disposition': row['disposition'] if row else 'unknown_source_location_not_unique',
+                        'statement_ids': [r['statement_id'] for r in selected],
+                        'semantic_verified': False,
+                        'reason': '唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价' if unique else '源位置未唯一匹配，保留未知'})
+    old_differences = []
+    for comparison in baseline['dialect_comparisons']:
+        for index, difference in enumerate(comparison['differences']):
+            if difference['source_statement_refs']:
+                continue
+            refs, status = difference_sources(comparison['domain'], difference, inventory)
+            old_differences.append({'id': f"old-diff-{comparison['domain']}-{index:04d}",
+                                    'domain': comparison['domain'], 'baseline_index': index,
+                                    'original': difference, 'association_status': status,
+                                    'source_statement_refs': refs, 'semantic_verified': False,
+                                    'reason': 'Flyway运行库自行维护此表，不伪造仓库DDL' if status.startswith('flyway_') else
+                                              '按迁移版本关联完整语句，含DML；不是DDL等价证明' if status.startswith('migration_') else
+                                              '精确表目标和列token候选，保留条件/过程scope，未验证执行' if refs else '未找到可核查语句'})
+    sql_counts = dict(collections.Counter(r['category'] for r in old_sql))
+    difference_counts = dict(collections.Counter(r['association_status'] for r in old_differences))
+    return {'baseline_sql_denominator': len(old_sql), 'baseline_difference_denominator': len(old_differences),
+            'old_sql_category_counts': sql_counts,
+            'old_sql_disposition_counts': dict(collections.Counter(r['disposition'] for r in old_sql)),
+            'old_sql_unknown_classification': sql_counts.get('unknown', 0),
+            'old_sql_runtime_or_semantic_review_remaining': sum(r['category'] in ('dynamic_sql', 'procedure_or_prepared_control', 'unknown') for r in old_sql),
+            'old_difference_association_counts': difference_counts,
+            'old_difference_without_source_ref': sum(not r['source_statement_refs'] for r in old_differences),
+            'old_difference_unexplained': difference_counts.get('no_source_statement_found', 0),
+            'old_sql_items': old_sql, 'old_difference_items': old_differences,
+            'added_statements': [r['statement_id'] for r in inventory if r['source'] in added_paths],
+            'added_statement_category_counts': dict(collections.Counter(r['category'] for r in inventory if r['source'] in added_paths))}
+
+
+def classify_difference(row):
+    category, a, b = row['category'], row['mysql'], row['postgresql']
+    if category == 'column_generation':
+        if (a.get('extra') or '').lower() in ('', 'default_generated') and not a.get('expression') and b.get('identity') == 'NO' and b.get('generated') == 'NEVER' and not b.get('expression'):
+            return 'dialect_acceptable', '普通列的catalog表示差异；不据此证明该列类型/default或更新行为相同'
+        return 'business_confirmation', '核实auto_increment/sequence分配、ON UPDATE或生成表达式与应用写入策略'
+    if category == 'column_default_raw':
+        if a is None and isinstance(b, str) and b.startswith('NULL::'):
+            return 'dialect_acceptable', '无默认值/显式typed NULL表示；保留NULL约束独立检查'
+        if isinstance(b, str) and b.startswith("'" + str(a).replace("'", "''") + "'::"):
+            return 'dialect_acceptable', '相同字面量的PostgreSQL类型cast表示；类型域单列检查'
+        if (str(a).lower(), str(b).lower()) in {('0', 'false'), ('1', 'true')}:
+            return 'business_confirmation', '0/1与boolean外观对应；其他写入值与驱动转换仍需验证'
+        if isinstance(b, str) and b.startswith("'") and '::' in b and a is not None and not re.search(r'CURRENT|now\(|nextval\(', str(a) + b, re.I):
+            return 'defect_candidate', '默认字面量不同，核对两库原始迁移与业务期望'
+        return 'business_confirmation', '默认函数、序列、时钟/精度或隐式转换尚未验证'
+    if category == 'column_type_normalized':
+        if (a, b) in {('double', 'double precision'), ('float', 'real')}:
+            return 'dialect_acceptable', '方言浮点类型名称对应；不证明运算/序列化精度相同'
+        return 'business_confirmation', '类型域、容量、精度、时区、JSON操作或驱动绑定可能不同，不能仅按名称折叠'
+    if category == 'column_order':
+        return 'business_confirmation', '结构列序不同；需排除SELECT *、无列清单INSERT和外部导入导出消费者'
+    if category == 'column_nullability' and row.get('object') in ('v_token_health.total_tokens', 'v_token_health.active_families'):
+        return 'dialect_acceptable', 'MySQL V42与PG V62视图均为COUNT(*)/COUNT(DISTINCT token_family)；COUNT返回非NULL，视图catalog可空性推断不同'
+    if category in ('column_nullability', 'column_presence', 'table_presence', 'history_version_presence', 'history_success'):
+        return 'defect_candidate', '结构/迁移状态不同，需按原始SQL与业务约束审阅'
+    if category in ('index_signature_multiset', 'constraint_kind_counts'):
+        return 'business_confirmation', '保留重复次数、unique、键序、谓词/前缀与CHECK；需验证查询/约束实际语义'
+    if category in ('index_raw_inventory', 'constraint_raw_inventory'):
+        return 'business_confirmation', '原始方言结构不同；结合签名、键列、约束定义，不把raw差集计作缺陷'
+    if category in ('history_checksum', 'history_script'):
+        return 'dialect_acceptable', '独立方言迁移允许文件名/内容不同；各自source hash/checksum独立验证，不代表SQL等价'
+    return 'unknown', '无已审阅分类规则，保留原值'
+
+
+def collect(root):
+    hashes, checks = {}, []
+
+    def source(path):
+        path = pathlib.Path(path)
+        rel = str(path.relative_to(root)) if path.is_absolute() else str(path)
+        raw = (root / rel).read_bytes()
+        hashes[rel] = hashlib.sha256(raw).hexdigest()
+        return raw.decode('utf-8-sig')
+
+    def load(name):
+        return json.loads(source(EVIDENCE / name))
+
+    baseline = load('table-source-facts-20261018-reviewed.json')
+    load('table-source-facts-20261018-validation.json')
+    links = load('asset-links-20261018.json')
+    migrations = load('tables-20261018.json')
+    old_catalog = load('final-schema-evidence.json')
+    final_catalog = load('schema-alignment-final-catalog-evidence.json')
+    catalog = [r for r in old_catalog['domains'] if r['domain'] != 'system'] + final_catalog['domains']
+    sql_by_table = collections.defaultdict(list)
+    unresolved, inventory = [], []
+    current_migrations = list(migrations['migrations'])
+    known_paths = {m['path'] for m in current_migrations}
+    # Include appended migrations without rewriting the frozen input manifest.
+    for domain, module in [('system', 'apex-system'), ('auth', 'apex-auth-service'), ('workflow', 'apex-workflow-service'), ('file', 'apex-file-service'), ('office', 'apex-office-service')]:
+        for dialect in ('mysql', 'postgresql'):
+            for path in sorted((root / module / 'src/main/resources/db/migration' / dialect).glob('V*__*.sql')):
+                rel = str(path.relative_to(root))
+                if rel not in known_paths:
+                    current_migrations.append({'path': rel, 'domain': domain, 'dialect': dialect,
+                                               'version': path.name.split('__')[0][1:], 'unresolved': [],
+                                               'sha256': None})
+    for migration in current_migrations:
+        path = migration['path']
+        text = source(path)
+        if migration['sha256'] is not None:
+            checks.append({'source': path, 'expected': migration['sha256'], 'actual': hashes[path], 'match': migration['sha256'] == hashes[path], 'input': 'tables-20261018.json'})
+        statements = statement_inventory(text, migration['dialect'])
+        for row in statements:
+            row.update(source=path, domain=migration['domain'], dialect=migration['dialect'], version=migration['version'])
+            inventory.append(row)
+            for fact in row['facts']:
+                fact.update(source=path, domain=migration['domain'], dialect=migration['dialect'], version=migration['version'])
+                sql_by_table[(fact['domain'], fact['table'])].append(fact)
+        for i, item in enumerate(migration['unresolved']):
+            matches = [row for row in statements if row['line'] <= item['line'] <= row['end_line']]
+            exact = [row for row in matches if row['line'] == item['line']]
+            selected = exact or matches
+            unresolved.append({'source': path, 'migration_unresolved_index': i, 'original': item,
+                               'source_sha256': hashes[path], 'source_matches_frozen_manifest': migration['sha256'] == hashes[path],
+                               'disposition': selected[0]['disposition'] if len(selected) == 1 else 'unknown_source_location_not_unique',
+                               'statement_refs': [{k: row[k] for k in ('line', 'end_line', 'statement_sha256', 'related_assignment_lines')} for row in selected],
+                               'semantic_verified': False,
+                               'reason': '逐原项定位并分类；条件、过程、动态拼接及数据结果未执行，目标提取不证明SQL等价'})
+    audit = baseline_audit(baseline, inventory, hashes, {m['path'] for m in current_migrations} - known_paths)
+    for data in catalog:
+        for entry in data['source_files']:
+            path = str(pathlib.Path(data['location']) / entry['file'])
+            source(path)
+            checks.append({'source': path, 'expected': entry['sha256'], 'actual': hashes[path], 'match': entry['sha256'] == hashes[path], 'input': 'catalog/' + data['domain'] + '/' + data['vendor']})
+
+    java, mappings = {}, collections.defaultdict(list)
+    modules = migrations['modules']
+    for module in modules:
+        base = root / module / 'src/main'
+        for path in sorted(base.rglob('*.java')) if base.exists() else []:
+            rel = str(path.relative_to(root))
+            text = source(rel)
+            masked = mask_java(text)
+            java[rel] = (text, masked)
+            for table, model, line in table_mappings(text):
+                mappings[table].append({'source': rel, 'line': line, 'model': model, 'module': module})
+
+    def positions(path, pattern, masked=True):
+        text, code = java[path]
+        return [{'source': path, 'line': text.count('\n', 0, m.start()) + 1, 'text': text.splitlines()[text.count('\n', 0, m.start())].strip()}
+                for m in re.finditer(pattern, code if masked else text)]
+
+    def consumers(table):
+        result = []
+        for mapping in mappings[table]:
+            model, module = mapping['model'], mapping['module']
+            direct = []
+            for path, (text, masked) in java.items():
+                if path.split('/')[0] != module:
+                    continue
+                generic = re.search(r'\b(?:BaseMapper|ReactiveCrudRepository|R2dbcRepository|CrudRepository)\s*<\s*' + re.escape(model) + r'\b', masked)
+                if not generic:
+                    continue
+                declaration = re.search(r'\binterface\s+(\w+)', masked)
+                if not declaration:
+                    continue
+                access = declaration[1]
+                references = []
+                for caller, (caller_text, caller_code) in java.items():
+                    if caller.split('/')[0] != module:
+                        continue
+                    for field in re.finditer(r'\b' + re.escape(access) + r'\s+(\w+)\s*[;,) ]', caller_code):
+                        variable = field[1]
+                        for call in positions(caller, r'\b' + re.escape(variable) + r'\s*\.\s*\w+\s*\('):
+                            call['tenant_evidence'] = positions(caller, r'\bJdbcTenantScope\s*\.|\bTenantContext\s*\.|\bgetTenantId\s*\(|\btenantId\b')
+                            references.append(call)
+                direct.append({'access_type': access, 'source': path, 'line': text.count('\n', 0, generic.start()) + 1,
+                               'kind': 'generic_persistence_binding', 'call_sites': references})
+            result.append(dict(mapping, persistence_bindings=direct,
+                               status='source_binding_and_call_sites_only_runtime_activation_not_proven'))
+        return result
+
+    table_domains = collections.defaultdict(set)
+    for data in catalog:
+        for row in data['tables']:
+            table_domains[row['table_name']].add(data['domain'])
+    shared_handler = source('apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java')
+    ignore_block = re.search(r'IGNORE_TABLES\s*=\s*Set\.of\((.*?)\);', shared_handler, re.S)[1]
+    ignored_tables = set(re.findall(r'"([a-z_]+)"', ignore_block))
+
+    def tenant_assessment(table, production_consumers):
+        assessments = []
+        for module in sorted({c['module'] for c in production_consumers}):
+            if module == 'apex-system':
+                rule = 'shared'
+                status = 'ignored_by_shared_handler' if table in ignored_tables else 'requires_apex.tenant.enabled_true_default_false_and_shared_bean_activation'
+            elif module == 'apex-auth':
+                rule, status = 'auth_explicit', 'JdbcTenantScope_for_JDBC_callers_only_R2DBC_derived_methods_require_individual_review'
+            elif module == 'apex-workflow':
+                rule, status = 'workflow_local', 'local_chain_pagination_only_check_explicit_tenant_predicates_per_operation'
+            elif module == 'apex-office':
+                rule = 'office_message'
+                status = 'dedicated_tenant_interceptor_requires_context' if table in ('off_message', 'off_message_recipient') else 'ignored_by_office_message_interceptor_check_explicit_predicates'
+            else:
+                rule, status = None, 'no_tenant_interceptor_activation_proven_check_application_access_boundary_and_explicit_predicates'
+            assessments.append({'consumer_module': module, 'rule_ref': rule, 'status': status})
+        return {'consumer_assessments': assessments, 'status': 'not_proven' if not assessments else 'source_conditions_only',
+                'limitation': '不按物理表名跨域套用；列存在、方法含tenant符号均不证明每条SQL受保护；生产装配尚未执行'}
+
+    rows = []
+    reference_counts = collections.Counter()
+    for link in links['table_links']:
+        domain, table = link['domain'], link['table']
+        refs = []
+        for candidate in link['production_reference_candidates']:
+            path = candidate['source']
+            text = source(path)
+            if 'sha256' in candidate:
+                checks.append({'source': path, 'expected': candidate['sha256'], 'actual': hashes[path], 'match': candidate['sha256'] == hashes[path], 'input': 'asset-links-20261018.json'})
+            kind = 'unresolved_text_reference'
+            if '/db/' in path and path.endswith('.sql'):
+                kind = 'schema_or_migration_not_runtime_consumer'
+            elif path in java:
+                if any(m['source'] == path for m in mappings[table]):
+                    kind = 'entity_table_mapping'
+                else:
+                    literals = [m for m in JAVA_TOKEN.finditer(text) if m[0].startswith(('"', '"""'))]
+                    found_sql = any(re.search(r'\b(?:FROM|JOIN|UPDATE|INTO|TABLE)\s+[`"]?' + re.escape(table) + r'\b', m[0], re.I) for m in literals)
+                    kind = 'sql_literal_requires_call_path_review' if found_sql else 'comment_or_non_sql_reference'
+            elif path.endswith('.xml'):
+                kind = 'xml_reference_requires_mapper_statement_review'
+            refs.append(dict(candidate, classification=kind))
+            reference_counts[kind] += 1
+        vendors = {}
+        for data in catalog:
+            if data['domain'] != domain:
+                continue
+            cols = [r for r in data['columns'] if r['table_name'] == table]
+            indexes = [dict(i, contains_tenant_id=has_tenant_key(i['keys'])) for i in index_inventory(data).get(table, []) if i['unique']]
+            vendors[data['vendor']] = {'catalog_collected_at': data['collected_at'], 'present': any(r['table_name'] == table for r in data['tables']),
+                                       'tenant_columns': [c for c in cols if c['column_name'] in ('tenant_id', 'tenant_code')],
+                                       'unique_indexes': indexes, 'columns_null_defaults': [{k: c.get(k) for k in ('column_name', 'is_nullable', 'column_default', 'data_type', 'extra', 'is_identity', 'is_generated')} for c in cols]}
+        facts = sql_by_table[(domain, table)]
+        production_consumers = consumers(table)
+        rows.append({'domain': domain, 'table': table, 'physical_domains_in_saved_catalog': sorted(table_domains[table]),
+                     'catalog': vendors, 'migration_statements': facts,
+                     'production_consumers': production_consumers, 'reference_candidate_dispositions': refs,
+                     'tenant_interceptor_assessment': tenant_assessment(table, production_consumers),
+                     'history_null_rule': '仅记录迁移原文及catalog；DEFAULT不证明历史归属；生产历史行未读取，不自动回填',
+                     'history_rule_source_lines': [{'source': path, 'line': i, 'text': line.strip()} for path in sorted({f['source'] for f in facts}) for i, line in enumerate(source(path).splitlines(), 1) if re.search(r'历史|回填|NULL|DEFAULT|UNIQUE', line, re.I) and (table in line or '历史' in line or '回填' in line)],
+                     'authority': {'current': 'physical_domain_and_source_consumers_only', 'target': '参见输入实施计划目标设计，非当前已实现事实', 'decision': '业务所有者需确认跨域重复、历史数据归属及保留/迁移；无静态消费者不构成删除依据'}})
+
+    comparisons = []
+    for domain in ('system', 'auth', 'workflow', 'file', 'office'):
+        pair = {d['vendor']: d for d in catalog if d['domain'] == domain}
+        comparison = compare(pair['mysql'], pair['postgresql'])
+        for i, difference in enumerate(comparison['differences']):
+            disposition, reason = classify_difference(difference)
+            obj = difference['object']
+            table, _, column = obj.partition('.')
+            sources = sql_by_table[(domain, table)]
+            if difference['category'].startswith('history_'):
+                sources = [f for (d, _), fs in sql_by_table.items() if d == domain for f in fs if f['version'] == obj]
+            elif column:
+                sources = [f for f in sources if column in f['identifiers']]
+            refs, association = difference_sources(domain, difference, inventory)
+            difference.update(original_index=i, classification=disposition, reason=reason,
+                              source_association_status=association, source_statement_refs=refs)
+        comparison['classification_counts'] = dict(collections.Counter(r['classification'] for r in comparison['differences']))
+        comparisons.append(comparison)
+    rules = {}
+    rule_paths = {
+        'shared': 'apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java',
+        'shared_handler': 'apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java',
+        'auth_explicit': 'apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/persistence/repository/JdbcTenantScope.java',
+        'workflow_local': 'apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/config/WorkflowPersistenceConfig.java',
+        'office_message': 'apex-office-service/src/main/java/com/apex/scaffold/officeservice/config/MessageTenantConfig.java'}
+    for name, path in rule_paths.items():
+        text = source(path)
+        rules[name] = {'source': path, 'lines': [{'line': i, 'text': line.strip()} for i, line in enumerate(text.splitlines(), 1) if re.search(r'Tenant|tenant|IGNORE_TABLES|"[a-z]+_[a-z_]+"|Interceptor', line)]}
+    for module in modules:
+        for path in sorted((root / module).glob('src/main/resources/application*.yml')):
+            source(path)
+        pom = root / module / 'pom.xml'
+        if pom.exists():
+            source(pom)
+    for path in ('AGENTS.md', 'docs/02-architecture/jdk21-unified-auth-multitenancy-implementation-plan.md', str(EVIDENCE / 'report.md'), str(pathlib.Path(__file__).resolve().relative_to(root)), 'scripts/ci/collect_database_schema.py', 'scripts/ci/collect_migration_tables.py'):
+        source(path)
+    source('scripts/test/test_collect_table_facts.py')
+    return {'schema_version': 2, 'baseline_audit': audit, 'statement_inventory': inventory,
+            'collected_at': datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).isoformat(),
+            'kind': 'offline_table_source_and_catalog_dispositions',
+            'limitations': ['Java为词法绑定/调用位置，不是AST或运行调用图；同名类型、条件Bean、反射、XML和外部消费者仍需核验',
+                           'catalog复用既有真实TEST快照，不是本轮查询；来源hash漂移逐项保留',
+                           '方言可接受仅限给出的局部表示差异，不证明整表业务等价',
+                           '过程/动态SQL未执行；589未解析项逐项保留未知，未伪装语义确认',
+                           '保存全部原始列NULL/default和唯一索引；不读取业务行、不决定回填或权威'],
+            'counts': {'domain_tables': len(rows), 'unique_table_names': len({r['table'] for r in rows}),
+                       'reference_associations': sum(reference_counts.values()),
+                       'unique_table_source_line_candidates': len({(r['table'], c['source'], c['line']) for r in rows for c in r['reference_candidate_dispositions']}),
+                       'unique_source_line_candidates': len({(c['source'], c['line']) for r in rows for c in r['reference_candidate_dispositions']}),
+                       'tables_with_source_mapping': sum(bool(r['production_consumers']) for r in rows),
+                       'tables_without_source_mapping': sum(not r['production_consumers'] for r in rows),
+                       'reference_classifications': dict(reference_counts),
+                       'sql_unresolved': len(unresolved), 'hash_checks': len(checks), 'hash_mismatches': sum(not c['match'] for c in checks),
+                       'source_files_hashed': len(hashes)},
+            'tenant_rules': rules, 'table_facts': rows, 'dialect_comparisons': comparisons,
+            'sql_unresolved_dispositions': unresolved, 'hash_checks': checks, 'source_sha256': hashes,
+            'remaining': ['目标权威、账号冲突合并与历史NULL归属由业务所有者决策',
+                          '全部词法调用链仍需实际装配/SQL执行核验；无法据此关闭租户隔离运行验收',
+                          '未解析SQL逐语句语义审阅未完成，保留精确原项',
+                          'business_confirmation/unknown/defect_candidate逐项审阅与运行条件未闭环']}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--root', type=pathlib.Path, default=ROOT)
+    parser.add_argument('--output', required=True, type=pathlib.Path)
+    args = parser.parse_args()
+    data = collect(args.root.resolve())
+    write_json(args.output, data)
+    print(json.dumps(data['counts'], ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    main()

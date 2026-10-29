@@ -16,7 +16,7 @@
     </marker>
   </defs>
   <rect width="1400" height="900" fill="#fff"/>
-  <text x="700" y="40" class="title">模块结构：apex-application</text>
+  <text x="700" y="40" class="title">模块结构：apex-system</text>
   <text x="700" y="64" class="subtitle">com.apex.scaffold.application · 应用层 · 用例编排 / DTO / 装配器 · v1.3.1</text>
 
   <rect x="40" y="92" width="430" height="740" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
@@ -43,7 +43,7 @@
 
   <text x="60" y="578" class="legend" font-weight="600">依赖</text>
   <text x="60" y="604" class="box-desc">→ 依赖 apex-domain + apex-common + apex-infrastructure</text>
-  <text x="60" y="626" class="box-desc">← 被 apex-interfaces / apex-auth-center 依赖</text>
+  <text x="60" y="626" class="box-desc">← 被 apex-system / apex-auth 依赖</text>
   <text x="60" y="648" class="box-desc">    （依赖深度 L3）</text>
 
   <!-- right: use cases -->
@@ -110,9 +110,9 @@
   <text x="520" y="718" class="box-desc">2. 不引入 WebFlux/Web 类型，保持对传输协议无感知。</text>
   <text x="520" y="746" class="box-desc">3. 用例服务只编排、不实现领域规则，规则下沉至 domain。</text>
   <text x="1040" y="660" class="box-title" font-size="14">典型引用方</text>
-  <text x="1040" y="690" class="box-desc">apex-interfaces（REST/Router 调用）</text>
-  <text x="1040" y="718" class="box-desc">apex-auth-center（复用认证用例）</text>
+  <text x="1040" y="690" class="box-desc">apex-system（REST/Router 调用）</text>
+  <text x="1040" y="718" class="box-desc">apex-auth（复用认证用例）</text>
   <text x="1040" y="746" class="note">依赖深度 L3，位于 domain/infra 之上、interfaces 之下</text>
 
-  <text x="700" y="872" class="note" text-anchor="middle">apex-application 承载用例编排与事务边界，是领域能力对外的应用门面</text>
+  <text x="700" y="872" class="note" text-anchor="middle">apex-system 承载用例编排与事务边界，是领域能力对外的应用门面</text>
 </svg>

@@ -1,0 +1,88 @@
+import copy
+import importlib.util
+import pathlib
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+TOOL = ROOT / 'scripts/ci/migration_one_time_acceptance.py'
+
+
+class OneTimeAcceptanceTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tool = None
+        if TOOL.exists():
+            spec = importlib.util.spec_from_file_location('one_time', TOOL)
+            cls.tool = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(cls.tool)
+
+    def require_tool(self):
+        self.assertIsNotNone(self.tool, 'independent acceptance validator is missing')
+        return self.tool
+
+    def test_saved_ledger_recomputes_exactly(self):
+        tool = self.require_tool()
+        summary = tool.validate(tool.load(tool.LEDGER))
+        self.assertEqual(summary['items'], 86)
+        self.assertEqual(summary['full_upgrade_unverified'], 86)
+        self.assertEqual(summary['original_verified'], 500)
+        self.assertEqual(summary['classification'], {
+            'local_first_execution_verified': 32,
+            'local_preflight_repair_verified': 45,
+            'local_structure_recovery_verified': 9})
+
+    def test_missing_duplicate_or_covered_id_is_rejected(self):
+        tool = self.require_tool()
+        ledger = tool.build()
+        for change in ('missing', 'duplicate', 'covered'):
+            candidate = copy.deepcopy(ledger)
+            if change == 'missing':
+                candidate['items'].pop()
+            elif change == 'duplicate':
+                candidate['items'][-1] = candidate['items'][0]
+            else:
+                candidate['items'][0]['id'] = 'old-sql-0001'
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                tool.validate(candidate)
+
+    def test_missing_evidence_and_unproved_acceptance_are_rejected(self):
+        tool = self.require_tool()
+        for field, value in (('diagnostic', None), ('first_execution', []),
+                             ('failure_residue', []), ('full_upgrade', 'accepted'),
+                             ('source_sha256', '0' * 64), ('classification', 'accepted')):
+            candidate = tool.build()
+            candidate['items'][0][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                tool.validate(candidate)
+
+    def test_repair_cannot_be_reclassified_as_native(self):
+        tool = self.require_tool()
+        for row in tool.build()['items']:
+            if row['classification'] != 'local_first_execution_verified':
+                candidate = tool.build()
+                index = next(i for i, x in enumerate(candidate['items']) if x['id'] == row['id'])
+                candidate['items'][index]['repair_or_recovery'] = []
+                with self.subTest(id=row['id']), self.assertRaises(ValueError):
+                    tool.validate(candidate)
+
+    def test_observation_pointer_or_evidence_hash_cannot_be_substituted(self):
+        tool = self.require_tool()
+        for field, value in (('pointer', '/missing-observation'), ('sha256', '0' * 64),
+                             ('observation_sha256', '0' * 64)):
+            candidate = tool.build()
+            candidate['items'][0]['diagnostic'][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                tool.validate(candidate)
+        with self.assertRaises(ValueError):
+            tool.pointer({'observations': {}}, '/observations/missing')
+
+    def test_hash_mismatch_and_missing_file_are_rejected(self):
+        tool = self.require_tool()
+        with self.assertRaises(ValueError):
+            tool.checked(tool.AUDIT, '0' * 64)
+        with self.assertRaises(ValueError):
+            tool.checked('missing-acceptance-evidence.json', '0' * 64)
+
+
+if __name__ == '__main__':
+    unittest.main()

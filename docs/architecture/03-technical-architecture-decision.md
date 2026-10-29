@@ -2,7 +2,7 @@
 
 > 文档版本: v1.1  
 > 最后更新: 2026-09-05  
-> 适用版本: apex-scaffold v1.2.0+
+> 适用版本: apex-scaffold v1.3.1+
 
 ## 架构图
 
@@ -301,7 +301,7 @@ public Mono<UserVO> getUser(Long id) {
 通过 Maven Profile 管理三个版本:
 - **basic**: 核心功能 (Spring Boot + MySQL + Caffeine)
 - **standard**: 标准版 (basic + Redis + MinIO + 监控)
-- **enterprise**: 企业版 (standard + RocketMQ + Nacos + Sentinel)
+- **enterprise**: 企业版 (standard + RocketMQ + Nacos + Resilience4j)
 
 ### 理由
 

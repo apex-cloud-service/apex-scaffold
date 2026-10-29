@@ -1,0 +1,151 @@
+import importlib.util
+import pathlib
+import unittest
+from unittest.mock import patch
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+
+class NegativeProbeTest(unittest.TestCase):
+    def load(self):
+        spec = importlib.util.spec_from_file_location('negative_probe', ROOT / 'scripts/ci/mysql_v19_v42_negative_probe.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_exact_baseline_statement_bindings(self):
+        p = self.load()
+        for version, count in (('V19', 16), ('V42', 9)):
+            result = p.plan(version)
+            self.assertEqual(count, len(result['items']))
+            self.assertEqual(count, len(result['bindings']))
+            for binding in result['bindings']:
+                self.assertEqual([binding['statement']['statement_id']], binding['item']['statement_ids'])
+            self.assertEqual([], result['coverage']['verified_old_ids'])
+
+    def test_source_drift_rejected(self):
+        p = self.load()
+        with self.assertRaisesRegex(ValueError, 'source hash'):
+            p.plan('V42', source_text='SELECT 1;')
+
+    def test_expected_failure_preserves_error_and_sql(self):
+        p = self.load()
+        result = {'scenarios': []}
+        with patch.object(p, 'save'):
+            p.observe(result, lambda text: (_ for _ in ()).throw(RuntimeError('ERROR 1064 original')), 'bad', 'original SQL', '1064')
+        self.assertEqual('original SQL', result['scenarios'][0]['sql'])
+        self.assertEqual('ERROR 1064 original', result['scenarios'][0]['error'])
+        self.assertFalse(result['scenarios'][0]['counts_as_branch_proof'])
+
+    def test_unexpected_success_rejected(self):
+        p = self.load()
+        with patch.object(p, 'save'), self.assertRaises(AssertionError):
+            p.observe({'scenarios': []}, lambda text: '', 'bad', 'SQL', '1064')
+
+    def partial_commit_sql(self, corrupt=False):
+        columns = 'id\naccess_token_issued_at\naccess_token_expires_at\naccess_token_hash\naccess_token_encrypted\naccess_token_iv\nrefresh_token_hash\nrefresh_token_encrypted\nrefresh_token_iv\ntoken_family\nprevious_jti\nrevoked_at\nrotation_count'
+        indexes = 'idx_access_token_hash\t1\taccess_token_hash\nidx_refresh_token_hash\t1\trefresh_token_hash\nidx_revoked_at\t1\trevoked_at\nidx_token_family\t1\ttoken_family\nPRIMARY\t0\tid'
+        calls = []
+        def sql(text):
+            calls.append(text)
+            if 'SET autocommit=0' in text:
+                raise RuntimeError('ERROR 1064 at PREPARE')
+            if 'ALTER TABLE oauth2_authorization' in text:
+                raise RuntimeError('ERROR 1060 duplicate column')
+            if 'SELECT column_name' in text:
+                return columns
+            if 'SELECT index_name' in text:
+                return indexes
+            if 'SELECT id,rotation_count' in text:
+                return '1\t0'
+            if 'SELECT id FROM token' in text:
+                return '7'
+            if 'SELECT id FROM commit_marker' in text:
+                return '' if corrupt else '99'
+            if 'SELECT table_name' in text:
+                return ''
+            return ''
+        return sql, calls
+
+    def test_v42_partial_commit_is_diagnostic_and_replay_fails(self):
+        p = self.load()
+        self.assertTrue(hasattr(p, 'verify_v42_partial_commit'), '缺少V42部分提交诊断')
+        result = p.plan('V42')
+        sql, calls = self.partial_commit_sql()
+        with patch.object(p, 'save'):
+            p.verify_v42_partial_commit(result, sql)
+        record = result['scenarios'][0]
+        self.assertEqual('expected_failure', record['status'])
+        self.assertEqual('99', record['after']['committed_marker'])
+        self.assertEqual(record['after'], result['scenarios'][1]['after'])
+        self.assertFalse(record['counts_as_branch_proof'])
+        self.assertEqual([], result['coverage']['verified_old_ids'])
+        self.assertIn((p.shared.ROOT / p.SOURCES['V42']).read_text(), record['sql'])
+        self.assertTrue(any('SET autocommit=0' in text for text in calls))
+
+    def test_v42_partial_commit_rejects_missing_commit_marker(self):
+        p = self.load()
+        self.assertTrue(hasattr(p, 'verify_v42_partial_commit'), '缺少V42部分提交诊断')
+        sql, _ = self.partial_commit_sql(corrupt=True)
+        with patch.object(p, 'save'), self.assertRaisesRegex(AssertionError, 'implicit commit'):
+            p.verify_v42_partial_commit(p.plan('V42'), sql)
+
+    def v19_failure_sql(self, corrupt=False):
+        state = {'kind': '', 'transaction': False, 'failed': False}
+        def sql(text):
+            if text.startswith('FIXTURE'):
+                state.update(kind='signal' if 'unassigned' in text else 'fk', transaction=False, failed=False)
+                return ''
+            if 'CREATE PROCEDURE' in text:
+                state['transaction'] = 'START TRANSACTION' in text
+                replay = state['failed']
+                state['failed'] = True
+                if state['kind'] == 'signal':
+                    raise RuntimeError('ERROR 1644 explicit tenant_id')
+                raise RuntimeError('ERROR 1061 duplicate key' if replay else 'ERROR 1452 foreign key')
+            if text == 'DATA':
+                cleaned = state['failed'] and (state['kind'] == 'fk' or not state['transaction'])
+                departments = ('2\ttenant-a' if cleaned else '1\tNULL\n2\ttenant-a')
+                if state['kind'] == 'signal':
+                    departments += '\n3\tNULL'
+                users = '1\tNULL' if cleaned else '1\t1'
+                roles = '2\ttenant-a\t2' + ('\n3\ttenant-b\t2' if state['kind'] == 'fk' else '')
+                return departments + '\n' + users + '\n' + roles
+            if 'SELECT is_nullable' in text:
+                return 'NO' if state['failed'] and state['kind'] == 'fk' else 'YES'
+            if 'SELECT index_name' in text:
+                return '' if corrupt or not state['failed'] or state['kind'] == 'signal' else 'uk_sys_dept_tenant_id_id\t0\ttenant_id\nuk_sys_dept_tenant_id_id\t0\tid'
+            if 'referential_constraints' in text:
+                return ''
+            return ''
+        return sql
+
+    def test_v19_failure_residue_and_signal_transaction_difference(self):
+        p = self.load()
+        self.assertTrue(hasattr(p, 'verify_v19_failure_residue'), '缺少V19失败残留诊断')
+        result = p.plan('V19')
+        with patch.object(p, 'save'):
+            p.verify_v19_failure_residue(result, self.v19_failure_sql(), 'FIXTURE', 'SEED', 'DATA')
+        records = {r['label']: r for r in result['scenarios']}
+        for mode in ('autocommit', 'transaction'):
+            failed = records['v19_fk_failure_' + mode]
+            replay = records['v19_fk_replay_' + mode]
+            self.assertEqual(failed['after'], replay['after'])
+            self.assertEqual('NO', failed['after']['tenant_nullable'])
+        auto = records['v19_signal_autocommit']
+        transaction = records['v19_signal_transaction']
+        self.assertNotEqual(auto['after']['data'], transaction['after']['data'])
+        self.assertIn('START TRANSACTION;\nCALL', transaction['sql'])
+        self.assertTrue(all(not r['counts_as_branch_proof'] for r in result['scenarios']))
+        self.assertEqual([], result['coverage']['verified_old_ids'])
+        self.assertIn('PRIMARY', result['v19_unique_constraint_limit'])
+
+    def test_v19_missing_composite_index_residue_rejected(self):
+        p = self.load()
+        self.assertTrue(hasattr(p, 'verify_v19_failure_residue'), '缺少V19失败残留诊断')
+        with patch.object(p, 'save'), self.assertRaises(AssertionError):
+            p.verify_v19_failure_residue(p.plan('V19'), self.v19_failure_sql(corrupt=True), 'FIXTURE', 'SEED', 'DATA')
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -20,6 +20,8 @@
 
 ---
 
+<a id="1-评审概述"></a>
+
 ## 1. 评审概述
 
 ### 1.1 评审方法
@@ -39,6 +41,8 @@
 - ⚠️ **文档与示例（P1）**：示例模块过于单薄（仅 CRUD + 一个 @FeatureGate 示例），缺部署指南/FAQ/升级指南，管理后台无系统管理页面。
 
 ---
+
+<a id="2-现状能力盘点"></a>
 
 ## 2. 现状能力盘点
 
@@ -95,6 +99,8 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 
 ---
 
+<a id="3-总体评价"></a>
+
 ## 3. 总体评价
 
 | 维度 | 评分（5 分制） | 说明 |
@@ -112,6 +118,8 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 **综合定位**：一个"工程质量极佳的响应式内核"，但尚缺"让客户 30 分钟跑通一个完整管理系统"的产品化外衣。
 
 ---
+
+<a id="4-差距分析与改进建议p0-优先"></a>
 
 ## 4. 差距分析与改进建议（P0 优先）
 
@@ -190,6 +198,8 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 **优先级**：P0 ｜ **工作量**：M
 
 ---
+
+<a id="5-改进建议详单p1"></a>
 
 ## 5. 改进建议详单（P1）
 
@@ -326,6 +336,8 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 
 ---
 
+<a id="6-改进建议详单p2"></a>
+
 ## 6. 改进建议详单（P2）
 
 > P2 = 增强竞争力与差异化，可按销售反馈择机落地。
@@ -349,6 +361,8 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 | P2-15 | 工作流 | 无 | Flowable 集成（企业版差异化卖点，可 OEM） | L |
 
 ---
+
+<a id="7-落地路线图"></a>
 
 ## 7. 落地路线图
 
@@ -376,6 +390,8 @@ RBAC 六件套（sys_user/role/permission/user_role/role_permission）、sys_ope
 15. 阶段 E 剩余项（营销物料深化、安全复核；v1.1.2/v1.1.3 已发布）
 
 ---
+
+<a id="8-附录主流脚手架功能对照表"></a>
 
 ## 8. 附录：主流脚手架功能对照表
 

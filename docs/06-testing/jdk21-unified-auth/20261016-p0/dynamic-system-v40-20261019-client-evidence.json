@@ -1,0 +1,3846 @@
+{
+  "schema_version": 1,
+  "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+  "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+  "baseline_sha256": "8f1402d62caf444d2d7343aa1b8f69ee6031e788dcf9c6d827eaf80d33eed254",
+  "items": [
+    {
+      "id": "old-sql-0394",
+      "baseline_index": 394,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 0,
+      "original": {
+        "line": 14,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-17d52c78a0042d554dcdf97f"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "replay"
+      ]
+    },
+    {
+      "id": "old-sql-0395",
+      "baseline_index": 395,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 1,
+      "original": {
+        "line": 21,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-01898fc252c7a7ad736ff49b"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "replay"
+      ]
+    },
+    {
+      "id": "old-sql-0396",
+      "baseline_index": 396,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 2,
+      "original": {
+        "line": 24,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-3a7544bf7a844b891e57c1c7"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "replay"
+      ]
+    },
+    {
+      "id": "old-sql-0397",
+      "baseline_index": 397,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 3,
+      "original": {
+        "line": 25,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5bf06329b464cec2c53ad330"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "replay"
+      ]
+    },
+    {
+      "id": "old-sql-0398",
+      "baseline_index": 398,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 4,
+      "original": {
+        "line": 26,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-9240e433d717942a1f63ce88"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": [
+        "absent",
+        "replay"
+      ]
+    },
+    {
+      "id": "old-sql-0399",
+      "baseline_index": 399,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 5,
+      "original": {
+        "line": 32,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-41360faa6cca9f3c0db87c9c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0400",
+      "baseline_index": 400,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 6,
+      "original": {
+        "line": 39,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-ebfaea0c05e0b6846fbdad82"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0401",
+      "baseline_index": 401,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 7,
+      "original": {
+        "line": 42,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f9c9fc5fa81bbbe055257f4a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0402",
+      "baseline_index": 402,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 8,
+      "original": {
+        "line": 43,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-7b8dd1b7354ee194aed3af14"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0403",
+      "baseline_index": 403,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 9,
+      "original": {
+        "line": 44,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-6ec1b225ab4282b7b1a8f0e7"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0404",
+      "baseline_index": 404,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 10,
+      "original": {
+        "line": 46,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-4cdfd964aeb682f8dafed693"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0405",
+      "baseline_index": 405,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 11,
+      "original": {
+        "line": 53,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-f86ffd8732fa429a512e91a5"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0406",
+      "baseline_index": 406,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 12,
+      "original": {
+        "line": 56,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-8b7d5eff72c12cca986d575e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0407",
+      "baseline_index": 407,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 13,
+      "original": {
+        "line": 57,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-db5553940db56e6e819986ff"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0408",
+      "baseline_index": 408,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 14,
+      "original": {
+        "line": 58,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-3bc3f44d82db67307942c48b"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0409",
+      "baseline_index": 409,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 15,
+      "original": {
+        "line": 64,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-93ac11f281c7bc9553e4b452"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0410",
+      "baseline_index": 410,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 16,
+      "original": {
+        "line": 71,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-b6c7e3a7ed8d4e88e61109a4"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0411",
+      "baseline_index": 411,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 17,
+      "original": {
+        "line": 74,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-7bc2fe16905b627776401e0d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0412",
+      "baseline_index": 412,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 18,
+      "original": {
+        "line": 75,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-6074e15e1e9333e4590ee85b"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0413",
+      "baseline_index": 413,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 19,
+      "original": {
+        "line": 76,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-25c2b70bb9f2781f8c79aa35"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0414",
+      "baseline_index": 414,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 20,
+      "original": {
+        "line": 82,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f9487bedd9c78c0422b79ce6"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0415",
+      "baseline_index": 415,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 21,
+      "original": {
+        "line": 89,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-8f1d8726e33fb4ba6c44d3df"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0416",
+      "baseline_index": 416,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 22,
+      "original": {
+        "line": 92,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-086e6d5874b67e035a07fc94"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0417",
+      "baseline_index": 417,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 23,
+      "original": {
+        "line": 93,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-da8a36bb7723d8e5929513f7"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0418",
+      "baseline_index": 418,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 24,
+      "original": {
+        "line": 94,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-6284cc97bcd61c8d6024828e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0419",
+      "baseline_index": 419,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 25,
+      "original": {
+        "line": 96,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-de89135a78365bcd42b2d95d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0420",
+      "baseline_index": 420,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 26,
+      "original": {
+        "line": 103,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-32428513bc425be19ff6a28d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0421",
+      "baseline_index": 421,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 27,
+      "original": {
+        "line": 106,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-f85da70ec9d09a14ba8cb40e"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0422",
+      "baseline_index": 422,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 28,
+      "original": {
+        "line": 107,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-2c300c9046ab96e17cf163f2"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0423",
+      "baseline_index": 423,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 29,
+      "original": {
+        "line": 108,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-b7f7df80319014eb0d51a683"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0424",
+      "baseline_index": 424,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 30,
+      "original": {
+        "line": 110,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-cd524eade09b0e9942e223f2"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0425",
+      "baseline_index": 425,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 31,
+      "original": {
+        "line": 117,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-841dbe3d6bc5c9092cd6d05a"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0426",
+      "baseline_index": 426,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 32,
+      "original": {
+        "line": 120,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1a0c38d4e6eb2ff9c95f87c2"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0427",
+      "baseline_index": 427,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 33,
+      "original": {
+        "line": 121,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-5356040def11d8082bf8b710"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0428",
+      "baseline_index": 428,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 34,
+      "original": {
+        "line": 122,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-1fc2e710faa4aef5d364caae"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0429",
+      "baseline_index": 429,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 35,
+      "original": {
+        "line": 124,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-82cbcdfc8e157f8e22e6b979"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0430",
+      "baseline_index": 430,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 36,
+      "original": {
+        "line": 131,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-4b4e7a8e0c8271384b6ac4db"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0431",
+      "baseline_index": 431,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 37,
+      "original": {
+        "line": 134,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-51239f2b81d7e71ef10ba688"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0432",
+      "baseline_index": 432,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 38,
+      "original": {
+        "line": 135,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-3fa060b033a61b5120ddfe31"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0433",
+      "baseline_index": 433,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 39,
+      "original": {
+        "line": 136,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-c38c74a37d74e70e8213f34c"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0434",
+      "baseline_index": 434,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 40,
+      "original": {
+        "line": 138,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_expression_requires_runtime_review",
+      "statement_ids": [
+        "stmt-35b7e501f736ac960e02927d"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0435",
+      "baseline_index": 435,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 41,
+      "original": {
+        "line": 145,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "dynamic_sql",
+      "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+      "statement_ids": [
+        "stmt-29689f64b462cdc1d80a63b1"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0436",
+      "baseline_index": 436,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 42,
+      "original": {
+        "line": 148,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-3f9a0a8fe84adb612ffd6aac"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0437",
+      "baseline_index": 437,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 43,
+      "original": {
+        "line": 149,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-c4d58585fe4226ac004a677b"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    },
+    {
+      "id": "old-sql-0438",
+      "baseline_index": 438,
+      "source": "apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql",
+      "migration_unresolved_index": 44,
+      "original": {
+        "line": 150,
+        "reason": "dynamic_or_procedural_sql"
+      },
+      "source_sha256": "1b39acb48ef41f3011db4b0502676456f7ecdbcac25516e06b8622d2c39383b9",
+      "source_matches_baseline": true,
+      "category": "procedure_or_prepared_control",
+      "disposition": "prepared_control_bound_requires_runtime_review",
+      "statement_ids": [
+        "stmt-867e704b30a00fbcdf94ce12"
+      ],
+      "semantic_verified": false,
+      "reason": "唯一源位置分类及目标候选已保存；不证明条件成立、过程执行或双库语义等价",
+      "verified_in_this_probe": false,
+      "unpassed_branches": []
+    }
+  ],
+  "groups": [
+    {
+      "target": {
+        "table": "oauth2_authorization_consent",
+        "kind": "column",
+        "name": "id"
+      },
+      "statements": [
+        {
+          "line": 14,
+          "end_line": 14,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 678,
+          "end_offset": 697,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 14,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-17d52c78a0042d554dcdf97f"
+        },
+        {
+          "line": 15,
+          "end_line": 19,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'oauth2_authorization_consent' \n  AND COLUMN_NAME = 'id'",
+          "start_offset": 699,
+          "end_offset": 874,
+          "category": "data_dml",
+          "statement_sha256": "cb91b14c2d73f9e2392ac881a6dcb0dce9b3dfbeb1f4bb311be751cc35418928",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-e8d93c8462a80180877d4d8e"
+        },
+        {
+          "line": 21,
+          "end_line": 23,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE oauth2_authorization_consent DROP PRIMARY KEY, ADD COLUMN id VARCHAR(100) NOT NULL FIRST, ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, ADD PRIMARY KEY (id), ADD UNIQUE INDEX uk_client_principal (registered_client_id, principal_name)',\n    'SELECT ''oauth2_authorization_consent already has id column'' AS result')",
+          "start_offset": 877,
+          "end_offset": 1340,
+          "category": "dynamic_sql",
+          "statement_sha256": "5de64e684f30b9d818e24274393e54820399efa5b9dccf8490b050c89dce1ba3",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "oauth2_authorization_consent",
+              "line": 22,
+              "end_line": 22,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "alter",
+                "column",
+                "created_at",
+                "current_timestamp",
+                "default",
+                "drop",
+                "first",
+                "id",
+                "index",
+                "key",
+                "not",
+                "null",
+                "oauth2_authorization_consent",
+                "on",
+                "primary",
+                "principal_name",
+                "registered_client_id",
+                "table",
+                "timestamp",
+                "uk_client_principal",
+                "unique",
+                "update",
+                "updated_at",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE oauth2_authorization_consent DROP PRIMARY KEY, ADD COLUMN id VARCHAR(100) NOT NULL FIRST, ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, ADD PRIMARY KEY (id), ADD UNIQUE INDEX uk_client_principal (registered_client_id, principal_name)",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 21
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 21,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-01898fc252c7a7ad736ff49b"
+        },
+        {
+          "line": 24,
+          "end_line": 24,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 1342,
+          "end_offset": 1364,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            21
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 24,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-3a7544bf7a844b891e57c1c7"
+        },
+        {
+          "line": 25,
+          "end_line": 25,
+          "sql": "EXECUTE stmt",
+          "start_offset": 1366,
+          "end_offset": 1378,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            21
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 25,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-5bf06329b464cec2c53ad330"
+        },
+        {
+          "line": 26,
+          "end_line": 26,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 1380,
+          "end_offset": 1403,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            21
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 26,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-9240e433d717942a1f63ce88"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0394",
+        "old-sql-0395",
+        "old-sql-0396",
+        "old-sql-0397",
+        "old-sql-0398"
+      ],
+      "statement_ids": [
+        [
+          "stmt-17d52c78a0042d554dcdf97f"
+        ],
+        [
+          "stmt-01898fc252c7a7ad736ff49b"
+        ],
+        [
+          "stmt-3a7544bf7a844b891e57c1c7"
+        ],
+        [
+          "stmt-5bf06329b464cec2c53ad330"
+        ],
+        [
+          "stmt-9240e433d717942a1f63ce88"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE oauth2_authorization_consent DROP PRIMARY KEY, ADD COLUMN id VARCHAR(100) NOT NULL FIRST, ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, ADD PRIMARY KEY (id), ADD UNIQUE INDEX uk_client_principal (registered_client_id, principal_name)",
+      "present_sql": "SELECT 'oauth2_authorization_consent already has id column' AS result",
+      "results": {
+        "absent": false,
+        "replay": false,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1062 (23000) at line 12: Duplicate entry '' for key 'oauth2_authorization_consent.PRIMARY'\n",
+          "before": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\nclient-b\tuser-b\twrite"
+          },
+          "after": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\nclient-b\tuser-b\twrite"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `oauth2_authorization_consent`; CREATE TABLE `oauth2_authorization_consent` (registered_client_id VARCHAR(100),principal_name VARCHAR(100),authorities TEXT,PRIMARY KEY(registered_client_id,principal_name)); INSERT INTO `oauth2_authorization_consent` VALUES ('client-a','user-a','read'),('client-b','user-b','write');"
+        },
+        "replay": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1062 (23000) at line 12: Duplicate entry '' for key 'oauth2_authorization_consent.PRIMARY'\n",
+          "before": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\nclient-b\tuser-b\twrite"
+          },
+          "after": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\nclient-b\tuser-b\twrite"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "oauth2_authorization_consent already has id column\n1\tSELECT 'oauth2_authorization_consent already has id column' AS result",
+          "before": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3\nid\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\todd-a\nclient-b\tuser-b\twrite\todd-b"
+          },
+          "after": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3\nid\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\todd-a\nclient-b\tuser-b\twrite\todd-b"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `oauth2_authorization_consent`; CREATE TABLE `oauth2_authorization_consent` (registered_client_id VARCHAR(100),principal_name VARCHAR(100),authorities TEXT,PRIMARY KEY(registered_client_id,principal_name),id VARCHAR(7) NULL); INSERT INTO `oauth2_authorization_consent` VALUES ('client-a','user-a','read','odd-a'),('client-b','user-b','write','odd-b');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.oauth2_authorization_consent' doesn't exist\n"
+        }
+      },
+      "semantic_verified": false
+    },
+    {
+      "target": {
+        "table": "wf_workflow_definition",
+        "kind": "column",
+        "name": "node_definition"
+      },
+      "statements": [
+        {
+          "line": 32,
+          "end_line": 32,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 1584,
+          "end_offset": 1603,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 32,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-41360faa6cca9f3c0db87c9c"
+        },
+        {
+          "line": 33,
+          "end_line": 37,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'wf_workflow_definition' \n  AND COLUMN_NAME = 'node_definition'",
+          "start_offset": 1605,
+          "end_offset": 1787,
+          "category": "data_dml",
+          "statement_sha256": "75d3a82c4593370fef57c1ca3499b48cf81bc209b17153bc71222121dfa85449",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-d7cd80b1624071d5a6448504"
+        },
+        {
+          "line": 39,
+          "end_line": 41,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE wf_workflow_definition CHANGE COLUMN node_config_json node_definition TEXT COMMENT ''节点定义JSON''',\n    'SELECT ''wf_workflow_definition node_definition already exists'' AS result')",
+          "start_offset": 1790,
+          "end_offset": 2018,
+          "category": "dynamic_sql",
+          "statement_sha256": "aa755dac95ff5e7282717d0b2c38c7be28419f3048f31f0b72a337836b648750",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "wf_workflow_definition",
+              "line": 40,
+              "end_line": 40,
+              "operation": "alter_table",
+              "identifiers": [
+                "alter",
+                "change",
+                "column",
+                "comment",
+                "node_config_json",
+                "node_definition",
+                "table",
+                "text",
+                "wf_workflow_definition"
+              ],
+              "sql": "ALTER TABLE wf_workflow_definition CHANGE COLUMN node_config_json node_definition TEXT COMMENT '节点定义JSON'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 39
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 39,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-ebfaea0c05e0b6846fbdad82"
+        },
+        {
+          "line": 42,
+          "end_line": 42,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 2020,
+          "end_offset": 2042,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            39
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 42,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-f9c9fc5fa81bbbe055257f4a"
+        },
+        {
+          "line": 43,
+          "end_line": 43,
+          "sql": "EXECUTE stmt",
+          "start_offset": 2044,
+          "end_offset": 2056,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            39
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 43,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-7b8dd1b7354ee194aed3af14"
+        },
+        {
+          "line": 44,
+          "end_line": 44,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 2058,
+          "end_offset": 2081,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            39
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 44,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-6ec1b225ab4282b7b1a8f0e7"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0399",
+        "old-sql-0400",
+        "old-sql-0401",
+        "old-sql-0402",
+        "old-sql-0403"
+      ],
+      "statement_ids": [
+        [
+          "stmt-41360faa6cca9f3c0db87c9c"
+        ],
+        [
+          "stmt-ebfaea0c05e0b6846fbdad82"
+        ],
+        [
+          "stmt-f9c9fc5fa81bbbe055257f4a"
+        ],
+        [
+          "stmt-7b8dd1b7354ee194aed3af14"
+        ],
+        [
+          "stmt-6ec1b225ab4282b7b1a8f0e7"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE wf_workflow_definition CHANGE COLUMN node_config_json node_definition TEXT COMMENT '节点定义JSON'",
+      "present_sql": "SELECT 'wf_workflow_definition node_definition already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE wf_workflow_definition CHANGE COLUMN node_config_json node_definition TEXT COMMENT '节点定义JSON'",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_config_json\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`node_config_json` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "wf_workflow_definition node_definition already exists\n1\tSELECT 'wf_workflow_definition node_definition already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "wf_workflow_definition node_definition already exists\n1\tSELECT 'wf_workflow_definition node_definition already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`node_definition` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.wf_workflow_definition' doesn't exist\n"
+        },
+        "missing_source_column": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1054 (42S22) at line 12: Unknown column 'node_config_json' in 'wf_workflow_definition'\n",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`node_config_json` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1'),(2,'row-2','v2');",
+          "dropped_source": "node_config_json"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "wf_workflow_definition",
+        "kind": "column",
+        "name": "enabled"
+      },
+      "statements": [
+        {
+          "line": 46,
+          "end_line": 46,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 2084,
+          "end_offset": 2103,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 46,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-4cdfd964aeb682f8dafed693"
+        },
+        {
+          "line": 47,
+          "end_line": 51,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'wf_workflow_definition' \n  AND COLUMN_NAME = 'enabled'",
+          "start_offset": 2105,
+          "end_offset": 2279,
+          "category": "data_dml",
+          "statement_sha256": "cb0ce1d2af656de114f083fadbe6cb5d0daf7c9e988cb4e2b98c345f18e45afc",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-a9f025c911e5f1b86e20f0e8"
+        },
+        {
+          "line": 53,
+          "end_line": 55,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE wf_workflow_definition CHANGE COLUMN status enabled VARCHAR(20) DEFAULT ''ACTIVE'' COMMENT ''是否启用''',\n    'SELECT ''wf_workflow_definition enabled already exists'' AS result')",
+          "start_offset": 2282,
+          "end_offset": 2506,
+          "category": "dynamic_sql",
+          "statement_sha256": "ab8b52aa0f7c8d47e3df770458daff8eff8d80a54c094861a71baa69d139473a",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "wf_workflow_definition",
+              "line": 54,
+              "end_line": 54,
+              "operation": "alter_table",
+              "identifiers": [
+                "alter",
+                "change",
+                "column",
+                "comment",
+                "default",
+                "enabled",
+                "status",
+                "table",
+                "varchar",
+                "wf_workflow_definition"
+              ],
+              "sql": "ALTER TABLE wf_workflow_definition CHANGE COLUMN status enabled VARCHAR(20) DEFAULT 'ACTIVE' COMMENT '是否启用'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 53
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 53,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-f86ffd8732fa429a512e91a5"
+        },
+        {
+          "line": 56,
+          "end_line": 56,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 2508,
+          "end_offset": 2530,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            53
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 56,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-8b7d5eff72c12cca986d575e"
+        },
+        {
+          "line": 57,
+          "end_line": 57,
+          "sql": "EXECUTE stmt",
+          "start_offset": 2532,
+          "end_offset": 2544,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            53
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 57,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-db5553940db56e6e819986ff"
+        },
+        {
+          "line": 58,
+          "end_line": 58,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 2546,
+          "end_offset": 2569,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            53
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 58,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-3bc3f44d82db67307942c48b"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0404",
+        "old-sql-0405",
+        "old-sql-0406",
+        "old-sql-0407",
+        "old-sql-0408"
+      ],
+      "statement_ids": [
+        [
+          "stmt-4cdfd964aeb682f8dafed693"
+        ],
+        [
+          "stmt-f86ffd8732fa429a512e91a5"
+        ],
+        [
+          "stmt-8b7d5eff72c12cca986d575e"
+        ],
+        [
+          "stmt-db5553940db56e6e819986ff"
+        ],
+        [
+          "stmt-3bc3f44d82db67307942c48b"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE wf_workflow_definition CHANGE COLUMN status enabled VARCHAR(20) DEFAULT 'ACTIVE' COMMENT '是否启用'",
+      "present_sql": "SELECT 'wf_workflow_definition enabled already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE wf_workflow_definition CHANGE COLUMN status enabled VARCHAR(20) DEFAULT 'ACTIVE' COMMENT '是否启用'",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nstatus\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nenabled\tvarchar(20)\tYES\tACTIVE\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`status` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "wf_workflow_definition enabled already exists\n1\tSELECT 'wf_workflow_definition enabled already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nenabled\tvarchar(20)\tYES\tACTIVE\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nenabled\tvarchar(20)\tYES\tACTIVE\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "wf_workflow_definition enabled already exists\n1\tSELECT 'wf_workflow_definition enabled already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nenabled\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nenabled\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`enabled` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.wf_workflow_definition' doesn't exist\n"
+        },
+        "missing_source_column": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1054 (42S22) at line 12: Unknown column 'status' in 'wf_workflow_definition'\n",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`status` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1'),(2,'row-2','v2');",
+          "dropped_source": "status"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "wf_process_instance",
+        "kind": "column",
+        "name": "form_data"
+      },
+      "statements": [
+        {
+          "line": 64,
+          "end_line": 64,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 2747,
+          "end_offset": 2766,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 64,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-93ac11f281c7bc9553e4b452"
+        },
+        {
+          "line": 65,
+          "end_line": 69,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'wf_process_instance' \n  AND COLUMN_NAME = 'form_data'",
+          "start_offset": 2768,
+          "end_offset": 2941,
+          "category": "data_dml",
+          "statement_sha256": "484820df54575595ede0c923805bb38ddb5b90a58a29cfe0a11cbc574687b3e4",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-1219fc498ecfee2a7069329c"
+        },
+        {
+          "line": 71,
+          "end_line": 73,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE wf_process_instance CHANGE COLUMN context_json form_data TEXT COMMENT ''表单数据JSON''',\n    'SELECT ''wf_process_instance form_data already exists'' AS result')",
+          "start_offset": 2944,
+          "end_offset": 3150,
+          "category": "dynamic_sql",
+          "statement_sha256": "1ce8be106241393a27071fb1caad8f3be0f31adbeec5b04c0e34bb56eba74715",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "wf_process_instance",
+              "line": 72,
+              "end_line": 72,
+              "operation": "alter_table",
+              "identifiers": [
+                "alter",
+                "change",
+                "column",
+                "comment",
+                "context_json",
+                "form_data",
+                "table",
+                "text",
+                "wf_process_instance"
+              ],
+              "sql": "ALTER TABLE wf_process_instance CHANGE COLUMN context_json form_data TEXT COMMENT '表单数据JSON'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 71
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 71,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-b6c7e3a7ed8d4e88e61109a4"
+        },
+        {
+          "line": 74,
+          "end_line": 74,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 3152,
+          "end_offset": 3174,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            71
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 74,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-7bc2fe16905b627776401e0d"
+        },
+        {
+          "line": 75,
+          "end_line": 75,
+          "sql": "EXECUTE stmt",
+          "start_offset": 3176,
+          "end_offset": 3188,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            71
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 75,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-6074e15e1e9333e4590ee85b"
+        },
+        {
+          "line": 76,
+          "end_line": 76,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 3190,
+          "end_offset": 3213,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            71
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 76,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-25c2b70bb9f2781f8c79aa35"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0409",
+        "old-sql-0410",
+        "old-sql-0411",
+        "old-sql-0412",
+        "old-sql-0413"
+      ],
+      "statement_ids": [
+        [
+          "stmt-93ac11f281c7bc9553e4b452"
+        ],
+        [
+          "stmt-b6c7e3a7ed8d4e88e61109a4"
+        ],
+        [
+          "stmt-7bc2fe16905b627776401e0d"
+        ],
+        [
+          "stmt-6074e15e1e9333e4590ee85b"
+        ],
+        [
+          "stmt-25c2b70bb9f2781f8c79aa35"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE wf_process_instance CHANGE COLUMN context_json form_data TEXT COMMENT '表单数据JSON'",
+      "present_sql": "SELECT 'wf_process_instance form_data already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE wf_process_instance CHANGE COLUMN context_json form_data TEXT COMMENT '表单数据JSON'",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ncontext_json\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_process_instance`; CREATE TABLE `wf_process_instance` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`context_json` VARCHAR(7) NULL); INSERT INTO `wf_process_instance` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "wf_process_instance form_data already exists\n1\tSELECT 'wf_process_instance form_data already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "wf_process_instance form_data already exists\n1\tSELECT 'wf_process_instance form_data already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_process_instance`; CREATE TABLE `wf_process_instance` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`form_data` VARCHAR(7) NULL); INSERT INTO `wf_process_instance` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.wf_process_instance' doesn't exist\n"
+        },
+        "missing_source_column": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1054 (42S22) at line 12: Unknown column 'context_json' in 'wf_process_instance'\n",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `wf_process_instance`; CREATE TABLE `wf_process_instance` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`context_json` VARCHAR(7) NULL); INSERT INTO `wf_process_instance` VALUES (1,'row-1','v1'),(2,'row-2','v2');",
+          "dropped_source": "context_json"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "office_message",
+        "kind": "column",
+        "name": "title"
+      },
+      "statements": [
+        {
+          "line": 82,
+          "end_line": 82,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 3386,
+          "end_offset": 3405,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 82,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-f9487bedd9c78c0422b79ce6"
+        },
+        {
+          "line": 83,
+          "end_line": 87,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'office_message' \n  AND COLUMN_NAME = 'title'",
+          "start_offset": 3407,
+          "end_offset": 3571,
+          "category": "data_dml",
+          "statement_sha256": "88ec3e59b9ab3ad2d8c05160c8fe2bd9cb8d7bc89d62bbf3c41914329fe9b92d",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-392a224a70d09af8c09d890a"
+        },
+        {
+          "line": 89,
+          "end_line": 91,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE office_message ADD COLUMN title VARCHAR(500) NULL COMMENT ''消息标题'' AFTER message_type',\n    'SELECT ''office_message title already exists'' AS result')",
+          "start_offset": 3574,
+          "end_offset": 3774,
+          "category": "dynamic_sql",
+          "statement_sha256": "3d7d250b63897fec109e51cd2badfaa78399124574ab195512d03fa78c3c0de4",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "office_message",
+              "line": 90,
+              "end_line": 90,
+              "operation": "alter_table",
+              "identifiers": [
+                "add",
+                "after",
+                "alter",
+                "column",
+                "comment",
+                "message_type",
+                "null",
+                "office_message",
+                "table",
+                "title",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE office_message ADD COLUMN title VARCHAR(500) NULL COMMENT '消息标题' AFTER message_type",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 89
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 89,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-8f1d8726e33fb4ba6c44d3df"
+        },
+        {
+          "line": 92,
+          "end_line": 92,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 3776,
+          "end_offset": 3798,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            89
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 92,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-086e6d5874b67e035a07fc94"
+        },
+        {
+          "line": 93,
+          "end_line": 93,
+          "sql": "EXECUTE stmt",
+          "start_offset": 3800,
+          "end_offset": 3812,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            89
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 93,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-da8a36bb7723d8e5929513f7"
+        },
+        {
+          "line": 94,
+          "end_line": 94,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 3814,
+          "end_offset": 3837,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            89
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 94,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-6284cc97bcd61c8d6024828e"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0414",
+        "old-sql-0415",
+        "old-sql-0416",
+        "old-sql-0417",
+        "old-sql-0418"
+      ],
+      "statement_ids": [
+        [
+          "stmt-f9487bedd9c78c0422b79ce6"
+        ],
+        [
+          "stmt-8f1d8726e33fb4ba6c44d3df"
+        ],
+        [
+          "stmt-086e6d5874b67e035a07fc94"
+        ],
+        [
+          "stmt-da8a36bb7723d8e5929513f7"
+        ],
+        [
+          "stmt-6284cc97bcd61c8d6024828e"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE office_message ADD COLUMN title VARCHAR(500) NULL COMMENT '消息标题' AFTER message_type",
+      "present_sql": "SELECT 'office_message title already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE office_message ADD COLUMN title VARCHAR(500) NULL COMMENT '消息标题' AFTER message_type",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nmessage_type\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nmessage_type\tvarchar(7)\tYES\t<NULL>\t\t3\ntitle\tvarchar(500)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tNULL\n2\trow-2\tv2\tNULL"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`message_type` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "office_message title already exists\n1\tSELECT 'office_message title already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nmessage_type\tvarchar(7)\tYES\t<NULL>\t\t3\ntitle\tvarchar(500)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tNULL\n2\trow-2\tv2\tNULL"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nmessage_type\tvarchar(7)\tYES\t<NULL>\t\t3\ntitle\tvarchar(500)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tNULL\n2\trow-2\tv2\tNULL"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "office_message title already exists\n1\tSELECT 'office_message title already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntitle\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntitle\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`title` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.office_message' doesn't exist\n"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "office_message",
+        "kind": "column",
+        "name": "target_type"
+      },
+      "statements": [
+        {
+          "line": 96,
+          "end_line": 96,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 3840,
+          "end_offset": 3859,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 96,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-de89135a78365bcd42b2d95d"
+        },
+        {
+          "line": 97,
+          "end_line": 101,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'office_message' \n  AND COLUMN_NAME = 'target_type'",
+          "start_offset": 3861,
+          "end_offset": 4031,
+          "category": "data_dml",
+          "statement_sha256": "8c8c1d41de290f5a8ae1ec653f79f823ecad18e66555871bc35e567d444ccd38",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-c491f0fd53f77abdf4fb897d"
+        },
+        {
+          "line": 103,
+          "end_line": 105,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE office_message CHANGE COLUMN recipient_type target_type VARCHAR(50) NOT NULL COMMENT ''目标类型''',\n    'SELECT ''office_message target_type already exists'' AS result')",
+          "start_offset": 4034,
+          "end_offset": 4248,
+          "category": "dynamic_sql",
+          "statement_sha256": "e669521eab8290e06e0ca4fb05604ff630e6cdec994646941661e9941b902982",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "office_message",
+              "line": 104,
+              "end_line": 104,
+              "operation": "alter_table",
+              "identifiers": [
+                "alter",
+                "change",
+                "column",
+                "comment",
+                "not",
+                "null",
+                "office_message",
+                "recipient_type",
+                "table",
+                "target_type",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE office_message CHANGE COLUMN recipient_type target_type VARCHAR(50) NOT NULL COMMENT '目标类型'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 103
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 103,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-32428513bc425be19ff6a28d"
+        },
+        {
+          "line": 106,
+          "end_line": 106,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 4250,
+          "end_offset": 4272,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            103
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 106,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-f85da70ec9d09a14ba8cb40e"
+        },
+        {
+          "line": 107,
+          "end_line": 107,
+          "sql": "EXECUTE stmt",
+          "start_offset": 4274,
+          "end_offset": 4286,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            103
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 107,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-2c300c9046ab96e17cf163f2"
+        },
+        {
+          "line": 108,
+          "end_line": 108,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 4288,
+          "end_offset": 4311,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            103
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 108,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-b7f7df80319014eb0d51a683"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0419",
+        "old-sql-0420",
+        "old-sql-0421",
+        "old-sql-0422",
+        "old-sql-0423"
+      ],
+      "statement_ids": [
+        [
+          "stmt-de89135a78365bcd42b2d95d"
+        ],
+        [
+          "stmt-32428513bc425be19ff6a28d"
+        ],
+        [
+          "stmt-f85da70ec9d09a14ba8cb40e"
+        ],
+        [
+          "stmt-2c300c9046ab96e17cf163f2"
+        ],
+        [
+          "stmt-b7f7df80319014eb0d51a683"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE office_message CHANGE COLUMN recipient_type target_type VARCHAR(50) NOT NULL COMMENT '目标类型'",
+      "present_sql": "SELECT 'office_message target_type already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE office_message CHANGE COLUMN recipient_type target_type VARCHAR(50) NOT NULL COMMENT '目标类型'",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nrecipient_type\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_type\tvarchar(50)\tNO\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`recipient_type` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "office_message target_type already exists\n1\tSELECT 'office_message target_type already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_type\tvarchar(50)\tNO\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_type\tvarchar(50)\tNO\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "office_message target_type already exists\n1\tSELECT 'office_message target_type already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_type\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_type\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`target_type` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.office_message' doesn't exist\n"
+        },
+        "missing_source_column": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1054 (42S22) at line 12: Unknown column 'recipient_type' in 'office_message'\n",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`recipient_type` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');",
+          "dropped_source": "recipient_type"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "office_message",
+        "kind": "column",
+        "name": "target_user_ids"
+      },
+      "statements": [
+        {
+          "line": 110,
+          "end_line": 110,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 4314,
+          "end_offset": 4333,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 110,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-cd524eade09b0e9942e223f2"
+        },
+        {
+          "line": 111,
+          "end_line": 115,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'office_message' \n  AND COLUMN_NAME = 'target_user_ids'",
+          "start_offset": 4335,
+          "end_offset": 4509,
+          "category": "data_dml",
+          "statement_sha256": "a6932b4893339a5c7cd934ca1ffcd981f2bf72785dd61c16ca159069202ef5e1",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-521bf15a08925fb6fd6a8441"
+        },
+        {
+          "line": 117,
+          "end_line": 119,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE office_message CHANGE COLUMN recipient_ids target_user_ids TEXT COMMENT ''目标用户ID列表''',\n    'SELECT ''office_message target_user_ids already exists'' AS result')",
+          "start_offset": 4512,
+          "end_offset": 4721,
+          "category": "dynamic_sql",
+          "statement_sha256": "438e7f1c876171a81912f6ac557a6a26ffb9b8ff03a268970d970c639c4e7d38",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "office_message",
+              "line": 118,
+              "end_line": 118,
+              "operation": "alter_table",
+              "identifiers": [
+                "alter",
+                "change",
+                "column",
+                "comment",
+                "office_message",
+                "recipient_ids",
+                "table",
+                "target_user_ids",
+                "text"
+              ],
+              "sql": "ALTER TABLE office_message CHANGE COLUMN recipient_ids target_user_ids TEXT COMMENT '目标用户ID列表'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 117
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 117,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-841dbe3d6bc5c9092cd6d05a"
+        },
+        {
+          "line": 120,
+          "end_line": 120,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 4723,
+          "end_offset": 4745,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            117
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 120,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-1a0c38d4e6eb2ff9c95f87c2"
+        },
+        {
+          "line": 121,
+          "end_line": 121,
+          "sql": "EXECUTE stmt",
+          "start_offset": 4747,
+          "end_offset": 4759,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            117
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 121,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-5356040def11d8082bf8b710"
+        },
+        {
+          "line": 122,
+          "end_line": 122,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 4761,
+          "end_offset": 4784,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            117
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 122,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-1fc2e710faa4aef5d364caae"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0424",
+        "old-sql-0425",
+        "old-sql-0426",
+        "old-sql-0427",
+        "old-sql-0428"
+      ],
+      "statement_ids": [
+        [
+          "stmt-cd524eade09b0e9942e223f2"
+        ],
+        [
+          "stmt-841dbe3d6bc5c9092cd6d05a"
+        ],
+        [
+          "stmt-1a0c38d4e6eb2ff9c95f87c2"
+        ],
+        [
+          "stmt-5356040def11d8082bf8b710"
+        ],
+        [
+          "stmt-1fc2e710faa4aef5d364caae"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE office_message CHANGE COLUMN recipient_ids target_user_ids TEXT COMMENT '目标用户ID列表'",
+      "present_sql": "SELECT 'office_message target_user_ids already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE office_message CHANGE COLUMN recipient_ids target_user_ids TEXT COMMENT '目标用户ID列表'",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nrecipient_ids\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_user_ids\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`recipient_ids` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "office_message target_user_ids already exists\n1\tSELECT 'office_message target_user_ids already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_user_ids\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_user_ids\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "office_message target_user_ids already exists\n1\tSELECT 'office_message target_user_ids already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_user_ids\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntarget_user_ids\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`target_user_ids` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.office_message' doesn't exist\n"
+        },
+        "missing_source_column": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1054 (42S22) at line 12: Unknown column 'recipient_ids' in 'office_message'\n",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`recipient_ids` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');",
+          "dropped_source": "recipient_ids"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "office_message",
+        "kind": "column",
+        "name": "send_status"
+      },
+      "statements": [
+        {
+          "line": 124,
+          "end_line": 124,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 4787,
+          "end_offset": 4806,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 124,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-82cbcdfc8e157f8e22e6b979"
+        },
+        {
+          "line": 125,
+          "end_line": 129,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'office_message' \n  AND COLUMN_NAME = 'send_status'",
+          "start_offset": 4808,
+          "end_offset": 4978,
+          "category": "data_dml",
+          "statement_sha256": "6ba96fb74f230d953113d1f6b72d3699443691d3dd3cb664f3b47bf3d972c996",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-b7cfc0dcb444d0855e114183"
+        },
+        {
+          "line": 131,
+          "end_line": 133,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE office_message CHANGE COLUMN status send_status VARCHAR(50) DEFAULT ''PENDING'' COMMENT ''发送状态''',\n    'SELECT ''office_message send_status already exists'' AS result')",
+          "start_offset": 4981,
+          "end_offset": 5198,
+          "category": "dynamic_sql",
+          "statement_sha256": "33a7d7cb0b0b557b3e9a12b925646d619b07fc2e25951725434a6f67f954ef43",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "office_message",
+              "line": 132,
+              "end_line": 132,
+              "operation": "alter_table",
+              "identifiers": [
+                "alter",
+                "change",
+                "column",
+                "comment",
+                "default",
+                "office_message",
+                "send_status",
+                "status",
+                "table",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE office_message CHANGE COLUMN status send_status VARCHAR(50) DEFAULT 'PENDING' COMMENT '发送状态'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 131
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 131,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-4b4e7a8e0c8271384b6ac4db"
+        },
+        {
+          "line": 134,
+          "end_line": 134,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 5200,
+          "end_offset": 5222,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            131
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 134,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-51239f2b81d7e71ef10ba688"
+        },
+        {
+          "line": 135,
+          "end_line": 135,
+          "sql": "EXECUTE stmt",
+          "start_offset": 5224,
+          "end_offset": 5236,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            131
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 135,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-3fa060b033a61b5120ddfe31"
+        },
+        {
+          "line": 136,
+          "end_line": 136,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 5238,
+          "end_offset": 5261,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            131
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 136,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-c38c74a37d74e70e8213f34c"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0429",
+        "old-sql-0430",
+        "old-sql-0431",
+        "old-sql-0432",
+        "old-sql-0433"
+      ],
+      "statement_ids": [
+        [
+          "stmt-82cbcdfc8e157f8e22e6b979"
+        ],
+        [
+          "stmt-4b4e7a8e0c8271384b6ac4db"
+        ],
+        [
+          "stmt-51239f2b81d7e71ef10ba688"
+        ],
+        [
+          "stmt-3fa060b033a61b5120ddfe31"
+        ],
+        [
+          "stmt-c38c74a37d74e70e8213f34c"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE office_message CHANGE COLUMN status send_status VARCHAR(50) DEFAULT 'PENDING' COMMENT '发送状态'",
+      "present_sql": "SELECT 'office_message send_status already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE office_message CHANGE COLUMN status send_status VARCHAR(50) DEFAULT 'PENDING' COMMENT '发送状态'",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nstatus\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nsend_status\tvarchar(50)\tYES\tPENDING\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`status` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "office_message send_status already exists\n1\tSELECT 'office_message send_status already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nsend_status\tvarchar(50)\tYES\tPENDING\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nsend_status\tvarchar(50)\tYES\tPENDING\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "office_message send_status already exists\n1\tSELECT 'office_message send_status already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nsend_status\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nsend_status\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`send_status` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.office_message' doesn't exist\n"
+        },
+        "missing_source_column": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1054 (42S22) at line 12: Unknown column 'status' in 'office_message'\n",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`status` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');",
+          "dropped_source": "status"
+        }
+      },
+      "semantic_verified": true
+    },
+    {
+      "target": {
+        "table": "office_message",
+        "kind": "column",
+        "name": "failure_reason"
+      },
+      "statements": [
+        {
+          "line": 138,
+          "end_line": 138,
+          "sql": "SET @col_exists = 0",
+          "start_offset": 5264,
+          "end_offset": 5283,
+          "category": "dynamic_sql",
+          "statement_sha256": "84c9844e67e49ba10e32fea17ea589a7a7dc705b90f206f2e5ef6889718459c1",
+          "disposition": "dynamic_expression_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 138,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-35b7e501f736ac960e02927d"
+        },
+        {
+          "line": 139,
+          "end_line": 143,
+          "sql": "SELECT COUNT(*) INTO @col_exists \nFROM information_schema.COLUMNS \nWHERE TABLE_SCHEMA = DATABASE() \n  AND TABLE_NAME = 'office_message' \n  AND COLUMN_NAME = 'failure_reason'",
+          "start_offset": 5285,
+          "end_offset": 5458,
+          "category": "data_dml",
+          "statement_sha256": "8634e3c2e2945190f11674ce15331fcdbdc836a71d819176e461a92a8776bc7a",
+          "disposition": "data_query_or_session_statement_not_ddl_proof",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [],
+          "parser_issues": [],
+          "statement_id": "stmt-eff10bccd606b5d8a6035530"
+        },
+        {
+          "line": 145,
+          "end_line": 147,
+          "sql": "SET @sql = IF(@col_exists = 0, \n    'ALTER TABLE office_message CHANGE COLUMN result_message failure_reason VARCHAR(1000) NULL COMMENT ''失败原因''',\n    'SELECT ''office_message failure_reason already exists'' AS result')",
+          "start_offset": 5461,
+          "end_offset": 5679,
+          "category": "dynamic_sql",
+          "statement_sha256": "cc31cc83fd4987b558e7c499183970809b328b0dc14d06d33839f9db06a7ee9d",
+          "disposition": "dynamic_literal_targets_identified_condition_not_evaluated",
+          "semantic_verified": false,
+          "related_assignment_lines": [],
+          "facts": [
+            {
+              "table": "office_message",
+              "line": 146,
+              "end_line": 146,
+              "operation": "alter_table",
+              "identifiers": [
+                "alter",
+                "change",
+                "column",
+                "comment",
+                "failure_reason",
+                "null",
+                "office_message",
+                "result_message",
+                "table",
+                "varchar"
+              ],
+              "sql": "ALTER TABLE office_message CHANGE COLUMN result_message failure_reason VARCHAR(1000) NULL COMMENT '失败原因'",
+              "parser_issues": [],
+              "scope": "conditional_literal_candidate",
+              "semantic_verified": false,
+              "container_line": 145
+            }
+          ],
+          "parser_issues": [
+            {
+              "line": 145,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-29689f64b462cdc1d80a63b1"
+        },
+        {
+          "line": 148,
+          "end_line": 148,
+          "sql": "PREPARE stmt FROM @sql",
+          "start_offset": 5681,
+          "end_offset": 5703,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "7df4cc4083ccecf4af04f7e43932a171b515889276659d610106efba9e70fa85",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            145
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 148,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-3f9a0a8fe84adb612ffd6aac"
+        },
+        {
+          "line": 149,
+          "end_line": 149,
+          "sql": "EXECUTE stmt",
+          "start_offset": 5705,
+          "end_offset": 5717,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "694f81c89a564815b5d626956bd621ce371262d98ce46aa72ca7a27eef5bd738",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            145
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 149,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-c4d58585fe4226ac004a677b"
+        },
+        {
+          "line": 150,
+          "end_line": 150,
+          "sql": "DEALLOCATE PREPARE stmt",
+          "start_offset": 5719,
+          "end_offset": 5742,
+          "category": "procedure_or_prepared_control",
+          "statement_sha256": "c56f73a69cae5ebfaa39e743c32ed9aa507e7c339886d4f85383481832db4a33",
+          "disposition": "prepared_control_bound_requires_runtime_review",
+          "semantic_verified": false,
+          "related_assignment_lines": [
+            145
+          ],
+          "facts": [],
+          "parser_issues": [
+            {
+              "line": 150,
+              "reason": "dynamic_or_procedural_sql"
+            }
+          ],
+          "statement_id": "stmt-867e704b30a00fbcdf94ce12"
+        }
+      ],
+      "old_ids": [
+        "old-sql-0434",
+        "old-sql-0435",
+        "old-sql-0436",
+        "old-sql-0437",
+        "old-sql-0438"
+      ],
+      "statement_ids": [
+        [
+          "stmt-35b7e501f736ac960e02927d"
+        ],
+        [
+          "stmt-29689f64b462cdc1d80a63b1"
+        ],
+        [
+          "stmt-3f9a0a8fe84adb612ffd6aac"
+        ],
+        [
+          "stmt-c4d58585fe4226ac004a677b"
+        ],
+        [
+          "stmt-867e704b30a00fbcdf94ce12"
+        ]
+      ],
+      "absent_sql": "ALTER TABLE office_message CHANGE COLUMN result_message failure_reason VARCHAR(1000) NULL COMMENT '失败原因'",
+      "present_sql": "SELECT 'office_message failure_reason already exists' AS result",
+      "results": {
+        "absent": true,
+        "replay": true,
+        "present": true
+      },
+      "observations": {
+        "absent": {
+          "succeeded": true,
+          "client_output": "0\tALTER TABLE office_message CHANGE COLUMN result_message failure_reason VARCHAR(1000) NULL COMMENT '失败原因'",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nresult_message\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nfailure_reason\tvarchar(1000)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`result_message` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "replay": {
+          "succeeded": true,
+          "client_output": "office_message failure_reason already exists\n1\tSELECT 'office_message failure_reason already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nfailure_reason\tvarchar(1000)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nfailure_reason\tvarchar(1000)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "reuse absent result"
+        },
+        "present": {
+          "succeeded": true,
+          "client_output": "office_message failure_reason already exists\n1\tSELECT 'office_message failure_reason already exists' AS result",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nfailure_reason\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nfailure_reason\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`failure_reason` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');"
+        },
+        "missing_table": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1146 (42S02) at line 12: Table 'probe.office_message' doesn't exist\n"
+        },
+        "missing_source_column": {
+          "succeeded": false,
+          "error": "mysql client failed: ERROR 1054 (42S22) at line 12: Unknown column 'result_message' in 'office_message'\n",
+          "before": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "after": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\n2\trow-2"
+          },
+          "fixture_sql": "USE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`result_message` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1'),(2,'row-2','v2');",
+          "dropped_source": "result_message"
+        }
+      },
+      "semantic_verified": true
+    }
+  ],
+  "status": "partial_failure",
+  "cleanup": {
+    "attempted": true,
+    "remove_exit_code": 0,
+    "exists_exit_code": 1,
+    "container_and_anonymous_volumes_removed": true,
+    "database_lifetime": "only inside removed tmpfs container"
+  },
+  "limits": [
+    "Synthetic two-row fixtures only; no production data or historical upgrade chain",
+    "Only selected MySQL guards; no PostgreSQL or full historical upgrade chain",
+    "Present incompatible columns prove name-guard no-op only, not schema equivalence",
+    "MySQL client only; no Java/Flyway, PostgreSQL, concurrency or production performance proof"
+  ],
+  "previous_verified_ids": [
+    "old-sql-0000",
+    "old-sql-0001",
+    "old-sql-0002",
+    "old-sql-0003",
+    "old-sql-0004",
+    "old-sql-0005",
+    "old-sql-0006",
+    "old-sql-0007",
+    "old-sql-0008",
+    "old-sql-0009",
+    "old-sql-0010",
+    "old-sql-0011",
+    "old-sql-0012",
+    "old-sql-0013",
+    "old-sql-0014",
+    "old-sql-0015",
+    "old-sql-0016",
+    "old-sql-0017",
+    "old-sql-0018",
+    "old-sql-0019",
+    "old-sql-0020",
+    "old-sql-0021",
+    "old-sql-0022",
+    "old-sql-0023",
+    "old-sql-0024",
+    "old-sql-0025",
+    "old-sql-0026",
+    "old-sql-0027",
+    "old-sql-0028",
+    "old-sql-0029",
+    "old-sql-0030",
+    "old-sql-0031",
+    "old-sql-0032",
+    "old-sql-0033",
+    "old-sql-0034",
+    "old-sql-0035",
+    "old-sql-0036",
+    "old-sql-0037",
+    "old-sql-0038",
+    "old-sql-0039",
+    "old-sql-0040",
+    "old-sql-0041",
+    "old-sql-0042",
+    "old-sql-0043",
+    "old-sql-0044",
+    "old-sql-0045",
+    "old-sql-0046",
+    "old-sql-0047",
+    "old-sql-0048",
+    "old-sql-0049",
+    "old-sql-0050",
+    "old-sql-0051",
+    "old-sql-0052",
+    "old-sql-0053",
+    "old-sql-0054",
+    "old-sql-0055",
+    "old-sql-0056",
+    "old-sql-0057",
+    "old-sql-0058",
+    "old-sql-0059",
+    "old-sql-0060",
+    "old-sql-0061",
+    "old-sql-0062",
+    "old-sql-0063",
+    "old-sql-0064",
+    "old-sql-0065",
+    "old-sql-0066",
+    "old-sql-0067",
+    "old-sql-0068",
+    "old-sql-0069",
+    "old-sql-0070",
+    "old-sql-0071",
+    "old-sql-0072",
+    "old-sql-0073",
+    "old-sql-0074",
+    "old-sql-0075",
+    "old-sql-0076",
+    "old-sql-0077",
+    "old-sql-0078",
+    "old-sql-0079",
+    "old-sql-0080",
+    "old-sql-0081",
+    "old-sql-0082",
+    "old-sql-0083",
+    "old-sql-0084",
+    "old-sql-0085",
+    "old-sql-0086",
+    "old-sql-0087",
+    "old-sql-0088",
+    "old-sql-0089",
+    "old-sql-0090",
+    "old-sql-0091",
+    "old-sql-0092",
+    "old-sql-0093",
+    "old-sql-0094",
+    "old-sql-0095",
+    "old-sql-0096",
+    "old-sql-0097",
+    "old-sql-0098",
+    "old-sql-0099",
+    "old-sql-0100",
+    "old-sql-0101",
+    "old-sql-0102",
+    "old-sql-0103",
+    "old-sql-0104",
+    "old-sql-0105",
+    "old-sql-0106",
+    "old-sql-0107",
+    "old-sql-0108",
+    "old-sql-0109",
+    "old-sql-0110",
+    "old-sql-0111",
+    "old-sql-0112",
+    "old-sql-0113",
+    "old-sql-0114",
+    "old-sql-0115",
+    "old-sql-0116",
+    "old-sql-0117",
+    "old-sql-0118",
+    "old-sql-0119",
+    "old-sql-0120",
+    "old-sql-0121",
+    "old-sql-0122",
+    "old-sql-0123",
+    "old-sql-0124",
+    "old-sql-0125",
+    "old-sql-0126",
+    "old-sql-0127",
+    "old-sql-0128",
+    "old-sql-0129",
+    "old-sql-0130",
+    "old-sql-0131",
+    "old-sql-0132",
+    "old-sql-0133",
+    "old-sql-0134",
+    "old-sql-0135",
+    "old-sql-0136",
+    "old-sql-0137",
+    "old-sql-0138",
+    "old-sql-0139",
+    "old-sql-0140",
+    "old-sql-0141",
+    "old-sql-0142",
+    "old-sql-0143",
+    "old-sql-0144",
+    "old-sql-0145",
+    "old-sql-0146",
+    "old-sql-0147",
+    "old-sql-0148",
+    "old-sql-0149",
+    "old-sql-0150",
+    "old-sql-0151",
+    "old-sql-0152",
+    "old-sql-0153",
+    "old-sql-0154",
+    "old-sql-0155",
+    "old-sql-0156",
+    "old-sql-0157",
+    "old-sql-0158",
+    "old-sql-0159",
+    "old-sql-0160",
+    "old-sql-0161",
+    "old-sql-0162",
+    "old-sql-0163",
+    "old-sql-0164",
+    "old-sql-0165",
+    "old-sql-0166",
+    "old-sql-0167",
+    "old-sql-0168",
+    "old-sql-0169",
+    "old-sql-0170",
+    "old-sql-0171",
+    "old-sql-0172",
+    "old-sql-0173",
+    "old-sql-0174",
+    "old-sql-0175",
+    "old-sql-0176",
+    "old-sql-0177",
+    "old-sql-0178",
+    "old-sql-0179",
+    "old-sql-0180",
+    "old-sql-0181",
+    "old-sql-0182",
+    "old-sql-0183",
+    "old-sql-0184",
+    "old-sql-0185",
+    "old-sql-0186",
+    "old-sql-0187",
+    "old-sql-0188",
+    "old-sql-0189",
+    "old-sql-0190",
+    "old-sql-0191",
+    "old-sql-0192",
+    "old-sql-0193",
+    "old-sql-0194",
+    "old-sql-0195",
+    "old-sql-0196",
+    "old-sql-0197",
+    "old-sql-0198",
+    "old-sql-0199",
+    "old-sql-0200",
+    "old-sql-0201",
+    "old-sql-0202",
+    "old-sql-0203",
+    "old-sql-0204",
+    "old-sql-0205",
+    "old-sql-0206",
+    "old-sql-0207",
+    "old-sql-0208",
+    "old-sql-0209",
+    "old-sql-0210",
+    "old-sql-0211",
+    "old-sql-0212",
+    "old-sql-0213",
+    "old-sql-0214",
+    "old-sql-0215",
+    "old-sql-0216",
+    "old-sql-0217",
+    "old-sql-0218",
+    "old-sql-0219",
+    "old-sql-0220",
+    "old-sql-0221",
+    "old-sql-0222",
+    "old-sql-0223",
+    "old-sql-0224",
+    "old-sql-0225",
+    "old-sql-0226",
+    "old-sql-0227",
+    "old-sql-0228",
+    "old-sql-0229",
+    "old-sql-0230",
+    "old-sql-0231",
+    "old-sql-0232",
+    "old-sql-0233",
+    "old-sql-0234",
+    "old-sql-0235",
+    "old-sql-0236",
+    "old-sql-0237",
+    "old-sql-0238",
+    "old-sql-0239",
+    "old-sql-0240",
+    "old-sql-0241",
+    "old-sql-0242",
+    "old-sql-0243",
+    "old-sql-0244",
+    "old-sql-0245",
+    "old-sql-0246",
+    "old-sql-0247",
+    "old-sql-0248",
+    "old-sql-0249",
+    "old-sql-0250",
+    "old-sql-0251",
+    "old-sql-0252",
+    "old-sql-0253",
+    "old-sql-0254",
+    "old-sql-0255",
+    "old-sql-0256",
+    "old-sql-0257",
+    "old-sql-0258",
+    "old-sql-0259",
+    "old-sql-0260",
+    "old-sql-0261",
+    "old-sql-0262",
+    "old-sql-0263",
+    "old-sql-0264",
+    "old-sql-0265",
+    "old-sql-0266",
+    "old-sql-0267",
+    "old-sql-0268",
+    "old-sql-0269",
+    "old-sql-0270",
+    "old-sql-0271",
+    "old-sql-0272",
+    "old-sql-0273",
+    "old-sql-0274",
+    "old-sql-0275",
+    "old-sql-0276",
+    "old-sql-0277",
+    "old-sql-0278",
+    "old-sql-0279",
+    "old-sql-0280",
+    "old-sql-0281",
+    "old-sql-0282",
+    "old-sql-0283",
+    "old-sql-0284",
+    "old-sql-0285",
+    "old-sql-0286",
+    "old-sql-0287",
+    "old-sql-0288",
+    "old-sql-0289",
+    "old-sql-0290",
+    "old-sql-0291",
+    "old-sql-0292",
+    "old-sql-0293",
+    "old-sql-0294",
+    "old-sql-0295",
+    "old-sql-0296",
+    "old-sql-0297",
+    "old-sql-0298",
+    "old-sql-0299",
+    "old-sql-0300",
+    "old-sql-0301",
+    "old-sql-0302",
+    "old-sql-0303",
+    "old-sql-0304",
+    "old-sql-0305",
+    "old-sql-0306",
+    "old-sql-0307",
+    "old-sql-0308",
+    "old-sql-0309",
+    "old-sql-0310",
+    "old-sql-0311",
+    "old-sql-0312",
+    "old-sql-0313",
+    "old-sql-0314",
+    "old-sql-0315",
+    "old-sql-0316",
+    "old-sql-0317",
+    "old-sql-0318",
+    "old-sql-0319",
+    "old-sql-0320",
+    "old-sql-0321",
+    "old-sql-0322",
+    "old-sql-0323",
+    "old-sql-0324",
+    "old-sql-0325",
+    "old-sql-0326",
+    "old-sql-0327",
+    "old-sql-0328",
+    "old-sql-0329",
+    "old-sql-0330",
+    "old-sql-0331",
+    "old-sql-0332",
+    "old-sql-0333",
+    "old-sql-0334",
+    "old-sql-0335",
+    "old-sql-0336",
+    "old-sql-0337",
+    "old-sql-0338",
+    "old-sql-0339",
+    "old-sql-0340",
+    "old-sql-0341",
+    "old-sql-0342",
+    "old-sql-0343",
+    "old-sql-0344",
+    "old-sql-0345",
+    "old-sql-0346",
+    "old-sql-0347",
+    "old-sql-0348",
+    "old-sql-0349",
+    "old-sql-0350",
+    "old-sql-0351",
+    "old-sql-0352",
+    "old-sql-0353",
+    "old-sql-0354",
+    "old-sql-0355",
+    "old-sql-0356",
+    "old-sql-0357",
+    "old-sql-0358",
+    "old-sql-0359",
+    "old-sql-0360",
+    "old-sql-0361",
+    "old-sql-0362",
+    "old-sql-0449",
+    "old-sql-0450",
+    "old-sql-0451",
+    "old-sql-0452",
+    "old-sql-0453",
+    "old-sql-0454",
+    "old-sql-0455",
+    "old-sql-0456",
+    "old-sql-0457",
+    "old-sql-0458",
+    "old-sql-0459",
+    "old-sql-0460",
+    "old-sql-0461",
+    "old-sql-0462",
+    "old-sql-0463",
+    "old-sql-0464",
+    "old-sql-0465",
+    "old-sql-0466",
+    "old-sql-0467",
+    "old-sql-0468",
+    "old-sql-0469",
+    "old-sql-0470",
+    "old-sql-0471",
+    "old-sql-0472",
+    "old-sql-0513",
+    "old-sql-0514",
+    "old-sql-0515",
+    "old-sql-0516",
+    "old-sql-0517",
+    "old-sql-0518",
+    "old-sql-0519",
+    "old-sql-0520",
+    "old-sql-0521",
+    "old-sql-0522",
+    "old-sql-0523",
+    "old-sql-0524",
+    "old-sql-0525",
+    "old-sql-0526",
+    "old-sql-0527",
+    "old-sql-0528"
+  ],
+  "remaining_before": 183,
+  "previous_evidence_hashes": {
+    "dynamic-auth-v45-20261018-client-evidence.json": "938a8f8edcf353510859df1650a0d2db677350b14421c891d5a310a8fd7681b4",
+    "dynamic-auth-v52-catalog-regression-evidence.json": "286fd56716171a547cd65a78e5912e61f548a777ac37a57c9589628e65c4d4d1",
+    "dynamic-auth-v52-client-evidence.json": "3e83c2f2354500ffadea9fca60bf37bb613026347d2d0464f040d9bd97ddf373",
+    "dynamic-auth-v55-client-evidence.json": "88b811c98334d55235d8a9282b38a091adbd08fe227e270ec83713f2e72e6fac",
+    "dynamic-system-v14-20261018-client-evidence.json": "bf978a17c42edab2d00ffa055bf34de3cd1695e3d8c69a8c7a27f2db856634ff",
+    "dynamic-system-v15-20261019-rerun-evidence.json": "37e4821b20ce16058ff0836d2f88d465ff474bc851df5f027a7d460b895fb303",
+    "dynamic-system-v15-20261019-rerun-subagent-evidence.json": "c66df02e6c26616bc0f5bc0a07904babbbc7215555261b8c20a69a1924a8ed6a",
+    "dynamic-system-v16-20261019-client-evidence.json": "ee97ae2bb94a4d82a8de8e139cde76b37a1a6c1711431d401dc42bc2f7db0fad",
+    "dynamic-system-v43-20261019-client-evidence.json": "4c76fefb305913982111e346ee4c258805b0b5f7101fc14f5f18675521514918",
+    "dynamic-system-v59-20261019-client-compatible-evidence.json": "663a39c2fe7b433468beb65ed4fd8bfd7a7ace6e176b70c3f687036168b60f85",
+    "dynamic-system-v59-20261019-client-final-evidence.json": "ba135b0fdfaa02aad4a554f68d0b0a4c662f0b58d040942eaa0b1132944c3e66"
+  },
+  "baseline_dynamic_denominator": 586,
+  "output": "docs/06-testing/jdk21-unified-auth/20261016-p0/dynamic-system-v40-20261019-client-evidence.json",
+  "updated_at": "2026-10-19T04:05:07.345309+00:00",
+  "container": {
+    "name": "apex-v45-probe-bda16680d04b",
+    "image": "localhost/mysql:8.0",
+    "network": "none",
+    "published_ports": [],
+    "storage": "tmpfs",
+    "credentials": "none; empty root only inside network-disabled disposable container",
+    "id": "0de861da56009dc4c685408a79e506db9b12fe39a1b465f4bd1b570a8dfbea29"
+  },
+  "mysql_version": "8.0.46",
+  "full_file": {
+    "original_nonempty": {
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS `oauth2_authorization_consent`; CREATE TABLE `oauth2_authorization_consent` (registered_client_id VARCHAR(100),principal_name VARCHAR(100),authorities TEXT,PRIMARY KEY(registered_client_id,principal_name)); INSERT INTO `oauth2_authorization_consent` VALUES ('client-a','user-a','read'),('client-b','user-b','write');\nUSE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`node_config_json` VARCHAR(7) NULL,`status` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1','v1'),(2,'row-2','v2','v2');\nUSE probe; DROP TABLE IF EXISTS `wf_process_instance`; CREATE TABLE `wf_process_instance` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`context_json` VARCHAR(7) NULL); INSERT INTO `wf_process_instance` VALUES (1,'row-1','v1'),(2,'row-2','v2');\nUSE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`message_type` VARCHAR(7) NULL,`recipient_type` VARCHAR(7) NULL,`recipient_ids` VARCHAR(7) NULL,`status` VARCHAR(7) NULL,`result_message` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1','v1','v1','v1','v1'),(2,'row-2','v2','v2','v2','v2','v2');",
+      "before": {
+        "oauth2_authorization_consent": {
+          "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3",
+          "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+          "data": "client-a\tuser-a\tread\nclient-b\tuser-b\twrite"
+        },
+        "wf_workflow_definition": {
+          "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_config_json\tvarchar(7)\tYES\t<NULL>\t\t3\nstatus\tvarchar(7)\tYES\t<NULL>\t\t4",
+          "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+          "data": "1\trow-1\tv1\tv1\n2\trow-2\tv2\tv2"
+        },
+        "wf_process_instance": {
+          "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ncontext_json\tvarchar(7)\tYES\t<NULL>\t\t3",
+          "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+          "data": "1\trow-1\tv1\n2\trow-2\tv2"
+        },
+        "office_message": {
+          "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nmessage_type\tvarchar(7)\tYES\t<NULL>\t\t3\nrecipient_type\tvarchar(7)\tYES\t<NULL>\t\t4\nrecipient_ids\tvarchar(7)\tYES\t<NULL>\t\t5\nstatus\tvarchar(7)\tYES\t<NULL>\t\t6\nresult_message\tvarchar(7)\tYES\t<NULL>\t\t7",
+          "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+          "data": "1\trow-1\tv1\tv1\tv1\tv1\tv1\n2\trow-2\tv2\tv2\tv2\tv2\tv2"
+        }
+      },
+      "counts_as_branch_proof": false,
+      "initial": {
+        "succeeded": false,
+        "error": "mysql client failed: ERROR 1062 (23000) at line 26: Duplicate entry '' for key 'oauth2_authorization_consent.PRIMARY'\n",
+        "after": {
+          "oauth2_authorization_consent": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\nclient-b\tuser-b\twrite"
+          },
+          "wf_workflow_definition": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_config_json\tvarchar(7)\tYES\t<NULL>\t\t3\nstatus\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\n2\trow-2\tv2\tv2"
+          },
+          "wf_process_instance": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ncontext_json\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "office_message": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nmessage_type\tvarchar(7)\tYES\t<NULL>\t\t3\nrecipient_type\tvarchar(7)\tYES\t<NULL>\t\t4\nrecipient_ids\tvarchar(7)\tYES\t<NULL>\t\t5\nstatus\tvarchar(7)\tYES\t<NULL>\t\t6\nresult_message\tvarchar(7)\tYES\t<NULL>\t\t7",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\tv1\tv1\tv1\n2\trow-2\tv2\tv2\tv2\tv2\tv2"
+          }
+        }
+      },
+      "replay": {
+        "succeeded": false,
+        "error": "mysql client failed: ERROR 1062 (23000) at line 26: Duplicate entry '' for key 'oauth2_authorization_consent.PRIMARY'\n",
+        "after": {
+          "oauth2_authorization_consent": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\nclient-b\tuser-b\twrite"
+          },
+          "wf_workflow_definition": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_config_json\tvarchar(7)\tYES\t<NULL>\t\t3\nstatus\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\n2\trow-2\tv2\tv2"
+          },
+          "wf_process_instance": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ncontext_json\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "office_message": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nmessage_type\tvarchar(7)\tYES\t<NULL>\t\t3\nrecipient_type\tvarchar(7)\tYES\t<NULL>\t\t4\nrecipient_ids\tvarchar(7)\tYES\t<NULL>\t\t5\nstatus\tvarchar(7)\tYES\t<NULL>\t\t6\nresult_message\tvarchar(7)\tYES\t<NULL>\t\t7",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\tv1\tv1\tv1\n2\trow-2\tv2\tv2\tv2\tv2\tv2"
+          }
+        }
+      }
+    },
+    "incompatible_present": {
+      "fixture_sql": "USE probe; DROP TABLE IF EXISTS `oauth2_authorization_consent`; CREATE TABLE `oauth2_authorization_consent` (registered_client_id VARCHAR(100),principal_name VARCHAR(100),authorities TEXT,PRIMARY KEY(registered_client_id,principal_name),id VARCHAR(7) NULL); INSERT INTO `oauth2_authorization_consent` VALUES ('client-a','user-a','read','odd-a'),('client-b','user-b','write','odd-b');\nUSE probe; DROP TABLE IF EXISTS `wf_workflow_definition`; CREATE TABLE `wf_workflow_definition` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`node_definition` VARCHAR(7) NULL,`enabled` VARCHAR(7) NULL); INSERT INTO `wf_workflow_definition` VALUES (1,'row-1','v1','v1'),(2,'row-2','v2','v2');\nUSE probe; DROP TABLE IF EXISTS `wf_process_instance`; CREATE TABLE `wf_process_instance` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`form_data` VARCHAR(7) NULL); INSERT INTO `wf_process_instance` VALUES (1,'row-1','v1'),(2,'row-2','v2');\nUSE probe; DROP TABLE IF EXISTS `office_message`; CREATE TABLE `office_message` (id BIGINT PRIMARY KEY,marker VARCHAR(32),`title` VARCHAR(7) NULL,`target_type` VARCHAR(7) NULL,`target_user_ids` VARCHAR(7) NULL,`send_status` VARCHAR(7) NULL,`failure_reason` VARCHAR(7) NULL); INSERT INTO `office_message` VALUES (1,'row-1','v1','v1','v1','v1','v1'),(2,'row-2','v2','v2','v2','v2','v2');",
+      "before": {
+        "oauth2_authorization_consent": {
+          "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3\nid\tvarchar(7)\tYES\t<NULL>\t\t4",
+          "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+          "data": "client-a\tuser-a\tread\todd-a\nclient-b\tuser-b\twrite\todd-b"
+        },
+        "wf_workflow_definition": {
+          "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\tvarchar(7)\tYES\t<NULL>\t\t3\nenabled\tvarchar(7)\tYES\t<NULL>\t\t4",
+          "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+          "data": "1\trow-1\tv1\tv1\n2\trow-2\tv2\tv2"
+        },
+        "wf_process_instance": {
+          "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\tvarchar(7)\tYES\t<NULL>\t\t3",
+          "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+          "data": "1\trow-1\tv1\n2\trow-2\tv2"
+        },
+        "office_message": {
+          "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntitle\tvarchar(7)\tYES\t<NULL>\t\t3\ntarget_type\tvarchar(7)\tYES\t<NULL>\t\t4\ntarget_user_ids\tvarchar(7)\tYES\t<NULL>\t\t5\nsend_status\tvarchar(7)\tYES\t<NULL>\t\t6\nfailure_reason\tvarchar(7)\tYES\t<NULL>\t\t7",
+          "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+          "data": "1\trow-1\tv1\tv1\tv1\tv1\tv1\n2\trow-2\tv2\tv2\tv2\tv2\tv2"
+        }
+      },
+      "counts_as_branch_proof": false,
+      "initial": {
+        "succeeded": true,
+        "client_output": "oauth2_authorization_consent already has id column\nwf_workflow_definition node_definition already exists\nwf_workflow_definition enabled already exists\nwf_process_instance form_data already exists\noffice_message title already exists\noffice_message target_type already exists\noffice_message target_user_ids already exists\noffice_message send_status already exists\noffice_message failure_reason already exists",
+        "after": {
+          "oauth2_authorization_consent": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3\nid\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\todd-a\nclient-b\tuser-b\twrite\todd-b"
+          },
+          "wf_workflow_definition": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\tvarchar(7)\tYES\t<NULL>\t\t3\nenabled\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\n2\trow-2\tv2\tv2"
+          },
+          "wf_process_instance": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "office_message": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntitle\tvarchar(7)\tYES\t<NULL>\t\t3\ntarget_type\tvarchar(7)\tYES\t<NULL>\t\t4\ntarget_user_ids\tvarchar(7)\tYES\t<NULL>\t\t5\nsend_status\tvarchar(7)\tYES\t<NULL>\t\t6\nfailure_reason\tvarchar(7)\tYES\t<NULL>\t\t7",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\tv1\tv1\tv1\n2\trow-2\tv2\tv2\tv2\tv2\tv2"
+          }
+        }
+      },
+      "replay": {
+        "succeeded": true,
+        "client_output": "oauth2_authorization_consent already has id column\nwf_workflow_definition node_definition already exists\nwf_workflow_definition enabled already exists\nwf_process_instance form_data already exists\noffice_message title already exists\noffice_message target_type already exists\noffice_message target_user_ids already exists\noffice_message send_status already exists\noffice_message failure_reason already exists",
+        "after": {
+          "oauth2_authorization_consent": {
+            "columns": "registered_client_id\tvarchar(100)\tNO\t<NULL>\t\t1\nprincipal_name\tvarchar(100)\tNO\t<NULL>\t\t2\nauthorities\ttext\tYES\t<NULL>\t\t3\nid\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tregistered_client_id\tBTREE\nPRIMARY\t0\t2\tprincipal_name\tBTREE",
+            "data": "client-a\tuser-a\tread\todd-a\nclient-b\tuser-b\twrite\todd-b"
+          },
+          "wf_workflow_definition": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nnode_definition\tvarchar(7)\tYES\t<NULL>\t\t3\nenabled\tvarchar(7)\tYES\t<NULL>\t\t4",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\n2\trow-2\tv2\tv2"
+          },
+          "wf_process_instance": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\nform_data\tvarchar(7)\tYES\t<NULL>\t\t3",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\n2\trow-2\tv2"
+          },
+          "office_message": {
+            "columns": "id\tbigint\tNO\t<NULL>\t\t1\nmarker\tvarchar(32)\tYES\t<NULL>\t\t2\ntitle\tvarchar(7)\tYES\t<NULL>\t\t3\ntarget_type\tvarchar(7)\tYES\t<NULL>\t\t4\ntarget_user_ids\tvarchar(7)\tYES\t<NULL>\t\t5\nsend_status\tvarchar(7)\tYES\t<NULL>\t\t6\nfailure_reason\tvarchar(7)\tYES\t<NULL>\t\t7",
+            "indexes": "PRIMARY\t0\t1\tid\tBTREE",
+            "data": "1\trow-1\tv1\tv1\tv1\tv1\tv1\n2\trow-2\tv2\tv2\tv2\tv2\tv2"
+          }
+        }
+      }
+    }
+  },
+  "scenario_status": "nonempty_primary_key_conversion_failed; no_batch_credit",
+  "coverage": {
+    "verified_old_ids": [],
+    "verified_old_id_count": 0,
+    "remaining_of_586": 183,
+    "passed_branch_runs": 25,
+    "planned_branch_runs": 27,
+    "definition": "distinct baseline IDs whose bound quartet passed absent + present + replay; no credit for full-file success",
+    "remaining_before": 183,
+    "new_unique_passed_count": 0,
+    "remaining_after": 183,
+    "cumulative_verified_count": 403
+  }
+}

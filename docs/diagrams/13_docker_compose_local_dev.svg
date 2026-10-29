@@ -12,7 +12,7 @@
   <text x="70" y="150" class="text">• apex-scaffold: Spring Boot应用</text>
   <text x="80" y="168" class="code">ports: 8080(业务) 8081(管理)</text>
   <text x="80" y="183" class="code">profile: default,dev</text>
-  <text x="70" y="210" class="text">• mysql: MySQL 8.0数据库</text>
+  <text x="70" y="210" class="text">• mysql: MySQL 9.x数据库</text>
   <text x="80" y="228" class="code">port: 3306, apex_data库</text>
   <text x="70" y="255" class="text">• redis: Redis 7.x缓存</text>
   <text x="80" y="273" class="code">port: 6379</text>

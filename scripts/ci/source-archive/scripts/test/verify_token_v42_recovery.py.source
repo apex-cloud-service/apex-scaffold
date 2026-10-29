@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+"""隔离 MySQL V42 显式恢复回归；只新增唯一证据。"""
+import datetime
+import hashlib
+import importlib.util
+import json
+import pathlib
+import subprocess
+import time
+import uuid
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+TOOL = ROOT / 'apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py'
+SOURCE = ROOT / 'apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql'
+P0 = ROOT / 'docs/06-testing/jdk21-unified-auth/20261016-p0'
+
+
+def command(args, text=None, timeout=90):
+    return subprocess.run(args, input=text, text=True, capture_output=True, timeout=timeout)
+
+
+def verify(output):
+    assert not output.exists(), 'cannot overwrite evidence'
+    result = {'started_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'status': 'running', 'baseline_credit': False,
+              'scenarios': {}, 'cleanup': {}}
+    name = 'apex-v42-recovery-' + uuid.uuid4().hex[:12]
+    owned = False
+    client = ['podman', 'exec', '-i', name, 'mysql', '--no-defaults', '-uroot']
+
+    def sql(text, success=True):
+        p = command(client + ['--batch', '--raw', '--skip-column-names', '--default-character-set=utf8mb4'], text)
+        if success:
+            assert p.returncode == 0, p.stderr
+            return p.stdout.strip()
+        assert p.returncode != 0, 'expected failure'
+        return p.stderr
+
+    def recover(success=True, apply=True):
+        args = ['python3', '-B', str(TOOL), '--database', 'probe', '--offline']
+        if apply:
+            args.append('--apply')
+        # 恢复工具每次调用约 40 次 podman exec；实测 exec 往返在长序列后可由约
+        # 0.4s 升至约 1.2s（最差 5s），故单次恢复调用独立放宽，避免装置超时
+        # 掩盖真实断言结果。断言与场景集合保持不变。
+        p = command(args + ['--mysql-command'] + client, timeout=300)
+        assert (p.returncode == 0) == success, p.stderr + p.stdout
+        return p.stdout.strip() if success else p.stderr.strip()
+
+    def fixture(token=True):
+        sql('DROP DATABASE IF EXISTS probe; CREATE DATABASE probe CHARACTER SET utf8mb4; USE probe; '
+            'CREATE TABLE oauth2_authorization(id BIGINT PRIMARY KEY,access_token_issued_at DATETIME,access_token_expires_at DATETIME,access_token_value TEXT);'
+            "INSERT INTO oauth2_authorization VALUES(1,'2026-01-01','2026-02-01','synthetic-plain');" +
+            ('CREATE TABLE token(id BIGINT PRIMARY KEY,token_value TEXT); INSERT INTO token VALUES(7,\'synthetic-token\');' if token else ''))
+
+    def snapshot():
+        tables = sql("SELECT table_name FROM information_schema.tables WHERE table_schema='probe' ORDER BY table_name;").splitlines()
+        return {t: {'ddl': sql('USE probe; SHOW CREATE TABLE `' + t + '`;'),
+                    'rows': sql('USE probe; SELECT * FROM `' + t + '`;') if t != 'v_token_health' else ''} for t in tables}
+
+    try:
+        assert TOOL.is_file(), 'V42 explicit recovery tool not implemented'
+        result['hashes'] = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest() for p in (SOURCE, TOOL, pathlib.Path(__file__))}
+        p = command(['podman', 'create', '--name', name, '--network', 'none', '--pull=never', '--tmpfs', '/var/lib/mysql:rw', '-e', 'MYSQL_ALLOW_EMPTY_PASSWORD=yes', 'localhost/mysql:8.0'])
+        assert p.returncode == 0, p.stderr
+        owned = True
+        result['container'] = {'name': name, 'id': p.stdout.strip(), 'network': 'none', 'storage': 'tmpfs', 'image': 'localhost/mysql:8.0'}
+        assert command(['podman', 'start', name]).returncode == 0
+        for _ in range(60):
+            if command(['podman', 'exec', name, 'mysqladmin', '--no-defaults', '-uroot', '--protocol=TCP', '-h127.0.0.1', 'ping']).returncode == 0:
+                break
+            time.sleep(1)
+        else:
+            raise AssertionError('readiness timeout')
+        result['mysql_version'] = sql('SELECT VERSION();')
+        host = json.loads(command(['podman', 'inspect', name]).stdout)[0]['HostConfig']
+        result['isolation'] = host['NetworkMode']
+        result['tmpfs'] = host['Tmpfs']
+        assert result['isolation'] == 'none' and '/var/lib/mysql' in result['tmpfs']
+        result['scope'] = 'isolated structure recovery only; no Flyway baseline credit'
+        original = SOURCE.read_text()
+        for label, token in (('actual_v42_failure', True), ('clean_predecessor', True), ('token_absent', False)):
+            fixture(token)
+            item = result['scenarios'][label] = {}
+            if label == 'actual_v42_failure':
+                item['original_error'] = sql('USE probe;' + original, False)
+                assert '1064' in item['original_error']
+                assert sql("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='probe' AND table_name='oauth2_authorization';") == '14'
+                assert sql("SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics WHERE table_schema='probe' AND table_name='oauth2_authorization';") == '5'
+                item['retry_error'] = sql('USE probe;' + original, False)
+                assert '1060' in item['retry_error']
+            before = snapshot()
+            item['before_schema'] = {t: state['ddl'] for t, state in before.items()}
+            item['plan'] = recover(apply=False)
+            assert snapshot() == before, 'dry-run changed state'
+            item['apply'] = recover()
+            assert sql('USE probe; SELECT access_token_value FROM oauth2_authorization;') == 'synthetic-plain'
+            if token:
+                assert sql('USE probe; SELECT token_value FROM token;') == 'synthetic-token'
+            sql("USE probe; UPDATE oauth2_authorization SET access_token_hash='keep-hash',access_token_encrypted='keep-cipher',access_token_iv='keep-iv',rotation_count=3;"
+                "UPDATE encryption_key_version SET active=0,key_id='retained-key' WHERE key_version=1;")
+            if token:
+                sql("USE probe; UPDATE token SET refresh_token_encrypted='keep-refresh',refresh_token_iv='keep-refresh-iv';")
+            sql("USE probe; INSERT INTO token_rotation_history(user_id,token_family,old_jti,new_jti) VALUES(1,'family','old','new');"
+                "INSERT INTO token_security_event(event_type,severity,description) VALUES('TOKEN_REUSE','HIGH','retained-event');"
+                "INSERT INTO encryption_key_version(key_version,key_id,active) VALUES(2,'retained-key-v2',1);")
+            before = snapshot()
+            item['reentry'] = recover()
+            assert json.loads(item['reentry'].splitlines()[0])['statements'] == []
+            assert snapshot() == before, 'reentry changed data/schema or inactive key'
+            assert sql('USE probe; SELECT active FROM encryption_key_version WHERE key_version=1;') == '0'
+            item['inactive_key_and_nonempty_data_preserved'] = True
+            item['after_schema'] = {t: state['ddl'] for t, state in before.items()}
+            item['snapshot_sha256'] = hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest()
+            item['passed'] = True
+        conflicts = {
+            'oauth_missing': 'DROP TABLE oauth2_authorization;',
+            'dependency_missing': 'ALTER TABLE oauth2_authorization DROP COLUMN access_token_issued_at;',
+            'column_type': 'ALTER TABLE oauth2_authorization ADD access_token_hash VARCHAR(32);',
+            'column_default': "ALTER TABLE token ADD rotation_count INT DEFAULT 1;",
+            'column_generated': 'ALTER TABLE token ADD access_token_hash VARCHAR(64) GENERATED ALWAYS AS (token_value) STORED;',
+            'table_charset': 'ALTER TABLE token CONVERT TO CHARACTER SET latin1;',
+            'trigger': 'CREATE TRIGGER token_guard BEFORE INSERT ON token FOR EACH ROW SET NEW.id=NEW.id;',
+            'wrong_index': 'CREATE INDEX idx_access_token_hash ON oauth2_authorization(id);',
+            'prefix_index': 'ALTER TABLE token ADD access_token_hash VARCHAR(64); CREATE INDEX idx_access_token_hash ON token(access_token_hash(10));',
+            'unique_index': 'ALTER TABLE token ADD access_token_hash VARCHAR(64); CREATE UNIQUE INDEX idx_access_token_hash ON token(access_token_hash);',
+            'descending_index': 'ALTER TABLE token ADD access_token_hash VARCHAR(64); CREATE INDEX idx_access_token_hash ON token(access_token_hash DESC);',
+            'invisible_index': 'ALTER TABLE token ADD access_token_hash VARCHAR(64); CREATE INDEX idx_access_token_hash ON token(access_token_hash) INVISIBLE;',
+            'compound_index': 'ALTER TABLE token ADD access_token_hash VARCHAR(64); CREATE INDEX idx_access_token_hash ON token(access_token_hash,id);',
+            'column_charset': 'ALTER TABLE token ADD access_token_hash VARCHAR(64) CHARACTER SET latin1;',
+            'check_constraint': 'ALTER TABLE token ADD CONSTRAINT token_check CHECK(id>0);',
+            'foreign_key': 'UPDATE token SET id=1; ALTER TABLE token ADD CONSTRAINT token_parent FOREIGN KEY(id) REFERENCES oauth2_authorization(id);',
+            'wrong_engine': 'ALTER TABLE token ENGINE=MyISAM;',
+            'history_table': 'CREATE TABLE token_rotation_history(id BIGINT PRIMARY KEY);',
+            'security_table': 'CREATE TABLE token_security_event(id BIGINT PRIMARY KEY);',
+            'key_table': 'CREATE TABLE encryption_key_version(id BIGINT PRIMARY KEY);',
+            'wrong_view': 'CREATE VIEW v_token_health AS SELECT id FROM oauth2_authorization;',
+            'table_instead_of_view': 'CREATE TABLE v_token_health(id BIGINT);',
+            'view_instead_of_token': 'DROP TABLE token; CREATE VIEW token AS SELECT id FROM oauth2_authorization;',
+        }
+        for label, setup in conflicts.items():
+            fixture()
+            sql('USE probe;' + setup)
+            before = snapshot()
+            error = recover(success=False)
+            assert 'preflight rejected' in error, error
+            assert snapshot() == before, label + ' changed state before refusal'
+            result['scenarios'][label] = {'rejected': True, 'unchanged': True, 'error': error,
+                                          'before_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),
+                                          'after_sha256': hashlib.sha256(json.dumps(snapshot(), sort_keys=True).encode()).hexdigest()}
+        fixture()
+        recover()
+        for label, setup in {
+            'later_table_wrong_default': "ALTER TABLE token_security_event ALTER COLUMN handled SET DEFAULT 1;",
+            'later_index_wrong': 'DROP INDEX idx_active ON encryption_key_version; CREATE INDEX idx_active ON encryption_key_version(key_id);',
+            'later_extra_column': 'ALTER TABLE token_rotation_history ADD unexpected INT;',
+            'view_identifier_space': 'ALTER TABLE oauth2_authorization ADD `access_token_issued_ at` DATETIME; '
+                                     'CREATE OR REPLACE VIEW v_token_health AS ' +
+                                     original.split('CREATE OR REPLACE VIEW v_token_health AS', 1)[1].split(';', 1)[0].replace('access_token_issued_at', '`access_token_issued_ at`') + ';',
+            'view_invoker': 'ALTER SQL SECURITY INVOKER VIEW v_token_health AS ' +
+                            original.split('CREATE OR REPLACE VIEW v_token_health AS', 1)[1].split(';', 1)[0] + ';',
+        }.items():
+            fixture()
+            recover()
+            sql('USE probe;' + setup + ' ALTER TABLE token DROP COLUMN previous_jti;')
+            before = snapshot()
+            error = recover(success=False)
+            assert 'preflight rejected' in error
+            assert snapshot() == before
+            result['scenarios'][label] = {'rejected': True, 'unchanged': True, 'error': error}
+        result['status'] = 'passed'
+    except Exception as exc:
+        result.update(status='failed', error=str(exc))
+    finally:
+        if owned:
+            # 清理同样受 podman exec/CLI 往返劣化影响，超时不得中断证据落盘。
+            cleanup = result['cleanup'] = {'remove_exit_code': None, 'exists_exit_code': None}
+            try:
+                cleanup['remove_exit_code'] = command(['podman', 'rm', '-f', '--volumes', name], timeout=300).returncode
+            except subprocess.TimeoutExpired:
+                cleanup['remove_timed_out'] = True
+            try:
+                cleanup['exists_exit_code'] = command(['podman', 'container', 'exists', name], timeout=120).returncode
+            except subprocess.TimeoutExpired:
+                cleanup['exists_timed_out'] = True
+            cleanup['container_and_anonymous_volumes_removed'] = cleanup['remove_exit_code'] == 0 and cleanup['exists_exit_code'] == 1
+        result['ended_at'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        with output.open('x') as stream:
+            json.dump(result, stream, ensure_ascii=False, indent=2)
+            stream.write('\n')
+        print(str(output))
+        print('sha256=' + hashlib.sha256(output.read_bytes()).hexdigest())
+        print(json.dumps({'status': result['status'], 'error': result.get('error'), 'cleanup': result['cleanup']}, ensure_ascii=False))
+    return result['status'] == 'passed' and result['cleanup'].get('container_and_anonymous_volumes_removed')
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', type=pathlib.Path, default=P0 / ('token-v42-recovery-' + uuid.uuid4().hex[:12] + '-evidence.json'))
+    args = parser.parse_args()
+    raise SystemExit(0 if verify(args.output) else 1)
