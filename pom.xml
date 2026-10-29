@@ -157,7 +157,7 @@
     <module>apex-system</module>
     <module>apex-example</module>
     <module>apex-generator</module>
-    <!-- ========== 微服务化改造模块（详见 docs/microservice-migration-plan.md） ========== -->
+    <!-- ========== 微服务化改造模块（详见 docs/08-project-management/plans/microservice-migration-plan.md） ========== -->
     <!-- 微服务依赖版本 BOM：统一锁定各服务模块与第三方依赖 -->
     <module>apex-services-bom</module>
     <!-- 跨服务内部 API 契约：Feign 接口 + 共享 DTO -->

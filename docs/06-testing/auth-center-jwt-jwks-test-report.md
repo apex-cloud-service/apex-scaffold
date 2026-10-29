@@ -1,7 +1,7 @@
 # 认证中心 JWT/JWKS 测试报告 — apex-auth-center（Phase 2.1/2.2）
 
 > 报告日期：2026-10-08 ｜ 执行环境：macOS（Java 17.0.12-oracle + Maven Daemon 2.0.0-rc-3）
-> 所属阶段：微服务改造执行计划 Phase 2.1/2.2（`docs/microservice-migration-plan.md` §7.2 JWT+JWKS 非对称 / §16 风险 #1 双 kid 过渡 / §17 验收）
+> 所属阶段：微服务改造执行计划 Phase 2.1/2.2（`docs/08-project-management/plans/microservice-migration-plan.md` §7.2 JWT+JWKS 非对称 / §16 风险 #1 双 kid 过渡 / §17 验收）
 
 ## 一、测试概览
 

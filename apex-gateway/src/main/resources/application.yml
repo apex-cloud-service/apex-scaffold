@@ -12,7 +12,7 @@
 # 【Phase 1 透明代理说明】
 #   本期网关只做"透明代理"：全部 /api/v1/** 与 /admin-api/v1/** 流量转发到
 #   现有单体 apex-scaffold（端口 8080），用于验证网关零损耗与契约不变。
-#   后续 Phase 按域把路由指向已迁移的微服务（见 docs/microservice-migration-plan.md §15）。
+#   后续 Phase 按域把路由指向已迁移的微服务（见 docs/08-project-management/plans/microservice-migration-plan.md §15）。
 #
 # @author Apex Team
 # ============================================================

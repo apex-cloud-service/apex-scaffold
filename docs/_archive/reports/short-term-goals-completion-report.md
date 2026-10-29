@@ -39,7 +39,7 @@
 
 #### 1.3 交付成果
 
-**文件**: [docs/API_ROUTES.md](../../API_ROUTES.md)
+**文件**: [docs/API_ROUTES.md](../../03-api/API_ROUTES.md)
 
 **文档规模**: 约 800 行，涵盖 7 大功能模块
 
@@ -386,7 +386,7 @@ if ! echo "${basename}" | grep -qE '^V[0-9]+__[a-zA-Z0-9_]+\.sql$'; then
 
 ### 给开发者
 
-1. 📖 **快速查阅接口**: 查看 [API_ROUTES.md](../../API_ROUTES.md)
+1. 📖 **快速查阅接口**: 查看 [API_ROUTES.md](../../03-api/API_ROUTES.md)
 2. ⚙️ **配置环境**: 参考 [.env.example](../../../.env.example)
 3. ✅ **提交前检查**: 运行 `./scripts/ci/check-doc-consistency.sh`
 4. 📚 **完整文档**: 查看 [开发者手册 2.0](../../01-guides/developer-handbook.md)

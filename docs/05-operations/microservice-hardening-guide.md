@@ -1,6 +1,6 @@
 # 微服务加固手册（Microservice Hardening Guide）
 
-> **性质**：Phase 7 加固（`docs/microservice-migration-plan.md` 第 7 章 / 执行计划 §7）配套文档。
+> **性质**：Phase 7 加固（`docs/08-project-management/plans/microservice-migration-plan.md` 第 7 章 / 执行计划 §7）配套文档。
 > **范围**：容量规划、混沌演练、全链路压测、告警调优与 runbook、值班手册、`apex-common` SDK 升级指南。
 > **依据**：执行计划 §7.1–7.5 与 §9 验收「可观测与运维」项；基础设施已随仓库提供
 > （`config/monitoring/`、`config/nacos/`、`k8s/`、`podman-compose.yml`、`podman-compose.infra.yml`）。

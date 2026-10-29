@@ -144,7 +144,7 @@ grep -r '```mermaid' --include='*.md' . | cut -d: -f1 | sort | uniq
 ## 🧪 测试页面
 
 **创建的测试文件**：
-- 📄 [test-mermaid-viewer.html](../test-mermaid-viewer.html)
+- 📄 [test-mermaid-viewer.html](../04-development/test-mermaid-viewer.html)
 
 **测试内容**：
 1. 基础功能测试 - Mermaid 库加载检查
@@ -227,7 +227,7 @@ open http://localhost:8765/test-mermaid-viewer.html
 
 ### 添加新文档
 
-当添加包含 Mermaid 图表的新文档时，更新 [mermaid-viewer.html](../mermaid-viewer.html)：
+当添加包含 Mermaid 图表的新文档时，更新 [mermaid-viewer.html](../04-development/mermaid-viewer.html)：
 
 ```html
 <select id="fileSelect">

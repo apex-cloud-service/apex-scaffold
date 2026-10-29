@@ -109,7 +109,7 @@
 
 - `scripts/test/test-workflow-api.sh`
 - `scripts/data/init_workflow_test_data.sql`、`init_workflow_test_data_v2.sql`
-- 文档：`docs/01-guides/workflow-*.md`、`docs/08-project-management/features/README-WORKFLOW-PROJECT.md`、`docs/03-api/api-routes.md`、`docs/API_ROUTES.md`、`docs/diagrams/06_workflow_approval_flow.svg`、`60_workflow_engine_lifecycle.svg` 等
+- 文档：`docs/01-guides/workflow-*.md`、`docs/08-project-management/features/README-WORKFLOW-PROJECT.md`、`docs/03-api/api-routes.md`、`docs/03-api/API_ROUTES.md`、`docs/diagrams/06_workflow_approval_flow.svg`、`60_workflow_engine_lifecycle.svg` 等
 - 监控配置：`config/monitoring/grafana/apex-dashboard*.json` 中如含工作流指标看板需复核 label 来源
 
 ---
@@ -399,7 +399,7 @@ flowchart TD
 ### 9.5 前端与脚本
 
 - 前端（`/Users/work/apex-admin-web`）：后端路由未变更，前端 `src/api/workflow.ts`、`src/types/workflow.ts` 及页面**无需改动**，仅回归验证。
-- 脚本：`scripts/check-commercialization-readiness.sh`、`scripts/test/generate-test-report.sh`、`scripts/test/generate-comprehensive-test-report.sh` 的模块清单均已包含 `apex-workflow`，与最终模块拓扑一致。
+- 脚本：`scripts/utils/check-commercialization-readiness.sh`、`scripts/test/generate-test-report.sh`、`scripts/test/generate-comprehensive-test-report.sh` 的模块清单均已包含 `apex-workflow`，与最终模块拓扑一致。
 - 数据库迁移脚本、Grafana 看板、对外 12 条路由路径/方法/参数/响应均保持原样。
 
 > 结论：本方案 §1–§8 所列全部前后端调整项均已落地，构建与测试通过，无遗留待办。

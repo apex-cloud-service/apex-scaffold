@@ -146,22 +146,22 @@
 1. **项目 README**
    - 路径: `README.md`
    - 位置: "📑 文档索引快速入口" 章节
-   - 链接: [文档搜索工具](../../doc-search.html)
+   - 链接: [文档搜索工具](../../04-development/doc-search.html)
 
 2. **架构文档索引**
    - 路径: `docs/ARCHITECTURE_INDEX.md`
    - 位置: 页面顶部
-   - 链接: [打开文档搜索工具](../../doc-search.html)
+   - 链接: [打开文档搜索工具](../../04-development/doc-search.html)
 
 3. **集成文档索引**
    - 路径: `docs/integration/README.md`
    - 位置: 目录概览前
-   - 链接: [打开文档搜索工具](../../doc-search.html)
+   - 链接: [打开文档搜索工具](../../04-development/doc-search.html)
 
 4. **文档整合摘要**
    - 路径: `docs/INTEGRATION_SUMMARY.md`
    - 位置: 页面顶部
-   - 链接: [打开文档搜索工具](../../doc-search.html)
+   - 链接: [打开文档搜索工具](../../04-development/doc-search.html)
 
 ### 直接访问
 

@@ -195,7 +195,7 @@ mvnd clean test jacoco:report
 
 ## 🚪 微服务改造 — apex-gateway 网关段（2026-10-08）
 
-> 归属：微服务改造执行计划 Phase 1.2（`docs/microservice-migration-plan.md` §5.3 过滤器链 / §17 验收）。
+> 归属：微服务改造执行计划 Phase 1.2（`docs/08-project-management/plans/microservice-migration-plan.md` §5.3 过滤器链 / §17 验收）。
 > 详细报告见 [gateway-module-test-report.md](./gateway-module-test-report.md)。
 
 ### 测试与门禁结果
@@ -236,7 +236,7 @@ mvnd clean test jacoco:report
 
 ## 📦 微服务改造 — apex-api-contract 契约模块段（2026-10-08）
 
-> 归属：微服务改造执行计划 Phase 1.3（`docs/microservice-migration-plan.md` §6.2 六个内部契约 / §17 验收）。
+> 归属：微服务改造执行计划 Phase 1.3（`docs/08-project-management/plans/microservice-migration-plan.md` §6.2 六个内部契约 / §17 验收）。
 > 详细报告见 [contract-module-test-report.md](./contract-module-test-report.md)。
 
 ### 测试与门禁结果

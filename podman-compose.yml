@@ -139,7 +139,7 @@ services:
     restart: "no"
   # ---------------- 应用微服务（§13.1：gateway + 5 服务；一个镜像 = 一个服务） ----------------
   #
-  # 旧单体 apex-scaffold 已退役（见 docs/microservice-migration-plan.md §15.1/§15.3）。
+  # 旧单体 apex-scaffold 已退役（见 docs/08-project-management/plans/microservice-migration-plan.md §15.1/§15.3）。
   # Containerfile 以 --build-arg SERVICE_MODULE 参数化，每个微服务构建独立镜像；
   # 网关（apex-gateway）承接原单体 8080 入口职责，其余服务经网关 lb:// 路由。
   # 服务间路由依赖 Nacos 服务发现，故本地编排默认启用 Nacos（见 NACOS_* 变量）。

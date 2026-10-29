@@ -101,10 +101,10 @@ echo ""
 echo "[4/5] 检查路由配置与文档一致性..."
 
 # 检查是否存在路由文档
-if [ -f "docs/API_ROUTES.md" ]; then
+if [ -f "docs/03-api/API_ROUTES.md" ]; then
   echo -e "${GREEN}  ✓ 路由文档存在${NC}"
 else
-  echo -e "${YELLOW}  ⚠ 建议创建 docs/API_ROUTES.md 记录所有路由${NC}"
+  echo -e "${YELLOW}  ⚠ 建议创建 docs/03-api/API_ROUTES.md 记录所有路由${NC}"
   WARNINGS=$((WARNINGS + 1))
 fi
 

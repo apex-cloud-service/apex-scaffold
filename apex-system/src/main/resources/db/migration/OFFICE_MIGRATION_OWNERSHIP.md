@@ -53,5 +53,5 @@ PostgreSQL 目录与 MySQL 目录共享同一逻辑链，但版本号**错位对
 ## 4. 备注与后续
 
 - `office_message` 存在**两套列名**：旧单体 `V31/V36`（`recipient_type/status/result_message`）与 `apex-office-service V1`（`target_type/target_user_ids/send_status/failure_reason`，与 `OfficeMessagePO` 对齐）。以新服务 `V1` 及其 PO 为准。
-- `off_*`（组织/消息域）**已迁出**（2026-10-11）：`apex-office-service` 通过 `mysql/`、`postgresql/` 的 `V2__create_off_msg_org.sql` 新建同构表；`Off*PO/Mapper/Converter/RepositoryImpl/Entity/Repository/Service/Assembler/DTO`（50 个类）已迁入 `apex-office`，`3×Handler + 2×Router`（5 个类）已迁入 `apex-office-service interfaces.off`，单体侧对应 55 个类已删除。网关 office-domain 路由已补齐 `/admin-api/v1/message-templates`。待观察期验收后，将单体侧六张 `off_*` 表改名 `_bak` 保留 30 天后归档（见 `docs/microservice-migration-plan.md §9.3`）。
+- `off_*`（组织/消息域）**已迁出**（2026-10-11）：`apex-office-service` 通过 `mysql/`、`postgresql/` 的 `V2__create_off_msg_org.sql` 新建同构表；`Off*PO/Mapper/Converter/RepositoryImpl/Entity/Repository/Service/Assembler/DTO`（50 个类）已迁入 `apex-office`，`3×Handler + 2×Router`（5 个类）已迁入 `apex-office-service interfaces.off`，单体侧对应 55 个类已删除。网关 office-domain 路由已补齐 `/admin-api/v1/message-templates`。待观察期验收后，将单体侧六张 `off_*` 表改名 `_bak` 保留 30 天后归档（见 `docs/08-project-management/plans/microservice-migration-plan.md §9.3`）。
 - **不在本索引范围**的共享表（`gen_*`、`sys_*` 等）归属单体系统域，与办公域拆分无关。

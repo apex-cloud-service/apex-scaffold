@@ -301,7 +301,7 @@ open http://localhost:3000
 **部署脚本**:
 - deploy_monitoring_configs.sh（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/deploy_monitoring_configs.sh`） - 监控部署
 - [start-mysql-and-run-sql.sh](../../../../../scripts/data/start-mysql-and-run-sql.sh) - MySQL启动
-- [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查
+- [check_javadoc.sh](../../../../../scripts/dev/check/check_javadoc.sh) - JavaDoc检查
 
 ---
 

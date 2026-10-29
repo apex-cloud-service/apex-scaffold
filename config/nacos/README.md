@@ -1,7 +1,7 @@
 # Nacos 配置分层模板（config/nacos/）
 
 本目录是微服务化后 Nacos 配置中心的**模板仓库**，对应迁移方案
-[§12.1 Nacos 配置分层](../../docs/microservice-migration-plan.md) 与
+[§12.1 Nacos 配置分层](../../docs/08-project-management/plans/microservice-migration-plan.md) 与
 执行计划 Phase 1.4。模板本身不参与应用启动，仅作为发布到 Nacos 的
 Data ID 内容基线，便于评审、版本管理与一键发布。
 
@@ -125,7 +125,7 @@ curl -X POST "http://127.0.0.1:18848/nacos/v1/cs/configs" \
 
 ## 六、关联文档
 
-- 迁移方案：[`docs/microservice-migration-plan.md`](../../docs/microservice-migration-plan.md) §12
+- 迁移方案：[`docs/08-project-management/plans/microservice-migration-plan.md`](../../docs/08-project-management/plans/microservice-migration-plan.md) §12
 - 配置项详解：[`docs/05-operations/configuration.md`](../../docs/05-operations/configuration.md)
 - 环境变量清单：[`docs/05-operations/configuration-inventory.md`](../../docs/05-operations/configuration-inventory.md)
 - Sentinel 规则模板：[`config/sentinel/README.md`](../sentinel/README.md)

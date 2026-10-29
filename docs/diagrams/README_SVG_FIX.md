@@ -55,7 +55,7 @@
 ### 方法1: 使用验证脚本（推荐）
 ```bash
 cd /Users/work/apex-scaffold/docs/diagrams
-bash verify_svg.sh
+bash scripts/archive/svg/verify_svg.sh
 ```
 
 ### 方法2: 浏览器直接打开HTML测试页
@@ -110,7 +110,7 @@ start 14_network_architecture.svg
 3. ✅ **test_svg.html** - SVG测试页面（浏览器查看）
 4. ✅ **TEST_SVG_DISPLAY.md** - Markdown测试文档
 5. ✅ **SVG_FIX_SUMMARY.md** - 修复总结文档
-6. ✅ **verify_svg.sh** - SVG验证脚本
+6. ✅ **verify_svg.sh** - SVG验证脚本（已归档至 scripts/archive/svg/）
 7. ✅ **README_SVG_FIX.md** - 本文档
 
 ---
@@ -196,7 +196,7 @@ docs/
 │   ├── test_svg.html 🆕
 │   ├── TEST_SVG_DISPLAY.md 🆕
 │   ├── SVG_FIX_SUMMARY.md 🆕
-│   ├── verify_svg.sh 🆕
+│   ├── verify_svg.sh（已归档至 scripts/archive/svg/）
 │   └── README_SVG_FIX.md 🆕（本文件）
 ├── architecture/
 │   ├── deployment-architecture.md ✅
@@ -216,7 +216,7 @@ docs/
 ✅ **测试工具**已准备就绪
 
 现在您可以通过以下方式验证：
-1. 运行 `bash verify_svg.sh` 脚本
+1. 运行 `bash scripts/archive/svg/verify_svg.sh` 脚本
 2. 打开 `test_svg.html` 查看
 3. 在VS Code中预览SVG文件
 4. 在支持的markdown查看器中查看文档

@@ -24,8 +24,8 @@ cd /Users/work/apex-scaffold
 - ✅ 显示访问地址
 
 **访问地址**:
-- 文档搜索工具: http://localhost:8080/docs/doc-search.html
-- 链接测试页面: http://localhost:8080/docs/link-test.html
+- 文档搜索工具: http://localhost:8080/docs/04-development/doc-search.html
+- 链接测试页面: http://localhost:8080/docs/04-development/link-test.html
 
 按 `Ctrl+C` 停止服务器。
 
@@ -52,7 +52,7 @@ $JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \
     com.apex.scaffold.tools.deployment.DocSearchServer 8080 .
 
 # 4. 在浏览器中打开
-# http://localhost:8080/docs/doc-search.html
+# http://localhost:8080/docs/04-development/doc-search.html
 ```
 
 ### 方法 3: 使用项目服务
@@ -62,7 +62,7 @@ $JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \
 cd /Users/work/apex-scaffold
 mvnd spring-boot:run -pl apex-interfaces
 
-# 访问 http://localhost:8080/docs/doc-search.html
+# 访问 http://localhost:8080/docs/04-development/doc-search.html
 ```
 
 ### 方法 4: VS Code Live Server
@@ -70,7 +70,7 @@ mvnd spring-boot:run -pl apex-interfaces
 如果使用 VS Code 开发:
 
 1. 安装 **Live Server** 扩展
-2. 右键点击 `docs/doc-search.html`
+2. 右键点击 `docs/04-development/doc-search.html`
 3. 选择 **Open with Live Server**
 
 ---
@@ -134,7 +134,7 @@ mvnd spring-boot:run -pl apex-interfaces
 访问测试页面验证链接是否正常:
 
 ```
-http://localhost:8080/docs/link-test.html
+http://localhost:8080/docs/04-development/link-test.html
 ```
 
 测试页面包含:
@@ -151,7 +151,7 @@ http://localhost:8080/docs/link-test.html
 
 2. **打开搜索工具**
    ```
-   http://localhost:8080/docs/doc-search.html
+   http://localhost:8080/docs/04-development/doc-search.html
    ```
 
 3. **测试搜索**
@@ -188,7 +188,7 @@ http://localhost:8080/docs/link-test.html
 $JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \
     com.apex.scaffold.tools.deployment.DocSearchServer 8081 .
 
-# 访问 http://localhost:8081/docs/doc-search.html
+# 访问 http://localhost:8081/docs/04-development/doc-search.html
 ```
 
 或者使用启动脚本,它会自动检测可用端口。
@@ -226,7 +226,7 @@ ls -la /Users/work/apex-scaffold/docs/integration/oauth2/integration-guide.md
 
 ### Q5: 如何添加新文档到搜索工具?
 
-**A**: 编辑 `docs/doc-search.html`,在 `documents` 数组中添加:
+**A**: 编辑 `docs/04-development/doc-search.html`,在 `documents` 数组中添加:
 
 ```javascript
 {
@@ -268,7 +268,7 @@ ls -la /Users/work/apex-scaffold/docs/integration/oauth2/integration-guide.md
 | [DOC_SEARCH_GUIDE.md](doc-search-guide.md) | 详细使用指南 |
 | [DOC_SEARCH_FIX.md](doc-search-fix.md) | 链接修复说明 |
 | [DOC_SEARCH_CHANGELOG.md](doc-search-changelog.md) | 更新日志 |
-| [link-test.html](../link-test.html) | 链接测试页面 |
+| [link-test.html](../04-development/link-test.html) | 链接测试页面 |
 
 ---
 

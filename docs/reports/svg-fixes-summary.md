@@ -173,7 +173,7 @@ scripts/dev/sync-component-counts.sh
 ## 🔗 相关文档
 
 - [SVG架构图表与代码实现对齐度综合报告](./svg-code-alignment-comprehensive-report.md)
-- [项目文档整体对齐度报告](../PROJECT_DOCUMENTATION_ALIGNMENT_REPORT.md)
+- [项目文档整体对齐度报告](./PROJECT_DOCUMENTATION_ALIGNMENT_REPORT.md)
 - [SVG维护指南](../04-development/svg-maintenance-guide.md)
 - [架构图表索引](../diagrams/README.md)
 

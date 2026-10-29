@@ -176,7 +176,7 @@
    
    或使用项目脚本:
    ```bash
-   ./scripts/deploy/pull-infra-images.sh
+   ./scripts/deploy/podman/pull-infra-images.sh
    ```
 
 2. **配置数据库连接** (15分钟)

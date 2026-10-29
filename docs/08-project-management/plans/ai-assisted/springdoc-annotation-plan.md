@@ -710,13 +710,13 @@ mvnd pmd:check
 ### 10.3 工具脚本
 
 - [scan-javadoc-issues.sh](../../../../scripts/dev/check/scan-javadoc-issues.sh) - 扫描 JavaDoc 问题
-- [check_javadoc.sh](../../../../scripts/check_javadoc.sh) - 检查 JavaDoc 覆盖率
+- [check_javadoc.sh](../../../../scripts/dev/check/check_javadoc.sh) - 检查 JavaDoc 覆盖率
 - [batch-add-javadoc.sh](../../../../scripts/dev/format/batch-add-javadoc.sh) - 批量添加 JavaDoc 框架
 
 ### 10.4 已有文档
 
 - [SpringDoc 注解完整性报告](../../../03-api/springdoc-annotation-audit.md)
-- [SpringDoc 覆盖报告](../../../test-reports/springdoc-coverage-report.md)
+- [SpringDoc 覆盖报告](../../../_archive/test-reports/springdoc-coverage-report.md)
 - [JavaDoc 补充任务总结](../../../reports/javadoc-补充任务总结报告-20260913.md)
 
 ---

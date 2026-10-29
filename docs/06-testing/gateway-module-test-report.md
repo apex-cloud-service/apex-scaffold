@@ -1,7 +1,7 @@
 # 网关模块测试报告 — apex-gateway（Phase 1.2）
 
 > 报告日期：2026-10-08 ｜ 执行环境：macOS（Java 17.0.12-oracle + Maven）
-> 涉及阶段：微服务改造执行计划 Phase 1.2（`docs/microservice-migration-plan.md` §5.3 网关过滤器链）
+> 涉及阶段：微服务改造执行计划 Phase 1.2（`docs/08-project-management/plans/microservice-migration-plan.md` §5.3 网关过滤器链）
 > 执行命令：`mvnd -pl apex-gateway -am verify`
 >
 > 追加记录（2026-10-12）：本文档在 Phase 1.2 基线之上，补充网关熔断 / 限流 / 负载均衡 / 访问日志

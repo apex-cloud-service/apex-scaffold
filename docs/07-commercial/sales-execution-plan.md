@@ -220,7 +220,7 @@ mvn verify -Pintegration -q
 #### 5.2 商业化就绪度检查
 
 ```bash
-./scripts/check-commercialization-readiness.sh
+./scripts/utils/check-commercialization-readiness.sh
 ```
 
 **验收标准**:
@@ -729,7 +729,7 @@ gh release create v1.2.0 \
 | License管理 | docs/LICENSE_MANAGEMENT.md | 安装/续期指南 |
 | 销售材料 | docs/sales/ | 4份采购材料 |
 | 就绪评审 | docs/COMMERCIAL_READINESS_REVIEW_2026-08.md | 92分评审报告 |
-| 商业化就绪检查 | scripts/check-commercialization-readiness.sh | 自动化检查 |
+| 商业化就绪检查 | scripts/utils/check-commercialization-readiness.sh | 自动化检查 |
 
 ### B. 关键命令速查
 
@@ -747,7 +747,7 @@ gh release create v1.2.0 \
 ./scripts/license/generate-license.sh ENTERPRISE "客户名" 365 --fingerprint <hash>
 
 # 商业化检查
-./scripts/check-commercialization-readiness.sh
+./scripts/utils/check-commercialization-readiness.sh
 
 # 代码生成
 ./scripts/codegen/generate.sh

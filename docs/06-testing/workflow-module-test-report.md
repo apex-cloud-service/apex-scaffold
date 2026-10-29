@@ -6,7 +6,7 @@
 
 ## 0. 总览（Phase 3.6）
 
-> 微服务改造执行计划 Phase 3（`docs/microservice-migration-plan.md` §3.6）：
+> 微服务改造执行计划 Phase 3（`docs/08-project-management/plans/microservice-migration-plan.md` §3.6）：
 > 工作流服务独立构建通过，并完成全接口回归、审批流转集成测试、Flyway 迁移测试。
 
 ### 0.1 独立构建

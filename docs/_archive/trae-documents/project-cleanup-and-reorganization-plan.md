@@ -108,7 +108,7 @@
 
 ### 2.1 遵循的规范文档
 - [AGENTS.md](../../../AGENTS.md) - 编码和提交约定
-- [docs/DOCS_STRUCTURE_STANDARD.md](../../DOCS_STRUCTURE_STANDARD.md) - 文档结构规范
+- [docs/DOCS_STRUCTURE_STANDARD.md](../../08-project-management/DOCS_STRUCTURE_STANDARD.md) - 文档结构规范
 
 ### 2.2 核心原则
 1. **用户导向**: 按用户角色和使用场景组织

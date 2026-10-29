@@ -19,9 +19,9 @@
 
 ### 访问方式
 
-1. **通过文件**: 直接打开 `docs/doc-search.html` 文件
+1. **通过文件**: 直接打开 `docs/04-development/doc-search.html` 文件
 2. **通过链接**: 在各文档索引页面点击"🔍 文档搜索工具"链接
-3. **本地服务器**: 启动项目后访问 `http://localhost:8080/docs/doc-search.html`
+3. **本地服务器**: 启动项目后访问 `http://localhost:8080/docs/04-development/doc-search.html`
 
 ### 基本使用
 
@@ -175,7 +175,7 @@ A: 文档搜索工具目前包含 80+ 个核心文档索引。如果需要搜索
 
 ### Q: 如何添加新文档到搜索工具?
 
-A: 编辑 `docs/doc-search.html` 文件,在 `documents` 数组中添加新文档对象:
+A: 编辑 `docs/04-development/doc-search.html` 文件,在 `documents` 数组中添加新文档对象:
 
 ```javascript
 {

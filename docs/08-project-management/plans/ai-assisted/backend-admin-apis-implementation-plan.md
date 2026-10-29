@@ -155,7 +155,7 @@ mvnd -pl apex-common,apex-domain,apex-application,apex-infrastructure,apex-inter
 **报告生成:**
 1. 运行 `scripts/test/generate-test-report.sh` 自动从 `target/surefire-reports/` 抓取统计
 2. 追加手写章节:新增接口清单、Flyway 迁移验证、菜单种子验证、安全检查清单
-3. 输出 `docs/test-reports/backend-admin-apis-test-report-YYYYMMDD.md`(参考 `docs/test-reports/test-summary-20260916.md` 格式)
+3. 输出 `docs/_archive/test-reports/backend-admin-apis-test-report-YYYYMMDD.md`(参考 `docs/_archive/test-reports/test-summary-20260916.md` 格式)
 
 ### 阶段 6:文档
 
@@ -174,7 +174,7 @@ mvnd -pl apex-common,apex-domain,apex-application,apex-infrastructure,apex-inter
 | RepositoryImpl 模板 | `apex-infrastructure/.../persistence/repository/DictTypeRepositoryImpl.java` |
 | DTO 模板 | `apex-application/.../dto/admin/DictTypeRequest.java` |
 | 测试基类 | `apex-interfaces/src/test/.../test/BaseIntegrationTest.java` |
-| 测试报告模板 | `docs/test-reports/test-summary-20260916.md` |
+| 测试报告模板 | `docs/_archive/test-reports/test-summary-20260916.md` |
 | 菜单种子模板 | `db/migration/mysql/V23__add_database_config_menu.sql` |
 | PG 菜单模板 | `db/migration/postgresql/V36__add_office_message_menu_and_permissions.sql` |
 | 现有 JwtConfig | `apex-interfaces/.../config/JwtConfig.java`(启动配置,勿破坏) |
@@ -194,7 +194,7 @@ mvnd -pl apex-common,apex-domain,apex-application,apex-infrastructure,apex-inter
 5. **单测:** `mvnd -pl apex-application -am test`
 6. **集成测试:** `mvnd -pl apex-interfaces -am test -P basic`
 7. **OpenAPI:** 启动应用 → `curl http://localhost:8080/v3/api-docs | jq '.paths | keys[] | select(startwith("/admin-api/v1/generator") or startwith("/admin-api/v1/sso") or startwith("/admin-api/v1/auth/config"))'`
-8. **报告生成:** `bash scripts/test/generate-test-report.sh` → 校验 `docs/test-reports/backend-admin-apis-test-report-YYYYMMDD.md` 包含所有新测试通过统计
+8. **报告生成:** `bash scripts/test/generate-test-report.sh` → 校验 `docs/_archive/test-reports/backend-admin-apis-test-report-YYYYMMDD.md` 包含所有新测试通过统计
 
 ---
 

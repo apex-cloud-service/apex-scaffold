@@ -66,7 +66,7 @@ GET    /api/v1/office/organization/sync/tasks
 - ✅ 测试代码框架
 
 **自动化脚本**：
-- ✅ `scripts/office/generate-phase2-code.sh` - 代码框架生成脚本
+- ✅ `scripts/archive/office/generate-phase2-code.sh` - 代码框架生成脚本
 
 #### 3. 文档交付（6个文档）
 
@@ -242,7 +242,7 @@ cat .trae/documents/phase-2-3-implementation-summary.md
 
 ```bash
 # 运行代码框架生成脚本
-./scripts/office/generate-phase2-code.sh
+./scripts/archive/office/generate-phase2-code.sh
 
 # 查看生成的文件
 ls -la apex-domain/src/main/java/com/apex/scaffold/domain/office/message/

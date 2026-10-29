@@ -81,10 +81,10 @@ cd /Users/work/apex-scaffold
 python3 -m http.server 8080
 
 # 在浏览器中打开测试页面
-# http://localhost:8080/docs/link-test.html
+# http://localhost:8080/docs/04-development/link-test.html
 ```
 
-测试页面 ([link-test.html](../link-test.html)) 包含:
+测试页面 ([link-test.html](../04-development/link-test.html)) 包含:
 - 6 个测试链接
 - 详细的测试说明
 - 结果分析指导
@@ -99,7 +99,7 @@ python3 -m http.server 8080
 
 2. **打开文档搜索工具**
    ```
-   http://localhost:8080/docs/doc-search.html
+   http://localhost:8080/docs/04-development/doc-search.html
    ```
 
 3. **测试搜索功能**
@@ -119,7 +119,7 @@ python3 -m http.server 8080
 
 | 文件 | 修改内容 |
 |------|---------|
-| `docs/doc-search.html` | 修复所有文档路径,添加 `./` 前缀 |
+| `docs/04-development/doc-search.html` | 修复所有文档路径,添加 `./` 前缀 |
 | `docs/DOC_SEARCH_FIX.md` | 本修复说明文档 |
 
 ## 版本历史

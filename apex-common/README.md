@@ -1,6 +1,6 @@
 # Apex Common（共享 SDK）
 
-> 依据：`docs/microservice-migration-plan.md` §4.1、`.trae/documents/microservice-migration-execution-plan.md` §1.1.3
+> 依据：`docs/08-project-management/plans/microservice-migration-plan.md` §4.1、`.trae/documents/microservice-migration-execution-plan.md` §1.1.3
 > 版本：1.3.1（微服务改造 Phase 1）
 > 维护：Apex Team
 
@@ -73,5 +73,5 @@ com.apex.scaffold.common
 ## 相关文档
 
 - 架构总览：`docs/02-architecture/architecture-overview.md`
-- 迁移方案：`docs/microservice-migration-plan.md`
+- 迁移方案：`docs/08-project-management/plans/microservice-migration-plan.md`
 - 开发规范：`docs/04-development/development-standards.md`

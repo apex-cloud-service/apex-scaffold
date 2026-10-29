@@ -267,7 +267,7 @@ ls -lt logs/quarterly-archive-*.log 2>/dev/null | head -1
 
 ## 📚 相关文档
 
-- [DOCS_STRUCTURE_STANDARD.md](../../../docs/DOCS_STRUCTURE_STANDARD.md) - 文档结构规范
+- [DOCS_STRUCTURE_STANDARD.md](../../../docs/08-project-management/DOCS_STRUCTURE_STANDARD.md) - 文档结构规范
 - [scripts/README.md](../../README.md) - 脚本索引
 - [scripts/ci/check-doc-links.sh](../../ci/check-doc-links.sh) - 链接检查脚本
 

@@ -523,6 +523,15 @@ rate-limit:
     max-count: 1000
 ```
 
+### IP 限流与客户端 IP 解析
+
+`apex.security.ip-rate-limit.trusted-proxy-cidrs` 声明可信反向代理网段（CIDR，逗号分隔），由 `APEX_TRUSTED_PROXY_CIDRS` 注入，默认留空。
+
+- 仅当 TCP 直连地址命中可信网段时，才采信 `X-Forwarded-For` / `X-Real-IP`；并按代理链从右向左跳过可信代理，取首个非可信地址作为客户端 IP。
+- 直连地址不可信时一律使用直连地址，客户端自带的转发头被忽略，避免伪造 IP 绕过 IP 限流、登录保护或污染审计日志。
+- 留空表示不信任任何代理。经网关或负载均衡转发时必须填入其网段，否则限流与审计只能看到代理地址。
+- 该配置同时作用于 system（`IpRateLimitProperties`，限流、幂等键与操作日志）与 auth（`AuthTrustedProxyProperties`，OAuth 端点、密码找回与资源权限切面）。
+
 ## 📨 消息队列配置
 
 ### RocketMQ配置
@@ -1023,6 +1032,43 @@ apex:
 ### 观测与钉住
 
 `snapshotAll()` 在虚拟线程模式下直接读执行器真实计数，Micrometer Gauge 的并发、排队、完成、拒绝数值不退化。JDK 21 中虚拟线程在 `synchronized` 块内阻塞会钉住（pin）载体线程；怀疑存在钉住时可在启动参数加 `-Djdk.tracePinnedThreads=full` 观测。本项目的阻塞边界已统一收口到 `BlockingIoSchedulers`，切换前仍需确认目标池调用的驱动/客户端不使用 `synchronized` 包裹阻塞 I/O。
+
+## 🩺 体检快照增强（system-service）
+
+`apex.operations.health` 控制运维体检快照的定时留存、保留期清理、签名防篡改与异步导出，仅 `system-service` 使用。四组开关互相独立，任一组设为 `enabled: false` 即关闭对应能力。
+
+```yaml
+apex:
+  operations:
+    health:
+      schedule:
+        enabled: true                    # 定时采集并留存历史快照
+        tenant-id: default               # 快照归属租户（定时任务无请求上下文）
+        cron: 0 0 * * * ?                # 默认每小时整点
+      retention:
+        enabled: true                    # 物理删除过期快照与导出结果
+        days: 90                         # 保留天数，< 1 回落到 90
+        batch-size: 500                  # 单批删除条数
+        max-batches: 20                  # 单次清理最多批次数
+        cron: 0 30 3 * * ?               # 默认每天 03:30
+      signature:
+        enabled: true                    # 关闭后完整性一律为 UNVERIFIABLE
+        secret: ""                       # 留空复用 apex.security.data-encryption-key
+      async-export:
+        enabled: true
+        poll-delay-ms: 5000              # 轮询间隔，< 1000 回落到 5000
+        tenant-id: default               # 导出任务归属租户
+        max-rows: 200000                 # 单任务最大生成行数
+        result-ttl-hours: 24             # 结果保留小时数
+        max-attempts: 3                  # 单任务最大尝试次数
+```
+
+### 运行约束
+
+- **平台租户**：定时任务没有认证上下文，`schedule.tenant-id` 与 `async-export.tenant-id` 必须填写实际业务租户，否则该轮调度直接跳过并记录 WARN。多租户部署时这两个定时能力只服务配置的单一租户。
+- **签名密钥**：`signature.secret` 留空时复用 `apex.security.data-encryption-key`。该密钥须跨实例、跨重启稳定保存，轮换会让历史快照的完整性判定变为 `INVALID`；快照实体本身不受影响。
+- **异步导出**：同步导出上限固定 5000 行；超过时改用 `POST /api/v2/operations/health-snapshots/export-tasks` 提交后台任务并轮询状态，下载端点返回 CSV 附件。提交阶段即校验规模，超出 `max-rows` 直接拒绝。
+- **保留期清理**：使用物理删除回收容量，删除范围仍受租户拦截器限制。导出结果按 `completed_at + result-ttl-hours` 判定过期。
 
 ## 📈 性能压测脚本
 

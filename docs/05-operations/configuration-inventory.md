@@ -342,6 +342,7 @@
 | `WEBCLIENT_CONNECT_TIMEOUT` | `5000` | WebClient 连接超时（毫秒） | 全部 | ❌ |
 | `WEBCLIENT_READ_TIMEOUT` | `10000` | WebClient 读取超时（毫秒） | 全部 | ❌ |
 | `WEBCLIENT_WRITE_TIMEOUT` | `10000` | WebClient 写入超时（毫秒） | 全部 | ❌ |
+| `APEX_GENERATOR_OUTPUT_ROOT` | `/tmp/apex-gen` | 代码生成产物输出根目录，须挂载持久卷（system-service） | 全部 | ❌ |
 | `ENV_NAME` | - | 环境名称标识 | 全部 | ❌ |
 | `VAR` | - | 通用变量占位符 | 全部 | ❌ |
 

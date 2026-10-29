@@ -1,6 +1,6 @@
 # 架构设计说明
 
-> 依据持续演进：本仓库正按 `docs/microservice-migration-plan.md` 从「多模块 DDD 单体」改造为「API 网关 + 5 个业务微服务 + 共享 SDK/契约」。截至微服务改造 Phase 1，已新增 `apex-gateway`、`apex-api-contract`、`apex-services-bom` 三个模块（详见下文「微服务共享层」与 `architecture-evolution.md`）。
+> 依据持续演进：本仓库正按 `docs/08-project-management/plans/microservice-migration-plan.md` 从「多模块 DDD 单体」改造为「API 网关 + 5 个业务微服务 + 共享 SDK/契约」。截至微服务改造 Phase 1，已新增 `apex-gateway`、`apex-api-contract`、`apex-services-bom` 三个模块（详见下文「微服务共享层」与 `architecture-evolution.md`）。
 
 ## 当前物理边界（2026-10-12）
 

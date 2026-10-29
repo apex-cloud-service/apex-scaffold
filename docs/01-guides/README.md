@@ -53,6 +53,10 @@
 - [数据源切换](./data-source-switch-usage.md) - 主从切换
 - [审计日志](./audit-log-usage.md) - 操作审计
 
+### 消息中间件
+
+- [RocketMQ 指南](./messaging/README.md) - RocketMQ 使用与优化文档
+
 ### 认证与授权
 
 - [SSO 实施指南](./sso-implementation-guide.md) - 单点登录
@@ -60,9 +64,17 @@
 - [OAuth2 集成](./oauth2-integration-guide.md) - OAuth2 授权
 - [SSO OAuth2 Keycloak 完整文档](./sso-oauth2-keycloak-complete.md) - 完整方案
 
+### 安全加固
+
+- [SAML 签名算法配置](./saml-signature-algorithm-configuration.md) - SAML 签名算法调整
+- [安全特性配置](./security-features-configuration.md) - 安全功能配置说明
+- [安全修复实施指南](./security-fixes-implementation-guide.md) - 安全修复落地步骤
+- [安全修复验证指南](./security-fixes-verification-guide.md) - 安全修复验证方法
+
 ### 其他功能
 
 - [文档搜索指南](./doc-search-guide.md) - 全文搜索
+- [定时任务分页查询](./job-query-feature-guide.md) - 定时任务分页查询功能
 - [SPI 插件指南](./spi-plugin-guide.md) - 插件开发
 - [分布式隔离](./distributed-bulkhead-guide.md) - 资源隔离
 - [读降级指南](./read-degradation-guide.md) - 降级策略

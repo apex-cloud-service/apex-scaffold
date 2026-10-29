@@ -23,8 +23,11 @@ scripts/
 ├── keycloak/         # Keycloak
 ├── license/          # 授权
 ├── office/           # Office 集成
-└── performance/      # 性能测试
+├── performance/      # 性能测试
+└── archive/          # 历史一次性脚本归档
 ```
+
+> **兼容入口说明**：`scripts/` 根目录与 `scripts/deploy/` 下保留的部分同名脚本（如 `batch-add-javadoc.sh`、`deploy-monitoring.sh`）是历史路径兼容转发壳，实际实现集中在对应分类目录；待调用方全部迁移后可移除（见《工作区管理规范》与 jdk21-unified-auth 计划文档的兼容入口约定）。
 
 ---
 
@@ -80,8 +83,14 @@ cd scripts/dev/codegen
 |-----|------|---------|
 | `scan-javadoc-issues.sh` | 扫描 JavaDoc 问题 | 提交前检查注释完整性 |
 | `scan-lombok-issues.sh` | 扫描 Lombok 使用问题 | 检查是否有手写样板代码 |
+| `check-javadoc.sh`（`check_javadoc.sh`） | JavaDoc 质量检查 | 识别缺少 JavaDoc 的类和方法 |
+| `check-handler-javadoc.sh` | Handler JavaDoc 检查 | 检查接口层注释完整性 |
 | `check-springdoc-annotations.sh` | 检查 SpringDoc 注解 | 确保 API 文档注解完整 |
+| `check-flyway-timestamp-usage.sh` | 检查时间戳用法 | 校验迁移脚本时间字段规范 |
 | `check-port-conflicts.sh` | 检查端口冲突 | 启动前检查端口占用 |
+| `owasp-check.sh` | OWASP 依赖漏洞扫描 | 运行 dependency-check 检查依赖漏洞 |
+
+**SpringDoc 检查配套文档**：[README-check-springdoc.md](dev/check/README-check-springdoc.md)（完整用法）、[QUICKREF-springdoc-check.md](dev/check/QUICKREF-springdoc-check.md)（速查表）。
 
 **示例**:
 ```bash
@@ -107,6 +116,8 @@ cd scripts/dev/codegen
 |-----|------|---------|
 | `jvm-diagnostics-test.sh` | JVM 诊断测试 | 排查内存泄漏、线程死锁等 JVM 问题 |
 | `generate-test-report.sh` | 生成测试报告 | CI/CD 中生成格式化的测试报告 |
+| `test-sentinel-hot-reload.sh` | Sentinel 热更新测试 | 验证 Sentinel 规则文件监听 |
+| `chaos-fault-injection.sh` | 混沌故障注入 | 验证服务容错与降级行为 |
 
 **示例**:
 ```bash
@@ -125,12 +136,12 @@ cd scripts/dev/codegen
 
 ### podman/ - Podman 部署
 
-**用途**: Podman 镜像管理和容器编排。
+**用途**: Podman 镜像管理和监控栈部署（实际实现所在，`scripts/deploy/` 下的同名脚本为兼容转发入口）。
 
 | 脚本 | 功能 | 使用场景 |
 |-----|------|---------|
-| `pull-infra-images.sh` | 拉取基础设施镜像 | 初始化开发环境时批量拉取 MySQL、Redis、RocketMQ 等镜像 |
-| `deploy-monitoring.sh` | 部署监控服务 | 部署 Prometheus、Grafana 监控栈 |
+| `pull-infra-images.sh` | 拉取基础设施镜像 | 初始化开发环境时批量拉取 MySQL、Redis、RocketMQ 等镜像（带重试） |
+| `deploy-monitoring.sh` | 部署监控服务 | 部署 Prometheus、Grafana 监控栈（macOS 需先 `podman machine start`） |
 
 **示例**:
 ```bash
@@ -228,6 +239,7 @@ sudo systemctl start apex-scaffold
 | 脚本 | 功能 | 使用场景 |
 |-----|------|---------|
 | `start-monitoring.sh` | 启动监控服务 | 启动 Prometheus + Grafana 监控栈 |
+| `verify-reactor-metrics.sh` | 验证 Reactor Netty 指标 | 应用启动后验证响应式指标暴露（默认 localhost:8081） |
 
 **Grafana 配置脚本**:
 
@@ -375,6 +387,12 @@ mysql -u root -p apex_scaffold < scripts/data/init_workflow_test_data_v2.sql
 | `export-api-docs.sh` | 导出 API 文档 | 从 Swagger/SpringDoc 导出 OpenAPI 规范 |
 | `extract-env-vars.sh` | 提取环境变量 | 从配置文件提取需要的环境变量列表 |
 | `batch-verify-svg.sh` | 批量验证 SVG | 检查 SVG 文件是否有效 |
+| `verify-svg-quality.sh` | SVG 质量验证 | 检查 `docs/diagrams/` 图表的 CSS 残留、XML 格式与配色 |
+| `check-commercialization-readiness.sh` | 商业化就绪度检查 | 检查项目是否达到商业化售卖标准 |
+| `local-deployment.sh` | 本地部署辅助 | 本地环境部署操作 |
+| `start-doc-search.sh` | 启动文档搜索 | 本地启动静态服务访问 `docs/04-development/doc-search.html` |
+| `token-v42-recover.sh` | 令牌迁移恢复 | token v42 敏感字段迁移的恢复工具 |
+| `ConfigEncryptionTool.java` | 配置加密工具 | 配置文件敏感项加解密 |
 
 **示例**:
 ```bash
@@ -460,21 +478,36 @@ Keycloak 认证服务器配置。
 
 ## 📄 office/ - Office 集成
 
-Office 文档处理相关脚本（5个脚本）。
+Office 文档处理相关脚本。
 
 | 脚本 | 功能 |
 |-----|------|
-| `init_word_template.sh` | 初始化 Word 模板 |
-| `init_excel_template.sh` | 初始化 Excel 模板 |
-| `convert_to_pdf.sh` | 文档转 PDF |
-| `merge_documents.sh` | 合并文档 |
-| `extract_text.sh` | 提取文本 |
+| `smoke-test.sh` | Office 服务冒烟测试 |
+| `validate-office-config.sh` | 校验 Office 配置 |
+| `generate-test-report.sh` | 生成 Office 集成测试报告 |
+| `generate-message-infrastructure.sh` | 历史站内信代码生成工具（兼容入口，实际实现已归档至 `archive/office/`） |
 
 **示例**:
 ```bash
-# 转换为 PDF
-./scripts/office/convert_to_pdf.sh document.docx
+# 校验 Office 配置
+./scripts/office/validate-office-config.sh
+
+# 冒烟测试
+./scripts/office/smoke-test.sh http://localhost:8080
 ```
+
+---
+
+## 🗄️ archive/ - 历史脚本归档
+
+已完成使命的一次性脚本，按来源分类保留；执行前请先核对脚本头部说明与原始上下文。
+
+| 子目录 | 内容 |
+|-----|------|
+| `frontend/` | 旧前端一次性工具（TS 错误修复、注释补充、版本号更新） |
+| `office/` | 一次性 Office 代码生成工具（消息基础设施、Phase 2 代码框架） |
+| `svg/` | SVG 图表一次性治理工具（图标批量升级/回滚、旧图清理、显示验证） |
+| `microservices/` | 微服务化迁移一次性工具（Phase 5/6 骨架生成、off_* 数据同步与对账守护） |
 
 ---
 
@@ -740,6 +773,15 @@ sdk env  # 或手动设置 export JAVA_HOME=...
 
 ## 🔄 版本历史
 
+### v2.1 (2026-10-29)
+
+- ✨ SVG 图表工具归位：`verify-svg-quality.sh` 迁入 `utils/`，一次性图表工具归档至 `archive/svg/`
+- ✨ `deploy/podman/` 成为部署脚本正身，`scripts/deploy/` 根级同名脚本转为兼容转发入口
+- ✨ 根目录实体脚本归位：`check_javadoc.sh`、`owasp-check.sh` 及 SpringDoc 检查文档迁入 `dev/check/`，`test-sentinel-hot-reload.sh` 迁入 `test/`，`verify-reactor-metrics.sh` 迁入 `ops/monitoring/`，`check-commercialization-readiness.sh` 迁入 `utils/`
+- ✨ `scripts/microservices/` 迁移一次性工具归档至 `archive/microservices/`
+- ✨ `scripts/office/generate-phase2-code.sh` 归档至 `archive/office/`
+- 📝 更新所有受影响脚本路径引用（文档、POM 注释与检查脚本）
+
 ### v2.0 (2026-09-20)
 
 - ✨ 重组目录结构，按功能分类
@@ -768,7 +810,7 @@ sdk env  # 或手动设置 export JAVA_HOME=...
 ---
 
 **维护者**: Apex Team  
-**最后更新**: 2026-09-20  
-**文档版本**: v2.0
+**最后更新**: 2026-10-29
+**文档版本**: v2.1
 
 © 2026 Apex Team · 让脚本管理更简单 🚀

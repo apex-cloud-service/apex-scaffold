@@ -1,7 +1,7 @@
 # 契约模块测试报告 — apex-api-contract（Phase 1.3）
 
 > 报告日期：2026-10-08 ｜ 执行环境：macOS（Java 17.0.12-oracle + Maven Daemon 2.0.0-rc-3）
-> 所属阶段：微服务改造执行计划 Phase 1.3（`docs/microservice-migration-plan.md` §6.2 六个内部契约 / §6.3 Feign 模板与降级矩阵 / §17 验收）
+> 所属阶段：微服务改造执行计划 Phase 1.3（`docs/08-project-management/plans/microservice-migration-plan.md` §6.2 六个内部契约 / §6.3 Feign 模板与降级矩阵 / §17 验收）
 
 ## 一、测试概览
 

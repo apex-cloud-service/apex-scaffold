@@ -2,7 +2,7 @@
 
 > **状态**：已执行（2026-10-11：`V2` 建表 + 全量代码迁移 + 网关切流 + 单体侧下线均已完成，编译验证通过，进入观察期）
 > **关联决策**：用户已确认「`off_*` 目标归属 `apex-office-service`」，并选择「先出提取方案」。
-> **关联文档**：`apex-interfaces/src/main/resources/db/migration/OFFICE_MIGRATION_OWNERSHIP.md`、`docs/microservice-migration-plan.md §9.2/§9.3`。
+> **关联文档**：`apex-system/src/main/resources/db/migration/OFFICE_MIGRATION_OWNERSHIP.md`、`docs/08-project-management/plans/microservice-migration-plan.md §9.2/§9.3`。
 > **硬约束**：**绝不执行 `mvnd clean verify`（门禁）**；**绝不改写任何已应用的 `.sql` 迁移文件**（Flyway checksum 与整份文件绑定）。
 
 ---
@@ -82,7 +82,7 @@
 ### Phase 3 — 双写过渡
 - 旧库（单体 `apex_data`）继续权威写；office-service 上线新 `off_*` 表并**只读**。
 - 定时对账（行数 + checksum），差异告警。
-- **执行状态（2026-10-11）**：已交付对账守护脚本 `scripts/microservices/reconcile-off-star-data-guard.sh`，
+- **执行状态（2026-10-11）**：已交付对账守护脚本 `scripts/archive/microservices/reconcile-off-star-data-guard.sh`，
   封装 `reconcile-off-star-data.sh` 周期性对账；发现差异时输出告警详情（含时间戳与差异指纹）并以非 0 退出码结束。
   支持 `--dedup`（默认开，结论/指纹不变时去重，避免重复刷屏）、`--quiet`，运行摘要落 `logs/reconcile-guard-YYYYMM.log`、
   告警流水落 `logs/reconcile-guard-alert.log`。退出码：`0`=一致 / `1`=不一致 / `2`=参数错误 / `3`=前置失败。

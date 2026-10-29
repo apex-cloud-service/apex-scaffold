@@ -24,7 +24,7 @@
 - **双 RBAC 并存**：主应用 sys_*（ADMIN/SUPER_ADMIN）与认证中心 auth_*（ROLE_ADMIN/ROLE_USER/ROLE_GUEST），角色码不通用；
 - **产品空白点 P0**：无租户管理端点（模型/配额字段已备）、无工作流定义对外端点、无密码重置/邮件/文件分享；
 - **路由前缀语义**：`/api/v1` 用户侧、`/admin-api/v1` 管理侧、`/auth/v1` 认证协议、`/internal/**` 公网 403；
-- 全部 **340 条路由**已登记至 docs/API_ROUTES.md（主应用 272 + 认证中心 68）。
+- 全部 **340 条路由**已登记至 docs/03-api/API_ROUTES.md（主应用 272 + 认证中心 68）。
 
 ### 2. 文档多格式交付流水线
 

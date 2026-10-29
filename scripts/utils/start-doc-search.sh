@@ -60,8 +60,8 @@ if [ "$BIND_HOST" != "127.0.0.1" ] && [ "$BIND_HOST" != "localhost" ]; then
     echo ""
 fi
 echo "📝 访问方式:"
-echo "   文档搜索工具: http://localhost:$PORT/docs/doc-search.html"
-echo "   链接测试页面: http://localhost:$PORT/docs/link-test.html"
+echo "   文档搜索工具: http://localhost:$PORT/docs/04-development/doc-search.html"
+echo "   链接测试页面: http://localhost:$PORT/docs/04-development/link-test.html"
 echo ""
 echo "⌨️  按 Ctrl+C 停止服务器"
 echo "================================================"

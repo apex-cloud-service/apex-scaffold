@@ -25,6 +25,8 @@
 - [工作流指南](./01-guides/workflow-guide.md) - 工作流引擎使用
 - [数据权限](./01-guides/data-scope-usage.md) - 数据权限过滤
 - [SSO 集成](./01-guides/sso-implementation-guide.md) - 单点登录
+- [消息中间件](./01-guides/messaging/README.md) - RocketMQ 使用与优化
+- [安全加固](./01-guides/security-features-configuration.md) - 安全特性配置与修复指南
 - [文档搜索](./01-guides/doc-search-guide.md) - 全文搜索
 
 ### [02. 架构设计](./02-architecture/README.md)
@@ -44,6 +46,7 @@
 API 接口文档、规范和版本管理。
 
 - [路由映射](./03-api/api-routes.md) - 前后端路由对应
+- [API 路由清单](./03-api/API_ROUTES.md) - 全部路由登记（主应用 + 认证中心）
 - [API 版本管理](./03-api/api-version-management.md) - 版本控制策略
 - [SpringDoc 注解](./03-api/springdoc-annotation-templates.md) - API 文档注解
 - [数据管理 API](./03-api/README.md) - 数据管理接口
@@ -60,6 +63,8 @@ API 接口文档、规范和版本管理。
 - [统一开发规范](./04-development/development-standards.md) - 后端开发规范、注释与 JavaDoc、Lombok、构建规范
 - [JMH 基准测试](./04-development/jmh-benchmark-guide.md) - 性能测试
 - [SVG 维护](./04-development/svg-maintenance-guide.md) - 图表维护
+- [Mermaid 查看器](./04-development/mermaid-viewer-guide.md) - 本地图表查看工具
+- [文档搜索工具](./04-development/doc-search.html) - 本地文档全文搜索页
 - 前端开发文档：已迁移至独立前端仓库 `apex-admin-web` 的 `frontend-docs/` 目录
 
 ### [05. 运维部署](./05-operations/README.md)
@@ -70,6 +75,8 @@ API 接口文档、规范和版本管理。
 - [配置管理](./05-operations/configuration.md) - 配置项说明
 - [安全防护](./05-operations/security-protections.md) - 安全体系
 - [高级特性](./05-operations/advanced-features.md) - 高级功能
+- [性能监控指南](./05-operations/performance-monitoring-guide.md) - 监控指标与实践
+- [Reactor Netty 指标验证](./05-operations/reactor-netty-metrics-guide.md) - 响应式指标开启与验证
 
 ### [06. 测试文档](./06-testing/README.md)
 
@@ -95,6 +102,8 @@ API 接口文档、规范和版本管理。
 - [脚手架审查](./08-project-management/scaffold-review-guide.md) - 代码审查
 - [功能需求](./08-project-management/function-enhancement-requirements.md) - 需求管理
 - [实施计划](./08-project-management/plans/) - 各类实施计划
+- [微服务化迁移方案](./08-project-management/plans/microservice-migration-plan.md) - 单体到五服务架构迁移
+- [文档与脚本目录结构规范](./08-project-management/DOCS_STRUCTURE_STANDARD.md) - docs/ 与 scripts/ 组织规范
 - [设计模式 / Starter / SPI 优化方案](./08-project-management/plans/design-pattern-starter-spi-optimization-plan.md) - 评审结论与待实施调整方案
 - [工作区治理](./08-project-management/workspace-governance/README.md) - 工作区管理规范与本地治理交付物
 

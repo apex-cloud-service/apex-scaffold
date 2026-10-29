@@ -6,6 +6,10 @@
 
 ## 📚 文档列表
 
+### [API 路由清单](./API_ROUTES.md)
+
+全部 HTTP 路由登记清单（主应用与认证中心），存在性由 `scripts/ci/check-doc-consistency.sh` 检查
+
 ### [路由映射](../_archive/api/route-mapping.md)
 
 前后端路由对应关系和接口对齐验证

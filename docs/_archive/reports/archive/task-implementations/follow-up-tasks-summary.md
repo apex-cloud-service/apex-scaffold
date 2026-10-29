@@ -128,7 +128,7 @@
 
 #### JavaDoc质量检查脚本
 
-**文件**: [scripts/check_javadoc.sh](../../../../../scripts/check_javadoc.sh)
+**文件**: [scripts/check_javadoc.sh](../../../../../scripts/dev/check/check_javadoc.sh)
 
 **功能**:
 - 自动扫描Java文件
@@ -339,7 +339,7 @@ cd /Users/work/apex-scaffold
 ### 代码文件
 
 **脚本工具**:
-- [check_javadoc.sh](../../../../../scripts/check_javadoc.sh) - JavaDoc检查
+- [check_javadoc.sh](../../../../../scripts/dev/check/check_javadoc.sh) - JavaDoc检查
 - [start-mysql-and-run-sql.sh](../../../../../scripts/data/start-mysql-and-run-sql.sh) - MySQL一键启动
 
 **SQL脚本**:

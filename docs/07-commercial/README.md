@@ -32,6 +32,14 @@
 
 销售支持文档位于 [sales/](./sales/) 目录：
 
+### [产品设计指导文档](./sales/Apex-Scaffold-产品设计指导文档.md)
+
+角色画像、能力地图、模块设计指引与设计规范（DOCX/HTML/PDF 同源多格式随附）
+
+### [产品解决方案文档](./sales/Apex-Scaffold-产品解决方案文档.html)
+
+面向客户的整体解决方案介绍（DOCX/PDF 同源多格式随附）
+
 ### [API 规范](./sales/API_SPECIFICATION.md)
 
 API 接口规范和设计标准
