@@ -10,8 +10,10 @@ import com.apex.scaffold.office.infrastructure.persistence.po.OfficeMessagePO;
 import com.apex.scaffold.office.infrastructure.po.ApprovalProcessPO;
 import com.apex.scaffold.office.infrastructure.po.CalendarEventPO;
 import com.apex.scaffold.office.infrastructure.po.DocumentInfoPO;
+import com.apex.scaffold.office.meetingroom.infrastructure.persistence.po.MeetingRoomPO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffDepartmentPO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffEmployeePO;
+import com.apex.scaffold.office.off.infrastructure.persistence.po.OffMessageDeliveryPO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffMessagePO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffMessageRecipientPO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffMessageTemplatePO;
@@ -41,7 +43,7 @@ import org.junit.jupiter.api.Test;
  * <p>本测试从以下维度保证三份脚本一致且与代码（PO 类）对齐：</p>
  * <ul>
  *   <li>版本链连续且在 MySQL/PostgreSQL 两个方言目录完全一致；</li>
- *   <li>14 张表（8 张 office_* + 6 张 off_*）在两方言中的列集合完全一致（方言差异仅限类型）；</li>
+ *   <li>15 张表（8 张 office_* + 7 张 off_*）在两方言中的列集合完全一致（方言差异仅限类型）；</li>
  *   <li>H2 {@code basic-schema.sql} 的表集合与 Flyway 迁移表集合一致；</li>
  *   <li>以代码实现（PO 类）为唯一事实来源：每个持久化字段必然对应迁移脚本中的列
  *       （MyBatis-Plus map-underscore-to-camel-case）。</li>
@@ -60,7 +62,10 @@ class OfficeFlywayMigrationTest {
     private static final String MYSQL = "mysql";
     private static final String POSTGRESQL = "postgresql";
 
-    /** 迁移声明的 14 张办公服务表（V1 八张 office_* + V2 六张 off_*）。 */
+    /**
+     * 迁移声明的 16 张办公服务表（V1 八张 office_* + V2 六张 off_* + V5 一张 off_message_delivery
+     * + V7 一张 office_meeting_room）。
+     */
     private static final Set<String> EXPECTED_TABLES = Set.of(
             "office_platform_app",
             "office_identity_binding",
@@ -73,9 +78,11 @@ class OfficeFlywayMigrationTest {
             "off_message_template",
             "off_message",
             "off_message_recipient",
+            "off_message_delivery",
             "off_department",
             "off_employee",
-            "off_sync_history");
+            "off_sync_history",
+            "office_meeting_room");
 
     /** 各表必须具备的索引名（MySQL 带反引号，PostgreSQL 不带，故按裸名断言）。 */
     private static final Map<String, Set<String>> REQUIRED_INDEXES = Map.ofEntries(
@@ -132,6 +139,9 @@ class OfficeFlywayMigrationTest {
                     "off_message_recipient",
                     Set.of("uk_off_message_recipient", "idx_off_recipient_status", "idx_off_recipient_tenant")),
             Map.entry(
+                    "off_message_delivery",
+                    Set.of("uk_off_message_delivery", "idx_off_delivery_recipient_status", "idx_off_delivery_tenant")),
+            Map.entry(
                     "off_department",
                     Set.of(
                             "uk_off_department_code_tenant",
@@ -144,7 +154,13 @@ class OfficeFlywayMigrationTest {
                             "idx_off_employee_dept",
                             "idx_off_employee_user",
                             "idx_off_employee_sync")),
-            Map.entry("off_sync_history", Set.of("idx_off_sync_tenant_time", "idx_off_sync_status_time")));
+            Map.entry("off_sync_history", Set.of("idx_off_sync_tenant_time", "idx_off_sync_status_time")),
+            Map.entry(
+                    "office_meeting_room",
+                    Set.of(
+                            "uk_office_meeting_room_tenant_code",
+                            "uk_office_meeting_room_tenant_name",
+                            "idx_office_meeting_room_tenant_status")));
 
     /** 以 PO 类为唯一事实来源：表名 → 持久化对象。 */
     private static final Map<String, Class<?>> PO_TABLES = Map.ofEntries(
@@ -159,9 +175,11 @@ class OfficeFlywayMigrationTest {
             Map.entry("off_message_template", OffMessageTemplatePO.class),
             Map.entry("off_message", OffMessagePO.class),
             Map.entry("off_message_recipient", OffMessageRecipientPO.class),
+            Map.entry("off_message_delivery", OffMessageDeliveryPO.class),
             Map.entry("off_department", OffDepartmentPO.class),
             Map.entry("off_employee", OffEmployeePO.class),
-            Map.entry("off_sync_history", OffSyncHistoryPO.class));
+            Map.entry("off_sync_history", OffSyncHistoryPO.class),
+            Map.entry("office_meeting_room", MeetingRoomPO.class));
 
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {
@@ -187,10 +205,16 @@ class OfficeFlywayMigrationTest {
         Set<String> mysqlTables = declaredTables(mysqlSql);
         Set<String> postgresqlTables = declaredTables(postgresqlSql);
 
-        assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(EXPECTED_TABLES);
-        assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(EXPECTED_TABLES);
+        Set<String> migrationTables = new LinkedHashSet<>(EXPECTED_TABLES);
+        migrationTables.add("undo_log");
+        assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
+        assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
+        Set<String> undoColumns =
+                Set.of("branch_id", "xid", "context", "rollback_info", "log_status", "log_created", "log_modified");
+        assertThat(allColumns(mysqlSql, "undo_log")).containsExactlyInAnyOrderElementsOf(undoColumns);
+        assertThat(allColumns(postgresqlSql, "undo_log")).containsExactlyInAnyOrderElementsOf(undoColumns);
 
-        for (String table : EXPECTED_TABLES) {
+        for (String table : migrationTables) {
             assertThat(allColumns(mysqlSql, table))
                     .as("表 %s 的 MySQL/PostgreSQL 列集合应完全一致（含 ALTER TABLE 增量列）", table)
                     .containsExactlyInAnyOrderElementsOf(allColumns(postgresqlSql, table));
@@ -365,7 +389,8 @@ class OfficeFlywayMigrationTest {
         Matcher alterMatcher = alterPattern.matcher(sql);
         while (alterMatcher.find()) {
             String body = alterMatcher.group(1);
-            Pattern addPattern = Pattern.compile("(?i)ADD COLUMN\\s+`?([a-z][a-z0-9_]*)`?");
+            // PostgreSQL 允许 ADD COLUMN IF NOT EXISTS，需跳过可选修饰，否则会把 IF 误识别为列名。
+            Pattern addPattern = Pattern.compile("(?i)ADD COLUMN\\s+(?:IF NOT EXISTS\\s+)?`?([a-z][a-z0-9_]*)`?");
             Matcher addMatcher = addPattern.matcher(body);
             while (addMatcher.find()) {
                 columns.add(addMatcher.group(1));

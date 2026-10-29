@@ -38,7 +38,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>接口路径：/api/v1/office/organization
  *
- * <p>权限要求：需要管理员权限
+ * <p>身份校验由办公服务安全过滤链执行。
  *
  * @author Apex Team
  * @since 1.3.0
@@ -55,6 +55,23 @@ public class OfficeOrganizationHandler {
     private final OfficeOrganizationSyncService organizationSyncService;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    /** 组织同步执行结果的统一响应。 */
+    @Schema(name = "OfficeOrganizationSyncResult")
+    public static class OrganizationSyncResult extends Result<SyncOrganizationResponse> {}
+
+    /** 组织映射详情的统一响应，不存在时data为空。 */
+    @Schema(name = "OfficeOrganizationMappingResult")
+    public static class OrganizationMappingResult extends Result<OrganizationMappingResponse> {}
+
+    /** 组织映射列表的统一响应。 */
+    @Schema(name = "OfficeOrganizationMappingListResult")
+    public static class OrganizationMappingListResult extends Result<java.util.List<OrganizationMappingResponse>> {}
+
+    /** 同步任务记录列表的统一响应，不包含分页总数。 */
+    @Schema(name = "OfficeOrganizationTaskListResult")
+    public static class OrganizationTaskListResult
+            extends Result<java.util.List<com.apex.scaffold.office.domain.OfficeSyncTask>> {}
+
     /**
      * 同步组织（部门或成员）
      *
@@ -64,8 +81,8 @@ public class OfficeOrganizationHandler {
      * @param request HTTP 请求
      * @return 同步结果，包含任务ID、同步数量和状态消息
      */
-    @OperationLog(module = "办公平台组织同步", type = OperationLog.OperationType.UPDATE, description = "同步组织")
     @Operation(
+            operationId = "syncOrganization",
             summary = "同步组织",
             description = "从外部办公平台同步部门或成员信息，支持全量和增量同步",
             tags = {"办公平台组织同步"})
@@ -83,7 +100,7 @@ public class OfficeOrganizationHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = SyncOrganizationResponse.class))),
+                                schema = @Schema(implementation = OrganizationSyncResult.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "请求参数错误或不支持的同步类型",
@@ -93,6 +110,12 @@ public class OfficeOrganizationHandler {
                 description = "同步失败",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeOrganization",
+            type = OperationLog.OperationType.UPDATE,
+            description = "syncOrganization",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> syncOrganization(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, SyncOrganizationRequest.class)
@@ -127,6 +150,7 @@ public class OfficeOrganizationHandler {
      * @return 组织映射信息
      */
     @Operation(
+            operationId = "getDepartmentMapping",
             summary = "查询部门映射",
             description = "根据外部部门ID查询对应的Apex部门映射关系",
             tags = {"办公平台组织同步"})
@@ -151,12 +175,18 @@ public class OfficeOrganizationHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = OrganizationMappingResponse.class))),
+                                schema = @Schema(implementation = OrganizationMappingResult.class))),
         @ApiResponse(
-                responseCode = "404",
-                description = "映射不存在",
+                responseCode = "400",
+                description = "查询失败；映射不存在时返回200且data为空",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeOrganization",
+            type = OperationLog.OperationType.SELECT,
+            description = "getDepartmentMapping",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getDepartmentMapping(ServerRequest request) {
         String tenantId = requestHandlerUtil.getTenantId(request);
         String platform = request.pathVariable("platform");
@@ -179,6 +209,7 @@ public class OfficeOrganizationHandler {
      * @return 组织映射信息
      */
     @Operation(
+            operationId = "getMemberMapping",
             summary = "查询成员映射",
             description = "根据外部用户ID查询对应的Apex用户映射关系",
             tags = {"办公平台组织同步"})
@@ -203,12 +234,18 @@ public class OfficeOrganizationHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = OrganizationMappingResponse.class))),
+                                schema = @Schema(implementation = OrganizationMappingResult.class))),
         @ApiResponse(
-                responseCode = "404",
-                description = "映射不存在",
+                responseCode = "400",
+                description = "查询失败；映射不存在时返回200且data为空",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeOrganization",
+            type = OperationLog.OperationType.SELECT,
+            description = "getMemberMapping",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMemberMapping(ServerRequest request) {
         String tenantId = requestHandlerUtil.getTenantId(request);
         String platform = request.pathVariable("platform");
@@ -231,6 +268,7 @@ public class OfficeOrganizationHandler {
      * @return 组织映射列表
      */
     @Operation(
+            operationId = "listOrganizationMappings",
             summary = "查询组织映射列表",
             description = "查询指定平台的所有组织映射关系",
             tags = {"办公平台组织同步"})
@@ -249,8 +287,14 @@ public class OfficeOrganizationHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = OrganizationMappingResponse.class)))
+                                schema = @Schema(implementation = OrganizationMappingListResult.class)))
     })
+    @OperationLog(
+            module = "OfficeOrganization",
+            type = OperationLog.OperationType.SELECT,
+            description = "listOrganizationMappings",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listOrganizationMappings(ServerRequest request) {
         String tenantId = requestHandlerUtil.getTenantId(request);
         String platformParam = request.queryParam("platform").orElse(null);
@@ -274,6 +318,7 @@ public class OfficeOrganizationHandler {
      * @return 同步任务列表
      */
     @Operation(
+            operationId = "listSyncTasks",
             summary = "查询同步任务列表",
             description = "查询历史同步任务记录，支持分页",
             tags = {"办公平台组织同步"})
@@ -301,8 +346,17 @@ public class OfficeOrganizationHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "查询成功",
-                content = @Content(mediaType = "application/json", schema = @Schema(type = "array")))
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OrganizationTaskListResult.class)))
     })
+    @OperationLog(
+            module = "OfficeOrganization",
+            type = OperationLog.OperationType.SELECT,
+            description = "listSyncTasks",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listSyncTasks(ServerRequest request) {
         String tenantId = requestHandlerUtil.getTenantId(request);
         String platformParam = request.queryParam("platform").orElse(null);

@@ -14,13 +14,13 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 /**
  * 办公服务安全配置。
  *
- * <p>办公服务部署于网关之后，身份由网关验签并透传，服务侧无需再次解析 JWT。
+ * <p>办公服务独立验证访问 JWT；WebSocket 握手消费短期一次性票据。身份头不作为认证依据。
  * 本配置定义 Spring Security 响应式过滤链：
  * <ul>
  *   <li>关闭 CSRF、HTTP Basic、表单登录与登出等单应用形态的能力</li>
  *   <li>放行监控端点、OpenAPI 文档与集群内部契约路由 {@code /internal/v1/**}</li>
  *   <li>其余请求一律要求已认证（认证上下文由
- *       {@code IdentityRelayAuthenticationFilter} 依据网关注入的可信头构建）</li>
+ *       {@code IdentityRelayAuthenticationFilter} 依据已验签 JWT 或一次性票据构建）</li>
  *   <li>未认证请求统一返回 HTTP 401</li>
  * </ul>
  *

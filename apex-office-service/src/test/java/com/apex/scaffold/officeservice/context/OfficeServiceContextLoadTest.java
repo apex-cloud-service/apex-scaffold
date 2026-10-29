@@ -10,11 +10,13 @@ import com.apex.scaffold.office.infrastructure.persistence.OfficeBindingMapper;
 import com.apex.scaffold.office.infrastructure.persistence.OfficeOrganizationMappingMapper;
 import com.apex.scaffold.office.infrastructure.persistence.OfficeSyncTaskMapper;
 import com.apex.scaffold.office.infrastructure.persistence.mapper.OfficeMessageMapper;
+import com.apex.scaffold.office.meetingroom.infrastructure.persistence.mapper.MeetingRoomMapper;
 import com.apex.scaffold.officeservice.interfaces.handler.OfficeAdminHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.OfficeHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeApprovalHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeCalendarHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeDocumentHandler;
+import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeMeetingRoomHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeMessageHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeOrganizationHandler;
 import com.apex.scaffold.officeservice.interfaces.security.IdentityRelayAuthenticationFilter;
@@ -54,7 +56,10 @@ import org.springframework.test.context.TestConstructor;
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
             // apex-common ConfigEncryptionService 要求恰好 32 字节的配置加密密钥
-            "security.config.encryption.key=01234567890123456789012345678901"
+            "security.config.encryption.key=01234567890123456789012345678901",
+            // 网关仅供独立联合测试装配，非 Web 的办公上下文不加载其自动配置。
+            "spring.cloud.gateway.enabled=false",
+            "spring.autoconfigure.exclude=org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration"
         })
 @ActiveProfiles("basic")
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
@@ -67,8 +72,10 @@ class OfficeServiceContextLoadTest {
     /**
      * 校验 {@code apex-office} 库中的办公 Mapper 均已注册到应用上下文。
      *
-     * <p>这 8 个 Mapper 均位于库模块 {@code com.apex.scaffold.office.infrastructure}，
-     * 依赖启动类的 {@code @MapperScan} 才能被注册；任一缺失即说明装配回归。</p>
+     * <p>这 9 个 Mapper 均位于库模块 {@code com.apex.scaffold.office} 下，依赖启动类的
+     * {@code @MapperScan} 才能被注册；任一缺失即说明装配回归。其中会议室 Mapper
+     * 位于独立子域包 {@code meetingroom.infrastructure.persistence.mapper}，
+     * 用于验证域根包扫描不会漏掉后新增的子域。</p>
      */
     @Test
     void officeMappersAreWiredIntoContext() {
@@ -81,6 +88,7 @@ class OfficeServiceContextLoadTest {
         assertThat(context.getBeanNamesForType(ApprovalProcessMapper.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(CalendarEventMapper.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(DocumentInfoMapper.class)).hasSize(1);
+        assertThat(context.getBeanNamesForType(MeetingRoomMapper.class)).hasSize(1);
     }
 
     /**
@@ -95,15 +103,51 @@ class OfficeServiceContextLoadTest {
     void officeHandlersAreWiredIntoContext() {
         assertThat(context.getBeanNamesForType(OfficeHandler.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(OfficeAdminHandler.class)).hasSize(1);
+        assertThat(org.springframework.aop.support.AopUtils.isAopProxy(context.getBean(OfficeAdminHandler.class)))
+                .isTrue();
+        assertThat(context.getBeanNamesForType(
+                        com.apex.scaffold.officeservice.interfaces.security.OfficeSecurityAspect.class))
+                .hasSize(1);
+        assertThat(context.getBeanNamesForType(com.apex.scaffold.common.audit.AuditLogService.class))
+                .hasSize(1);
         assertThat(context.getBeanNamesForType(OfficeApprovalHandler.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(OfficeCalendarHandler.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(OfficeMessageHandler.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(OfficeDocumentHandler.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(OfficeOrganizationHandler.class)).hasSize(1);
+        assertThat(context.getBeanNamesForType(OfficeMeetingRoomHandler.class)).hasSize(1);
+    }
+
+    /** 校验站内信新增 Mapper、事务仓储、票据表及自定义握手适配器均能装配。 */
+    @Test
+    void messageDeliveryAndSocketBeansAreWiredIntoContext() {
+        assertThat(context.getBeanNamesForType(
+                        com.apex.scaffold.office.off.infrastructure.persistence.mapper.OffMessageMapper.class))
+                .hasSize(1);
+        assertThat(context.getBeanNamesForType(
+                        com.apex.scaffold.office.off.infrastructure.persistence.mapper.OffMessageRecipientMapper.class))
+                .hasSize(1);
+        assertThat(context.getBeanNamesForType(
+                        com.apex.scaffold.office.off.infrastructure.persistence.mapper.OffEmployeeMapper.class))
+                .hasSize(1);
+        assertThat(context.getBeanNamesForType(
+                        com.apex.scaffold.office.off.domain.repository.MessageDeliveryRepository.class))
+                .hasSize(1);
+        assertThat(context.getBeanNamesForType(
+                        com.apex.scaffold.officeservice.interfaces.security.MessageSocketRegistry.class))
+                .hasSize(1);
+        assertThat(context.getBean(org.springframework.transaction.PlatformTransactionManager.class))
+                .isInstanceOf(org.springframework.jdbc.datasource.DataSourceTransactionManager.class);
+        assertThat(context.getBean("messageSocketMapping")).isNotNull();
+        assertThat(context.getBean(
+                                "messageSocketAdapter",
+                                org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter.class)
+                        .getOrder())
+                .isEqualTo(1);
     }
 
     /**
-     * 校验网关注入身份所依赖的身份中继过滤器已注册，避免未认证请求被静默放行。
+     * 校验独立验签身份过滤器已注册，避免未认证请求被静默放行。
      */
     @Test
     void identityRelayFilterIsWiredIntoContext() {

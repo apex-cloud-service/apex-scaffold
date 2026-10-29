@@ -15,8 +15,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.crypto.SecretKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
@@ -38,9 +37,8 @@ import org.springframework.stereotype.Service;
  * @since 1.3.1
  */
 @Service
+@Slf4j
 public class GatewayJwtVerifierService {
-
-    private static final Logger log = LoggerFactory.getLogger(GatewayJwtVerifierService.class);
 
     /** HMAC 过渡密钥的合成 kid（当配置未显式声明 hmac 条目时兜底使用） */
     private static final String HMAC_FALLBACK_KID = "hmac-legacy";

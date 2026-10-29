@@ -40,7 +40,7 @@ public record UnifiedAuthorizationResponse(
      */
     @Schema(name = "UnifiedAuthorizationResult", description = "Result 封装的中心授权快照")
     public record UnifiedAuthorizationResult(
-            @Schema(description = "业务响应码", example = "200", requiredMode = Schema.RequiredMode.REQUIRED) Integer code,
+            @Schema(description = "业务响应码", example = "0", requiredMode = Schema.RequiredMode.REQUIRED) Integer code,
             @Schema(description = "响应消息", example = "success", requiredMode = Schema.RequiredMode.REQUIRED) String msg,
             @Schema(description = "授权快照", requiredMode = Schema.RequiredMode.REQUIRED)
                     UnifiedAuthorizationResponse data,

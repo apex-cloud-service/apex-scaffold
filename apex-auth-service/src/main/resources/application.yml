@@ -1,10 +1,30 @@
 apex:
+  seata:
+    enabled: ${APEX_SEATA_ENABLED:false}
+    application-id: apex-auth-service
+    transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
+    propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+    allowed-origins: []
   security:
     data-encryption-key: ${APEX_DATA_ENCRYPTION_KEY:}
     config-encryption-key: ${APEX_CONFIG_ENCRYPTION_KEY:}
 
 auth-center:
   authorization-reader-user-id: ${AUTH_CENTER_AUTHORIZATION_READER_USER_ID:}
+
+# 创蓝短信（密码找回 SMS 通道验证码投递）
+# 账号、密码、模板 ID 未注入时短信通道不可用，接口返回 SMS_SERVICE_ERROR（503）。
+chuanglan:
+  sms:
+    host: ${CL_SMS_HOST:smssh.253.com}
+    port: ${CL_SMS_PORT:443}
+    account: ${CL_SMS_ACCOUNT:}
+    password: ${CL_SMS_PASSWORD:}
+    signature: ${CL_SMS_SIGNATURE:【Apex】}
+    template-id: ${CL_SMS_TEMPLATE_ID:}
+    send-uri: /msg/sms/v2/tpl/send
+    balance-uri: /msg/balance/json
+    ssl-enabled: ${CL_SMS_SSL:true}
 
 server:
   port: 8081

@@ -1,8 +1,7 @@
 package com.apex.scaffold.gateway.config;
 
 import com.apex.scaffold.gateway.ratelimit.GatewayRateLimitProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
@@ -31,9 +30,8 @@ import reactor.core.publisher.Mono;
  */
 @Configuration
 @EnableConfigurationProperties(GatewayRateLimitProperties.class)
+@Slf4j
 public class RateLimitConfig {
-
-    private static final Logger log = LoggerFactory.getLogger(RateLimitConfig.class);
 
     /** 用户身份头（由 {@link com.apex.scaffold.gateway.filter.UserContextRelayFilter} 注入） */
     private static final String HEADER_USER_ID = "X-User-Id";

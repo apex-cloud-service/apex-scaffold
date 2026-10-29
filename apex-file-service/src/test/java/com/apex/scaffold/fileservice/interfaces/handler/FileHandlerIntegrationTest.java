@@ -23,15 +23,20 @@ import com.apex.scaffold.file.application.dto.data.ChartResponse;
 import com.apex.scaffold.file.application.dto.data.DocumentQueryRequest;
 import com.apex.scaffold.file.application.dto.data.DocumentRequest;
 import com.apex.scaffold.file.application.dto.data.DocumentResponse;
+import com.apex.scaffold.file.application.dto.share.FileShareContent;
+import com.apex.scaffold.file.application.dto.share.FileShareCreated;
+import com.apex.scaffold.file.application.dto.share.FileShareExchangeResult;
 import com.apex.scaffold.file.application.service.ChartService;
 import com.apex.scaffold.file.application.service.ChunkUploadService;
 import com.apex.scaffold.file.application.service.DocumentService;
 import com.apex.scaffold.file.application.service.FileService;
+import com.apex.scaffold.file.application.service.FileShareService;
 import com.apex.scaffold.fileservice.FileServiceSliceTestConfiguration;
 import com.apex.scaffold.fileservice.interfaces.router.ChartRouter;
 import com.apex.scaffold.fileservice.interfaces.router.ChunkRouter;
 import com.apex.scaffold.fileservice.interfaces.router.DocumentRouter;
 import com.apex.scaffold.fileservice.interfaces.router.FileRouter;
+import com.apex.scaffold.fileservice.interfaces.router.FileShareRouter;
 import com.apex.scaffold.fileservice.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.fileservice.interfaces.util.RequestHandlerUtil;
 import jakarta.annotation.Resource;
@@ -60,7 +65,7 @@ import reactor.core.publisher.Mono;
 /**
  * 文件服务 Handler 集成测试。
  *
- * <p>在 {@link WebFluxTest} 切片上下文中加载文件服务的 4 个 Handler 与 4 个 Router，
+ * <p>在 {@link WebFluxTest} 切片上下文中加载文件服务的 5 个 Handler 与 5 个 Router，
  * 通过 {@code WebTestClient} 以真实 HTTP 语义驱动全部函数式端点，覆盖迁移方案
  * 「文件域接口集成测试」要求：文件元数据、分片上传、图表与文档管理的完整链路，
  * 以及参数校验、未认证与服务异常分支。
@@ -72,6 +77,8 @@ import reactor.core.publisher.Mono;
  *   <li>分片上传：POST /api/v1/file/chunk/{init,upload,merge}、GET /api/v1/file/chunk/status/{fileId}</li>
  *   <li>图表管理：/admin-api/v1/charts 的 CRUD、状态变更与数据查询</li>
  *   <li>文档管理：/admin-api/v1/documents 的 CRUD、状态变更与下载</li>
+ *   <li>文件分享：POST /api/v2/files/{fileId}/shares、DELETE /api/v2/file-shares/{shareId}、
+ *       匿名兑换与下载 /api/v2/file-shares/{exchange,download}</li>
  * </ul>
  *
  * <p>说明：File/Chunk Handler 使用 {@link RequestHandlerUtil} 构建统一响应，故对
@@ -85,14 +92,61 @@ import reactor.core.publisher.Mono;
  */
 @WebFluxTest
 @Import({
-    FileHandler.class, FileRouter.class,
-    ChunkHandler.class, ChunkRouter.class,
-    ChartHandler.class, ChartRouter.class,
-    DocumentHandler.class, DocumentRouter.class,
-    FileServiceSliceTestConfiguration.class
+    org.springdoc.core.configuration.SpringDocConfiguration.class,
+    org.springdoc.webflux.core.configuration.SpringDocWebFluxConfiguration.class,
+    org.springdoc.core.properties.SpringDocConfigProperties.class,
+    FileHandler.class,
+    FileRouter.class,
+    ChunkHandler.class,
+    ChunkRouter.class,
+    ChartHandler.class,
+    ChartRouter.class,
+    DocumentHandler.class,
+    DocumentRouter.class,
+    FileShareHandler.class,
+    FileShareRouter.class,
+    FileServiceSliceTestConfiguration.class,
+    com.apex.scaffold.fileservice.config.FileSecurityConfig.class
 })
 @DisplayName("文件服务Handler集成测试")
 class FileHandlerIntegrationTest {
+
+    @Test
+    void exposesTypedFileOpenApi() {
+        client.get()
+                .uri("/v3/api-docs")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.paths.*.*.operationId")
+                .value(value -> org.assertj.core.api.Assertions.assertThat((List<?>) value)
+                        .hasSize(31)
+                        .doesNotHaveDuplicates())
+                .jsonPath("$.paths['/admin-api/v1/documents'].get.operationId")
+                .isEqualTo("queryDocuments")
+                .jsonPath("$.paths['/admin-api/v1/charts/{id}/data'].get.operationId")
+                .isEqualTo("getChartData")
+                .jsonPath(
+                        "$.paths['/api/v1/file/chunk/upload'].post.requestBody.content['application/octet-stream'].schema.format")
+                .isEqualTo("binary")
+                .jsonPath(
+                        "$.paths['/api/v1/file/content'].get.responses['200'].content['application/octet-stream'].schema.format")
+                .isEqualTo("binary")
+                .jsonPath("$.paths['/api/v1/file/preview'].get.responses['200'].content['*/*'].schema.format")
+                .isEqualTo("binary")
+                .jsonPath(
+                        "$.paths['/api/v1/files/generic'].post.requestBody.content['multipart/form-data'].schema['$ref']")
+                .isEqualTo("#/components/schemas/GenericFileUploadRequest")
+                .jsonPath("$.components.schemas.FileUploadResponse.properties.data['$ref']")
+                .isEqualTo("#/components/schemas/FileUploadResult")
+                .jsonPath("$.components.schemas.FileBooleanResponse.properties.data.type")
+                .isEqualTo("boolean")
+                .jsonPath("$.components.schemas.DocumentUrlResult.properties.data.type")
+                .isEqualTo("string")
+                .jsonPath("$.components.schemas.DocumentPageResult.properties.data['$ref']")
+                .exists();
+    }
 
     private static final long USER_ID = 100L;
 
@@ -112,6 +166,9 @@ class FileHandlerIntegrationTest {
 
     @MockBean
     private DocumentService documentService;
+
+    @MockBean
+    private FileShareService fileShareService;
 
     @MockBean
     private RequestHandlerUtil requestHandlerUtil;
@@ -158,6 +215,51 @@ class FileHandlerIntegrationTest {
                 .thenReturn(ServerResponse.badRequest()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.error("error")));
+    }
+
+    /** 清理入口仅接收记录编号，实际对象定位由应用服务授权后恢复。 */
+    @Test
+    void cleanupRetryRoutes() {
+        when(chunkUploadService.retryCleanup(1L)).thenReturn(Mono.empty());
+        when(fileService.retryOrphanCleanup(2L)).thenReturn(Mono.just(false));
+        client.post()
+                .uri("/api/v1/file/chunk/cleanup/1/retry")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(0);
+        client.post()
+                .uri("/api/v1/file/orphan/2/retry")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.data")
+                .isEqualTo(false);
+        org.mockito.Mockito.verify(chunkUploadService).retryCleanup(1L);
+        org.mockito.Mockito.verify(fileService).retryOrphanCleanup(2L);
+    }
+
+    /** 未认证请求不能触发清理服务。 */
+    @Test
+    void cleanupRetryRequiresAuthentication() {
+        webTestClient
+                .post()
+                .uri("/api/v1/file/chunk/cleanup/1/retry")
+                .exchange()
+                .expectStatus()
+                .isUnauthorized();
+        webTestClient
+                .post()
+                .uri("/api/v1/file/orphan/2/retry")
+                .exchange()
+                .expectStatus()
+                .isUnauthorized();
+        org.mockito.Mockito.verifyNoInteractions(chunkUploadService, fileService);
     }
 
     // ===================== 文件元数据 =====================
@@ -268,6 +370,22 @@ class FileHandlerIntegrationTest {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .expectBody(byte[].class)
                 .isEqualTo(payload);
+    }
+
+    /** 下载地址中的历史桶名必须传递至归属授权服务。 */
+    @Test
+    void content_UsesRecordedBucket() {
+        byte[] payload = "historical-file".getBytes(StandardCharsets.UTF_8);
+        when(fileService.download("old-bucket", "test.png"))
+                .thenReturn(Mono.just((InputStream) new ByteArrayInputStream(payload)));
+        client.get()
+                .uri("/api/v1/file/content?bucketName=old-bucket&fileName=test.png")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(byte[].class)
+                .isEqualTo(payload);
+        org.mockito.Mockito.verify(fileService).download("old-bucket", "test.png");
     }
 
     @Test
@@ -1058,5 +1176,92 @@ class FileHandlerIntegrationTest {
                 .exchange()
                 .expectStatus()
                 .is5xxServerError();
+    }
+
+    @Test
+    @DisplayName("创建文件分享 - 返回明文令牌与失效时间")
+    void createFileShare() {
+        when(fileShareService.create(7L, 3600))
+                .thenReturn(Mono.just(new FileShareCreated(11L, 7L, "share-token", null)));
+
+        client.post()
+                .uri("/api/v2/files/7/shares")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("expireSeconds", 3600))
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(0)
+                .jsonPath("$.data.shareId")
+                .isEqualTo(11)
+                .jsonPath("$.data.token")
+                .isEqualTo("share-token");
+    }
+
+    @Test
+    @DisplayName("撤销文件分享 - 重复撤销视为成功")
+    void revokeFileShare() {
+        when(fileShareService.revoke(11L)).thenReturn(Mono.empty());
+
+        client.delete()
+                .uri("/api/v2/file-shares/11")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(0);
+        org.mockito.Mockito.verify(fileShareService).revoke(11L);
+    }
+
+    @Test
+    @DisplayName("匿名兑换分享 - 无需认证即可访问")
+    void exchangeFileShare_Anonymous() {
+        when(fileShareService.exchange("share-token"))
+                .thenReturn(
+                        Mono.just(new FileShareExchangeResult(11L, 7L, "report.pdf", "application/pdf", 100L, null)));
+
+        webTestClient
+                .post()
+                .uri("/api/v2/file-shares/exchange")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("token", "share-token"))
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(0)
+                .jsonPath("$.data.originalName")
+                .isEqualTo("report.pdf");
+    }
+
+    @Test
+    @DisplayName("匿名下载分享 - 代理输出文件流")
+    void downloadFileShare_Anonymous() {
+        when(fileShareService.download("share-token"))
+                .thenReturn(Mono.just(new FileShareContent(
+                        "report.pdf",
+                        "application/pdf",
+                        5L,
+                        new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8)))));
+
+        webTestClient
+                .post()
+                .uri("/api/v2/file-shares/download")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("token", "share-token"))
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectHeader()
+                .contentType("application/pdf")
+                .expectBody(String.class)
+                .isEqualTo("hello");
     }
 }

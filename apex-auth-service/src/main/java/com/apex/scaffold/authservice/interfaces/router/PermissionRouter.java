@@ -43,7 +43,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 1.3.1
  */
 @Configuration
 @RequiredArgsConstructor

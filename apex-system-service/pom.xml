@@ -26,16 +26,23 @@
     <dependencies>
         <dependency>
             <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-seata-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-job-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-common</artifactId>
         </dependency>
         <dependency>
             <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-domain</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.apex.scaffold</groupId>
-            <artifactId>apex-infrastructure</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-api-contract</artifactId>

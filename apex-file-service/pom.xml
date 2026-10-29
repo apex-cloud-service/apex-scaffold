@@ -27,6 +27,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-seata-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-job-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
         </dependency>

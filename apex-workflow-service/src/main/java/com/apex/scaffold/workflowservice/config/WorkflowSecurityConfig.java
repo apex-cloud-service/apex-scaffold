@@ -11,13 +11,13 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 /**
  * 工作流服务安全配置。
  *
- * <p>工作流服务部署于网关之后，身份由网关验签并透传，服务侧无需再次解析 JWT。
+ * <p>工作流服务通过 {@code IdentityRelayAuthenticationFilter} 独立验证 ACCESS JWT，
+ * 认证身份取自已验签声明，不信任中继身份头。
  * 本配置定义 Spring Security 响应式过滤链：
  * <ul>
  *   <li>关闭 CSRF、HTTP Basic、表单登录与登出等单应用形态的能力</li>
- *   <li>放行监控端点、OpenAPI 文档与集群内部契约路由 {@code /internal/v1/**}</li>
- *   <li>其余请求一律要求已认证（认证上下文由
- *       {@code IdentityRelayAuthenticationFilter} 依据网关注入的可信头构建）</li>
+ *   <li>放行监控端点与 OpenAPI 文档</li>
+ *   <li>其余请求（包括 {@code /internal/v1/**}）一律要求已认证</li>
  *   <li>未认证请求统一返回 HTTP 401</li>
  * </ul>
  *
@@ -28,9 +28,6 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 @Configuration
 @EnableWebFluxSecurity
 public class WorkflowSecurityConfig {
-
-    /** 内部契约路由前缀（迁移方案 Phase 2.3）：不经网关，仅集群内服务直连调用 */
-    private static final String INTERNAL_API_PREFIX = "/internal/v1/**";
 
     /**
      * 工作流服务 Spring Security 过滤链。
@@ -51,12 +48,7 @@ public class WorkflowSecurityConfig {
                 }))
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(
-                                "/actuator/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/webjars/**",
-                                INTERNAL_API_PREFIX)
+                                "/actuator/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/webjars/**")
                         .permitAll()
                         .anyExchange()
                         .authenticated())

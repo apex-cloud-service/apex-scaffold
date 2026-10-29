@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Primary;
  * </ul>
  *
  * @author Apex Team
- * @since 2026-10-09
+ * @since 1.3.1
  * @see DomainEventPublisherImpl
  * @see LocalDomainEventPublisher
  */

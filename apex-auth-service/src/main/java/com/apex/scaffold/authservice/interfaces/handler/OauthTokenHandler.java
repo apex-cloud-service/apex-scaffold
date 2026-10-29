@@ -3,6 +3,7 @@ package com.apex.scaffold.authservice.interfaces.handler;
 import com.apex.scaffold.auth.application.service.OAuth2Service;
 import com.apex.scaffold.auth.application.service.OAuth2Service.OAuthException;
 import com.apex.scaffold.auth.domain.service.UnifiedAuditService;
+import com.apex.scaffold.common.annotation.OperationLog;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -103,6 +104,12 @@ public class OauthTokenHandler {
      * @param request 包含表单编码的令牌请求
      * @return 令牌响应或OAuth2标准错误响应
      */
+    @OperationLog(
+            module = "OauthToken",
+            type = OperationLog.OperationType.OTHER,
+            description = "token",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> token(ServerRequest request) {
         return request.formData().flatMap(form -> {
             if (form.values().stream().anyMatch(value -> value.size() != 1)
@@ -156,6 +163,17 @@ public class OauthTokenHandler {
         });
     }
 
+    /**
+     * 在可信租户上下文中签发令牌并记录服务处理结果，返回原生 OAuth JSON。
+     *
+     * @param request 用于获取客户端地址的请求
+     * @param values 已解析的单值表单
+     * @param grant 已校验的授权类型
+     * @param finalClientId 解析出的客户端标识
+     * @param finalSecret 解析出的客户端密钥
+     * @param authorization 原始认证头；为空时使用表单客户端认证
+     * @return HTTP 200 令牌响应或 HTTP 400/401 协议错误响应
+     */
     private Mono<ServerResponse> issueToken(
             ServerRequest request,
             Map<String, String> values,
@@ -202,10 +220,23 @@ public class OauthTokenHandler {
         });
     }
 
+    /**
+     * 将客户端认证失败映射为 401，其余 OAuth 校验失败映射为 400。
+     *
+     * @param exception OAuth 业务异常
+     * @return HTTP 状态码
+     */
     private int status(OAuthException exception) {
         return INVALID_CLIENT.equals(exception.getMessage()) ? UNAUTHORIZED : BAD_REQUEST;
     }
 
+    /**
+     * 返回原生 OAuth 错误体；401 响应附带 Basic 客户端认证挑战头。
+     *
+     * @param status HTTP 状态码
+     * @param error OAuth 协议错误码
+     * @return 禁止缓存且不经 Result 包装的 JSON 响应
+     */
     private Mono<ServerResponse> error(int status, String error) {
         return ServerResponse.status(status)
                 .contentType(MediaType.APPLICATION_JSON)

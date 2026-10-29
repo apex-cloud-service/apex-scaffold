@@ -1,12 +1,20 @@
 package com.apex.scaffold.fileservice.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
+import com.apex.scaffold.file.application.dto.PageResponse;
 import com.apex.scaffold.file.application.dto.data.DocumentQueryRequest;
 import com.apex.scaffold.file.application.dto.data.DocumentRequest;
+import com.apex.scaffold.file.application.dto.data.DocumentResponse;
 import com.apex.scaffold.file.application.service.DocumentService;
 import com.apex.scaffold.fileservice.interfaces.util.RequestHandlerUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -16,26 +24,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 文档管理处理器（函数式端点）。
- *
- * <p>提供文档管理的完整 CRUD API，包括文档创建、更新、删除、查询、
- * 状态管理、下载以及浏览/下载计数等功能，支持分页查询与多维度过滤。</p>
- *
- * <h2>接口清单</h2>
- * <ul>
- *   <li>POST /admin-api/v1/documents - 创建文档</li>
- *   <li>PUT /admin-api/v1/documents/{id} - 更新文档</li>
- *   <li>DELETE /admin-api/v1/documents/{id} - 删除文档</li>
- *   <li>GET /admin-api/v1/documents/{id} - 查询文档详情</li>
- *   <li>GET /admin-api/v1/documents - 分页查询文档列表</li>
- *   <li>PUT /admin-api/v1/documents/{id}/status - 更新文档状态</li>
- *   <li>GET /admin-api/v1/documents/{id}/download - 下载文档</li>
- * </ul>
+ * 文档管理处理器，提供文档增删改查、状态变更及附件地址查询。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.1
  * @since 1.0.0
- * @see DocumentService
  */
 @Slf4j
 @Tag(name = "文档管理")
@@ -43,14 +36,13 @@ import reactor.core.publisher.Mono;
 public class DocumentHandler {
 
     private final DocumentService documentService;
-
     private final RequestHandlerUtil requestHandlerUtil;
 
     /**
      * 构造文档处理器。
      *
-     * @param documentService    文档服务
-     * @param requestHandlerUtil 请求处理工具
+     * @param documentService 文档服务
+     * @param requestHandlerUtil 请求校验工具
      */
     public DocumentHandler(DocumentService documentService, RequestHandlerUtil requestHandlerUtil) {
         this.documentService = documentService;
@@ -58,14 +50,35 @@ public class DocumentHandler {
     }
 
     /**
-     * 处理创建文档请求。
+     * 校验文档信息并创建文档。
      *
-     * <p>解析请求体为 {@link DocumentRequest}，校验通过后调用应用服务创建文档。
-     *
-     * @param request HTTP 请求对象，请求体为文档信息 JSON
-     * @return 包含新建文档信息的统一成功响应
+     * @param request 请求体为文档创建信息的请求
+     * @return HTTP 200，数据为新建文档详情的统一响应
      */
-    @Operation(summary = "创建文档")
+    @Operation(
+            operationId = "createDocument",
+            summary = "创建文档",
+            requestBody =
+                    @RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = DocumentRequest.class))),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "创建成功，返回文档详情",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = DocumentResult.class))))
+    @OperationLog(
+            module = "Document",
+            type = OperationLog.OperationType.INSERT,
+            description = "create",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return requestHandlerUtil
                 .handleRequestBody(request, DocumentRequest.class)
@@ -74,14 +87,42 @@ public class DocumentHandler {
     }
 
     /**
-     * 处理更新文档请求。
+     * 根据路径 ID 校验并更新文档信息。
      *
-     * <p>根据路径中的文档 ID 解析请求体并更新文档信息。
-     *
-     * @param request HTTP 请求对象，路径参数包含文档 ID，请求体为文档信息 JSON
-     * @return 包含更新后文档信息的统一成功响应
+     * @param request 包含文档 ID 和文档更新信息的请求
+     * @return HTTP 200，数据为更新后文档详情的统一响应
      */
-    @Operation(summary = "更新文档")
+    @Operation(
+            operationId = "updateDocument",
+            summary = "更新文档",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "文档 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            requestBody =
+                    @RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = DocumentRequest.class))),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "更新成功，返回文档详情",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = DocumentResult.class))))
+    @OperationLog(
+            module = "Document",
+            type = OperationLog.OperationType.UPDATE,
+            description = "update",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return requestHandlerUtil
@@ -91,28 +132,71 @@ public class DocumentHandler {
     }
 
     /**
-     * 处理删除文档请求。
+     * 根据路径 ID 删除文档。
      *
-     * <p>根据路径中的文档 ID 删除指定文档。
-     *
-     * @param request HTTP 请求对象，路径参数包含文档 ID
-     * @return 删除成功的统一成功响应
+     * @param request 包含文档 ID 的请求
+     * @return HTTP 200，data 为空的统一成功响应
      */
-    @Operation(summary = "删除文档")
+    @Operation(
+            operationId = "deleteDocument",
+            summary = "删除文档",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "文档 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "删除成功，data 为空",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = EmptyDocumentResult.class))))
+    @OperationLog(
+            module = "Document",
+            type = OperationLog.OperationType.DELETE,
+            description = "delete",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return documentService.delete(id).then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
     /**
-     * 处理查询文档详情请求。
+     * 累加浏览次数后查询文档详情。
      *
-     * <p>先对指定文档累加浏览计数，再查询并返回文档详情。
-     *
-     * @param request HTTP 请求对象，路径参数包含文档 ID
-     * @return 包含文档详情的统一成功响应
+     * @param request 包含文档 ID 的请求
+     * @return HTTP 200，数据为文档详情的统一响应
      */
-    @Operation(summary = "查询文档详情")
+    @Operation(
+            operationId = "getDocumentById",
+            summary = "查询文档详情",
+            description = "先累加浏览次数，再读取文档详情",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "文档 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "查询成功",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = DocumentResult.class))))
+    @OperationLog(
+            module = "Document",
+            type = OperationLog.OperationType.SELECT,
+            description = "getById",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getById(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return documentService
@@ -122,15 +206,60 @@ public class DocumentHandler {
     }
 
     /**
-     * 处理分页查询文档列表请求。
+     * 按关键字、文档类型、分类和状态分页查询文档。
      *
-     * <p>从查询参数构建过滤条件（关键字、文档类型、分类、状态、页码、每页数量），
-     * 调用应用服务分页查询文档列表。
-     *
-     * @param request HTTP 请求对象，查询参数包含 keyword、docType、category、status、page、size
-     * @return 包含文档分页结果的统一成功响应
+     * @param request 包含筛选条件与 page、size 的请求，默认第 1 页、每页 20 条
+     * @return HTTP 200，数据为文件域分页结构的统一响应
      */
-    @Operation(summary = "分页查询文档列表")
+    @Operation(
+            operationId = "queryDocuments",
+            summary = "分页查询文档列表",
+            parameters = {
+                @Parameter(
+                        name = "keyword",
+                        description = "文档标题关键字",
+                        in = ParameterIn.QUERY,
+                        schema = @Schema(type = "string")),
+                @Parameter(
+                        name = "docType",
+                        description = "文档类型",
+                        in = ParameterIn.QUERY,
+                        schema = @Schema(type = "string")),
+                @Parameter(
+                        name = "category",
+                        description = "文档分类",
+                        in = ParameterIn.QUERY,
+                        schema = @Schema(type = "string")),
+                @Parameter(
+                        name = "status",
+                        description = "文档状态",
+                        in = ParameterIn.QUERY,
+                        schema = @Schema(type = "integer")),
+                @Parameter(
+                        name = "page",
+                        description = "页码",
+                        in = ParameterIn.QUERY,
+                        schema = @Schema(type = "integer", defaultValue = "1")),
+                @Parameter(
+                        name = "size",
+                        description = "每页数量",
+                        in = ParameterIn.QUERY,
+                        schema = @Schema(type = "integer", defaultValue = "20"))
+            },
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "查询成功",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = DocumentPageResult.class))))
+    @OperationLog(
+            module = "Document",
+            type = OperationLog.OperationType.SELECT,
+            description = "query",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> query(ServerRequest request) {
         DocumentQueryRequest queryRequest = DocumentQueryRequest.builder()
                 .keyword(request.queryParam("keyword").orElse(null))
@@ -146,14 +275,42 @@ public class DocumentHandler {
     }
 
     /**
-     * 处理更新文档状态请求。
+     * 读取请求中的状态并更新指定文档。
      *
-     * <p>解析请求体中的目标状态，并更新指定文档的状态。
-     *
-     * @param request HTTP 请求对象，路径参数包含文档 ID，请求体包含状态值
-     * @return 更新成功的统一成功响应
+     * @param request 包含文档 ID 和状态 JSON 的请求
+     * @return HTTP 200，data 为空的统一成功响应
      */
-    @Operation(summary = "更新文档状态")
+    @Operation(
+            operationId = "updateDocumentStatus",
+            summary = "更新文档状态",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "文档 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            requestBody =
+                    @RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = UpdateStatusRequest.class))),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "更新成功，data 为空",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = EmptyDocumentResult.class))))
+    @OperationLog(
+            module = "Document",
+            type = OperationLog.OperationType.UPDATE,
+            description = "updateStatus",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return requestHandlerUtil
@@ -163,14 +320,44 @@ public class DocumentHandler {
     }
 
     /**
-     * 处理下载文档请求。
+     * 累加下载次数后返回附件地址，不直接传输附件内容。
      *
-     * <p>对指定文档累加下载计数并返回附件下载地址；文档没有附件时返回 400 错误响应。
-     *
-     * @param request HTTP 请求对象，路径参数包含文档 ID
-     * @return 包含附件下载地址的统一成功响应，无附件时返回 400 错误响应
+     * @param request 包含文档 ID 的请求
+     * @return HTTP 200 的附件地址统一响应；无附件时返回 HTTP 400 的错误响应
      */
-    @Operation(summary = "下载文档")
+    @Operation(
+            operationId = "getDocumentDownloadUrl",
+            summary = "获取文档附件地址",
+            description = "先累加下载次数，再返回附件 URL；不返回二进制文件流",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "文档 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "附件地址",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = DocumentUrlResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "文档无附件",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = EmptyDocumentResult.class)))
+            })
+    @OperationLog(
+            module = "Document",
+            type = OperationLog.OperationType.DOWNLOAD,
+            description = "download",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> download(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return documentService
@@ -184,10 +371,27 @@ public class DocumentHandler {
                 });
     }
 
+    /** 文档状态更新请求。 */
     @Data
-    @Schema(description = "文档状态更新请求")
+    @Schema(name = "DocumentStatusRequest", description = "文档状态更新请求")
     public static class UpdateStatusRequest {
         @Schema(description = "文档状态：0-草稿，1-正常，2-归档", example = "1")
         private Integer status;
     }
+
+    /** 文档详情统一响应的文档模型。 */
+    @Schema(name = "DocumentResult")
+    public static class DocumentResult extends Result<DocumentResponse> {}
+
+    /** 文档分页统一响应的文档模型。 */
+    @Schema(name = "DocumentPageResult")
+    public static class DocumentPageResult extends Result<PageResponse<DocumentResponse>> {}
+
+    /** 文档附件地址统一响应的文档模型。 */
+    @Schema(name = "DocumentUrlResult")
+    public static class DocumentUrlResult extends Result<String> {}
+
+    /** 文档无数据统一响应的文档模型。 */
+    @Schema(name = "EmptyDocumentResult")
+    public static class EmptyDocumentResult extends Result<Void> {}
 }

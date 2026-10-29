@@ -11,6 +11,7 @@
 --   file_document  文档表（对应旧 doc_document）
 --   file_chart     图表表（对应旧 doc_chart）
 --   file_chunk     分片上传表（文件服务新增）
+--   file_share     文件限时只读分享记录（令牌仅存 SHA-256 摘要）
 --
 -- @author Apex Team
 -- @version 1.0.0
@@ -22,11 +23,15 @@
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS file_record (
     id                BIGINT       NOT NULL,
+    tenant_id         VARCHAR(64),
+    storage_type      VARCHAR(32),
     file_name         VARCHAR(255),
     original_name     VARCHAR(255),
     file_path         VARCHAR(500),
     file_url          VARCHAR(500),
     file_size         BIGINT,
+    total_chunks      INT,
+    chunk_size        BIGINT,
     file_type         VARCHAR(100),
     content_type      VARCHAR(255),
     bucket_name       VARCHAR(100),
@@ -110,6 +115,8 @@ CREATE INDEX IF NOT EXISTS idx_file_chart_create_time ON file_chart (create_time
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS file_chunk (
     id              BIGINT       NOT NULL,
+    tenant_id       VARCHAR(64),
+    storage_type    VARCHAR(32),
     file_id         BIGINT       NOT NULL,
     chunk_index     INT          NOT NULL,
     chunk_size      BIGINT       NOT NULL,
@@ -129,3 +136,26 @@ CREATE INDEX IF NOT EXISTS idx_file_chunk_file ON file_chunk (file_id);
 CREATE INDEX IF NOT EXISTS idx_file_chunk_file_index ON file_chunk (file_id, chunk_index);
 CREATE INDEX IF NOT EXISTS idx_file_chunk_status ON file_chunk (storage_status);
 CREATE INDEX IF NOT EXISTS idx_file_chunk_create_time ON file_chunk (create_time);
+
+-- ------------------------------------------------------------
+-- 文件限时只读分享表
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS file_share (
+    id          BIGINT       NOT NULL,
+    file_id     BIGINT       NOT NULL,
+    tenant_id   VARCHAR(64),
+    creator_id  BIGINT,
+    token_hash  VARCHAR(64)  NOT NULL,
+    expire_at   TIMESTAMP    NOT NULL,
+    status      VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version     INT          NOT NULL DEFAULT 1,
+    deleted     TINYINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_file_share_token_hash ON file_share (token_hash);
+CREATE INDEX IF NOT EXISTS idx_file_share_file ON file_share (file_id);
+CREATE INDEX IF NOT EXISTS idx_file_share_tenant ON file_share (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_file_share_creator ON file_share (creator_id);
+CREATE INDEX IF NOT EXISTS idx_file_share_expire ON file_share (expire_at);

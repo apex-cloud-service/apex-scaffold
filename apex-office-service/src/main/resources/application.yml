@@ -8,6 +8,46 @@
 # @author Apex Team
 # ============================================================
 
+apex:
+  seata:
+    enabled: ${APEX_SEATA_ENABLED:false}
+    application-id: apex-office-service
+    transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
+    propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+    allowed-origins: []
+
+# 办公 HTTP 独立验签；RSA 公钥为 X509 DER Base64，HMAC 仅用于显式启用的过渡环境。
+# 不配置密钥时拒绝用户认证，绝不使用 X-User-Id/X-Tenant-Id 作为认证依据。
+office:
+  security:
+    jwt-public-key-base64: ${OFFICE_JWT_PUBLIC_KEY_BASE64:}
+    jwt-secret: ${OFFICE_JWT_SECRET:}
+    authorization:
+      # 部署者确认 office JWT userId 就是 auth 用户 ID 后才能开启；默认拒绝，禁止混用 accountId。
+      shared-user-namespace: ${OFFICE_AUTHORIZATION_SHARED_USER_NAMESPACE:false}
+      # HTTPS auth 中心；未配置则所有 @RequirePermission 接口拒绝访问。
+      base-url: ${OFFICE_AUTHORIZATION_BASE_URL:}
+      # 总请求超时，必须 > 0 且 <= 30s。
+      timeout: ${OFFICE_AUTHORIZATION_TIMEOUT:3s}
+      # 每个租户单独注入 readerTokens 映射（安全配置中心或 SPRING_APPLICATION_JSON）。
+      # reader token 须属于该租户及 auth-center.authorization-reader-user-id 指定的 reader。
+      # 目标使用 JWT userId（不是 accountId）；office/auth 必须共享用户及租户命名空间。
+      reader-tokens: {}
+  organization:
+    # 组织同步把外部通讯录成员解析为本租户真实系统用户时使用的 system 内部接口基址。
+    # 集群内直连（如 http://apex-system-service:8082），不经网关；未配置时跳过解析，成员仅写镜像。
+    system-base-url: ${OFFICE_ORGANIZATION_SYSTEM_BASE_URL:}
+    # 单次解析请求超时；解析失败按未绑定处理，不阻断部门与成员镜像同步。
+    timeout: ${OFFICE_ORGANIZATION_SYSTEM_TIMEOUT:3s}
+  messages:
+    # 单实例内存票据/连接：网关 ROUTE_OFFICE_MESSAGE_URI 与 ROUTE_OFFICE_WS_URI 必须指向同一实例。
+    # POST /api/v1/messages/ws-ticket 使用访问 JWT；30 秒内通过 GET /api/v1/messages/ws?ticket=... 消费一次。
+    # 服务每 20 秒发送 {"type":"ping"}；客户端须回文本 pong，超过 60 秒无响应或连接满 1 小时关闭。
+    # 在线事件只是提示：重连后须查询 /api/v1/messages/inbox 和 /api/v1/messages/unread/count 补偿。
+    # recipientIds 使用系统 userId，必须存在本租户未删除且 ACTIVE 的 off_employee.user_id 绑定。
+    # 精确来源列表，逗号分隔，包含协议及端口；缺省拒绝所有浏览器握手，禁止通配符。
+    allowed-origins: ${OFFICE_MESSAGE_ALLOWED_ORIGINS:}
+
 server:
   port: 8084
 
@@ -45,7 +85,8 @@ logging:
     root: INFO
     com.apex.scaffold.office: DEBUG
     com.apex.scaffold.officeservice: DEBUG
-    org.springframework.web: DEBUG
+    # 握手 URI 含短期 ticket，避免 Web DEBUG 日志记录完整查询串。
+    org.springframework.web: INFO
 
 springdoc:
   api-docs:

@@ -41,7 +41,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * </ul>
  *
  * @author Apex Team
- * @since 2026-09-20
+ * @since 1.3.1
  */
 @SpringBootApplication(
         scanBasePackages = {"com.apex.scaffold.authservice", "com.apex.scaffold.auth", "com.apex.scaffold.common"})

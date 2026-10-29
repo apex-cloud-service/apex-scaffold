@@ -5,7 +5,6 @@ import com.apex.scaffold.auth.application.dto.LoginResponse;
 import com.apex.scaffold.auth.application.dto.RefreshTokenRequest;
 import com.apex.scaffold.auth.application.service.AuthenticationApplicationService;
 import com.apex.scaffold.common.annotation.OperationLog;
-import com.apex.scaffold.common.annotation.OperationLog.OperationType;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
@@ -53,7 +52,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2026-09-20
+ * @since 1.3.1
  * @see AuthenticationApplicationService
  */
 @Slf4j
@@ -93,11 +92,6 @@ public class AuthenticationHandler {
      * @param request HTTP请求，包含LoginRequest请求体
      * @return 登录响应（包含用户信息、访问令牌和刷新令牌）
      */
-    @OperationLog(
-            module = "认证",
-            type = OperationType.LOGIN,
-            description = "用户登录",
-            excludeRequestFields = {"password"})
     @Operation(
             operationId = "userLogin",
             summary = "用户登录",
@@ -127,6 +121,12 @@ public class AuthenticationHandler {
             description = "登录请求参数,包含用户名、密码、租户ID（可选）和设备ID（可选）",
             required = true,
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginRequest.class)))
+    @OperationLog(
+            module = "Authentication",
+            type = OperationLog.OperationType.LOGIN,
+            description = "login",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> login(ServerRequest request) {
         String clientIp = request.remoteAddress()
                 .map(addr -> addr.getAddress().getHostAddress())
@@ -172,7 +172,6 @@ public class AuthenticationHandler {
      * @param request HTTP请求，路径参数中包含userId
      * @return 成功响应（204 No Content）或错误响应
      */
-    @OperationLog(module = "认证", type = OperationType.LOGOUT, description = "用户登出")
     @Operation(
             operationId = "userLogout",
             summary = "用户登出",
@@ -195,6 +194,12 @@ public class AuthenticationHandler {
             in = ParameterIn.PATH,
             example = "1001")
     @SecurityRequirement(name = "Bearer Authentication")
+    @OperationLog(
+            module = "Authentication",
+            type = OperationLog.OperationType.LOGOUT,
+            description = "logout",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> logout(ServerRequest request) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(context -> context.getAuthentication())
@@ -248,11 +253,6 @@ public class AuthenticationHandler {
      * @param request HTTP请求，包含RefreshTokenRequest请求体
      * @return 新的令牌对（包含新的访问令牌和刷新令牌）
      */
-    @OperationLog(
-            module = "认证",
-            type = OperationType.OTHER,
-            description = "刷新访问令牌",
-            excludeRequestFields = {"refreshToken"})
     @Operation(
             operationId = "refreshToken",
             summary = "刷新访问令牌",
@@ -285,6 +285,12 @@ public class AuthenticationHandler {
                     @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = RefreshTokenRequest.class)))
+    @OperationLog(
+            module = "Authentication",
+            type = OperationLog.OperationType.OTHER,
+            description = "refreshToken",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> refreshToken(ServerRequest request) {
         return request.bodyToMono(RefreshTokenRequest.class)
                 .flatMap(req -> authenticationService.refreshToken(req.getRefreshToken()))

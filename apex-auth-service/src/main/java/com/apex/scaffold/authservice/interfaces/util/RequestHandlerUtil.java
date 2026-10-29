@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * <p>提供统一的请求处理、参数验证和响应构建功能。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Component
 @RequiredArgsConstructor

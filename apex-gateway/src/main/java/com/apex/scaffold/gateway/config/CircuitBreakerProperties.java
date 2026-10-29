@@ -3,6 +3,8 @@ package com.apex.scaffold.gateway.config;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -27,6 +29,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Apex Team
  * @since 1.3.1
  */
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "apex.gateway.circuit-breaker")
 public class CircuitBreakerProperties {
 
@@ -36,18 +40,6 @@ public class CircuitBreakerProperties {
     /** 按路由实例名的覆盖参数，key 为 CircuitBreaker 过滤器 args.name */
     private Map<String, InstanceOverride> instances = new LinkedHashMap<>();
 
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public Map<String, InstanceOverride> getInstances() {
-        return instances;
-    }
-
     public void setInstances(Map<String, InstanceOverride> instances) {
         this.instances = instances == null ? new LinkedHashMap<>() : instances;
     }
@@ -55,6 +47,8 @@ public class CircuitBreakerProperties {
     /**
      * 单个熔断实例的可覆盖参数（null 表示沿用默认配置）.
      */
+    @Getter
+    @Setter
     public static class InstanceOverride {
 
         /** 滑动窗口大小（COUNT_BASED 下为调用次数） */
@@ -77,61 +71,5 @@ public class CircuitBreakerProperties {
 
         /** HALF_OPEN 允许的探测调用数 */
         private Integer permittedNumberOfCallsInHalfOpenState;
-
-        public Integer getSlidingWindowSize() {
-            return slidingWindowSize;
-        }
-
-        public void setSlidingWindowSize(Integer slidingWindowSize) {
-            this.slidingWindowSize = slidingWindowSize;
-        }
-
-        public Integer getMinimumNumberOfCalls() {
-            return minimumNumberOfCalls;
-        }
-
-        public void setMinimumNumberOfCalls(Integer minimumNumberOfCalls) {
-            this.minimumNumberOfCalls = minimumNumberOfCalls;
-        }
-
-        public Float getFailureRateThreshold() {
-            return failureRateThreshold;
-        }
-
-        public void setFailureRateThreshold(Float failureRateThreshold) {
-            this.failureRateThreshold = failureRateThreshold;
-        }
-
-        public Float getSlowCallRateThreshold() {
-            return slowCallRateThreshold;
-        }
-
-        public void setSlowCallRateThreshold(Float slowCallRateThreshold) {
-            this.slowCallRateThreshold = slowCallRateThreshold;
-        }
-
-        public Duration getSlowCallDurationThreshold() {
-            return slowCallDurationThreshold;
-        }
-
-        public void setSlowCallDurationThreshold(Duration slowCallDurationThreshold) {
-            this.slowCallDurationThreshold = slowCallDurationThreshold;
-        }
-
-        public Duration getWaitDurationInOpenState() {
-            return waitDurationInOpenState;
-        }
-
-        public void setWaitDurationInOpenState(Duration waitDurationInOpenState) {
-            this.waitDurationInOpenState = waitDurationInOpenState;
-        }
-
-        public Integer getPermittedNumberOfCallsInHalfOpenState() {
-            return permittedNumberOfCallsInHalfOpenState;
-        }
-
-        public void setPermittedNumberOfCallsInHalfOpenState(Integer permittedNumberOfCallsInHalfOpenState) {
-            this.permittedNumberOfCallsInHalfOpenState = permittedNumberOfCallsInHalfOpenState;
-        }
     }
 }

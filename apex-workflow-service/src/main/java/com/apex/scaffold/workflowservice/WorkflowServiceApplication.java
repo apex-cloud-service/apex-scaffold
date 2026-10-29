@@ -30,7 +30,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * 确保仅注册标注 {@link Mapper} 的接口，避免误注册其他普通接口。</p>
  *
  * @author Apex Team
- * @since 2026-10-09
+ * @since 1.3.1
  */
 @SpringBootApplication(
         scanBasePackages = {

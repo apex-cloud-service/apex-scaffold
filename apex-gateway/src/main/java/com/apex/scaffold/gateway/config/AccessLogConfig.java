@@ -39,6 +39,7 @@ public class AccessLogConfig {
      * @param repository 访问日志仓储（R2DBC 实现）
      * @param properties 访问日志落库配置
      * @return 访问日志落库服务
+     * @param meterRegistry 指标注册表（访问日志内部指标）
      */
     @Bean
     public AccessLogService accessLogService(

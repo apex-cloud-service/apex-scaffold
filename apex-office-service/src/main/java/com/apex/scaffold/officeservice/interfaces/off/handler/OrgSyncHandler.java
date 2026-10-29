@@ -6,10 +6,6 @@ import com.apex.scaffold.office.off.application.dto.DepartmentDTO;
 import com.apex.scaffold.office.off.application.service.OrgSyncService;
 import com.apex.scaffold.officeservice.interfaces.util.RequestHandlerUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,62 +15,38 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 组织同步管理处理器（函数式端点）。
+ * 本地组织数据管理处理器。
  *
- * <p>提供组织架构数据同步功能，支持从第三方办公平台（如飞书、钉钉、企业微信等）
- * 同步部门和员工信息，并管理同步历史记录。确保本地组织架构数据与外部系统保持一致。
- * 本类为微服务化 Phase 5 从单体 {@code apex-interfaces} 迁移而来，不再继承旧应用
- * 专有的 {@code BaseHandler}，改用办公服务接口层的 {@link RequestHandlerUtil}。
- *
- * <h2>接口清单</h2>
- * <ul>
- *   <li>GET /admin-api/v1/org/departments - 获取部门列表</li>
- *   <li>GET /admin-api/v1/org/departments/{id} - 获取部门详情</li>
- *   <li>POST /admin-api/v1/org/departments - 创建部门</li>
- *   <li>PUT /admin-api/v1/org/departments/{id} - 更新部门</li>
- *   <li>DELETE /admin-api/v1/org/departments/{id} - 删除部门</li>
- *   <li>GET /admin-api/v1/org/employees - 获取员工列表</li>
- *   <li>GET /admin-api/v1/org/employees/{id} - 获取员工详情</li>
- *   <li>GET /admin-api/v1/org/sync-history - 获取同步历史</li>
- * </ul>
+ * <p>维护部门、查询员工与同步历史；这些端点不触发第三方同步。参数、请求体和泛型响应契约由
+ * {@link com.apex.scaffold.officeservice.interfaces.off.router.OrgSyncRouter} 声明。
+ * 业务处理失败返回 HTTP 400，具体原因由统一响应中的 code 和 msg 表达。
  *
  * @author Apex Team
  * @version 1.3.0
  * @since 1.3.0
- * @see OrgSyncService
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Tag(name = "组织同步管理", description = "组织架构同步相关接口")
+@Tag(name = "组织同步管理", description = "本地组织数据维护与同步历史查询")
 public class OrgSyncHandler {
 
     private final OrgSyncService orgSyncService;
     private final RequestHandlerUtil requestHandlerUtil;
 
     /**
-     * 处理获取部门列表请求。
+     * 分页查询部门，支持按状态原值过滤。
      *
-     * <p>分页查询部门数据，支持按状态过滤，查询结果以统一响应格式返回。
-     *
-     * @param request HTTP 请求对象，查询参数包含 pageNum、pageSize、status
-     * @return 包含部门分页数据的统一成功响应，失败时返回错误响应
+     * @param request 查询参数 pageNum、pageSize、status；分页缺失、非法或负数时分别默认 1、10
+     * @return 包含部门分页数据的 Result 成功响应，处理失败返回 HTTP 400
      */
-    @Operation(summary = "获取部门列表", description = "分页获取部门列表")
-    @Parameters({
-        @Parameter(
-                name = "pageNum",
-                in = ParameterIn.QUERY,
-                description = "页码",
-                schema = @Schema(type = "integer", defaultValue = "1")),
-        @Parameter(
-                name = "pageSize",
-                in = ParameterIn.QUERY,
-                description = "每页数量",
-                schema = @Schema(type = "integer", defaultValue = "10")),
-        @Parameter(name = "status", in = ParameterIn.QUERY, description = "状态")
-    })
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.SELECT, description = "获取部门列表")
+    @Operation(operationId = "getDepartmentList", summary = "获取部门列表", description = "分页获取部门列表")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取部门列表",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getDepartmentList(ServerRequest request) {
         Integer pageNum =
                 RequestHandlerUtil.safeParseInt(request.queryParam("pageNum").orElse("1"), 1);
@@ -89,17 +61,18 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 处理获取部门详情请求。
+     * 根据数值 ID 查询部门详情。
      *
-     * <p>根据路径中的部门 ID 查询部门详情，ID 缺失或非法时返回参数错误，
-     * 部门不存在时返回 404 响应。
-     *
-     * @param request HTTP 请求对象，路径参数包含部门 ID
-     * @return 包含部门详情的统一成功响应，不存在或失败时返回对应错误响应
+     * @param request 路径参数 id 为部门 Long ID
+     * @return 包含部门 DTO 的 Result；ID 非法、部门不存在或处理失败时返回 HTTP 400
      */
-    @Parameters({@Parameter(name = "id", in = ParameterIn.PATH, required = true, description = "部门ID")})
-    @Operation(summary = "获取部门详情", description = "根据ID获取部门详情")
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.SELECT, description = "获取部门详情")
+    @Operation(operationId = "getDepartmentDetail", summary = "获取部门详情", description = "根据ID获取部门详情")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取部门详情",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getDepartmentDetail(ServerRequest request) {
         Long id = RequestHandlerUtil.safeParseLong(request.pathVariable("id"));
         if (id == null) {
@@ -114,15 +87,18 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 处理创建部门请求。
+     * 解析并校验部门 DTO，调用本地部门创建用例。
      *
-     * <p>解析并校验请求体为 {@link DepartmentDTO}，校验通过后调用应用服务创建新部门。
-     *
-     * @param request HTTP 请求对象，请求体为部门信息 JSON
-     * @return 包含新建部门信息的统一成功响应，校验失败或创建失败时返回错误响应
+     * @param request JSON 请求体为 DepartmentDTO
+     * @return 包含部门 DTO 的 Result；校验或处理失败返回 HTTP 400
      */
-    @Operation(summary = "创建部门", description = "创建新部门")
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.INSERT, description = "创建部门")
+    @Operation(operationId = "createDepartment", summary = "创建部门", description = "创建本地部门")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.INSERT,
+            description = "创建部门",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createDepartment(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, DepartmentDTO.class)
@@ -132,17 +108,18 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 处理更新部门请求。
+     * 按路径 ID 更新本地部门。
      *
-     * <p>根据路径中的部门 ID 更新部门信息，ID 缺失或非法时返回参数错误，
-     * 请求体校验通过后调用应用服务执行更新，部门不存在时返回 404 响应。
-     *
-     * @param request HTTP 请求对象，路径参数包含部门 ID，请求体为部门信息 JSON
-     * @return 包含更新后部门信息的统一成功响应，不存在或失败时返回对应错误响应
+     * @param request 路径参数 id 为 Long ID，JSON 请求体为 DepartmentDTO
+     * @return 包含更新后 DTO 的 Result；ID 非法、部门不存在或处理失败返回 HTTP 400
      */
-    @Parameters({@Parameter(name = "id", in = ParameterIn.PATH, required = true, description = "部门ID")})
-    @Operation(summary = "更新部门", description = "更新部门信息")
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.UPDATE, description = "更新部门")
+    @Operation(operationId = "updateDepartment", summary = "更新部门", description = "更新本地部门信息")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.UPDATE,
+            description = "更新部门",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateDepartment(ServerRequest request) {
         Long id = RequestHandlerUtil.safeParseLong(request.pathVariable("id"));
         if (id == null) {
@@ -158,16 +135,18 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 处理删除部门请求。
+     * 按 ID 删除部门，不额外检查记录是否存在。
      *
-     * <p>根据路径中的部门 ID 删除指定部门，ID 缺失或非法时返回参数错误。
-     *
-     * @param request HTTP 请求对象，路径参数包含部门 ID
-     * @return 删除成功的统一成功响应，失败时返回错误响应
+     * @param request 路径参数 id 为部门 Long ID
+     * @return data 为空的 Result；ID 非法或处理失败返回 HTTP 400
      */
-    @Parameters({@Parameter(name = "id", in = ParameterIn.PATH, required = true, description = "部门ID")})
-    @Operation(summary = "删除部门", description = "删除指定部门")
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.DELETE, description = "删除部门")
+    @Operation(operationId = "deleteDepartment", summary = "删除部门", description = "删除指定部门")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.DELETE,
+            description = "删除部门",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteDepartment(ServerRequest request) {
         Long id = RequestHandlerUtil.safeParseLong(request.pathVariable("id"));
         if (id == null) {
@@ -181,29 +160,18 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 处理获取员工列表请求。
+     * 分页查询员工，支持按部门 ID 和状态过滤。
      *
-     * <p>分页查询员工数据，支持按部门 ID 和状态过滤，查询结果以统一响应格式返回。
-     *
-     * @param request HTTP 请求对象，查询参数包含 pageNum、pageSize、deptId、status
-     * @return 包含员工分页数据的统一成功响应，失败时返回错误响应
+     * @param request 查询参数 pageNum、pageSize 默认 1、10；deptId 无法解析时不按部门过滤；status 按原值匹配
+     * @return 包含员工分页数据的 Result；处理失败返回 HTTP 400
      */
-    @Operation(summary = "获取员工列表", description = "分页获取员工列表")
-    @Parameters({
-        @Parameter(
-                name = "pageNum",
-                in = ParameterIn.QUERY,
-                description = "页码",
-                schema = @Schema(type = "integer", defaultValue = "1")),
-        @Parameter(
-                name = "pageSize",
-                in = ParameterIn.QUERY,
-                description = "每页数量",
-                schema = @Schema(type = "integer", defaultValue = "10")),
-        @Parameter(name = "deptId", in = ParameterIn.QUERY, description = "部门ID"),
-        @Parameter(name = "status", in = ParameterIn.QUERY, description = "状态")
-    })
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.SELECT, description = "获取员工列表")
+    @Operation(operationId = "getEmployeeList", summary = "获取员工列表", description = "分页获取员工列表")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取员工列表",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getEmployeeList(ServerRequest request) {
         Integer pageNum =
                 RequestHandlerUtil.safeParseInt(request.queryParam("pageNum").orElse("1"), 1);
@@ -220,17 +188,18 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 处理获取员工详情请求。
+     * 根据数值 ID 查询员工详情。
      *
-     * <p>根据路径中的员工 ID 查询员工详情，ID 缺失或非法时返回参数错误，
-     * 员工不存在时返回 404 响应。
-     *
-     * @param request HTTP 请求对象，路径参数包含员工 ID
-     * @return 包含员工详情的统一成功响应，不存在或失败时返回对应错误响应
+     * @param request 路径参数 id 为员工 Long ID
+     * @return 包含员工 DTO 的 Result；ID 非法、员工不存在或处理失败返回 HTTP 400
      */
-    @Parameters({@Parameter(name = "id", in = ParameterIn.PATH, required = true, description = "员工ID")})
-    @Operation(summary = "获取员工详情", description = "根据ID获取员工详情")
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.SELECT, description = "获取员工详情")
+    @Operation(operationId = "getEmployeeDetail", summary = "获取员工详情", description = "根据ID获取员工详情")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取员工详情",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getEmployeeDetail(ServerRequest request) {
         Long id = RequestHandlerUtil.safeParseLong(request.pathVariable("id"));
         if (id == null) {
@@ -245,29 +214,18 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 处理获取同步历史请求。
+     * 分页查询组织同步历史，支持按来源和状态原值过滤。
      *
-     * <p>分页查询组织架构同步的历史记录，支持按同步来源和同步状态过滤。
-     *
-     * @param request HTTP 请求对象，查询参数包含 pageNum、pageSize、syncSource、syncStatus
-     * @return 包含同步历史分页数据的统一成功响应，失败时返回错误响应
+     * @param request 查询参数 pageNum、pageSize 默认 1、10，syncSource、syncStatus 为可选过滤条件
+     * @return 包含同步历史分页数据的 Result；处理失败返回 HTTP 400
      */
-    @Operation(summary = "获取同步历史", description = "分页获取同步历史记录")
-    @Parameters({
-        @Parameter(
-                name = "pageNum",
-                in = ParameterIn.QUERY,
-                description = "页码",
-                schema = @Schema(type = "integer", defaultValue = "1")),
-        @Parameter(
-                name = "pageSize",
-                in = ParameterIn.QUERY,
-                description = "每页数量",
-                schema = @Schema(type = "integer", defaultValue = "10")),
-        @Parameter(name = "syncSource", in = ParameterIn.QUERY, description = "同步来源"),
-        @Parameter(name = "syncStatus", in = ParameterIn.QUERY, description = "同步状态")
-    })
-    @OperationLog(module = "组织同步", type = OperationLog.OperationType.SELECT, description = "获取同步历史")
+    @Operation(operationId = "getSyncHistory", summary = "获取同步历史", description = "分页获取同步历史记录")
+    @OperationLog(
+            module = "组织同步",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取同步历史",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getSyncHistory(ServerRequest request) {
         Integer pageNum =
                 RequestHandlerUtil.safeParseInt(request.queryParam("pageNum").orElse("1"), 1);
@@ -283,10 +241,10 @@ public class OrgSyncHandler {
     }
 
     /**
-     * 记录异常并委托 {@link RequestHandlerUtil} 统一构建错误响应。
+     * 记录异常并委托工具构建 HTTP 400 错误响应。
      *
      * @param throwable 异常
-     * @return 错误响应 Mono
+     * @return 统一错误响应
      */
     private Mono<ServerResponse> handleError(Throwable throwable) {
         log.error("组织同步处理失败: {}", throwable.getMessage(), throwable);

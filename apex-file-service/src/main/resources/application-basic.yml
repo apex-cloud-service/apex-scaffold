@@ -3,7 +3,7 @@
 # ============================================================
 # 【作用】
 #   基础版（basic）单机运行配置：使用 H2 内存库替代 MySQL，
-#   关闭 Flyway 改用 db/basic-schema.sql 初始化；存储使用本地文件系统兜底。
+#   关闭 Flyway 改用 db/basic-schema.sql 初始化；存储默认使用本地文件系统，不进行故障降级。
 # @author Apex Team
 # ============================================================
 
@@ -29,12 +29,11 @@ spring:
     # basic 环境内存受限，收窄请求体缓冲
     max-in-memory-size: 16MB
 
-# basic 环境使用本地文件系统存储（MinIO/TOS 默认关闭）
+# 默认及云开关沿用主配置；仅显式配置时启用云后端。
 storage:
+  default-type: ${STORAGE_DEFAULT_TYPE:local}
   local:
-    enabled: true
-  volcengine:
-    enabled: false
+    enabled: ${STORAGE_LOCAL_ENABLED:true}
 
 logging:
   level:

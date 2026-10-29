@@ -41,5 +41,7 @@ cors:
 logging:
   level:
     com.apex.scaffold.gateway: DEBUG
-    org.springframework.cloud.gateway: DEBUG
+    # 路由调试日志可能输出含一次性 ticket 的握手 URI。
+    org.springframework.cloud.gateway: INFO
+    org.springframework.web: INFO
     reactor.netty.http.client: INFO

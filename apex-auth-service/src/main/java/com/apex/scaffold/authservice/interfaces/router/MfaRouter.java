@@ -34,7 +34,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * <p>定义 MFA 相关的 HTTP 路由，包括设置、验证、禁用和状态查询。
  *
  * @author Apex Scaffold Team
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Configuration
 @RequiredArgsConstructor

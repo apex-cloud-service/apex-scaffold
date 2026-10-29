@@ -4,7 +4,9 @@
 -- 【用途】
 --   基础版（basic）单机环境使用 H2 内存库（MODE=MySQL）时，
 --   通过 spring.sql.init 加载本脚本初始化表结构，替代 Flyway。
---   表结构与应用代码 PO 保持一致（与 db/migration 下 MySQL/PostgreSQL V1 脚本对齐）。
+--   表结构与应用代码 PO 保持一致（与 db/migration 下 MySQL/PostgreSQL 迁移链对齐，
+--   含 V3 的租户唯一键与 version 乐观锁列、V4 的后台调度租约表、
+--   V5 的流程定义生命周期列）。
 --
 -- @author Apex Team
 -- @version 1.0.0
@@ -23,15 +25,19 @@ CREATE TABLE IF NOT EXISTS wf_workflow_definition (
     node_definition CLOB,
     version         INT          NOT NULL DEFAULT 1,
     enabled         INT          NOT NULL DEFAULT 1,
+    status          VARCHAR(16)  NOT NULL DEFAULT 'PUBLISHED',
+    published_at    TIMESTAMP,
+    published_by    BIGINT,
     remark          VARCHAR(500),
     create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
-    CONSTRAINT uk_wf_def_code_version UNIQUE (workflow_code, version, deleted)
+    CONSTRAINT uk_wf_def_tenant_code_version UNIQUE (tenant_id, workflow_code, version, deleted)
 );
 CREATE INDEX IF NOT EXISTS idx_wf_def_tenant ON wf_workflow_definition (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_wf_def_enabled ON wf_workflow_definition (enabled);
+CREATE INDEX IF NOT EXISTS idx_wf_def_status ON wf_workflow_definition (status);
 CREATE INDEX IF NOT EXISTS idx_wf_def_update_time ON wf_workflow_definition (update_time);
 
 -- ------------------------------------------------------------
@@ -52,9 +58,10 @@ CREATE TABLE IF NOT EXISTS wf_process_instance (
     suspended              TINYINT      NOT NULL DEFAULT 0,
     create_time            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version                INT          NOT NULL DEFAULT 0,
     deleted                TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
-    CONSTRAINT uk_wf_instance_business_key UNIQUE (business_key, deleted)
+    CONSTRAINT uk_wf_instance_tenant_business_key UNIQUE (tenant_id, business_key, deleted)
 );
 CREATE INDEX IF NOT EXISTS idx_wf_instance_def ON wf_process_instance (workflow_definition_id);
 CREATE INDEX IF NOT EXISTS idx_wf_instance_tenant_initiator ON wf_process_instance (tenant_id, initiator_id);
@@ -83,6 +90,7 @@ CREATE TABLE IF NOT EXISTS wf_task (
     transferred_from    BIGINT,
     create_time         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version             INT          NOT NULL DEFAULT 0,
     deleted             TINYINT      NOT NULL DEFAULT 0,
     PRIMARY KEY (id)
 );
@@ -116,3 +124,17 @@ CREATE INDEX IF NOT EXISTS idx_wf_approval_instance ON wf_approval_record (proce
 CREATE INDEX IF NOT EXISTS idx_wf_approval_task ON wf_approval_record (task_id);
 CREATE INDEX IF NOT EXISTS idx_wf_approval_tenant_approver ON wf_approval_record (tenant_id, approver_id);
 CREATE INDEX IF NOT EXISTS idx_wf_approval_create_time ON wf_approval_record (create_time);
+
+-- ------------------------------------------------------------
+-- 后台调度租约表（与 V4 迁移对齐；多实例扫描互斥）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS wf_scheduler_lease (
+    lock_name   VARCHAR(100) NOT NULL,
+    owner       VARCHAR(100) NOT NULL DEFAULT '',
+    lease_until TIMESTAMP    NOT NULL DEFAULT TIMESTAMP '1970-01-01 00:00:00',
+    update_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (lock_name)
+);
+INSERT INTO wf_scheduler_lease (lock_name, owner, lease_until, update_time)
+SELECT 'workflow-timeout-scan', '', TIMESTAMP '1970-01-01 00:00:00', CURRENT_TIMESTAMP FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM wf_scheduler_lease WHERE lock_name = 'workflow-timeout-scan');

@@ -53,6 +53,22 @@ import reactor.core.publisher.Mono;
 @Tag(name = "办公平台文档管理", description = "办公平台文档创建、上传、查询、下载、删除等相关接口")
 public class OfficeDocumentHandler {
 
+    /** 文档详情的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "OfficeDocumentResult")
+    public static class DocumentResult extends Result<DocumentInfoResponse> {}
+
+    /** 文档列表的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "OfficeDocumentListResult")
+    public static class DocumentListResult extends Result<java.util.List<DocumentInfoResponse>> {}
+
+    /** 文档写操作的布尔结果，仅用于接口文档。 */
+    @Schema(name = "OfficeDocumentBooleanResult")
+    public static class DocumentBooleanResult extends Result<Boolean> {}
+
+    /** 文档下载地址的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "OfficeDocumentDownloadResult")
+    public static class DocumentDownloadResult extends Result<String> {}
+
     private final OfficeDocumentService documentService;
     private final DocumentInfoAssembler assembler;
     private final RequestHandlerUtil requestHandlerUtil;
@@ -65,8 +81,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，包含请求体和参数
      * @return Mono&lt;ServerResponse&gt; 包含创建成功的文档信息
      */
-    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.INSERT, description = "创建文档")
-    @Operation(summary = "创建文档", description = "在指定办公平台创建新文档，支持多种文档类型")
+    @Operation(operationId = "createDocument", summary = "创建文档", description = "在指定办公平台创建新文档，支持多种文档类型")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "文档创建请求信息",
@@ -81,7 +96,7 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = DocumentInfoResponse.class))),
+                                schema = @Schema(implementation = DocumentResult.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "请求参数错误",
@@ -91,6 +106,12 @@ public class OfficeDocumentHandler {
                 description = "创建失败",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.INSERT,
+            description = "createDocument",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> createDocument(ServerRequest request) {
         log.info("创建文档请求");
 
@@ -120,8 +141,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，包含文件内容和参数
      * @return Mono&lt;ServerResponse&gt; 包含上传成功的文档信息
      */
-    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.INSERT, description = "上传文件")
-    @Operation(summary = "上传文件", description = "上传文件到指定办公平台，文件内容需Base64编码")
+    @Operation(operationId = "uploadFile", summary = "上传文件", description = "上传文件到指定办公平台，文件内容需Base64编码")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "文件上传请求信息",
@@ -136,7 +156,7 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = DocumentInfoResponse.class))),
+                                schema = @Schema(implementation = DocumentResult.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "请求参数错误",
@@ -146,6 +166,12 @@ public class OfficeDocumentHandler {
                 description = "上传失败",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.UPLOAD,
+            description = "uploadFile",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> uploadFile(ServerRequest request) {
         log.info("上传文件请求");
 
@@ -171,7 +197,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId
      * @return Mono&lt;ServerResponse&gt; 包含文档详细信息
      */
-    @Operation(summary = "查询文档详情", description = "根据文档ID查询文档的详细信息")
+    @Operation(operationId = "getDocumentDetail", summary = "查询文档详情", description = "根据文档ID查询文档的详细信息")
     @Parameters({
         @Parameter(
                 name = "documentId",
@@ -187,12 +213,18 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = DocumentInfoResponse.class))),
+                                schema = @Schema(implementation = DocumentResult.class))),
         @ApiResponse(
                 responseCode = "404",
                 description = "文档不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.SELECT,
+            description = "getDocumentDetail",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getDocumentDetail(ServerRequest request) {
         String documentIdStr = request.pathVariable("documentId");
         Long documentId = Long.parseLong(documentIdStr);
@@ -213,7 +245,10 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，查询参数包含platform和folderId
      * @return Mono&lt;ServerResponse&gt; 包含文档列表
      */
-    @Operation(summary = "查询文件夹下的文档", description = "列出指定文件夹下的所有文档")
+    @Operation(
+            operationId = "getDocumentsInFolder",
+            summary = "查询文件夹下的文档",
+            description = "按folderId查询文档；platform仅用于请求日志，不参与筛选")
     @Parameters({
         @Parameter(
                 name = "platform",
@@ -235,12 +270,18 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = DocumentInfoResponse.class))),
+                                schema = @Schema(implementation = DocumentListResult.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "请求参数错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.SELECT,
+            description = "getDocumentsInFolder",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getDocumentsInFolder(ServerRequest request) {
         String platform = request.queryParam("platform").orElse("");
         String folderId = request.queryParam("folderId").orElse("");
@@ -262,7 +303,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，查询参数包含ownerId
      * @return Mono&lt;ServerResponse&gt; 包含文档列表
      */
-    @Operation(summary = "查询我的文档", description = "查询当前用户的所有文档")
+    @Operation(operationId = "getMyDocuments", summary = "按所有者查询文档", description = "按请求中的ownerId查询文档，未传时使用空字符串")
     @Parameters({
         @Parameter(
                 name = "ownerId",
@@ -278,12 +319,18 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = DocumentInfoResponse.class))),
+                                schema = @Schema(implementation = DocumentListResult.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "请求参数错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.SELECT,
+            description = "getMyDocuments",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMyDocuments(ServerRequest request) {
         String ownerId = request.queryParam("ownerId").orElse("");
         log.info("查询我的文档 - ownerId: {}", ownerId);
@@ -301,9 +348,9 @@ public class OfficeDocumentHandler {
      * <p>下载指定的文档。
      *
      * @param request ServerRequest对象，路径参数包含documentId
-     * @return Mono&lt;ServerResponse&gt; 包含文档内容（Base64编码）
+     * @return 包含文档下载 URL 的统一响应
      */
-    @Operation(summary = "下载文档", description = "下载指定文档，返回Base64编码的文档内容")
+    @Operation(operationId = "downloadDocument", summary = "获取文档下载地址", description = "按导出格式获取下载URL，data为地址字符串")
     @Parameters({
         @Parameter(
                 name = "documentId",
@@ -325,12 +372,18 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(type = "string", description = "Base64编码的文档内容"))),
+                                schema = @Schema(implementation = DocumentDownloadResult.class))),
         @ApiResponse(
                 responseCode = "404",
                 description = "文档不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.DOWNLOAD,
+            description = "downloadDocument",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> downloadDocument(ServerRequest request) {
         String documentIdStr = request.pathVariable("documentId");
         Long documentId = Long.parseLong(documentIdStr);
@@ -351,8 +404,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId
      * @return Mono&lt;ServerResponse&gt; 包含删除结果
      */
-    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.DELETE, description = "删除文档")
-    @Operation(summary = "删除文档", description = "删除指定的文档")
+    @Operation(operationId = "deleteDocument", summary = "删除文档", description = "删除指定的文档")
     @Parameters({
         @Parameter(
                 name = "documentId",
@@ -365,12 +417,21 @@ public class OfficeDocumentHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "删除成功",
-                content = @Content(mediaType = "application/json", schema = @Schema(type = "boolean"))),
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = DocumentBooleanResult.class))),
         @ApiResponse(
                 responseCode = "404",
                 description = "文档不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.DELETE,
+            description = "deleteDocument",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> deleteDocument(ServerRequest request) {
         String documentIdStr = request.pathVariable("documentId");
         Long documentId = Long.parseLong(documentIdStr);
@@ -388,10 +449,9 @@ public class OfficeDocumentHandler {
      * <p>移动文档到指定的文件夹。
      *
      * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
-     * @return Mono&lt;ServerResponse&gt; 包含移动后的文档信息
+     * @return 包含移动操作布尔结果的统一响应
      */
-    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.UPDATE, description = "移动文档")
-    @Operation(summary = "移动文档", description = "移动文档到指定的文件夹")
+    @Operation(operationId = "moveDocument", summary = "移动文档", description = "移动文档到指定的文件夹")
     @Parameters({
         @Parameter(
                 name = "documentId",
@@ -413,12 +473,18 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = DocumentInfoResponse.class))),
+                                schema = @Schema(implementation = DocumentBooleanResult.class))),
         @ApiResponse(
                 responseCode = "404",
                 description = "文档或文件夹不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.OTHER,
+            description = "moveDocument",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> moveDocument(ServerRequest request) {
         String documentIdStr = request.pathVariable("documentId");
         Long documentId = Long.parseLong(documentIdStr);
@@ -440,8 +506,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
      * @return Mono&lt;ServerResponse&gt; 包含复制后的文档信息
      */
-    @OperationLog(module = "办公平台文档管理", type = OperationLog.OperationType.INSERT, description = "复制文档")
-    @Operation(summary = "复制文档", description = "复制指定的文档到目标文件夹")
+    @Operation(operationId = "copyDocument", summary = "复制文档", description = "复制指定的文档到目标文件夹")
     @Parameters({
         @Parameter(
                 name = "documentId",
@@ -469,12 +534,18 @@ public class OfficeDocumentHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = DocumentInfoResponse.class))),
+                                schema = @Schema(implementation = DocumentResult.class))),
         @ApiResponse(
                 responseCode = "404",
                 description = "文档或文件夹不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
+    @OperationLog(
+            module = "OfficeDocument",
+            type = OperationLog.OperationType.OTHER,
+            description = "copyDocument",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> copyDocument(ServerRequest request) {
         String documentIdStr = request.pathVariable("documentId");
         Long documentId = Long.parseLong(documentIdStr);

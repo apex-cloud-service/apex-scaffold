@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * 办公平台消息发送 Handler
  *
  * <p>处理消息发送相关的 HTTP 请求，负责参数验证、DTO 转换和响应构建。
- * 采用 WebFlux 函数式编程风格，所有方法返回 {@link Mono<ServerResponse>}。
+ * 采用 WebFlux 函数式编程风格，所有方法返回 {@code Mono<ServerResponse>}，成功数据使用 {@link Result} 包装。
  *
  * <p>提供的接口：
  * <ul>
@@ -81,7 +81,10 @@ public class OfficeMessageHandler {
      * @param request HTTP 请求
      * @return 发送结果响应
      */
-    @Operation(summary = "发送办公平台消息", description = "向飞书、钉钉或企业微信发送消息，支持文本、Markdown、卡片等多种消息类型")
+    @Operation(
+            operationId = "sendOfficeMessage",
+            summary = "发送办公平台消息",
+            description = "向飞书、钉钉或企业微信发送消息，支持文本、Markdown、卡片等多种消息类型")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             description = "消息发送请求信息",
@@ -96,15 +99,11 @@ public class OfficeMessageHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = SendMessageResponse.class))),
+                                schema = @Schema(implementation = OfficeSendMessageResult.class))),
         @ApiResponse(
                 responseCode = "400",
-                description = "请求参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "消息发送失败",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "参数校验或消息发送失败",
+                content = @Content(schema = @Schema(implementation = OfficeMessageErrorResult.class)))
     })
     @RequirePermission("office:message:send")
     @OperationLog(
@@ -157,7 +156,10 @@ public class OfficeMessageHandler {
      * @param request HTTP 请求
      * @return 消息状态响应
      */
-    @Operation(summary = "查询消息发送状态", description = "根据消息ID查询消息的详细状态信息，包括发送状态、平台消息ID、重试次数、发送时间等")
+    @Operation(
+            operationId = "getOfficeMessageStatus",
+            summary = "查询消息发送状态",
+            description = "根据消息ID查询消息的详细状态信息，包括发送状态、平台消息ID、重试次数、发送时间等")
     @Parameters({
         @Parameter(
                 name = "messageId",
@@ -173,13 +175,15 @@ public class OfficeMessageHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = MessageStatusResponse.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "消息不存在",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                                schema = @Schema(implementation = OfficeMessageStatusResult.class)))
     })
     @RequirePermission("office:message:query")
+    @OperationLog(
+            module = "OfficeMessage",
+            type = OperationLog.OperationType.SELECT,
+            description = "getMessageStatus",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMessageStatus(ServerRequest request) {
         Long messageId = Long.parseLong(request.pathVariable("messageId"));
         log.info("查询消息状态，ID：{}", messageId);
@@ -210,7 +214,10 @@ public class OfficeMessageHandler {
      * @param request HTTP 请求
      * @return 重新发送结果
      */
-    @Operation(summary = "重新发送失败的消息", description = "重新发送状态为FAILED的消息，成功后更新消息状态和平台消息ID")
+    @Operation(
+            operationId = "resendOfficeMessage",
+            summary = "重新发送失败的消息",
+            description = "重新发送状态为FAILED的消息；服务失败仍返回HTTP 200，通过code和msg表示失败")
     @Parameters({
         @Parameter(
                 name = "messageId",
@@ -222,16 +229,11 @@ public class OfficeMessageHandler {
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "重新发送成功",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "400",
-                description = "消息状态不允许重发",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "消息不存在",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "重发结果；业务失败时data为空，code和msg表示失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OfficeMessageBooleanResult.class)))
     })
     @RequirePermission("office:message:resend")
     @OperationLog(
@@ -263,7 +265,10 @@ public class OfficeMessageHandler {
      * @param request HTTP 请求
      * @return 撤回结果
      */
-    @Operation(summary = "撤回消息", description = "撤回发送成功的消息。只能撤回状态为SUCCESS且已获得平台消息ID的消息")
+    @Operation(
+            operationId = "recallOfficeMessage",
+            summary = "撤回消息",
+            description = "撤回状态为SUCCESS且已获得平台消息ID的消息；服务失败仍返回HTTP 200，通过code和msg表示失败")
     @Parameters({
         @Parameter(
                 name = "messageId",
@@ -275,16 +280,11 @@ public class OfficeMessageHandler {
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "撤回成功",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "400",
-                description = "消息状态不允许撤回",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "消息不存在",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                description = "撤回结果；业务失败时data为空，code和msg表示失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OfficeMessageBooleanResult.class)))
     })
     @RequirePermission("office:message:recall")
     @OperationLog(
@@ -307,6 +307,18 @@ public class OfficeMessageHandler {
                     return ServerResponse.ok().bodyValue(Result.error(error.getMessage()));
                 });
     }
+
+    @Schema(name = "OfficeSendMessageResult")
+    public static class OfficeSendMessageResult extends Result<SendMessageResponse> {}
+
+    @Schema(name = "OfficeMessageStatusResult")
+    public static class OfficeMessageStatusResult extends Result<MessageStatusResponse> {}
+
+    @Schema(name = "OfficeMessageBooleanResult")
+    public static class OfficeMessageBooleanResult extends Result<Boolean> {}
+
+    @Schema(name = "OfficeMessageErrorResult")
+    public static class OfficeMessageErrorResult extends Result<Void> {}
 
     /**
      * 根据请求构建消息内容

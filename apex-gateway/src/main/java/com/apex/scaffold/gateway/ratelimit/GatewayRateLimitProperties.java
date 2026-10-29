@@ -2,6 +2,8 @@ package com.apex.scaffold.gateway.ratelimit;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -34,6 +36,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.3.1
  * @see com.apex.scaffold.gateway.filter.RequestRateLimitFilter
  */
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "apex.gateway.rate-limit")
 public class GatewayRateLimitProperties {
 
@@ -58,58 +62,6 @@ public class GatewayRateLimitProperties {
     /** 按资源（路径通配）覆盖的限流规则，命中后覆盖默认容量与速率 */
     private List<Rule> rules = new ArrayList<>();
 
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    public long getDefaultCapacity() {
-        return defaultCapacity;
-    }
-
-    public void setDefaultCapacity(long defaultCapacity) {
-        this.defaultCapacity = defaultCapacity;
-    }
-
-    public double getDefaultRefillRate() {
-        return defaultRefillRate;
-    }
-
-    public void setDefaultRefillRate(double defaultRefillRate) {
-        this.defaultRefillRate = defaultRefillRate;
-    }
-
-    public String getKeyPrefix() {
-        return keyPrefix;
-    }
-
-    public void setKeyPrefix(String keyPrefix) {
-        this.keyPrefix = keyPrefix;
-    }
-
-    public long getWindowMs() {
-        return windowMs;
-    }
-
-    public void setWindowMs(long windowMs) {
-        this.windowMs = windowMs;
-    }
-
-    public List<Rule> getRules() {
-        return rules;
-    }
-
     public void setRules(List<Rule> rules) {
         this.rules = rules == null ? new ArrayList<>() : rules;
     }
@@ -117,6 +69,8 @@ public class GatewayRateLimitProperties {
     /**
      * 单条按资源覆盖的限流规则（{@code null} 字段表示沿用默认值）.
      */
+    @Getter
+    @Setter
     public static class Rule {
 
         /** 资源匹配表达式（Ant 风格路径通配，如 {@code /api/v1/workflows/**}） */
@@ -127,29 +81,5 @@ public class GatewayRateLimitProperties {
 
         /** 令牌补充速率（令牌/秒，覆盖 {@link #defaultRefillRate}） */
         private Double refillRate;
-
-        public String getResource() {
-            return resource;
-        }
-
-        public void setResource(String resource) {
-            this.resource = resource;
-        }
-
-        public Long getCapacity() {
-            return capacity;
-        }
-
-        public void setCapacity(Long capacity) {
-            this.capacity = capacity;
-        }
-
-        public Double getRefillRate() {
-            return refillRate;
-        }
-
-        public void setRefillRate(Double refillRate) {
-            this.refillRate = refillRate;
-        }
     }
 }

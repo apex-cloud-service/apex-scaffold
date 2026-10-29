@@ -74,7 +74,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Scaffold Team
  * @version 1.0.0
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Slf4j
 @Component
@@ -124,7 +124,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "获取审计日志详情")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "获取审计日志详情",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getAuditLog", summary = "获取审计日志详情", description = "根据ID获取审计日志详情")
     @io.swagger.v3.oas.annotations.Parameter(name = "id", description = "审计日志ID", required = true, example = "1001")
     @ApiResponse(
@@ -187,7 +192,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "查询用户审计日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "查询用户审计日志",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listUserAuditLogs", summary = "查询用户审计日志", description = "查询指定用户的审计日志列表")
     @io.swagger.v3.oas.annotations.Parameter(name = "userId", description = "用户ID", required = true, example = "1001")
     @io.swagger.v3.oas.annotations.Parameter(
@@ -267,7 +277,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "按事件类型查询审计日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "按事件类型查询审计日志",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listLogsByEventType", summary = "按事件类型查询", description = "按事件类型查询审计日志列表")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "eventType",
@@ -352,7 +367,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "按时间范围查询审计日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "按时间范围查询审计日志",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listLogsByTimeRange", summary = "按时间范围查询", description = "按时间范围查询审计日志列表")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "时间范围查询请求",
@@ -424,7 +444,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "查询失败日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "查询失败日志",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listFailedLogs", summary = "查询失败日志", description = "查询所有失败的审计日志")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "tenantId",
@@ -496,7 +521,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "查询高风险日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "查询高风险日志",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listHighRiskLogs", summary = "查询高风险日志", description = "查询所有高风险的审计日志")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "tenantId",
@@ -570,7 +600,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "按IP地址查询日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "按IP地址查询日志",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listLogsByIpAddress", summary = "按IP地址查询", description = "按IP地址查询审计日志列表")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "ipAddress",
@@ -657,7 +692,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "统计日志数量")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "统计日志数量",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "countAuditLogs", summary = "统计日志数量", description = "统计指定时间范围内的日志数量")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "时间范围统计请求",
@@ -737,7 +777,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.SELECT, description = "统计登录失败次数")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.SELECT,
+            description = "统计登录失败次数",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "countLoginFailures", summary = "统计登录失败次数", description = "统计用户在指定时间后的登录失败次数")
     @io.swagger.v3.oas.annotations.Parameter(name = "userId", description = "用户ID", required = true, example = "1001")
     @io.swagger.v3.oas.annotations.Parameter(
@@ -842,7 +887,12 @@ public class AuditLogHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "审计日志", type = OperationType.DELETE, description = "清理过期日志")
+    @OperationLog(
+            module = "审计日志",
+            type = OperationType.DELETE,
+            description = "清理过期日志",
+            saveRequest = false,
+            saveResponse = false)
     @RequireAdminRole
     @RequireResourcePermission(
             resourceType = "audit-logs",

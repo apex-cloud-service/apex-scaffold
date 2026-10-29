@@ -46,7 +46,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 1.3.1
  */
 @Configuration
 @RequiredArgsConstructor
@@ -105,7 +105,14 @@ public class RoleRouter {
                                                     @Content(
                                                             mediaType = "application/json",
                                                             schema = @Schema(implementation = RoleResult.class))),
-                                    @ApiResponse(responseCode = "401", description = "未认证或访问令牌无效，空响应体")
+                                    @ApiResponse(responseCode = "401", description = "未认证或访问令牌无效，空响应体"),
+                                    @ApiResponse(
+                                            responseCode = "403",
+                                            description = "需要管理员权限",
+                                            content =
+                                                    @Content(
+                                                            mediaType = "application/json",
+                                                            schema = @Schema(implementation = EmptyResult.class)))
                                 })),
         @RouterOperation(
                 path = "/auth/v1/roles",
@@ -197,7 +204,14 @@ public class RoleRouter {
                                                     @Content(
                                                             mediaType = "application/json",
                                                             schema = @Schema(implementation = RoleResult.class))),
-                                    @ApiResponse(responseCode = "401", description = "未认证或访问令牌无效，空响应体")
+                                    @ApiResponse(responseCode = "401", description = "未认证或访问令牌无效，空响应体"),
+                                    @ApiResponse(
+                                            responseCode = "403",
+                                            description = "需要管理员权限",
+                                            content =
+                                                    @Content(
+                                                            mediaType = "application/json",
+                                                            schema = @Schema(implementation = EmptyResult.class)))
                                 })),
         @RouterOperation(
                 path = "/auth/v1/roles/{id}",
@@ -229,7 +243,14 @@ public class RoleRouter {
                                                     @Content(
                                                             mediaType = "application/json",
                                                             schema = @Schema(implementation = EmptyResult.class))),
-                                    @ApiResponse(responseCode = "401", description = "未认证或访问令牌无效，空响应体")
+                                    @ApiResponse(responseCode = "401", description = "未认证或访问令牌无效，空响应体"),
+                                    @ApiResponse(
+                                            responseCode = "403",
+                                            description = "需要管理员权限",
+                                            content =
+                                                    @Content(
+                                                            mediaType = "application/json",
+                                                            schema = @Schema(implementation = EmptyResult.class)))
                                 })),
         @RouterOperation(
                 path = "/auth/v1/roles/{id}",

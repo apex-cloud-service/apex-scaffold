@@ -4,6 +4,7 @@ import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryServi
 import com.apex.scaffold.authservice.interfaces.dto.UnifiedAuthorizationRequest;
 import com.apex.scaffold.authservice.interfaces.dto.UnifiedAuthorizationResponse;
 import com.apex.scaffold.authservice.interfaces.util.RequestHandlerUtil;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import lombok.RequiredArgsConstructor;
@@ -28,11 +29,20 @@ public class UnifiedAuthorizationHandler {
     private final RequestHandlerUtil responses;
 
     /**
-     * 处理授权快照查询请求，仅允许专用 reader 账号访问
+     * 按路径 userId 查询授权快照，仅允许配置的专用 reader 账号访问。
      *
-     * @param request 请求对象
-     * @return 授权快照响应
+     * <p>租户从已认证主体的 details 获取，查询参数不能覆盖该作用域。
+     * userId 必须为正整数；请求参数错误返回 400，reader 身份或访问权限不满足返回 403。
+     *
+     * @param request 包含目标 userId 路径参数的请求
+     * @return Result 包装的授权快照或对应状态码的业务错误响应
      */
+    @OperationLog(
+            module = "UnifiedAuthorization",
+            type = OperationLog.OperationType.SELECT,
+            description = "query",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> query(ServerRequest request) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(context -> context.getAuthentication())
@@ -78,6 +88,13 @@ public class UnifiedAuthorizationHandler {
                         failure -> error(403, ResultCode.FORBIDDEN));
     }
 
+    /**
+     * 使用指定 HTTP 状态和业务码构造统一错误响应。
+     *
+     * @param status HTTP 状态码
+     * @param code 业务响应码
+     * @return Result 包装的错误响应
+     */
     private Mono<ServerResponse> error(int status, ResultCode code) {
         return ServerResponse.status(status).bodyValue(Result.error(code));
     }

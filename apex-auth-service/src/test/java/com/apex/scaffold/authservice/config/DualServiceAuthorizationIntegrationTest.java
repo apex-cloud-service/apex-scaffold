@@ -294,7 +294,7 @@ class DualServiceAuthorizationIntegrationTest {
         properties.setBaseUrl(endpoint());
         properties.setAccessToken(token);
         properties.setMappings(List.of(new AuthCenterPermissionProperties.Mapping("main", 7L, mappedTenant, 99L)));
-        return new AuthCenterPermissionClient(properties, transport);
+        return new AuthCenterPermissionClient(properties, transport, null);
     }
 
     private String endpoint() {

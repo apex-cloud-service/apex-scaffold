@@ -146,6 +146,31 @@ class JwtSignatureFilterTest {
         }
     }
 
+    @Test
+    @DisplayName("大小写混合的内部身份和事务头均剥离，合法认证链保持不变")
+    void shouldStripTransactionHeadersAndPreserveAuthentication() {
+        for (String path : new String[] {"/api/v1/auth/login", "/api/v1/masking/batch", "/admin-api/v1/jobs"}) {
+            String authorization = "Bearer " + validToken("user-1001");
+            ServerWebExchange[] holder = new ServerWebExchange[1];
+            MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.post(path)
+                    .header(HttpHeaders.AUTHORIZATION, authorization)
+                    .header("x-internal-call", "forged")
+                    .header("x-ApEx-Seata-Xid", "forged")
+                    .header("X-Apex-Seata-Key", "forged")
+                    .header("TX_XID", "forged")
+                    .header("Cookie", "session=retained")
+                    .build());
+            filter.filter(exchange, capturingChain(holder)).block();
+            HttpHeaders headers = holder[0].getRequest().getHeaders();
+            assertThat(headers.getFirst("X-Internal-Call")).isNull();
+            assertThat(headers.getFirst("X-Apex-Seata-Xid")).isNull();
+            assertThat(headers.getFirst("X-Apex-Seata-Key")).isNull();
+            assertThat(headers.getFirst("TX_XID")).isNull();
+            assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isEqualTo(authorization);
+            assertThat(headers.getFirst("Cookie")).isEqualTo("session=retained");
+        }
+    }
+
     @Nested
     @DisplayName("公开路径放行")
     class PublicPathTests {

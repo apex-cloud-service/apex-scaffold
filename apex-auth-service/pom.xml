@@ -27,6 +27,28 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-messaging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-infrastructure-integration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-seata-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-job-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
         </dependency>
@@ -172,6 +194,17 @@
         <dependency>
             <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-system</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Testcontainers MySQL/PostgreSQL：MFA 迁移集成测试使用真实容器，避免依赖人工预置的本机容器 -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

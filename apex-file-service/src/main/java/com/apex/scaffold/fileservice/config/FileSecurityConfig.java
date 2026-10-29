@@ -33,6 +33,15 @@ public class FileSecurityConfig {
     private static final String INTERNAL_API_PREFIX = "/internal/v1/**";
 
     /**
+     * 匿名分享兑换与下载路径：仅这两个精确入口对外开放，创建与撤销仍要求已认证身份。
+     * 令牌经 POST 请求体传递，租户与文件归属由服务端分享记录确定，不信任任何匿名身份头。
+     */
+    private static final String SHARE_EXCHANGE_PATH = "/api/v2/file-shares/exchange";
+
+    /** 匿名分享下载路径，见 {@link #SHARE_EXCHANGE_PATH} */
+    private static final String SHARE_DOWNLOAD_PATH = "/api/v2/file-shares/download";
+
+    /**
      * 文件服务 Spring Security 过滤链。
      *
      * @param http ServerHttpSecurity 构建器
@@ -56,7 +65,9 @@ public class FileSecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/webjars/**",
-                                INTERNAL_API_PREFIX)
+                                INTERNAL_API_PREFIX,
+                                SHARE_EXCHANGE_PATH,
+                                SHARE_DOWNLOAD_PATH)
                         .permitAll()
                         .anyExchange()
                         .authenticated())

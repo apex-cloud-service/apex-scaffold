@@ -4,7 +4,9 @@ import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.office.off.application.dto.InboxCursorItemDTO;
 import com.apex.scaffold.office.off.application.dto.MessageDTO;
+import com.apex.scaffold.office.off.application.dto.MessageDeliveryDTO;
 import com.apex.scaffold.office.off.application.dto.SendMessageRequest;
 import com.apex.scaffold.office.off.application.service.OffMessageService;
 import com.apex.scaffold.officeservice.interfaces.security.AuthenticatedUser;
@@ -19,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -70,19 +73,36 @@ public class MessageHandler {
      * @param request HTTP 请求对象，请求体为消息发送参数 JSON
      * @return 包含已发送消息信息的统一成功响应，失败时返回错误响应
      */
-    @Operation(summary = "发送消息", description = "发送站内消息给指定用户")
+    @Operation(
+            operationId = "sendMessage",
+            summary = "发送消息",
+            description = "发送站内消息给指定用户",
+            requestBody =
+                    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = SendMessageRequest.class))))
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
                 description = "发送成功",
                 content =
-                        @Content(mediaType = "application/json", schema = @Schema(implementation = MessageDTO.class))),
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageResult.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "参数错误",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "消息管理", type = OperationLog.OperationType.INSERT, description = "发送消息")
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "发送消息",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> sendMessage(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, SendMessageRequest.class)
@@ -99,7 +119,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，查询参数包含 pageNum、pageSize
      * @return 包含收件箱消息列表的统一成功响应，失败时返回错误响应
      */
-    @Operation(summary = "获取收件箱", description = "获取当前用户的收件箱消息列表")
+    @Operation(operationId = "getInbox", summary = "获取收件箱", description = "分页查询当前用户收件箱，data 为消息数组")
     @Parameters({
         @Parameter(
                 name = "pageNum",
@@ -113,9 +133,20 @@ public class MessageHandler {
                 schema = @Schema(type = "integer", defaultValue = "10"))
     })
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(mediaType = "application/json"))
+        @ApiResponse(
+                responseCode = "200",
+                description = "获取成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageListResult.class)))
     })
-    @OperationLog(module = "消息管理", type = OperationLog.OperationType.SELECT, description = "获取收件箱")
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取收件箱",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getInbox(ServerRequest request) {
         Integer pageNum =
                 RequestHandlerUtil.safeParseInt(request.queryParam("pageNum").orElse("1"), 1);
@@ -138,7 +169,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，查询参数包含 pageNum、pageSize
      * @return 包含已发送消息列表的统一成功响应，失败时返回错误响应
      */
-    @Operation(summary = "获取发件箱", description = "获取当前用户的发件箱消息列表")
+    @Operation(operationId = "getSentMessages", summary = "获取发件箱", description = "分页查询当前用户发件箱，data 为消息数组")
     @Parameters({
         @Parameter(
                 name = "pageNum",
@@ -152,9 +183,20 @@ public class MessageHandler {
                 schema = @Schema(type = "integer", defaultValue = "10"))
     })
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(mediaType = "application/json"))
+        @ApiResponse(
+                responseCode = "200",
+                description = "获取成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageListResult.class)))
     })
-    @OperationLog(module = "消息管理", type = OperationLog.OperationType.SELECT, description = "获取发件箱")
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取发件箱",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getSentMessages(ServerRequest request) {
         Integer pageNum =
                 RequestHandlerUtil.safeParseInt(request.queryParam("pageNum").orElse("1"), 1);
@@ -173,33 +215,50 @@ public class MessageHandler {
      * 处理获取消息详情请求。
      *
      * <p>根据路径中的消息 ID 查询消息详情，ID 缺失或非法时返回参数错误，
-     * 消息不存在时返回 404 响应。
+     * 消息不存在时返回 HTTP 400，业务码为 NOT_FOUND。
      *
      * @param request HTTP 请求对象，路径参数包含消息 ID
-     * @return 包含消息详情的统一成功响应，不存在时返回 404 错误响应
+     * @return 包含消息详情的统一成功响应，不存在时返回 HTTP 400 错误响应
      */
-    @Parameters({@Parameter(name = "messageId", in = ParameterIn.PATH, required = true, description = "消息ID")})
-    @Operation(summary = "获取消息详情", description = "获取指定消息的详细信息")
+    @Parameters({
+        @Parameter(
+                name = "messageId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "消息ID",
+                schema = @Schema(type = "integer", format = "int64"))
+    })
+    @Operation(
+            operationId = "getMessageDetail",
+            summary = "获取消息详情",
+            description = "查询当前用户可访问的消息；不存在时返回 HTTP 400、NOT_FOUND 业务码")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
                 description = "获取成功",
                 content =
-                        @Content(mediaType = "application/json", schema = @Schema(implementation = MessageDTO.class))),
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageResult.class))),
         @ApiResponse(
-                responseCode = "404",
+                responseCode = "400",
                 description = "消息不存在",
                 content = @Content(schema = @Schema(implementation = Result.class)))
     })
-    @OperationLog(module = "消息管理", type = OperationLog.OperationType.SELECT, description = "获取消息详情")
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取消息详情",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMessageDetail(ServerRequest request) {
         Long messageId = RequestHandlerUtil.safeParseLong(request.pathVariable("messageId"));
         if (messageId == null) {
             return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "消息ID无效");
         }
 
-        return messageService
-                .getMessageDetail(messageId)
+        return currentUserId()
+                .flatMap(userId -> messageService.getMessageDetail(messageId, userId))
                 .flatMap(requestHandlerUtil::buildSuccessResponse)
                 .switchIfEmpty(requestHandlerUtil.buildErrorResponse(ResultCode.NOT_FOUND, "消息不存在"))
                 .onErrorResume(this::handleError);
@@ -213,12 +272,30 @@ public class MessageHandler {
      * @param request HTTP 请求对象，路径参数包含消息 ID
      * @return 标记成功的统一成功响应，失败时返回错误响应
      */
-    @Parameters({@Parameter(name = "messageId", in = ParameterIn.PATH, required = true, description = "消息ID")})
-    @Operation(summary = "标记消息为已读", description = "将指定消息标记为已读状态")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "标记成功", content = @Content(mediaType = "application/json"))
+    @Parameters({
+        @Parameter(
+                name = "messageId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "消息ID",
+                schema = @Schema(type = "integer", format = "int64"))
     })
-    @OperationLog(module = "消息管理", type = OperationLog.OperationType.UPDATE, description = "标记消息为已读")
+    @Operation(operationId = "markAsRead", summary = "标记消息为已读", description = "将指定消息标记为已读状态，data 为空")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "标记成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageVoidResult.class)))
+    })
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "标记消息为已读",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> markAsRead(ServerRequest request) {
         Long messageId = RequestHandlerUtil.safeParseLong(request.pathVariable("messageId"));
         if (messageId == null) {
@@ -239,11 +316,22 @@ public class MessageHandler {
      * @param request HTTP 请求对象
      * @return 标记成功的统一成功响应，失败时返回错误响应
      */
-    @Operation(summary = "全部标记为已读", description = "将当前用户的所有未读消息标记为已读")
+    @Operation(operationId = "markAllAsRead", summary = "全部标记为已读", description = "将当前用户的所有未读消息标记为已读，data 为空")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "标记成功", content = @Content(mediaType = "application/json"))
+        @ApiResponse(
+                responseCode = "200",
+                description = "标记成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageVoidResult.class)))
     })
-    @OperationLog(module = "消息管理", type = OperationLog.OperationType.UPDATE, description = "全部标记为已读")
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "全部标记为已读",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> markAllAsRead(ServerRequest request) {
         return currentUserId()
                 .flatMap(messageService::markAllAsRead)
@@ -259,14 +347,132 @@ public class MessageHandler {
      * @param request HTTP 请求对象
      * @return 包含未读消息数量的统一成功响应，失败时返回错误响应
      */
-    @Operation(summary = "获取未读消息数", description = "获取当前用户的未读消息数量")
+    @Operation(operationId = "getUnreadCount", summary = "获取未读消息数", description = "获取当前用户的未读消息数量")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "获取成功", content = @Content(mediaType = "application/json"))
+        @ApiResponse(
+                responseCode = "200",
+                description = "获取成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageCountResult.class)))
     })
-    @OperationLog(module = "消息管理", type = OperationLog.OperationType.SELECT, description = "获取未读消息数")
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "获取未读消息数",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getUnreadCount(ServerRequest request) {
         return currentUserId()
                 .flatMap(messageService::countUnread)
+                .flatMap(requestHandlerUtil::buildSuccessResponse)
+                .onErrorResume(this::handleError);
+    }
+
+    /**
+     * 处理收件箱增量游标查询请求。
+     *
+     * <p>按接收记录 id 升序返回当前登录用户的收件箱条目，
+     * {@code afterId} 传上一次返回的最大 {@code recipientRecordId}，首次传 0。
+     *
+     * @param request HTTP 请求对象，查询参数包含 afterId、limit
+     * @return 包含收件箱条目列表的统一成功响应，失败时返回错误响应
+     */
+    @Operation(
+            operationId = "getInboxCursor",
+            summary = "增量查询收件箱",
+            description = "按接收记录 id 游标增量查询当前用户收件箱，data 为条目数组，recipientRecordId 作为下一页游标")
+    @Parameters({
+        @Parameter(
+                name = "afterId",
+                in = ParameterIn.QUERY,
+                description = "游标：仅返回接收记录 id 大于该值的条目",
+                schema = @Schema(type = "integer", format = "int64", defaultValue = "0")),
+        @Parameter(
+                name = "limit",
+                in = ParameterIn.QUERY,
+                description = "返回条数上限，最大 100",
+                schema = @Schema(type = "integer", defaultValue = "20"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "获取成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = InboxCursorListResult.class)))
+    })
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "增量查询收件箱",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> getInboxCursor(ServerRequest request) {
+        Long afterId =
+                RequestHandlerUtil.safeParseLong(request.queryParam("afterId").orElse("0"));
+        if (afterId == null) {
+            return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "afterId 无效");
+        }
+        Integer limit =
+                RequestHandlerUtil.safeParseInt(request.queryParam("limit").orElse("20"), 20);
+
+        return currentUserId()
+                .flatMapMany(userId -> messageService.getInboxCursor(userId, afterId, limit))
+                .collectList()
+                .map(list -> list.isEmpty() ? Collections.emptyList() : list)
+                .flatMap(requestHandlerUtil::buildSuccessResponse)
+                .onErrorResume(this::handleError);
+    }
+
+    /**
+     * 处理查询消息渠道投递记录请求。
+     *
+     * <p>发送人可见全部接收人的投递记录，接收人仅可见本人的投递记录；
+     * 消息不存在或无权限时返回空列表。
+     *
+     * @param request HTTP 请求对象，路径参数包含消息 ID
+     * @return 包含投递记录列表的统一成功响应，失败时返回错误响应
+     */
+    @Parameters({
+        @Parameter(
+                name = "messageId",
+                in = ParameterIn.PATH,
+                required = true,
+                description = "消息ID",
+                schema = @Schema(type = "integer", format = "int64"))
+    })
+    @Operation(
+            operationId = "getMessageDeliveries",
+            summary = "查询消息投递记录",
+            description = "发送人可见全量投递，接收人仅可见本人投递，data 为投递记录数组")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "获取成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = MessageDeliveryListResult.class)))
+    })
+    @OperationLog(
+            module = "消息管理",
+            type = OperationLog.OperationType.SELECT,
+            description = "查询消息投递记录",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> getMessageDeliveries(ServerRequest request) {
+        Long messageId = RequestHandlerUtil.safeParseLong(request.pathVariable("messageId"));
+        if (messageId == null) {
+            return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "消息ID无效");
+        }
+
+        return currentUserId()
+                .flatMapMany(userId -> messageService.getMessageDeliveries(messageId, userId))
+                .collectList()
+                .map(list -> list.isEmpty() ? Collections.emptyList() : list)
                 .flatMap(requestHandlerUtil::buildSuccessResponse)
                 .onErrorResume(this::handleError);
     }
@@ -296,4 +502,22 @@ public class MessageHandler {
         log.error("消息管理处理失败: {}", throwable.getMessage(), throwable);
         return requestHandlerUtil.handleError(throwable);
     }
+
+    @Schema(name = "InternalMessageResult")
+    public static class MessageResult extends Result<MessageDTO> {}
+
+    @Schema(name = "InternalMessageListResult")
+    public static class MessageListResult extends Result<List<MessageDTO>> {}
+
+    @Schema(name = "InternalMessageVoidResult")
+    public static class MessageVoidResult extends Result<Void> {}
+
+    @Schema(name = "InternalMessageCountResult")
+    public static class MessageCountResult extends Result<Long> {}
+
+    @Schema(name = "InternalInboxCursorListResult")
+    public static class InboxCursorListResult extends Result<List<InboxCursorItemDTO>> {}
+
+    @Schema(name = "InternalMessageDeliveryListResult")
+    public static class MessageDeliveryListResult extends Result<List<MessageDeliveryDTO>> {}
 }

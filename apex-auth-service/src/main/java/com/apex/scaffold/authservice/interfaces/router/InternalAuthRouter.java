@@ -1,6 +1,7 @@
 package com.apex.scaffold.authservice.interfaces.router;
 
 import com.apex.scaffold.authservice.interfaces.handler.InternalAuthHandler;
+import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.contract.dto.internal.TokenValidationDTO;
 import com.apex.scaffold.contract.dto.internal.TokenValidationRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.util.List;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
@@ -90,8 +92,7 @@ public class InternalAuthRouter {
                                                             schema =
                                                                     @Schema(
                                                                             implementation =
-                                                                                    com.apex.scaffold.common.result
-                                                                                            .Result.class))),
+                                                                                    InternalPermissionsResult.class))),
                                     @ApiResponse(
                                             responseCode = "400",
                                             description = "参数非法",
@@ -125,7 +126,7 @@ public class InternalAuthRouter {
                                 operationId = "internalValidateToken",
                                 summary = "校验存量 Token（内部）",
                                 description = "内部契约接口，不经网关。对访问令牌执行语义校验（签名、有效期、撤销状态、"
-                                        + "租户一致性），始终以 200 返回，业务有效性体现在 data.valid 字段，"
+                                        + "租户一致性），完成校验时以 200 返回，业务有效性体现在 data.valid 字段，"
                                         + "便于消费方按「拒绝优先」语义处理。",
                                 tags = {"内部契约"},
                                 requestBody =
@@ -149,7 +150,7 @@ public class InternalAuthRouter {
                                                             schema =
                                                                     @Schema(
                                                                             implementation =
-                                                                                    TokenValidationDTO.class))),
+                                                                                    TokenValidationResult.class))),
                                     @ApiResponse(
                                             responseCode = "400",
                                             description = "请求体缺失或非法",
@@ -186,4 +187,12 @@ public class InternalAuthRouter {
                         handler::validateToken)
                 .build();
     }
+
+    /** 内部令牌校验的实际 Result 包装，仅用于 OpenAPI 建模。 */
+    @Schema(name = "TokenValidationResult", description = "Result 包装的令牌校验快照")
+    public static class TokenValidationResult extends Result<TokenValidationDTO> {}
+
+    /** 内部权限查询的实际 Result 包装，仅用于 OpenAPI 建模。 */
+    @Schema(name = "InternalPermissionsResult", description = "Result 包装的权限编码数组")
+    public static class InternalPermissionsResult extends Result<List<String>> {}
 }

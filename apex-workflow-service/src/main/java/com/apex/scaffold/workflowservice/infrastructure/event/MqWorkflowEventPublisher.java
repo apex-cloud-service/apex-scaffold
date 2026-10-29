@@ -4,12 +4,11 @@ import com.apex.scaffold.common.event.AbstractDomainEvent;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.util.JsonUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.apache.rocketmq.spring.support.RocketMQHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -42,9 +41,8 @@ import reactor.core.publisher.Mono;
  * @see RocketMQTemplate
  */
 @RequiredArgsConstructor
+@Slf4j
 public class MqWorkflowEventPublisher implements WorkflowEventPublisher {
-
-    private static final Logger log = LoggerFactory.getLogger(MqWorkflowEventPublisher.class);
 
     /** RocketMQ 模板，用于分布式事件发布 */
     private final RocketMQTemplate rocketMQTemplate;

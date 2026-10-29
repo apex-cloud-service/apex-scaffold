@@ -84,7 +84,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Scaffold Team
  * @version 1.0.0
- * @since 2026-09-21
+ * @since 1.3.1
  */
 @Slf4j
 @Component
@@ -143,7 +143,12 @@ public class AuthConfigHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "认证配置", type = OperationType.INSERT, description = "创建认证配置")
+    @OperationLog(
+            module = "认证配置",
+            type = OperationType.INSERT,
+            description = "创建认证配置",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "createAuthConfig", summary = "创建认证配置", description = "创建新的认证配置项")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "认证配置创建请求",
@@ -234,7 +239,12 @@ public class AuthConfigHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "认证配置", type = OperationType.UPDATE, description = "更新认证配置")
+    @OperationLog(
+            module = "认证配置",
+            type = OperationType.UPDATE,
+            description = "更新认证配置",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "updateAuthConfig", summary = "更新认证配置", description = "根据ID更新认证配置")
     @io.swagger.v3.oas.annotations.Parameter(name = "id", description = "配置ID", required = true, example = "1001")
     @io.swagger.v3.oas.annotations.Parameter(
@@ -330,7 +340,12 @@ public class AuthConfigHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "认证配置", type = OperationType.DELETE, description = "删除认证配置")
+    @OperationLog(
+            module = "认证配置",
+            type = OperationType.DELETE,
+            description = "删除认证配置",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "deleteAuthConfig", summary = "删除认证配置", description = "根据ID删除认证配置")
     @io.swagger.v3.oas.annotations.Parameter(name = "id", description = "配置ID", required = true, example = "1001")
     @io.swagger.v3.oas.annotations.Parameter(
@@ -412,7 +427,12 @@ public class AuthConfigHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "认证配置", type = OperationType.SELECT, description = "获取认证配置详情")
+    @OperationLog(
+            module = "认证配置",
+            type = OperationType.SELECT,
+            description = "获取认证配置详情",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getAuthConfig", summary = "获取认证配置详情", description = "根据ID获取认证配置详情")
     @io.swagger.v3.oas.annotations.Parameter(name = "id", description = "配置ID", required = true, example = "1001")
     @io.swagger.v3.oas.annotations.Parameter(
@@ -479,7 +499,12 @@ public class AuthConfigHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "认证配置", type = OperationType.SELECT, description = "获取认证配置列表")
+    @OperationLog(
+            module = "认证配置",
+            type = OperationType.SELECT,
+            description = "获取认证配置列表",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listAuthConfigs", summary = "获取认证配置列表", description = "获取指定租户的认证配置列表")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "tenantId",
@@ -546,7 +571,12 @@ public class AuthConfigHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "认证配置", type = OperationType.SELECT, description = "根据类型获取配置")
+    @OperationLog(
+            module = "认证配置",
+            type = OperationType.SELECT,
+            description = "根据类型获取配置",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getAuthConfigsByType", summary = "根据类型获取配置", description = "根据配置类型获取指定租户的配置列表")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "type",
@@ -636,7 +666,12 @@ public class AuthConfigHandler {
      * @param request HTTP请求
      * @return HTTP响应
      */
-    @OperationLog(module = "认证配置", type = OperationType.SELECT, description = "获取有效配置")
+    @OperationLog(
+            module = "认证配置",
+            type = OperationType.SELECT,
+            description = "获取有效配置",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getEffectiveAuthConfig", summary = "获取有效配置", description = "获取指定类型和键的有效认证配置")
     @io.swagger.v3.oas.annotations.Parameter(
             name = "configType",

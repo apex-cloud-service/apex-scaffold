@@ -1,5 +1,7 @@
 package com.apex.scaffold.gateway.log;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -26,6 +28,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Apex Team
  * @since 1.3.1
  */
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "apex.gateway.access-log")
 public class AccessLogProperties {
 
@@ -40,36 +44,4 @@ public class AccessLogProperties {
 
     /** 是否记录请求体（默认关闭；开启存在敏感数据外溢风险） */
     private boolean persistRequestBody = false;
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    public double getSampleRate() {
-        return sampleRate;
-    }
-
-    public void setSampleRate(double sampleRate) {
-        this.sampleRate = sampleRate;
-    }
-
-    public int getMaxHeaderLength() {
-        return maxHeaderLength;
-    }
-
-    public void setMaxHeaderLength(int maxHeaderLength) {
-        this.maxHeaderLength = maxHeaderLength;
-    }
-
-    public boolean isPersistRequestBody() {
-        return persistRequestBody;
-    }
-
-    public void setPersistRequestBody(boolean persistRequestBody) {
-        this.persistRequestBody = persistRequestBody;
-    }
 }

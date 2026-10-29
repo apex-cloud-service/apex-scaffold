@@ -261,7 +261,8 @@ class OfficeCalendarHandlerTest {
                             any(LocalDateTime.class),
                             any(LocalDateTime.class),
                             any(String[].class),
-                            eq("线上")))
+                            eq("线上"),
+                            isNull()))
                     .thenReturn(Mono.just(true));
 
             StepVerifier.create(handler.updateCalendarEvent(MockServerRequest.builder()
@@ -271,12 +272,30 @@ class OfficeCalendarHandlerTest {
                     .verifyComplete();
         }
 
+        @org.junit.jupiter.params.ParameterizedTest
+        @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+        void forwardsExplicitAllDay(boolean allDay) {
+            UpdateCalendarEventRequest body =
+                    UpdateCalendarEventRequest.builder().isAllDay(allDay).build();
+            when(calendarService.updateEvent(
+                            eq(10L), any(), any(), any(), any(), any(String[].class), any(), eq(allDay)))
+                    .thenReturn(Mono.just(true));
+
+            StepVerifier.create(handler.updateCalendarEvent(MockServerRequest.builder()
+                            .pathVariable("eventId", "10")
+                            .body(Mono.just(body))))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+            org.mockito.Mockito.verify(calendarService)
+                    .updateEvent(eq(10L), any(), any(), any(), any(), any(String[].class), any(), eq(allDay));
+        }
+
         @Test
         @DisplayName("服务异常时返回 HTTP 400")
         void serviceError() {
             UpdateCalendarEventRequest body =
                     UpdateCalendarEventRequest.builder().title("x").build();
-            when(calendarService.updateEvent(eq(10L), any(), any(), any(), any(), any(String[].class), any()))
+            when(calendarService.updateEvent(eq(10L), any(), any(), any(), any(), any(String[].class), any(), any()))
                     .thenReturn(Mono.error(new IllegalStateException("boom")));
 
             StepVerifier.create(handler.updateCalendarEvent(MockServerRequest.builder()

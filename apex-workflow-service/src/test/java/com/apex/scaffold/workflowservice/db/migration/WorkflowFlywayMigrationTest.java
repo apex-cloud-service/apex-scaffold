@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +30,13 @@ import org.junit.jupiter.api.Test;
  *
  * <p>本测试从以下维度保证三份脚本一致且与代码（PO 类）对齐：</p>
  * <ul>
- *   <li>版本链 V1 连续且在 MySQL/PostgreSQL 两个方言目录完全一致；</li>
+ *   <li>版本链在 MySQL/PostgreSQL 两个方言目录完全一致且从 1 连续；</li>
  *   <li>4 张表在两方言中的列集合、索引、唯一约束完全一致（方言差异仅限类型）；</li>
  *   <li>H2 {@code basic-schema.sql} 的表集合与 Flyway 迁移表集合一致；</li>
  *   <li>以代码实现（PO 类）为唯一事实来源：每个持久化字段必然对应迁移脚本中的列
  *       （MyBatis-Plus map-underscore-to-camel-case）。</li>
+ *   <li>V3 之后：{@code wf_process_instance}/{@code wf_task} 具备 {@code version} 乐观锁列，
+ *       定义与实例唯一键以 {@code tenant_id} 为首列。</li>
  * </ul>
  *
  * @author Apex Team
@@ -47,9 +50,16 @@ class WorkflowFlywayMigrationTest {
 
     private static final String[] MIGRATION_DIALECTS = {MYSQL, POSTGRESQL};
 
-    /** 迁移声明的 4 张工作流表。 */
-    private static final Set<String> EXPECTED_TABLES =
+    /** 迁移声明的 5 张工作流表（4 张业务表 + 1 张后台调度租约表）。 */
+    private static final Set<String> EXPECTED_TABLES = Set.of(
+            "wf_workflow_definition", "wf_process_instance", "wf_task", "wf_approval_record", "wf_scheduler_lease");
+
+    /** 继承 BasePO 审计列的业务表；租约表不参与 PO 字段对齐校验。 */
+    private static final Set<String> BUSINESS_TABLES =
             Set.of("wf_workflow_definition", "wf_process_instance", "wf_task", "wf_approval_record");
+
+    /** 仅存在于 Flyway 迁移、不出现在 H2 basic-schema 的表（Seata AT 的 undo_log）。 */
+    private static final Set<String> MIGRATION_ONLY_TABLES = Set.of("undo_log");
 
     /** 所有表必须具备的通用审计列（继承 BasePO，源码事实：id/create_time/update_time/deleted）。 */
     private static final Set<String> AUDIT_COLUMNS = Set.of("id", "create_time", "update_time", "deleted");
@@ -66,6 +76,9 @@ class WorkflowFlywayMigrationTest {
                             "node_definition",
                             "version",
                             "enabled",
+                            "status",
+                            "published_at",
+                            "published_by",
                             "remark")),
             Map.entry(
                     "wf_process_instance",
@@ -80,7 +93,8 @@ class WorkflowFlywayMigrationTest {
                             "start_time",
                             "end_time",
                             "remark",
-                            "suspended")),
+                            "suspended",
+                            "version")),
             Map.entry(
                     "wf_task",
                     Set.of(
@@ -96,7 +110,8 @@ class WorkflowFlywayMigrationTest {
                             "timeout_at",
                             "timeout_strategy",
                             "timeout_handled",
-                            "transferred_from")),
+                            "transferred_from",
+                            "version")),
             Map.entry(
                     "wf_approval_record",
                     Set.of(
@@ -114,14 +129,15 @@ class WorkflowFlywayMigrationTest {
             Map.entry(
                     "wf_workflow_definition",
                     Set.of(
-                            "uk_wf_def_code_version",
+                            "uk_wf_def_tenant_code_version",
                             "idx_wf_def_tenant",
                             "idx_wf_def_enabled",
+                            "idx_wf_def_status",
                             "idx_wf_def_update_time")),
             Map.entry(
                     "wf_process_instance",
                     Set.of(
-                            "uk_wf_instance_business_key",
+                            "uk_wf_instance_tenant_business_key",
                             "idx_wf_instance_def",
                             "idx_wf_instance_tenant_initiator",
                             "idx_wf_instance_status",
@@ -176,9 +192,11 @@ class WorkflowFlywayMigrationTest {
 
         Set<String> mysqlTables = declaredTables(mysqlSql);
         Set<String> postgresqlTables = declaredTables(postgresqlSql);
+        Set<String> migrationTables = new LinkedHashSet<>(EXPECTED_TABLES);
+        migrationTables.addAll(MIGRATION_ONLY_TABLES);
 
-        assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(EXPECTED_TABLES);
-        assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(EXPECTED_TABLES);
+        assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
+        assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
 
         for (String table : EXPECTED_TABLES) {
             assertThat(tableColumns(mysqlSql, table))
@@ -202,7 +220,7 @@ class WorkflowFlywayMigrationTest {
         String postgresqlSql = readMigrationSql(POSTGRESQL);
         String basicSql = readBasicSchemaSql();
 
-        for (String table : EXPECTED_TABLES) {
+        for (String table : BUSINESS_TABLES) {
             assertThat(tableColumns(mysqlSql, table))
                     .as("MySQL 表 %s 必须具备要求的列（含通用审计列）", table)
                     .containsAll(withAudit(REQUIRED_COLUMNS.get(table)));
@@ -256,6 +274,54 @@ class WorkflowFlywayMigrationTest {
         }
     }
 
+    @Test
+    void shouldScopeUniqueKeysByTenantAndProvideOptimisticLockColumns() throws Exception {
+        String mysqlSql = readMigrationSql(MYSQL);
+        String postgresqlSql = readMigrationSql(POSTGRESQL);
+        String basicSql = readBasicSchemaSql();
+
+        assertThat(uniqueKeyColumns(mysqlSql, "uk_wf_def_tenant_code_version"))
+                .as("MySQL 工作流定义唯一键必须以 tenant_id 为首列")
+                .containsExactly("tenant_id", "workflow_code", "version", "deleted");
+        assertThat(uniqueKeyColumns(postgresqlSql, "uk_wf_def_tenant_code_version"))
+                .as("PostgreSQL 工作流定义唯一键必须以 tenant_id 为首列")
+                .containsExactly("tenant_id", "workflow_code", "version", "deleted");
+        assertThat(uniqueKeyColumns(basicSql, "uk_wf_def_tenant_code_version"))
+                .as("H2 工作流定义唯一键必须以 tenant_id 为首列")
+                .containsExactly("tenant_id", "workflow_code", "version", "deleted");
+
+        assertThat(uniqueKeyColumns(mysqlSql, "uk_wf_instance_tenant_business_key"))
+                .as("MySQL 流程实例唯一键必须以 tenant_id 为首列")
+                .containsExactly("tenant_id", "business_key", "deleted");
+        assertThat(uniqueKeyColumns(postgresqlSql, "uk_wf_instance_tenant_business_key"))
+                .as("PostgreSQL 流程实例唯一键必须以 tenant_id 为首列")
+                .containsExactly("tenant_id", "business_key", "deleted");
+        assertThat(uniqueKeyColumns(basicSql, "uk_wf_instance_tenant_business_key"))
+                .as("H2 流程实例唯一键必须以 tenant_id 为首列")
+                .containsExactly("tenant_id", "business_key", "deleted");
+
+        // wf_approval_record 仅追加记录，按 PO 的 excludeProperty=version 保持无 version 列。
+        for (String sql : List.of(mysqlSql, postgresqlSql, basicSql)) {
+            assertThat(tableColumns(sql, "wf_process_instance"))
+                    .as("wf_process_instance 必须具备乐观锁版本列")
+                    .contains("version");
+            assertThat(tableColumns(sql, "wf_task")).as("wf_task 必须具备乐观锁版本列").contains("version");
+            assertThat(tableColumns(sql, "wf_approval_record"))
+                    .as("wf_approval_record 不应具备 version 列")
+                    .doesNotContain("version");
+        }
+    }
+
+    /** 跨实例扫描互斥依赖租约表：两方言与 H2 都必须有 lock_name/owner/lease_until 三列。 */
+    @Test
+    void shouldProvideSchedulerLeaseTableForCrossInstanceMutex() throws Exception {
+        for (String sql : List.of(readMigrationSql(MYSQL), readMigrationSql(POSTGRESQL), readBasicSchemaSql())) {
+            assertThat(tableColumns(sql, "wf_scheduler_lease"))
+                    .as("调度租约表必须具备抢占所需的列")
+                    .contains("lock_name", "owner", "lease_until", "update_time");
+        }
+    }
+
     /** 拼接通用审计列与业务列。 */
     private Set<String> withAudit(Set<String> business) {
         Set<String> combined = new LinkedHashSet<>(AUDIT_COLUMNS);
@@ -302,7 +368,19 @@ class WorkflowFlywayMigrationTest {
     }
 
     private String readMigrationSql(String database) throws Exception {
-        return Files.readString(migrationSqlPath(database, "V1__init_workflow_schema.sql"));
+        try (var files = Files.list(migrationDirectory(database))) {
+            List<Path> ordered = files.filter(path -> VERSION_PATTERN
+                            .matcher(path.getFileName().toString())
+                            .matches())
+                    .sorted(Comparator.comparing(
+                            path -> version(path.getFileName().toString())))
+                    .toList();
+            StringBuilder sql = new StringBuilder();
+            for (Path path : ordered) {
+                sql.append(Files.readString(path)).append('\n');
+            }
+            return sql.toString();
+        }
     }
 
     private String readBasicSchemaSql() throws Exception {
@@ -342,7 +420,7 @@ class WorkflowFlywayMigrationTest {
         return root.resolve("apex-workflow-service/src/main/resources/db/basic-schema.sql");
     }
 
-    /** 提取指定 CREATE TABLE 语句块内声明的列名集合（兼容带/不带反引号与大小写类型）。 */
+    /** 提取指定表生效的列集合：CREATE TABLE 列 + 后续 ALTER TABLE ... ADD COLUMN。 */
     private Set<String> tableColumns(String sql, String table) {
         Pattern blockPattern = Pattern.compile(
                 "(?is)CREATE TABLE (?:IF NOT EXISTS )?`?" + table + "`?\\s*\\((.*?)\\)\\s*(?:ENGINE|;)");
@@ -358,7 +436,29 @@ class WorkflowFlywayMigrationTest {
         while (columnMatcher.find()) {
             columns.add(columnMatcher.group(1));
         }
+
+        Pattern alterPattern = Pattern.compile("(?is)ALTER TABLE\\s+`?" + table + "`?\\s+(.*?);");
+        Matcher alterMatcher = alterPattern.matcher(sql);
+        Pattern addColumnPattern = Pattern.compile("(?i)ADD COLUMN (?:IF NOT EXISTS )?`?([a-z][a-z0-9_]*)`?\\s+[A-Z]");
+        while (alterMatcher.find()) {
+            Matcher addColumnMatcher = addColumnPattern.matcher(alterMatcher.group(1));
+            while (addColumnMatcher.find()) {
+                columns.add(addColumnMatcher.group(1));
+            }
+        }
         return columns;
+    }
+
+    /** 提取唯一键/唯一约束的列顺序（列名去引号、去空白）。 */
+    private List<String> uniqueKeyColumns(String sql, String keyName) {
+        Pattern pattern = Pattern.compile("(?is)`?" + keyName + "`?[^()]*?\\(([^)]*)\\)");
+        Matcher matcher = pattern.matcher(sql);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("未找到唯一键定义: " + keyName);
+        }
+        return List.of(matcher.group(1).split(",")).stream()
+                .map(column -> column.replace("`", "").trim())
+                .toList();
     }
 
     /** 将 Java 驼峰字段名转换为数据库下划线列名。 */

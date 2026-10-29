@@ -1,12 +1,21 @@
 package com.apex.scaffold.fileservice.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
+import com.apex.scaffold.file.application.dto.PageResponse;
+import com.apex.scaffold.file.application.dto.data.ChartDataResponse;
 import com.apex.scaffold.file.application.dto.data.ChartQueryRequest;
 import com.apex.scaffold.file.application.dto.data.ChartRequest;
+import com.apex.scaffold.file.application.dto.data.ChartResponse;
 import com.apex.scaffold.file.application.service.ChartService;
 import com.apex.scaffold.fileservice.interfaces.util.RequestHandlerUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -16,26 +25,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 图表管理处理器（函数式端点）。
- *
- * <p>提供图表管理的完整 CRUD API，包括图表创建、更新、删除、查询、
- * 状态管理、图表数据获取以及浏览计数等功能，支持分页查询与多维度过滤。</p>
- *
- * <h2>接口清单</h2>
- * <ul>
- *   <li>POST /admin-api/v1/charts - 创建图表</li>
- *   <li>PUT /admin-api/v1/charts/{id} - 更新图表</li>
- *   <li>DELETE /admin-api/v1/charts/{id} - 删除图表</li>
- *   <li>GET /admin-api/v1/charts/{id} - 查询图表详情</li>
- *   <li>GET /admin-api/v1/charts/{id}/data - 查询图表数据</li>
- *   <li>GET /admin-api/v1/charts - 分页查询图表列表</li>
- *   <li>PUT /admin-api/v1/charts/{id}/status - 更新图表状态</li>
- * </ul>
+ * 图表管理处理器，提供图表配置、分页查询、状态管理和渲染数据查询。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.1
  * @since 1.0.0
- * @see ChartService
  */
 @Slf4j
 @Tag(name = "图表管理")
@@ -43,13 +37,11 @@ import reactor.core.publisher.Mono;
 public class ChartHandler {
 
     private final ChartService chartService;
-
     private final RequestHandlerUtil requestHandlerUtil;
 
     /**
      * 构造图表处理器。
-     *
-     * @param chartService       图表服务
+     * @param chartService 图表服务
      * @param requestHandlerUtil 请求处理工具
      */
     public ChartHandler(ChartService chartService, RequestHandlerUtil requestHandlerUtil) {
@@ -58,14 +50,34 @@ public class ChartHandler {
     }
 
     /**
-     * 处理创建图表请求。
-     *
-     * <p>解析请求体为 {@link ChartRequest}，调用应用服务创建图表。
-     *
-     * @param request HTTP 请求对象，请求体为图表配置信息 JSON
-     * @return 包含新建图表信息的统一成功响应
+     * 校验 JSON 图表配置并创建图表。
+     * @param request 包含 ChartRequest 的请求
+     * @return 包含图表详情的统一响应
      */
-    @Operation(summary = "创建图表")
+    @Operation(
+            operationId = "createChart",
+            summary = "创建图表",
+            requestBody =
+                    @RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ChartRequest.class))),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "图表详情",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ChartResult.class))))
+    @OperationLog(
+            module = "Chart",
+            type = OperationLog.OperationType.INSERT,
+            description = "create",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> create(ServerRequest request) {
         return requestHandlerUtil
                 .handleRequestBody(request, ChartRequest.class)
@@ -74,14 +86,41 @@ public class ChartHandler {
     }
 
     /**
-     * 处理更新图表请求。
-     *
-     * <p>根据路径中的图表 ID 解析请求体并更新图表配置信息。
-     *
-     * @param request HTTP 请求对象，路径参数包含图表 ID，请求体为图表配置信息 JSON
-     * @return 包含更新后图表信息的统一成功响应
+     * 校验 JSON 图表配置并更新路径指定的图表。
+     * @param request 包含 id 路径参数和 ChartRequest 的请求
+     * @return 包含更新后图表详情的统一响应
      */
-    @Operation(summary = "更新图表")
+    @Operation(
+            operationId = "updateChart",
+            summary = "更新图表",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "图表 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            requestBody =
+                    @RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ChartRequest.class))),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "图表详情",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ChartResult.class))))
+    @OperationLog(
+            module = "Chart",
+            type = OperationLog.OperationType.UPDATE,
+            description = "update",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> update(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return requestHandlerUtil
@@ -91,42 +130,103 @@ public class ChartHandler {
     }
 
     /**
-     * 处理删除图表请求。
-     *
-     * <p>根据路径中的图表 ID 删除指定图表。
-     *
-     * @param request HTTP 请求对象，路径参数包含图表 ID
-     * @return 删除成功的统一成功响应
+     * 删除路径指定的图表。
+     * @param request 包含 id 路径参数的请求
+     * @return data 为空的统一成功响应
      */
-    @Operation(summary = "删除图表")
+    @Operation(
+            operationId = "deleteChart",
+            summary = "删除图表",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "图表 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "删除成功",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = EmptyChartResult.class))))
+    @OperationLog(
+            module = "Chart",
+            type = OperationLog.OperationType.DELETE,
+            description = "delete",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return chartService.delete(id).then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
     /**
-     * 处理查询图表详情请求。
-     *
-     * <p>根据路径中的图表 ID 查询并返回图表详情。
-     *
-     * @param request HTTP 请求对象，路径参数包含图表 ID
-     * @return 包含图表详情的统一成功响应
+     * 查询路径指定的图表详情。
+     * @param request 包含 id 路径参数的请求
+     * @return 包含图表详情的统一响应
      */
-    @Operation(summary = "查询图表详情")
+    @Operation(
+            operationId = "getChartById",
+            summary = "查询图表详情",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "图表 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "图表详情",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ChartResult.class))))
+    @OperationLog(
+            module = "Chart",
+            type = OperationLog.OperationType.SELECT,
+            description = "getById",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getById(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return chartService.getById(id).flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)));
     }
 
     /**
-     * 处理查询图表数据请求。
-     *
-     * <p>先对指定图表累加浏览计数，再查询并返回图表的渲染数据。
-     *
-     * @param request HTTP 请求对象，路径参数包含图表 ID
-     * @return 包含图表数据的统一成功响应
+     * 累加浏览次数后查询图表渲染数据。
+     * @param request 包含 id 路径参数的请求
+     * @return 包含坐标轴和序列数据的统一响应
      */
-    @Operation(summary = "查询图表数据")
+    @Operation(
+            operationId = "getChartData",
+            summary = "查询图表数据",
+            description = "先累加浏览次数，再返回渲染数据",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "图表 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "图表渲染数据",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ChartDataResult.class))))
+    @OperationLog(
+            module = "Chart",
+            type = OperationLog.OperationType.SELECT,
+            description = "getChartData",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getChartData(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return chartService
@@ -136,15 +236,59 @@ public class ChartHandler {
     }
 
     /**
-     * 处理分页查询图表列表请求。
-     *
-     * <p>从查询参数构建过滤条件（关键字、图表类型、分类、状态、页码、每页数量），
-     * 调用应用服务分页查询图表列表。
-     *
-     * @param request HTTP 请求对象，查询参数包含 keyword、chartType、category、status、page、size
-     * @return 包含图表分页结果的统一成功响应
+     * 按关键字、类型、分类和状态分页查询图表。
+     * @param request 查询参数包含 keyword、chartType、category、status、page 和 size
+     * @return 包含图表分页数据的统一响应
      */
-    @Operation(summary = "分页查询图表列表")
+    @Operation(
+            operationId = "queryCharts",
+            summary = "分页查询图表列表",
+            parameters = {
+                @Parameter(
+                        name = "keyword",
+                        in = ParameterIn.QUERY,
+                        description = "关键字",
+                        schema = @Schema(type = "string")),
+                @Parameter(
+                        name = "chartType",
+                        in = ParameterIn.QUERY,
+                        description = "图表类型",
+                        schema = @Schema(type = "string")),
+                @Parameter(
+                        name = "category",
+                        in = ParameterIn.QUERY,
+                        description = "分类",
+                        schema = @Schema(type = "string")),
+                @Parameter(
+                        name = "status",
+                        in = ParameterIn.QUERY,
+                        description = "状态",
+                        schema = @Schema(type = "integer")),
+                @Parameter(
+                        name = "page",
+                        in = ParameterIn.QUERY,
+                        description = "页码",
+                        schema = @Schema(type = "integer", defaultValue = "1")),
+                @Parameter(
+                        name = "size",
+                        in = ParameterIn.QUERY,
+                        description = "每页数量",
+                        schema = @Schema(type = "integer", defaultValue = "20"))
+            },
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "图表分页结果",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = ChartPageResult.class))))
+    @OperationLog(
+            module = "Chart",
+            type = OperationLog.OperationType.SELECT,
+            description = "query",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> query(ServerRequest request) {
         ChartQueryRequest queryRequest = ChartQueryRequest.builder()
                 .keyword(request.queryParam("keyword").orElse(null))
@@ -160,14 +304,41 @@ public class ChartHandler {
     }
 
     /**
-     * 处理更新图表状态请求。
-     *
-     * <p>解析请求体中的目标状态，并更新指定图表的状态。
-     *
-     * @param request HTTP 请求对象，路径参数包含图表 ID，请求体包含状态值
-     * @return 更新成功的统一成功响应
+     * 更新路径指定图表的状态。
+     * @param request 包含 id 路径参数和状态 JSON 的请求
+     * @return data 为空的统一成功响应
      */
-    @Operation(summary = "更新图表状态")
+    @Operation(
+            operationId = "updateChartStatus",
+            summary = "更新图表状态",
+            parameters =
+                    @Parameter(
+                            name = "id",
+                            description = "图表 ID",
+                            required = true,
+                            in = ParameterIn.PATH,
+                            schema = @Schema(type = "integer", format = "int64")),
+            requestBody =
+                    @RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = UpdateStatusRequest.class))),
+            responses =
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "更新成功",
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = EmptyChartResult.class))))
+    @OperationLog(
+            module = "Chart",
+            type = OperationLog.OperationType.UPDATE,
+            description = "updateStatus",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> updateStatus(ServerRequest request) {
         Long id = Long.parseLong(request.pathVariable("id"));
         return requestHandlerUtil
@@ -176,10 +347,27 @@ public class ChartHandler {
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
+    /** 图表状态更新请求。 */
     @Data
-    @Schema(description = "图表状态更新请求")
+    @Schema(name = "ChartStatusRequest", description = "图表状态更新请求")
     public static class UpdateStatusRequest {
         @Schema(description = "图表状态：0-草稿，1-正常", example = "1")
         private Integer status;
     }
+
+    /** 图表详情统一响应的文档模型。 */
+    @Schema(name = "ChartResult")
+    public static class ChartResult extends Result<ChartResponse> {}
+
+    /** 图表渲染数据统一响应的文档模型。 */
+    @Schema(name = "ChartDataResult")
+    public static class ChartDataResult extends Result<ChartDataResponse> {}
+
+    /** 图表分页统一响应的文档模型。 */
+    @Schema(name = "ChartPageResult")
+    public static class ChartPageResult extends Result<PageResponse<ChartResponse>> {}
+
+    /** 图表无数据统一响应的文档模型。 */
+    @Schema(name = "EmptyChartResult")
+    public static class EmptyChartResult extends Result<Void> {}
 }

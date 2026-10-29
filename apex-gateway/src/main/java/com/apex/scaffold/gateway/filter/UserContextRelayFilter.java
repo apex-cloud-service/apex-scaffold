@@ -3,8 +3,7 @@ package com.apex.scaffold.gateway.filter;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.gateway.support.GatewayWebUtil;
 import io.jsonwebtoken.Claims;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -34,10 +33,9 @@ import reactor.core.publisher.Mono;
  * @since 1.3.1
  * @see JwtSignatureFilter
  */
+@Slf4j
 @Component
 public class UserContextRelayFilter implements GlobalFilter, Ordered {
-
-    private static final Logger log = LoggerFactory.getLogger(UserContextRelayFilter.class);
 
     /** 过滤器顺序：验签（10）之后、限流（30）之前 */
     public static final int ORDER = 20;

@@ -10,13 +10,12 @@ import com.apex.scaffold.officeservice.interfaces.dto.office.approval.InitiateAp
 import com.apex.scaffold.officeservice.interfaces.util.RequestHandlerUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,25 +24,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * 办公平台审批Handler
- *
- * <p>处理审批相关的HTTP请求，包括：
- * <ul>
- *   <li>发起审批流程</li>
- *   <li>查询审批状态和详情</li>
- *   <li>执行审批操作（同意/拒绝等）</li>
- *   <li>撤销审批</li>
- *   <li>查询待审批列表</li>
- *   <li>查询我发起的审批</li>
- * </ul>
- *
- * <p>实现要点：
- * <ul>
- *   <li>使用{@link RequestHandlerUtil}进行统一的参数校验和响应转换</li>
- *   <li>完整的SpringDoc注解，生成清晰的在线API文档</li>
- *   <li>中文JavaDoc说明业务逻辑和参数含义</li>
- *   <li>响应式编程，返回{@link Mono}类型</li>
- * </ul>
+ * 办公平台审批处理器。异步业务错误由 RequestHandlerUtil 转换为 HTTP 400 响应。
  *
  * @author Apex Team
  * @since 1.3.0
@@ -53,50 +34,46 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Tag(name = "办公平台审批管理", description = "办公平台审批流程发起、查询、审批操作、撤销等相关接口")
 public class OfficeApprovalHandler {
-
     private final OfficeApprovalService approvalService;
     private final ApprovalProcessAssembler assembler;
     private final RequestHandlerUtil requestHandlerUtil;
 
     /**
-     * 发起审批流程
-     *
-     * <p>业务逻辑：
-     * <ol>
-     *   <li>校验请求参数（平台类型、应用ID、流程定义ID等）</li>
-     *   <li>调用应用服务创建审批流程</li>
-     *   <li>返回流程实例ID和详细信息</li>
-     * </ol>
-     *
-     * @param request HTTP请求
-     * @return 审批流程响应
+     * 校验请求并发起审批流程。
+     * @param request 包含审批平台、流程定义、发起人与表单数据的请求
+     * @return Result 包装的审批详情，失败时 HTTP 400
      */
-    @OperationLog(module = "办公平台审批管理", type = OperationLog.OperationType.INSERT, description = "发起审批流程")
-    @Operation(summary = "发起审批流程", description = "在指定办公平台创建审批流程实例，支持飞书、钉钉、企业微信等平台")
+    @OperationLog(
+            module = "办公平台审批管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "发起审批流程",
+            saveRequest = false,
+            saveResponse = false)
+    @Operation(
+            operationId = "initiateApproval",
+            summary = "发起审批流程",
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "发起成功",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "请求校验或业务处理失败",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalErrorResult.class)))
+            })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            description = "审批发起请求信息",
             content =
                     @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = InitiateApprovalRequest.class)))
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "发起成功",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
-        @ApiResponse(
-                responseCode = "400",
-                description = "请求参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "发起失败",
-                content = @Content(schema = @Schema(implementation = Result.class)))
-    })
     public Mono<ServerResponse> initiateApproval(ServerRequest request) {
         log.info("收到发起审批请求");
 
@@ -115,41 +92,43 @@ public class OfficeApprovalHandler {
     }
 
     /**
-     * 查询审批详情
-     *
-     * <p>根据流程实例ID查询审批流程的完整信息，包括：
-     * <ul>
-     *   <li>基本信息（流程名称、发起人等）</li>
-     *   <li>当前状态和审批节点</li>
-     *   <li>审批记录列表</li>
-     *   <li>表单数据</li>
-     * </ul>
-     *
-     * @param request HTTP请求
-     * @return 审批流程响应
+     * 按平台流程实例 ID 查询审批详情。
+     * @param request 包含 processInstanceId 路径参数的请求
+     * @return Result 包装的审批详情，业务失败时 HTTP 400
      */
-    @Operation(summary = "查询审批流程详情", description = "根据流程实例ID查询审批流程的完整信息，包括基本信息、当前状态、审批记录和表单数据")
-    @Parameters({
-        @Parameter(
-                name = "processInstanceId",
-                in = ParameterIn.PATH,
-                required = true,
-                description = "流程实例ID",
-                schema = @Schema(type = "string"))
-    })
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "查询成功",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "流程不存在",
-                content = @Content(schema = @Schema(implementation = Result.class)))
-    })
+    @Operation(
+            operationId = "getApprovalDetail",
+            summary = "查询审批流程详情",
+            parameters = {
+                @Parameter(
+                        name = "processInstanceId",
+                        in = ParameterIn.PATH,
+                        required = true,
+                        description = "流程实例ID",
+                        schema = @Schema(type = "string"))
+            },
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "查询成功",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "流程不存在或业务处理失败",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalErrorResult.class)))
+            })
+    @OperationLog(
+            module = "OfficeApproval",
+            type = OperationLog.OperationType.SELECT,
+            description = "getApprovalDetail",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getApprovalDetail(ServerRequest request) {
         String processInstanceId = request.pathVariable("processInstanceId");
         log.info("查询审批详情，流程实例ID：{}", processInstanceId);
@@ -163,54 +142,46 @@ public class OfficeApprovalHandler {
     }
 
     /**
-     * 执行审批操作
-     *
-     * <p>审批人对待审批流程执行操作，支持的操作包括：
-     * <ul>
-     *   <li>APPROVE：同意</li>
-     *   <li>REJECT：拒绝</li>
-     *   <li>TRANSFER：转审</li>
-     *   <li>ADD_SIGN：加签</li>
-     * </ul>
-     *
-     * @param request HTTP请求
-     * @return 更新后的审批流程响应
+     * 使用请求体中的审批人与操作类型执行审批。
+     * @param request 包含流程实例 ID 和审批操作请求体的请求
+     * @return Result 包装的更新后审批详情，失败时 HTTP 400
      */
-    @OperationLog(module = "办公平台审批管理", type = OperationLog.OperationType.UPDATE, description = "执行审批操作")
-    @Operation(summary = "执行审批操作", description = "审批人对待审批流程执行操作，支持同意、拒绝、转审、加签等操作")
-    @Parameters({
-        @Parameter(
-                name = "processInstanceId",
-                in = ParameterIn.PATH,
-                required = true,
-                description = "流程实例ID",
-                schema = @Schema(type = "string"))
-    })
+    @OperationLog(
+            module = "办公平台审批管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "执行审批操作",
+            saveRequest = false,
+            saveResponse = false)
+    @Operation(
+            operationId = "approveProcess",
+            summary = "执行审批操作",
+            parameters = {
+                @Parameter(
+                        name = "processInstanceId",
+                        in = ParameterIn.PATH,
+                        required = true,
+                        description = "流程实例ID",
+                        schema = @Schema(type = "string"))
+            },
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "审批操作成功",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "请求校验或业务处理失败",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalErrorResult.class)))
+            })
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
-            description = "审批操作请求信息",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApproveRequest.class)))
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "审批操作成功",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
-        @ApiResponse(
-                responseCode = "400",
-                description = "请求参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "403",
-                description = "无权审批此流程",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "流程不存在",
-                content = @Content(schema = @Schema(implementation = Result.class)))
-    })
     public Mono<ServerResponse> approveProcess(ServerRequest request) {
         String processInstanceId = request.pathVariable("processInstanceId");
         log.info("收到审批操作请求，流程实例ID：{}", processInstanceId);
@@ -226,42 +197,43 @@ public class OfficeApprovalHandler {
     }
 
     /**
-     * 撤销审批
-     *
-     * <p>发起人撤销自己发起的审批流程。
-     * 注意：只有发起人可以撤销，且流程必须处于待审批或审批中状态。
-     *
-     * @param request HTTP请求
-     * @return 操作结果
+     * 按流程实例 ID 请求撤销审批。
+     * @param request 包含 processInstanceId 路径参数的请求
+     * @return Result 包装的布尔操作结果，业务失败时 HTTP 400
      */
-    @OperationLog(module = "办公平台审批管理", type = OperationLog.OperationType.DELETE, description = "撤销审批流程")
-    @Operation(summary = "撤销审批流程", description = "发起人撤销自己发起的审批流程，只有发起人可以撤销，且流程必须处于待审批或审批中状态")
-    @Parameters({
-        @Parameter(
-                name = "processInstanceId",
-                in = ParameterIn.PATH,
-                required = true,
-                description = "流程实例ID",
-                schema = @Schema(type = "string"))
-    })
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "撤销成功",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "403",
-                description = "无权撤销此流程",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "流程不存在",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "409",
-                description = "流程状态不允许撤销",
-                content = @Content(schema = @Schema(implementation = Result.class)))
-    })
+    @OperationLog(
+            module = "办公平台审批管理",
+            type = OperationLog.OperationType.DELETE,
+            description = "撤销审批流程",
+            saveRequest = false,
+            saveResponse = false)
+    @Operation(
+            operationId = "cancelApproval",
+            summary = "撤销审批流程",
+            parameters = {
+                @Parameter(
+                        name = "processInstanceId",
+                        in = ParameterIn.PATH,
+                        required = true,
+                        description = "流程实例ID",
+                        schema = @Schema(type = "string"))
+            },
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "撤销结果",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalBooleanResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "流程不存在、状态不允许或业务处理失败",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalErrorResult.class)))
+            })
     public Mono<ServerResponse> cancelApproval(ServerRequest request) {
         String processInstanceId = request.pathVariable("processInstanceId");
         log.info("撤销审批，流程实例ID：{}", processInstanceId);
@@ -274,41 +246,43 @@ public class OfficeApprovalHandler {
     }
 
     /**
-     * 查询待审批列表
-     *
-     * <p>查询当前用户的待审批事项列表，包括：
-     * <ul>
-     *   <li>待我审批的流程</li>
-     *   <li>流程基本信息</li>
-     *   <li>发起人信息</li>
-     *   <li>发起时间</li>
-     * </ul>
-     *
-     * @param request HTTP请求
-     * @return 待审批列表
+     * 查询指定审批人的待审批流程。
+     * @param request 必须包含 approverId 查询参数
+     * @return Result 包装的审批列表
      */
-    @Operation(summary = "查询待审批列表", description = "查询当前用户的待审批事项列表，包括待我审批的流程、流程基本信息、发起人信息和发起时间")
-    @Parameters({
-        @Parameter(
-                name = "approverId",
-                in = ParameterIn.QUERY,
-                required = true,
-                description = "审批人ID",
-                schema = @Schema(type = "string"))
-    })
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "查询成功",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
-        @ApiResponse(
-                responseCode = "400",
-                description = "请求参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
-    })
+    @Operation(
+            operationId = "getPendingApprovals",
+            summary = "查询待审批列表",
+            description = "使用查询参数指定审批人",
+            parameters =
+                    @Parameter(
+                            name = "approverId",
+                            in = ParameterIn.QUERY,
+                            required = true,
+                            description = "审批人ID",
+                            schema = @Schema(type = "string")),
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "查询成功",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalListResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "业务处理失败",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalErrorResult.class)))
+            })
+    @OperationLog(
+            module = "OfficeApproval",
+            type = OperationLog.OperationType.SELECT,
+            description = "getPendingApprovals",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getPendingApprovals(ServerRequest request) {
         String approverId =
                 request.queryParam("approverId").orElseThrow(() -> new IllegalArgumentException("审批人ID不能为空"));
@@ -324,40 +298,43 @@ public class OfficeApprovalHandler {
     }
 
     /**
-     * 查询我发起的审批
-     *
-     * <p>查询当前用户发起的所有审批流程，包括：
-     * <ul>
-     *   <li>进行中的流程</li>
-     *   <li>已完成的流程</li>
-     *   <li>已撤销的流程</li>
-     * </ul>
-     *
-     * @param request HTTP请求
-     * @return 我发起的审批列表
+     * 查询指定发起人的审批流程。
+     * @param request 必须包含 initiatorId 查询参数
+     * @return Result 包装的审批列表
      */
-    @Operation(summary = "查询我发起的审批", description = "查询当前用户发起的所有审批流程，包括进行中、已完成和已撤销的流程")
-    @Parameters({
-        @Parameter(
-                name = "initiatorId",
-                in = ParameterIn.QUERY,
-                required = true,
-                description = "发起人ID",
-                schema = @Schema(type = "string"))
-    })
-    @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                description = "查询成功",
-                content =
-                        @Content(
-                                mediaType = "application/json",
-                                schema = @Schema(implementation = ApprovalProcessResponse.class))),
-        @ApiResponse(
-                responseCode = "400",
-                description = "请求参数错误",
-                content = @Content(schema = @Schema(implementation = Result.class)))
-    })
+    @Operation(
+            operationId = "getMyInitiatedApprovals",
+            summary = "查询发起的审批",
+            description = "使用查询参数指定发起人",
+            parameters =
+                    @Parameter(
+                            name = "initiatorId",
+                            in = ParameterIn.QUERY,
+                            required = true,
+                            description = "发起人ID",
+                            schema = @Schema(type = "string")),
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "查询成功",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalListResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "业务处理失败",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalErrorResult.class)))
+            })
+    @OperationLog(
+            module = "OfficeApproval",
+            type = OperationLog.OperationType.SELECT,
+            description = "getMyInitiatedApprovals",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getMyInitiatedApprovals(ServerRequest request) {
         String initiatorId =
                 request.queryParam("initiatorId").orElseThrow(() -> new IllegalArgumentException("发起人ID不能为空"));
@@ -371,4 +348,16 @@ public class OfficeApprovalHandler {
                 .doOnSuccess(res -> log.debug("查询我发起的审批完成"))
                 .onErrorResume(requestHandlerUtil::handleError);
     }
+
+    @Schema(name = "OfficeApprovalResult")
+    public static class ApprovalResult extends Result<ApprovalProcessResponse> {}
+
+    @Schema(name = "OfficeApprovalListResult")
+    public static class ApprovalListResult extends Result<List<ApprovalProcessResponse>> {}
+
+    @Schema(name = "OfficeApprovalBooleanResult")
+    public static class ApprovalBooleanResult extends Result<Boolean> {}
+
+    @Schema(name = "OfficeApprovalErrorResult")
+    public static class ApprovalErrorResult extends Result<Void> {}
 }

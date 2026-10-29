@@ -1,5 +1,7 @@
 package com.apex.scaffold.fileservice.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.file.application.dto.chunk.ChunkInitRequest;
 import com.apex.scaffold.file.application.dto.chunk.ChunkInitResult;
@@ -13,7 +15,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,7 +31,7 @@ import reactor.core.publisher.Mono;
  * 分片上传处理器（函数式端点）。
  *
  * <p>为超大文件提供分片上传、断点续传与合片能力的 RESTful API，覆盖初始化、逐片上传、
- * 合并与进度查询四个阶段。分片二进制内容通过请求体直接传递，元数据经查询参数或 JSON
+ * 合并、进度查询与清理重试。分片二进制内容通过请求体直接传递，元数据经查询参数或 JSON
  * 请求体提交。</p>
  *
  * <h2>接口清单</h2>
@@ -33,6 +39,7 @@ import reactor.core.publisher.Mono;
  *   <li>POST /api/v1/file/chunk/init - 初始化分片上传，登记文件元数据并返回 fileId</li>
  *   <li>POST /api/v1/file/chunk/upload - 上传单个分片（二进制请求体 + 元数据查询参数）</li>
  *   <li>POST /api/v1/file/chunk/merge - 合并全部分片为完整文件</li>
+ *   <li>POST /api/v1/file/chunk/cleanup/{fileId}/retry - 重试已完成会话的分片清理</li>
  *   <li>GET /api/v1/file/chunk/status/{fileId} - 查询分片上传进度（断点续传）</li>
  * </ul>
  *
@@ -72,6 +79,32 @@ public class ChunkHandler {
      * @return 包含 {@link ChunkInitResult} 的统一成功响应
      */
     @Operation(operationId = "initChunkUpload", summary = "初始化分片上传", description = "登记文件元数据并创建上传中记录，返回 fileId 与建议分片大小")
+    @RequestBody(
+            required = true,
+            content =
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ChunkInitRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "初始化信息",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkSessionResult.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数或业务处理失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkErrorResult.class)))
+    })
+    @OperationLog(
+            module = "Chunk",
+            type = OperationLog.OperationType.OTHER,
+            description = "init",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> init(ServerRequest request) {
         return requestHandlerUtil
                 .handleRequestBody(request, ChunkInitRequest.class)
@@ -110,6 +143,34 @@ public class ChunkHandler {
                 schema = @Schema(type = "integer")),
         @Parameter(name = "md5", description = "分片 MD5", in = ParameterIn.QUERY, schema = @Schema(type = "string"))
     })
+    @RequestBody(
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/octet-stream",
+                            schema = @Schema(type = "string", format = "binary")))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "分片上传结果",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkPartResult.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数或业务处理失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkErrorResult.class)))
+    })
+    @OperationLog(
+            module = "Chunk",
+            type = OperationLog.OperationType.UPLOAD,
+            description = "uploadChunk",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> uploadChunk(ServerRequest request) {
         ChunkUploadRequest chunkRequest = buildChunkUploadRequest(request);
         if (chunkRequest.getFileId() == null || chunkRequest.getChunkIndex() == null) {
@@ -142,17 +203,86 @@ public class ChunkHandler {
      * 合并分片为完整文件。
      *
      * <p>解析 JSON 请求体为 {@link ChunkMergeRequest}，校验分片完整性后按序拼接并上传为完整
-     * 文件，清理已用分片后返回对象定位信息与临时访问 URL。</p>
+     * 文件，清理已用分片后返回对象定位信息与访问 URL。云签名 TTL 由配置决定；Local 内容地址每次访问仍须认证授权。</p>
      *
      * @param request 包含合并元数据 JSON 的服务器请求
      * @return 包含 {@link ChunkMergeResult} 的统一成功响应
      */
     @Operation(operationId = "mergeChunks", summary = "合并分片", description = "按序拼接全部分片为完整文件并生成访问 URL")
+    @RequestBody(
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ChunkMergeRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "合并文件定位信息",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkMergedResult.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数或业务处理失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkErrorResult.class)))
+    })
+    @OperationLog(
+            module = "Chunk",
+            type = OperationLog.OperationType.OTHER,
+            description = "merge",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> merge(ServerRequest request) {
         return requestHandlerUtil
                 .handleRequestBody(request, ChunkMergeRequest.class)
                 .flatMap(chunkUploadService::merge)
                 .flatMap(requestHandlerUtil::buildSuccessResponse)
+                .onErrorResume(requestHandlerUtil::handleError);
+    }
+
+    /**
+     * 重试所有者已完成会话的分片清理，未删对象保留元数据供后续重试。
+     * @param request 仅包含文件记录编号的请求
+     * @return 本次清理尝试已执行的响应
+     */
+    @Operation(operationId = "retryChunkCleanup", summary = "重试分片清理", description = "仅文件所有者可重试已完成会话的清理；未删除分片保留元数据")
+    @Parameter(
+            name = "fileId",
+            description = "文件记录主键",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "清理尝试已执行，data 为 true",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkCleanupResult.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数或业务处理失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkErrorResult.class)))
+    })
+    @OperationLog(
+            module = "Chunk",
+            type = OperationLog.OperationType.OTHER,
+            description = "retryCleanup",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> retryCleanup(ServerRequest request) {
+        return Mono.fromCallable(() -> Long.parseLong(request.pathVariable("fileId")))
+                .flatMap(chunkUploadService::retryCleanup)
+                .then(Mono.defer(() -> requestHandlerUtil.buildSuccessResponse(true)))
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
@@ -174,6 +304,28 @@ public class ChunkHandler {
                 in = ParameterIn.PATH,
                 schema = @Schema(type = "integer", format = "int64"))
     })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "上传进度",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkSessionResult.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数或业务处理失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ChunkErrorResult.class)))
+    })
+    @OperationLog(
+            module = "Chunk",
+            type = OperationLog.OperationType.SELECT,
+            description = "status",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> status(ServerRequest request) {
         Long fileId = Long.parseLong(request.pathVariable("fileId"));
         return chunkUploadService
@@ -181,4 +333,24 @@ public class ChunkHandler {
                 .flatMap(requestHandlerUtil::buildSuccessResponse)
                 .onErrorResume(requestHandlerUtil::handleError);
     }
+
+    /** 分片会话统一响应的文档模型。 */
+    @Schema(name = "ChunkSessionResult")
+    public static class ChunkSessionResult extends Result<ChunkInitResult> {}
+
+    /** 单片上传统一响应的文档模型。 */
+    @Schema(name = "ChunkPartResult")
+    public static class ChunkPartResult extends Result<ChunkUploadResult> {}
+
+    /** 合并文件统一响应的文档模型。 */
+    @Schema(name = "ChunkMergedResult")
+    public static class ChunkMergedResult extends Result<ChunkMergeResult> {}
+
+    /** 清理尝试统一响应的文档模型。 */
+    @Schema(name = "ChunkCleanupResult")
+    public static class ChunkCleanupResult extends Result<Boolean> {}
+
+    /** 分片错误统一响应的文档模型。 */
+    @Schema(name = "ChunkErrorResult")
+    public static class ChunkErrorResult extends Result<Void> {}
 }

@@ -15,11 +15,13 @@ import com.apex.scaffold.auth.application.assembler.AuditLogAssembler;
 import com.apex.scaffold.auth.application.assembler.RoleAssembler;
 import com.apex.scaffold.auth.application.assembler.SessionAssembler;
 import com.apex.scaffold.auth.application.dto.AssignPermissionsRequest;
+import com.apex.scaffold.auth.application.dto.RoleDTO;
 import com.apex.scaffold.auth.application.service.AuditLogService;
 import com.apex.scaffold.auth.application.service.RoleService;
 import com.apex.scaffold.auth.application.service.SessionService;
 import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
 import com.apex.scaffold.auth.domain.model.MfaConfig;
+import com.apex.scaffold.auth.domain.model.entity.RoleEntity;
 import com.apex.scaffold.auth.domain.service.IpAccessControlService;
 import com.apex.scaffold.auth.domain.service.MfaService;
 import com.apex.scaffold.auth.domain.service.ResourcePermissionService;
@@ -28,9 +30,13 @@ import com.apex.scaffold.authservice.interfaces.handler.AuditLogHandler;
 import com.apex.scaffold.authservice.interfaces.handler.MfaManagementHandler;
 import com.apex.scaffold.authservice.interfaces.handler.RoleHandler;
 import com.apex.scaffold.authservice.interfaces.handler.SessionHandler;
+import com.apex.scaffold.common.annotation.RequireAdminRole;
 import com.apex.scaffold.common.annotation.RequireResourcePermission;
 import com.apex.scaffold.common.exception.BusinessException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -97,6 +103,97 @@ class ResourcePermissionWiringTest {
                         RoleHandler.class.getDeclaredMethod("assignPermissions", AssignPermissionsRequest.class),
                         RequireResourcePermission.class))
                 .isNotNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"createRole", "updateRole", "deleteRole"})
+    void roleWritesDeclareAdminRoleGate(String methodName) throws Exception {
+        RequireAdminRole annotation = RoleHandler.class
+                .getDeclaredMethod(methodName, ServerRequest.class)
+                .getAnnotation(RequireAdminRole.class);
+        assertThat(annotation).isNotNull();
+        assertThat(annotation.roles()).containsExactlyInAnyOrder("ROLE_ADMIN", "ROLE_SUPER_ADMIN");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "createRole, 403", "updateRole, 403", "deleteRole, 403",
+        "createRole, 401", "updateRole, 401", "deleteRole, 401"
+    })
+    void roleWriteProxiesRejectAccessBeforeReadingRequest(String methodName, int expectedCode) throws Exception {
+        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+            context.register(HighRiskHandlerConfiguration.class);
+            context.refresh();
+            RoleHandler handler = context.getBean(RoleHandler.class);
+            assertThat(AopUtils.isAopProxy(handler)).isTrue();
+            ServerRequest request = mock(ServerRequest.class);
+            Mono<?> result = (Mono<?>) RoleHandler.class
+                    .getDeclaredMethod(methodName, ServerRequest.class)
+                    .invoke(handler, request);
+            if (expectedCode == 403) {
+                result = result.contextWrite(
+                        ReactiveSecurityContextHolder.withAuthentication(new UsernamePasswordAuthenticationToken(
+                                "user-1", "", java.util.List.of(new SimpleGrantedAuthority("ROLE_USER")))));
+            }
+
+            StepVerifier.create(result)
+                    .expectErrorSatisfies(error -> {
+                        assertThat(error).isInstanceOf(BusinessException.class);
+                        assertThat(((BusinessException) error).getCode()).isEqualTo(expectedCode);
+                    })
+                    .verify();
+            org.mockito.Mockito.verifyNoInteractions(
+                    request,
+                    context.getBean(RoleService.class),
+                    context.getBean(RoleAssembler.class),
+                    context.getBean(ResourcePermissionService.class));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
+    void roleWriteProxiesAllowAdministratorRoles(String role) {
+        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+            context.register(HighRiskHandlerConfiguration.class);
+            context.refresh();
+            RoleHandler handler = context.getBean(RoleHandler.class);
+            RoleService service = context.getBean(RoleService.class);
+            RoleAssembler assembler = context.getBean(RoleAssembler.class);
+            RoleDTO dto =
+                    RoleDTO.builder().id(42L).code("ROLE_TEST").name("测试角色").build();
+            RoleEntity entity =
+                    RoleEntity.builder().id(42L).code("ROLE_TEST").name("测试角色").build();
+            ServerRequest request = mock(ServerRequest.class);
+            when(request.bodyToMono(RoleDTO.class)).thenReturn(Mono.just(dto));
+            when(request.pathVariable("id")).thenReturn("42");
+            when(assembler.toEntity(dto)).thenReturn(entity);
+            when(assembler.toDto(entity)).thenReturn(dto);
+            when(service.createRole(entity)).thenReturn(Mono.just(entity));
+            when(service.updateRole(entity)).thenReturn(Mono.just(entity));
+            when(service.deleteRole(42L)).thenReturn(Mono.empty());
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    "admin-1", "", java.util.List.of(new SimpleGrantedAuthority(role)));
+
+            StepVerifier.create(handler.createRole(request)
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
+                    .assertNext(response ->
+                            assertThat(response.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+            StepVerifier.create(handler.updateRole(request)
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
+                    .assertNext(response ->
+                            assertThat(response.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+            StepVerifier.create(handler.deleteRole(request)
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication)))
+                    .assertNext(response ->
+                            assertThat(response.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+            verify(service).createRole(entity);
+            verify(service).updateRole(entity);
+            verify(service).deleteRole(42L);
+            org.mockito.Mockito.verifyNoInteractions(context.getBean(ResourcePermissionService.class));
+        }
     }
 
     @Test

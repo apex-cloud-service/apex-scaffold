@@ -42,10 +42,36 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
     private static final String CONTRACTS =
             """
+            post|/api/mfa/totp/enable|enableTotp||TotpSetupResult|
+            post|/api/mfa/totp/activate|activateTotp||TotpActivationResult|code:query:true:string::
+            post|/api/mfa/sms/enable|enableSms||ManagedMfaConfigResult|phoneNumber:query:true:string::
+            post|/api/mfa/email/enable|enableEmail||ManagedMfaConfigResult|email:query:true:string::
+            delete|/api/mfa/{type}|disableManagedMfa||EmptyResult|type:path:true:string::
+            post|/api/mfa/verify|verifyManagedMfaCode||ManagedMfaBooleanResult|code:query:true:string::,type:query:true:string::
+            post|/api/mfa/send-code|sendMfaCode||EmptyResult|type:query:true:string::
+            get|/api/mfa/configs|getUserMfaConfigs||MfaConfig[]|
+            get|/api/mfa/status|checkMfaStatus||ManagedMfaBooleanResult|
+            post|/api/mfa/backup-codes/regenerate|regenerateBackupCodes||ManagedBackupCodesResult|
+            post|/api/mfa/backup-codes/verify|verifyManagedBackupCode||ManagedMfaBooleanResult|code:query:true:string::
+            post|/api/mfa/unlock|unlockMfa||EmptyResult|userId:query:true:string::,type:query:true:string::
+            post|/api/ip-access-control/whitelist|addToWhitelist||IpRuleResult|ipAddress:query:true:string::,description:query:false:string::
+            post|/api/ip-access-control/blacklist|addToBlacklist||IpRuleResult|ipAddress:query:true:string::,description:query:false:string::,durationMinutes:query:false:integer:int32:
+            delete|/api/ip-access-control/whitelist|removeFromWhitelist||EmptyResult|ipAddress:query:true:string::
+            delete|/api/ip-access-control/blacklist|removeFromBlacklist||EmptyResult|ipAddress:query:true:string::
+            get|/api/ip-access-control/whitelist|getWhitelist||IpAccessControl[]|
+            get|/api/ip-access-control/blacklist|getBlacklist||IpAccessControl[]|
+            put|/api/ip-access-control/{ruleId}/enable|enableRule||EmptyResult|ruleId:path:true:integer:int64:
+            put|/api/ip-access-control/{ruleId}/disable|disableRule||EmptyResult|ruleId:path:true:integer:int64:
+            delete|/api/ip-access-control/{ruleId}|deleteRule||EmptyResult|ruleId:path:true:integer:int64:
+            post|/api/ip-access-control/cleanup|cleanupExpiredRules||CountResult|
+            post|/api/ip-access-control/check|checkAccess||IpAccessResult|ipAddress:query:true:string::
             get|/auth/v1/authorization/users/{userId}|queryUnifiedAuthorization||UnifiedAuthorizationResult|userId:path:true:integer:int64:
             post|/auth/v1/login|login|LoginRequest|LoginResponse|
             post|/auth/v1/logout/{userId}|logout|||userId:path:true:integer:int64:
             post|/auth/v1/refresh|refreshToken|RefreshTokenRequest|TokenPair|
+            post|/auth/v2/password-recovery/requests|initiatePasswordRecovery|PasswordRecoveryInitiateRequest|PasswordRecoveryInitiateResult|
+            post|/auth/v2/password-recovery/verifications|verifyPasswordRecovery|PasswordRecoveryVerifyRequest|PasswordRecoveryVerifyResult|
+            post|/auth/v2/password-recovery/confirmations|confirmPasswordRecovery|PasswordRecoveryConfirmRequest|PasswordRecoveryConfirmResult|
             post|/auth/v1/roles|createRole|RoleDTO|RoleResult|
             get|/auth/v1/roles|listRoles||RoleListResult|
             post|/auth/v1/roles/assign-permissions|assignPermissions|AssignPermissionsRequest|EmptyResult|
@@ -129,7 +155,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
     }
 
     @Test
-    void allFortySixOperationsMatchExplicitContracts() {
+    void allSixtyNineOperationsMatchExplicitContracts() {
         Set<String> actual = new HashSet<>();
         Set<String> operationIds = new HashSet<>();
         document.path("paths")
@@ -152,7 +178,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             expected.add(contract[0] + " " + contract[1]);
             assertOperationContract(contract);
         });
-        assertThat(expected).hasSize(46);
+        assertThat(expected).hasSize(72);
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
         assertLocalReferencesResolve(document);
     }
@@ -224,6 +250,34 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
                     assertThat(operation.path("operationId").asText()).isNotBlank();
                     assertThat(operation.path("summary").asText()).isNotBlank();
                 });
+        JsonNode authorize = document.path("paths").path("/oauth2/authorize").path("get");
+        assertAuthorizeParameters(authorize);
+        assertThat(authorize.path("responses").has("200")).isFalse();
+        JsonNode redirect = authorize.path("responses").path("302");
+        assertThat(redirect.has("content")).isFalse();
+        assertThat(redirect.at("/headers/Location/schema/format").asText()).isEqualTo("uri");
+        for (String endpoint : new String[] {"token", "revoke", "introspect"}) {
+            JsonNode operation =
+                    document.path("paths").path("/oauth2/" + endpoint).path("post");
+            assertThat(operation
+                            .at("/requestBody/content/application~1x-www-form-urlencoded/schema/$ref")
+                            .asText())
+                    .startsWith("#/components/schemas/");
+            assertThat(operation
+                            .at("/responses/400/content/application~1json/schema/$ref")
+                            .asText())
+                    .isEqualTo("#/components/schemas/OAuthError");
+        }
+        assertThat(schema("TokenForm").path("properties").has("grant_type")).isTrue();
+        assertThat(schema("TokenForm").path("required").toString()).contains("grant_type");
+        assertThat(schema("TokenResponse").path("properties").fieldNames())
+                .toIterable()
+                .containsExactlyInAnyOrder("access_token", "token_type", "expires_in", "refresh_token", "scope");
+        assertThat(schema("IntrospectionResponse").path("properties").has("active"))
+                .isTrue();
+        assertThat(schema("OAuthError").path("properties").fieldNames())
+                .toIterable()
+                .containsExactly("error");
     }
 
     @Test
@@ -236,7 +290,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
                     assertThat(operation.path("description").asText()).isNotBlank();
                     assertThat(operation.path("tags").toString()).contains("内部契约");
                 });
-        // 内部契约路由虽在服务端 OpenAPI 文档中可见，但不属于对外公共契约（不计入 46 个外部操作）
+        // 内部契约路由虽在服务端 OpenAPI 文档中可见，但不属于对外公共契约（不计入 69 个外部操作）
         assertThat(document.path("paths").has("/internal/v1/users/{accountId}/permissions"))
                 .isTrue();
         assertThat(document.path("paths").has("/internal/v1/tokens/validate")).isTrue();
@@ -403,6 +457,29 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
                 .isUnauthorized();
     }
 
+    /**
+     * 校验实际授权端点文档的七项查询参数及 PKCE 约束，避免参数遗漏或重复。
+     *
+     * @param authorize 授权端点的 OpenAPI 操作
+     */
+    private void assertAuthorizeParameters(JsonNode authorize) {
+        assertParameters(
+                authorize,
+                "client_id:query:true:string::,response_type:query:true:string::,redirect_uri:query:true:string:uri:,"
+                        + "scope:query:false:string::,state:query:false:string::,"
+                        + "code_challenge:query:true:string::,code_challenge_method:query:true:string::");
+        Set<String> names = new HashSet<>();
+        for (JsonNode parameter : authorize.path("parameters")) {
+            assertThat(names.add(parameter.path("name").asText())).isTrue();
+            if ("code_challenge".equals(parameter.path("name").asText())) {
+                assertThat(parameter.at("/schema/pattern").asText()).isEqualTo("[A-Za-z0-9_-]{43}");
+            } else if ("code_challenge_method".equals(parameter.path("name").asText())) {
+                assertThat(parameter.at("/schema/enum")).hasSize(1);
+                assertThat(parameter.at("/schema/enum/0").asText()).isEqualTo("S256");
+            }
+        }
+    }
+
     private void assertOperationContract(String[] contract) {
         JsonNode operation = document.path("paths").path(contract[1]).path(contract[0]);
         assertThat(operation.path("operationId").asText()).as(contract[1]).isEqualTo(contract[2]);
@@ -413,14 +490,30 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
         JsonNode success = operation.path("responses").path("200");
         if (contract[4].isEmpty()) {
             assertThat(success.has("content")).isFalse();
+        } else if (contract[4].endsWith("[]")) {
+            JsonNode array = success.at("/content/application~1json/schema");
+            assertThat(array.path("type").asText()).isEqualTo("array");
+            assertThat(array.at("/items/$ref").asText())
+                    .isEqualTo("#/components/schemas/" + contract[4].replace("[]", ""));
         } else {
             assertThat(success.at("/content/application~1json/schema/$ref").asText())
                     .isEqualTo("#/components/schemas/" + contract[4]);
         }
-        if (Set.of("login", "refreshToken").contains(contract[2])) {
+        if (Set.of(
+                        "login",
+                        "refreshToken",
+                        "initiatePasswordRecovery",
+                        "verifyPasswordRecovery",
+                        "confirmPasswordRecovery")
+                .contains(contract[2])) {
             assertThat(operation.path("security").isMissingNode()
                             || operation.path("security").isEmpty())
                     .isTrue();
+        } else if (contract[1].startsWith("/api/mfa/") || contract[1].startsWith("/api/ip-access-control/")) {
+            for (JsonNode parameter : operation.path("parameters")) {
+                assertThat(parameter.path("name").asText()).isNotEqualTo("tenantId");
+            }
+            assertThat(operation.path("responses").has("500")).isTrue();
         } else {
             assertThat(operation.path("security").get(0).has("bearerAuth")).isTrue();
             assertThat(operation.path("responses").path("401").has("content")).isFalse();

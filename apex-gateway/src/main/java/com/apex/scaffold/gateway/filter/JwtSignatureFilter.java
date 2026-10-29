@@ -4,8 +4,7 @@ import com.apex.scaffold.common.constant.SystemConstants;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.gateway.security.GatewayJwtVerifierService;
 import io.jsonwebtoken.Claims;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -46,10 +45,10 @@ import reactor.core.publisher.Mono;
  * @see GatewayJwtVerifierService
  * @see UserContextRelayFilter
  */
+@Slf4j
 @Component
+@lombok.RequiredArgsConstructor
 public class JwtSignatureFilter implements GlobalFilter, Ordered {
-
-    private static final Logger log = LoggerFactory.getLogger(JwtSignatureFilter.class);
 
     /** 过滤器顺序：JWKS 验签在 Trace 与 CORS 之后、上下文注入之前 */
     public static final int ORDER = 10;
@@ -68,14 +67,11 @@ public class JwtSignatureFilter implements GlobalFilter, Ordered {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     /**
-     * 构造 JWT 校验过滤器.
-     *
-     * @param verifierService JWKS 验签服务
+     * 剥离伪造身份头并验证 HTTP JWT，精确 WebSocket 升级交由办公服务消费票据。
+     * @param exchange 请求交换对象
+     * @param chain 网关后续过滤链
+     * @return 请求完成信号
      */
-    public JwtSignatureFilter(GatewayJwtVerifierService verifierService) {
-        this.verifierService = verifierService;
-    }
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getURI().getPath();
@@ -94,12 +90,19 @@ public class JwtSignatureFilter implements GlobalFilter, Ordered {
                     headers.remove("X-User-Id");
                     headers.remove("X-Tenant-Id");
                     headers.remove("X-Client-Type");
-                    headers.keySet().removeIf(name -> name.startsWith("X-Internal-"));
+                    // 外部请求不能注入内部身份或事务上下文；保留原始认证凭据供下游复验。
+                    headers.remove("X-Apex-Seata-Xid");
+                    headers.remove("X-Apex-Seata-Key");
+                    headers.remove("TX_XID");
+                    headers.keySet().removeIf(name -> name.regionMatches(true, 0, "X-Internal-", 0, 11));
                 })
                 .build();
 
+        boolean messageSocketUpgrade = "/api/v1/messages/ws".equals(path)
+                && "websocket".equalsIgnoreCase(sanitized.getHeaders().getUpgrade());
         // 公开路径：跳过验签，仅剥离伪造头后继续
-        if (isPublicPath(path)) {
+        if (isPublicPath(path) || messageSocketUpgrade) {
+            // 浏览器握手由 office 原子消费短期票据；身份头仍已剥离，网关不信任票据内身份。
             return chain.filter(exchange.mutate().request(sanitized).build());
         }
 
@@ -172,6 +175,11 @@ public class JwtSignatureFilter implements GlobalFilter, Ordered {
         return token.isEmpty() ? null : token;
     }
 
+    /**
+     * 返回全局过滤器执行顺序，使 JWT 验签在可信用户上下文转发前完成。
+     *
+     * @return 固定顺序值 {@value #ORDER}，值越小越先进入过滤链
+     */
     @Override
     public int getOrder() {
         return ORDER;

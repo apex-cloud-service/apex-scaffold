@@ -1,8 +1,7 @@
 package com.apex.scaffold.workflowservice.infrastructure.event;
 
 import com.apex.scaffold.common.event.AbstractDomainEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
@@ -29,9 +28,8 @@ import reactor.core.publisher.Mono;
  * @see WorkflowEventPublisher
  * @see MqWorkflowEventPublisher
  */
+@Slf4j
 public class LocalWorkflowEventPublisher implements WorkflowEventPublisher {
-
-    private static final Logger log = LoggerFactory.getLogger(LocalWorkflowEventPublisher.class);
 
     /**
      * 本地发布工作流事件。

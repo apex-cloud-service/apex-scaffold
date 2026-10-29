@@ -9,9 +9,8 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import net.logstash.logback.marker.Markers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -48,10 +47,10 @@ import reactor.core.publisher.Mono;
  * @author Apex Team
  * @since 1.3.1
  */
+@Slf4j
 @Component
+@lombok.RequiredArgsConstructor
 public class RequestLoggingFilter implements GlobalFilter, Ordered {
-
-    private static final Logger log = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     /** 过滤器顺序：链路末端，观测最终结果 */
     public static final int ORDER = 50;
@@ -69,17 +68,6 @@ public class RequestLoggingFilter implements GlobalFilter, Ordered {
 
     /** 访问日志落库配置（总开关/采样/头长限制） */
     private final AccessLogProperties accessLogProperties;
-
-    /**
-     * 构造访问日志过滤器.
-     *
-     * @param accessLogService    访问日志落库服务
-     * @param accessLogProperties 访问日志落库配置
-     */
-    public RequestLoggingFilter(AccessLogService accessLogService, AccessLogProperties accessLogProperties) {
-        this.accessLogService = accessLogService;
-        this.accessLogProperties = accessLogProperties;
-    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -144,7 +132,7 @@ public class RequestLoggingFilter implements GlobalFilter, Ordered {
      * @param clientIp 客户端 IP
      * @param traceId  链路追踪 ID
      * @param status   响应状态码（可空）
-     * @param costMs   端到端耗时（毫秒）
+     * @param costMillis 端到端耗时（毫秒）
      */
     private void persistAccessLog(
             ServerWebExchange exchange,

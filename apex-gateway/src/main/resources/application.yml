@@ -121,7 +121,7 @@ spring:
         - id: workflow-domain
           uri: ${ROUTE_WORKFLOW_URI:lb://apex-workflow-service}
           predicates:
-            - Path=/api/v1/workflows/**,/api/workflow/**,/admin-api/v1/workflows/**
+            - Path=/api/v1/workflows/**,/api/v2/workflow-definitions/**,/api/workflow/**,/admin-api/v1/workflows/**
           filters:
             - name: CircuitBreaker
               args:
@@ -130,10 +130,27 @@ spring:
 
         # ---- 办公域（Phase 5 已切换为 apex-office-service） ----
         # 💡 可用 ROUTE_OFFICE_URI 环境变量临时指回单体地址以一键回滚。
+        # WebSocket 使用独立路由，不经过 HTTP 熔断回退；固定实例便于单机票据原子消费。
+        # 本地票据与连接不共享：下列 HTTP/WS 地址必须指向同一单实例。
+        # 多实例部署须提供粘性路由及跨实例通知；仅 HTTP 补偿不能修复跨实例票据握手失败。
+        - id: office-message-websocket
+          uri: ${ROUTE_OFFICE_WS_URI:ws://127.0.0.1:8084}
+          predicates:
+            - Path=/api/v1/messages/ws
+            - Header=Upgrade, (?i)websocket
+        - id: office-message-http
+          uri: ${ROUTE_OFFICE_MESSAGE_URI:http://127.0.0.1:8084}
+          predicates:
+            - Path=/api/v1/messages,/api/v1/messages/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: officeService
+                fallbackUri: forward:/__gateway/fallback
         - id: office-domain
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
+            - Path=/api/v1/office/**,/api/v2/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
           filters:
             - name: CircuitBreaker
               args:
@@ -144,11 +161,31 @@ spring:
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
-            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/api/v2/files/**,/api/v2/file-shares/**
           filters:
             - name: CircuitBreaker
               args:
                 name: fileService
+                fallbackUri: forward:/__gateway/fallback
+
+        # 独立轻量服务未注册 Nacos，使用固定受信地址；JWT 验签沿用全局链，权限由下游复验。
+        - id: job-domain
+          uri: ${ROUTE_JOB_URI:http://127.0.0.1:8095}
+          predicates:
+            - Path=/admin-api/v1/jobs,/admin-api/v1/jobs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: jobService
+                fallbackUri: forward:/__gateway/fallback
+        - id: masking-domain
+          uri: ${ROUTE_MASKING_URI:http://127.0.0.1:8096}
+          predicates:
+            - Path=/api/v1/masking/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: maskingService
                 fallbackUri: forward:/__gateway/fallback
 
         # ---- 兜底：系统管理与其余全部接口（Phase 6 收敛为 apex-system-service） ----

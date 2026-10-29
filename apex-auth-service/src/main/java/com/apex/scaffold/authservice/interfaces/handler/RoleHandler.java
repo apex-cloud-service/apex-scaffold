@@ -59,7 +59,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 1.3.1
  * @see RoleService
  * @see RoleAssembler
  */
@@ -98,7 +98,13 @@ public class RoleHandler {
      * @param request 服务器请求对象，包含角色信息
      * @return 创建成功的角色信息，包含自动生成的ID和时间戳
      */
-    @OperationLog(module = "角色管理", type = OperationType.INSERT, description = "创建角色")
+    @RequireAdminRole
+    @OperationLog(
+            module = "角色管理",
+            type = OperationType.INSERT,
+            description = "创建角色",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "createRole", summary = "创建角色", description = "创建新的角色并定义其权限范围和数据权限。角色编码在同一租户下必须唯一。")
     @ApiResponse(
             responseCode = "200",
@@ -107,6 +113,10 @@ public class RoleHandler {
     @ApiResponse(
             responseCode = "400",
             description = "参数校验失败 - 角色编码重复或必填字段缺失",
+            content = @Content(schema = @Schema(implementation = Result.class)))
+    @ApiResponse(
+            responseCode = "403",
+            description = "需要管理员权限",
             content = @Content(schema = @Schema(implementation = Result.class)))
     @ApiResponse(
             responseCode = "500",
@@ -151,7 +161,13 @@ public class RoleHandler {
      * @param request 服务器请求对象，路径参数包含角色ID，请求体包含更新信息
      * @return 更新成功的角色信息，包含新的版本号
      */
-    @OperationLog(module = "角色管理", type = OperationType.UPDATE, description = "更新角色")
+    @RequireAdminRole
+    @OperationLog(
+            module = "角色管理",
+            type = OperationType.UPDATE,
+            description = "更新角色",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "updateRole", summary = "更新角色", description = "修改现有角色信息,使用乐观锁防止并发冲突。支持部分更新。")
     @Parameter(name = "id", description = "角色ID", required = true, in = ParameterIn.PATH, example = "1")
     @ApiResponse(
@@ -165,6 +181,10 @@ public class RoleHandler {
     @ApiResponse(
             responseCode = "404",
             description = "角色不存在",
+            content = @Content(schema = @Schema(implementation = Result.class)))
+    @ApiResponse(
+            responseCode = "403",
+            description = "需要管理员权限",
             content = @Content(schema = @Schema(implementation = Result.class)))
     @ApiResponse(
             responseCode = "409",
@@ -213,7 +233,13 @@ public class RoleHandler {
      * @param request 服务器请求对象，路径参数包含角色ID
      * @return 删除成功响应
      */
-    @OperationLog(module = "角色管理", type = OperationType.DELETE, description = "删除角色")
+    @RequireAdminRole
+    @OperationLog(
+            module = "角色管理",
+            type = OperationType.DELETE,
+            description = "删除角色",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "deleteRole", summary = "删除角色", description = "删除指定角色。如果有用户绑定该角色则拒绝删除,需先解除用户绑定。")
     @Parameter(name = "id", description = "角色ID", required = true, in = ParameterIn.PATH, example = "1")
     @ApiResponse(responseCode = "200", description = "删除成功")
@@ -227,7 +253,7 @@ public class RoleHandler {
             content = @Content(schema = @Schema(implementation = Result.class)))
     @ApiResponse(
             responseCode = "403",
-            description = "系统预置角色不允许删除",
+            description = "需要管理员权限",
             content = @Content(schema = @Schema(implementation = Result.class)))
     public Mono<ServerResponse> deleteRole(ServerRequest request) {
         String id = request.pathVariable("id");
@@ -256,7 +282,12 @@ public class RoleHandler {
      * @param request 服务器请求对象，路径参数包含角色ID
      * @return 角色详细信息
      */
-    @OperationLog(module = "角色管理", type = OperationType.SELECT, description = "查询角色详情")
+    @OperationLog(
+            module = "角色管理",
+            type = OperationType.SELECT,
+            description = "查询角色详情",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getRoleById", summary = "查询角色详情", description = "根据ID查询角色详细信息,包含基本信息和关联的权限ID集合")
     @Parameter(name = "id", description = "角色ID", required = true, in = ParameterIn.PATH, example = "1")
     @ApiResponse(
@@ -301,7 +332,12 @@ public class RoleHandler {
      * @param request 服务器请求对象
      * @return 角色列表
      */
-    @OperationLog(module = "角色管理", type = OperationType.SELECT, description = "获取角色列表")
+    @OperationLog(
+            module = "角色管理",
+            type = OperationType.SELECT,
+            description = "获取角色列表",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listRoles", summary = "获取角色列表", description = "获取当前租户下的所有角色列表,按创建时间倒序排列")
     @ApiResponse(
             responseCode = "200",
@@ -355,7 +391,12 @@ public class RoleHandler {
      * @param request 服务器请求对象，请求体包含角色ID和权限ID集合
      * @return 分配成功响应
      */
-    @OperationLog(module = "角色管理", type = OperationType.UPDATE, description = "为角色分配权限")
+    @OperationLog(
+            module = "角色管理",
+            type = OperationType.UPDATE,
+            description = "为角色分配权限",
+            saveRequest = false,
+            saveResponse = false)
     @RequireAdminRole
     @RequireResourcePermission(
             resourceType = "role",
@@ -413,7 +454,12 @@ public class RoleHandler {
      * @param request 服务器请求对象，路径参数包含角色ID
      * @return 权限ID集合
      */
-    @OperationLog(module = "角色管理", type = OperationType.SELECT, description = "查询角色的权限")
+    @OperationLog(
+            module = "角色管理",
+            type = OperationType.SELECT,
+            description = "查询角色的权限",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(
             operationId = "getRolePermissions",
             summary = "查询角色的权限",

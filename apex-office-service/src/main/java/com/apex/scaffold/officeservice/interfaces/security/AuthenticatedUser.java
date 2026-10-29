@@ -5,12 +5,11 @@ import java.security.Principal;
 /**
  * 已认证用户信息。
  *
- * <p>作为 Spring Security 认证主体（{@link Principal}）承载网关下发的用户标识信息：
+ * <p>作为 Spring Security 认证主体（{@link Principal}）承载已验证的用户标识信息：
  * 用户 ID、OpenID、租户 ID 与部门 ID。其中 compact 构造器重载允许不提供部门 ID。
  *
- * <p>本类为办公服务的本地实现，用户身份来源于网关注入的可信请求头
- * （{@code X-User-Id}、{@code X-Tenant-Id}），由
- * {@link IdentityRelayAuthenticationFilter} 解析后构建。
+ * <p>本类为办公服务的本地实现，由 {@link IdentityRelayAuthenticationFilter}
+ * 从独立验签的 JWT 或一次性握手票据构建，不接受客户端身份头。
  *
  * @author Apex Team
  * @since 1.0.0

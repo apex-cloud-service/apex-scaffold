@@ -1,5 +1,7 @@
 package com.apex.scaffold.gateway.security;
 
+import lombok.Getter;
+
 /**
  * JWKS 单个密钥条目（kid / 算法 / 公钥或共享密钥）.
  *
@@ -18,6 +20,7 @@ package com.apex.scaffold.gateway.security;
  * @author Apex Team
  * @since 1.3.1
  */
+@Getter
 public class JwksProfile {
 
     /** 密钥 ID（对应 JWT header 的 kid） */
@@ -63,21 +66,5 @@ public class JwksProfile {
      */
     public boolean isHmac() {
         return "hmac".equals(alg) || "hs256".equals(alg) || "hs384".equals(alg) || "hs512".equals(alg);
-    }
-
-    public String getKid() {
-        return kid;
-    }
-
-    public String getAlg() {
-        return alg;
-    }
-
-    public String getPublicKeyBase64() {
-        return publicKeyBase64;
-    }
-
-    public String getHmacSecret() {
-        return hmacSecret;
     }
 }

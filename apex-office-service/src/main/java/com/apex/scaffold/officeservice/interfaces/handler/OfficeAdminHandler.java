@@ -9,6 +9,8 @@ import com.apex.scaffold.office.application.OfficeAdminService;
 import com.apex.scaffold.office.domain.OfficePlatform;
 import com.apex.scaffold.officeservice.interfaces.assembler.OfficeAssembler;
 import com.apex.scaffold.officeservice.interfaces.dto.office.OfficeAppRequest;
+import com.apex.scaffold.officeservice.interfaces.dto.office.OfficeAppResponse;
+import com.apex.scaffold.officeservice.interfaces.dto.office.OfficeBindingResponse;
 import com.apex.scaffold.officeservice.interfaces.dto.office.OfficeBindingReviewRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -64,6 +66,26 @@ public class OfficeAdminHandler {
     private final OfficeAdminService service;
     private final OfficeAssembler assembler;
 
+    /** 应用配置列表响应。 */
+    @Schema(name = "OfficeAppListResult")
+    public static class AppListResult extends Result<java.util.List<OfficeAppResponse>> {}
+
+    /** 应用配置详情响应。 */
+    @Schema(name = "OfficeAppResult")
+    public static class AppResult extends Result<OfficeAppResponse> {}
+
+    /** 管理操作布尔响应。 */
+    @Schema(name = "OfficeAdminBooleanResult")
+    public static class AdminBooleanResult extends Result<Boolean> {}
+
+    /** 身份绑定列表响应。 */
+    @Schema(name = "OfficeBindingListResult")
+    public static class BindingListResult extends Result<java.util.List<OfficeBindingResponse>> {}
+
+    /** 身份绑定分页响应。 */
+    @Schema(name = "OfficeBindingPageResult")
+    public static class BindingPageResult extends Result<PageResponse<OfficeBindingResponse>> {}
+
     /**
      * 查询当前租户的所有办公平台应用配置列表。
      *
@@ -78,9 +100,18 @@ public class OfficeAdminHandler {
                 @ApiResponse(
                         responseCode = "200",
                         description = "查询成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = AppListResult.class)))
             })
     @RequirePermission("office:app:list")
+    @OperationLog(
+            module = "OfficeAdmin",
+            type = OperationLog.OperationType.SELECT,
+            description = "listApps",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listApps(ServerRequest request) {
         return service.listApps()
                 .map(apps -> apps.stream().map(assembler::toAppResponse).toList())
@@ -102,9 +133,18 @@ public class OfficeAdminHandler {
                 @ApiResponse(
                         responseCode = "200",
                         description = "查询成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = AppResult.class)))
             })
     @RequirePermission("office:app:query")
+    @OperationLog(
+            module = "OfficeAdmin",
+            type = OperationLog.OperationType.SELECT,
+            description = "getApp",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getApp(ServerRequest request) {
         return parsePlatform(request)
                 .flatMap(service::getApp)
@@ -123,11 +163,21 @@ public class OfficeAdminHandler {
             summary = "创建办公平台应用配置",
             description = "为当前租户创建新的办公平台应用配置，平台类型通过路径参数指定",
             parameters = {@Parameter(name = "platform", description = "平台类型", required = true, example = "FEISHU")},
+            requestBody =
+                    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = OfficeAppRequest.class))),
             responses = {
                 @ApiResponse(
                         responseCode = "200",
                         description = "创建成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = AppResult.class)))
             })
     @RequirePermission("office:app:create")
     @OperationLog(
@@ -157,11 +207,21 @@ public class OfficeAdminHandler {
             summary = "更新办公平台应用配置",
             description = "更新指定平台的应用配置信息，需要提供乐观锁版本号",
             parameters = {@Parameter(name = "platform", description = "平台类型", required = true, example = "FEISHU")},
+            requestBody =
+                    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = OfficeAppRequest.class))),
             responses = {
                 @ApiResponse(
                         responseCode = "200",
                         description = "更新成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = AppResult.class)))
             })
     @RequirePermission("office:app:update")
     @OperationLog(
@@ -198,7 +258,10 @@ public class OfficeAdminHandler {
                 @ApiResponse(
                         responseCode = "200",
                         description = "删除成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = AdminBooleanResult.class)))
             })
     @RequirePermission("office:app:delete")
     @OperationLog(
@@ -230,16 +293,35 @@ public class OfficeAdminHandler {
             description = "分页查询指定平台的身份绑定记录",
             parameters = {
                 @Parameter(name = "platform", description = "平台类型", required = true, example = "FEISHU"),
-                @Parameter(name = "page", description = "页码", required = true, example = "1"),
-                @Parameter(name = "size", description = "每页数量", required = true, example = "20")
+                @Parameter(
+                        name = "page",
+                        description = "页码",
+                        required = false,
+                        example = "1",
+                        schema = @Schema(type = "integer", defaultValue = "1")),
+                @Parameter(
+                        name = "size",
+                        description = "每页数量",
+                        required = false,
+                        example = "20",
+                        schema = @Schema(type = "integer", defaultValue = "20"))
             },
             responses = {
                 @ApiResponse(
                         responseCode = "200",
                         description = "查询成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = BindingListResult.class)))
             })
     @RequirePermission("office:binding:list")
+    @OperationLog(
+            module = "OfficeAdmin",
+            type = OperationLog.OperationType.SELECT,
+            description = "listBindings",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listBindings(ServerRequest request) {
         return parsePlatformFromQuery(request)
                 .flatMap(platform -> {
@@ -269,16 +351,35 @@ public class OfficeAdminHandler {
                         description = "绑定状态（PENDING/APPROVED/REJECTED/REVOKED）",
                         required = false,
                         example = "PENDING"),
-                @Parameter(name = "page", description = "页码", required = true, example = "1"),
-                @Parameter(name = "size", description = "每页数量", required = true, example = "20")
+                @Parameter(
+                        name = "page",
+                        description = "页码",
+                        required = false,
+                        example = "1",
+                        schema = @Schema(type = "integer", defaultValue = "1")),
+                @Parameter(
+                        name = "size",
+                        description = "每页数量",
+                        required = false,
+                        example = "20",
+                        schema = @Schema(type = "integer", defaultValue = "20"))
             },
             responses = {
                 @ApiResponse(
                         responseCode = "200",
                         description = "查询成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = BindingPageResult.class)))
             })
     @RequirePermission("office:binding:list")
+    @OperationLog(
+            module = "OfficeAdmin",
+            type = OperationLog.OperationType.SELECT,
+            description = "listBindingsPage",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listBindingsPage(ServerRequest request) {
         return parsePlatformFromQuery(request)
                 .flatMap(platform -> {
@@ -308,11 +409,21 @@ public class OfficeAdminHandler {
             summary = "审批身份绑定申请",
             description = "管理员审批用户的办公平台身份绑定申请，批准或拒绝",
             parameters = {@Parameter(name = "id", description = "绑定主键", required = true, example = "1001")},
+            requestBody =
+                    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                            required = true,
+                            content =
+                                    @Content(
+                                            mediaType = "application/json",
+                                            schema = @Schema(implementation = OfficeBindingReviewRequest.class))),
             responses = {
                 @ApiResponse(
                         responseCode = "200",
                         description = "审批成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = AdminBooleanResult.class)))
             })
     @RequirePermission("office:binding:review")
     @OperationLog(
@@ -348,7 +459,10 @@ public class OfficeAdminHandler {
                 @ApiResponse(
                         responseCode = "200",
                         description = "解绑成功",
-                        content = @Content(schema = @Schema(implementation = Result.class)))
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = AdminBooleanResult.class)))
             })
     @RequirePermission("office:binding:unbind")
     @OperationLog(

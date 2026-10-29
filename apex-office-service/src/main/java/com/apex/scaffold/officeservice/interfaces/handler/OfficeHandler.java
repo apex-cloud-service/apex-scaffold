@@ -1,7 +1,9 @@
 package com.apex.scaffold.officeservice.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.office.application.OfficeApplicationService;
+import com.apex.scaffold.office.application.dto.LoginResponse;
 import com.apex.scaffold.office.domain.OfficePlatform;
 import com.apex.scaffold.office.infrastructure.spi.OfficeOAuthClient;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +43,18 @@ public class OfficeHandler {
     private final List<OfficeOAuthClient> clients;
     private final com.apex.scaffold.office.infrastructure.config.OfficePlatformProperties properties;
 
+    /** 已注册平台列表响应。 */
+    @Schema(name = "OfficePlatformStatusResult")
+    public static class PlatformStatusResult extends Result<List<String>> {}
+
+    /** 授权地址响应。 */
+    @Schema(name = "OfficeAuthorizationUrlResult")
+    public static class AuthorizationUrlResult extends Result<String> {}
+
+    /** 办公平台登录响应。 */
+    @Schema(name = "OfficeLoginResult")
+    public static class LoginResult extends Result<LoginResponse> {}
+
     /**
      * 查询已注册办公平台状态
      *
@@ -60,8 +74,14 @@ public class OfficeHandler {
                         content =
                                 @Content(
                                         mediaType = "application/json",
-                                        schema = @Schema(implementation = Result.class)))
+                                        schema = @Schema(implementation = PlatformStatusResult.class)))
             })
+    @OperationLog(
+            module = "Office",
+            type = OperationLog.OperationType.SELECT,
+            description = "status",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> status(ServerRequest request) {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -96,10 +116,16 @@ public class OfficeHandler {
                         content =
                                 @Content(
                                         mediaType = "application/json",
-                                        schema = @Schema(implementation = Result.class))),
+                                        schema = @Schema(implementation = AuthorizationUrlResult.class))),
                 @ApiResponse(responseCode = "400", description = "平台参数无效"),
                 @ApiResponse(responseCode = "500", description = "租户未配置应用或应用未启用")
             })
+    @OperationLog(
+            module = "Office",
+            type = OperationLog.OperationType.OTHER,
+            description = "start",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> start(ServerRequest request) {
         return tenantScoped(platform(request).flatMap(service::authorizationUrl))
                 .flatMap(url -> ServerResponse.ok()
@@ -152,10 +178,16 @@ public class OfficeHandler {
                         content =
                                 @Content(
                                         mediaType = "application/json",
-                                        schema = @Schema(implementation = Result.class))),
+                                        schema = @Schema(implementation = LoginResult.class))),
                 @ApiResponse(responseCode = "400", description = "参数无效或 state 已失效"),
                 @ApiResponse(responseCode = "500", description = "认证失败或绑定未审批")
             })
+    @OperationLog(
+            module = "Office",
+            type = OperationLog.OperationType.OTHER,
+            description = "callback",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> callback(ServerRequest request) {
         String code = request.queryParam("code").orElse("");
         String state = request.queryParam("state").orElse("");

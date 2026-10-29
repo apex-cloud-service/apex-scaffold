@@ -23,6 +23,7 @@
 --   off_department               办公组织部门（V2 迁入）
 --   off_employee                 办公组织员工（V2 迁入）
 --   off_sync_history             办公组织同步历史（V2 迁入）
+--   off_message_delivery         办公消息渠道投递记录（V5 新增）
 --
 -- @author Apex Team
 -- @version 1.0.0
@@ -96,6 +97,7 @@ CREATE TABLE IF NOT EXISTS office_sync_task (
     id              BIGINT       NOT NULL AUTO_INCREMENT,
     tenant_id       VARCHAR(64)  NOT NULL,
     platform        VARCHAR(32)  NOT NULL,
+    sync_type       VARCHAR(32)  NOT NULL DEFAULT 'DEPARTMENT',
     cursor_value    VARCHAR(512),
     state           VARCHAR(32)  NOT NULL,
     failure_message VARCHAR(1000),
@@ -105,7 +107,7 @@ CREATE TABLE IF NOT EXISTS office_sync_task (
     update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 );
-CREATE INDEX IF NOT EXISTS idx_office_sync ON office_sync_task (tenant_id, platform);
+CREATE INDEX IF NOT EXISTS idx_office_sync ON office_sync_task (tenant_id, platform, sync_type);
 
 -- ------------------------------------------------------------
 -- 办公消息发送记录
@@ -322,6 +324,29 @@ CREATE INDEX IF NOT EXISTS idx_off_recipient_status ON off_message_recipient (re
 CREATE INDEX IF NOT EXISTS idx_off_recipient_tenant ON off_message_recipient (tenant_id, deleted);
 
 -- ------------------------------------------------------------
+-- 办公消息渠道投递记录（V5 新增）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS off_message_delivery (
+    id                  BIGINT      NOT NULL AUTO_INCREMENT,
+    message_id          BIGINT      NOT NULL,
+    recipient_id        BIGINT      NOT NULL,
+    channel             VARCHAR(16) NOT NULL,
+    delivery_status     VARCHAR(16) NOT NULL DEFAULT 'PENDING',
+    platform_message_id VARCHAR(128),
+    failure_reason      VARCHAR(512),
+    delivered_at        TIMESTAMP,
+    tenant_id           VARCHAR(64) NOT NULL,
+    create_time         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time         TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             TINYINT     NOT NULL DEFAULT 0,
+    version             INT         NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_off_message_delivery ON off_message_delivery (message_id, recipient_id, channel, deleted);
+CREATE INDEX IF NOT EXISTS idx_off_delivery_recipient_status ON off_message_delivery (recipient_id, delivery_status, deleted);
+CREATE INDEX IF NOT EXISTS idx_off_delivery_tenant ON off_message_delivery (tenant_id, deleted);
+
+-- ------------------------------------------------------------
 -- 办公组织部门（V2 迁入）
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS off_department (
@@ -405,3 +430,27 @@ CREATE TABLE IF NOT EXISTS off_sync_history (
 );
 CREATE INDEX IF NOT EXISTS idx_off_sync_tenant_time ON off_sync_history (tenant_id, start_time);
 CREATE INDEX IF NOT EXISTS idx_off_sync_status_time ON off_sync_history (sync_status, start_time);
+
+-- ------------------------------------------------------------
+-- 会议室资源（V7）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS office_meeting_room (
+    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    tenant_id   VARCHAR(64)  NOT NULL,
+    room_code   VARCHAR(64)  NOT NULL,
+    room_name   VARCHAR(128) NOT NULL,
+    capacity    INT,
+    location    VARCHAR(255),
+    floor       VARCHAR(32),
+    equipment   VARCHAR(1024),
+    status      VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+    remark      VARCHAR(512),
+    create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     TINYINT      NOT NULL DEFAULT 0,
+    version     INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_office_meeting_room_tenant_code ON office_meeting_room (tenant_id, room_code, deleted);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_office_meeting_room_tenant_name ON office_meeting_room (tenant_id, room_name, deleted);
+CREATE INDEX IF NOT EXISTS idx_office_meeting_room_tenant_status ON office_meeting_room (tenant_id, status, deleted);

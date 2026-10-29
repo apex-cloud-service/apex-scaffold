@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
  * <p>提供认证中心所需的基础Bean配置
  *
  * @author Apex Team
- * @since 2026-09-20
+ * @since 1.3.1
  */
 @Configuration
 @EnableConfigurationProperties(JwtProperties.class)
@@ -76,6 +76,15 @@ public class AuthCenterConfig {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String LOGIN_PATH = "/auth/v1/login";
 
+    /** 自助密码找回：申请恢复单（匿名） */
+    private static final String PASSWORD_RECOVERY_REQUESTS_PATH = "/auth/v2/password-recovery/requests";
+
+    /** 自助密码找回：校验验证码（匿名） */
+    private static final String PASSWORD_RECOVERY_VERIFICATIONS_PATH = "/auth/v2/password-recovery/verifications";
+
+    /** 自助密码找回：确认重设（匿名） */
+    private static final String PASSWORD_RECOVERY_CONFIRMATIONS_PATH = "/auth/v2/password-recovery/confirmations";
+
     /** 内部契约路由前缀（迁移方案 Phase 2.3）：不经网关，仅集群内服务直连调用 */
     private static final String INTERNAL_API_PREFIX = "/internal/v1/**";
 
@@ -111,6 +120,21 @@ public class AuthCenterConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * 密码策略领域服务Bean
+     *
+     * <p>自助密码找回确认重设时执行密码策略校验（长度、字符类型、弱密码字典等）。
+     *
+     * @param redisTemplate Redis模板（密码历史等校验）
+     * @param passwordEncoder 密码编码器（历史密码哈希比对）
+     * @return PasswordPolicyService实例
+     */
+    @Bean
+    public com.apex.scaffold.auth.domain.service.PasswordPolicyService passwordPolicyService(
+            ReactiveStringRedisTemplate redisTemplate, PasswordEncoder passwordEncoder) {
+        return new com.apex.scaffold.auth.domain.service.PasswordPolicyService(redisTemplate, passwordEncoder);
     }
 
     /**
@@ -153,6 +177,9 @@ public class AuthCenterConfig {
                                 OAUTH2_TOKEN_PATH,
                                 OAUTH2_REVOKE_PATH,
                                 OAUTH2_INTROSPECT_PATH,
+                                PASSWORD_RECOVERY_REQUESTS_PATH,
+                                PASSWORD_RECOVERY_VERIFICATIONS_PATH,
+                                PASSWORD_RECOVERY_CONFIRMATIONS_PATH,
                                 INTERNAL_API_PREFIX)
                         .permitAll()
                         .anyExchange()
@@ -170,7 +197,14 @@ public class AuthCenterConfig {
                                 return TenantContext.withTenant(chain.filter(exchange))
                                         .contextWrite(TenantContext.withTenant(tenant));
                             }
-                            if (List.of(LOGIN_PATH, OAUTH2_TOKEN_PATH, OAUTH2_REVOKE_PATH, OAUTH2_INTROSPECT_PATH)
+                            if (List.of(
+                                            LOGIN_PATH,
+                                            OAUTH2_TOKEN_PATH,
+                                            OAUTH2_REVOKE_PATH,
+                                            OAUTH2_INTROSPECT_PATH,
+                                            PASSWORD_RECOVERY_REQUESTS_PATH,
+                                            PASSWORD_RECOVERY_VERIFICATIONS_PATH,
+                                            PASSWORD_RECOVERY_CONFIRMATIONS_PATH)
                                     .contains(path)) {
                                 String tenant = environment.getProperty("auth-center.login-tenant", "default");
                                 return TenantContext.withTenant(chain.filter(exchange))

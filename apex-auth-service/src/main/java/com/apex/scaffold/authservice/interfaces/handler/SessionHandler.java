@@ -57,7 +57,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 1.3.1
  */
 @Component
 @RequiredArgsConstructor
@@ -95,7 +95,12 @@ public class SessionHandler {
      * @param request 服务器请求对象，路径参数包含userId，查询参数包含tenantId
      * @return 用户的会话列表数组
      */
-    @OperationLog(module = "会话管理", type = OperationType.SELECT, description = "查询用户会话")
+    @OperationLog(
+            module = "会话管理",
+            type = OperationType.SELECT,
+            description = "查询用户会话",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getUserSessions", summary = "查询用户会话", description = "获取指定用户的所有活跃会话，包含设备、IP、登录时间等详细信息")
     @Parameter(name = "userId", description = "用户ID", required = true, example = "1001")
     @Parameter(name = "tenantId", description = "租户ID（可选，默认为default）", required = false, example = "tenant_001")
@@ -149,7 +154,12 @@ public class SessionHandler {
      * @param request 服务器请求对象，路径参数包含sessionId
      * @return 操作成功返回空响应体
      */
-    @OperationLog(module = "会话管理", type = OperationType.DELETE, description = "终止会话")
+    @OperationLog(
+            module = "会话管理",
+            type = OperationType.DELETE,
+            description = "终止会话",
+            saveRequest = false,
+            saveResponse = false)
     @RequireAdminRole
     @RequireResourcePermission(
             resourceType = "session",
@@ -215,7 +225,12 @@ public class SessionHandler {
      * @param request 服务器请求对象，路径参数包含userId，查询参数包含tenantId
      * @return 操作成功返回空响应体
      */
-    @OperationLog(module = "会话管理", type = OperationType.DELETE, description = "批量下线用户所有会话")
+    @OperationLog(
+            module = "会话管理",
+            type = OperationType.DELETE,
+            description = "批量下线用户所有会话",
+            saveRequest = false,
+            saveResponse = false)
     @RequireAdminRole
     @RequireResourcePermission(
             resourceType = "user-sessions",
@@ -289,7 +304,12 @@ public class SessionHandler {
      * @param request 服务器请求对象
      * @return 在线用户列表数组
      */
-    @OperationLog(module = "会话管理", type = OperationType.SELECT, description = "获取在线用户列表")
+    @OperationLog(
+            module = "会话管理",
+            type = OperationType.SELECT,
+            description = "获取在线用户列表",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getOnlineUsers", summary = "获取在线用户列表", description = "获取当前系统中所有在线用户的基本信息，用于实时监控和运营分析")
     @ApiResponse(
             responseCode = "200",
@@ -332,7 +352,12 @@ public class SessionHandler {
      * @param request 服务器请求对象
      * @return 包含在线用户统计数据的响应体
      */
-    @OperationLog(module = "会话管理", type = OperationType.SELECT, description = "获取在线用户统计")
+    @OperationLog(
+            module = "会话管理",
+            type = OperationType.SELECT,
+            description = "获取在线用户统计",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getOnlineStatistics", summary = "获取在线用户统计", description = "获取当前在线用户数量统计，包括总数和统计时间")
     @ApiResponse(
             responseCode = "200",
@@ -387,7 +412,12 @@ public class SessionHandler {
      * @param request 服务器请求对象，路径参数包含sessionId
      * @return 会话详细信息，如果会话不存在返回null
      */
-    @OperationLog(module = "会话管理", type = OperationType.SELECT, description = "查询会话详情")
+    @OperationLog(
+            module = "会话管理",
+            type = OperationType.SELECT,
+            description = "查询会话详情",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getSessionById", summary = "查询会话详情", description = "根据ID查询单个会话的完整详细信息，包括设备、IP、地理位置等")
     @Parameter(name = "sessionId", description = "会话ID", required = true, example = "1001")
     @ApiResponse(

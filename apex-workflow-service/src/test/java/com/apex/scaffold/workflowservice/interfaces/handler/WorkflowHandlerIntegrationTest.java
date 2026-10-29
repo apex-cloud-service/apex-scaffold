@@ -1,13 +1,19 @@
 package com.apex.scaffold.workflowservice.interfaces.handler;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.common.event.AbstractDomainEvent;
+import com.apex.scaffold.contract.event.TaskAssignedEvent;
+import com.apex.scaffold.contract.event.TaskCompletedEvent;
 import com.apex.scaffold.workflow.application.dto.WorkflowInstanceDTO;
 import com.apex.scaffold.workflow.application.dto.WorkflowInstanceDetailDTO;
 import com.apex.scaffold.workflow.application.dto.WorkflowStatisticsDTO;
@@ -19,9 +25,14 @@ import com.apex.scaffold.workflow.application.service.WorkflowService;
 import com.apex.scaffold.workflow.domain.model.ProcessInstance;
 import com.apex.scaffold.workflowservice.WorkflowServiceSliceTestConfiguration;
 import com.apex.scaffold.workflowservice.infrastructure.event.WorkflowEventPublisher;
+import com.apex.scaffold.workflowservice.interfaces.dto.workflow.CompleteTaskRequest;
+import com.apex.scaffold.workflowservice.interfaces.dto.workflow.DelegateTaskRequest;
+import com.apex.scaffold.workflowservice.interfaces.dto.workflow.RollbackTaskRequest;
+import com.apex.scaffold.workflowservice.interfaces.dto.workflow.TransferTaskRequest;
 import com.apex.scaffold.workflowservice.interfaces.router.WorkflowRouter;
 import com.apex.scaffold.workflowservice.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.workflowservice.interfaces.util.RequestHandlerUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,14 +40,22 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.reactive.function.server.MockServerRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+import reactor.test.publisher.TestPublisher;
 
 /**
  * 工作流处理器审批流转集成测试。
@@ -624,6 +643,183 @@ class WorkflowHandlerIntegrationTest {
                 .isArray()
                 .jsonPath("$.data.dateList.length()")
                 .isEqualTo(0);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
+    @DisplayName("任务操作继承租户上下文并发布原有事件")
+    void taskEvent_InheritsTenantContext(String operation) {
+        stubTaskOperation(operation, Mono.empty());
+        stubTenantTaskQuery();
+        when(workflowEventPublisher.publish(any())).thenReturn(Mono.deferContextual(context -> {
+            assertThat(context.<String>get(TenantContext.REACTOR_CONTEXT_KEY)).isEqualTo("tenant-events");
+            return Mono.empty();
+        }));
+
+        StepVerifier.create(invokeTaskOperation(operation))
+                .assertNext(
+                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
+                .verifyComplete();
+
+        ArgumentCaptor<AbstractDomainEvent> event = ArgumentCaptor.forClass(AbstractDomainEvent.class);
+        verify(workflowEventPublisher).publish(event.capture());
+        if (operation.equals("complete")) {
+            assertThat(event.getValue()).isInstanceOfSatisfying(TaskCompletedEvent.class, completed -> {
+                assertThat(completed.getTaskId()).isEqualTo(5001L);
+                assertThat(completed.getProcessInstanceId()).isEqualTo(3001L);
+                assertThat(completed.getApproverId()).isEqualTo(USER_ID);
+                assertThat(completed.getAction()).isEqualTo(TaskCompletedEvent.ACTION_APPROVE);
+                assertThat(completed.getComment()).isEqualTo("同意");
+                assertThat(completed.getCompletedAt()).isNotNull();
+            });
+        } else {
+            assertThat(event.getValue()).isInstanceOfSatisfying(TaskAssignedEvent.class, assigned -> {
+                assertThat(assigned.getTaskId()).isEqualTo(5001L);
+                assertThat(assigned.getProcessInstanceId()).isEqualTo(3001L);
+                assertThat(assigned.getNodeCode()).isEqualTo("node_1");
+                assertThat(assigned.getAssigneeId()).isEqualTo(operation.equals("rollback") ? USER_ID : 200L);
+                assertThat(assigned.getAssignedBy()).isEqualTo(USER_ID);
+            });
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
+    @DisplayName("任务响应等待事件发布完成")
+    void taskEvent_ResponseWaitsForPublication(String operation) {
+        stubTaskOperation(operation, Mono.empty());
+        stubTenantTaskQuery();
+        TestPublisher<Void> publication = TestPublisher.create();
+        when(workflowEventPublisher.publish(any())).thenReturn(publication.mono());
+
+        java.util.concurrent.atomic.AtomicBoolean responseReceived = new java.util.concurrent.atomic.AtomicBoolean();
+        StepVerifier.create(invokeTaskOperation(operation).doOnNext(response -> responseReceived.set(true)))
+                .then(() -> {
+                    assertThat(responseReceived).isFalse();
+                    publication.assertSubscribers().complete();
+                })
+                .assertNext(
+                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
+                .verifyComplete();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
+    @DisplayName("任务回查失败保持主操作成功")
+    void taskEvent_QueryFailureDoesNotFailOperation(String operation) {
+        stubTaskOperation(operation, Mono.empty());
+        when(workflowQueryService.getTaskById(5001L))
+                .thenReturn(Mono.error(new IllegalStateException("query unavailable")));
+
+        StepVerifier.create(invokeTaskOperation(operation))
+                .assertNext(
+                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
+                .verifyComplete();
+        verifyNoInteractions(workflowEventPublisher);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
+    @DisplayName("事件发布失败保持主操作成功")
+    void taskEvent_PublishFailureDoesNotFailOperation(String operation) {
+        stubTaskOperation(operation, Mono.empty());
+        when(workflowQueryService.getTaskById(5001L)).thenReturn(Mono.just(testTaskDto));
+        when(workflowEventPublisher.publish(any()))
+                .thenReturn(Mono.error(new IllegalStateException("publisher unavailable")));
+
+        StepVerifier.create(invokeTaskOperation(operation))
+                .assertNext(
+                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
+                .verifyComplete();
+        verify(workflowEventPublisher).publish(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
+    @DisplayName("发布器同步抛错保持主操作成功")
+    void taskEvent_SynchronousPublishFailureDoesNotFailOperation(String operation) {
+        stubTaskOperation(operation, Mono.empty());
+        when(workflowQueryService.getTaskById(5001L)).thenReturn(Mono.just(testTaskDto));
+        when(workflowEventPublisher.publish(any())).thenThrow(new IllegalStateException("serialization failed"));
+
+        StepVerifier.create(invokeTaskOperation(operation))
+                .assertNext(
+                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
+                .verifyComplete();
+        verify(workflowEventPublisher).publish(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
+    @DisplayName("主操作错误原样传播且不触发事件旁路")
+    void taskEvent_BusinessFailurePropagates(String operation) {
+        IllegalStateException failure = new IllegalStateException("business failed");
+        stubTaskOperation(operation, Mono.error(failure));
+        when(workflowQueryService.getTaskById(5001L))
+                .thenReturn(Mono.error(new IllegalStateException("query unavailable")));
+        when(workflowEventPublisher.publish(any()))
+                .thenReturn(Mono.error(new IllegalStateException("publisher unavailable")));
+
+        StepVerifier.create(invokeTaskOperation(operation))
+                .expectErrorMatches(error -> error == failure)
+                .verify();
+        verifyNoInteractions(workflowQueryService, workflowEventPublisher);
+    }
+
+    private void stubTenantTaskQuery() {
+        when(workflowQueryService.getTaskById(5001L)).thenReturn(Mono.deferContextual(context -> {
+            if (!"tenant-events".equals(context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null))) {
+                return Mono.error(new IllegalStateException("tenant context missing"));
+            }
+            return Mono.just(testTaskDto);
+        }));
+    }
+
+    private void stubTaskOperation(String operation, Mono<Void> result) {
+        switch (operation) {
+            case "complete" -> when(workflowService.completeTask(5001L, USER_ID, "同意"))
+                    .thenReturn(result);
+            case "rollback" -> when(workflowService.rollbackToNode(5001L, "node_1", USER_ID, "原因"))
+                    .thenReturn(result);
+            case "transfer" -> when(workflowService.transferTask(5001L, 200L, USER_ID, "原因"))
+                    .thenReturn(result);
+            case "delegate" -> when(workflowService.delegateTask(5001L, 200L, USER_ID, "原因"))
+                    .thenReturn(result);
+            default -> throw new IllegalArgumentException(operation);
+        }
+    }
+
+    private Mono<ServerResponse> invokeTaskOperation(String operation) {
+        WorkflowHandler handler = new WorkflowHandler(
+                workflowService,
+                workflowQueryService,
+                workflowStatisticsService,
+                workflowEventPublisher,
+                requestHandlerUtil);
+        ObjectMapper mapper = new ObjectMapper();
+        Mono<ServerResponse> response =
+                switch (operation) {
+                    case "complete" -> handler.completeTask(MockServerRequest.builder()
+                            .pathVariable("taskId", "5001")
+                            .body(Mono.just(mapper.convertValue(Map.of("comment", "同意"), CompleteTaskRequest.class))));
+                    case "rollback" -> handler.rollbackTask(MockServerRequest.builder()
+                            .pathVariable("taskId", "5001")
+                            .body(Mono.just(mapper.convertValue(
+                                    Map.of("targetNodeCode", "node_1", "reason", "原因"), RollbackTaskRequest.class))));
+                    case "transfer" -> handler.transferTask(MockServerRequest.builder()
+                            .pathVariable("taskId", "5001")
+                            .body(Mono.just(mapper.convertValue(
+                                    Map.of("newAssigneeId", 200L, "reason", "原因"), TransferTaskRequest.class))));
+                    case "delegate" -> handler.delegateTask(MockServerRequest.builder()
+                            .pathVariable("taskId", "5001")
+                            .body(Mono.just(mapper.convertValue(
+                                    Map.of("delegateToId", 200L, "reason", "原因"), DelegateTaskRequest.class))));
+                    default -> throw new IllegalArgumentException(operation);
+                };
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                new AuthenticatedUser(USER_ID, "openid-1", "tenant-events"), "", List.of());
+        return response.contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication))
+                .contextWrite(context -> context.put(TenantContext.REACTOR_CONTEXT_KEY, "tenant-events"));
     }
 
     @Test

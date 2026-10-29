@@ -2,111 +2,159 @@ package com.apex.scaffold.fileservice.interfaces.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.file.application.service.FileAccessContext;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-/**
- * {@link IdentityRelayAuthenticationFilter} 单元测试.
- *
- * <p>覆盖网关身份中继过滤器的核心分支：缺失用户 ID 头、非法用户 ID 头（数字解析失败）、
- * 合法用户 ID 携带或不携带租户头的场景，验证只有可信且合法的网关注入头才会构建
- * Spring Security 认证上下文与响应式租户上下文。
- *
- * @author Apex Team
- * @version 1.0.0
- * @since 1.3.1
- */
-@DisplayName("IdentityRelayAuthenticationFilter 单元测试")
+/** 验证独立验签拒绝伪造中继头和失效凭证。 */
 class IdentityRelayAuthenticationFilterTest {
+    private static final String SECRET = "test-file-signing-key-with-at-least-32-bytes";
+    private final IdentityRelayAuthenticationFilter filter = new IdentityRelayAuthenticationFilter("", SECRET);
 
-    private final IdentityRelayAuthenticationFilter filter = new IdentityRelayAuthenticationFilter();
-
-    /**
-     * 执行过滤器并捕获注入到响应式上下文中的认证主体与租户 ID。
-     *
-     * @param request 模拟请求
-     * @return 捕获结果（认证主体可能为 null）
-     */
-    private CapturedContexts filterAndCapture(MockServerHttpRequest request) {
-        AtomicReference<Authentication> authRef = new AtomicReference<>();
-        AtomicReference<String> tenantRef = new AtomicReference<>();
-
-        WebFilterChain chain = exchange -> Mono.deferContextual(contextView -> {
-            tenantRef.set(contextView.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null));
-            return ReactiveSecurityContextHolder.getContext()
-                    .map(SecurityContext::getAuthentication)
-                    .doOnNext(authRef::set)
-                    .then();
-        });
-
-        StepVerifier.create(filter.filter(MockServerWebExchange.from(request), chain))
+    /** 捕获过滤器创建的认证主体。 */
+    private Authentication capture(MockServerHttpRequest request) {
+        AtomicReference<Authentication> auth = new AtomicReference<>();
+        StepVerifier.create(filter.filter(
+                        MockServerWebExchange.from(request), exchange -> ReactiveSecurityContextHolder.getContext()
+                                .doOnNext(c -> auth.set(c.getAuthentication()))
+                                .then()))
                 .verifyComplete();
-
-        return new CapturedContexts(authRef.get(), tenantRef.get());
+        return auth.get();
     }
 
+    /** 创建指定期限及租户的签名凭证。 */
+    private String token(String tenant, Instant expiration, String secret) {
+        return Jwts.builder()
+                .subject("7")
+                .claim("userId", 7L)
+                .claim("tenantId", tenant)
+                .claim("tokenType", "ACCESS")
+                .expiration(Date.from(expiration))
+                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                .compact();
+    }
+
+    /** 伪造用户与租户请求头不能建立认证。 */
     @Test
-    @DisplayName("缺失 X-User-Id - 不写入任何认证信息直接放行")
-    void shouldPassThroughWhenUserIdMissing() {
-        CapturedContexts captured =
-                filterAndCapture(MockServerHttpRequest.get("/x").build());
-
-        assertThat(captured.authentication()).isNull();
-        assertThat(captured.tenantId()).isNull();
+    void rejectsIdentityHeaders() {
+        assertThat(capture(MockServerHttpRequest.get("/x")
+                        .header("X-User-Id", "7")
+                        .header("X-Tenant-Id", "42")
+                        .build()))
+                .isNull();
+        assertThat(capture(MockServerHttpRequest.get("/x").build())).isNull();
     }
 
+    /** 验签通过后同时提供业务可信身份。 */
     @Test
-    @DisplayName("X-User-Id 非法 - 数字解析失败时不写入认证信息")
-    void shouldPassThroughWhenUserIdNotNumeric() {
-        CapturedContexts captured = filterAndCapture(MockServerHttpRequest.get("/x")
-                .header(IdentityRelayAuthenticationFilter.HEADER_USER_ID, "abc")
-                .build());
-
-        assertThat(captured.authentication()).isNull();
-        assertThat(captured.tenantId()).isNull();
+    void acceptsSignedIdentity() {
+        AtomicReference<FileAccessContext> identity = new AtomicReference<>();
+        String jwt = token("42", Instant.now().plusSeconds(60), SECRET);
+        StepVerifier.create(filter.filter(
+                        MockServerWebExchange.from(MockServerHttpRequest.get("/x")
+                                .header("Authorization", "Bearer " + jwt)
+                                .build()),
+                        exchange -> FileAccessContext.current()
+                                .doOnNext(identity::set)
+                                .then()))
+                .verifyComplete();
+        assertThat(identity.get()).isEqualTo(new FileAccessContext("42", 7L));
+        assertThat(capture(MockServerHttpRequest.get("/x")
+                        .header("Authorization", "Bearer " + jwt)
+                        .build()))
+                .isNotNull();
     }
 
+    /** 刷新令牌不能用于文件业务认证。 */
     @Test
-    @DisplayName("合法用户与租户头 - 同时写入认证与租户上下文")
-    void shouldBuildAuthenticationAndTenant() {
-        CapturedContexts captured = filterAndCapture(MockServerHttpRequest.get("/x")
-                .header(IdentityRelayAuthenticationFilter.HEADER_USER_ID, " 100 ")
-                .header(IdentityRelayAuthenticationFilter.HEADER_TENANT_ID, "default")
-                .header(IdentityRelayAuthenticationFilter.HEADER_CLIENT_TYPE, "web")
-                .build());
-
-        assertThat(captured.authentication()).isNotNull();
-        assertThat(captured.authentication().getPrincipal()).isEqualTo(new AuthenticatedUser(100L, null, "default"));
-        assertThat(captured.authentication().getDetails()).isEqualTo("web");
-        assertThat(captured.tenantId()).isEqualTo("default");
+    void rejectsRefreshToken() {
+        String jwt = Jwts.builder()
+                .subject("7")
+                .claim("userId", 7L)
+                .claim("tenantId", "42")
+                .claim("tokenType", "REFRESH")
+                .expiration(Date.from(Instant.now().plusSeconds(60)))
+                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)))
+                .compact();
+        assertThat(capture(MockServerHttpRequest.get("/x")
+                        .header("Authorization", "Bearer " + jwt)
+                        .build()))
+                .isNull();
     }
 
+    /** 认证中心签发的完整 RS256 ACCESS 声明可以被文件服务消费，其他 RSA 算法不能冒充。 */
     @Test
-    @DisplayName("合法用户但无租户头 - 仅写入认证上下文")
-    void shouldBuildAuthenticationWithoutTenant() {
-        CapturedContexts captured = filterAndCapture(MockServerHttpRequest.get("/x")
-                .header(IdentityRelayAuthenticationFilter.HEADER_USER_ID, "100")
-                .build());
-
-        assertThat(captured.authentication()).isNotNull();
-        assertThat(captured.tenantId()).isNull();
+    void acceptsAuthCenterRs256ContractAndRejectsOtherAlgorithms() {
+        var keys = Jwts.SIG.RS512.keyPair().build();
+        var rsaFilter = new IdentityRelayAuthenticationFilter(
+                java.util.Base64.getEncoder().encodeToString(keys.getPublic().getEncoded()), "");
+        for (var algorithm : java.util.List.of(Jwts.SIG.RS256, Jwts.SIG.RS512)) {
+            String jwt = Jwts.builder()
+                    .header()
+                    .keyId("active-key")
+                    .and()
+                    .subject("7")
+                    .id("access-id")
+                    .claim("userId", 7L)
+                    .claim("tenantId", "42")
+                    .claim("tokenType", "ACCESS")
+                    .claim("deviceId", "device")
+                    .claim("accountId", 8L)
+                    .claim("username", "tester")
+                    .claim("clientType", "WEB")
+                    .issuedAt(Date.from(Instant.now()))
+                    .expiration(Date.from(Instant.now().plusSeconds(60)))
+                    .signWith(keys.getPrivate(), algorithm)
+                    .compact();
+            if (algorithm == Jwts.SIG.RS256) {
+                assertThat(Jwts.parser()
+                                .verifyWith(keys.getPublic())
+                                .build()
+                                .parseSignedClaims(jwt)
+                                .getPayload()
+                                .get("tenantId", String.class))
+                        .isEqualTo("42");
+            }
+            AtomicReference<FileAccessContext> identity = new AtomicReference<>();
+            StepVerifier.create(rsaFilter.filter(
+                            MockServerWebExchange.from(MockServerHttpRequest.get("/x")
+                                    .header("Authorization", "Bearer " + jwt)
+                                    .build()),
+                            exchange -> reactor.core.publisher.Mono.deferContextual(context -> {
+                                identity.set(context.getOrDefault(FileAccessContext.KEY, null));
+                                return reactor.core.publisher.Mono.empty();
+                            })))
+                    .verifyComplete();
+            if (algorithm == Jwts.SIG.RS256) {
+                assertThat(identity.get()).isEqualTo(new FileAccessContext("42", 7L));
+            } else {
+                assertThat(identity.get()).isNull();
+            }
+        }
     }
 
-    /**
-     * 过滤器执行后从响应式上下文中捕获的信息。
-     *
-     * @param authentication 认证主体，未注入时为 null
-     * @param tenantId 租户 ID，未注入时为 null
-     */
-    private record CapturedContexts(Authentication authentication, String tenantId) {}
+    /** 过期、错误签名及缺失租户均不能建立认证。 */
+    @Test
+    void rejectsInvalidTokens() {
+        for (String jwt : new String[] {
+            token("42", Instant.now().minusSeconds(60), SECRET),
+            token("42", Instant.now().plusSeconds(60), "different-signing-key-at-least-32-bytes"),
+            token(null, Instant.now().plusSeconds(60), SECRET)
+        }) {
+            assertThat(capture(MockServerHttpRequest.get("/x")
+                            .header("Authorization", "Bearer " + jwt)
+                            .build()))
+                    .isNull();
+        }
+    }
 }

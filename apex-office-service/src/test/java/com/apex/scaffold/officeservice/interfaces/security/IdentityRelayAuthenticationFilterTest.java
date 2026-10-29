@@ -1,128 +1,109 @@
 package com.apex.scaffold.officeservice.interfaces.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import com.apex.scaffold.common.context.TenantContext;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
-@DisplayName("IdentityRelayAuthenticationFilter 单元测试")
+/**
+ * 服务端身份验签与伪造中继头拒绝测试。
+ * @author Apex Team
+ * @version 1.3.1
+ * @since 1.3.1
+ */
 class IdentityRelayAuthenticationFilterTest {
+    private static final String SECRET = "office-test-key-0123456789-abcdef0123456789";
+    private final IdentityRelayAuthenticationFilter filter = new IdentityRelayAuthenticationFilter(
+            "", SECRET, new MessageSocketRegistry(), List.of("https://app.example"));
 
-    private IdentityRelayAuthenticationFilter filter;
-    private WebFilterChain chain;
-    private AtomicReference<Authentication> capturedAuth;
-
-    @BeforeEach
-    void setUp() {
-        filter = new IdentityRelayAuthenticationFilter();
-        chain = mock(WebFilterChain.class);
-        capturedAuth = new AtomicReference<>();
-        when(chain.filter(any())).thenAnswer(invocation -> ReactiveSecurityContextHolder.getContext()
-                .doOnNext(ctx -> capturedAuth.set(ctx.getAuthentication()))
-                .then());
+    /** 伪造网关身份头不能创建认证。 */
+    @Test
+    void rejectsForgedIdentityHeaders() {
+        var exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/messages/inbox")
+                .header("X-User-Id", "7")
+                .header("X-Tenant-Id", "other"));
+        AtomicReference<Object> seen = new AtomicReference<>();
+        filter.filter(exchange, ignored -> ReactiveSecurityContextHolder.getContext()
+                        .doOnNext(context -> seen.set(context.getAuthentication()))
+                        .then())
+                .block();
+        assertThat(seen.get()).isNull();
     }
 
-    @AfterEach
-    void tearDown() {
-        TenantContext.clear();
+    /** 有效访问 JWT 的签名声明优先于任意伪造头。 */
+    @Test
+    void acceptsVerifiedAccessClaimsOnly() {
+        String jwt = Jwts.builder()
+                .claim("userId", 7)
+                .claim("tenantId", "trusted")
+                .claim("tokenType", "ACCESS")
+                .expiration(Date.from(Instant.now().plusSeconds(60)))
+                .signWith(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)))
+                .compact();
+        var exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/messages/inbox")
+                .header("Authorization", "Bearer " + jwt)
+                .header("X-User-Id", "99")
+                .header("X-Tenant-Id", "forged"));
+        AtomicReference<AuthenticatedUser> seen = new AtomicReference<>();
+        filter.filter(exchange, ignored -> ReactiveSecurityContextHolder.getContext()
+                        .doOnNext(context -> seen.set(
+                                (AuthenticatedUser) context.getAuthentication().getPrincipal()))
+                        .then())
+                .block();
+        assertThat(seen.get()).isEqualTo(new AuthenticatedUser(7L, null, "trusted"));
     }
 
-    private ServerWebExchange exchange(HttpHeaders headers) {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/office/status")
-                .headers(headers)
-                .build();
-        return MockServerWebExchange.from(request);
+    /** 非 GET 升级请求必须在消费票据前拒绝。 */
+    @Test
+    void rejectsNonGetHandshakeWithoutConsumingTicket() {
+        var registry = new MessageSocketRegistry();
+        var identity = new AuthenticatedUser(7L, null, "a");
+        String ticket = registry.issue(identity);
+        var handshakeFilter =
+                new IdentityRelayAuthenticationFilter("", SECRET, registry, List.of("https://app.example"));
+        var exchange = MockServerWebExchange.from(MockServerHttpRequest.post("/api/v1/messages/ws?ticket=" + ticket)
+                .header("Origin", "https://app.example")
+                .header("Upgrade", "websocket"));
+        handshakeFilter
+                .filter(exchange, ignored -> {
+                    throw new AssertionError("不应进入后续过滤链");
+                })
+                .block();
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN);
+        assertThat(registry.consume(ticket)).isEqualTo(identity);
     }
 
-    @Nested
-    @DisplayName("filter")
-    class FilterTest {
-
-        @Test
-        @DisplayName("无 X-User-Id 请求头时透传且不写入认证")
-        void noUserIdHeader() {
-            StepVerifier.create(filter.filter(exchange(new HttpHeaders()), chain))
-                    .verifyComplete();
-            assertThat(capturedAuth.get()).isNull();
-        }
-
-        @Test
-        @DisplayName("X-User-Id 非数字时透传且不写入认证")
-        void nonNumericUserId() {
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(IdentityRelayAuthenticationFilter.HEADER_USER_ID, "abc");
-
-            StepVerifier.create(filter.filter(exchange(headers), chain)).verifyComplete();
-            assertThat(capturedAuth.get()).isNull();
-        }
-
-        @Test
-        @DisplayName("合法 X-User-Id 时写入认证上下文")
-        void validUserId() {
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(IdentityRelayAuthenticationFilter.HEADER_USER_ID, " 100 ");
-            headers.add(IdentityRelayAuthenticationFilter.HEADER_CLIENT_TYPE, "WEB");
-
-            StepVerifier.create(filter.filter(exchange(headers), chain)).verifyComplete();
-
-            Authentication auth = capturedAuth.get();
-            assertThat(auth).isNotNull();
-            assertThat(auth.getPrincipal()).isInstanceOf(AuthenticatedUser.class);
-            AuthenticatedUser principal = (AuthenticatedUser) auth.getPrincipal();
-            assertThat(principal.userId()).isEqualTo(100L);
-            assertThat(auth.getDetails()).isEqualTo("WEB");
-        }
-
-        @Test
-        @DisplayName("携带租户头时安装租户上下文")
-        void withTenantHeader() {
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(IdentityRelayAuthenticationFilter.HEADER_USER_ID, "100");
-            headers.add(IdentityRelayAuthenticationFilter.HEADER_TENANT_ID, "tenant-1");
-
-            AtomicReference<String> tenantSeen = new AtomicReference<>();
-            when(chain.filter(any()))
-                    .thenAnswer(invocation -> Mono.defer(() -> {
-                        tenantSeen.set(TenantContext.currentTenantId().orElse(null));
-                        return Mono.empty();
-                    }));
-
-            StepVerifier.create(filter.filter(exchange(headers), chain)).verifyComplete();
-            assertThat(tenantSeen.get()).isEqualTo("tenant-1");
-        }
-
-        @Test
-        @DisplayName("无租户头时不安装租户上下文")
-        void withoutTenantHeader() {
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(IdentityRelayAuthenticationFilter.HEADER_USER_ID, "100");
-
-            AtomicReference<String> tenantSeen = new AtomicReference<>("unset");
-            when(chain.filter(any()))
-                    .thenAnswer(invocation -> Mono.defer(() -> {
-                        tenantSeen.set(TenantContext.currentTenantId().orElse(null));
-                        return Mono.empty();
-                    }));
-
-            StepVerifier.create(filter.filter(exchange(headers), chain)).verifyComplete();
-            assertThat(tenantSeen.get()).isNull();
+    /** 正确签名的刷新令牌或过期访问令牌仍不能建立业务身份。 */
+    @Test
+    void rejectsRefreshAndExpiredTokens() {
+        for (String type : List.of("REFRESH", "ACCESS")) {
+            Instant expiration = "ACCESS".equals(type)
+                    ? Instant.now().minusSeconds(60)
+                    : Instant.now().plusSeconds(60);
+            String jwt = Jwts.builder()
+                    .claim("userId", 7)
+                    .claim("tenantId", "a")
+                    .claim("tokenType", type)
+                    .expiration(Date.from(expiration))
+                    .signWith(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)))
+                    .compact();
+            var exchange = MockServerWebExchange.from(
+                    MockServerHttpRequest.get("/api/v1/messages/inbox").header("Authorization", "Bearer " + jwt));
+            AtomicReference<Object> seen = new AtomicReference<>();
+            filter.filter(exchange, ignored -> ReactiveSecurityContextHolder.getContext()
+                            .doOnNext(context -> seen.set(context.getAuthentication()))
+                            .then())
+                    .block();
+            assertThat(seen.get()).isNull();
         }
     }
 }

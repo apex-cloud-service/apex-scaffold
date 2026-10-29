@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
  * @since 1.3.1
  */
 @Repository
+@lombok.RequiredArgsConstructor
 public class R2dbcAccessLogRepository implements AccessLogRepository {
 
     /** 目标表名（迁移 V60 建表，独立库 apex_gateway） */
@@ -34,15 +35,6 @@ public class R2dbcAccessLogRepository implements AccessLogRepository {
 
     /** R2DBC 响应式数据库客户端 */
     private final DatabaseClient databaseClient;
-
-    /**
-     * 构造 R2DBC 访问日志仓储.
-     *
-     * @param databaseClient Spring 自动配置的 R2DBC 数据库客户端（面向 apex_gateway 独立库）
-     */
-    public R2dbcAccessLogRepository(DatabaseClient databaseClient) {
-        this.databaseClient = databaseClient;
-    }
 
     @Override
     public Mono<Void> save(AccessLogRecord record) {

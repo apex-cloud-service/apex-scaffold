@@ -2,6 +2,7 @@ package com.apex.scaffold.authservice.interfaces.handler;
 
 import com.apex.scaffold.auth.application.service.InternalAuthService;
 import com.apex.scaffold.authservice.interfaces.util.RequestHandlerUtil;
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.contract.dto.internal.TokenValidationRequest;
@@ -41,6 +42,12 @@ public class InternalAuthHandler {
      * @param request 当前请求
      * @return 权限编码列表响应（{@code Result<List<String>>}）
      */
+    @OperationLog(
+            module = "InternalAuth",
+            type = OperationLog.OperationType.SELECT,
+            description = "getUserPermissions",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getUserPermissions(ServerRequest request) {
         Long accountId;
         try {
@@ -73,12 +80,18 @@ public class InternalAuthHandler {
      * 处理「校验存量 Token」请求.
      *
      * <p>请求体为 {@link TokenValidationRequest}（原始 Token + 可选租户 / 来源）。
-     * 校验结论始终以 200 返回，业务有效性体现在 {@code data.valid} 字段中，
+     * 正常完成校验时以 HTTP 200 返回，业务有效性体现在 {@code data.valid} 字段中，
      * 便于消费方按「拒绝优先」语义处理。
      *
      * @param request 当前请求
      * @return Token 语义校验快照响应（{@code Result<TokenValidationDTO>}）
      */
+    @OperationLog(
+            module = "InternalAuth",
+            type = OperationLog.OperationType.OTHER,
+            description = "validateToken",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> validateToken(ServerRequest request) {
         Mono<ServerResponse> handled = responses
                 .validateAndMap(request, TokenValidationRequest.class)

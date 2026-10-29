@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  * 从而保证“启动即生成初始 RSA 密钥”的行为在两条链路上完全一致。</p>
  *
  * @author Apex Team
- * @since 2026-10-08
+ * @since 1.3.1
  */
 @Slf4j
 @Component

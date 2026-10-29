@@ -33,6 +33,12 @@
 # 服务治理：模式只在启动期解析一次，运行期不热切换
 # ============================================================
 apex:
+  seata:
+    enabled: ${APEX_SEATA_ENABLED:false}
+    application-id: apex-system-service
+    transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
+    propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+    allowed-origins: []
   features:
     auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}
   auth-center-permission:
@@ -57,8 +63,12 @@ apex:
       readiness-withdraw-timeout: ${APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT:5s}
       force-shutdown-after-timeout: ${APEX_GOVERNANCE_FORCE_SHUTDOWN:true}
   blocking-io:
+    # 阻塞 I/O 专用池；各池可独立开启虚拟线程（JDK 21），默认关闭以保持既有行为
     jdbc:
       threads: 32
+      # 开启虚拟线程后 threads 语义变为"默认最大并发"，建议用 max-concurrency 与数据库连接池上限对齐
+      # virtual-threads: false
+      # max-concurrency: 32
     cache:
       threads: 4
     storage:

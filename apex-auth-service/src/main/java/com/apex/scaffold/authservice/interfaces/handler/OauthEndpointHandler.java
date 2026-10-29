@@ -3,6 +3,15 @@ package com.apex.scaffold.authservice.interfaces.handler;
 import com.apex.scaffold.auth.application.service.OAuth2Service;
 import com.apex.scaffold.auth.application.service.OAuth2Service.OAuthException;
 import com.apex.scaffold.auth.domain.service.UnifiedAuditService;
+import com.apex.scaffold.common.annotation.OperationLog;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -94,6 +103,13 @@ public class OauthEndpointHandler {
      * @param request 包含授权请求查询参数的请求
      * @return 302重定向响应或OAuth2标准错误响应
      */
+    @AuthorizeParameters
+    @OperationLog(
+            module = "OauthEndpoint",
+            type = OperationLog.OperationType.OTHER,
+            description = "authorize",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> authorize(ServerRequest request) {
         if (request.queryParams().values().stream().anyMatch(values -> values.size() != 1)) {
             return error(400, "invalid_request");
@@ -135,6 +151,65 @@ public class OauthEndpointHandler {
     }
 
     /**
+     * 声明授权端点的七项查询参数及 S256 PKCE 约束。
+     *
+     * <p>显式指定字符串模型，避免函数式端点缺少可推导的 Java 参数时生成空 schema。
+     */
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Parameters({
+        @Parameter(
+                name = "client_id",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "已注册的客户端标识",
+                schema = @Schema(type = "string", implementation = String.class)),
+        @Parameter(
+                name = "response_type",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "响应类型，仅支持 code",
+                schema =
+                        @Schema(
+                                type = "string",
+                                implementation = String.class,
+                                allowableValues = {"code"})),
+        @Parameter(
+                name = "redirect_uri",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "与客户端注册值匹配的重定向 URI",
+                schema = @Schema(type = "string", implementation = String.class, format = "uri")),
+        @Parameter(
+                name = "scope",
+                in = ParameterIn.QUERY,
+                description = "空格分隔的授权范围，受客户端配置约束",
+                schema = @Schema(type = "string", implementation = String.class)),
+        @Parameter(
+                name = "state",
+                in = ParameterIn.QUERY,
+                description = "客户端状态值；传入时在重定向中原样携带",
+                schema = @Schema(type = "string", implementation = String.class)),
+        @Parameter(
+                name = "code_challenge",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "43 位 Base64URL 编码的 S256 PKCE 挑战值",
+                schema = @Schema(type = "string", implementation = String.class, pattern = "[A-Za-z0-9_-]{43}")),
+        @Parameter(
+                name = "code_challenge_method",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "PKCE 算法，仅支持 S256",
+                schema =
+                        @Schema(
+                                type = "string",
+                                implementation = String.class,
+                                allowableValues = {"S256"}))
+    })
+    private @interface AuthorizeParameters {}
+
+    /**
      * 撤销OAuth2令牌。
      *
      * <p>对应{@code POST /oauth2/revoke}端点，实现RFC 7009令牌撤销。
@@ -143,6 +218,12 @@ public class OauthEndpointHandler {
      * @param request 包含客户端凭据与待撤销令牌的表单请求
      * @return 撤销结果（空JSON对象）或OAuth2标准错误响应
      */
+    @OperationLog(
+            module = "OauthEndpoint",
+            type = OperationLog.OperationType.UPDATE,
+            description = "revoke",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> revoke(ServerRequest request) {
         return withClient(
                 "REVOKE", request, (values, clientId, tenant) -> service.revoke(values.get("token"), clientId, tenant)
@@ -158,6 +239,12 @@ public class OauthEndpointHandler {
      * @param request 包含客户端凭据与待查询令牌的表单请求
      * @return 令牌状态JSON响应或OAuth2标准错误响应
      */
+    @OperationLog(
+            module = "OauthEndpoint",
+            type = OperationLog.OperationType.OTHER,
+            description = "introspect",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> introspect(ServerRequest request) {
         return withClient("INTROSPECT", request, (values, clientId, tenant) -> service.introspect(
                         values.get("token"), clientId, tenant)
@@ -248,6 +335,12 @@ public class OauthEndpointHandler {
         });
     }
 
+    /**
+     * 返回不经 Result 包装、禁止缓存的 OAuth JSON 成功响应。
+     *
+     * @param body 协议响应字段；撤销成功时为空对象
+     * @return HTTP 200 JSON 响应
+     */
     private Mono<ServerResponse> ok(Map<String, Object> body) {
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -256,6 +349,13 @@ public class OauthEndpointHandler {
                 .bodyValue(body);
     }
 
+    /**
+     * 构造包含 error 字段的原生 OAuth 错误体，并禁止缓存。
+     *
+     * @param status HTTP 状态码
+     * @param code OAuth 协议错误码
+     * @return 不经 Result 包装的错误响应
+     */
     private Mono<ServerResponse> error(int status, String code) {
         return ServerResponse.status(status)
                 .contentType(MediaType.APPLICATION_JSON)

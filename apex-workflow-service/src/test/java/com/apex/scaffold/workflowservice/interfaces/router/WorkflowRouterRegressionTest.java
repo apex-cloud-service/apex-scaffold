@@ -2,6 +2,7 @@ package com.apex.scaffold.workflowservice.interfaces.router;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.apex.scaffold.workflowservice.interfaces.handler.WorkflowDefinitionHandler;
 import com.apex.scaffold.workflowservice.interfaces.handler.WorkflowHandler;
 import java.util.ArrayDeque;
 import java.util.LinkedHashSet;
@@ -32,11 +33,12 @@ import reactor.core.publisher.Mono;
  * §6.2「工作流全接口回归」要求，确保网关切流后 {@code apex-workflow-service}
  * 独立暴露的接口路径与旧单体一致、无遗漏、无错配、无冗余。
  *
- * <h2>覆盖接口（共 12 个）</h2>
+ * <h2>覆盖接口（共 21 个）</h2>
  * <ul>
  *   <li>管理后台查询：{@code /admin-api/v1/workflows/**}（4 个）</li>
  *   <li>业务 API：{@code /api/v1/workflows/**}（3 个）</li>
  *   <li>业务操作：{@code /api/workflow/**}（5 个）</li>
+ *   <li>流程定义生命周期：{@code /api/v2/workflow-definitions/**}（9 个）</li>
  * </ul>
  *
  * @author Apex Team
@@ -102,6 +104,26 @@ class WorkflowRouterRegressionTest {
     }
 
     /**
+     * 验证流程定义生命周期接口全部正确注册。
+     */
+    @Test
+    @DisplayName("流程定义生命周期接口全部正确注册")
+    void shouldExposeWorkflowDefinitionEndpoints() {
+        Set<Endpoint> expected = Set.of(
+                new Endpoint("GET", "/api/v2/workflow-definitions"),
+                new Endpoint("POST", "/api/v2/workflow-definitions"),
+                new Endpoint("GET", "/api/v2/workflow-definitions/{definitionId}"),
+                new Endpoint("PUT", "/api/v2/workflow-definitions/{definitionId}"),
+                new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/validate"),
+                new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/publish"),
+                new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/enable"),
+                new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/disable"),
+                new Endpoint("GET", "/api/v2/workflow-definitions/{definitionId}/versions"));
+
+        assertThat(collectEndpoints()).containsAll(expected);
+    }
+
+    /**
      * 验证对外暴露的端点集合与预期完全一致（数量、路径、方法一一对应）。
      */
     @Test
@@ -120,10 +142,19 @@ class WorkflowRouterRegressionTest {
         expected.add(new Endpoint("POST", "/api/workflow/tasks/{taskId}/delegate"));
         expected.add(new Endpoint("POST", "/api/workflow/instances/{instanceId}/suspend"));
         expected.add(new Endpoint("POST", "/api/workflow/instances/{instanceId}/resume"));
+        expected.add(new Endpoint("GET", "/api/v2/workflow-definitions"));
+        expected.add(new Endpoint("POST", "/api/v2/workflow-definitions"));
+        expected.add(new Endpoint("GET", "/api/v2/workflow-definitions/{definitionId}"));
+        expected.add(new Endpoint("PUT", "/api/v2/workflow-definitions/{definitionId}"));
+        expected.add(new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/validate"));
+        expected.add(new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/publish"));
+        expected.add(new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/enable"));
+        expected.add(new Endpoint("POST", "/api/v2/workflow-definitions/{definitionId}/disable"));
+        expected.add(new Endpoint("GET", "/api/v2/workflow-definitions/{definitionId}/versions"));
 
         Set<Endpoint> actual = collectEndpoints();
 
-        assertThat(actual).as("工作流对外接口总数").hasSize(12);
+        assertThat(actual).as("工作流对外接口总数").hasSize(21);
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
     }
 
@@ -131,8 +162,9 @@ class WorkflowRouterRegressionTest {
      * 收集全部路由 Bean 暴露的端点集合。
      *
      * <p>反射调用 {@link WorkflowRouter} 的三个路由工厂方法，路由 Bean 依赖的
-     * {@link WorkflowHandler} 使用 Mockito 桩对象填充，仅用于构建路由树，
-     * 不触发任何业务逻辑。</p>
+     * {@link WorkflowHandler} 使用 Mockito 桩对象填充；随后直接调用
+     * {@link WorkflowDefinitionRouter#workflowDefinitionRoutes(WorkflowDefinitionHandler)}
+     * 构建流程定义生命周期路由。桩对象仅用于构建路由树，不触发任何业务逻辑。</p>
      *
      * @return 已注册的「HTTP 方法 + 绝对路径」端点集合
      */
@@ -146,6 +178,11 @@ class WorkflowRouterRegressionTest {
             routes.accept(collector);
             endpoints.addAll(collector.endpoints);
         }
+        RouterFunction<ServerResponse> definitionRoutes =
+                new WorkflowDefinitionRouter().workflowDefinitionRoutes(Mockito.mock(WorkflowDefinitionHandler.class));
+        RouteCollector definitionCollector = new RouteCollector();
+        definitionRoutes.accept(definitionCollector);
+        endpoints.addAll(definitionCollector.endpoints);
         return endpoints;
     }
 

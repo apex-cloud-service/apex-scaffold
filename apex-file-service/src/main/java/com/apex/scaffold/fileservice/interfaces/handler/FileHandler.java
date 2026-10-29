@@ -1,5 +1,6 @@
 package com.apex.scaffold.fileservice.interfaces.handler;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
@@ -161,7 +162,7 @@ public class FileHandler {
      *
      * <p>
      * 处理 multipart/form-data 文件上传请求，将文件数据读取后上传到服务端固定对象存储桶。
-     * 上传完成后返回桶名、唯一对象名、预签名访问 URL 和有效期。
+     * 上传完成后返回桶名、唯一对象名和访问 URL；云存储返回签名有效秒数，Local 返回需认证授权的内容地址且 expiresIn 为 0。
      *
      * <h3>处理流程</h3>
      * <ul>
@@ -174,7 +175,7 @@ public class FileHandler {
      *
      * <h3>文件大小限制</h3>
      * <p>文件大小限制由配置项 {@code file.upload.max-size-bytes} 控制，默认 10 MiB。
-     * 使用流式检查方式，避免将大文件全部读入内存导致内存溢出。</p>
+     * 逐块累计大小，超限后释放已持有的缓冲区；限制内的文件会完整合并到内存字节数组。</p>
      *
      * @param request 服务器请求对象，包含 multipart 表单数据中的 file 字段
      * @return 包含完整 {@link FileUploadResult} 的统一响应对象
@@ -203,17 +204,22 @@ public class FileHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = FileUploadResult.class))),
+                                schema = @Schema(implementation = FileUploadResponse.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "文件为空、格式不支持或图片内容违规",
-                content = @Content(schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "上传失败",
-                content = @Content(schema = @Schema(implementation = Result.class)))
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
     })
     @Deprecated(since = "2.2.0", forRemoval = true)
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.UPLOAD,
+            description = "upload",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> upload(ServerRequest request) {
         if (!uploadEnabled) {
             return requestHandlerUtil.buildErrorResponse(ResultCode.ERROR, "文件上传功能未启用");
@@ -258,7 +264,7 @@ public class FileHandler {
                     """
                     普通图片上传的独立接口。对象存储前依次执行百度云图片审核和
                     Python FGCLIP 违规检测；审核通过后仅写入普通对象存储。
-                    sex 必填：0=男（AM 目录），1=女（AF 目录）。接口不接受 usage。
+                    sex 必填：1=男（AM 目录），2=女（AF 目录）。接口仅解析 file 和 sex。
                     """,
             requestBody =
                     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -272,11 +278,24 @@ public class FileHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "百度和 FGCLIP 审核通过，普通对象上传成功",
-                content = @Content(schema = @Schema(implementation = FileUploadResult.class))),
-        @ApiResponse(responseCode = "400", description = "表单、文件格式或审核结果不符合要求"),
-        @ApiResponse(responseCode = "401", description = "未登录"),
-        @ApiResponse(responseCode = "503", description = "百度或 Python 审核服务不可用")
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileUploadResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "表单、文件格式或审核结果不符合要求",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
     })
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.UPLOAD,
+            description = "uploadGenericFile",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> uploadGenericFile(ServerRequest request) {
         if (!uploadEnabled) {
             return requestHandlerUtil.buildErrorResponse(ResultCode.ERROR, "文件上传功能未启用");
@@ -381,6 +400,7 @@ public class FileHandler {
      * @param filename  原始文件名
      * @param filePart  multipart 文件部分
      * @param sex       性别路由参数
+     * @param request 当前服务器请求
      * @return 上传结果响应
      */
     private Mono<ServerResponse> handleGenericUpload(
@@ -460,16 +480,16 @@ public class FileHandler {
      * 获取文件 URL
      *
      * <p>
-     * 根据存储桶名称和文件名获取文件的预签名访问地址。
-     * 预签名 URL 具有时效性，可直接用于文件下载。
+     * 根据已授权的存储桶名称和文件名获取访问地址。
+     * 云存储返回临时预签名 URL；Local 返回每次访问仍需携带认证凭证的内容地址，不适用签名 TTL。
      *
      * @param request 服务器请求对象，包含 {@code bucketName} 和 {@code fileName} 查询参数
-     * @return 包含文件预签名 URL 的响应对象
+     * @return 包含文件访问 URL 的响应对象
      */
     @Operation(
             operationId = "getFileUrl",
             summary = "获取文件URL",
-            description = "根据存储桶名称和文件名获取文件的预签名访问地址，预签名 URL 具有时效性，可直接用于文件下载")
+            description = "云存储返回临时预签名 URL；Local 返回需携带认证凭证的内容地址，不适用签名 TTL")
     @Parameters({
         @Parameter(
                 name = "bucketName",
@@ -487,17 +507,25 @@ public class FileHandler {
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "获取成功，返回文件预签名URL",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
+                description = "获取成功，返回云预签名 URL 或需认证授权的 Local 内容地址",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileUrlResponse.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "参数错误，bucketName或fileName为空",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
     })
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.SELECT,
+            description = "getUrl",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getUrl(ServerRequest request) {
         String bucketName = request.queryParam("bucketName").orElse(null);
         String fileName = request.queryParam("fileName").orElse(null);
@@ -534,21 +562,25 @@ public class FileHandler {
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "删除成功，返回操作结果",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
+                description = "返回删除操作的布尔结果",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileBooleanResponse.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "参数错误，bucketName或fileName为空",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "文件不存在",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
     })
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.DELETE,
+            description = "delete",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> delete(ServerRequest request) {
         String bucketName = request.queryParam("bucketName").orElse(null);
         String fileName = request.queryParam("fileName").orElse(null);
@@ -556,6 +588,47 @@ public class FileHandler {
             return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "存储桶名称和文件名称不能为空");
         }
         return fileService.delete(bucketName, fileName).flatMap(requestHandlerUtil::buildSuccessResponse);
+    }
+
+    /**
+     * 重试所有者的孤儿对象清理，失败时保留清理记录。
+     * @param request 包含清理记录编号的请求
+     * @return 本次对象清理结果
+     */
+    @Operation(operationId = "retryOrphanCleanup", summary = "重试孤儿对象清理", description = "仅文件所有者可重试孤儿对象清理，失败时保留元数据")
+    @Parameter(
+            name = "fileId",
+            description = "清理记录编号",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "对象清理的布尔结果",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileBooleanResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数或清理失败",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
+    })
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.OTHER,
+            description = "retryOrphanCleanup",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> retryOrphanCleanup(ServerRequest request) {
+        return Mono.fromCallable(() -> Long.parseLong(request.pathVariable("fileId")))
+                .flatMap(fileService::retryOrphanCleanup)
+                .flatMap(requestHandlerUtil::buildSuccessResponse)
+                .onErrorResume(requestHandlerUtil::handleError);
     }
 
     /**
@@ -586,16 +659,24 @@ public class FileHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "查询成功，返回文件是否存在",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileBooleanResponse.class))),
         @ApiResponse(
                 responseCode = "400",
                 description = "参数错误，bucketName或fileName为空",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "服务器内部错误",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
     })
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.SELECT,
+            description = "exists",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> exists(ServerRequest request) {
         String bucketName = request.queryParam("bucketName").orElse(null);
         String fileName = request.queryParam("fileName").orElse(null);
@@ -606,19 +687,24 @@ public class FileHandler {
     }
 
     /**
-     * 读取默认存储桶中的文件内容。
+     * 读取经过文件归属授权的文件内容。
      *
-     * <p>该端点主要为本地存储模式提供可访问 URL。物理桶名由服务端配置固定，
-     * 客户端只能提交上传结果中的 UUID 对象名，不能跨桶读取。</p>
+     * <p>未指定桶名时使用配置默认桶；指定桶名仅用于定位历史文件，
+     * 下载前仍校验持久化记录中的租户与用户归属。</p>
      *
-     * @param request 包含 fileName 查询参数的服务器请求
+     * @param request 包含 fileName 及可选 bucketName 查询参数的服务器请求
      * @return 流式文件响应
      */
     @Operation(
             operationId = "getLocalFileContent",
             summary = "读取本地存储文件",
-            description = "仅用于 local 存储模式，按服务端固定桶流式读取文件内容并返回，主要为本地存储提供可访问 URL")
+            description = "按持久化文件归属授权后流式读取文件内容，未指定桶名时使用默认桶")
     @Parameters({
+        @Parameter(
+                name = "bucketName",
+                description = "历史文件的存储桶名称，省略时使用默认桶",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
         @Parameter(
                 name = "fileName",
                 description = "上传后返回的对象名称（UUID格式）",
@@ -630,28 +716,34 @@ public class FileHandler {
         @ApiResponse(
                 responseCode = "200",
                 description = "读取成功，返回文件内容流",
-                content = @Content(mediaType = "application/octet-stream")),
+                content =
+                        @Content(
+                                mediaType = "application/octet-stream",
+                                schema = @Schema(type = "string", format = "binary"))),
         @ApiResponse(
                 responseCode = "400",
                 description = "参数错误，fileName缺失或为空",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "404",
-                description = "文件不存在",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "文件读取失败",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
     })
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.DOWNLOAD,
+            description = "content",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> content(ServerRequest request) {
         String fileName = request.queryParam("fileName").orElse(null);
         if (fileName == null || fileName.isBlank()) {
             return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "文件名称不能为空");
         }
-        return fileService.download(defaultBucketName, fileName).flatMap(inputStream -> {
+        String bucketName = request.queryParam("bucketName").orElse(defaultBucketName);
+        return fileService.download(bucketName, fileName).flatMap(inputStream -> {
             Flux<DataBuffer> content = DataBufferUtils.readInputStream(
                             () -> inputStream, DefaultDataBufferFactory.sharedInstance, 8192)
+                    .subscribeOn(com.apex.scaffold.common.scheduler.BlockingIoSchedulers.storage())
                     .doFinally(signal -> {
                         try {
                             inputStream.close();
@@ -697,17 +789,22 @@ public class FileHandler {
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
-                description = "预览成功，返回文件内容流",
-                content = @Content(mediaType = "application/octet-stream")),
+                description = "预览成功，媒体类型由 contentType 或扩展名确定，Content-Disposition 为 inline",
+                content = @Content(mediaType = "*/*", schema = @Schema(type = "string", format = "binary"))),
         @ApiResponse(
                 responseCode = "400",
                 description = "参数错误，fileName缺失或为空",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class))),
-        @ApiResponse(
-                responseCode = "500",
-                description = "文件读取失败",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Result.class)))
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileErrorResponse.class)))
     })
+    @OperationLog(
+            module = "File",
+            type = OperationLog.OperationType.DOWNLOAD,
+            description = "preview",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> preview(ServerRequest request) {
         String fileName = request.queryParam("fileName").orElse(null);
         if (fileName == null || fileName.isBlank()) {
@@ -719,6 +816,7 @@ public class FileHandler {
         return fileService.download(defaultBucketName, fileName).flatMap(inputStream -> {
             Flux<DataBuffer> content = DataBufferUtils.readInputStream(
                             () -> inputStream, DefaultDataBufferFactory.sharedInstance, 8192)
+                    .subscribeOn(com.apex.scaffold.common.scheduler.BlockingIoSchedulers.storage())
                     .doFinally(signal -> {
                         try {
                             inputStream.close();
@@ -775,4 +873,20 @@ public class FileHandler {
         }
         return MediaType.APPLICATION_OCTET_STREAM_VALUE;
     }
+
+    /** 上传结果统一响应的文档模型。 */
+    @Schema(name = "FileUploadResponse")
+    public static class FileUploadResponse extends Result<FileUploadResult> {}
+
+    /** 文件地址统一响应的文档模型。 */
+    @Schema(name = "FileUrlResponse")
+    public static class FileUrlResponse extends Result<String> {}
+
+    /** 文件布尔结果统一响应的文档模型。 */
+    @Schema(name = "FileBooleanResponse")
+    public static class FileBooleanResponse extends Result<Boolean> {}
+
+    /** 文件错误统一响应的文档模型。 */
+    @Schema(name = "FileErrorResponse")
+    public static class FileErrorResponse extends Result<Void> {}
 }

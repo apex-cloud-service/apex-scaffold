@@ -3,8 +3,7 @@ package com.apex.scaffold.gateway.filter;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -41,10 +40,9 @@ import reactor.core.publisher.Mono;
  * @author Apex Team
  * @since 1.3.1
  */
+@Slf4j
 @Component
 public class GrayRouteFilter implements GlobalFilter, Ordered {
-
-    private static final Logger log = LoggerFactory.getLogger(GrayRouteFilter.class);
 
     /** 过滤器顺序：限流（30）之后、访问日志（50）之前 */
     public static final int ORDER = 40;

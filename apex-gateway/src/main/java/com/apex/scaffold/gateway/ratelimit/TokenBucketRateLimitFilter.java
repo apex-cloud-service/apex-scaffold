@@ -6,8 +6,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -43,9 +42,9 @@ import reactor.core.publisher.Mono;
  * @since 1.3.1
  */
 @Component
+@Slf4j
+@lombok.RequiredArgsConstructor
 public class TokenBucketRateLimitFilter {
-
-    private static final Logger log = LoggerFactory.getLogger(TokenBucketRateLimitFilter.class);
 
     /** 令牌数 Key 后缀 */
     private static final String TOKENS_SUFFIX = ":tokens";
@@ -108,22 +107,6 @@ public class TokenBucketRateLimitFilter {
 
     /** 指标注册表 */
     private final MeterRegistry meterRegistry;
-
-    /**
-     * 构造限流内核.
-     *
-     * @param redisTemplate 响应式 Redis 模板
-     * @param properties    限流配置属性
-     * @param meterRegistry 指标注册表
-     */
-    public TokenBucketRateLimitFilter(
-            ReactiveStringRedisTemplate redisTemplate,
-            GatewayRateLimitProperties properties,
-            MeterRegistry meterRegistry) {
-        this.redisTemplate = redisTemplate;
-        this.properties = properties;
-        this.meterRegistry = meterRegistry;
-    }
 
     /**
      * 执行限流判定并按结果放行或终止请求.

@@ -79,6 +79,65 @@ import reactor.core.publisher.Mono;
 @Tag(name = "工作流管理", description = "工作流任务和流程实例操作接口")
 public class WorkflowHandler {
 
+    /** 流程发起的统一响应文档模型。 */
+    @Schema(name = "WorkflowStartedResult")
+    public static class WorkflowStartedResult extends Result<com.apex.scaffold.workflow.domain.model.ProcessInstance> {}
+
+    /** 无数据操作响应文档模型。 */
+    @Schema(name = "WorkflowVoidResult")
+    public static class WorkflowVoidResult extends Result<Void> {}
+
+    /** 流程实例分页响应文档模型。 */
+    @Schema(name = "WorkflowInstancePageResult")
+    public static class WorkflowInstancePageResult
+            extends Result<PageResponse<com.apex.scaffold.workflow.application.dto.WorkflowInstanceDTO>> {}
+
+    /** 待办任务分页响应文档模型。 */
+    @Schema(name = "WorkflowTaskPageResult")
+    public static class WorkflowTaskPageResult
+            extends Result<PageResponse<com.apex.scaffold.workflow.application.dto.WorkflowTaskDTO>> {}
+
+    /** 流程实例详情响应文档模型。 */
+    @Schema(name = "WorkflowDetailResult")
+    public static class WorkflowDetailResult
+            extends Result<com.apex.scaffold.workflow.application.dto.WorkflowInstanceDetailDTO> {}
+
+    /** 统计正常响应与服务失败降级响应的文档模型。 */
+    @Schema(name = "WorkflowStatisticsResult")
+    public static class WorkflowStatisticsResult extends Result<Object> {
+        @Override
+        @Schema(
+                oneOf = {
+                    com.apex.scaffold.workflow.application.dto.WorkflowStatisticsDTO.class,
+                    StatisticsFallback.class
+                })
+        public Object getData() {
+            return super.getData();
+        }
+    }
+
+    /** 趋势正常响应与服务失败降级响应的文档模型。 */
+    @Schema(name = "WorkflowTrendResult")
+    public static class WorkflowTrendResult extends Result<Object> {
+        @Override
+        @Schema(oneOf = {com.apex.scaffold.workflow.application.dto.WorkflowTrendDTO.class, TrendFallback.class})
+        public Object getData() {
+            return super.getData();
+        }
+    }
+
+    /** 统计查询失败时返回的零值数据。 */
+    @Schema(name = "WorkflowStatisticsFallback")
+    public record StatisticsFallback(
+            int totalInstances, int runningInstances, int completedInstances, int pendingTasks) {}
+
+    /** 趋势查询失败时返回的空列表数据。 */
+    @Schema(name = "WorkflowTrendFallback")
+    public record TrendFallback(
+            java.util.List<String> dateList,
+            java.util.List<Integer> completedList,
+            java.util.List<Integer> rejectedList) {}
+
     private final WorkflowService workflowService;
     private final WorkflowQueryService workflowQueryService;
     private final WorkflowStatisticsService workflowStatisticsService;
@@ -115,7 +174,12 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 workflowCode，请求体 StartProcessInstanceRequest
      * @return ServerResponse，包含流程实例
      */
-    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.INSERT, description = "发起流程实例")
+    @OperationLog(
+            module = "工作流管理",
+            type = OperationLog.OperationType.INSERT,
+            description = "发起流程实例",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "startProcessInstance", summary = "发起流程实例", description = "根据流程编码创建新的流程实例")
     @Parameter(
             name = "workflowCode",
@@ -131,7 +195,13 @@ public class WorkflowHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = StartProcessInstanceRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowStartedResult.class))),
         @ApiResponse(responseCode = "400", description = "请求参数错误"),
         @ApiResponse(responseCode = "404", description = "流程定义不存在")
     })
@@ -142,12 +212,13 @@ public class WorkflowHandler {
                 .flatMap(requestHandlerUtil::validateAndThrow)
                 .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
                         .startProcessInstance(workflowCode, req.getBusinessKey(), userId, req.getContextJson())
-                        .doOnSuccess(instance -> publish(new WorkflowInstanceStartedEvent(
-                                instance.getId(),
-                                workflowCode,
-                                instance.getBusinessKey(),
-                                instance.getInitiatorId(),
-                                instance.getStartTime())))))
+                        .flatMap(instance -> publish(new WorkflowInstanceStartedEvent(
+                                        instance.getId(),
+                                        workflowCode,
+                                        instance.getBusinessKey(),
+                                        instance.getInitiatorId(),
+                                        instance.getStartTime()))
+                                .thenReturn(instance))))
                 .flatMap(instance -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(instance)));
@@ -175,9 +246,21 @@ public class WorkflowHandler {
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
             schema = @Schema(type = "integer", defaultValue = "10"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowTaskPageResult.class))),
         @ApiResponse(responseCode = "401", description = "未授权")
     })
+    @OperationLog(
+            module = "Workflow",
+            type = OperationLog.OperationType.SELECT,
+            description = "listPendingTasks",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listPendingTasks(ServerRequest request) {
         int pageNum = Integer.parseInt(request.queryParam("pageNum").orElse("1"));
         int pageSize = Integer.parseInt(request.queryParam("pageSize").orElse("10"));
@@ -197,7 +280,12 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 CompleteTaskRequest
      * @return ServerResponse，包含操作结果
      */
-    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "完成任务")
+    @OperationLog(
+            module = "工作流管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "完成任务",
+            saveRequest = true,
+            saveResponse = true)
     @Operation(operationId = "completeTask", summary = "完成任务", description = "审批通过任务")
     @Parameter(
             name = "taskId",
@@ -213,7 +301,13 @@ public class WorkflowHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = CompleteTaskRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "完成成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "完成成功，data 为空",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowVoidResult.class))),
         @ApiResponse(responseCode = "400", description = "请求参数错误"),
         @ApiResponse(responseCode = "404", description = "任务不存在")
     })
@@ -224,7 +318,7 @@ public class WorkflowHandler {
                 .flatMap(requestHandlerUtil::validateAndThrow)
                 .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
                         .completeTask(taskId, userId, req.getComment())
-                        .doOnSuccess(v -> publishTaskCompleted(taskId, userId, req.getComment()))))
+                        .then(Mono.defer(() -> publishTaskCompleted(taskId, userId, req.getComment())))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -244,9 +338,20 @@ public class WorkflowHandler {
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
-        @ApiResponse(responseCode = "404", description = "流程实例不存在")
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowDetailResult.class)))
     })
+    @OperationLog(
+            module = "Workflow",
+            type = OperationLog.OperationType.SELECT,
+            description = "getInstanceDetail",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getInstanceDetail(ServerRequest request) {
         Long instanceId = Long.valueOf(request.pathVariable("instanceId"));
 
@@ -272,10 +377,16 @@ public class WorkflowHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema = @Schema(implementation = PageResponse.class))),
+                                schema = @Schema(implementation = WorkflowInstancePageResult.class))),
         @ApiResponse(responseCode = "401", description = "未授权"),
         @ApiResponse(responseCode = "403", description = "权限不足")
     })
+    @OperationLog(
+            module = "Workflow",
+            type = OperationLog.OperationType.SELECT,
+            description = "listInstances",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> listInstances(ServerRequest request) {
         int pageNum = Integer.parseInt(request.queryParam("pageNum").orElse("1"));
         int pageSize = Integer.parseInt(request.queryParam("pageSize").orElse("10"));
@@ -291,7 +402,8 @@ public class WorkflowHandler {
     /**
      * 获取工作流统计数据。
      *
-     * <p>返回总实例数、运行中实例数、已完成实例数、待办任务数等统计信息。</p>
+     * <p>正常返回今日发起量、运行及挂起实例数、待办与超时任务数、转办量、平均完成耗时及状态分布。
+     * 服务异常时返回 totalInstances、runningInstances、completedInstances、pendingTasks 均为零的降级结构。</p>
      *
      * @param request ServerRequest
      * @return 工作流统计数据
@@ -299,9 +411,21 @@ public class WorkflowHandler {
     @TenantAware
     @Operation(operationId = "getStatistics", summary = "获取工作流统计数据", description = "获取工作流实例和任务的统计信息")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(
+                responseCode = "200",
+                description = "统计成功；服务异常时 data 为零值降级结构",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowStatisticsResult.class))),
         @ApiResponse(responseCode = "401", description = "未授权")
     })
+    @OperationLog(
+            module = "Workflow",
+            type = OperationLog.OperationType.SELECT,
+            description = "getStatistics",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getStatistics(ServerRequest request) {
         return workflowStatisticsService
                 .getStatistics()
@@ -324,7 +448,8 @@ public class WorkflowHandler {
     /**
      * 获取工作流趋势数据。
      *
-     * <p>返回指定天数内的工作流趋势数据，包括每日完成数和拒绝数。</p>
+     * <p>正常返回 dates、startedCounts、completedCounts；服务异常时返回
+     * dateList、completedList、rejectedList 三个空数组的降级结构。</p>
      *
      * @param request ServerRequest
      * @return 工作流趋势数据
@@ -338,9 +463,21 @@ public class WorkflowHandler {
             in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
             schema = @Schema(type = "integer", defaultValue = "7"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功", content = @Content(mediaType = "application/json")),
+        @ApiResponse(
+                responseCode = "200",
+                description = "趋势查询成功；服务异常时 data 为三个空列表的降级结构",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowTrendResult.class))),
         @ApiResponse(responseCode = "401", description = "未授权")
     })
+    @OperationLog(
+            module = "Workflow",
+            type = OperationLog.OperationType.SELECT,
+            description = "getTrend",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> getTrend(ServerRequest request) {
         int days = Integer.parseInt(request.queryParam("days").orElse("7"));
 
@@ -369,7 +506,12 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 RollbackTaskRequest
      * @return ServerResponse，包含操作结果
      */
-    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "流程回退")
+    @OperationLog(
+            module = "工作流管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "流程回退",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "rollbackTask", summary = "流程回退", description = "将工作流任务回退到指定的前置节点")
     @Parameter(
             name = "taskId",
@@ -385,7 +527,13 @@ public class WorkflowHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = RollbackTaskRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "回退成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "回退成功，data 为空",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowVoidResult.class))),
         @ApiResponse(responseCode = "400", description = "请求参数错误"),
         @ApiResponse(responseCode = "404", description = "任务不存在")
     })
@@ -396,7 +544,7 @@ public class WorkflowHandler {
                 .flatMap(requestHandlerUtil::validateAndThrow)
                 .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
                         .rollbackToNode(taskId, req.getTargetNodeCode(), userId, req.getReason())
-                        .doOnSuccess(v -> publishTaskAssigned(taskId, userId, userId))))
+                        .then(Mono.defer(() -> publishTaskAssigned(taskId, userId, userId)))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -408,7 +556,12 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 TransferTaskRequest
      * @return ServerResponse，包含操作结果
      */
-    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "任务转办")
+    @OperationLog(
+            module = "工作流管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "任务转办",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "transferTask", summary = "任务转办", description = "将当前待办任务转交给其他用户处理，任务责任人变更")
     @Parameter(
             name = "taskId",
@@ -424,7 +577,13 @@ public class WorkflowHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = TransferTaskRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "转办成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "转办成功，data 为空",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowVoidResult.class))),
         @ApiResponse(responseCode = "400", description = "请求参数错误"),
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，无法转办该任务")
@@ -436,7 +595,7 @@ public class WorkflowHandler {
                 .flatMap(requestHandlerUtil::validateAndThrow)
                 .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
                         .transferTask(taskId, req.getNewAssigneeId(), userId, req.getReason())
-                        .doOnSuccess(v -> publishTaskAssigned(taskId, req.getNewAssigneeId(), userId))))
+                        .then(Mono.defer(() -> publishTaskAssigned(taskId, req.getNewAssigneeId(), userId)))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -448,7 +607,12 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 taskId，请求体 DelegateTaskRequest
      * @return ServerResponse，包含操作结果
      */
-    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "任务委派")
+    @OperationLog(
+            module = "工作流管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "任务委派",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "delegateTask", summary = "任务委派", description = "将当前待办任务临时委托给其他用户处理，委托人完成后任务回到原责任人")
     @Parameter(
             name = "taskId",
@@ -464,7 +628,13 @@ public class WorkflowHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = DelegateTaskRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "委派成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "委派成功，data 为空",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowVoidResult.class))),
         @ApiResponse(responseCode = "400", description = "请求参数错误"),
         @ApiResponse(responseCode = "404", description = "任务不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，无法委派该任务")
@@ -476,7 +646,7 @@ public class WorkflowHandler {
                 .flatMap(requestHandlerUtil::validateAndThrow)
                 .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
                         .delegateTask(taskId, req.getDelegateToId(), userId, req.getReason())
-                        .doOnSuccess(v -> publishTaskAssigned(taskId, req.getDelegateToId(), userId))))
+                        .then(Mono.defer(() -> publishTaskAssigned(taskId, req.getDelegateToId(), userId)))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -488,7 +658,12 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 instanceId，请求体 SuspendInstanceRequest
      * @return ServerResponse，包含操作结果
      */
-    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "挂起流程实例")
+    @OperationLog(
+            module = "工作流管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "挂起流程实例",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "suspendInstance", summary = "挂起流程实例", description = "暂停流程实例的执行，所有待办任务无法审批，直到恢复流程")
     @Parameter(
             name = "instanceId",
@@ -504,7 +679,13 @@ public class WorkflowHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = SuspendInstanceRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "挂起成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "挂起成功，data 为空",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowVoidResult.class))),
         @ApiResponse(responseCode = "400", description = "请求参数错误或流程已挂起"),
         @ApiResponse(responseCode = "404", description = "流程实例不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，无法挂起该流程")
@@ -527,7 +708,12 @@ public class WorkflowHandler {
      * @param request ServerRequest，路径参数 instanceId，请求体 ResumeInstanceRequest
      * @return ServerResponse，包含操作结果
      */
-    @OperationLog(module = "工作流管理", type = OperationLog.OperationType.UPDATE, description = "恢复流程实例")
+    @OperationLog(
+            module = "工作流管理",
+            type = OperationLog.OperationType.UPDATE,
+            description = "恢复流程实例",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "resumeInstance", summary = "恢复流程实例", description = "恢复挂起的流程实例，允许待办任务继续审批和流转")
     @Parameter(
             name = "instanceId",
@@ -543,7 +729,13 @@ public class WorkflowHandler {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ResumeInstanceRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "恢复成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "恢复成功，data 为空",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = WorkflowVoidResult.class))),
         @ApiResponse(responseCode = "400", description = "请求参数错误或流程未挂起"),
         @ApiResponse(responseCode = "404", description = "流程实例不存在"),
         @ApiResponse(responseCode = "403", description = "权限不足，无法恢复该流程")
@@ -559,23 +751,25 @@ public class WorkflowHandler {
     }
 
     /**
-     * 发布工作流领域事件（fire-and-forget）。
+     * 在请求链中发布工作流领域事件。
      *
      * <p>事件为最终一致的旁路信号，发布失败仅记录告警日志，不阻断主业务流程。
      * 发送动作由 {@link WorkflowEventPublisher} 内部调度到事件专用线程池执行。
      *
      * @param event 待发布的领域事件
+     * @return 发布完成信号，发布失败记录日志后正常完成
      */
-    private void publish(AbstractDomainEvent event) {
-        workflowEventPublisher
-                .publish(event)
-                .subscribe(
-                        v -> log.debug("工作流事件已发布: {}", event.getClass().getSimpleName()),
-                        error -> log.warn(
-                                "发布工作流事件失败: type={}, sourceId={}, error: {}",
-                                event.getClass().getSimpleName(),
-                                event.getSourceId(),
-                                error.getMessage()));
+    private Mono<Void> publish(AbstractDomainEvent event) {
+        return Mono.defer(() -> workflowEventPublisher.publish(event))
+                .doOnSuccess(v -> log.debug("工作流事件已发布: {}", event.getClass().getSimpleName()))
+                .onErrorResume(error -> {
+                    log.warn(
+                            "发布工作流事件失败: type={}, sourceId={}, error: {}",
+                            event.getClass().getSimpleName(),
+                            event.getSourceId(),
+                            error.getMessage());
+                    return Mono.empty();
+                });
     }
 
     /**
@@ -587,23 +781,21 @@ public class WorkflowHandler {
      * @param taskId 任务 ID
      * @param approverId 审批人账户 ID
      * @param comment 审批意见
+     * @return 任务完成事件旁路的完成信号
      */
-    private void publishTaskCompleted(Long taskId, Long approverId, String comment) {
-        workflowQueryService
-                .getTaskById(taskId)
-                .subscribe(
-                        task -> {
-                            if (task != null) {
-                                publish(new TaskCompletedEvent(
-                                        taskId,
-                                        task.getInstanceId(),
-                                        approverId,
-                                        TaskCompletedEvent.ACTION_APPROVE,
-                                        comment,
-                                        LocalDateTime.now()));
-                            }
-                        },
-                        error -> log.warn("回查任务信息失败，跳过任务完成事件发布: taskId={}, error: {}", taskId, error.getMessage()));
+    private Mono<Void> publishTaskCompleted(Long taskId, Long approverId, String comment) {
+        return Mono.defer(() -> workflowQueryService.getTaskById(taskId))
+                .flatMap(task -> publish(new TaskCompletedEvent(
+                        taskId,
+                        task.getInstanceId(),
+                        approverId,
+                        TaskCompletedEvent.ACTION_APPROVE,
+                        comment,
+                        LocalDateTime.now())))
+                .onErrorResume(error -> {
+                    log.warn("回查任务信息失败，跳过任务完成事件发布: taskId={}, error: {}", taskId, error.getMessage());
+                    return Mono.empty();
+                });
     }
 
     /**
@@ -615,18 +807,16 @@ public class WorkflowHandler {
      * @param taskId 任务 ID
      * @param assigneeId 办理人账户 ID
      * @param assignedBy 分配人账户 ID
+     * @return 任务分配事件旁路的完成信号
      */
-    private void publishTaskAssigned(Long taskId, Long assigneeId, Long assignedBy) {
-        workflowQueryService
-                .getTaskById(taskId)
-                .subscribe(
-                        task -> {
-                            if (task != null) {
-                                publish(new TaskAssignedEvent(
-                                        taskId, task.getInstanceId(), task.getNodeId(), assigneeId, assignedBy));
-                            }
-                        },
-                        error -> log.warn("回查任务信息失败，跳过任务分配事件发布: taskId={}, error: {}", taskId, error.getMessage()));
+    private Mono<Void> publishTaskAssigned(Long taskId, Long assigneeId, Long assignedBy) {
+        return Mono.defer(() -> workflowQueryService.getTaskById(taskId))
+                .flatMap(task -> publish(
+                        new TaskAssignedEvent(taskId, task.getInstanceId(), task.getNodeId(), assigneeId, assignedBy)))
+                .onErrorResume(error -> {
+                    log.warn("回查任务信息失败，跳过任务分配事件发布: taskId={}, error: {}", taskId, error.getMessage());
+                    return Mono.empty();
+                });
     }
 
     /**

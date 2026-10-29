@@ -2,8 +2,7 @@ package com.apex.scaffold.gateway.lb;
 
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.Request;
 import org.springframework.cloud.client.loadbalancer.RequestData;
@@ -36,9 +35,8 @@ import reactor.core.publisher.Flux;
  * @author Apex Team
  * @since 1.3.1
  */
+@Slf4j
 public class GrayTagServiceInstanceListSupplier extends DelegatingServiceInstanceListSupplier {
-
-    private static final Logger log = LoggerFactory.getLogger(GrayTagServiceInstanceListSupplier.class);
 
     /** 灰度标记请求头（与 {@code GrayRouteFilter} 约定一致） */
     public static final String HEADER_GRAY_TAG = "X-Gray-Tag";

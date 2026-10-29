@@ -9,6 +9,7 @@ import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeCalendarH
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeDocumentHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeMessageHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeOrganizationHandler;
+import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeSyncWizardHandler;
 import com.apex.scaffold.officeservice.interfaces.off.handler.MessageHandler;
 import com.apex.scaffold.officeservice.interfaces.off.handler.MessageTemplateHandler;
 import com.apex.scaffold.officeservice.interfaces.off.handler.OrgSyncHandler;
@@ -19,6 +20,7 @@ import com.apex.scaffold.officeservice.interfaces.router.office.OfficeCalendarRo
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeDocumentRouter;
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeMessageRouter;
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeOrganizationRouter;
+import com.apex.scaffold.officeservice.interfaces.router.office.OfficeSyncWizardRouter;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.LinkedHashSet;
@@ -140,8 +142,10 @@ class OfficeRouterRegressionTest {
     private static final Set<Endpoint> INTERNAL_MESSAGE_ENDPOINTS = Set.of(
             new Endpoint("POST", "/api/v1/messages"),
             new Endpoint("GET", "/api/v1/messages/inbox"),
+            new Endpoint("GET", "/api/v1/messages/inbox/cursor"),
             new Endpoint("GET", "/api/v1/messages/sent"),
             new Endpoint("GET", "/api/v1/messages/{messageId}"),
+            new Endpoint("GET", "/api/v1/messages/{messageId}/deliveries"),
             new Endpoint("PUT", "/api/v1/messages/{messageId}/read"),
             new Endpoint("PUT", "/api/v1/messages/read-all"),
             new Endpoint("GET", "/api/v1/messages/unread/count"));
@@ -164,6 +168,15 @@ class OfficeRouterRegressionTest {
             new Endpoint("GET", "/admin-api/v1/org/employees"),
             new Endpoint("GET", "/admin-api/v1/org/employees/{id}"),
             new Endpoint("GET", "/admin-api/v1/org/sync-history"));
+
+    /** 组织同步向导（v2）端点。 */
+    private static final Set<Endpoint> SYNC_WIZARD_ENDPOINTS = Set.of(
+            new Endpoint("POST", "/api/v2/office/sync/preflight"),
+            new Endpoint("POST", "/api/v2/office/sync/preview"),
+            new Endpoint("POST", "/api/v2/office/sync/tasks"),
+            new Endpoint("GET", "/api/v2/office/sync/tasks"),
+            new Endpoint("GET", "/api/v2/office/sync/tasks/{taskId}"),
+            new Endpoint("POST", "/api/v2/office/sync/tasks/{taskId}/retry"));
 
     /** 验证统一认证与状态接口正确注册。 */
     @Test
@@ -228,9 +241,16 @@ class OfficeRouterRegressionTest {
         assertThat(collectEndpoints()).containsAll(ORG_SYNC_ENDPOINTS);
     }
 
+    /** 验证组织同步向导（v2）接口正确注册。 */
+    @Test
+    @DisplayName("组织同步向导接口全部正确注册")
+    void shouldExposeSyncWizardEndpoints() {
+        assertThat(collectEndpoints()).containsAll(SYNC_WIZARD_ENDPOINTS);
+    }
+
     /** 验证对外暴露的端点集合与预期完全一致（数量、路径、方法一一对应）。 */
     @Test
-    @DisplayName("对外暴露端点集合与预期精确一致（共 63 个）")
+    @DisplayName("对外暴露端点集合与预期精确一致（共 71 个）")
     void shouldExposeExactlyExpectedEndpoints() {
         Set<Endpoint> expected = new LinkedHashSet<>();
         expected.addAll(OFFICE_ENDPOINTS);
@@ -243,6 +263,7 @@ class OfficeRouterRegressionTest {
         expected.addAll(INTERNAL_MESSAGE_ENDPOINTS);
         expected.addAll(MESSAGE_TEMPLATE_ENDPOINTS);
         expected.addAll(ORG_SYNC_ENDPOINTS);
+        expected.addAll(SYNC_WIZARD_ENDPOINTS);
 
         Set<Endpoint> actual = collectEndpoints();
 
@@ -309,6 +330,10 @@ class OfficeRouterRegressionTest {
 
         OrgSyncRouter orgSyncRouter = new OrgSyncRouter();
         collect(endpoints, orgSyncRouter, "orgSyncRoutes", OrgSyncHandler.class, Mockito.mock(OrgSyncHandler.class));
+
+        OfficeSyncWizardRouter syncWizardRouter =
+                new OfficeSyncWizardRouter(Mockito.mock(OfficeSyncWizardHandler.class));
+        collect(endpoints, syncWizardRouter, "officeSyncWizardRoutes", null, null);
 
         return endpoints;
     }

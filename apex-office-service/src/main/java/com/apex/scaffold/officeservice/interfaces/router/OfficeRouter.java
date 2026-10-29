@@ -3,6 +3,7 @@ package com.apex.scaffold.officeservice.interfaces.router;
 import com.apex.scaffold.officeservice.interfaces.handler.OfficeHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
@@ -38,7 +39,14 @@ public class OfficeRouter {
                                     @ApiResponse(
                                             responseCode = "200",
                                             description = "操作成功",
-                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                            content =
+                                                    @Content(
+                                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                            schema =
+                                                                    @Schema(
+                                                                            implementation =
+                                                                                    OfficeHandler.PlatformStatusResult
+                                                                                            .class)))
                                 })),
         @RouterOperation(
                 path = "/api/v1/office/login",
@@ -54,7 +62,14 @@ public class OfficeRouter {
                                     @ApiResponse(
                                             responseCode = "200",
                                             description = "操作成功",
-                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                            content =
+                                                    @Content(
+                                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                            schema =
+                                                                    @Schema(
+                                                                            implementation =
+                                                                                    OfficeHandler.AuthorizationUrlResult
+                                                                                            .class)))
                                 })),
         @RouterOperation(
                 path = "/api/v1/office/callback",
@@ -70,7 +85,13 @@ public class OfficeRouter {
                                     @ApiResponse(
                                             responseCode = "200",
                                             description = "操作成功",
-                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                            content =
+                                                    @Content(
+                                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                            schema =
+                                                                    @Schema(
+                                                                            implementation =
+                                                                                    OfficeHandler.LoginResult.class)))
                                 }))
     })
     @Bean

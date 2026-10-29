@@ -12,6 +12,14 @@
 # @author Apex Team
 # ============================================================
 
+apex:
+  seata:
+    enabled: ${APEX_SEATA_ENABLED:false}
+    application-id: apex-file-service
+    transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
+    propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+    allowed-origins: []
+
 server:
   # 文件服务端口（迁移方案 §4.1：端口 8085）
   port: 8085
@@ -50,22 +58,57 @@ mybatis-plus:
 
 # ==================== 文件能力配置 ====================
 file:
+  security:
+    # auth 当前使用 RS256：注入同一签名密钥对的 X509 DER Base64 公钥。
+    # 不自动同步 JWKS/轮换；HMAC 字段仅兼容历史签发方，不替代 RSA 公钥。
+    # 独立验签，不信任可伪造的网关身份头；未配置信任材料时拒绝认证。
+    jwt-public-key-base64: ${FILE_JWT_PUBLIC_KEY_BASE64:}
+    jwt-secret: ${FILE_JWT_SECRET:}
   upload:
     # 单文件最大字节数（默认 10MB，分片上传接口不受此限制）
     max-size-bytes: ${FILE_MAX_SIZE_BYTES:10485760}
+  share:
+    # 限时只读分享：未指定有效期时使用默认值，请求值收敛到 [60, max] 秒区间
+    default-expire-seconds: ${FILE_SHARE_DEFAULT_EXPIRE_SECONDS:86400}
+    max-expire-seconds: ${FILE_SHARE_MAX_EXPIRE_SECONDS:604800}
+    # 文件域不拥有租户数据，租户停用状态由部署配置声明（逗号分隔租户 ID）
+    suspended-tenants: ${FILE_SHARE_SUSPENDED_TENANTS:}
 
 storage:
-  # 默认存储桶
+  # 默认策略只影响新文件；已存记录按其提供商和桶路由，不静默降级。
+  default-type: ${STORAGE_DEFAULT_TYPE:local}
   bucket-name: ${STORAGE_BUCKET_NAME:apex}
-  # 预签名 URL 有效期（秒）
+  # 云桶须预创建；签名有效期为 1—604800 秒，Local 不提供无认证签名地址。
   presigned-url-expire-seconds: ${STORAGE_PRESIGNED_URL_EXPIRE_SECONDS:300}
   local:
-    # 本地存储开关（默认开启，作为兜底存储）
     enabled: ${STORAGE_LOCAL_ENABLED:true}
     base-path: ${STORAGE_LOCAL_BASE_PATH:/root/data/apex/uploads}
+  minio:
+    enabled: ${STORAGE_MINIO_ENABLED:false}
+    endpoint: ${MINIO_ENDPOINT:}
+    access-key: ${MINIO_ACCESS_KEY:}
+    secret-key: ${MINIO_SECRET_KEY:}
   volcengine:
-    # 火山引擎 TOS 开关（默认关闭，按需开启）
     enabled: ${STORAGE_VOLCENGINE_ENABLED:false}
+    endpoint: ${STORAGE_VOLCENGINE_ENDPOINT:}
+    region: ${STORAGE_VOLCENGINE_REGION:}
+    access-key: ${STORAGE_VOLCENGINE_ACCESS_KEY:}
+    secret-key: ${STORAGE_VOLCENGINE_SECRET_KEY:}
+  # 凭证通过环境变量注入；.env.example 提供待替换值，Java 不会自动读取 .env。
+  # access-key 对应 AccessKey ID，secret-key 对应 AccessKey Secret；endpoint 按桶区域填写。
+  aliyun-oss:
+    enabled: ${STORAGE_ALIYUN_OSS_ENABLED:false}
+    endpoint: ${STORAGE_ALIYUN_OSS_ENDPOINT:}
+    access-key: ${STORAGE_ALIYUN_OSS_ACCESS_KEY:}
+    secret-key: ${STORAGE_ALIYUN_OSS_SECRET_KEY:}
+  qiniu:
+    enabled: ${STORAGE_QINIU_ENABLED:false}
+    access-key: ${STORAGE_QINIU_ACCESS_KEY:}
+    secret-key: ${STORAGE_QINIU_SECRET_KEY:}
+    region: ${STORAGE_QINIU_REGION:}
+    bucket: ${STORAGE_QINIU_BUCKET:}
+    # 必须为已绑定上述桶的 HTTPS 域名，不含路径、查询参数或末尾斜杠。
+    download-domain: ${STORAGE_QINIU_DOWNLOAD_DOMAIN:}
 
 logging:
   level:

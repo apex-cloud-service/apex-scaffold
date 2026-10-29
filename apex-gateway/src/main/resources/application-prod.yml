@@ -13,11 +13,11 @@ spring:
   cloud:
     nacos:
       config:
-        enabled: true
+        enabled: ${NACOS_CONFIG_ENABLED:true}
         namespace: ${NACOS_NAMESPACE:prod}
       discovery:
-        enabled: true
-        register-enabled: true
+        enabled: ${NACOS_DISCOVERY_ENABLED:true}
+        register-enabled: ${NACOS_REGISTER_ENABLED:true}
         namespace: ${NACOS_NAMESPACE:prod}
 
     gateway:
@@ -38,15 +38,37 @@ spring:
         - id: workflow-domain
           uri: ${ROUTE_WORKFLOW_URI:lb://apex-workflow-service}
           predicates:
-            - Path=/api/v1/workflows/**,/api/workflow/**,/admin-api/v1/workflows/**
+            - Path=/api/v1/workflows/**,/api/v2/workflow-definitions/**,/api/workflow/**,/admin-api/v1/workflows/**
+        # ---- 办公域（Phase 5 已切换为 apex-office-service） ----
+        # ⚠️ 本文件重新定义了 routes 列表：YAML 列表不逐元素合并，未在此声明的路由在生产环境将丢失。
+        # 因此站内信 WebSocket/HTTP 路由必须与 application.yml 保持同步，且必须排在 office-domain 之前，
+        # 否则 /api/v1/messages/** 会先被 office-domain 的 lb://（http 语义）匹配，WebSocket 升级握手丢失。
+        # WebSocket 使用独立路由，不经过 HTTP 熔断回退；固定实例便于单机票据原子消费。
+        # 本地票据与连接不共享：下列 HTTP/WS 地址必须指向同一单实例。
+        # 多实例部署须提供粘性路由及跨实例通知；仅 HTTP 补偿不能修复跨实例票据握手失败。
+        # 🔒 生产必须通过环境变量显式指定真实 office 实例地址，勿沿用回环默认值。
+        - id: office-message-websocket
+          uri: ${ROUTE_OFFICE_WS_URI:ws://127.0.0.1:8084}
+          predicates:
+            - Path=/api/v1/messages/ws
+            - Header=Upgrade, (?i)websocket
+        - id: office-message-http
+          uri: ${ROUTE_OFFICE_MESSAGE_URI:http://127.0.0.1:8084}
+          predicates:
+            - Path=/api/v1/messages,/api/v1/messages/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: officeService
+                fallbackUri: forward:/__gateway/fallback
         - id: office-domain
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
+            - Path=/api/v1/office/**,/api/v2/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
-            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/api/v2/files/**,/api/v2/file-shares/**
         # 兜底路由：Phase 6 完成后切换为 lb://apex-system-service
         - id: system-domain
           uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}

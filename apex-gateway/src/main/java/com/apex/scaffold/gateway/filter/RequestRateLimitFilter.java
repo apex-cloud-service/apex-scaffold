@@ -4,8 +4,7 @@ import com.apex.scaffold.gateway.ratelimit.GatewayRateLimitProperties;
 import com.apex.scaffold.gateway.ratelimit.TokenBucketRateLimitFilter;
 import com.apex.scaffold.gateway.support.GatewayWebUtil;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -43,10 +42,9 @@ import reactor.core.publisher.Mono;
  * @see com.apex.scaffold.gateway.config.RateLimitConfig
  * @see TokenBucketRateLimitFilter
  */
+@Slf4j
 @Component
 public class RequestRateLimitFilter implements GlobalFilter, Ordered {
-
-    private static final Logger log = LoggerFactory.getLogger(RequestRateLimitFilter.class);
 
     /** 过滤器顺序：上下文注入（20）之后、灰度（40）之前 */
     public static final int ORDER = 30;

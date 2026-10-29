@@ -12,6 +12,28 @@
 # @author Apex Team
 # ============================================================
 
+apex:
+  seata:
+    enabled: ${APEX_SEATA_ENABLED:false}
+    application-id: apex-workflow-service
+    transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
+    propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+    allowed-origins: []
+
+workflow:
+  security:
+    # auth RS256 活跃公钥，X509 DER Base64；缺失时拒绝认证。
+    jwt-public-key-base64: ${WORKFLOW_JWT_PUBLIC_KEY_BASE64:}
+    # 仅历史 HMAC 签发方显式开启；配置 RSA 后不降级。
+    jwt-hmac-enabled: ${WORKFLOW_JWT_HMAC_ENABLED:false}
+    jwt-secret: ${WORKFLOW_JWT_SECRET:}
+    # 受权限注解保护接口的授权快照来源；未确认共享命名空间或缺少租户凭据时拒绝访问。
+    authorization:
+      shared-user-namespace: ${WORKFLOW_AUTHORIZATION_SHARED_USER_NAMESPACE:false}
+      base-url: ${WORKFLOW_AUTHORIZATION_BASE_URL:}
+      timeout: ${WORKFLOW_AUTHORIZATION_TIMEOUT:3s}
+      reader-tokens: {}
+
 server:
   # 工作流服务端口（迁移方案 §3.1：端口 8083）
   port: 8083

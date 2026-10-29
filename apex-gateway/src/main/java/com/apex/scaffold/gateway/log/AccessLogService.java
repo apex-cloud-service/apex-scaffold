@@ -10,8 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import reactor.core.publisher.Mono;
 
@@ -38,9 +37,9 @@ import reactor.core.publisher.Mono;
  * @author Apex Team
  * @since 1.3.1
  */
+@Slf4j
+@lombok.RequiredArgsConstructor
 public class AccessLogService {
-
-    private static final Logger log = LoggerFactory.getLogger(AccessLogService.class);
 
     /** 需要记录的请求头（按固定顺序输出，保证 JSON 稳定可比对） */
     private static final List<String> RECORDED_HEADERS = List.of(
@@ -82,20 +81,6 @@ public class AccessLogService {
 
     /** 落库失败累计次数（用于观测，不作为错误向上传播） */
     private final AtomicLong persistFailureCount = new AtomicLong();
-
-    /**
-     * 构造访问日志落库服务.
-     *
-     * @param repository    访问日志仓储
-     * @param properties    访问日志落库配置
-     * @param meterRegistry 指标注册表（用于落库失败计数）
-     */
-    public AccessLogService(
-            AccessLogRepository repository, AccessLogProperties properties, MeterRegistry meterRegistry) {
-        this.repository = repository;
-        this.properties = properties;
-        this.meterRegistry = meterRegistry;
-    }
 
     /**
      * 异步持久化一条访问日志.

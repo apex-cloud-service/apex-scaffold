@@ -59,7 +59,7 @@ import reactor.core.publisher.Mono;
  *
  * @author Apex Team
  * @version 1.0.0
- * @since 2024-01-01
+ * @since 1.3.1
  */
 @Component
 @RequiredArgsConstructor
@@ -106,7 +106,12 @@ public class PermissionHandler {
      * @param request 服务器请求对象，请求体包含PermissionDTO
      * @return 响应体包含创建成功的权限信息（包含自动生成的ID、创建时间等）
      */
-    @OperationLog(module = "权限管理", type = OperationType.INSERT, description = "创建权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationType.INSERT,
+            description = "创建权限",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(
             operationId = "createPermission",
             summary = "创建权限",
@@ -180,7 +185,12 @@ public class PermissionHandler {
      * @param request 服务器请求对象，路径参数包含权限ID，请求体包含更新的PermissionDTO
      * @return 响应体包含更新后的权限信息（version已自动+1）
      */
-    @OperationLog(module = "权限管理", type = OperationType.UPDATE, description = "更新权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationType.UPDATE,
+            description = "更新权限",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "updatePermission", summary = "更新权限", description = "修改现有权限信息，支持乐观锁防止并发冲突，禁用权限会立即影响用户访问")
     @Parameter(name = "id", description = "权限ID", required = true, example = "100")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -247,7 +257,12 @@ public class PermissionHandler {
      * @param request 服务器请求对象，路径参数包含要删除的权限ID
      * @return 删除成功返回空响应体，响应码200
      */
-    @OperationLog(module = "权限管理", type = OperationType.DELETE, description = "删除权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationType.DELETE,
+            description = "删除权限",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(
             operationId = "deletePermission",
             summary = "删除权限",
@@ -312,7 +327,12 @@ public class PermissionHandler {
      * @param request 服务器请求对象，路径参数包含权限ID
      * @return 包含权限完整信息的响应体，如果权限不存在则返回null
      */
-    @OperationLog(module = "权限管理", type = OperationType.SELECT, description = "查询权限详情")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationType.SELECT,
+            description = "查询权限详情",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "getPermissionById", summary = "查询权限详情", description = "根据ID查询单个权限的完整信息，包含所有字段和元数据")
     @Parameter(name = "id", description = "权限ID", required = true, example = "100")
     @ApiResponse(
@@ -369,7 +389,12 @@ public class PermissionHandler {
      * @param request 服务器请求对象（无需额外参数）
      * @return 包含权限列表的响应体，数组格式
      */
-    @OperationLog(module = "权限管理", type = OperationType.SELECT, description = "列出所有权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationType.SELECT,
+            description = "列出所有权限",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(operationId = "listPermissions", summary = "列出所有权限", description = "获取当前租户下的所有权限列表，包含启用和禁用的权限，自动租户隔离")
     @ApiResponse(
             responseCode = "200",
@@ -438,7 +463,12 @@ public class PermissionHandler {
      * @param request 服务器请求对象，路径参数包含资源标识（resource）
      * @return 包含该资源下所有权限的列表，如果资源不存在或无权限则返回空数组
      */
-    @OperationLog(module = "权限管理", type = OperationType.SELECT, description = "按资源查询权限")
+    @OperationLog(
+            module = "权限管理",
+            type = OperationType.SELECT,
+            description = "按资源查询权限",
+            saveRequest = false,
+            saveResponse = false)
     @Operation(
             operationId = "getPermissionsByResource",
             summary = "按资源查询权限",

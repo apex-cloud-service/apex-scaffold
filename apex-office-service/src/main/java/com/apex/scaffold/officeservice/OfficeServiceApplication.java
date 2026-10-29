@@ -28,8 +28,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * <h2>数据访问组件扫描</h2>
  * <p>Spring Boot 的 MyBatis-Plus 自动装配仅扫描启动类所在包（{@code com.apex.scaffold.officeservice}）。
  * 而本服务的 Mapper 位于库模块 {@code apex-office}（{@code com.apex.scaffold.office.*}），
- * 且分散于 {@code infrastructure.mapper} 与 {@code infrastructure.persistence(.mapper)} 等子包，
- * 因此需借助 {@link MapperScan} 以父包 {@code com.apex.scaffold.office.infrastructure} 显式声明扫描范围；
+ * 且按子域分散于 {@code infrastructure}、{@code off.infrastructure}、{@code meetingroom.infrastructure}
+ * 等多个子包，因此需借助 {@link MapperScan} 以域根包 {@code com.apex.scaffold.office} 声明扫描范围，
+ * 避免每新增一个子域就要再补一次扫描路径；
  * {@code annotationClass = Mapper.class} 确保仅注册标注 {@link Mapper} 的接口，避免误注册其他普通接口。</p>
  *
  * @author Apex Team
@@ -39,9 +40,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(
         scanBasePackages = {"com.apex.scaffold.officeservice", "com.apex.scaffold.office", "com.apex.scaffold.common"})
 @EnableConfigurationProperties(OfficePlatformProperties.class)
-@MapperScan(
-        basePackages = {"com.apex.scaffold.office.infrastructure", "com.apex.scaffold.office.off.infrastructure"},
-        annotationClass = Mapper.class)
+@MapperScan(basePackages = "com.apex.scaffold.office", annotationClass = Mapper.class)
 @EnableDiscoveryClient
 @EnableScheduling
 public class OfficeServiceApplication {

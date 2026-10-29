@@ -13,6 +13,7 @@ import com.apex.scaffold.gateway.security.GatewayJwtVerifierService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.gateway.config.GatewayProperties;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
 
@@ -40,6 +41,7 @@ class GatewayApplicationTest {
     private final RequestLoggingFilter requestLoggingFilter;
     private final GatewayJwtVerifierService gatewayJwtVerifierService;
     private final GatewayExceptionHandler gatewayExceptionHandler;
+    private final GatewayProperties gatewayProperties;
 
     /** 构造测试实例并注入网关过滤器与验签组件。 */
     GatewayApplicationTest(
@@ -50,7 +52,8 @@ class GatewayApplicationTest {
             GrayRouteFilter grayRouteFilter,
             RequestLoggingFilter requestLoggingFilter,
             GatewayJwtVerifierService gatewayJwtVerifierService,
-            GatewayExceptionHandler gatewayExceptionHandler) {
+            GatewayExceptionHandler gatewayExceptionHandler,
+            GatewayProperties gatewayProperties) {
         this.traceWebFilter = traceWebFilter;
         this.jwtSignatureFilter = jwtSignatureFilter;
         this.userContextRelayFilter = userContextRelayFilter;
@@ -59,6 +62,7 @@ class GatewayApplicationTest {
         this.requestLoggingFilter = requestLoggingFilter;
         this.gatewayJwtVerifierService = gatewayJwtVerifierService;
         this.gatewayExceptionHandler = gatewayExceptionHandler;
+        this.gatewayProperties = gatewayProperties;
     }
 
     @Test
@@ -72,6 +76,40 @@ class GatewayApplicationTest {
         assertThat(requestLoggingFilter).isNotNull();
         assertThat(gatewayJwtVerifierService).isNotNull();
         assertThat(gatewayExceptionHandler).isNotNull();
+    }
+
+    /** 握手优先于消息 HTTP 路由，且只有 HTTP 请求进入熔断回退。 */
+    @Test
+    void messageRoutesPreserveWebSocketAndHttpContracts() {
+        var routes = gatewayProperties.getRoutes();
+        var websocket = routes.stream()
+                .filter(route -> "office-message-websocket".equals(route.getId()))
+                .findFirst()
+                .orElseThrow();
+        var http = routes.stream()
+                .filter(route -> "office-message-http".equals(route.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(routes.indexOf(websocket)).isLessThan(routes.indexOf(http));
+        assertThat(websocket.getUri().getScheme()).isIn("ws", "wss");
+        assertThat(websocket.getPredicates()).anySatisfy(predicate -> {
+            assertThat(predicate.getName()).isEqualTo("Path");
+            assertThat(predicate.getArgs()).containsValue("/api/v1/messages/ws");
+        });
+        assertThat(websocket.getFilters())
+                .noneSatisfy(filter -> assertThat(filter.getName()).isEqualTo("CircuitBreaker"));
+        assertThat(http.getUri().getScheme()).isIn("http", "https");
+        assertThat(http.getPredicates()).anySatisfy(predicate -> {
+            assertThat(predicate.getName()).isEqualTo("Path");
+            assertThat(predicate.getArgs()).containsValues("/api/v1/messages", "/api/v1/messages/**");
+        });
+        assertThat(http.getFilters()).anySatisfy(filter -> {
+            assertThat(filter.getName()).isEqualTo("CircuitBreaker");
+            // Gateway 将 filter 参数键规范化小写，故断言使用 fallbackuri。
+            assertThat(filter.getArgs())
+                    .containsEntry("name", "officeService")
+                    .containsEntry("fallbackuri", "forward:/__gateway/fallback");
+        });
     }
 
     @Test

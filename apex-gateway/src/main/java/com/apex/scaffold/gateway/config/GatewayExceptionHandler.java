@@ -4,8 +4,7 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.JsonUtil;
 import java.nio.charset.StandardCharsets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -28,9 +27,8 @@ import reactor.core.publisher.Mono;
  */
 @Configuration
 @Order(-1)
+@Slf4j
 public class GatewayExceptionHandler implements ErrorWebExceptionHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(GatewayExceptionHandler.class);
 
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {

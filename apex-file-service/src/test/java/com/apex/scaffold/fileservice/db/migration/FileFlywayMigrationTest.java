@@ -6,6 +6,7 @@ import com.apex.scaffold.file.infrastructure.persistence.po.ChartPO;
 import com.apex.scaffold.file.infrastructure.persistence.po.DocumentPO;
 import com.apex.scaffold.file.infrastructure.persistence.po.FileChunkPO;
 import com.apex.scaffold.file.infrastructure.persistence.po.FilePO;
+import com.apex.scaffold.file.infrastructure.persistence.po.FileSharePO;
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.Test;
  * <p>本测试从以下维度保证三份脚本一致且与代码（PO 类）对齐：</p>
  * <ul>
  *   <li>版本链 V1、V2 连续且在 MySQL/PostgreSQL 两个方言目录完全一致；</li>
- *   <li>4 张表在两方言中的列集合（含 ALTER TABLE 增量列）完全一致（方言差异仅限类型）；</li>
+ *   <li>5 张表在两方言中的列集合（含 ALTER TABLE 增量列）完全一致（方言差异仅限类型）；</li>
  *   <li>H2 {@code basic-schema.sql} 的表集合与 Flyway 迁移表集合一致；</li>
  *   <li>以代码实现（PO 类）为唯一事实来源：每个持久化字段必然对应迁移脚本中的列
  *       （MyBatis-Plus map-underscore-to-camel-case）。</li>
@@ -48,9 +49,9 @@ class FileFlywayMigrationTest {
 
     private static final String[] MIGRATION_DIALECTS = {MYSQL, POSTGRESQL};
 
-    /** 迁移声明的 4 张文件服务表。 */
+    /** 迁移声明的 5 张文件服务表。 */
     private static final Set<String> EXPECTED_TABLES =
-            Set.of("file_record", "file_document", "file_chart", "file_chunk");
+            Set.of("file_record", "file_document", "file_chart", "file_chunk", "file_share");
 
     /** 所有表必须具备的通用审计列（继承 BasePO，源码事实：id/create_time/update_time/deleted）。 */
     private static final Set<String> AUDIT_COLUMNS = Set.of("id", "create_time", "update_time", "deleted");
@@ -119,7 +120,10 @@ class FileFlywayMigrationTest {
                             "bucket_name",
                             "storage_status",
                             "user_id",
-                            "version")));
+                            "version")),
+            Map.entry(
+                    "file_share",
+                    Set.of("file_id", "tenant_id", "creator_id", "token_hash", "expire_at", "status", "version")));
 
     /** 各表必须具备的索引名（MySQL 带反引号，PostgreSQL 不带，故按裸名断言）。 */
     private static final Map<String, Set<String>> REQUIRED_INDEXES = Map.ofEntries(
@@ -152,14 +156,23 @@ class FileFlywayMigrationTest {
                             "idx_file_chunk_file",
                             "idx_file_chunk_file_index",
                             "idx_file_chunk_status",
-                            "idx_file_chunk_create_time")));
+                            "idx_file_chunk_create_time")),
+            Map.entry(
+                    "file_share",
+                    Set.of(
+                            "uk_file_share_token_hash",
+                            "idx_file_share_file",
+                            "idx_file_share_tenant",
+                            "idx_file_share_creator",
+                            "idx_file_share_expire")));
 
     /** 以 PO 类为唯一事实来源：表名 → 持久化对象。 */
     private static final Map<String, Class<?>> PO_TABLES = Map.of(
             "file_record", FilePO.class,
             "file_document", DocumentPO.class,
             "file_chart", ChartPO.class,
-            "file_chunk", FileChunkPO.class);
+            "file_chunk", FileChunkPO.class,
+            "file_share", FileSharePO.class);
 
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {
@@ -185,10 +198,16 @@ class FileFlywayMigrationTest {
         Set<String> mysqlTables = declaredTables(mysqlSql);
         Set<String> postgresqlTables = declaredTables(postgresqlSql);
 
-        assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(EXPECTED_TABLES);
-        assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(EXPECTED_TABLES);
+        Set<String> migrationTables = new LinkedHashSet<>(EXPECTED_TABLES);
+        migrationTables.add("undo_log");
+        assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
+        assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
+        Set<String> undoColumns =
+                Set.of("branch_id", "xid", "context", "rollback_info", "log_status", "log_created", "log_modified");
+        assertThat(allColumns(mysqlSql, "undo_log")).containsExactlyInAnyOrderElementsOf(undoColumns);
+        assertThat(allColumns(postgresqlSql, "undo_log")).containsExactlyInAnyOrderElementsOf(undoColumns);
 
-        for (String table : EXPECTED_TABLES) {
+        for (String table : migrationTables) {
             assertThat(allColumns(mysqlSql, table))
                     .as("表 %s 的 MySQL/PostgreSQL 列集合应完全一致（含 ALTER TABLE 增量列）", table)
                     .containsExactlyInAnyOrderElementsOf(allColumns(postgresqlSql, table));

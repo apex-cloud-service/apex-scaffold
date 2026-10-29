@@ -1,5 +1,6 @@
 package com.apex.scaffold.gateway.fallback;
 
+import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,12 @@ public class FallbackHandler {
      * @param exchange 当前请求交换上下文（含熔断异常属性）
      * @return 状态码 503、响应体为统一 {@link Result} 的响应式结果
      */
+    @OperationLog(
+            module = "Fallback",
+            type = OperationLog.OperationType.OTHER,
+            description = "fallback",
+            saveRequest = false,
+            saveResponse = false)
     public Mono<ServerResponse> fallback(ServerWebExchange exchange) {
         Throwable cause = exchange.getAttribute(ServerWebExchangeUtils.CIRCUITBREAKER_EXECUTION_EXCEPTION_ATTR);
         String traceId = exchange.getRequest().getHeaders().getFirst(HEADER_TRACE_ID);

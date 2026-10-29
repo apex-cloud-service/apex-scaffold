@@ -2,6 +2,7 @@ package com.apex.scaffold.gateway.security;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -28,6 +29,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Apex Team
  * @since 1.3.1
  */
+@Getter
 @ConfigurationProperties(prefix = "apex.gateway.jwks")
 public class JwksProperties {
 
@@ -37,16 +39,8 @@ public class JwksProperties {
     /** 按 kid 组织的 RSA 公钥清单（可热更新下发） */
     private List<JwksProfile> ks = new ArrayList<>();
 
-    public String getHmacSecret() {
-        return hmacSecret;
-    }
-
     public void setHmacSecret(String hmacSecret) {
         this.hmacSecret = hmacSecret == null ? "" : hmacSecret;
-    }
-
-    public List<JwksProfile> getKs() {
-        return ks;
     }
 
     public void setKs(List<JwksProfile> ks) {

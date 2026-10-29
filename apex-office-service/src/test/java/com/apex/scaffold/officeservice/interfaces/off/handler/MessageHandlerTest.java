@@ -7,7 +7,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.office.off.application.dto.InboxCursorItemDTO;
 import com.apex.scaffold.office.off.application.dto.MessageDTO;
+import com.apex.scaffold.office.off.application.dto.MessageDeliveryDTO;
 import com.apex.scaffold.office.off.application.dto.SendMessageRequest;
 import com.apex.scaffold.office.off.application.service.OffMessageService;
 import com.apex.scaffold.officeservice.interfaces.security.AuthenticatedUser;
@@ -167,26 +169,30 @@ class MessageHandlerTest {
     @Nested
     @DisplayName("getMessageDetail")
     class GetMessageDetailTest {
+        /** 验证详情查询使用当前认证用户并返回成功响应。 */
         @Test
         @DisplayName("happy path 返回 HTTP 200")
         void happyPath() {
-            when(messageService.getMessageDetail(9L)).thenReturn(Mono.just(message()));
+            when(messageService.getMessageDetail(9L, 100L)).thenReturn(Mono.just(message()));
 
             StepVerifier.create(handler.getMessageDetail(MockServerRequest.builder()
-                            .pathVariable("messageId", "9")
-                            .build()))
+                                    .pathVariable("messageId", "9")
+                                    .build())
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth())))
                     .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(200))
                     .verifyComplete();
         }
 
+        /** 验证不存在或无归属权限的消息沿用既有错误响应。 */
         @Test
         @DisplayName("消息不存在返回 HTTP 400")
         void notFound() {
-            when(messageService.getMessageDetail(9L)).thenReturn(Mono.empty());
+            when(messageService.getMessageDetail(9L, 100L)).thenReturn(Mono.empty());
 
             StepVerifier.create(handler.getMessageDetail(MockServerRequest.builder()
-                            .pathVariable("messageId", "9")
-                            .build()))
+                                    .pathVariable("messageId", "9")
+                                    .build())
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth())))
                     .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(400))
                     .verifyComplete();
         }
@@ -284,6 +290,107 @@ class MessageHandlerTest {
         void noAuth() {
             StepVerifier.create(
                             handler.getUnreadCount(MockServerRequest.builder().build()))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(400))
+                    .verifyComplete();
+        }
+    }
+
+    @Nested
+    @DisplayName("getInboxCursor")
+    class GetInboxCursorTest {
+        @Test
+        @DisplayName("happy path 返回 HTTP 200")
+        void happyPath() {
+            InboxCursorItemDTO item = InboxCursorItemDTO.builder()
+                    .recipientRecordId(11L)
+                    .messageId(1L)
+                    .subject("主题")
+                    .build();
+            when(messageService.getInboxCursor(eq(100L), eq(0L), eq(20))).thenReturn(Flux.just(item));
+
+            StepVerifier.create(handler.getInboxCursor(MockServerRequest.builder()
+                                    .queryParam("afterId", "0")
+                                    .queryParam("limit", "20")
+                                    .build())
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth())))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("缺省参数返回 HTTP 200")
+        void defaultParams() {
+            when(messageService.getInboxCursor(eq(100L), eq(0L), eq(20))).thenReturn(Flux.empty());
+
+            StepVerifier.create(
+                            handler.getInboxCursor(MockServerRequest.builder().build())
+                                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth())))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("afterId 非法返回 HTTP 400")
+        void invalidAfterId() {
+            StepVerifier.create(handler.getInboxCursor(MockServerRequest.builder()
+                            .queryParam("afterId", "abc")
+                            .build()))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(400))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("未认证时返回 HTTP 400")
+        void noAuth() {
+            StepVerifier.create(
+                            handler.getInboxCursor(MockServerRequest.builder().build()))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(400))
+                    .verifyComplete();
+        }
+    }
+
+    @Nested
+    @DisplayName("getMessageDeliveries")
+    class GetMessageDeliveriesTest {
+        @Test
+        @DisplayName("happy path 返回 HTTP 200")
+        void happyPath() {
+            MessageDeliveryDTO delivery = MessageDeliveryDTO.builder()
+                    .id(1L)
+                    .messageId(9L)
+                    .recipientId(100L)
+                    .channel("INBOX")
+                    .deliveryStatus("SUCCESS")
+                    .build();
+            when(messageService.getMessageDeliveries(9L, 100L)).thenReturn(Flux.just(delivery));
+
+            StepVerifier.create(handler.getMessageDeliveries(MockServerRequest.builder()
+                                    .pathVariable("messageId", "9")
+                                    .build())
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth())))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("无权限或不存在返回空列表 HTTP 200")
+        void emptyList() {
+            when(messageService.getMessageDeliveries(9L, 100L)).thenReturn(Flux.empty());
+
+            StepVerifier.create(handler.getMessageDeliveries(MockServerRequest.builder()
+                                    .pathVariable("messageId", "9")
+                                    .build())
+                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth())))
+                    .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("消息ID非法返回 HTTP 400")
+        void invalidId() {
+            StepVerifier.create(handler.getMessageDeliveries(MockServerRequest.builder()
+                            .pathVariable("messageId", "abc")
+                            .build()))
                     .assertNext(r -> assertThat(r.statusCode().value()).isEqualTo(400))
                     .verifyComplete();
         }
