@@ -529,7 +529,7 @@ public enum UserStatus {
 1. **不翻动存量**：不新增 package 前置文件头块；既有 `@author/@version/@since` 无需调整，缺 `@created` 不回填。
 2. **合法既有风格白名单**（明确不算违规，禁止"顺手改掉"）：record 组件 `@param`、`/* == */` 分节横幅、单行 `/** 字段说明 */`、字段级多行 JavaDoc、`@SuppressWarnings("PMD.ClassMustHaveAuthorRule")` 豁免、`@Override` 方法无文档、测试代码无类文档（测试类新增时才按"一行类级说明"要求）。
 3. **署名渐进收敛**：现存多种 `@author` 写法仅在文件因其他原因被大改时顺手统一为 `Apex Team`，不做专项批量替换。
-4. **工具链判据对齐**：`scripts/dev/check/scan-javadoc-issues.sh` 的判据（类级 JavaDoc、`@author`、`@since`、`@Override` 豁免、带参方法需 `@param`）即本规范的机器可查子集，该脚本输出必须保持全绿；新增检查项先改脚本再改码，脚本入库并使用 `scripts/lib/common.sh`。
+4. **工具链判据对齐**：`scripts/dev/check/scan-javadoc-issues.sh` 的判据（类级 JavaDoc、`@author`、`@since`、非豁免 public 方法需 JavaDoc，`@Override` 与匿名类实现、getter/setter/is、builder 流式 setter 豁免）即本规范的机器可查子集，该脚本输出必须保持全绿；新增检查项先改脚本再改码，脚本入库并使用 `scripts/lib/common.sh`。
 5. **与 AGENTS.md 的关系**：本节是 AGENTS.md "代码注释规范"一节的展开，冲突处以 AGENTS.md 为准。
 
 ### 4.8 JavaDoc 标签与 HTML 参考
