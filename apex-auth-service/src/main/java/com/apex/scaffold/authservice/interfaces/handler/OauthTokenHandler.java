@@ -4,6 +4,7 @@ import com.apex.scaffold.auth.application.service.OAuth2Service;
 import com.apex.scaffold.auth.application.service.OAuth2Service.OAuthException;
 import com.apex.scaffold.auth.domain.service.UnifiedAuditService;
 import com.apex.scaffold.common.annotation.OperationLog;
+import io.swagger.v3.oas.annotations.Operation;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -47,7 +48,7 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  * @see OAuth2Service
- * @see OauthEndpointHandler
+ * @see OAuthEndpointHandler
  */
 @Component
 public class OauthTokenHandler {
@@ -110,6 +111,13 @@ public class OauthTokenHandler {
             description = "token",
             saveRequest = false,
             saveResponse = false)
+    @Operation(
+            operationId = "token",
+            summary = "签发OAuth2访问令牌",
+            description = "对应 POST /oauth2/token 端点（RFC 6749）。表单编码请求，支持 authorization_code、password、"
+                    + "client_credentials、refresh_token 四种授权类型；客户端凭据支持 HTTP Basic 与表单两种互斥方式。"
+                    + "响应头固定 Cache-Control: no-store；客户端认证失败返回 401 并附带 WWW-Authenticate 挑战头，"
+                    + "其余校验失败按 RFC 6749 返回 400 标准错误体")
     public Mono<ServerResponse> token(ServerRequest request) {
         return request.formData().flatMap(form -> {
             if (form.values().stream().anyMatch(value -> value.size() != 1)

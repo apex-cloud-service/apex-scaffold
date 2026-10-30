@@ -4,6 +4,7 @@ import com.apex.scaffold.auth.application.service.OAuth2Service;
 import com.apex.scaffold.auth.application.service.OAuth2Service.OAuthException;
 import com.apex.scaffold.auth.domain.service.UnifiedAuditService;
 import com.apex.scaffold.common.annotation.OperationLog;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -56,7 +57,7 @@ import reactor.core.publisher.Mono;
  * @see OauthTokenHandler
  */
 @Component
-public class OauthEndpointHandler {
+public class OAuthEndpointHandler {
     private static final String BASIC_PREFIX = "Basic ";
     private static final String CLIENT_ID = "client_id";
     private static final String CLIENT_SECRET = "client_secret";
@@ -74,7 +75,7 @@ public class OauthEndpointHandler {
      * @param service OAuth2应用服务
      * @param auditService 统一审计服务
      */
-    public OauthEndpointHandler(OAuth2Service service, UnifiedAuditService auditService) {
+    public OAuthEndpointHandler(OAuth2Service service, UnifiedAuditService auditService) {
         this.service = service;
         this.auditService = auditService;
     }
@@ -110,6 +111,12 @@ public class OauthEndpointHandler {
             description = "authorize",
             saveRequest = false,
             saveResponse = false)
+    @Operation(
+            operationId = "authorize",
+            summary = "签发OAuth2授权码",
+            description = "对应 GET /oauth2/authorize 端点（RFC 6749）。要求请求携带已认证用户主体，"
+                    + "校验通过后签发 PKCE 授权码并 302 重定向回客户端 redirect_uri（附带 code 与可选 state）；"
+                    + "未认证用户返回 401 access_denied，重定向响应强制 Cache-Control: no-store")
     public Mono<ServerResponse> authorize(ServerRequest request) {
         if (request.queryParams().values().stream().anyMatch(values -> values.size() != 1)) {
             return error(400, "invalid_request");
@@ -224,6 +231,11 @@ public class OauthEndpointHandler {
             description = "revoke",
             saveRequest = false,
             saveResponse = false)
+    @Operation(
+            operationId = "revoke",
+            summary = "撤销OAuth2令牌",
+            description = "对应 POST /oauth2/revoke 端点（RFC 7009）。需通过客户端凭据校验"
+                    + "（HTTP Basic 或表单 client_secret_post）后方可撤销指定令牌，成功返回空 JSON 对象")
     public Mono<ServerResponse> revoke(ServerRequest request) {
         return withClient(
                 "REVOKE", request, (values, clientId, tenant) -> service.revoke(values.get("token"), clientId, tenant)
@@ -245,6 +257,11 @@ public class OauthEndpointHandler {
             description = "introspect",
             saveRequest = false,
             saveResponse = false)
+    @Operation(
+            operationId = "introspect",
+            summary = "查询OAuth2令牌状态",
+            description = "对应 POST /oauth2/introspect 端点（RFC 7662）。需通过客户端凭据校验"
+                    + "（HTTP Basic 或表单 client_secret_post）后查询令牌当前状态，返回令牌状态 JSON 响应")
     public Mono<ServerResponse> introspect(ServerRequest request) {
         return withClient("INTROSPECT", request, (values, clientId, tenant) -> service.introspect(
                         values.get("token"), clientId, tenant)
