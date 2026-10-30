@@ -6,6 +6,7 @@ import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.contract.dto.internal.TokenValidationRequest;
+import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,10 @@ public class InternalAuthHandler {
             description = "getUserPermissions",
             saveRequest = false,
             saveResponse = false)
+    @Operation(
+            operationId = "getUserPermissions",
+            summary = "查询用户权限码（内部）",
+            description = "集群内服务直连接口，不经网关。按统一账户 ID 返回其权限编码列表，" + "路径参数 accountId 为统一账户 ID，查询参数 tenantId 为契约侧租户 ID（必填）")
     public Mono<ServerResponse> getUserPermissions(ServerRequest request) {
         Long accountId;
         try {
@@ -92,6 +97,11 @@ public class InternalAuthHandler {
             description = "validateToken",
             saveRequest = false,
             saveResponse = false)
+    @Operation(
+            operationId = "validateToken",
+            summary = "校验存量 Token（内部）",
+            description = "集群内服务直连接口，不经网关。对存量 Token 做语义校验，请求体为 TokenValidationRequest；"
+                    + "正常完成校验时以 HTTP 200 返回，业务有效性体现在 data.valid 字段中，便于消费方按「拒绝优先」语义处理")
     public Mono<ServerResponse> validateToken(ServerRequest request) {
         Mono<ServerResponse> handled = responses
                 .validateAndMap(request, TokenValidationRequest.class)

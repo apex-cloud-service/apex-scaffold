@@ -7,6 +7,7 @@ import com.apex.scaffold.authservice.interfaces.util.RequestHandlerUtil;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -43,6 +44,12 @@ public class UnifiedAuthorizationHandler {
             description = "query",
             saveRequest = false,
             saveResponse = false)
+    @Operation(
+            operationId = "queryUnifiedAuthorization",
+            summary = "查询授权快照（reader 专用）",
+            description = "对应 GET /auth/v1/authorization/users/{userId} 端点。仅允许配置的专用 reader 账号访问；"
+                    + "租户从已认证主体的 details 获取，查询参数不能覆盖该作用域。"
+                    + "userId 必须为正整数；请求参数错误返回 400，reader 身份或访问权限不满足返回 403")
     public Mono<ServerResponse> query(ServerRequest request) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(context -> context.getAuthentication())

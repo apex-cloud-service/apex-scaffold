@@ -109,6 +109,24 @@ public class PublicApiRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 })),
         @RouterOperation(
+                path = "/api/v1/auth/wechat/mp/authorize",
+                method = RequestMethod.GET,
+                beanClass = AuthHandler.class,
+                beanMethod = "mpAuthorize",
+                operation =
+                        @Operation(
+                                summary = "公众号网页授权跳转",
+                                description = "构造微信公众号 OAuth2 授权链接并 302 跳转；"
+                                        + "授权后微信回跳 redirectUri 并携带 code/state，客户端以 loginType=WX_OAUTH 提交登录",
+                                tags = {"认证授权"},
+                                responses = {
+                                    @ApiResponse(responseCode = "302", description = "重定向到微信授权页"),
+                                    @ApiResponse(
+                                            responseCode = "400",
+                                            description = "缺少 redirectUri 参数或微信渠道未配置",
+                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                })),
+        @RouterOperation(
                 path = "/api/v1/auth/login",
                 method = RequestMethod.POST,
                 beanClass = AuthHandler.class,
