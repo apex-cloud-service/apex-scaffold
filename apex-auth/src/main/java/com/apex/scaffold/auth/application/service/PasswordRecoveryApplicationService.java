@@ -26,10 +26,12 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -103,6 +105,8 @@ public class PasswordRecoveryApplicationService {
     private final TokenService tokenService;
 
     private final DomainEventPublisher domainEventPublisher;
+
+    private final MessageSource messageSource;
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -226,7 +230,8 @@ public class PasswordRecoveryApplicationService {
                     if (!result.isPassed()) {
                         List<String> errors = result.getErrors() == null ? List.of() : result.getErrors();
                         return Mono.error(new BusinessException(
-                                ResultCode.PARAM_INVALID, "新密码不符合安全策略: " + String.join("; ", errors)));
+                                ResultCode.PARAM_INVALID,
+                                message("auth.password_recovery.password_policy_failed", String.join("; ", errors))));
                     }
                     return Mono.just(result);
                 });
@@ -360,20 +365,37 @@ public class PasswordRecoveryApplicationService {
     private void validateChannelAndContact(String channel, String contact) {
         if (PasswordRecoveryEntity.CHANNEL_SMS.equals(channel)) {
             if (!PHONE_PATTERN.matcher(contact).matches()) {
-                throw new BusinessException(ResultCode.PARAM_INVALID, "手机号格式不正确");
+                throw new BusinessException(
+                        ResultCode.PARAM_INVALID, message("auth.password_recovery.contact.phone_invalid"));
             }
             return;
         }
         if (!PasswordRecoveryEntity.CHANNEL_EMAIL.equals(channel)) {
-            throw new BusinessException(ResultCode.PARAM_INVALID, "恢复通道仅支持 EMAIL 或 SMS");
+            throw new BusinessException(
+                    ResultCode.PARAM_INVALID, message("auth.password_recovery.channel.unsupported"));
         }
         if (!EMAIL_PATTERN.matcher(contact).matches()) {
-            throw new BusinessException(ResultCode.PARAM_INVALID, "邮箱格式不正确");
+            throw new BusinessException(
+                    ResultCode.PARAM_INVALID, message("auth.password_recovery.contact.email_invalid"));
         }
     }
 
     private BusinessException genericInvalid() {
-        return new BusinessException(ResultCode.UNAUTHORIZED, "恢复请求无效或已过期");
+        return new BusinessException(ResultCode.UNAUTHORIZED, message("auth.password_recovery.request_invalid"));
+    }
+
+    /**
+     * 解析用户可见文案。
+     *
+     * <p>恢复链路是匿名入口且跨线程执行，不携带请求 Locale，统一使用简体中文；
+     * 资源缺失时返回 key 本身而不是空串。</p>
+     *
+     * @param code 消息键
+     * @param args 消息模板参数
+     * @return 已格式化的文案
+     */
+    private String message(String code, Object... args) {
+        return messageSource.getMessage(code, args, code, Locale.SIMPLIFIED_CHINESE);
     }
 
     private String generateNumericCode() {

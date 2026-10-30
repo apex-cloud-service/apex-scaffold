@@ -2,6 +2,7 @@ package com.apex.scaffold.office.infrastructure.repository;
 
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
+import com.apex.scaffold.office.domain.approval.ApprovalAction;
 import com.apex.scaffold.office.domain.approval.ApprovalProcess;
 import com.apex.scaffold.office.domain.approval.ApprovalProcessRepository;
 import com.apex.scaffold.office.domain.approval.ApprovalStatus;
@@ -163,6 +164,26 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
                 })
                 .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(list -> log.debug("查询待审批列表完成，审批人：{}，数量：{}", approverId, list.size()));
+    }
+
+    @Override
+    public Mono<List<ApprovalProcess>> findCompletedByApprover(String approverId) {
+        return Mono.fromCallable(() -> {
+                    Long tenantId = TenantContext.currentTenantId()
+                            .map(Long::valueOf)
+                            .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
+                    List<ApprovalProcessPO> poList = mapper.selectAllByTenant(tenantId);
+                    return poList.stream()
+                            .map(converter::toEntity)
+                            .filter(process -> process.getRecords() != null
+                                    && process.getRecords().stream()
+                                            .anyMatch(record -> approverId.equals(record.getApproverId())
+                                                    && (record.getAction() == ApprovalAction.APPROVE
+                                                            || record.getAction() == ApprovalAction.REJECT)))
+                            .toList();
+                })
+                .subscribeOn(blockingIoSchedulers.jdbc())
+                .doOnSuccess(list -> log.debug("查询已办审批列表完成，审批人：{}，数量：{}", approverId, list.size()));
     }
 
     @Override

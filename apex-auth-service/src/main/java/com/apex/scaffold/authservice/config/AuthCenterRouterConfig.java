@@ -15,15 +15,20 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 /**
- * 认证中心路由配置
+ * 认证中心的无版本前缀路由配置，使用 WebFlux 函数式路由注册两类端点：
  *
- * 使用WebFlux函数式路由注册认证中心的端点路由
+ * <ul>
+ *   <li>{@code /api/mfa/**}：当前用户的多因素认证管理；
+ *   <li>{@code /api/ip-access-control/**}：IP 黑白名单规则管理。
+ * </ul>
  *
- * 端点列表：
- * - /api/mfa/** - 多因素认证管理
- * - /api/ip-access-control/** - IP访问控制管理
+ * <p>这两组路径不带版本号，与 {@link com.apex.scaffold.authservice.interfaces.router.MfaRouter}
+ * 声明的 {@code /api/v1/mfa/**} 路由集并存且互不重叠，各自登记为独立 Bean；
+ * 网关的 auth 路由需同时覆盖两套前缀，缺少任一前缀时对应接口不可达。
+ * Handler 通过构造器注入，故 Bean 方法不接收参数。
  *
  * @author Apex Team
+ * @version 1.3.1
  * @since 1.3.1
  */
 @Configuration
@@ -34,10 +39,13 @@ public class AuthCenterRouterConfig {
     private final IpAccessControlHandler ipAccessControlHandler;
 
     /**
-     * MFA多因素认证管理路由（/api/mfa/**，与 {@link com.apex.scaffold.authservice.interfaces.router.MfaRouter}
-     * 的 /api/v1/mfa/** 路由集相互独立，bean 命名区分避免冲突）
+     * MFA 多因素认证管理路由（{@code /api/mfa/**}，与 {@link com.apex.scaffold.authservice.interfaces.router.MfaRouter}
+     * 的 {@code /api/v1/mfa/**} 路由集相互独立，Bean 命名区分避免冲突）。
      *
-     * @return MFA 管理路由
+     * <p>覆盖 TOTP/SMS/邮件方式的启用与激活、按类型关闭、验证码校验与发送、
+     * 配置与状态查询、备用码重新生成与校验，以及账号解锁；所有操作仅作用于当前用户。
+     *
+     * @return MFA 管理路由函数，挂载于 {@code /api/mfa}
      */
     @Bean
     @RouterOperations({
@@ -119,9 +127,12 @@ public class AuthCenterRouterConfig {
     }
 
     /**
-     * IP访问控制路由。
+     * IP 访问控制路由（{@code /api/ip-access-control/**}）。
      *
-     * @return IP 规则管理路由
+     * <p>提供黑白名单的增删查、规则启用/停用、按标识删除、过期规则清理与访问判定；
+     * {@code DELETE /{ruleId}} 与 {@code POST /check} 等路径由具体 Handler 校验权限与租户范围。
+     *
+     * @return IP 规则管理路由函数，挂载于 {@code /api/ip-access-control}
      */
     @Bean
     @RouterOperations({

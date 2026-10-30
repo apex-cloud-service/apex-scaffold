@@ -583,7 +583,9 @@ class WorkflowServiceTest {
             when(taskRepository.findById(1000L)).thenReturn(Mono.just(testTask));
             when(taskRepository.updateById(any(Task.class))).thenReturn(Mono.just(1));
 
-            StepVerifier.create(workflowService.transferTask(1000L, 10003L, 10002L, "本周出差"))
+            StepVerifier.create(workflowService
+                            .transferTask(1000L, 10003L, 10002L, "本周出差")
+                            .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant("1")))
                     .verifyComplete();
 
             ArgumentCaptor<Task> taskCaptor = ArgumentCaptor.forClass(Task.class);
@@ -600,7 +602,9 @@ class WorkflowServiceTest {
             testTask.setStatus("COMPLETED");
             when(taskRepository.findById(1000L)).thenReturn(Mono.just(testTask));
 
-            StepVerifier.create(workflowService.transferTask(1000L, 10003L, 10002L, "test"))
+            StepVerifier.create(workflowService
+                            .transferTask(1000L, 10003L, 10002L, "test")
+                            .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant("1")))
                     .expectError(IllegalStateException.class)
                     .verify();
         }
@@ -610,7 +614,9 @@ class WorkflowServiceTest {
         void testTransferTask_NotOwnTask() {
             when(taskRepository.findById(1000L)).thenReturn(Mono.just(testTask));
 
-            StepVerifier.create(workflowService.transferTask(1000L, 10003L, 99999L, "test"))
+            StepVerifier.create(workflowService
+                            .transferTask(1000L, 10003L, 99999L, "test")
+                            .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant("1")))
                     .expectError(IllegalStateException.class)
                     .verify();
         }

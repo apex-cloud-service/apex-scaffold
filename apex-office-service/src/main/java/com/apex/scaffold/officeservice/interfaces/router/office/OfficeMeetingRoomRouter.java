@@ -20,6 +20,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * <p>网关仅放行 {@code /api/v2/office/**}，因此会议室接口统一挂在 v2 版本域下。
  *
  * @author Apex Scaffold Team
+ * @version 1.4.0
  * @since 1.4.0
  */
 @Configuration

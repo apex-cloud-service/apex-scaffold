@@ -33,7 +33,7 @@ class OperationsHealthServiceTest {
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
     private final HealthSnapshotRepository repository = mock(HealthSnapshotRepository.class);
-    private final OperationsHealthService service = new OperationsHealthService(repository);
+    private final OperationsHealthService service = new OperationsHealthService(repository, () -> "test-secret");
 
     @Test
     void captureRejectsMissingTenantContext() {

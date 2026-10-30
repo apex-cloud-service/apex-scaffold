@@ -30,8 +30,10 @@ import org.springframework.core.io.Resource;
  * 语义的 URI，升级握手因此被丢弃，HTTP 消息接口却仍然正常，问题只在长连接侧暴露。
  *
  * <p>本测试对每个配置源单独绑定路由列表（不跨文件合并，以忠实反映各文件自身声明的内容），
- * 校验三件事：站内信 WS/HTTP 路由存在、均排在 {@code office-domain} 通配路由之前、WS 路由为 {@code ws}/{@code wss}
- * 语义且不挂 HTTP 熔断回退。测试不启动 Spring 上下文、不依赖 Nacos 或下游服务。
+ * 校验域路由契约：站内信 WS/HTTP 路由存在且排在 {@code office-domain} 之前；认证域覆盖认证中心
+ * 契约路径且不承接由 system 承载的 {@code /admin-api/v1/auth|sso/**}；办公域覆盖 {@code /api/office/**}；
+ * 文件域覆盖管理端图表前缀；系统域兜底显式覆盖 {@code /api/v2/operations/**} 与 {@code /api/v2/platform/**}；
+ * job/masking 独立路由在整表重定义的配置源中显式声明。测试不启动 Spring 上下文、不依赖 Nacos 或下游服务。
  *
  * @author Apex Team
  * @since 1.3.1
@@ -56,6 +58,21 @@ class GatewayRouteProfileConfigTest {
 
     /** 办公域通配路由标识，站内信路由必须排在它之前。 */
     private static final String OFFICE_ROUTE_ID = "office-domain";
+
+    /** 认证域路由标识：基础与生产配置为 auth-service，Nacos 配置为 auth-domain。 */
+    private static final List<String> AUTH_ROUTE_IDS = List.of("auth-service", "auth-domain");
+
+    /** 文件域路由标识，须显式覆盖管理端图表前缀。 */
+    private static final String FILE_ROUTE_ID = "file-domain";
+
+    /** 系统域兜底路由标识，须显式覆盖体检运营与平台租户接口前缀。 */
+    private static final String SYSTEM_ROUTE_ID = "system-domain";
+
+    /** 任务代理路由标识，整表重定义时易被整表覆盖丢失。 */
+    private static final String JOB_ROUTE_ID = "job-domain";
+
+    /** 脱敏服务路由标识，整表重定义时易被整表覆盖丢失。 */
+    private static final String MASKING_ROUTE_ID = "masking-domain";
 
     /** 站内信 WebSocket 握手路径。 */
     private static final String WEBSOCKET_PATH = "/api/v1/messages/ws";
@@ -120,10 +137,62 @@ class GatewayRouteProfileConfigTest {
                     .containsEntry("fallbackUri", FALLBACK_URI);
         });
 
-        // 办公域通配路由必须同时覆盖 v1 与 v2（组织同步向导）前缀，防止整表重定义时 v2 路径丢失。
+        // 办公域通配路由必须同时覆盖 v1 与 v2（组织同步向导）前缀，防止整表重定义时 v2 路径丢失；
+        // 同时覆盖 /api/office/**（站内信 HTTP 消息接口）与管理端消息模板前缀。
         assertThat(pathPredicateArgs(office))
                 .withFailMessage("%s：office-domain 须覆盖 v1/v2 办公前缀", source)
-                .contains("/api/v1/office/**", "/api/v2/office/**");
+                .contains("/api/v1/office/**", "/api/v2/office/**")
+                .withFailMessage("%s：office-domain 须覆盖 /api/office/** 与管理端消息模板前缀", source)
+                .contains("/api/office/**", "/admin-api/v1/message-templates");
+
+        // 认证域路由：auth-service 承载认证协议、密码找回与认证中心管理面（MFA/IP 访问控制/
+        // 认证配置/审计日志）；/admin-api/v1/auth|sso/** 由 system 承载，若误加入本路由
+        // 会在 auth-service 404。
+        RouteDefinition auth = findRouteAny(routes, AUTH_ROUTE_IDS, source);
+        assertThat(pathPredicateArgs(auth))
+                .withFailMessage("%s：auth 路由须覆盖认证中心契约路径", source)
+                .contains(
+                        "/auth/v1/**",
+                        "/auth/v2/**",
+                        "/oauth2/**",
+                        "/.well-known/**",
+                        "/api/v1/mfa/**",
+                        "/api/mfa/**",
+                        "/api/ip-access-control/**",
+                        "/api/v1/auth/configs/**",
+                        "/api/v1/auth/audit-logs/**")
+                .withFailMessage("%s：auth 路由不得承接 /admin-api/v1/auth|sso/**（由 system 承载）", source)
+                .doesNotContain("/admin-api/v1/auth/**", "/admin-api/v1/sso/**");
+
+        // 文件域路由必须显式覆盖管理端图表前缀（ChartRouter），否则落入 system 兜底后 404。
+        assertThat(pathPredicateArgs(findRoute(routes, FILE_ROUTE_ID, source)))
+                .withFailMessage("%s：file-domain 须覆盖 /admin-api/v1/charts/** 前缀", source)
+                .contains("/admin-api/v1/charts/**");
+
+        // 系统域兜底路由必须显式覆盖 /api/v2/operations/**（体检快照、趋势、导出、租户摘要）
+        // 与 /api/v2/platform/**（平台租户管理端点），否则整表重定义后相应端点无显式路由。
+        RouteDefinition system = findRoute(routes, SYSTEM_ROUTE_ID, source);
+        assertThat(pathPredicateArgs(system))
+                .withFailMessage("%s：system-domain 须覆盖 /api/v2/operations/** 前缀", source)
+                .contains("/api/v2/operations/**")
+                .withFailMessage("%s：system-domain 须覆盖 /api/v2/platform/** 前缀", source)
+                .contains("/api/v2/platform/**");
+
+        // 独立轻量服务路由（job/masking）在整表重定义的配置源中必须显式声明并挂熔断回退。
+        for (String routeId : List.of(JOB_ROUTE_ID, MASKING_ROUTE_ID)) {
+            RouteDefinition lightweight = findRoute(routes, routeId, source);
+            assertThat(lightweight.getUri().getScheme()).isIn("http", "https");
+            assertThat(lightweight.getFilters()).anySatisfy(filter -> {
+                assertThat(filter.getName()).isEqualTo("CircuitBreaker");
+                assertThat(filter.getArgs()).containsEntry("fallbackUri", FALLBACK_URI);
+            });
+        }
+        assertThat(pathPredicateArgs(findRoute(routes, JOB_ROUTE_ID, source)))
+                .withFailMessage("%s：job-domain 须覆盖任务代理前缀", source)
+                .contains("/admin-api/v1/jobs", "/admin-api/v1/jobs/**");
+        assertThat(pathPredicateArgs(findRoute(routes, MASKING_ROUTE_ID, source)))
+                .withFailMessage("%s：masking-domain 须覆盖脱敏前缀", source)
+                .contains("/api/v1/masking/**");
     }
 
     /**
@@ -171,9 +240,21 @@ class GatewayRouteProfileConfigTest {
      * @return 命中的路由定义
      */
     private static RouteDefinition findRoute(List<RouteDefinition> routes, String routeId, String source) {
+        return findRouteAny(routes, List.of(routeId), source);
+    }
+
+    /**
+     * 按候选路由标识依次查找路由（同一逻辑域在不同配置源的 id 可能不同），全部缺失时失败.
+     *
+     * @param routes 路由定义
+     * @param routeIds 候选路由标识
+     * @param source 配置源名称，仅用于失败信息
+     * @return 命中的路由定义
+     */
+    private static RouteDefinition findRouteAny(List<RouteDefinition> routes, List<String> routeIds, String source) {
         return routes.stream()
-                .filter(route -> routeId.equals(route.getId()))
+                .filter(route -> routeIds.contains(route.getId()))
                 .findFirst()
-                .orElseThrow(() -> new AssertionError(source + "：缺少网关路由 " + routeId));
+                .orElseThrow(() -> new AssertionError(source + "：缺少网关路由 " + routeIds));
     }
 }

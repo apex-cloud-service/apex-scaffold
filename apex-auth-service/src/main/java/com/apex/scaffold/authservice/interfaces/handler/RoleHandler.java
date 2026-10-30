@@ -298,6 +298,7 @@ public class RoleHandler {
             responseCode = "404",
             description = "角色不存在",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getRoleById(ServerRequest request) {
         String id = request.pathVariable("id");
         return roleService
@@ -346,6 +347,7 @@ public class RoleHandler {
                     @Content(
                             mediaType = "application/json",
                             schema = @Schema(type = "array", implementation = RoleDTO.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> listRoles(ServerRequest request) {
         return roleService
                 .listRoles()
@@ -476,6 +478,7 @@ public class RoleHandler {
             responseCode = "404",
             description = "角色不存在",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getRolePermissions(ServerRequest request) {
         String id = request.pathVariable("id");
         return roleService

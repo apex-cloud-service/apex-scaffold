@@ -50,6 +50,9 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *     <li>POST /admin-api/v1/generator/preview - 纯渲染预览</li>
  *     <li>POST /admin-api/v1/generator/configs/{id}/generate - 执行代码生成</li>
  *     <li>GET /admin-api/v1/generator/artifacts/{id}/download - 按产物 ID 下载</li>
+ *     <li>POST /admin-api/v1/generator/tasks - 提交异步生成任务</li>
+ *     <li>GET /admin-api/v1/generator/tasks/{id} - 查询任务进度</li>
+ *     <li>POST /admin-api/v1/generator/tasks/{id}/cancel - 取消任务</li>
  *   </ul>
  * </ul>
  *
@@ -136,7 +139,19 @@ public class GeneratorAdminRouter {
         @RouterOperation(
                 path = "/admin-api/v1/generator/artifacts/{id}/download",
                 beanClass = CodeGeneratorHandler.class,
-                beanMethod = "download")
+                beanMethod = "download"),
+        @RouterOperation(
+                path = "/admin-api/v1/generator/tasks",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "submit"),
+        @RouterOperation(
+                path = "/admin-api/v1/generator/tasks/{id}",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "taskProgress"),
+        @RouterOperation(
+                path = "/admin-api/v1/generator/tasks/{id}/cancel",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "cancelTask")
     })
     @Bean
     @SuppressWarnings("PMD.MethodTooLongRule")
@@ -365,6 +380,35 @@ public class GeneratorAdminRouter {
                                         .in(ParameterIn.PATH)
                                         .required(true))
                                 .response(responseBuilder().responseCode("200").description("下载成功")))
+                .POST("/admin-api/v1/generator/tasks", generatorHandler::submit, ops -> ops.operationId("submitGenTask")
+                        .summary("提交代码生成任务")
+                        .tag("代码生成器管理")
+                        .requestBody(requestBodyBuilder()
+                                .description("异步生成参数：生成配置 ID、表清单、模板与预览令牌")
+                                .required(true)
+                                .content(org.springdoc.core.fn.builders.content.Builder.contentBuilder()
+                                        .mediaType(MediaType.APPLICATION_JSON_VALUE)))
+                        .response(responseBuilder().responseCode("200").description("任务已受理")))
+                .GET("/admin-api/v1/generator/tasks/{id}", generatorHandler::taskProgress, ops -> ops.operationId(
+                                "getGenTaskProgress")
+                        .summary("查询代码生成任务进度")
+                        .tag("代码生成器管理")
+                        .parameter(parameterBuilder()
+                                .name("id")
+                                .description("任务ID")
+                                .in(ParameterIn.PATH)
+                                .required(true))
+                        .response(responseBuilder().responseCode("200").description("查询成功")))
+                .POST("/admin-api/v1/generator/tasks/{id}/cancel", generatorHandler::cancelTask, ops -> ops.operationId(
+                                "cancelGenTask")
+                        .summary("取消代码生成任务")
+                        .tag("代码生成器管理")
+                        .parameter(parameterBuilder()
+                                .name("id")
+                                .description("任务ID")
+                                .in(ParameterIn.PATH)
+                                .required(true))
+                        .response(responseBuilder().responseCode("200").description("取消请求已受理")))
                 .build();
     }
 }

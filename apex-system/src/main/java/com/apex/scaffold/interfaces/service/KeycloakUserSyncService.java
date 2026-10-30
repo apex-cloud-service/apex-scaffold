@@ -1,11 +1,11 @@
 package com.apex.scaffold.interfaces.service;
 
+import com.apex.scaffold.application.service.TenantGuard;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.interfaces.config.KeycloakConfig;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
@@ -20,14 +20,14 @@ import reactor.core.publisher.Mono;
  * <p>提供从 Keycloak 批量或单个同步用户到本地数据库的功能。
  * 仅在 {@code keycloak.enabled=true} 时生效。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>{@link #syncUserFromKeycloak} - 从 Keycloak 同步单个用户</li>
  *   <li>{@link #syncAllUsers} - 从 Keycloak 批量同步所有用户</li>
  *   <li>{@link #createUserInKeycloak} - 在 Keycloak 中创建新用户（预留）</li>
  * </ul>
  *
- * <h2>同步策略</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>使用 Keycloak Sub（用户唯一标识）作为关联键</li>
  *   <li>本地已存在的用户跳过同步（避免覆盖本地修改）</li>
@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
  *   <li>同步失败的用户记录警告日志，不中断整体流程</li>
  * </ul>
  *
- * <h2>WebFlux 响应式设计</h2>
+ * <h2>设计说明</h2>
  * <p>核心设计原则：
  * <ul>
  *   <li>Keycloak Admin Client 是阻塞式 API，必须使用 {@link BlockingIoSchedulers#remote()} 隔离</li>
@@ -45,7 +45,7 @@ import reactor.core.publisher.Mono;
  *   <li>严禁使用 {@code .block()} 阻塞主线程</li>
  * </ul>
  *
- * <h2>使用场景</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>系统初始化：批量导入 Keycloak 现有用户</li>
  *   <li>数据修复：修复本地与 Keycloak 用户数据不一致</li>
@@ -76,13 +76,16 @@ public class KeycloakUserSyncService {
     /** 用户仓储 */
     private final UserRepository userRepository;
 
+    /** 租户写链路守卫：镜像建档前校验租户状态与用户配额 */
+    private final TenantGuard tenantGuard;
+
     /**
      * 从 Keycloak 同步单个用户
      *
      * <p>根据 Keycloak Sub（用户唯一标识）从 Keycloak 获取用户信息，
      * 并同步到本地数据库。如果本地已存在该用户，则跳过创建。
      *
-     * <h3>处理流程</h3>
+     * <p><strong>处理流程</strong></p>
      * <ol>
      *   <li>调用 Keycloak Admin API 获取用户信息（阻塞调用，隔离到 {@code remote} 调度器）</li>
      *   <li>检查本地数据库是否已存在该用户（根据 keycloak_sub）</li>
@@ -90,7 +93,7 @@ public class KeycloakUserSyncService {
      *   <li>返回用户实体</li>
      * </ol>
      *
-     * <h3>字段映射</h3>
+     * <p><strong>字段映射</strong></p>
      * <ul>
      *   <li>username ← kcUser.username 或 kcUser.email（如果 username 为空）</li>
      *   <li>email ← kcUser.email</li>
@@ -101,7 +104,7 @@ public class KeycloakUserSyncService {
      *   <li>deleted ← 0（未删除）</li>
      * </ul>
      *
-     * <h3>错误处理</h3>
+     * <p><strong>错误处理</strong></p>
      * <ul>
      *   <li>Keycloak API 调用失败 → 记录错误日志并返回 Mono.error</li>
      *   <li>数据库保存失败 → 由调用方处理异常</li>
@@ -111,23 +114,26 @@ public class KeycloakUserSyncService {
      * @return {@link Mono<UserEntity>} 同步后的用户实体
      */
     public Mono<UserEntity> syncUserFromKeycloak(String keycloakSub) {
-        return Mono.fromCallable(() -> {
-                    log.info("Syncing user from Keycloak: keycloakSub={}", keycloakSub);
+        if (keycloakSub == null || keycloakSub.isBlank()) {
+            return Mono.error(new IllegalArgumentException("keycloakSub 不能为空"));
+        }
+        return userRepository
+                .findByKeycloakSub(keycloakSub)
+                .switchIfEmpty(Mono.defer(() -> fetchAndCreate(keycloakSub)));
+    }
 
-                    UserRepresentation kcUser = keycloakAdminClient
-                            .realm(keycloakConfig.getRealm())
-                            .users()
-                            .get(keycloakSub)
-                            .toRepresentation();
-
-                    return kcUser;
-                })
+    /** 拉取 Keycloak 用户并在本地建档；已存在判断由调用方先行完成。 */
+    private Mono<UserEntity> fetchAndCreate(String keycloakSub) {
+        return Mono.fromCallable(() -> keycloakAdminClient
+                        .realm(keycloakConfig.getRealm())
+                        .users()
+                        .get(keycloakSub)
+                        .toRepresentation())
                 .subscribeOn(BlockingIoSchedulers.remote())
                 .flatMap(kcUser -> {
                     String username = kcUser.getUsername();
                     String email = kcUser.getEmail();
                     String firstName = kcUser.getFirstName();
-
                     UserEntity user = new UserEntity();
                     user.setUsername(username != null ? username : email);
                     user.setEmail(email);
@@ -138,52 +144,122 @@ public class KeycloakUserSyncService {
                     user.setDeleted(0);
                     user.setCreateTime(LocalDateTime.now());
                     user.setUpdateTime(LocalDateTime.now());
-
-                    return userRepository
-                            .save(user)
+                    return tenantGuard
+                            .assertUserQuota(1)
+                            .then(userRepository.save(user))
+                            .onErrorResume(error -> userRepository
+                                    .findByKeycloakSub(keycloakSub)
+                                    .switchIfEmpty(Mono.error(error)))
                             .doOnSuccess(savedUser -> log.info(
                                     "User synced from Keycloak: userId={}, username={}, keycloakSub={}",
                                     savedUser.getId(),
                                     savedUser.getUsername(),
                                     keycloakSub));
                 })
-                .onErrorResume(e -> {
-                    log.error("Failed to sync user from Keycloak: keycloakSub={}", keycloakSub, e);
-                    return Mono.error(new RuntimeException("Failed to sync user from Keycloak: " + e.getMessage(), e));
-                });
+                .onErrorMap(
+                        error -> !(error instanceof com.apex.scaffold.common.exception.BusinessException),
+                        error -> new RuntimeException(
+                                "Failed to sync user from Keycloak: " + error.getMessage(), error));
     }
 
     /**
-     * 从 Keycloak 全量同步用户到本地数据库。
+     * 从 Keycloak 全量同步用户，返回逐项统计结果，失败不再伪装为成功。
      *
-     * <p>拉取 Keycloak 全部用户并逐个调用 {@code syncUserFromKeycloak}；单个用户同步失败仅记录
-     * 警告日志并继续，不中断整体流程。</p>
+     * @return 同步统计
      */
-    public Mono<Void> syncAllUsers() {
-        return Mono.fromCallable(() -> {
-                    log.info("Starting full user sync from Keycloak");
-
-                    List<UserRepresentation> kcUsers = keycloakAdminClient
-                            .realm(keycloakConfig.getRealm())
-                            .users()
-                            .list();
-
-                    log.info("Found {} users in Keycloak", kcUsers.size());
-                    return kcUsers;
-                })
+    public Mono<SyncResult> syncAllUsers() {
+        return Mono.fromCallable(() -> keycloakAdminClient
+                        .realm(keycloakConfig.getRealm())
+                        .users()
+                        .list())
                 .subscribeOn(BlockingIoSchedulers.remote())
                 .flatMapMany(reactor.core.publisher.Flux::fromIterable)
-                .flatMap(kcUser -> {
+                .concatMap(kcUser -> {
                     String keycloakSub = kcUser.getId();
-                    return syncUserFromKeycloak(keycloakSub).onErrorResume(e -> {
-                        log.warn("Failed to sync user: keycloakSub={}, error={}", keycloakSub, e.getMessage());
-                        return Mono.empty();
-                    });
+                    if (keycloakSub == null || keycloakSub.isBlank()) {
+                        return Mono.just(SyncOutcome.failed("", "missing keycloak sub"));
+                    }
+                    return userRepository
+                            .findByKeycloakSub(keycloakSub)
+                            .map(existing -> SyncOutcome.skipped(keycloakSub))
+                            .switchIfEmpty(syncUserFromKeycloak(keycloakSub)
+                                    .map(saved -> SyncOutcome.synced(keycloakSub))
+                                    .onErrorResume(error -> {
+                                        log.warn(
+                                                "Failed to sync user: keycloakSub={}, error={}",
+                                                keycloakSub,
+                                                error.getMessage());
+                                        return Mono.just(SyncOutcome.failed(keycloakSub, error.getMessage()));
+                                    }));
                 })
-                .then()
-                .doOnSuccess(v -> log.info("Full user sync from Keycloak completed"))
-                .doOnError(e -> log.error("Full user sync from Keycloak failed", e));
+                .collectList()
+                .map(SyncResult::from)
+                .doOnNext(result -> log.info(
+                        "Full user sync finished: requested={}, synced={}, skipped={}, failed={}",
+                        result.requested(),
+                        result.synced(),
+                        result.skipped(),
+                        result.failed()));
     }
+
+    /** 单用户同步结果。 */
+    private record SyncOutcome(String keycloakSub, String status, String error) {
+        private static SyncOutcome synced(String sub) {
+            return new SyncOutcome(sub, "SYNCED", null);
+        }
+
+        private static SyncOutcome skipped(String sub) {
+            return new SyncOutcome(sub, "SKIPPED", null);
+        }
+
+        private static SyncOutcome failed(String sub, String error) {
+            return new SyncOutcome(sub, "FAILED", error);
+        }
+    }
+
+    /** 全量同步统计结果。 */
+    public record SyncResult(int requested, int synced, int skipped, int failed, java.util.List<String> errors) {
+        private static SyncResult from(java.util.List<SyncOutcome> outcomes) {
+            int synced = 0;
+            int skipped = 0;
+            int failed = 0;
+            java.util.List<String> errors = new java.util.ArrayList<>();
+            for (SyncOutcome outcome : outcomes) {
+                switch (outcome.status()) {
+                    case "SYNCED" -> synced++;
+                    case "SKIPPED" -> skipped++;
+                    default -> {
+                        failed++;
+                        errors.add(outcome.keycloakSub() + ": " + outcome.error());
+                    }
+                }
+            }
+            return new SyncResult(outcomes.size(), synced, skipped, failed, java.util.List.copyOf(errors));
+        }
+    }
+
+    /**
+     * 探测 Keycloak 真实连通性。
+     *
+     * @return 连通状态
+     */
+    public Mono<StatusResult> status() {
+        return Mono.fromCallable(() -> {
+                    long started = System.currentTimeMillis();
+                    keycloakAdminClient.realm(keycloakConfig.getRealm()).toRepresentation();
+                    return new StatusResult(
+                            true, "CONNECTED", keycloakConfig.getRealm(), null, System.currentTimeMillis() - started);
+                })
+                .subscribeOn(BlockingIoSchedulers.remote())
+                .onErrorResume(error -> {
+                    log.warn("Keycloak status check failed: {}", error.getMessage());
+                    return Mono.just(
+                            new StatusResult(true, "ERROR", keycloakConfig.getRealm(), error.getMessage(), -1L));
+                });
+    }
+
+    /** Keycloak 连通状态。 */
+    public record StatusResult(boolean enabled, String status, String realm, String error, long latencyMs) {}
 
     /**
      * 在 Keycloak 中创建用户并回写本地数据库。
@@ -239,12 +315,14 @@ public class KeycloakUserSyncService {
                 .subscribeOn(BlockingIoSchedulers.remote())
                 .flatMap(keycloakSub -> {
                     user.setKeycloakSub(keycloakSub);
-                    return userRepository
-                            .save(user)
-                            .doOnSuccess(savedUser -> log.info(
-                                    "User saved with Keycloak reference: userId={}, keycloakSub={}",
-                                    savedUser.getId(),
-                                    keycloakSub));
+                    return tenantGuard
+                            .assertUserQuota(1)
+                            .then(userRepository
+                                    .save(user)
+                                    .doOnSuccess(savedUser -> log.info(
+                                            "User saved with Keycloak reference: userId={}, keycloakSub={}",
+                                            savedUser.getId(),
+                                            keycloakSub)));
                 })
                 .onErrorResume(e -> {
                     log.error("Failed to create user in Keycloak: username={}", user.getUsername(), e);

@@ -49,6 +49,9 @@ public class HealthSnapshotPO extends BasePO {
     /** 总体结论说明。 */
     private String summary;
 
+    /** 快照签名（HMAC-SHA256 十六进制）。 */
+    private String signature;
+
     /** UP 检查项数。 */
     private Integer upCount;
 

@@ -99,6 +99,54 @@ public class OperationsRouter {
                                             content = @Content(mediaType = "text/csv"))
                                 })),
         @RouterOperation(
+                path = "/api/v2/operations/health-snapshots/export-tasks",
+                method = RequestMethod.POST,
+                beanClass = OperationsHealthHandler.class,
+                beanMethod = "submitExportTask",
+                operation =
+                        @Operation(
+                                summary = "提交体检快照异步导出任务",
+                                description = "记录数超过异步导出上限时拒绝；任务由后台生成 CSV",
+                                tags = {"运维体检"},
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "操作成功",
+                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                })),
+        @RouterOperation(
+                path = "/api/v2/operations/health-snapshots/export-tasks/{id}",
+                method = RequestMethod.GET,
+                beanClass = OperationsHealthHandler.class,
+                beanMethod = "getExportTask",
+                operation =
+                        @Operation(
+                                summary = "查询体检快照异步导出任务",
+                                description = "返回任务状态、尝试次数、失败原因与导出记录数",
+                                tags = {"运维体检"},
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "操作成功",
+                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                })),
+        @RouterOperation(
+                path = "/api/v2/operations/health-snapshots/export-tasks/{id}/download",
+                method = RequestMethod.GET,
+                beanClass = OperationsHealthHandler.class,
+                beanMethod = "downloadExportTask",
+                operation =
+                        @Operation(
+                                summary = "下载体检快照异步导出结果",
+                                description = "仅已完成任务可下载",
+                                tags = {"运维体检"},
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "操作成功",
+                                            content = @Content(mediaType = "text/csv"))
+                                })),
+        @RouterOperation(
                 path = "/api/v2/operations/health-trend",
                 method = RequestMethod.GET,
                 beanClass = OperationsHealthHandler.class,
@@ -138,6 +186,9 @@ public class OperationsRouter {
                         .POST("/health-snapshots", handler::captureSnapshot)
                         .GET("/health-snapshots", handler::listSnapshots)
                         .GET("/health-snapshots/export", handler::exportSnapshots)
+                        .POST("/health-snapshots/export-tasks", handler::submitExportTask)
+                        .GET("/health-snapshots/export-tasks/{id}", handler::getExportTask)
+                        .GET("/health-snapshots/export-tasks/{id}/download", handler::downloadExportTask)
                         .GET("/health-trend", handler::trend)
                         .GET("/tenant-health-summary", handler::tenantSummary))
                 .build();

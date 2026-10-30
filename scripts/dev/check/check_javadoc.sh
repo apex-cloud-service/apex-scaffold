@@ -34,6 +34,41 @@ METHODS_WITHOUT_DOC=0
 TMP_CLASSES="/tmp/javadoc_check_classes_$$.txt"
 TMP_METHODS="/tmp/javadoc_check_methods_$$.txt"
 
+# 删除 JavaDoc、块注释和行注释，同时保留行号，避免注释示例中的类型声明被扫描。
+strip_java_comments() {
+    awk '
+    {
+        line = $0
+        out = ""
+        while (1) {
+            if (depth == 0) {
+                start = index(line, "/*")
+                if (start == 0) {
+                    out = out line
+                    break
+                }
+                out = out substr(line, 1, start - 1)
+                rest = substr(line, start + 2)
+                end = index(rest, "*/")
+                if (end == 0) {
+                    depth = 1
+                    break
+                }
+                line = substr(rest, end + 2)
+            } else {
+                end = index(line, "*/")
+                if (end == 0) {
+                    break
+                }
+                line = substr(line, end + 2)
+                depth = 0
+            }
+        }
+        sub(/\/\/.*/, "", out)
+        print out
+    }' "$1"
+}
+
 # 清理临时文件
 trap "rm -f $TMP_CLASSES $TMP_METHODS" EXIT
 
@@ -47,31 +82,27 @@ find "$SCAN_PATH" -name "*.java" -type f | while read file; do
         continue
     fi
     
-    # 查找public class/interface/enum声明
-    if grep -q "public \(class\|interface\|enum\|@interface\|record\)" "$file"; then
+    # 先从注释中剥离类型声明，避免 JavaDoc 示例被当作真实类声明。
+    stripped_file="/tmp/javadoc_check_stripped_$$.java"
+    strip_java_comments "$file" > "$stripped_file"
+
+    # 查找第一个真实的 public class/interface/enum 声明。
+    class_line=$(grep -nE "^[[:space:]]*public[[:space:]]+(class|interface|enum|@interface|record)[[:space:]]" "$stripped_file" | head -1 | cut -d: -f1 || true)
+    rm -f "$stripped_file"
+
+    if [ -n "$class_line" ]; then
         TOTAL_CLASSES=$((TOTAL_CLASSES + 1))
-        
-        # 查找类声明的行号（可能在注解后面）
-        class_line=$(grep -n "public \(class\|interface\|enum\|@interface\|record\)" "$file" | head -1 | cut -d: -f1)
-        
-        if [ -n "$class_line" ]; then
-            # 向前查找 100 行，查看是否有 JavaDoc 注释起始标记 /**
-            # 从文件开头到类声明行的内容中，查找最后一个 /** 的位置
-            javadoc_start=$(sed -n "1,${class_line}p" "$file" | grep -n "^/\*\*" | tail -1 | cut -d: -f1)
-            
+
+        # 从真实声明向前查找最近的完整 JavaDoc。
+        javadoc_end=$(sed -n "1,${class_line}p" "$file" | grep -n "^[[:space:]]*\*/[[:space:]]*$" | tail -1 | cut -d: -f1 || true)
+        if [ -z "$javadoc_end" ]; then
+            CLASSES_WITHOUT_DOC=$((CLASSES_WITHOUT_DOC + 1))
+            echo "$file" >> "$TMP_CLASSES"
+        else
+            javadoc_start=$(sed -n "1,${javadoc_end}p" "$file" | grep -n "^[[:space:]]*/\*\*" | tail -1 | cut -d: -f1 || true)
             if [ -z "$javadoc_start" ]; then
-                # 没有找到 JavaDoc 注释
                 CLASSES_WITHOUT_DOC=$((CLASSES_WITHOUT_DOC + 1))
                 echo "$file" >> "$TMP_CLASSES"
-            else
-                # 检查 JavaDoc 结束标记 */ 是否在类声明之前
-                javadoc_end=$(sed -n "${javadoc_start},${class_line}p" "$file" | grep -n "^ \*/" | tail -1 | cut -d: -f1)
-                
-                if [ -z "$javadoc_end" ]; then
-                    # JavaDoc 没有正确结束
-                    CLASSES_WITHOUT_DOC=$((CLASSES_WITHOUT_DOC + 1))
-                    echo "$file" >> "$TMP_CLASSES"
-                fi
             fi
         fi
     fi

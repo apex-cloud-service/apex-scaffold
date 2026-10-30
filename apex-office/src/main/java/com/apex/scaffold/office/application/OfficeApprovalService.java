@@ -249,6 +249,22 @@ public class OfficeApprovalService {
     }
 
     /**
+     * 查询我已执行审批动作的流程列表。
+     *
+     * @param approverId 当前审批人ID
+     * @return 包含本人同意或拒绝记录的流程列表
+     */
+    public Flux<ApprovalProcess> getCompletedApprovals(String approverId) {
+        log.info("查询已办审批列表 - approverId: {}", approverId);
+
+        return approvalProcessRepository
+                .findCompletedByApprover(approverId)
+                .flatMapMany(Flux::fromIterable)
+                .doOnComplete(() -> log.info("已办审批列表查询成功 - approverId: {}", approverId))
+                .doOnError(error -> log.error("已办审批列表查询失败 - approverId: {}", approverId, error));
+    }
+
+    /**
      * 查询我发起的审批列表
      *
      * <p>查询指定发起人发起的所有审批流程。

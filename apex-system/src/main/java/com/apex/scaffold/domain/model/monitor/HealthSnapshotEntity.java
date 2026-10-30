@@ -13,7 +13,7 @@ import lombok.ToString;
  * 快照只保存总体结论、状态计数与摘要文本，不复制逐项 {@code source}/{@code evidence}，
  * 避免平台级实例证据随快照扩散到历史归档。
  *
- * <h2>关键约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@link #scope} 固定为 {@code INSTANCE}：快照只代表单实例进程内采集结果，不代表集群</li>
  *   <li>{@link #ruleVersion} 记录判定规则版本，跨版本趋势比较前需先确认口径一致</li>
@@ -71,6 +71,14 @@ public class HealthSnapshotEntity extends BaseEntity {
 
     /** 总体结论说明。 */
     private String summary;
+
+    /**
+     * 快照签名（HMAC-SHA256 十六进制）。
+     *
+     * <p>采集时按结论级字段计算，读取侧重新计算并比较，用于发现落库后被改写的数据。
+     * V70 之前的存量快照为 {@code null}，表示「无法验证」而非「已被篡改」。</p>
+     */
+    private String signature;
 
     /** UP 检查项数。 */
     private Integer upCount;

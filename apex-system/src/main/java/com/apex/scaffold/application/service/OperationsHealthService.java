@@ -9,7 +9,9 @@ import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.monitor.HealthSnapshotEntity;
+import com.apex.scaffold.domain.model.monitor.HealthSnapshotSigner;
 import com.apex.scaffold.domain.repository.HealthSnapshotRepository;
+import com.apex.scaffold.domain.service.HealthSnapshotSignatureKeyPort;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,7 +29,7 @@ import reactor.core.publisher.Mono;
  * <p>在即时体检报告之上补齐「历史列表、趋势分析、CSV 导出、租户受限摘要」四段能力，
  * 回答「昨天是否也这样」「风险是否在收敛」。
  *
- * <h2>口径约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>快照只保存结论级字段，逐项证据不落库、不导出</li>
  *   <li>所有查询的租户范围由持久化拦截器追加；写快照时租户取自可信上下文</li>
@@ -70,8 +72,13 @@ public class OperationsHealthService {
 
     private final HealthSnapshotRepository snapshotRepository;
 
+    private final HealthSnapshotSignatureKeyPort signatureKeyPort;
+
     /**
      * 保存一次体检快照。
+     *
+     * <p>落库前按结论级字段计算 HMAC-SHA256 签名，使读取侧能发现落库后被改写的数据。
+     * 密钥缺失时不写签名，读取侧降级为 UNVERIFIABLE，而不是判定篡改。</p>
      *
      * @param command 结论级快照命令
      * @return 已落库的快照视图
@@ -82,7 +89,9 @@ public class OperationsHealthService {
                     if (tenant == null || tenant.isBlank()) {
                         return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "租户上下文不能为空"));
                     }
-                    return snapshotRepository.insert(toEntity(command, tenant));
+                    HealthSnapshotEntity entity = toEntity(command, tenant);
+                    entity.setSignature(HealthSnapshotSigner.sign(entity, signatureKeyPort.currentSecret()));
+                    return snapshotRepository.insert(entity);
                 })
                 .map(this::toDto);
     }
@@ -150,9 +159,7 @@ public class OperationsHealthService {
                 return snapshotRepository
                         .search(from, to, status, 1, EXPORT_MAX_ROWS)
                         .map(page -> new ExportFile(
-                                "health-snapshots-"
-                                        + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"))
-                                        + ".csv",
+                                exportFileName(),
                                 CSV_CONTENT_TYPE,
                                 buildCsv(page.getList().stream()
                                                 .map(this::toDto)
@@ -175,6 +182,65 @@ public class OperationsHealthService {
         return snapshotRepository
                 .findForTrend(start, end, TENANT_TREND_POINTS)
                 .map(points -> buildTenantSummary(points, end));
+    }
+
+    /**
+     * 按主键查询单条体检快照。
+     *
+     * @param id 快照主键
+     * @return 快照视图，不存在时为空
+     */
+    public Mono<HealthSnapshotDTO> findById(Long id) {
+        return snapshotRepository.findById(id).map(this::toDto);
+    }
+
+    /**
+     * 清理保留期之外的体检快照。
+     *
+     * <p>按批物理删除，直到某批不足 {@code batchSize} 或达到 {@code maxBatches} 为止，
+     * 避免单次清理长时间占用数据库连接。
+     *
+     * @param before 保留截止时间（不含）
+     * @param batchSize 单批删除条数
+     * @param maxBatches 单次最多执行批次数
+     * @return 实际删除总行数
+     */
+    public Mono<Integer> purge(LocalDateTime before, int batchSize, int maxBatches) {
+        return Mono.defer(() -> purgeBatch(before, batchSize, maxBatches, 0));
+    }
+
+    private Mono<Integer> purgeBatch(LocalDateTime before, int batchSize, int maxBatches, int purged) {
+        if (maxBatches <= 0) {
+            return Mono.just(purged);
+        }
+        return snapshotRepository.purgeGeneratedBefore(before, batchSize).flatMap(deleted -> {
+            int total = purged + (deleted == null ? 0 : deleted);
+            if (deleted == null || deleted < batchSize) {
+                return Mono.just(total);
+            }
+            return purgeBatch(before, batchSize, maxBatches - 1, total);
+        });
+    }
+
+    /**
+     * 把快照视图渲染为 CSV 文本。
+     *
+     * <p>供同步导出与异步导出任务共用，保证两条路径产出完全一致的文件格式。
+     *
+     * @param rows 快照视图
+     * @return CSV 文本（含表头）
+     */
+    public static String renderCsv(List<HealthSnapshotDTO> rows) {
+        return buildCsv(rows);
+    }
+
+    /**
+     * 构造导出文件名。
+     *
+     * @return 带时间戳的 CSV 文件名
+     */
+    public static String exportFileName() {
+        return "health-snapshots-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")) + ".csv";
     }
 
     /* ==================== 组装 ==================== */
@@ -325,6 +391,20 @@ public class OperationsHealthService {
     }
 
     private HealthSnapshotDTO toDto(HealthSnapshotEntity entity) {
+        return toDto(entity, signatureKeyPort.currentSecret());
+    }
+
+    /**
+     * 把快照实体转换为视图，并按给定密钥校验完整性。
+     *
+     * <p>异步导出任务在无请求上下文的后台线程执行，密钥由调用方一次性取出传入，
+     * 避免逐条重复解析配置。</p>
+     *
+     * @param entity 快照实体
+     * @param secret 签名密钥，为空时完整性为 UNVERIFIABLE
+     * @return 快照视图
+     */
+    public static HealthSnapshotDTO toDto(HealthSnapshotEntity entity, String secret) {
         return HealthSnapshotDTO.builder()
                 .id(entity.getId())
                 .captureSource(entity.getCaptureSource())
@@ -334,6 +414,7 @@ public class OperationsHealthService {
                 .ruleVersion(entity.getRuleVersion())
                 .overallStatus(entity.getOverallStatus())
                 .summary(entity.getSummary())
+                .integrity(HealthSnapshotSigner.verify(entity, secret))
                 .upCount(entity.getUpCount())
                 .degradedCount(entity.getDegradedCount())
                 .downCount(entity.getDownCount())
@@ -366,7 +447,15 @@ public class OperationsHealthService {
         return entity;
     }
 
-    private static String normalizeStatus(String overallStatus) {
+    /**
+     * 归一化总体结论取值。
+     *
+     * <p>供异步导出任务在提交阶段校验过滤条件，与同步导出保持同一套白名单。</p>
+     *
+     * @param overallStatus 原始取值，可为 {@code null}
+     * @return 大写归一化结果，空值返回 {@code null}
+     */
+    public static String normalizeStatus(String overallStatus) {
         if (overallStatus == null || overallStatus.isBlank()) {
             return null;
         }

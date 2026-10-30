@@ -3,6 +3,7 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.application.dto.admin.GenGenerateRequest;
 import com.apex.scaffold.application.dto.admin.GenPreflightRequest;
 import com.apex.scaffold.application.dto.admin.GenPreviewRequest;
+import com.apex.scaffold.application.service.GeneratorTaskService;
 import com.apex.scaffold.application.service.GeneratorWizardService;
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.annotation.OperationLog;
@@ -42,6 +43,7 @@ import reactor.core.publisher.Mono;
  *   <li>纯渲染预览：只做内存渲染，不写服务器文件，返回输入摘要令牌</li>
  *   <li>执行生成：凭预览令牌写盘并发布产物，记录生成历史</li>
  *   <li>产物下载：浏览器只提交产物 ID，不接受任意路径</li>
+ *   <li>异步任务：提交生成任务、轮询进度、取消任务，逐项推进进度</li>
  * </ul>
  *
  * <h2>设计说明</h2>
@@ -49,10 +51,11 @@ import reactor.core.publisher.Mono;
  *   <li>预览与执行必须使用相同参数，配置或模板版本变化后需重新预览</li>
  *   <li>默认拒绝覆盖既有文件，需显式传入 overwrite=true</li>
  *   <li>各端点分别要求 template:list、preflight、preview、generate、artifact:download 权限</li>
+ *   <li>异步任务端点要求 task:create、task:read、task:cancel 权限</li>
  * </ul>
  *
  * @author Apex Team
- * @version 1.3.0
+ * @version 1.4.0
  * @since 1.2.0
  * @see com.apex.scaffold.application.service.GeneratorWizardService
  */
@@ -61,23 +64,27 @@ import reactor.core.publisher.Mono;
 public class CodeGeneratorHandler extends BaseHandler {
 
     private final GeneratorWizardService generatorWizardService;
+    private final GeneratorTaskService generatorTaskService;
     private final UserService userService;
 
     /**
      * 创建代码生成执行处理器。
      *
      * @param generatorWizardService 代码生成向导服务
+     * @param generatorTaskService 异步生成任务服务
      * @param userService 用户服务，用于解析当前操作人
      * @param messageUtils 国际化消息工具
      * @param validator Jakarta Bean Validation 校验器
      */
     public CodeGeneratorHandler(
             GeneratorWizardService generatorWizardService,
+            GeneratorTaskService generatorTaskService,
             UserService userService,
             MessageUtils messageUtils,
             Validator validator) {
         super(messageUtils, validator);
         this.generatorWizardService = generatorWizardService;
+        this.generatorTaskService = generatorTaskService;
         this.userService = userService;
     }
 
@@ -229,5 +236,106 @@ public class CodeGeneratorHandler extends BaseHandler {
                                 .build()
                                 .toString())
                 .bodyValue(file.content()));
+    }
+
+    /**
+     * 提交异步生成任务。
+     *
+     * <p>提交后立即返回任务 ID，渲染、写盘与落库在后台按「表 × 模板」逐项执行，
+     * 调用方通过进度接口轮询状态。</p>
+     *
+     * @param request 服务器请求对象，请求体为 {@link GenGenerateRequest}
+     * @return 任务 ID 与初始状态
+     */
+    @RequirePermission("system:generator:task:create")
+    @Operation(
+            operationId = "adminSubmitGenTask",
+            summary = "提交代码生成任务",
+            description = "提交异步代码生成任务并立即返回任务 ID，后台按表与模板逐项生成并推进进度")
+    @RequestBody(
+            description = "异步生成参数（与同步执行一致，含配置 ID、表清单、模板与预览令牌）",
+            required = true,
+            content = @Content(mediaType = "application/json"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "任务已受理，返回任务ID与状态"),
+        @ApiResponse(responseCode = "400", description = "参数错误或预览令牌失效"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:create 权限")
+    })
+    @OperationLog(
+            module = "代码生成器-执行",
+            type = OperationLog.OperationType.OTHER,
+            description = "提交代码生成任务",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> submit(ServerRequest request) {
+        return parseBody(request, GenGenerateRequest.class)
+                .flatMap(this::validateAndThrow)
+                .flatMap(body -> currentUserId(request, userService)
+                        .flatMap(operatorId -> generatorTaskService.submit(body, operatorId)))
+                .flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 查询异步生成任务进度。
+     *
+     * @param request 服务器请求对象，包含任务 ID 路径参数
+     * @return 任务进度详情
+     */
+    @RequirePermission("system:generator:task:read")
+    @Operation(
+            operationId = "adminGetGenTaskProgress",
+            summary = "查询代码生成任务进度",
+            description = "按任务 ID 查询异步生成任务的当前状态、总项数、已处理数与失败数")
+    @Parameter(
+            name = "id",
+            description = "任务ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:read 权限"),
+        @ApiResponse(responseCode = "404", description = "任务不存在或属于其他租户")
+    })
+    public Mono<ServerResponse> taskProgress(ServerRequest request) {
+        long taskId = requirePositiveId(request);
+        return generatorTaskService.getProgress(taskId).flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 取消异步生成任务。
+     *
+     * <p>待执行任务直接置为已取消；执行中的任务在下一次推进进度时感知取消并停止。</p>
+     *
+     * @param request 服务器请求对象，包含任务 ID 路径参数
+     * @return 是否成功提交取消
+     */
+    @RequirePermission("system:generator:task:cancel")
+    @Operation(
+            operationId = "adminCancelGenTask",
+            summary = "取消代码生成任务",
+            description = "取消待执行或执行中的异步生成任务，执行中任务在下一项推进时停止")
+    @Parameter(
+            name = "id",
+            description = "任务ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "取消请求已受理"),
+        @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:cancel 权限"),
+        @ApiResponse(responseCode = "404", description = "任务不存在或属于其他租户")
+    })
+    @OperationLog(
+            module = "代码生成器-执行",
+            type = OperationLog.OperationType.OTHER,
+            description = "取消代码生成任务",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> cancelTask(ServerRequest request) {
+        long taskId = requirePositiveId(request);
+        return generatorTaskService.cancel(taskId).flatMap(this::buildSuccess);
     }
 }

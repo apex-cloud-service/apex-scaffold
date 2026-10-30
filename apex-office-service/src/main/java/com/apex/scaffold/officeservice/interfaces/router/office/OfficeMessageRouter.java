@@ -17,7 +17,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 /**
  * 办公平台消息路由；请求和响应契约由关联的 {@link OfficeMessageHandler} 方法声明。
  *
+ * <p>接口统一挂载在 {@code /api/office/messages} 下，覆盖消息发送、状态查询、重发和撤回；
+ * 发送操作要求 JSON 请求体，消息状态转换和权限规则由处理器及应用服务负责。
+ *
  * @author Apex Team
+ * @version 1.3.0
  * @since 1.3.0
  */
 @Configuration
@@ -29,7 +33,10 @@ public class OfficeMessageRouter {
     /**
      * 注册消息发送、状态查询、重发和撤回路由。
      *
-     * @return 消息路由函数
+     * <p>发送路由限定 JSON 请求体；消息状态查询、重发和撤回均通过消息标识定位目标消息，
+     * 具体的权限和状态校验由处理器及应用服务负责。
+     *
+     * @return 消息路由函数，挂载于 {@code /api/office/messages}
      */
     @RouterOperations({
         @RouterOperation(

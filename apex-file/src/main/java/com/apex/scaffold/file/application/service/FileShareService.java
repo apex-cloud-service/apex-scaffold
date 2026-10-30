@@ -2,9 +2,11 @@ package com.apex.scaffold.file.application.service;
 
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.file.application.dto.PageResponse;
 import com.apex.scaffold.file.application.dto.share.FileShareContent;
 import com.apex.scaffold.file.application.dto.share.FileShareCreated;
 import com.apex.scaffold.file.application.dto.share.FileShareExchangeResult;
+import com.apex.scaffold.file.application.dto.share.FileShareItem;
 import com.apex.scaffold.file.domain.model.entity.FileEntity;
 import com.apex.scaffold.file.domain.model.entity.FileShareEntity;
 import com.apex.scaffold.file.domain.repository.FileRepository;
@@ -121,6 +123,47 @@ public class FileShareService {
                             .map(saved ->
                                     new FileShareCreated(saved.getId(), saved.getFileId(), token, saved.getExpireAt()));
                 }));
+    }
+
+    /**
+     * 分页查询文件分享列表，仅文件所有者可查询，响应不包含令牌与摘要。
+     *
+     * @param fileId 文件编号
+     * @param status 状态筛选（ACTIVE/REVOKED），可为空
+     * @param page 页码（从 1 开始）
+     * @param size 每页大小（1-100）
+     * @return 分享列表分页结果
+     */
+    public Mono<PageResponse<FileShareItem>> list(Long fileId, String status, int page, int size) {
+        int safePage = Math.max(page, 1);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        String normalizedStatus =
+                status == null || status.isBlank() ? null : status.trim().toUpperCase();
+        if (normalizedStatus != null
+                && !FileShareEntity.STATUS_ACTIVE.equals(normalizedStatus)
+                && !FileShareEntity.STATUS_REVOKED.equals(normalizedStatus)) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "状态取值不合法"));
+        }
+        return FileAccessContext.current().flatMap(identity -> fileRepository
+                .findById(fileId)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "文件记录不存在")))
+                .flatMap(file -> {
+                    identity.authorize(file);
+                    return fileShareRepository.listByFile(
+                            fileId, identity.tenantId(), identity.userId(), normalizedStatus, safePage, safeSize);
+                })
+                .map(result -> PageResponse.of(
+                        result.records().stream()
+                                .map(share -> new FileShareItem(
+                                        share.getId(),
+                                        share.getFileId(),
+                                        share.getStatus(),
+                                        share.getExpireAt(),
+                                        share.getCreateTime()))
+                                .toList(),
+                        result.total(),
+                        result.page(),
+                        result.size())));
     }
 
     /**

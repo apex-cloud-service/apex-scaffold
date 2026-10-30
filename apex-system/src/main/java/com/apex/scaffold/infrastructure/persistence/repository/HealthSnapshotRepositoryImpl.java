@@ -75,6 +75,30 @@ public class HealthSnapshotRepositoryImpl implements HealthSnapshotRepository {
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
+    @Override
+    public Mono<HealthSnapshotEntity> findById(Long id) {
+        return Mono.fromCallable(() -> snapshotPoConverter.toEntity(snapshotMapper.selectById(id)))
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    @Override
+    public Mono<Integer> purgeGeneratedBefore(LocalDateTime before, int limit) {
+        return Mono.fromCallable(() -> {
+                    LambdaQueryWrapper<HealthSnapshotPO> wrapper = new LambdaQueryWrapper<HealthSnapshotPO>()
+                            .lt(HealthSnapshotPO::getGeneratedAt, before)
+                            .orderByAsc(HealthSnapshotPO::getGeneratedAt)
+                            .last("LIMIT " + limit);
+                    // 逐条物理删除：LambdaQueryWrapper.delete 会走 @TableLogic 转为更新，无法回收容量
+                    List<HealthSnapshotPO> expired = snapshotMapper.selectList(wrapper);
+                    int purged = 0;
+                    for (HealthSnapshotPO po : expired) {
+                        purged += snapshotMapper.deleteByIdPhysically(po.getId());
+                    }
+                    return purged;
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
     /**
      * 构造生成时间区间与总体结论过滤条件。
      *

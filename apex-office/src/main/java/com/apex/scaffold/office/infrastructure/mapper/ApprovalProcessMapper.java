@@ -43,6 +43,18 @@ public interface ApprovalProcessMapper extends BaseMapper<ApprovalProcessPO> {
             @Param("processInstanceId") String processInstanceId, @Param("tenantId") Long tenantId);
 
     /**
+     * 查询租户下全部未删除审批流程。
+     *
+     * <p>已办筛选依赖 records JSON，统一在仓储层解析，避免不同数据库 JSON 查询方言差异。
+     *
+     * @param tenantId 租户ID
+     * @return 审批流程列表
+     */
+    @Select(
+            "SELECT * FROM office_approval_process WHERE tenant_id = #{tenantId} AND deleted = 0 ORDER BY created_at DESC")
+    List<ApprovalProcessPO> selectAllByTenant(@Param("tenantId") Long tenantId);
+
+    /**
      * 查询用户发起的审批流程列表
      *
      * @param initiatorId 发起人ID

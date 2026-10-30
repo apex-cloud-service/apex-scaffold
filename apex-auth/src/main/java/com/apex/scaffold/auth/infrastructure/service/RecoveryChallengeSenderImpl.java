@@ -7,9 +7,11 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.infrastructure.chuanglan.service.ChuanglanApiService;
 import com.apex.scaffold.infrastructure.mail.MailService;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -31,7 +33,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class RecoveryChallengeSenderImpl implements RecoveryChallengeSender {
 
-    private static final String MAIL_SUBJECT = "密码找回验证码";
+    private static final String MAIL_SUBJECT_KEY = "auth.password_recovery.mail.subject";
 
     /** 创蓝短信模板接口成功返回码。 */
     private static final String SMS_SUCCESS_CODE = "000000";
@@ -43,6 +45,8 @@ public class RecoveryChallengeSenderImpl implements RecoveryChallengeSender {
 
     private final ObjectProvider<ChuanglanApiService> chuanglanApiServiceProvider;
 
+    private final MessageSource messageSource;
+
     @Override
     public Mono<Void> send(String channel, String contact, String code) {
         if (PasswordRecoveryEntity.CHANNEL_SMS.equals(channel)) {
@@ -51,7 +55,8 @@ public class RecoveryChallengeSenderImpl implements RecoveryChallengeSender {
         if (PasswordRecoveryEntity.CHANNEL_EMAIL.equals(channel)) {
             return sendMail(contact, code);
         }
-        return Mono.error(new BusinessException(ResultCode.PARAM_INVALID, "不支持的恢复通道: " + channel));
+        return Mono.error(new BusinessException(
+                ResultCode.PARAM_INVALID, message("auth.password_recovery.channel.not_supported", channel)));
     }
 
     /**
@@ -59,13 +64,13 @@ public class RecoveryChallengeSenderImpl implements RecoveryChallengeSender {
      *
      * @param phone 手机号
      * @param code 验证码
-     * @return 投递完成信号，失败时以 {@code SMS_SERVICE_ERROR} 终止
      */
     private Mono<Void> sendSms(String phone, String code) {
         ChuanglanApiService chuanglanApiService = chuanglanApiServiceProvider.getIfAvailable();
         if (chuanglanApiService == null) {
             log.error("短信服务未装配，密码找回验证码投递失败: channel=SMS");
-            return Mono.error(new BusinessException(ResultCode.SMS_SERVICE_ERROR, "验证码投递服务不可用，请稍后重试或联系管理员"));
+            return Mono.error(new BusinessException(
+                    ResultCode.SMS_SERVICE_ERROR, message("auth.password_recovery.delivery.unavailable")));
         }
         return Mono.defer(() -> chuanglanApiService.sendSms(phone, code))
                 .flatMap(response -> {
@@ -74,11 +79,13 @@ public class RecoveryChallengeSenderImpl implements RecoveryChallengeSender {
                         return Mono.empty();
                     }
                     log.error("短信验证码投递失败，resultCode: {}", resultCode);
-                    return Mono.error(new BusinessException(ResultCode.SMS_SERVICE_ERROR, "验证码投递失败，请稍后重试"));
+                    return Mono.error(new BusinessException(
+                            ResultCode.SMS_SERVICE_ERROR, message("auth.password_recovery.delivery.failed")));
                 })
                 .onErrorResume(error -> !(error instanceof BusinessException), error -> {
                     log.error("短信验证码投递异常", error);
-                    return Mono.error(new BusinessException(ResultCode.SMS_SERVICE_ERROR, "验证码投递失败，请稍后重试"));
+                    return Mono.error(new BusinessException(
+                            ResultCode.SMS_SERVICE_ERROR, message("auth.password_recovery.delivery.failed")));
                 })
                 .then();
     }
@@ -88,19 +95,29 @@ public class RecoveryChallengeSenderImpl implements RecoveryChallengeSender {
      *
      * @param email 收件邮箱
      * @param code 验证码
-     * @return 投递完成信号，失败时以 {@code SMS_SERVICE_ERROR} 终止
      */
     private Mono<Void> sendMail(String email, String code) {
         MailService mailService = mailServiceProvider.getIfAvailable();
         if (mailService == null) {
             log.error("邮件服务未装配，密码找回验证码投递失败: channel=EMAIL");
-            return Mono.error(new BusinessException(ResultCode.SMS_SERVICE_ERROR, "验证码投递服务不可用，请稍后重试或联系管理员"));
+            return Mono.error(new BusinessException(
+                    ResultCode.SMS_SERVICE_ERROR, message("auth.password_recovery.delivery.unavailable")));
         }
         return Mono.fromCallable(() -> {
-                    mailService.sendSimple(email, MAIL_SUBJECT, "您的密码找回验证码为：" + code + "，10 分钟内有效。若非本人操作，请忽略此邮件。");
+                    mailService.sendSimple(
+                            email, message(MAIL_SUBJECT_KEY), message("auth.password_recovery.mail.body", code));
                     return Boolean.TRUE;
                 })
                 .subscribeOn(BlockingIoSchedulers.remote())
                 .then();
+    }
+
+    /**
+     * 解析用户可见文案。
+     *
+     * <p>投递链路不携带请求 Locale，统一使用简体中文；资源缺失时返回 key 本身而不是空串。</p>
+     */
+    private String message(String code, Object... args) {
+        return messageSource.getMessage(code, args, code, Locale.SIMPLIFIED_CHINESE);
     }
 }

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.service.HealthExportService;
 import com.apex.scaffold.application.service.OperationsHealthService;
 import com.apex.scaffold.interfaces.dto.monitor.HealthReportResponse;
 import com.apex.scaffold.interfaces.monitor.health.HealthReportAssembler;
@@ -26,9 +27,10 @@ class OperationsHealthHandlerTest {
 
     private final HealthReportAssembler assembler = mock(HealthReportAssembler.class);
     private final OperationsHealthService operationsHealthService = mock(OperationsHealthService.class);
+    private final HealthExportService healthExportService = mock(HealthExportService.class);
     private final Validator validator = mock(Validator.class);
-    private final OperationsHealthHandler handler =
-            new OperationsHealthHandler(mock(MessageUtils.class), validator, assembler, operationsHealthService);
+    private final OperationsHealthHandler handler = new OperationsHealthHandler(
+            mock(MessageUtils.class), validator, assembler, operationsHealthService, healthExportService);
     private final ServerRequest request = mock(ServerRequest.class);
 
     @Test

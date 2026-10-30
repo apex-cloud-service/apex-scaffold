@@ -116,6 +116,7 @@ public class SessionHandler {
             responseCode = "500",
             description = "服务器内部错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getUserSessions(ServerRequest request) {
         String userId = request.pathVariable("userId");
         String tenantId = request.queryParam("tenantId").orElse("default");
@@ -319,6 +320,7 @@ public class SessionHandler {
             responseCode = "500",
             description = "服务器内部错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getOnlineUsers(ServerRequest request) {
         return sessionService
                 .getOnlineUsers()
@@ -367,6 +369,7 @@ public class SessionHandler {
             responseCode = "500",
             description = "服务器内部错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getOnlineStatistics(ServerRequest request) {
         return sessionService
                 .countOnlineUsers()
@@ -432,6 +435,7 @@ public class SessionHandler {
             responseCode = "500",
             description = "服务器内部错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getSessionById(ServerRequest request) {
         String sessionId = request.pathVariable("sessionId");
         return sessionService

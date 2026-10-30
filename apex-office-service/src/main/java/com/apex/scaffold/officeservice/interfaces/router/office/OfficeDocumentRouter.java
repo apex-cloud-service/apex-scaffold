@@ -17,7 +17,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 /**
  * 办公平台文档路由，接口参数和响应契约由绑定的处理方法提供。
  *
+ * <p>接口统一挂载在 {@code /api/office/documents} 下，覆盖文档创建、上传、查询、下载、删除、
+ * 移动和复制。{@code /folder}、{@code /my} 等静态路径应优先于 {@code /{documentId}} 解析，
+ * 避免被误判为文档标识；创建、上传和复制接口要求 JSON 请求体。
+ *
  * @author Apex Scaffold
+ * @version 1.0.0
  * @since 1.0.0
  */
 @Configuration
@@ -31,7 +36,10 @@ public class OfficeDocumentRouter {
     /**
      * 注册创建、上传、查询、下载、删除、移动和复制文档的路由。
      *
-     * @return 文档接口路由函数
+     * <p>文档列表静态路径在文档标识路径之前注册，写操作的请求体媒体类型由路由谓词约束，
+     * 具体的文件存储、权限和目录规则由处理器及应用服务负责。
+     *
+     * @return 文档接口路由函数，挂载于 {@code /api/office/documents}
      */
     @RouterOperations({
         @RouterOperation(

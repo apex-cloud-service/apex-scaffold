@@ -65,4 +65,26 @@ public interface HealthSnapshotRepository {
      * @return 满足条件的记录数
      */
     Mono<Long> countByRange(LocalDateTime from, LocalDateTime to);
+
+    /**
+     * 按主键查询体检快照。
+     *
+     * <p>租户范围同样由持久化拦截器追加，跨租户主键查询返回空。
+     *
+     * @param id 快照主键
+     * @return 快照实体，不存在时为空
+     */
+    Mono<HealthSnapshotEntity> findById(Long id);
+
+    /**
+     * 物理删除生成时间早于截止时间的快照，用于保留期清理。
+     *
+     * <p>采用物理删除而非逻辑删除，才能真实回收容量；单次删除条数由 {@code limit} 限制，
+     * 调用方循环至返回 0 为止。租户范围由持久化拦截器追加。
+     *
+     * @param before 保留截止时间（不含）
+     * @param limit 单批删除上限
+     * @return 实际删除行数
+     */
+    Mono<Integer> purgeGeneratedBefore(LocalDateTime before, int limit);
 }

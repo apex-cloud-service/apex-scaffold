@@ -8,6 +8,7 @@ import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.office.domain.OfficePlatform;
 import com.apex.scaffold.office.domain.approval.ApprovalProcess;
 import com.apex.scaffold.office.domain.approval.ApprovalProcessRepository;
+import com.apex.scaffold.office.domain.approval.ApprovalStatus;
 import com.apex.scaffold.office.domain.port.ApprovalPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
@@ -62,6 +63,21 @@ class OfficeApprovalServiceTest {
         } finally {
             TenantContext.restoreTenantId(previousTenantId);
         }
+    }
+
+    @Test
+    void getCompletedApprovals_delegatesToRepository() {
+        ApprovalProcess process = ApprovalProcess.builder()
+                .processInstanceId("completed-1")
+                .status(ApprovalStatus.APPROVED)
+                .build();
+        when(repository.findCompletedByApprover("42")).thenReturn(Mono.just(java.util.List.of(process)));
+
+        StepVerifier.create(service.getCompletedApprovals("42"))
+                .expectNext(process)
+                .verifyComplete();
+
+        verify(repository).findCompletedByApprover("42");
     }
 
     @Test

@@ -17,7 +17,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 /**
  * 办公平台日历事件路由，文档契约由对应处理方法声明。
  *
+ * <p>接口统一挂载在 {@code /api/office/calendar/events} 下，支持事件创建、单项维护、
+ * 时间范围查询、当前用户查询和即将发生事件查询。创建与更新接口要求 JSON 请求体。
+ *
  * @author Apex Team
+ * @version 1.3.1
  * @since 1.3.1
  */
 @Configuration
@@ -27,8 +31,12 @@ public class OfficeCalendarRouter {
     private final OfficeCalendarHandler handler;
 
     /**
-     * 注册日历事件接口，静态 GET 路径优先于事件 ID 路径匹配。
-     * @return 日历事件路由
+     * 注册日历事件接口。
+     *
+     * <p>{@code /range}、{@code /my} 和 {@code /upcoming} 等静态查询路径在事件 ID 路径之前
+     * 注册，避免被 {@code /{eventId}} 错误匹配。
+     *
+     * @return 日历事件路由，挂载于 {@code /api/office/calendar/events}
      */
     @RouterOperations({
         @RouterOperation(

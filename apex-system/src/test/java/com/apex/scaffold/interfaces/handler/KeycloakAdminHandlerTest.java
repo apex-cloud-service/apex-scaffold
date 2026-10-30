@@ -57,7 +57,8 @@ class KeycloakAdminHandlerTest {
         @Test
         @DisplayName("全量同步成功应返回成功响应")
         void shouldReturnSuccessWhenSyncAll() {
-            when(keycloakUserSyncService.syncAllUsers()).thenReturn(Mono.empty());
+            when(keycloakUserSyncService.syncAllUsers())
+                    .thenReturn(Mono.just(new KeycloakUserSyncService.SyncResult(0, 0, 0, 0, java.util.List.of())));
 
             MockServerHttpRequest httpRequest = MockServerHttpRequest.post("/admin-api/v1/keycloak/sync/all")
                     .build();
@@ -159,6 +160,9 @@ class KeycloakAdminHandlerTest {
         @Test
         @DisplayName("状态查询应返回 enabled 和 connected 状态")
         void shouldReturnEnabledAndConnectedStatus() {
+            when(keycloakUserSyncService.status())
+                    .thenReturn(Mono.just(
+                            new KeycloakUserSyncService.StatusResult(true, "CONNECTED", "test-realm", null, 12L)));
             MockServerHttpRequest httpRequest =
                     MockServerHttpRequest.get("/admin-api/v1/keycloak/status").build();
             MockServerWebExchange exchange = MockServerWebExchange.from(httpRequest);

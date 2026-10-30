@@ -2,6 +2,7 @@
 # scan-javadoc-issues.sh
 # 扫描项目中 JavaDoc 注释缺失或不完整的文件
 # 用法：JAVADOC_OUTPUT_DIR=/tmp/javadoc-scan bash scripts/dev/check/scan-javadoc-issues.sh
+# 可用 JAVADOC_SCAN_PATH 限定扫描目录；默认扫描所有业务模块 main/java。
 # 默认输出到 _tmp/（工作区管理规范 4.1：中间产物不入项目根目录）；方法检查为启发式候选列表，退出码不表示文档门禁结果。
 # 作者：Apex Team
 
@@ -13,116 +14,114 @@ cd -- "$PROJECT_ROOT"
 OUTPUT_DIR=${JAVADOC_OUTPUT_DIR:-$PROJECT_ROOT/_tmp}
 mkdir -p -- "$OUTPUT_DIR" || exit
 OUTPUT_DIR=$(CDPATH= cd -- "$OUTPUT_DIR" && pwd -P) || exit
-JAVA_FILES=$(safe_find "apex-*/src/main/java" "*.java")
-
-# 剥离 Java 注释（JavaDoc、块注释、行注释），避免示例代码中的 public 声明被误计
-strip_java_comments() {
-    awk '
-    {
-        line = $0
-        out = ""
-        while (1) {
-            if (depth == 0) {
-                i = index(line, "/*")
-                if (i == 0) { out = out line; break }
-                out = out substr(line, 1, i - 1)
-                rest = substr(line, i + 2)
-                j = index(rest, "*/")
-                if (j > 0) { line = substr(rest, j + 2) } else { depth = 1; break }
-            } else {
-                j = index(line, "*/")
-                if (j == 0) { break }
-                line = substr(line, j + 2)
-                depth = 0
-            }
-        }
-        sub(/\/\/.*/, "", out)
-        print out
-    }' "$1" 2>/dev/null
-}
+SCAN_PATH=${JAVADOC_SCAN_PATH:-"apex-*/src/main/java"}
+JAVA_FILES=$(safe_find "$SCAN_PATH" "*.java")
 
 print_header "扫描 JavaDoc 注释问题..."
 
-# 1. 查找 public 类没有类级 JavaDoc 的
+: > "${OUTPUT_DIR}/javadoc-issues-class.txt"
+: > "${OUTPUT_DIR}/javadoc-issues-author.txt"
+: > "${OUTPUT_DIR}/javadoc-issues-since.txt"
+: > "${OUTPUT_DIR}/javadoc-issues-method.txt"
+
 echo "==> [1/4] 查找缺少类级 JavaDoc 的 public 类..."
-while IFS= read -r file; do
-    [[ -n "$file" && "$file" != */test/* ]] || continue
-    file=${file#./}
-    # 使用 awk 检测：跳过注解行（含多行注解续行）和空行后，public class 前的非空行必须以 */ 结尾
-    if awk '
-        in_ann {
-            pd += gsub(/\(/, "(", $0) - gsub(/\)/, ")", $0)
-            if (pd <= 0) in_ann = 0
-            next
-        }
-        /^[[:space:]]*@[A-Za-z_]/ {
-            pd = gsub(/\(/, "(", $0) - gsub(/\)/, ")", $0)
-            if (pd > 0) in_ann = 1
-            next
-        }
-        /^[[:space:]]*$/ { next }
-        /^public (class|interface|enum|@interface)/ {
-            if (last !~ /\*\/[[:space:]]*$/) { found = 1; exit }
-        }
-        { last = $0 }
-        END { exit found ? 0 : 1 }
-    ' "$file" 2>/dev/null; then
-        printf '%s\n' "$file"
-    fi
-done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-class.txt"
-CLASS_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-class.txt")
-echo "    发现 ${CLASS_COUNT} 个类缺少类级 JavaDoc"
-
-# 2. 查找 JavaDoc 缺少 @author 的
 echo "==> [2/4] 查找缺少 @author 标签..."
-while IFS= read -r file; do
-    [[ -n "$file" && "$file" != */test/* ]] || continue
-    file=${file#./}
-    # 如果有 JavaDoc 但没有 @author
-    DOC_COUNT=$(safe_count '/\*\*' "$file")
-    AUTHOR_TAG_COUNT=$(safe_count '@author' "$file")
-    if safe_gt "$DOC_COUNT" 0 && safe_eq "$AUTHOR_TAG_COUNT" 0; then
-        printf '%s\n' "$file"
-    fi
-done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-author.txt"
-AUTHOR_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-author.txt")
-echo "    发现 ${AUTHOR_COUNT} 个文件缺少 @author"
-
-# 3. 查找 JavaDoc 缺少 @since 的
 echo "==> [3/4] 查找缺少 @since 标签..."
-while IFS= read -r file; do
-    [[ -n "$file" && "$file" != */test/* ]] || continue
-    file=${file#./}
-    # 如果是 public 类但 JavaDoc 没有 @since
-    CLASS_MATCHES=$(safe_count "^public \(class\|interface\|enum\)" "$file")
-    if safe_gt "$CLASS_MATCHES" 0; then
-        DOC_COUNT=$(safe_count '/\*\*' "$file")
-        SINCE_TAG_COUNT=$(safe_count '@since' "$file")
-        if safe_gt "$DOC_COUNT" 0 && safe_eq "$SINCE_TAG_COUNT" 0; then
-            printf '%s\n' "$file"
-        fi
-    fi
-done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-since.txt"
-SINCE_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-since.txt")
-echo "    发现 ${SINCE_COUNT} 个文件缺少 @since"
-
-# 4. 查找 public 方法可能缺少 JavaDoc 的文件（简化检查）
 echo "==> [4/4] 查找可能缺少方法级 JavaDoc 的文件..."
+
+# 每个文件只启动一次 awk，同时完成四类启发式检查，避免重复 fork 和读取源文件。
 while IFS= read -r file; do
     [[ -n "$file" && "$file" != */test/* ]] || continue
     file=${file#./}
-    # 先剥离注释，再统计 public 方法数量，避免 JavaDoc 示例中的 public 方法被误计
-    stripped=$(strip_java_comments "$file")
-    PUBLIC_METHOD_COUNT=$(printf '%s\n' "$stripped" | grep -cE '^[[:space:]]*public[[:space:]]+[^(]*[[:space:]]+[a-z][A-Za-z0-9]*[[:space:]]*\(' || true)
-    PARAM_COUNT=$(safe_count "@param" "$file")
-    RETURN_COUNT=$(safe_count "@return" "$file")
-    
-    # 如果有 public 方法但 @param/@return 明显不足，标记为可疑
-    if safe_gt "$PUBLIC_METHOD_COUNT" 3 && safe_lt "$PARAM_COUNT" 3; then
-        printf '%s\n' "$file"
-    fi
-done <<< "$JAVA_FILES" > "${OUTPUT_DIR}/javadoc-issues-method.txt"
-METHOD_COUNT=$(safe_count '' "${OUTPUT_DIR}/javadoc-issues-method.txt")
+
+    result=$(awk -v file="$file" '
+        function emit(kind) {
+            printf "%s\t%s\n", kind, file
+        }
+        function strip_comments(input,    line, out, i, rest, j) {
+            line = input
+            out = ""
+            while (1) {
+                if (comment_depth == 0) {
+                    i = index(line, "/*")
+                    if (i == 0) {
+                        out = out line
+                        break
+                    }
+                    out = out substr(line, 1, i - 1)
+                    rest = substr(line, i + 2)
+                    j = index(rest, "*/")
+                    if (j > 0) {
+                        line = substr(rest, j + 2)
+                    } else {
+                        comment_depth = 1
+                        break
+                    }
+                } else {
+                    j = index(line, "*/")
+                    if (j == 0) {
+                        break
+                    }
+                    line = substr(line, j + 2)
+                    comment_depth = 0
+                }
+            }
+            sub(/\/\/.*/, "", out)
+            return out
+        }
+        {
+            if ($0 ~ /\/\*\*/) doc_count++
+            if ($0 ~ /@author/) author_count++
+            if ($0 ~ /@since/) since_count++
+            if ($0 ~ /@param/) param_count++
+            if ($0 ~ /@return/) return_count++
+
+            starts_doc = ($0 ~ /\/\*\*/)
+            code = strip_comments($0)
+            is_blank = (code ~ /^[[:space:]]*$/)
+            is_annotation = (code ~ /^[[:space:]]*@[A-Za-z_]/)
+            is_public_type = (code ~ /^[[:space:]]*public[[:space:]]+(class|interface|enum|@interface|record)[[:space:]]/)
+
+            if (starts_doc) {
+                doc_pending = 1
+            }
+
+            if (is_public_type) {
+                public_type_count++
+                if (!doc_pending) class_issue = 1
+                doc_pending = 0
+            } else if (code ~ /^[[:space:]]*public[[:space:]]+[^ (]*[[:space:]]+[a-z][A-Za-z0-9]*[[:space:]]*\(/) {
+                public_method_count++
+                doc_pending = 0
+            } else if (!is_blank && !is_annotation && code !~ /^[[:space:]]*\/\//) {
+                doc_pending = 0
+            }
+        }
+        END {
+            if (class_issue) emit("class")
+            if (doc_count > 0 && author_count == 0) emit("author")
+            if (public_type_count > 0 && doc_count > 0 && since_count == 0) emit("since")
+            if (public_method_count > 3 && param_count < 3) emit("method")
+        }
+    ' "$file" 2>/dev/null) || continue
+
+    while IFS=$'\t' read -r kind path; do
+        case "$kind" in
+            class) printf '%s\n' "$path" >> "${OUTPUT_DIR}/javadoc-issues-class.txt" ;;
+            author) printf '%s\n' "$path" >> "${OUTPUT_DIR}/javadoc-issues-author.txt" ;;
+            since) printf '%s\n' "$path" >> "${OUTPUT_DIR}/javadoc-issues-since.txt" ;;
+            method) printf '%s\n' "$path" >> "${OUTPUT_DIR}/javadoc-issues-method.txt" ;;
+        esac
+    done <<< "$result"
+done <<< "$JAVA_FILES"
+
+CLASS_COUNT=$(wc -l < "${OUTPUT_DIR}/javadoc-issues-class.txt" | tr -d ' ')
+AUTHOR_COUNT=$(wc -l < "${OUTPUT_DIR}/javadoc-issues-author.txt" | tr -d ' ')
+SINCE_COUNT=$(wc -l < "${OUTPUT_DIR}/javadoc-issues-since.txt" | tr -d ' ')
+METHOD_COUNT=$(wc -l < "${OUTPUT_DIR}/javadoc-issues-method.txt" | tr -d ' ')
+echo "    发现 ${CLASS_COUNT} 个类缺少类级 JavaDoc"
+echo "    发现 ${AUTHOR_COUNT} 个文件缺少 @author"
+echo "    发现 ${SINCE_COUNT} 个文件缺少 @since"
 echo "    发现 ${METHOD_COUNT} 个文件可能缺少方法级 JavaDoc"
 
 echo ""

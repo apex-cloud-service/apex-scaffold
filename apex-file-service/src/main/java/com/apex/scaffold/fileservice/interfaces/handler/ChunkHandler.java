@@ -172,13 +172,23 @@ public class ChunkHandler {
             saveRequest = false,
             saveResponse = false)
     public Mono<ServerResponse> uploadChunk(ServerRequest request) {
-        ChunkUploadRequest chunkRequest = buildChunkUploadRequest(request);
-        if (chunkRequest.getFileId() == null || chunkRequest.getChunkIndex() == null) {
-            return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "fileId 与 chunkIndex 不能为空");
-        }
-        return request.bodyToMono(byte[].class)
-                .flatMap(content -> chunkUploadService.uploadChunk(chunkRequest, content))
-                .flatMap(requestHandlerUtil::buildSuccessResponse)
+        return Mono.defer(() -> {
+                    ChunkUploadRequest chunkRequest;
+                    try {
+                        chunkRequest = buildChunkUploadRequest(request);
+                    } catch (NumberFormatException error) {
+                        return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "分片参数必须为有效数字");
+                    }
+                    if (chunkRequest.getFileId() == null || chunkRequest.getChunkIndex() == null) {
+                        return requestHandlerUtil.buildErrorResponse(
+                                ResultCode.PARAM_ERROR, "fileId 与 chunkIndex 不能为空");
+                    }
+                    return request.bodyToMono(byte[].class)
+                            .switchIfEmpty(Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                                    ResultCode.PARAM_ERROR, "分片内容不能为空")))
+                            .flatMap(content -> chunkUploadService.uploadChunk(chunkRequest, content))
+                            .flatMap(requestHandlerUtil::buildSuccessResponse);
+                })
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
@@ -280,9 +290,17 @@ public class ChunkHandler {
             saveRequest = false,
             saveResponse = false)
     public Mono<ServerResponse> retryCleanup(ServerRequest request) {
-        return Mono.fromCallable(() -> Long.parseLong(request.pathVariable("fileId")))
-                .flatMap(chunkUploadService::retryCleanup)
-                .then(Mono.defer(() -> requestHandlerUtil.buildSuccessResponse(true)))
+        return Mono.defer(() -> {
+                    final long fileId;
+                    try {
+                        fileId = Long.parseLong(request.pathVariable("fileId"));
+                    } catch (NumberFormatException error) {
+                        return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "fileId 必须为有效数字");
+                    }
+                    return chunkUploadService
+                            .retryCleanup(fileId)
+                            .then(Mono.defer(() -> requestHandlerUtil.buildSuccessResponse(true)));
+                })
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
@@ -327,10 +345,15 @@ public class ChunkHandler {
             saveRequest = false,
             saveResponse = false)
     public Mono<ServerResponse> status(ServerRequest request) {
-        Long fileId = Long.parseLong(request.pathVariable("fileId"));
-        return chunkUploadService
-                .status(fileId)
-                .flatMap(requestHandlerUtil::buildSuccessResponse)
+        return Mono.defer(() -> {
+                    final long fileId;
+                    try {
+                        fileId = Long.parseLong(request.pathVariable("fileId"));
+                    } catch (NumberFormatException error) {
+                        return requestHandlerUtil.buildErrorResponse(ResultCode.PARAM_ERROR, "fileId 必须为有效数字");
+                    }
+                    return chunkUploadService.status(fileId).flatMap(requestHandlerUtil::buildSuccessResponse);
+                })
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 

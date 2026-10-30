@@ -7,6 +7,7 @@ import com.apex.scaffold.officeservice.interfaces.assembler.office.ApprovalProce
 import com.apex.scaffold.officeservice.interfaces.dto.office.approval.ApprovalProcessResponse;
 import com.apex.scaffold.officeservice.interfaces.dto.office.approval.ApproveRequest;
 import com.apex.scaffold.officeservice.interfaces.dto.office.approval.InitiateApprovalRequest;
+import com.apex.scaffold.officeservice.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.officeservice.interfaces.util.RequestHandlerUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -294,6 +295,53 @@ public class OfficeApprovalHandler {
                 .collectList()
                 .flatMap(list -> requestHandlerUtil.ok(Result.success(list)))
                 .doOnSuccess(res -> log.debug("查询待审批列表完成"))
+                .onErrorResume(requestHandlerUtil::handleError);
+    }
+
+    /**
+     * 查询当前登录用户已执行审批操作的流程。
+     * @param request 当前认证请求
+     * @return Result 包装的已办审批列表
+     */
+    @Operation(
+            operationId = "getCompletedApprovals",
+            summary = "查询已办审批",
+            description = "按当前认证用户的同意或拒绝记录查询，不接受客户端指定审批人",
+            responses = {
+                @ApiResponse(
+                        responseCode = "200",
+                        description = "查询成功",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalListResult.class))),
+                @ApiResponse(
+                        responseCode = "400",
+                        description = "认证主体缺失或业务处理失败",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = ApprovalErrorResult.class)))
+            })
+    @OperationLog(
+            module = "OfficeApproval",
+            type = OperationLog.OperationType.SELECT,
+            description = "getCompletedApprovals",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> getCompletedApprovals(ServerRequest request) {
+        return request.principal()
+                .filter(AuthenticatedUser.class::isInstance)
+                .cast(AuthenticatedUser.class)
+                .map(AuthenticatedUser::userId)
+                .filter(userId -> userId != null)
+                .map(String::valueOf)
+                .switchIfEmpty(Mono.error(new IllegalStateException("当前请求未包含有效认证用户")))
+                .flatMapMany(approvalService::getCompletedApprovals)
+                .map(assembler::toResponse)
+                .collectList()
+                .flatMap(list -> requestHandlerUtil.ok(Result.success(list)))
+                .doOnSuccess(res -> log.debug("查询已办审批完成"))
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 

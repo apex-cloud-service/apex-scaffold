@@ -65,8 +65,11 @@ file:
     jwt-public-key-base64: ${FILE_JWT_PUBLIC_KEY_BASE64:}
     jwt-secret: ${FILE_JWT_SECRET:}
   upload:
-    # 单文件最大字节数（默认 10MB，分片上传接口不受此限制）
+    # 单文件最大字节数（默认 10MB）。分片接口可上传更大文件，但每片上限单独约束。
     max-size-bytes: ${FILE_MAX_SIZE_BYTES:10485760}
+    # 分片请求体整片缓冲到 byte[]，限制单片大小以保护堆内存。
+    max-chunk-bytes: ${FILE_MAX_CHUNK_BYTES:67108864}
+    max-total-chunks: ${FILE_MAX_TOTAL_CHUNKS:100000}
   share:
     # 限时只读分享：未指定有效期时使用默认值，请求值收敛到 [60, max] 秒区间
     default-expire-seconds: ${FILE_SHARE_DEFAULT_EXPIRE_SECONDS:86400}

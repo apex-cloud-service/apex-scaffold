@@ -306,6 +306,8 @@ apex:
     ip-rate-limit:
       # 禁用 IP 限流 — 测试可能在短时间内发送大量请求，不应被限流
       enabled: false
+      # 测试环境不信任任何转发代理，客户端 IP 一律取 TCP 直连地址
+      trusted-proxy-cidrs: ${APEX_TRUSTED_PROXY_CIDRS:}
     login-protection:
       # 禁用登录保护 — 测试中可能频繁登录/登出，不应触发风控策略
       enabled: false

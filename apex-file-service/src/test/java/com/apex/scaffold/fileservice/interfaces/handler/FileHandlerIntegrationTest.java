@@ -121,7 +121,7 @@ class FileHandlerIntegrationTest {
                 .expectBody()
                 .jsonPath("$.paths.*.*.operationId")
                 .value(value -> org.assertj.core.api.Assertions.assertThat((List<?>) value)
-                        .hasSize(31)
+                        .hasSize(32)
                         .doesNotHaveDuplicates())
                 .jsonPath("$.paths['/admin-api/v1/documents'].get.operationId")
                 .isEqualTo("queryDocuments")

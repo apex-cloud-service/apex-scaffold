@@ -1364,3 +1364,42 @@ O03b 的可视化图编辑界面属于独立管理后台项目，本仓不生成
 验证：在固定构建环境（JDK 21.0.13.0+9-tem、mvnd 2.0.0-rc-3）下执行 `mvnd -T4 -B -pl apex-system test -Dtest='LayeringArchTest,HealthSnapshot*Test,HealthExportServiceTest,OperationsHealthHandlerTest'`，全部通过；`HealthSnapshotSignerTest` 6 项（同载荷签名稳定、缺密钥返回 null、未改动判定有效、结论被改写判定失效、缺签名或密钥返回 UNVERIFIABLE、租户与时间戳不参与签名）、`HealthExportServiceTest` 9 项（缺租户拒绝、非法状态在计数前拒绝、区间倒置拒绝、超上限不建任务、任务落库或状态规范化、CSV 由仓储分页生成、未完成任务拒绝下载、已完成返回内容、分批清理直到不足一批）、`HealthSnapshotCaptureSchedulerTest` 3 项（报告映射为结论级命令、缺平台租户跳过、装配失败被吞并记录）、`HealthSnapshotSchedulerTest` 3 项（先清理快照再清导出、缺平台租户跳过、清理失败不继续导出清理）、`OperationsHealthHandlerTest` 3 项、`LayeringArchTest` 6 项，均 Failures 0 / Errors 0。
 
 本轮缺口明确保留：定时留存只覆盖采集与保留期两条链路，趋势仍为按时间取样而非固定窗口聚合；签名只保护结论级字段，证据本身不入库，因此无法证明原始逐项证据未被改写；异步导出内容存于数据库 `LONGBLOB`，大结果集的分片下载与断点续传未实现，单任务上限（`max-rows`）与数据库行长度/内存需按部署量评估；导出任务轮询为多实例竞争同一批候选，未验证高并发下的租约争抢分布；未做前端交互验证，也未在真实多实例集群下验证跨实例数据不互相冒充。
+
+### 42.31 O08b 代码生成器异步生成进度（2026-10-30）
+
+> 2026-10-30 范围说明：用户批准 O08b 收口，本轮仅做只读核对既有实现、追加本节并执行全仓门禁；不修改业务源码、迁移、配置与测试，发现的问题只记录不修复。42.27 已记录同步向导（V68）；本节记录其后新增的异步任务链（O08b），实现以当前工作区源码为准，未经用户批准不推进其他机会点。
+
+**接口层**：`GeneratorAdminRouter` 在既有生成器路由上新增三条路由并配 `@RouterOperation` 元数据；`CodeGeneratorHandler` 新增对应方法，路径校验正整数 ID，权限码与 V71 种子一致：`POST /admin-api/v1/generator/tasks`（submit，`system:generator:task:create`）、`GET /admin-api/v1/generator/tasks/{id}`（taskProgress，`system:generator:task:read`）、`POST /admin-api/v1/generator/tasks/{id}/cancel`（cancelTask，`system:generator:task:cancel`，`@OperationLog` 记审计不存请求响应）。取消语义为协作式：待执行任务直接置为 CANCELED，执行中任务在下一次进度推进时感知并停止。
+
+**提交**：`GeneratorTaskService.submit` 调用 `GeneratorWizardService.prepareTask`：加载当前配置上下文并 `validateExecutable`，字段映射为 null 时按空列表处理，重算 `inputDigest` 与请求 `previewToken` 比对（不一致抛参数错误），`totalCount` 按「表数 × 当前模板数」计算，字段映射序列化为 JSON 快照，随后插入 `gen_task`（PENDING、计数清零、attempts=0）并返回 `GenTaskSubmitResponse(taskId, PENDING)`。`getProgress` 限定当前租户与任务 ID，无记录返回 NOT_FOUND；`GenTaskDTO` 的 `progressPercent` 向下取整、封顶 100，总量未知或为 0 时返回 0。
+
+**后台执行**：`GeneratorTaskScheduler` 配置前缀 `apex.generator.async-task`（未配置即启用），`@Scheduled` 按 `poll-delay-ms` 轮询候选租户，按租户分链处理，单租户失败记录后返回空、不阻断其他租户；候选条件为 PENDING 且 attempts 未达上限，或 RUNNING 且 `locked_at` 超过租约期；认领 SQL 置 RUNNING、`attempts+1` 并写入 `locked_at/locked_by`（进程内静态 `WORKER_ID`），认领失败跳过。`processTask` 调用 `GeneratorWizardService.runTask`：每次执行重新加载配置、模板与表元数据，表为空判 NOT_FOUND，按表、模板两层 `concatMap` 串行渲染；写盘用 `Mono.fromCallable + subscribeOn(BlockingIoSchedulers.storage())`，仓储 JDBC 访问隔离到 `jdbc()` 池；进度监听器把 processed/failed 与截断到 500 字符的错误摘要回写任务表（仅 RUNNING 且租户匹配）。字段映射从任务持久化 JSON 反序列化恢复，解析失败记 warn 并回退空列表，不直接令任务失败。
+
+**完成语义**：`processedCount` 含失败单元。执行链返回 `TaskOutcome(historyId, processed, failed, stopped)`：`stopped` 为 true（取消或进度监听器失败）时不写终态、不保存本次历史、不登记产物批次，已写文件不回滚；有 `historyId` 时任务服务标记 COMPLETED——即使 `failedCount > 0`，即「流程完成」不等于「全部单元成功」；无 `historyId` 且未停止时标记 FAILED。执行异常仅在传入任务对象的 `attempts >= max-attempts` 时写 FAILED，否则保留数据库 RUNNING 等待租约过期重试。保留期清理按 `purge-cron` 对终态任务按完成时间物理删除，单批上限 500。
+
+**配置默认值**（前缀 `apex.generator.async-task`）：`enabled` true、`max-attempts` 3、`lease-minutes` 10、`tenant-batch` 20、`retention-hours` 24、`poll-delay-ms` 5000、`purge-cron` `0 40 3 * * ?`。
+
+**数据层**：system 迁移 `V71__create_generator_task_and_async_permissions.sql` 双方言建 `gen_task`：状态、总/已处理/失败计数、预览令牌（VARCHAR(128)，敏感数据）、覆盖开关、操作人、错误摘要（VARCHAR(1000)）、次数、租约（`locked_at/locked_by`）、终态时间、租户、乐观锁与逻辑删除；时间字段 MySQL 用 `DATETIME`、PostgreSQL 用 `TIMESTAMP`；索引 `(status, locked_at, id)`、`(tenant_id, status)`、`(create_time)`；权限码 3017-3019 双方言登记并授权 ADMIN（MySQL `INSERT IGNORE`，PostgreSQL 显式 `500000+p.id` 加 `ON CONFLICT DO NOTHING`）。`V72__add_generator_task_field_mappings.sql` 双方言补 `field_mappings_json TEXT`：MySQL 用 information_schema 判断后动态 ALTER，PostgreSQL 用 `ADD COLUMN IF NOT EXISTS`。已知口径不一致：V71 两条方言的运维注释写 `apex.generator.task.retention.*`，实际配置前缀为 `apex.generator.async-task.*`；注释不影响执行，但修改已执行迁移会变更 Flyway checksum，存量环境需评估后 repair。
+
+**静态核对确认的缺口（本轮只记录，未修复）**：`renewLease` 仅在仓储端口、Mapper 与实现三处定义，已读执行链无任何调用方，长任务不续租，完全依赖租约过期接管；进度与终态更新条件只要求租户、未删除、RUNNING，无执行者或认领代次条件，接管后旧执行者的进度/终态写入和后续文件写盘不被 SQL 阻止；认领只返回 Boolean，不刷新调度器持有的内存 candidate，`WORKER_ID` 为进程内静态标识，内存 attempts 与数据库认领次数可能偏差；RUNNING 过期候选分支无 `attempts < max-attempts` 条件；取消感知发生在单元渲染写盘之后，首次写盘前不检查，停止后不登记历史与产物，取消完成不保证存在可下载数据库产物记录；执行期重载配置但不重验预览令牌、不重算回写 `totalCount`，提交与执行之间配置/模板变化时输入可能漂移且计数与提交值不一致；字段映射 JSON 无效回退空列表而非失败，可能生成与预览不一致的产物；清理 SQL 为 MySQL 风格 `DELETE ... ORDER BY ... LIMIT`，PostgreSQL 等价性未在真实 PG 上验证；`LayeringArchTest` 无针对 scheduler 包的专门条款，infrastructure 调度器依赖 application 服务的合规性由门禁与既有规则裁决；以上均未在真实多实例集群验证。
+
+**测试静态覆盖**：`GeneratorTaskServiceTest` 10 项（提交持久化并返回任务 ID、进度字段映射、未知任务拒绝、取消成功、终态任务取消拒绝、进度推进并标记完成、停止后跳过终态写入、无产物判失败、次数耗尽判失败、次数未满保持 RUNNING 等待重试）；`GeneratorTaskSchedulerTest` 6 项（无候选租户跳过、认领后处理、认领失败跳过、单租户失败隔离、按保留期清理、无完成租户跳过）。测试文件存在不表示通过，结果以下述门禁为准。
+
+**门禁**：环境为 JDK 21.0.13.0+9-tem、mvnd 2.0.0-rc-3，执行 `mvnd -T4 -B clean verify`，反应堆全模块 `BUILD SUCCESS`。该结果覆盖执行时整个工作区，不单独代表 O08b 或其他任一主题的独立验收；本节静态缺口仍按上文保留。
+
+### 42.32 网关路由缺口收口：租户管理、MFA/IP、办公/图表/认证管理面（2026-10-30）
+
+> 本节记录用户指出的前端无法自行补齐的后端路由缺口的核对结论与修复。缺口共四类：平台租户管理端点经网关不可达、认证中心 MFA/IP 访问控制路由缺失、生产/Nacos 整表覆盖丢失 masking 等路由、以及 auth 路由误承接由 system 承载的管理面前缀。
+
+**核对结论**（以源码为准逐项验证）：
+
+- 平台租户管理端点已在 system 实现（`PlatformTenantRouter`：`/api/v2/platform/tenants` 目录/开通/详情/状态动作/配额，见 42.3/42.20），但三份网关配置的 system-domain 兜底均只显式声明 `/api/v2/operations/**`，`/api/v2/platform/**` 不匹配任何路由而 404——端点存在但不可达。
+- 认证中心 MFA/IP 路由已在 auth-service 实现：`MfaRouter`（`/api/v1/mfa/**`）、`AuthCenterRouterConfig`（`/api/mfa/**`、`/api/ip-access-control/**`）、`AuthConfigRouter`（`/api/v1/auth/configs/**`）、`AuditLogRouter`（`/api/v1/auth/audit-logs/**`）、`PasswordRecoveryRouter`（`/auth/v2/password-recovery/**`）；旧注释「过渡期由单体兜底」已失效（单体退役，兜底目标是 system，而 system 无这些端点），经网关全部 404。
+- `application-prod.yml` 与 `config/nacos/apex-gateway.yaml` 整表重定义 routes，`job-domain`、`masking-domain` 仅在 application.yml 声明，生产/Nacos 生效时丢失；生产 office-domain 还缺 `/api/office/**`（`OfficeMessageRouter` 站内信 HTTP 接口）与 `/admin-api/v1/message-templates`；file-domain 缺 `/admin-api/v1/charts/**`（`ChartRouter`），落入 system 兜底后 404。
+- 反向纠偏：auth 路由声明的 `/admin-api/v1/auth/**`、`/admin-api/v1/sso/**` 在 auth-service 无任何实现（全量字面路径核对为零命中），实际由 system 的 `AuthConfigRouter`（`/admin-api/v1/auth/config/**`）与 `SsoAdminRouter`（`/admin-api/v1/sso/**`）承载，该前缀被 auth 路由截走后在 auth-service 404。
+
+**修复**（仅网关配置与契约测试，业务源码不动）：`apex-gateway/src/main/resources/application.yml`、`application-prod.yml`、`config/nacos/apex-gateway.yaml` 三处同步——auth 路由改为 `/auth/v1/**`、`/auth/v2/**`、`/oauth2/**`、`/.well-known/**`、`/api/v1/mfa/**`、`/api/mfa/**`、`/api/ip-access-control/**`、`/api/v1/auth/configs/**`、`/api/v1/auth/audit-logs/**`，并移除 `/admin-api/v1/auth/**`、`/admin-api/v1/sso/**`（回落 system 兜底；其余 `/api/v1/auth/**` 如 Keycloak OIDC 登录亦由 system 承载）；office-domain 补 `/api/office/**`（生产/Nacos 另补 `/admin-api/v1/message-templates`）；file-domain 补 `/admin-api/v1/charts/**`；system-domain 补 `/api/v2/platform/**`；生产与 Nacos 显式补回 `job-domain`、`masking-domain` 路由，并在声明 instances 的文件补 `jobService`、`maskingService` 熔断实例。`GatewayRouteProfileConfigTest` 扩展为对三个配置源逐一断言上述路径契约（含 auth 路由不得承接 admin-api auth|sso 前缀的反向断言）。
+
+**已知保留**：Nacos 的 auth-domain 路由 id 与基础/生产配置（auth-service）不一致，测试已兼容；限流规则 `/api/v1/auth/**` 为路径级匹配，与路由归属解耦，不受本次调整影响；`/internal/v1/**`（auth 内部接口）按既有约定不经网关暴露，未新增路由；本轮未做前端联调验证，仅静态核对路由与 Router 字面路径一致。
+
+**验证**：`mvnd -T4 -B -pl apex-gateway test` 通过，`GatewayRouteProfileConfigTest` 3 项（`application.yml`、`application-prod.yml`、`config/nacos/apex-gateway.yaml` 各一）Failures 0 / Errors 0；随后在固定 JDK 21.0.13.0+9-tem 与 mvnd 2.0.0-rc-3 环境执行 `mvnd -T4 -B clean verify`，反应堆全模块 `BUILD SUCCESS`。全仓结果覆盖执行时整个工作区，不等同于真实 Nacos 发布、生产部署或前端联调；未验证项按本节保留。

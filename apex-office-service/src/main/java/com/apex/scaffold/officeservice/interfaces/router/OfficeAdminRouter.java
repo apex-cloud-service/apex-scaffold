@@ -20,9 +20,21 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 /**
- * 办公平台管理端路由配置。
+ * 办公平台管理端路由，声明 {@code /admin-api/v1/office/**} 下的应用配置与身份绑定审批接口。
+ *
+ * <p>路由由两类职责组成：
+ *
+ * <ul>
+ *   <li>办公应用配置 CRUD：维护第三方平台接入参数，删除需携带版本号实现乐观锁校验；
+ *   <li>身份绑定审批：查询待审批绑定、审核通过/拒绝，以及对既有绑定执行解绑。
+ * </ul>
+ *
+ * <p>所有端点均为管理端入口，权限与数据范围由安全配置及 Handler 内校验决定，
+ * 不在路由层做租户过滤。路径使用 {@link SpringdocRouteBuilder} 链式声明 OpenAPI，
+ * 与 {@code @RouterOperations} 注解存在重复，二者需保持一致以保证文档与实际路由匹配。
  *
  * @author Apex Team
+ * @version 1.3.1
  * @since 1.2.0
  */
 @Configuration
@@ -30,8 +42,11 @@ public class OfficeAdminRouter {
     /**
      * 配置办公平台管理端路由，包括应用配置和绑定审批。
      *
+     * <p>端点数量较多且 OpenAPI 元数据内联声明，导致方法长度超过 PMD 阈值；
+     * 抑制 {@code MethodTooLongRule} 而不拆分，以保持路由注册顺序与实际路径一致、便于审阅。
+     *
      * @param handler 办公平台管理端处理器
-     * @return 路由函数
+     * @return 管理端路由函数，挂载于 {@code /admin-api/v1/office}
      */
     @RouterOperations({
         @RouterOperation(

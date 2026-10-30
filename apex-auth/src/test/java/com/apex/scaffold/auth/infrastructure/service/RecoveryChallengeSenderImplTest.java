@@ -10,12 +10,14 @@ import com.apex.scaffold.infrastructure.chuanglan.service.ChuanglanApiService;
 import com.apex.scaffold.infrastructure.mail.MailService;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.MessageSource;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -41,8 +43,22 @@ class RecoveryChallengeSenderImplTest {
     @Mock
     private ChuanglanApiService chuanglanApiService;
 
+    @Mock
+    private MessageSource messageSource;
+
     private RecoveryChallengeSenderImpl sender() {
-        return new RecoveryChallengeSenderImpl(mailServiceProvider, chuanglanApiServiceProvider);
+        return new RecoveryChallengeSenderImpl(mailServiceProvider, chuanglanApiServiceProvider, messageSource);
+    }
+
+    @BeforeEach
+    void stubMessages() {
+        lenient()
+                .when(messageSource.getMessage(anyString(), any(), anyString(), any()))
+                .thenAnswer(invocation -> {
+                    String code = invocation.getArgument(0);
+                    Object[] args = invocation.getArgument(1);
+                    return args == null || args.length == 0 ? code : code + ":" + args[0];
+                });
     }
 
     @Test

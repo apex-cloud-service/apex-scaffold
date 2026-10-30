@@ -28,13 +28,15 @@ spring:
       routes:
         # 🔒 生产路由指向 Nacos 注册的服务名；灰度期可临时改为单体地址回滚
         # ---- 认证域（Phase 2 已切换为 apex-auth-service，路径契约见方案 §5.2） ----
-        # 💡 Phase 2.4：auth-service 实际承载 /auth/v1/** 契约；
-        # MFA/认证配置/审计日志等 /api/v1/** 接口过渡期仍由单体兜底（绞杀者模式）。
+        # 💡 auth-service 承载 /auth/v1/**、/auth/v2/**（密码找回）、/oauth2/**、/.well-known/**，
+        #    以及认证中心管理面：/api/v1/mfa/**、/api/mfa/**、/api/ip-access-control/**、
+        #    /api/v1/auth/configs/**、/api/v1/auth/audit-logs/**。
+        # ⚠️ /admin-api/v1/auth/**、/admin-api/v1/sso/** 由 system 承载，走下方 system-domain 兜底。
         # 可用 ROUTE_AUTH_URI 环境变量临时指回单体地址以一键回滚。
         - id: auth-service
           uri: ${ROUTE_AUTH_URI:lb://apex-auth-service}
           predicates:
-            - Path=/auth/v1/**,/oauth2/**,/.well-known/**,/admin-api/v1/auth/**,/admin-api/v1/sso/**
+            - Path=/auth/v1/**,/auth/v2/**,/oauth2/**,/.well-known/**,/api/v1/mfa/**,/api/mfa/**,/api/ip-access-control/**,/api/v1/auth/configs/**,/api/v1/auth/audit-logs/**
         - id: workflow-domain
           uri: ${ROUTE_WORKFLOW_URI:lb://apex-workflow-service}
           predicates:
@@ -64,16 +66,37 @@ spring:
         - id: office-domain
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v2/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
+            - Path=/api/v1/office/**,/api/v2/office/**,/api/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
-            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/api/v2/files/**,/api/v2/file-shares/**
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/admin-api/v1/charts/**,/api/v2/files/**,/api/v2/file-shares/**
+        # 独立轻量服务未注册 Nacos，使用固定受信地址；JWT 验签沿用全局链，权限由下游复验。
+        # ⚠️ 本文件整表重定义 routes：job/masking 路由必须在此显式声明，否则生产环境丢失。
+        - id: job-domain
+          uri: ${ROUTE_JOB_URI:http://127.0.0.1:8095}
+          predicates:
+            - Path=/admin-api/v1/jobs,/admin-api/v1/jobs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: jobService
+                fallbackUri: forward:/__gateway/fallback
+        - id: masking-domain
+          uri: ${ROUTE_MASKING_URI:http://127.0.0.1:8096}
+          predicates:
+            - Path=/api/v1/masking/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: maskingService
+                fallbackUri: forward:/__gateway/fallback
         # 兜底路由：Phase 6 完成后切换为 lb://apex-system-service
+        # 💡 /api/v2/platform/** 为平台租户管理端点（PlatformTenantRouter）。
         - id: system-domain
           uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
           predicates:
-            - Path=/api/v1/**,/admin-api/v1/**,/health,/actuator/**
+            - Path=/api/v1/**,/api/v2/operations/**,/api/v2/platform/**,/admin-api/v1/**,/health,/actuator/**
 
 management:
   tracing:

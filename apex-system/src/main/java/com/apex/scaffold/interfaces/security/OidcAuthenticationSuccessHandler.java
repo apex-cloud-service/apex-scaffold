@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.security;
 
+import com.apex.scaffold.application.service.TenantGuard;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
@@ -26,7 +27,7 @@ import reactor.core.publisher.Mono;
  * <p>实现 Spring Security WebFlux 的 {@link ServerAuthenticationSuccessHandler}，
  * 处理 Keycloak OIDC 认证成功后的用户信息同步和 JWT Token 生成。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li>解析 OIDC 用户信息（sub、email、username）</li>
  *   <li>自动创建或更新本地用户数据</li>
@@ -34,7 +35,7 @@ import reactor.core.publisher.Mono;
  *   <li>重定向到前端回调地址，携带 Token 和用户信息</li>
  * </ul>
  *
- * <h2>认证流程</h2>
+ * <h2>设计说明</h2>
  * <pre>
  * 1. 用户通过 Keycloak 完成 OIDC 认证
  * 2. Spring Security OAuth2 Client 接收回调
@@ -46,14 +47,14 @@ import reactor.core.publisher.Mono;
  * 8. 重定向到前端 callback URL，携带 Token 参数
  * </pre>
  *
- * <h2>配置要求</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>{@code keycloak.enabled=true} - 启用 Keycloak 集成</li>
  *   <li>{@code keycloak.user-sync-enabled=true} - 启用用户自动同步</li>
  *   <li>{@code keycloak.frontend-callback-url} - 前端回调地址</li>
  * </ul>
  *
- * <h2>WebFlux 响应式设计</h2>
+ * <h2>设计说明</h2>
  * <p>完全基于 Reactor 响应式编程：
  * <ul>
  *   <li>使用 {@link Mono} 处理异步数据流</li>
@@ -84,13 +85,16 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
     /** Keycloak 配置 */
     private final KeycloakConfig keycloakConfig;
 
+    /** 租户写链路守卫：镜像建档前校验租户状态与用户配额 */
+    private final TenantGuard tenantGuard;
+
     /**
      * 处理 OIDC 认证成功事件
      *
      * <p>当用户通过 Keycloak 完成 OIDC 认证后，Spring Security 会调用此方法。
      * 本方法负责提取用户信息、同步到本地数据库、生成 JWT Token，并重定向到前端。
      *
-     * <h3>处理流程</h3>
+     * <p><strong>处理流程</strong></p>
      * <ol>
      *   <li>验证 Authentication Principal 是否为 {@link OidcUser}</li>
      *   <li>提取 Keycloak Sub（用户唯一标识）、Email、Username</li>
@@ -107,7 +111,7 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
      *   <li>设置 302 重定向响应</li>
      * </ol>
      *
-     * <h3>错误处理</h3>
+     * <p><strong>错误处理</strong></p>
      * <ul>
      *   <li>Principal 类型不匹配 → {@link IllegalStateException}</li>
      *   <li>用户同步禁用且用户不存在 → 403 Forbidden</li>
@@ -116,7 +120,6 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
      *
      * @param webFilterExchange WebFlux 过滤器交换对象，包含 Request 和 Response
      * @param authentication 认证对象，Principal 应为 {@link OidcUser}
-     * @return {@link Mono<Void>} 异步完成信号
      */
     @Override
     @SuppressWarnings("PMD.MethodTooLongRule")
@@ -149,21 +152,24 @@ public class OidcAuthenticationSuccessHandler implements ServerAuthenticationSuc
                             email,
                             username);
 
-                    return Mono.fromCallable(() -> {
-                                UserEntity user = new UserEntity();
-                                user.setUsername(username != null ? username : email);
-                                user.setEmail(email);
-                                user.setKeycloakSub(keycloakSub);
-                                user.setNickName(oidcUser.getGivenName() != null ? oidcUser.getGivenName() : username);
-                                user.setPassword("");
-                                user.setStatus(1);
-                                user.setDeleted(0);
-                                user.setCreateTime(LocalDateTime.now());
-                                user.setUpdateTime(LocalDateTime.now());
-                                return user;
-                            })
-                            .subscribeOn(BlockingIoSchedulers.jdbc())
-                            .flatMap(userRepository::save);
+                    return tenantGuard
+                            .assertUserQuota(1)
+                            .then(Mono.fromCallable(() -> {
+                                        UserEntity user = new UserEntity();
+                                        user.setUsername(username != null ? username : email);
+                                        user.setEmail(email);
+                                        user.setKeycloakSub(keycloakSub);
+                                        user.setNickName(
+                                                oidcUser.getGivenName() != null ? oidcUser.getGivenName() : username);
+                                        user.setPassword("");
+                                        user.setStatus(1);
+                                        user.setDeleted(0);
+                                        user.setCreateTime(LocalDateTime.now());
+                                        user.setUpdateTime(LocalDateTime.now());
+                                        return user;
+                                    })
+                                    .subscribeOn(BlockingIoSchedulers.jdbc())
+                                    .flatMap(userRepository::save));
                 }))
                 .flatMap(user -> {
                     log.debug("Updating last login time for user: userId={}", user.getId());

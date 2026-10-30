@@ -111,6 +111,69 @@ public class FileShareHandler {
     }
 
     /**
+     * 分页查询指定文件的分享列表（仅所有者，不返回令牌）。
+     *
+     * @param request 含 fileId 路径变量与 page/size/status 查询参数的请求
+     * @return 分享列表分页结果
+     */
+    @Operation(operationId = "listFileShares", summary = "查询文件分享列表", description = "仅文件所有者可查询；响应只含分享元数据，不返回令牌或摘要")
+    @Parameter(
+            name = "fileId",
+            description = "文件编号",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "分享列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileSharePageResponse.class))),
+        @ApiResponse(
+                responseCode = "400",
+                description = "参数错误或无权查询",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = FileShareErrorResponse.class)))
+    })
+    @OperationLog(
+            module = "FileShare",
+            type = OperationLog.OperationType.SELECT,
+            description = "listFileShares",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> list(ServerRequest request) {
+        return Mono.defer(() -> {
+                    final long fileId;
+                    try {
+                        fileId = Long.parseLong(request.pathVariable("fileId"));
+                    } catch (NumberFormatException error) {
+                        return requestHandlerUtil.buildErrorResponse(
+                                com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "fileId 必须为有效数字");
+                    }
+                    int page = parseInt(request.queryParam("page").orElse("1"), 1);
+                    int size = parseInt(request.queryParam("size").orElse("20"), 20);
+                    String status = request.queryParam("status").orElse(null);
+                    return fileShareService
+                            .list(fileId, status, page, size)
+                            .flatMap(requestHandlerUtil::buildSuccessResponse);
+                })
+                .onErrorResume(requestHandlerUtil::handleError);
+    }
+
+    /** 解析整数查询参数，非法时回退默认值。 */
+    private int parseInt(String value, int fallback) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException error) {
+            return fallback;
+        }
+    }
+
+    /**
      * 撤销分享。
      *
      * @param request 含 shareId 路径变量的请求
@@ -268,6 +331,13 @@ public class FileShareHandler {
     /** 分享创建结果的文档模型。 */
     @Schema(name = "FileShareCreatedResponse")
     public static class FileShareCreatedResponse extends Result<FileShareCreated> {}
+
+    /** 分享列表分页结果的文档模型。 */
+    @Schema(name = "FileSharePageResponse")
+    public static class FileSharePageResponse
+            extends Result<
+                    com.apex.scaffold.file.application.dto.PageResponse<
+                            com.apex.scaffold.file.application.dto.share.FileShareItem>> {}
 
     /** 分享兑换结果的文档模型。 */
     @Schema(name = "FileShareExchangeResponse")

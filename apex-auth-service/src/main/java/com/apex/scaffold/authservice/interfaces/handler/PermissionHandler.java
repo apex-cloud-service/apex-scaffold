@@ -5,6 +5,7 @@ import com.apex.scaffold.auth.application.dto.PermissionDTO;
 import com.apex.scaffold.auth.application.service.PermissionService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
+import com.apex.scaffold.common.annotation.RequireAdminRole;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -132,6 +133,7 @@ public class PermissionHandler {
             responseCode = "500",
             description = "服务器内部错误 - 数据库异常或其他未预期错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> createPermission(ServerRequest request) {
         return request.bodyToMono(PermissionDTO.class)
                 .flatMap(dto -> permissionService.createPermission(permissionAssembler.toEntity(dto)))
@@ -217,6 +219,7 @@ public class PermissionHandler {
             responseCode = "500",
             description = "服务器内部错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> updatePermission(ServerRequest request) {
         String id = request.pathVariable("id");
         return request.bodyToMono(PermissionDTO.class)
@@ -288,6 +291,7 @@ public class PermissionHandler {
             responseCode = "500",
             description = "服务器内部错误 - 数据库级联删除失败",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> deletePermission(ServerRequest request) {
         String id = request.pathVariable("id");
         return permissionService
@@ -347,6 +351,7 @@ public class PermissionHandler {
             responseCode = "500",
             description = "服务器内部错误",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getPermissionById(ServerRequest request) {
         String id = request.pathVariable("id");
         return permissionService
@@ -409,6 +414,7 @@ public class PermissionHandler {
             responseCode = "500",
             description = "服务器内部错误 - 数据库查询失败",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> listPermissions(ServerRequest request) {
         return permissionService
                 .listPermissions()
@@ -487,6 +493,7 @@ public class PermissionHandler {
             responseCode = "500",
             description = "服务器内部错误 - 数据库查询失败",
             content = @Content(schema = @Schema(implementation = Result.class)))
+    @RequireAdminRole
     public Mono<ServerResponse> getPermissionsByResource(ServerRequest request) {
         String resource = request.pathVariable("resource");
         return permissionService

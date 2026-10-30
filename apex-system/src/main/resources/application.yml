@@ -89,6 +89,43 @@ apex:
       threads: 4
     storage:
       threads: 8
+  operations:
+    health:
+      # ---------- 体检快照增强（定时留存 / 保留期清理 / 签名防篡改 / 异步导出） ----------
+      schedule:
+        # 是否启用定时留存：按 cron 周期采集实例体检并固化为历史快照
+        enabled: ${APEX_HEALTH_SCHEDULE_ENABLED:true}
+        # 快照归属租户；定时任务没有请求上下文，只能使用平台租户
+        tenant-id: ${APEX_HEALTH_SCHEDULE_TENANT_ID:default}
+        cron: ${APEX_HEALTH_SCHEDULE_CRON:0 0 * * * ?}
+      retention:
+        # 是否启用保留期清理：物理删除过期快照与导出结果
+        enabled: ${APEX_HEALTH_RETENTION_ENABLED:true}
+        # 保留天数，小于 1 时回落到 90
+        days: ${APEX_HEALTH_RETENTION_DAYS:90}
+        # 单批删除条数，限制单次事务规模
+        batch-size: ${APEX_HEALTH_RETENTION_BATCH_SIZE:500}
+        # 单次清理最多执行的批次数
+        max-batches: ${APEX_HEALTH_RETENTION_MAX_BATCHES:20}
+        cron: ${APEX_HEALTH_RETENTION_CRON:0 30 3 * * ?}
+      signature:
+        # 是否启用快照签名校验；关闭后列表完整性一律为 UNVERIFIABLE
+        enabled: ${APEX_HEALTH_SIGNATURE_ENABLED:true}
+        # 签名密钥；留空时复用 apex.security.data-encryption-key
+        secret: ${APEX_HEALTH_SIGNATURE_SECRET:}
+      async-export:
+        # 是否启用异步导出任务轮询
+        enabled: ${APEX_HEALTH_EXPORT_ENABLED:true}
+        # 轮询间隔（毫秒），小于 1000 时回落到 5000
+        poll-delay-ms: ${APEX_HEALTH_EXPORT_POLL_DELAY_MS:5000}
+        # 导出任务归属租户；定时任务没有请求上下文，只能使用平台租户
+        tenant-id: ${APEX_HEALTH_EXPORT_TENANT_ID:default}
+        # 单任务最大生成行数
+        max-rows: ${APEX_HEALTH_EXPORT_MAX_ROWS:200000}
+        # 结果保留小时数，超时任务与文件一起清理
+        result-ttl-hours: ${APEX_HEALTH_EXPORT_RESULT_TTL_HOURS:24}
+        # 单任务最大尝试次数
+        max-attempts: ${APEX_HEALTH_EXPORT_MAX_ATTEMPTS:3}
 
 server:
   # HTTP 服务端口
@@ -922,6 +959,9 @@ operation-log:
       block-threshold: 30
       # 封禁时长（秒）
       block-duration: 300
+      # 可信反向代理网段（CIDR），逗号分隔；仅直连地址命中这些网段时才采信
+      # X-Forwarded-For / X-Real-IP，否则一律使用 TCP 直连地址，防止客户端伪造转发头
+      trusted-proxy-cidrs: ${APEX_TRUSTED_PROXY_CIDRS:}
     login-protection:
       # ✅ 登录保护（防暴力破解；⚠️ prod 暂关闭，启用前需验证 Redis 跨实例一致性）
       enabled: true

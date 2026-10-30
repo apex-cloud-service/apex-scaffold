@@ -48,6 +48,9 @@ public class HealthSnapshotDTO {
     @Schema(description = "总体结论说明")
     private String summary;
 
+    @Schema(description = "签名完整性校验结果 VALID/INVALID/UNVERIFIABLE", example = "VALID")
+    private String integrity;
+
     @Schema(description = "UP 检查项数", example = "8")
     private Integer upCount;
 

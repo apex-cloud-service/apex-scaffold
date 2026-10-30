@@ -3,7 +3,10 @@ package com.apex.scaffold.officeservice.interfaces.handler.office;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.office.application.OfficeApprovalService;
@@ -15,14 +18,17 @@ import com.apex.scaffold.officeservice.interfaces.assembler.office.ApprovalProce
 import com.apex.scaffold.officeservice.interfaces.dto.office.approval.ApprovalProcessResponse;
 import com.apex.scaffold.officeservice.interfaces.dto.office.approval.ApproveRequest;
 import com.apex.scaffold.officeservice.interfaces.dto.office.approval.InitiateApprovalRequest;
+import com.apex.scaffold.officeservice.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.officeservice.interfaces.util.RequestHandlerUtil;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
+import java.security.Principal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.reactive.function.server.MockServerRequest;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -261,6 +267,41 @@ class OfficeApprovalHandlerTest {
             MockServerRequest request = MockServerRequest.builder().build();
 
             assertThatThrownBy(() -> handler.getPendingApprovals(request)).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("getCompletedApprovals")
+    class GetCompletedApprovalsTest {
+        @Test
+        @DisplayName("使用认证用户 ID 查询已办列表")
+        void usesAuthenticatedUserId() {
+            AuthenticatedUser user = new AuthenticatedUser(42L, "open-42", "1");
+            ServerRequest request = mock(ServerRequest.class);
+            doReturn(Mono.just((Principal) user)).when(request).principal();
+            when(approvalService.getCompletedApprovals("42")).thenReturn(Flux.just(process()));
+            when(assembler.toResponse(any(ApprovalProcess.class))).thenReturn(response());
+
+            StepVerifier.create(handler.getCompletedApprovals(request))
+                    .assertNext(
+                            result -> assertThat(result.statusCode().value()).isEqualTo(200))
+                    .verifyComplete();
+
+            verify(approvalService).getCompletedApprovals("42");
+        }
+
+        @Test
+        @DisplayName("缺少认证用户时拒绝且不触达服务")
+        void rejectsMissingPrincipal() {
+            ServerRequest request = mock(ServerRequest.class);
+            doReturn(Mono.<Principal>empty()).when(request).principal();
+
+            StepVerifier.create(handler.getCompletedApprovals(request))
+                    .assertNext(
+                            result -> assertThat(result.statusCode().value()).isEqualTo(400))
+                    .verifyComplete();
+
+            verifyNoInteractions(approvalService);
         }
     }
 

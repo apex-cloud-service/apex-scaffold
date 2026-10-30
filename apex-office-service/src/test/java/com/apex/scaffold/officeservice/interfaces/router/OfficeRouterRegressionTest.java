@@ -99,6 +99,7 @@ class OfficeRouterRegressionTest {
             new Endpoint("POST", "/api/office/approvals/{processInstanceId}/approve"),
             new Endpoint("DELETE", "/api/office/approvals/{processInstanceId}"),
             new Endpoint("GET", "/api/office/approvals/pending"),
+            new Endpoint("GET", "/api/office/approvals/completed"),
             new Endpoint("GET", "/api/office/approvals/initiated"));
 
     /** 日历事件端点。 */
@@ -250,7 +251,7 @@ class OfficeRouterRegressionTest {
 
     /** 验证对外暴露的端点集合与预期完全一致（数量、路径、方法一一对应）。 */
     @Test
-    @DisplayName("对外暴露端点集合与预期精确一致（共 71 个）")
+    @DisplayName("对外暴露端点集合与预期精确一致（共 72 个）")
     void shouldExposeExactlyExpectedEndpoints() {
         Set<Endpoint> expected = new LinkedHashSet<>();
         expected.addAll(OFFICE_ENDPOINTS);

@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.interfaces.service.KeycloakUserSyncService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,12 +88,13 @@ public class KeycloakAdminHandler {
             description = "syncAllUsers",
             saveRequest = false,
             saveResponse = false)
+    @RequirePermission("system:keycloak:sync")
     public Mono<ServerResponse> syncAllUsers(ServerRequest request) {
         log.info("Admin triggered full user sync from Keycloak");
 
         return keycloakUserSyncService
                 .syncAllUsers()
-                .then(ServerResponse.ok().bodyValue(Result.success("User sync completed successfully")))
+                .flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)))
                 .onErrorResume(e -> {
                     log.error("User sync failed", e);
                     return ServerResponse.status(500)
@@ -129,6 +131,7 @@ public class KeycloakAdminHandler {
             description = "syncUser",
             saveRequest = false,
             saveResponse = false)
+    @RequirePermission("system:keycloak:user:sync")
     public Mono<ServerResponse> syncUser(ServerRequest request) {
         String keycloakSub = request.pathVariable("keycloakSub");
         log.info("Admin triggered user sync from Keycloak: keycloakSub={}", keycloakSub);
@@ -171,9 +174,11 @@ public class KeycloakAdminHandler {
             description = "getKeycloakStatus",
             saveRequest = false,
             saveResponse = false)
+    @RequirePermission("system:keycloak:status")
     public Mono<ServerResponse> getKeycloakStatus(ServerRequest request) {
         log.info("Checking Keycloak integration status");
 
-        return ServerResponse.ok().bodyValue(Result.success(java.util.Map.of("enabled", true, "status", "connected")));
+        return keycloakUserSyncService.status().flatMap(status -> ServerResponse.ok()
+                .bodyValue(Result.success(status)));
     }
 }

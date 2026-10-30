@@ -49,4 +49,27 @@ public interface FileShareRepository {
      * @return 撤销成功返回 true
      */
     Mono<Boolean> markRevoked(Long id, String tenantId, Long creatorId, LocalDateTime now);
+
+    /**
+     * 按文件、租户与创建者分页查询分享记录。
+     *
+     * @param fileId 文件编号
+     * @param tenantId 可信租户标识
+     * @param creatorId 可信用户标识
+     * @param status 状态筛选，可为空
+     * @param page 页码（从 1 开始）
+     * @param size 每页大小
+     * @return 分页结果
+     */
+    Mono<FileSharePage> listByFile(Long fileId, String tenantId, Long creatorId, String status, int page, int size);
+
+    /**
+     * 分享分页结果。
+     *
+     * @param records 当前页记录
+     * @param total 总记录数
+     * @param page 页码
+     * @param size 每页大小
+     */
+    record FileSharePage(java.util.List<FileShareEntity> records, long total, int page, int size) {}
 }

@@ -2,6 +2,7 @@ package com.apex.scaffold.authservice.config;
 
 import com.apex.scaffold.auth.application.service.RoleService;
 import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
+import com.apex.scaffold.auth.config.AuthTrustedProxyProperties;
 import com.apex.scaffold.auth.domain.service.IpAccessControlService;
 import com.apex.scaffold.auth.domain.service.ResourcePermissionService;
 import com.apex.scaffold.auth.domain.service.TokenService;
@@ -42,7 +43,7 @@ import reactor.core.publisher.Mono;
  * @since 1.3.1
  */
 @Configuration
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, AuthTrustedProxyProperties.class})
 @Import({EncryptionKeyProvider.class, DefaultAuditLogService.class, DefaultEncryptionService.class})
 public class AuthCenterConfig {
     /**

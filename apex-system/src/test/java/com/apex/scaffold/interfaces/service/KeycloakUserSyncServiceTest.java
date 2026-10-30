@@ -2,9 +2,12 @@ package com.apex.scaffold.interfaces.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.service.TenantGuard;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.interfaces.config.KeycloakConfig;
@@ -46,6 +49,9 @@ class KeycloakUserSyncServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private TenantGuard tenantGuard;
+
+    @Mock
     private RealmResource realmResource;
 
     @Mock
@@ -61,11 +67,12 @@ class KeycloakUserSyncServiceTest {
      */
     @BeforeEach
     void setUp() {
-        service = new KeycloakUserSyncService(keycloakAdminClient, keycloakConfig, userRepository);
+        service = new KeycloakUserSyncService(keycloakAdminClient, keycloakConfig, userRepository, tenantGuard);
 
         when(keycloakConfig.getRealm()).thenReturn("test-realm");
         when(keycloakAdminClient.realm(anyString())).thenReturn(realmResource);
-        when(realmResource.users()).thenReturn(usersResource);
+        lenient().when(realmResource.users()).thenReturn(usersResource);
+        lenient().when(tenantGuard.assertUserQuota(anyLong())).thenReturn(Mono.empty());
     }
 
     @Nested
@@ -91,6 +98,7 @@ class KeycloakUserSyncServiceTest {
 
             when(usersResource.get(keycloakSub)).thenReturn(userResource);
             when(userResource.toRepresentation()).thenReturn(kcUser);
+            when(userRepository.findByKeycloakSub(keycloakSub)).thenReturn(Mono.empty());
 
             UserEntity savedUser = new UserEntity();
             savedUser.setId(1L);
@@ -119,6 +127,7 @@ class KeycloakUserSyncServiceTest {
         void shouldPropagateErrorWhenKeycloakApiFails() {
             String keycloakSub = "test-keycloak-sub";
 
+            when(userRepository.findByKeycloakSub(keycloakSub)).thenReturn(Mono.empty());
             when(usersResource.get(keycloakSub)).thenReturn(userResource);
             when(userResource.toRepresentation()).thenThrow(new RuntimeException("Keycloak API error"));
 
@@ -144,6 +153,7 @@ class KeycloakUserSyncServiceTest {
 
             when(usersResource.get(keycloakSub)).thenReturn(userResource);
             when(userResource.toRepresentation()).thenReturn(kcUser);
+            when(userRepository.findByKeycloakSub(keycloakSub)).thenReturn(Mono.empty());
 
             UserEntity savedUser = new UserEntity();
             savedUser.setId(1L);
@@ -175,7 +185,13 @@ class KeycloakUserSyncServiceTest {
         void shouldCompleteSuccessfullyWhenNoUsers() {
             when(usersResource.list()).thenReturn(java.util.Collections.emptyList());
 
-            StepVerifier.create(service.syncAllUsers()).verifyComplete();
+            StepVerifier.create(service.syncAllUsers())
+                    .assertNext(result -> {
+                        assertThat(result.requested()).isZero();
+                        assertThat(result.synced()).isZero();
+                        assertThat(result.failed()).isZero();
+                    })
+                    .verifyComplete();
         }
 
         /**
@@ -204,13 +220,60 @@ class KeycloakUserSyncServiceTest {
             savedUser2.setId(2L);
             savedUser2.setKeycloakSub("user-2");
 
+            when(userRepository.findByKeycloakSub(anyString())).thenReturn(Mono.empty());
             when(usersResource.get("user-1")).thenReturn(userResource);
             when(usersResource.get("user-2")).thenReturn(userResource);
             when(userResource.toRepresentation()).thenReturn(kcUser1, kcUser2);
 
             when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(savedUser1), Mono.just(savedUser2));
 
-            StepVerifier.create(service.syncAllUsers()).verifyComplete();
+            StepVerifier.create(service.syncAllUsers())
+                    .assertNext(result -> {
+                        assertThat(result.requested()).isEqualTo(2);
+                        assertThat(result.synced()).isEqualTo(2);
+                        assertThat(result.skipped()).isZero();
+                        assertThat(result.failed()).isZero();
+                    })
+                    .verifyComplete();
+        }
+    }
+
+    @Nested
+    @DisplayName("status 方法")
+    class StatusTests {
+
+        /**
+         * 验证连通时返回 CONNECTED 与延迟数据
+         */
+        @Test
+        @DisplayName("连通时返回 CONNECTED")
+        void shouldReturnConnectedWhenRealmReachable() {
+            when(realmResource.toRepresentation())
+                    .thenReturn(new org.keycloak.representations.idm.RealmRepresentation());
+
+            StepVerifier.create(service.status())
+                    .assertNext(result -> {
+                        assertThat(result.enabled()).isTrue();
+                        assertThat(result.status()).isEqualTo("CONNECTED");
+                        assertThat(result.error()).isNull();
+                    })
+                    .verifyComplete();
+        }
+
+        /**
+         * 验证远端失败时返回 ERROR 且不抛出
+         */
+        @Test
+        @DisplayName("远端失败时返回 ERROR")
+        void shouldReturnErrorWhenRealmUnreachable() {
+            when(realmResource.toRepresentation()).thenThrow(new RuntimeException("unreachable"));
+
+            StepVerifier.create(service.status())
+                    .assertNext(result -> {
+                        assertThat(result.status()).isEqualTo("ERROR");
+                        assertThat(result.error()).contains("unreachable");
+                    })
+                    .verifyComplete();
         }
     }
 }

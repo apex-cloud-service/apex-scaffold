@@ -15,17 +15,40 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 /**
- * 站内消息与消息模板路由，OpenAPI 契约由关联的 Handler 方法提供。
+ * 站内消息与消息模板的函数式路由，OpenAPI 契约由关联的 Handler 方法提供。
+ *
+ * <p>本类同时承载两组语义不同的接口：
+ *
+ * <ul>
+ *   <li>{@code /api/v1/messages/**}：面向当前登录用户的站内信，收件人由认证上下文推导，
+ *       不接受客户端指定用户标识；
+ *   <li>{@code /admin-api/v1/message-templates}：面向管理端模板配置，属于写操作入口。
+ * </ul>
+ *
+ * <p>网关侧 {@code office-domain} 路由以 {@code /api/office/**} 等前缀转发到 office 实例，
+ * 模板路径为精确匹配而非通配，新增子路径时需同步网关配置，否则虽在本类注册也不可达。
+ *
+ * <p>站内信实时推送的 WebSocket 握手路由不在此声明；票据与连接注册表为单实例内存状态，
+ * 断线后的消息以收件箱列表与未读数接口补偿，不依赖长连接可达性。
  *
  * @author Apex Team
+ * @version 1.3.1
  * @since 1.3.1
  */
 @Configuration
 public class MessageRouter {
     /**
      * 注册当前登录用户的站内消息接口。
-     * @param handler 消息处理器
-     * @return 消息路由
+     *
+     * <p>只暴露读取与已读标记能力，发送为唯一写入口且要求 JSON 请求体；
+     * 分页同时提供页号式 {@code /inbox} 与游标式 {@code /inbox/cursor}，
+     * 游标版本供前端增量拉取以避免深翻页。
+     *
+     * <p>Bean 名显式指定为 {@code internalMessageRoutes}，用于和同模块其它消息相关路由
+     * 以及模板路由 Bean 区分，避免按类型注入时产生歧义。
+     *
+     * @param handler 消息处理器，负责协议解析、校验与调用应用服务
+     * @return 站内消息路由函数，挂载于 {@code /api/v1/messages}
      */
     @RouterOperations({
         @RouterOperation(
@@ -91,9 +114,14 @@ public class MessageRouter {
     }
 
     /**
-     * 注册消息模板配置接口。
-     * @param handler 模板处理器
-     * @return 模板路由
+     * 注册消息模板配置的管理端接口。
+     *
+     * <p>查询列表仅返回启用状态模板，供发送侧选择；创建与更新要求 JSON 请求体。
+     * 同一路径段在读取与写入时承载不同标识：{@code GET /{templateCode}} 按业务模板编码查询，
+     * {@code PUT}、{@code DELETE /{templateId}} 按主键变更，调用方不可混用两种标识。
+     *
+     * @param handler 消息模板处理器
+     * @return 消息模板路由函数，挂载于 {@code /admin-api/v1/message-templates}
      */
     @RouterOperations({
         @RouterOperation(

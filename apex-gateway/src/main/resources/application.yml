@@ -103,13 +103,17 @@ spring:
       # 💡 未显式切流的路径统一兜底到单体，保证 Phase 1 行为不变
       routes:
         # ---- 认证域（Phase 2 已切换为 apex-auth-service，路径契约见方案 §5.2） ----
-        # 💡 Phase 2.4：auth-service 实际承载 /auth/v1/** 契约；
-        # MFA/认证配置/审计日志等 /api/v1/** 接口过渡期仍由单体兜底（绞杀者模式）。
-        # 可用 ROUTE_AUTH_URI 环境变量临时指回单体地址以一键回滚。
+        # 💡 auth-service 承载 /auth/v1/**、/auth/v2/**（密码找回）、/oauth2/**、/.well-known/**，
+        #    以及认证中心管理面：/api/v1/mfa/**、/api/mfa/**、/api/ip-access-control/**、
+        #    /api/v1/auth/configs/**、/api/v1/auth/audit-logs/**（MfaRouter、AuthCenterRouterConfig、
+        #    AuthConfigRouter、AuditLogRouter）。
+        # ⚠️ /admin-api/v1/auth/**、/admin-api/v1/sso/** 由 system 承载（AuthConfigRouter、SsoAdminRouter），
+        #    不得加入本路由，否则会在 auth-service 404。
+        # 💡 其余 /api/v1/auth/**（Keycloak OIDC 登录等）仍由 system-domain 兜底。
         - id: auth-service
           uri: ${ROUTE_AUTH_URI:lb://apex-auth-service}
           predicates:
-            - Path=/auth/v1/**,/oauth2/**,/.well-known/**,/admin-api/v1/auth/**,/admin-api/v1/sso/**
+            - Path=/auth/v1/**,/auth/v2/**,/oauth2/**,/.well-known/**,/api/v1/mfa/**,/api/mfa/**,/api/ip-access-control/**,/api/v1/auth/configs/**,/api/v1/auth/audit-logs/**
           filters:
             - name: CircuitBreaker
               args:
@@ -150,7 +154,7 @@ spring:
         - id: office-domain
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v2/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
+            - Path=/api/v1/office/**,/api/v2/office/**,/api/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
           filters:
             - name: CircuitBreaker
               args:
@@ -161,7 +165,7 @@ spring:
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
-            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/api/v2/files/**,/api/v2/file-shares/**
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/admin-api/v1/charts/**,/api/v2/files/**,/api/v2/file-shares/**
           filters:
             - name: CircuitBreaker
               args:
@@ -191,10 +195,11 @@ spring:
         # ---- 兜底：系统管理与其余全部接口（Phase 6 收敛为 apex-system-service） ----
         # 💡 可用 ROUTE_SYSTEM_URI 环境变量临时指回单体地址（http://127.0.0.1:8080）
         #    以实现一键回滚。
+        # 💡 /api/v2/platform/** 为平台租户管理端点（PlatformTenantRouter：目录/开通/详情/状态动作/配额）。
         - id: system-domain
           uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
           predicates:
-            - Path=/api/v1/**,/admin-api/v1/**,/health,/actuator/**
+            - Path=/api/v1/**,/api/v2/operations/**,/api/v2/platform/**,/admin-api/v1/**,/health,/actuator/**
           filters:
             - name: CircuitBreaker
               args:
@@ -237,6 +242,10 @@ resilience4j:
       fileService:
         base-config: default
       systemService:
+        base-config: default
+      jobService:
+        base-config: default
+      maskingService:
         base-config: default
 
 # ==================== 健康检查与指标 ====================

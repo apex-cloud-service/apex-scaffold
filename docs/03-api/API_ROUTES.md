@@ -159,6 +159,7 @@
 | POST | `/api/office/approvals/{processInstanceId}/approve` | `OfficeApprovalRouter` | `OfficeApprovalHandler.approveProcess` | 执行审批操作 |
 | DELETE | `/api/office/approvals/{processInstanceId}` | `OfficeApprovalRouter` | `OfficeApprovalHandler.cancelApproval` | 撤销审批 |
 | GET | `/api/office/approvals/pending` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getPendingApprovals` | 查询待审批列表 |
+| GET | `/api/office/approvals/completed` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getCompletedApprovals` | 查询当前用户已同意或拒绝的审批 |
 | GET | `/api/office/approvals/initiated` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getMyInitiatedApprovals` | 查询我发起的审批 |
 | POST | `/api/office/calendar/events` | `OfficeCalendarRouter` | `OfficeCalendarHandler.createCalendarEvent` | 创建日历事件 |
 | GET | `/api/office/calendar/events/{eventId}` | `OfficeCalendarRouter` | `OfficeCalendarHandler.getCalendarEventDetail` | 查询事件详情 |

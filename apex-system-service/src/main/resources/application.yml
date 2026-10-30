@@ -73,6 +73,10 @@ apex:
       threads: 4
     storage:
       threads: 8
+  generator:
+    # 代码生成产物输出根目录，按租户/任务隔离；须为服务可写的持久卷，
+    # 否则容器重建后产物与生成历史失去对应文件。
+    output-root: ${APEX_GENERATOR_OUTPUT_ROOT:/tmp/apex-gen}
 
 server:
   # 系统服务端口（迁移方案 Phase 6 / §13 微服务拓扑）
@@ -629,6 +633,8 @@ operation-log:
       violation-window: 60
       block-threshold: 30
       block-duration: 300
+      # 可信反向代理网段（CIDR），逗号分隔；仅直连地址命中这些网段时才采信转发头
+      trusted-proxy-cidrs: ${APEX_TRUSTED_PROXY_CIDRS:}
     login-protection:
       enabled: true
       ip-max-attempts: 20

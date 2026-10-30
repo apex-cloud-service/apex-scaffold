@@ -8,6 +8,10 @@ apex:
   security:
     data-encryption-key: ${APEX_DATA_ENCRYPTION_KEY:}
     config-encryption-key: ${APEX_CONFIG_ENCRYPTION_KEY:}
+    ip-rate-limit:
+      # 可信反向代理网段（CIDR），逗号分隔；仅直连地址命中这些网段时才采信
+      # X-Forwarded-For / X-Real-IP，否则一律使用 TCP 直连地址，防止客户端伪造转发头
+      trusted-proxy-cidrs: ${APEX_TRUSTED_PROXY_CIDRS:}
 
 auth-center:
   authorization-reader-user-id: ${AUTH_CENTER_AUTHORIZATION_READER_USER_ID:}

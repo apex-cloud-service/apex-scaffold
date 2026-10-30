@@ -25,6 +25,8 @@ import com.apex.scaffold.domain.model.generator.GenArtifactEntity;
 import com.apex.scaffold.domain.model.generator.GenConfigEntity;
 import com.apex.scaffold.domain.model.generator.GenDatasourceEntity;
 import com.apex.scaffold.domain.model.generator.GenHistoryEntity;
+import com.apex.scaffold.domain.model.generator.GenTaskEntity;
+import com.apex.scaffold.domain.model.generator.GenTaskStatus;
 import com.apex.scaffold.domain.model.generator.GenTemplateEntity;
 import com.apex.scaffold.domain.repository.GenArtifactRepository;
 import com.apex.scaffold.domain.repository.GenConfigRepository;
@@ -49,7 +51,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import javax.sql.DataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -73,12 +78,12 @@ import reactor.core.publisher.Mono;
  *   <li>配置、数据源、模板、历史与产物全链校验租户归属；内置模板仅只读共享</li>
  *   <li>预览片段最多返回 4000 字符，不回传完整文件内容；数据源密码不解密回传</li>
  *   <li>所有 JDBC 元数据读取与文件读写均隔离到阻塞调度器</li>
+ *   <li>在线引擎 {@link CodeTemplateEngine} 只支持 {@code ${variable}} 变量替换，不支持 FreeMarker 指令；
+ *       独立模块 {@code apex-generator} 的 FreeMarker 模板不能直接混用，需先改写语法。
+ *       模板目录通过 {@code engine=VARIABLE_SUBSTITUTION} 显式声明该能力</li>
+ *   <li>异步任务复用同一套渲染与写盘逻辑，按「表 × 模板」逐项推进进度，每完成一项回写一次，
+ *       取消由进度监听回调返回 {@code false} 感知并中止后续单元</li>
  * </ul>
- *
- * <h2>设计说明</h2>
- * <p>在线引擎 {@link CodeTemplateEngine} 只支持 {@code ${variable}} 变量替换，
- * 不支持 FreeMarker 指令；独立模块 {@code apex-generator} 的 FreeMarker 模板不能直接混用，
- * 需先改写语法。模板目录通过 {@code engine=VARIABLE_SUBSTITUTION} 显式声明该能力。
  *
  * @author Apex Team
  * @version 1.0.0
@@ -113,15 +118,15 @@ public class GeneratorWizardService {
     static final String HISTORY_PARTIAL = "PARTIAL";
     static final String HISTORY_FAILED = "FAILED";
 
-    private static final String DEFAULT_OUTPUT_ROOT = "/tmp/apex-gen";
-    private static final String BUILTIN_TENANT = "system";
-    private static final String DIGEST_ALGORITHM = "SHA-256";
-    private static final int DIGEST_LENGTH = 16;
-    private static final String TEMPLATE_VARIABLE = "${tableName}";
-    private static final Pattern UNSAFE_PATH = Pattern.compile("(^/)|(^[A-Za-z]:)|(\\\\)|(^|/)\\.\\.(/|$)");
+    static final String DEFAULT_OUTPUT_ROOT = "/tmp/apex-gen";
+    static final String BUILTIN_TENANT = "system";
+    static final String DIGEST_ALGORITHM = "SHA-256";
+    static final int DIGEST_LENGTH = 16;
+    static final String TEMPLATE_VARIABLE = "${tableName}";
+    static final Pattern UNSAFE_PATH = Pattern.compile("(^/)|(^[A-Za-z]:)|(\\\\)|(^|/)\\.\\.(/|$)");
 
     /** 仅支持 MySQL 与 PostgreSQL，其余数据库类型在预检阶段以结构化问题项表达。 */
-    private static final EnumSet<DbType> SUPPORTED_DB_TYPES = EnumSet.of(DbType.MYSQL, DbType.POSTGRESQL);
+    static final EnumSet<DbType> SUPPORTED_DB_TYPES = EnumSet.of(DbType.MYSQL, DbType.POSTGRESQL);
 
     private final GenConfigRepository configRepository;
     private final GenDatasourceRepository datasourceRepository;
@@ -612,10 +617,22 @@ public class GeneratorWizardService {
      *
      * <p>任务目录按 {@code outputRoot/tenant/taskId} 隔离；已存在同名文件且未显式允许覆盖时，
      * 该文件记为 FAILED 并保留原文件。发布状态按成功数量区分 PUBLISHED / PARTIAL / FAILED。
+     *
+     * @param context 向导上下文
+     * @param tenant 租户标识
+     * @param rendered 内存渲染结果
+     * @param overwrite 是否允许覆盖
+     * @param operatorId 操作人 ID
+     * @param taskId 同步执行任务号
+     * @return 执行结果
      */
     private Mono<GenExecutionResponse> publish(
-            WizardContext context, String tenant, List<RenderedFile> rendered, boolean overwrite, Long operatorId) {
-        long taskId = nextTaskId();
+            WizardContext context,
+            String tenant,
+            List<RenderedFile> rendered,
+            boolean overwrite,
+            Long operatorId,
+            long taskId) {
         Path taskDirectory = taskDirectory(tenant, taskId);
         List<GenIssueDTO> issues = new ArrayList<>();
         return Mono.fromCallable(() -> {
@@ -632,6 +649,11 @@ public class GeneratorWizardService {
                                 .insertBatch(written)
                                 .map(persisted ->
                                         executionResponse(taskId, history.getId(), tenant, persisted, issues))));
+    }
+
+    private Mono<GenExecutionResponse> publish(
+            WizardContext context, String tenant, List<RenderedFile> rendered, boolean overwrite, Long operatorId) {
+        return publish(context, tenant, rendered, overwrite, operatorId, nextTaskId());
     }
 
     private GenArtifactEntity writeArtifact(
@@ -931,7 +953,7 @@ public class GeneratorWizardService {
                 .build();
     }
 
-    private Mono<String> tenantId() {
+    Mono<String> tenantId() {
         return Mono.deferContextual(context -> {
             String tenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
             return tenant == null || tenant.isBlank()
@@ -944,5 +966,227 @@ public class GeneratorWizardService {
         return expected.equals(actual)
                 ? Mono.empty()
                 : Mono.error(new BusinessException(ResultCode.FORBIDDEN, "无权访问其他租户的数据"));
+    }
+
+    // ------------------------------------------------------------------ 异步任务
+
+    /**
+     * 异步任务的阶段结果。
+     *
+     * @param historyId      生成历史 ID；未产生产物时为 {@code null}
+     * @param processedCount 已处理单元数（含失败单元）
+     * @param failedCount    失败单元数
+     * @param stopped        是否因取消而中止
+     */
+    public record TaskOutcome(Long historyId, int processedCount, int failedCount, boolean stopped) {}
+
+    /**
+     * 单元进度监听器。
+     *
+     * <p>每完成一个「表 × 模板」单元回调一次；返回 {@code false} 表示任务已被取消，
+     * 执行方应立即停止后续单元。
+     */
+    @FunctionalInterface
+    public interface TaskProgressListener {
+
+        /**
+         * 进度回调。
+         *
+         * @param processedCount 已处理单元数（含失败单元）
+         * @param failedCount    失败单元数
+         * @param errorMessage   最近一次失败原因；无失败时可为 {@code null}
+         * @return {@code true} 继续执行；{@code false} 已取消，停止后续单元
+         */
+        Mono<Boolean> onProgress(int processedCount, int failedCount, String errorMessage);
+    }
+
+    /** 取消信号，只在响应式链路内部流转，不暴露给调用方。 */
+    private static final class TaskStoppedException extends RuntimeException {
+
+        private static final long serialVersionUID = 1L;
+
+        private TaskStoppedException() {
+            super("生成任务已取消");
+        }
+    }
+
+    /**
+     * 校验提交参数并构建待入队任务（不落库、不写盘）。
+     *
+     * <p>校验口径与同步执行一致：配置、数据源、模板归属与可执行性，预览令牌绑定输入摘要。
+     * 任务 ID 由调用方插入后回填，产物与任务共享同一 ID。
+     *
+     * @param request    执行请求（携带预览令牌与字段映射）
+     * @param operatorId 操作人 ID
+     * @return 待入队任务
+     */
+    public Mono<GenTaskEntity> prepareTask(GenGenerateRequest request, Long operatorId) {
+        return tenantId().flatMap(tenant -> loadContext(request.getConfigId(), tenant)
+                .flatMap(context -> validateExecutable(context).map(datasource -> {
+                    List<GenFieldMappingDTO> fieldMappings =
+                            request.getFieldMappings() == null ? List.of() : request.getFieldMappings();
+                    String expected = inputDigest(context, fieldMappings);
+                    if (!expected.equals(request.getPreviewToken())) {
+                        throw new BusinessException(ResultCode.PARAM_ERROR, "预览结果已失效，请重新预览后再执行");
+                    }
+                    int totalCount =
+                            parseTableNames(context.config().getTableNames()).size()
+                                    * context.templates().size();
+                    GenTaskEntity task = new GenTaskEntity();
+                    task.setConfigId(context.config().getId());
+                    task.setStatus(GenTaskStatus.PENDING.name());
+                    task.setTotalCount(totalCount);
+                    task.setProcessedCount(0);
+                    task.setFailedCount(0);
+                    task.setPreviewToken(request.getPreviewToken());
+                    task.setFieldMappingsJson(toJson(fieldMappings));
+                    task.setOverwriteFlag(Boolean.TRUE.equals(request.getOverwrite()) ? 1 : 0);
+                    task.setOperatorId(operatorId);
+                    task.setAttempts(0);
+                    task.setTenantId(tenant);
+                    return task;
+                })));
+    }
+
+    /**
+     * 执行一次已认领的任务，按「表 × 模板」逐项渲染写盘并推进进度。
+     *
+     * <p>每个单元完成后立即回写一次进度；监听器返回 {@code false} 时抛取消信号，
+     * 由本方法收敛为空流并保留已产生的产物。
+     *
+     * @param task     已认领的任务
+     * @param operatorId 操作人 ID（取自任务）
+     * @param tenant   租户标识
+     * @param listener 进度监听器
+     * @return 阶段结果
+     */
+    public Mono<TaskOutcome> runTask(
+            GenTaskEntity task, Long operatorId, String tenant, TaskProgressListener listener) {
+        AtomicInteger processed = new AtomicInteger();
+        AtomicInteger failed = new AtomicInteger();
+        AtomicReference<String> lastError = new AtomicReference<>();
+        AtomicBoolean stopped = new AtomicBoolean();
+        List<GenArtifactEntity> artifacts = new ArrayList<>();
+        return loadContext(task.getConfigId(), tenant)
+                .flatMap(context -> validateExecutable(context).flatMap(datasource -> {
+                    long taskId = task.getId() == null ? nextTaskId() : task.getId();
+                    Path taskDirectory = taskDirectory(tenant, taskId);
+                    boolean overwrite = Integer.valueOf(1).equals(task.getOverwriteFlag());
+                    List<GenFieldMappingDTO> fieldMappings = parseFieldMappings(task.getFieldMappingsJson());
+                    return readTables(context, fieldMappings)
+                            .flatMapMany(tables -> {
+                                if (tables.isEmpty()) {
+                                    return Flux.error(new BusinessException(ResultCode.NOT_FOUND, "目标表不存在或不可读取"));
+                                }
+                                return Flux.fromIterable(tables).concatMap(table -> dataModel(context, table)
+                                        .flatMapMany(model -> Flux.fromIterable(context.templates())
+                                                .concatMap(template -> runUnit(
+                                                        new RenderedFile(
+                                                                table,
+                                                                template,
+                                                                null,
+                                                                resolveRelativePath(template, model)),
+                                                        context,
+                                                        tenant,
+                                                        taskId,
+                                                        taskDirectory,
+                                                        overwrite,
+                                                        model,
+                                                        processed,
+                                                        failed,
+                                                        lastError,
+                                                        artifacts,
+                                                        listener))));
+                            })
+                            .onErrorResume(TaskStoppedException.class, error -> {
+                                stopped.set(true);
+                                return Flux.empty();
+                            })
+                            .then(Mono.defer(() -> finishTask(
+                                    context, tenant, taskId, operatorId, artifacts, processed, failed, stopped)))
+                            .map(outcome -> outcome);
+                }));
+    }
+
+    /**
+     * 渲染并写入单个「表 × 模板」单元，随后推进一次进度。
+     *
+     * @return 单元完成信号；取消时以 {@link TaskStoppedException} 终止
+     */
+    private Mono<Void> runUnit(
+            RenderedFile skeleton,
+            WizardContext context,
+            String tenant,
+            long taskId,
+            Path taskDirectory,
+            boolean overwrite,
+            Map<String, Object> model,
+            AtomicInteger processed,
+            AtomicInteger failed,
+            AtomicReference<String> lastError,
+            List<GenArtifactEntity> artifacts,
+            TaskProgressListener listener) {
+        return templateEngine
+                .render(skeleton.template().getTemplateContent(), model)
+                .flatMap(content -> Mono.fromCallable(() -> writeArtifact(
+                                new RenderedFile(
+                                        skeleton.table(), skeleton.template(), content, skeleton.relativePath()),
+                                context.config().getId(),
+                                tenant,
+                                taskId,
+                                taskDirectory,
+                                overwrite,
+                                new ArrayList<>()))
+                        .subscribeOn(BlockingIoSchedulers.storage()))
+                .doOnNext(artifact -> {
+                    artifacts.add(artifact);
+                    processed.incrementAndGet();
+                    if (STATUS_FAILED.equals(artifact.getStatus())) {
+                        failed.incrementAndGet();
+                        lastError.set(artifact.getErrorMessage());
+                    }
+                })
+                .flatMap(artifact -> listener.onProgress(processed.get(), failed.get(), lastError.get())
+                        .flatMap(go -> Boolean.TRUE.equals(go) ? Mono.empty() : Mono.error(new TaskStoppedException())))
+                .then();
+    }
+
+    /**
+     * 收敛执行结果：有产物时落库历史与产物，否则仅返回计数。
+     */
+    private Mono<TaskOutcome> finishTask(
+            WizardContext context,
+            String tenant,
+            long taskId,
+            Long operatorId,
+            List<GenArtifactEntity> artifacts,
+            AtomicInteger processed,
+            AtomicInteger failed,
+            AtomicBoolean stopped) {
+        if (stopped.get() || artifacts.isEmpty()) {
+            return Mono.just(new TaskOutcome(null, processed.get(), failed.get(), stopped.get()));
+        }
+        return saveHistory(context, tenant, taskId, operatorId, artifacts).flatMap(history -> artifactRepository
+                .insertBatch(artifacts)
+                .thenReturn(new TaskOutcome(history.getId(), processed.get(), failed.get(), stopped.get())));
+    }
+
+    /**
+     * 反序列化任务中的字段映射。
+     *
+     * @param json 持久化的 JSON
+     * @return 字段映射；为空或解析失败时返回空列表
+     */
+    List<GenFieldMappingDTO> parseFieldMappings(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(
+                    json, objectMapper.getTypeFactory().constructCollectionType(List.class, GenFieldMappingDTO.class));
+        } catch (IOException error) {
+            log.warn("任务字段映射解析失败: {}", error.getMessage());
+            return List.of();
+        }
     }
 }

@@ -136,17 +136,19 @@ flowchart TB
 
 | 路由 id | 匹配路径 | 默认目标 |
 | --- | --- | --- |
-| auth-service | `/auth/v1/**`、`/oauth2/**`、`/.well-known/**`、`/admin-api/v1/auth/**`、`/admin-api/v1/sso/**` | `lb://apex-auth-service` |
+| auth-service | `/auth/v1/**`、`/auth/v2/**`、`/oauth2/**`、`/.well-known/**`、`/api/v1/mfa/**`、`/api/mfa/**`、`/api/ip-access-control/**`、`/api/v1/auth/configs/**`、`/api/v1/auth/audit-logs/**` | `lb://apex-auth-service` |
 | workflow-domain | `/api/v1/workflows/**`、`/api/v2/workflow-definitions/**`、`/api/workflow/**`、`/admin-api/v1/workflows/**` | `lb://apex-workflow-service` |
 | office-message-websocket | `/api/v1/messages/ws`（要求 `Upgrade: websocket`） | `ws://127.0.0.1:8084` |
 | office-message-http | `/api/v1/messages`、`/api/v1/messages/**` | `http://127.0.0.1:8084` |
-| office-domain | `/api/v1/office/**`、`/api/v1/messages/**`、`/admin-api/v1/office/**`、`/admin-api/v1/org/**`、`/admin-api/v1/message-templates` | `lb://apex-office-service` |
-| file-domain | `/api/v1/file/**`、`/api/v1/files/**`、`/api/v1/documents/**`、`/admin-api/v1/documents/**` | `lb://apex-file-service` |
+| office-domain | `/api/v1/office/**`、`/api/v2/office/**`、`/api/office/**`、`/api/v1/messages/**`、`/admin-api/v1/office/**`、`/admin-api/v1/org/**`、`/admin-api/v1/message-templates` | `lb://apex-office-service` |
+| file-domain | `/api/v1/file/**`、`/api/v1/files/**`、`/api/v1/documents/**`、`/admin-api/v1/documents/**`、`/admin-api/v1/charts/**`、`/api/v2/files/**`、`/api/v2/file-shares/**` | `lb://apex-file-service` |
 | job-domain | `/admin-api/v1/jobs`、`/admin-api/v1/jobs/**` | `http://127.0.0.1:8095` |
 | masking-domain | `/api/v1/masking/**` | `http://127.0.0.1:8096` |
-| system-domain（兜底） | `/api/v1/**`、`/admin-api/v1/**`、`/health`、`/actuator/**` | `lb://apex-system-service` |
+| system-domain（兜底） | `/api/v1/**`、`/api/v2/operations/**`、`/api/v2/platform/**`、`/admin-api/v1/**`、`/health`、`/actuator/**` | `lb://apex-system-service` |
 
-来源：`apex-gateway/src/main/resources/application.yml`（生产覆盖见同目录 `application-prod.yml`，该文件重定义 routes 列表，新增路由必须两处同步）。
+来源：`apex-gateway/src/main/resources/application.yml`（生产覆盖见同目录 `application-prod.yml`，该文件重定义 routes 列表，新增路由必须两处同步；Nacos 下发见 `config/nacos/apex-gateway.yaml`，同样整表覆盖）。
+
+> 归属说明：`/admin-api/v1/auth/**`、`/admin-api/v1/sso/**` 由 system 承载（`AuthConfigRouter`、`SsoAdminRouter`），不进入 auth-service 路由，经 system-domain 兜底；其余 `/api/v1/auth/**`（Keycloak OIDC 登录等）同样由 system 兜底。
 
 #### 请求处理链路时序图
 

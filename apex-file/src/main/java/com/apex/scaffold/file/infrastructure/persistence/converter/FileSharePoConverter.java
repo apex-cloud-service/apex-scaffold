@@ -30,4 +30,12 @@ public interface FileSharePoConverter {
      * @return 分享实体
      */
     FileShareEntity toEntity(FileSharePO po);
+
+    /**
+     * 批量转换分享持久化对象。
+     *
+     * @param pos 分享持久化对象列表
+     * @return 分享实体列表
+     */
+    java.util.List<FileShareEntity> toEntityList(java.util.List<FileSharePO> pos);
 }

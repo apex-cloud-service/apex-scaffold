@@ -42,6 +42,11 @@ public class FileShareRouter {
                 beanClass = FileShareHandler.class,
                 beanMethod = "create"),
         @RouterOperation(
+                path = "/api/v2/files/{fileId}/shares",
+                method = RequestMethod.GET,
+                beanClass = FileShareHandler.class,
+                beanMethod = "list"),
+        @RouterOperation(
                 path = "/api/v2/file-shares/{shareId}",
                 method = RequestMethod.DELETE,
                 beanClass = FileShareHandler.class,
@@ -60,7 +65,8 @@ public class FileShareRouter {
     @Bean
     public RouterFunction<ServerResponse> fileShareRoutes(FileShareHandler handler) {
         return RouterFunctions.route()
-                .path("/api/v2/files", builder -> builder.POST("/{fileId}/shares", handler::create))
+                .path("/api/v2/files", builder -> builder.POST("/{fileId}/shares", handler::create)
+                        .GET("/{fileId}/shares", handler::list))
                 .path("/api/v2/file-shares", builder -> builder.DELETE("/{shareId}", handler::revoke)
                         .POST("/exchange", handler::exchange)
                         .POST("/download", handler::download))

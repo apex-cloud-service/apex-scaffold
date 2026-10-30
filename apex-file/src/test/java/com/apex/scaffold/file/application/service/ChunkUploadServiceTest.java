@@ -119,7 +119,7 @@ class ChunkUploadServiceTest {
                                 .totalChunks(2)
                                 .chunkSize(3L)
                                 .contentType("video/mp4")
-                                .md5("expected-md5")
+                                .md5("d41d8cd98f00b204e9800998ecf8427e")
                                 .build())
                         .flatMap(result -> service.status(result.fileId()))))
                 .assertNext(result -> {
@@ -196,7 +196,7 @@ class ChunkUploadServiceTest {
         when(chunks.findByFileIdAndIndex(1L, 0)).thenReturn(Mono.empty());
         when(storage.upload(eq("apex"), anyString(), any(InputStream.class), anyString()))
                 .thenReturn(Mono.just("actual-part"));
-        when(chunks.save(any())).thenAnswer(inv -> {
+        when(chunks.saveIfAbsent(any())).thenAnswer(inv -> {
             FileChunkEntity p = inv.getArgument(0);
             assertThat(p.getUserId()).isEqualTo(7L);
             assertThat(p.getTenantId()).isEqualTo("42");

@@ -89,6 +89,14 @@ public interface ApprovalProcessRepository {
     Mono<List<ApprovalProcess>> findPendingByApprover(String approverId);
 
     /**
+     * 查询指定审批人已执行审批动作的流程列表
+     *
+     * @param approverId 审批人ID
+     * @return 包含该审批人同意或拒绝记录的流程列表
+     */
+    Mono<List<ApprovalProcess>> findCompletedByApprover(String approverId);
+
+    /**
      * 更新审批流程
      *
      * @param process 审批流程聚合根

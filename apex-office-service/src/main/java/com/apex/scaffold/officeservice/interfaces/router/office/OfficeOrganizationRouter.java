@@ -17,7 +17,11 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 /**
  * 办公平台组织同步路由，接口契约由对应处理方法声明。
  *
+ * <p>同步接口接受 JSON 请求体；映射查询按外部平台、组织标识或用户标识定位，
+ * 同步任务查询用于查看组织同步历史。路由层只负责路径和请求方法匹配，租户及权限校验由处理器完成。
+ *
  * @author Apex Team
+ * @version 1.3.1
  * @since 1.3.1
  */
 @Configuration
@@ -30,7 +34,9 @@ public class OfficeOrganizationRouter {
     /**
      * 注册组织同步、映射查询和同步历史接口。
      *
-     * @return 组织同步路由
+     * <p>同步写接口限定为 JSON 请求，查询接口直接交由处理器完成参数解析和响应映射。
+     *
+     * @return 组织同步路由，挂载于 {@code /api/v1/office/organization}
      */
     @RouterOperations({
         @RouterOperation(

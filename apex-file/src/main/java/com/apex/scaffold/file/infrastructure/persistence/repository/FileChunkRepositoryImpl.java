@@ -52,6 +52,31 @@ public class FileChunkRepositoryImpl implements FileChunkRepository {
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
+    @Override
+    public Mono<FileChunkEntity> saveIfAbsent(FileChunkEntity chunk) {
+        return Mono.fromCallable(() -> {
+                    FileChunkPO po = fileChunkPoConverter.toPo(chunk);
+                    try {
+                        int affected = fileChunkMapper.insert(po);
+                        if (affected != 1) {
+                            throw new IllegalStateException("分片记录保存失败");
+                        }
+                        return fileChunkPoConverter.toEntity(po);
+                    } catch (org.springframework.dao.DuplicateKeyException duplicate) {
+                        FileChunkPO existing = fileChunkMapper.selectOne(ConditionUtil.lambda(FileChunkPO.class)
+                                .eq(FileChunkPO::getFileId, chunk.getFileId())
+                                .eq(FileChunkPO::getChunkIndex, chunk.getChunkIndex())
+                                .eq(FileChunkPO::getDeleted, 0)
+                                .last("LIMIT 1"));
+                        if (existing == null) {
+                            throw duplicate;
+                        }
+                        return fileChunkPoConverter.toEntity(existing);
+                    }
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
     /**
      * 根据所属文件 ID 与分片序号查询分片信息
      *

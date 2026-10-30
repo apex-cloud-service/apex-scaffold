@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
  * <p>提供轻量级工作流引擎的核心功能，包括流程定义管理、流程实例管理和任务管理。
  * 该服务基于 DDD 领域驱动设计，遵循 WebFlux 响应式编程模型。
  *
- * <h2>核心功能</h2>
+ * <h2>职责范围</h2>
  * <ul>
  *   <li><strong>流程定义管理</strong>：创建草稿、编辑、校验、发布、启用/停用与查询</li>
  *   <li><strong>流程实例管理</strong>：启动流程、查询流程状态</li>
@@ -82,7 +82,7 @@ import reactor.core.publisher.Mono;
  *       驳回、回退与委派通过同步事务端口保证多步写入原子性</li>
  * </ul>
  *
- * <h2>注意事项</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>流程定义的 DAG JSON 必须符合 WorkflowNode 和
  *       WorkflowEdge 的格式规范</li>
@@ -206,7 +206,6 @@ public class WorkflowService {
      * 校验流程定义的 DAG 结构。
      *
      * @param id 流程定义ID
-     * @return 校验通过时完成
      */
     public Mono<Void> validateDefinition(Long id) {
         return workflowDefinitionRepository
@@ -377,7 +376,6 @@ public class WorkflowService {
      * @param taskId 任务ID
      * @param approverId 审批人ID
      * @param comment 审批意见
-     * @return 完成结果
      */
     public Mono<Void> completeTask(Long taskId, Long approverId, String comment) {
         log.info("完成任务: taskId={}, approverId={}, comment={}", taskId, approverId, comment);
@@ -419,7 +417,6 @@ public class WorkflowService {
      * @param taskId 任务ID
      * @param approverId 审批人ID
      * @param comment 驳回意见
-     * @return 驳回结果
      */
     public Mono<Void> rejectTask(Long taskId, Long approverId, String comment) {
         log.info("驳回任务: taskId={}, approverId={}, comment={}", taskId, approverId, comment);
@@ -457,7 +454,7 @@ public class WorkflowService {
      *   <li>保留完整的流转记录，确保审计追溯</li>
      * </ul>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code
      * // 将任务回退到"部门经理审批"节点
      * workflowService.rollbackToNode(
@@ -468,7 +465,7 @@ public class WorkflowService {
      * ).block();
      * }</pre>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>目标节点必须是当前任务的前置节点，不允许跨分支回退</li>
      *   <li>回退操作不会删除历史审批记录</li>
@@ -479,7 +476,6 @@ public class WorkflowService {
      * @param targetNodeCode 目标节点编码
      * @param operatorId 操作人ID
      * @param reason 回退原因
-     * @return 回退操作结果
      * @throws IllegalArgumentException 当目标节点不存在或不是前置节点时抛出
      */
     public Mono<Void> rollbackToNode(Long taskId, String targetNodeCode, Long operatorId, String reason) {
@@ -518,7 +514,7 @@ public class WorkflowService {
      *   <li>保留任务的其他属性（状态、创建时间等）</li>
      * </ul>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code
      * // 将任务转办给同事
      * workflowService.transferTask(
@@ -529,7 +525,7 @@ public class WorkflowService {
      * ).block();
      * }</pre>
      *
-     * <h3>与委派的区别</h3>
+     * <p><strong>与委派的区别</strong></p>
      * <ul>
      *   <li><strong>转办</strong>：任务所有权永久转移，新审批人完成后流程继续</li>
      *   <li><strong>委派</strong>：任务所有权临时转移，受托人完成后任务回到原审批人</li>
@@ -539,7 +535,6 @@ public class WorkflowService {
      * @param newAssigneeId 新审批人ID
      * @param operatorId 当前操作人ID
      * @param reason 转办原因
-     * @return 转办操作结果
      * @throws IllegalStateException 当任务已完成或不属于操作人时抛出
      */
     public Mono<Void> transferTask(Long taskId, Long newAssigneeId, Long operatorId, String reason) {
@@ -550,13 +545,12 @@ public class WorkflowService {
                 operatorId,
                 reason);
 
-        return findPendingTaskForOperator(taskId, operatorId, "转办")
-                .flatMap(task -> {
-                    task.setTransferredFrom(operatorId);
-                    task.setAssigneeId(newAssigneeId);
-                    return updatePendingTask(task);
-                })
-                .then();
+        return inTaskTransaction(operations -> {
+            Task task = validatePendingTask(operations.findTask(taskId), operatorId, "转办");
+            task.setTransferredFrom(operatorId);
+            task.setAssigneeId(newAssigneeId);
+            requireOne(operations.updateTask(task), "任务已被其他操作修改");
+        });
     }
 
     /**
@@ -570,7 +564,7 @@ public class WorkflowService {
      *   <li>受托人完成后，原任务自动回到原审批人</li>
      * </ul>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code
      * // 委派任务给下属初审
      * workflowService.delegateTask(
@@ -581,7 +575,7 @@ public class WorkflowService {
      * ).block();
      * }</pre>
      *
-     * <h3>委派流程</h3>
+     * <p><strong>委派流程</strong></p>
      * <ol>
      *   <li>原审批人创建委派任务</li>
      *   <li>受托人收到待办并处理</li>
@@ -593,7 +587,6 @@ public class WorkflowService {
      * @param delegateToId 受托人ID
      * @param operatorId 委托人ID
      * @param reason 委派说明
-     * @return 委派操作结果
      * @throws IllegalStateException 当任务已完成或不属于操作人时抛出
      */
     public Mono<Void> delegateTask(Long taskId, Long delegateToId, Long operatorId, String reason) {
@@ -647,28 +640,6 @@ public class WorkflowService {
                 throw new IllegalStateException("超时任务更新行数异常");
             }
         });
-    }
-
-    /** 按读取版本竞争待办任务；未命中时终止后续实例更新和任务创建。 */
-    private Mono<Integer> updatePendingTask(Task task) {
-        return taskRepository
-                .updateById(task)
-                .flatMap(count -> count == 1 ? Mono.just(count) : Mono.error(new IllegalStateException("任务已被其他操作修改")));
-    }
-
-    /**
-     * 查询并校验操作人所属的待办任务，校验通过后才允许修改。
-     *
-     * @param taskId 任务ID
-     * @param operatorId 操作人ID
-     * @param operation 操作名称
-     * @return 校验通过的任务
-     */
-    private Mono<Task> findPendingTaskForOperator(Long taskId, Long operatorId, String operation) {
-        return taskRepository
-                .findById(taskId)
-                .switchIfEmpty(Mono.error(new IllegalStateException("任务不存在")))
-                .map(task -> validatePendingTask(task, operatorId, operation));
     }
 
     private Task validatePendingTask(Task task, Long operatorId, String operation) {
@@ -753,14 +724,14 @@ public class WorkflowService {
      *   <li>保留流程上下文和历史记录</li>
      * </ul>
      *
-     * <h3>使用场景</h3>
+     * <p><strong>使用场景</strong></p>
      * <ul>
      *   <li>业务数据需要修正，暂时冻结审批流程</li>
      *   <li>发现流程配置错误，需要修复后再继续</li>
      *   <li>审批人长期不在，需要暂停流程等待回归</li>
      * </ul>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code
      * // 挂起流程实例
      * workflowService.suspendInstance(
@@ -773,7 +744,6 @@ public class WorkflowService {
      * @param processInstanceId 流程实例ID
      * @param operatorId 操作人ID
      * @param reason 挂起原因
-     * @return 挂起操作结果
      * @throws IllegalStateException 当流程已完成或已挂起时抛出
      */
     public Mono<Void> suspendInstance(Long processInstanceId, Long operatorId, String reason) {
@@ -806,7 +776,7 @@ public class WorkflowService {
      *   <li>保留挂起期间的所有数据</li>
      * </ul>
      *
-     * <h3>使用示例</h3>
+     * <p><strong>使用示例</strong></p>
      * <pre>{@code
      * // 恢复流程实例
      * workflowService.resumeInstance(
@@ -816,7 +786,7 @@ public class WorkflowService {
      * ).block();
      * }</pre>
      *
-     * <h3>注意事项</h3>
+     * <p><strong>注意事项</strong></p>
      * <ul>
      *   <li>只能恢复处于 SUSPENDED 状态的流程</li>
      *   <li>恢复后待办任务立即可以审批</li>
@@ -826,7 +796,6 @@ public class WorkflowService {
      * @param processInstanceId 流程实例ID
      * @param operatorId 操作人ID
      * @param reason 恢复原因
-     * @return 恢复操作结果
      * @throws IllegalStateException 当流程未挂起时抛出
      */
     public Mono<Void> resumeInstance(Long processInstanceId, Long operatorId, String reason) {

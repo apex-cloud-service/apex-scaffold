@@ -29,10 +29,15 @@ spring:
       #    迁移完成后改为 lb://apex-xxx-service（见迁移方案 §15）。
       routes:
         # ---- 认证域（Phase 2 切为 apex-auth-service） ----
+        # 💡 auth-service 承载 /auth/v1/**、/auth/v2/**（密码找回）、/oauth2/**、/.well-known/**，
+        #    以及认证中心管理面：/api/v1/mfa/**、/api/mfa/**、/api/ip-access-control/**、
+        #    /api/v1/auth/configs/**、/api/v1/auth/audit-logs/**。
+        # ⚠️ /admin-api/v1/auth/**、/admin-api/v1/sso/** 由 system 承载（AuthConfigRouter、SsoAdminRouter），
+        #    不得加入本路由；其余 /api/v1/auth/**（Keycloak OIDC 登录等）由 system-domain 兜底。
         - id: auth-domain
           uri: ${ROUTE_AUTH_URI:http://127.0.0.1:8080}
           predicates:
-            - Path=/api/v1/auth/**,/oauth2/**,/.well-known/**,/admin-api/v1/auth/**,/admin-api/v1/sso/**
+            - Path=/auth/v1/**,/auth/v2/**,/oauth2/**,/.well-known/**,/api/v1/mfa/**,/api/mfa/**,/api/ip-access-control/**,/api/v1/auth/configs/**,/api/v1/auth/audit-logs/**
           filters:
             - name: CircuitBreaker
               args:
@@ -72,7 +77,7 @@ spring:
         - id: office-domain
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v2/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**
+            - Path=/api/v1/office/**,/api/v2/office/**,/api/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
           filters:
             - name: CircuitBreaker
               args:
@@ -83,18 +88,40 @@ spring:
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
-            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/api/v2/files/**,/api/v2/file-shares/**
+            - Path=/api/v1/file/**,/api/v1/files/**,/api/v1/documents/**,/admin-api/v1/documents/**,/admin-api/v1/charts/**,/api/v2/files/**,/api/v2/file-shares/**
           filters:
             - name: CircuitBreaker
               args:
                 name: fileService
                 fallbackUri: forward:/__gateway/fallback
 
-        # ---- 系统域兜底（Phase 6 收敛为 apex-system-service） ----
-        - id: system-domain
-          uri: ${ROUTE_SYSTEM_URI:http://127.0.0.1:8080}
+        # ---- 独立轻量服务：未注册 Nacos，使用固定受信地址 ----
+        # ⚠️ 本文件整表覆盖 routes：job/masking 路由必须在此显式声明，否则一经下发即丢失。
+        - id: job-domain
+          uri: ${ROUTE_JOB_URI:http://127.0.0.1:8095}
           predicates:
-            - Path=/api/v1/**,/admin-api/v1/**,/health,/actuator/**
+            - Path=/admin-api/v1/jobs,/admin-api/v1/jobs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: jobService
+                fallbackUri: forward:/__gateway/fallback
+        - id: masking-domain
+          uri: ${ROUTE_MASKING_URI:http://127.0.0.1:8096}
+          predicates:
+            - Path=/api/v1/masking/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: maskingService
+                fallbackUri: forward:/__gateway/fallback
+
+        # ---- 系统域兜底（Phase 6 收敛为 apex-system-service） ----
+        # 💡 /api/v2/platform/** 为平台租户管理端点（PlatformTenantRouter）。
+        - id: system-domain
+          uri: ${ROUTE_SYSTEM_URI:http://127.0.0.1:8082}
+          predicates:
+            - Path=/api/v1/**,/api/v2/operations/**,/api/v2/platform/**,/admin-api/v1/**,/health,/actuator/**
           filters:
             - name: CircuitBreaker
               args:
@@ -129,6 +156,10 @@ resilience4j:
       fileService:
         base-config: default
       systemService:
+        base-config: default
+      jobService:
+        base-config: default
+      maskingService:
         base-config: default
 
 # ==================== 网关自定义能力 ====================

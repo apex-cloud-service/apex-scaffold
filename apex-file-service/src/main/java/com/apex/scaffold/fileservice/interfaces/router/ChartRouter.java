@@ -14,7 +14,15 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 /**
- * 图表路由，通过处理方法绑定发现 OpenAPI 契约。
+ * 图表管理与渲染数据查询的函数式路由，OpenAPI 契约通过处理方法绑定发现。
+ *
+ * <p>路径前缀 {@code /admin-api/v1/charts} 由 file 服务提供，非 system 服务；
+ * 网关按 {@code file-domain} 规则转发，路径调整时需同步网关配置。
+ *
+ * <p>所有端点均声明 {@code Accept: application/json} 谓词，客户端未声明可接受 JSON 时
+ * 不会匹配到本路由，而是继续落入后续路由或返回 404/406，属于有意约束。
+ * {@code /{id}/data} 用于读取图表渲染数据，与 {@code /{id}} 的元数据查询分离。
+ *
  * @author Apex Team
  * @version 1.3.1
  * @since 1.0.0
@@ -23,8 +31,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class ChartRouter {
     /**
      * 注册图表管理与渲染数据查询路由。
+     *
+     * <p>包含列表/详情查询、创建、更新、删除、状态切换以及渲染数据读取；
+     * 路径参数 {@code id} 为图表主键，具体校验与权限由 {@link ChartHandler} 完成。
+     *
      * @param handler 图表处理器
-     * @return 要求接受 JSON 响应的图表路由
+     * @return 图表路由函数，全部端点要求接受 JSON 响应
      */
     @RouterOperations({
         @RouterOperation(

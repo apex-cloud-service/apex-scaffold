@@ -64,6 +64,30 @@ public class FileShareRepositoryImpl implements FileShareRepository {
 
     /** {@inheritDoc} */
     @Override
+    public Mono<FileSharePage> listByFile(
+            Long fileId, String tenantId, Long creatorId, String status, int page, int size) {
+        return Mono.fromCallable(() -> {
+                    com.baomidou.mybatisplus.extension.plugins.pagination.Page<FileSharePO> request =
+                            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
+                    com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FileSharePO> query =
+                            ConditionUtil.lambda(FileSharePO.class)
+                                    .eq(FileSharePO::getFileId, fileId)
+                                    .eq(FileSharePO::getTenantId, tenantId)
+                                    .eq(FileSharePO::getCreatorId, creatorId)
+                                    .orderByDesc(FileSharePO::getCreateTime);
+                    if (status != null && !status.isBlank()) {
+                        query.eq(FileSharePO::getStatus, status);
+                    }
+                    com.baomidou.mybatisplus.extension.plugins.pagination.Page<FileSharePO> result =
+                            fileShareMapper.selectPage(request, query);
+                    return new FileSharePage(
+                            fileSharePoConverter.toEntityList(result.getRecords()), result.getTotal(), page, size);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Mono<Boolean> markRevoked(Long id, String tenantId, Long creatorId, LocalDateTime now) {
         return Mono.fromCallable(() -> fileShareMapper.update(
                                 null,

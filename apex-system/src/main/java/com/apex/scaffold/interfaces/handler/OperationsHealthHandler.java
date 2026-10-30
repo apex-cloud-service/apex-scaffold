@@ -1,6 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.admin.HealthSnapshotCommand;
+import com.apex.scaffold.application.service.HealthExportService;
 import com.apex.scaffold.application.service.OperationsHealthService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
@@ -69,6 +70,9 @@ public class OperationsHealthHandler extends BaseHandler {
     /** 体检历史应用服务。 */
     private final OperationsHealthService operationsHealthService;
 
+    /** 体检快照异步导出应用服务。 */
+    private final HealthExportService healthExportService;
+
     /**
      * 创建运维体检处理器。
      *
@@ -76,15 +80,18 @@ public class OperationsHealthHandler extends BaseHandler {
      * @param validator Jakarta Bean Validation 校验器
      * @param assembler 体检报告组装器
      * @param operationsHealthService 体检历史应用服务
+     * @param healthExportService 体检快照异步导出应用服务
      */
     public OperationsHealthHandler(
             MessageUtils messageUtils,
             Validator validator,
             HealthReportAssembler assembler,
-            OperationsHealthService operationsHealthService) {
+            OperationsHealthService operationsHealthService,
+            HealthExportService healthExportService) {
         super(messageUtils, validator);
         this.assembler = assembler;
         this.operationsHealthService = operationsHealthService;
+        this.healthExportService = healthExportService;
     }
 
     /**
@@ -262,6 +269,124 @@ public class OperationsHealthHandler extends BaseHandler {
     }
 
     /**
+     * 提交异步导出任务。
+     *
+     * <p>用于记录数超出同步导出上限的场景：提交后立即返回任务标识，
+     * 由后台调度器分页生成 CSV。</p>
+     *
+     * @param request HTTP 请求，查询参数 {@code from}、{@code to}、{@code status}
+     * @return 统一成功响应，data 为任务视图
+     */
+    @RequirePermission("system:operations:health:export:task:create")
+    @Operation(
+            operationId = "operationsHealthSubmitExportTask",
+            summary = "提交体检快照异步导出任务",
+            description = "记录数超过异步导出上限时拒绝；任务由后台生成 CSV，完成后经下载端点获取")
+    @Parameter(
+            name = "from",
+            description = "生成时间下界(ISO 8601)",
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string", format = "date-time"))
+    @Parameter(
+            name = "to",
+            description = "生成时间上界(ISO 8601)",
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string", format = "date-time"))
+    @Parameter(
+            name = "status",
+            description = "总体结论(UP/DEGRADED/DOWN/UNKNOWN)",
+            in = ParameterIn.QUERY,
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "提交成功，返回任务标识"),
+        @ApiResponse(responseCode = "400", description = "时间格式非法、结论取值非法或记录数超过导出上限"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:operations:health:export:task:create权限")
+    })
+    @OperationLog(
+            module = "OperationsHealth",
+            type = OperationLog.OperationType.OTHER,
+            description = "health-export-task-submit",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> submitExportTask(ServerRequest request) {
+        return healthExportService
+                .submit(
+                        parseTime(request, "from"),
+                        parseTime(request, "to"),
+                        request.queryParam("status").orElse(null))
+                .flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 查询异步导出任务状态。
+     *
+     * @param request HTTP 请求，路径参数 {@code id}
+     * @return 统一成功响应，data 为任务视图
+     */
+    @RequirePermission("system:operations:health:export:task:read")
+    @Operation(
+            operationId = "operationsHealthGetExportTask",
+            summary = "查询体检快照异步导出任务",
+            description = "返回任务状态、尝试次数、失败原因与导出记录数；文件内容需经下载端点获取")
+    @Parameter(name = "id", description = "任务ID", in = ParameterIn.PATH, schema = @Schema(type = "integer"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:operations:health:export:task:read权限")
+    })
+    @OperationLog(
+            module = "OperationsHealth",
+            type = OperationLog.OperationType.SELECT,
+            description = "health-export-task-get",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> getExportTask(ServerRequest request) {
+        return healthExportService
+                .findTask(parseId(request))
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "导出任务不存在")))
+                .flatMap(this::buildSuccess);
+    }
+
+    /**
+     * 下载异步导出任务的结果文件。
+     *
+     * @param request HTTP 请求，路径参数 {@code id}
+     * @return CSV 附件响应
+     */
+    @RequirePermission("system:operations:health:export:task:read")
+    @Operation(
+            operationId = "operationsHealthDownloadExportTask",
+            summary = "下载体检快照异步导出结果",
+            description = "仅已完成任务可下载；任务不存在、未完成或跨租户时按对应错误返回")
+    @Parameter(name = "id", description = "任务ID", in = ParameterIn.PATH, schema = @Schema(type = "integer"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "下载成功，返回 CSV 文件流"),
+        @ApiResponse(responseCode = "400", description = "任务尚未完成"),
+        @ApiResponse(responseCode = "404", description = "任务不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要system:operations:health:export:task:read权限")
+    })
+    @OperationLog(
+            module = "OperationsHealth",
+            type = OperationLog.OperationType.SELECT,
+            description = "health-export-task-download",
+            saveRequest = false,
+            saveResponse = false)
+    public Mono<ServerResponse> downloadExportTask(ServerRequest request) {
+        return healthExportService
+                .findDownload(parseId(request))
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "导出任务不存在")))
+                .flatMap(file -> ServerResponse.ok()
+                        .contentType(MediaType.parseMediaType(file.contentType()))
+                        .header(
+                                "Content-Disposition",
+                                ContentDisposition.attachment()
+                                        .filename(file.fileName(), StandardCharsets.UTF_8)
+                                        .build()
+                                        .toString())
+                        .bodyValue(file.content()));
+    }
+
+    /**
      * 查询体检趋势。
      *
      * @param request HTTP 请求，查询参数 {@code from}、{@code to}（ISO 8601）、{@code limit}
@@ -369,6 +494,15 @@ public class OperationsHealthHandler extends BaseHandler {
                     }
                 })
                 .orElse(null);
+    }
+
+    private static Long parseId(ServerRequest request) {
+        String raw = request.pathVariable("id");
+        try {
+            return Long.valueOf(raw);
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "任务ID格式非法: " + raw);
+        }
     }
 
     private static int safePageNum(ServerRequest request) {

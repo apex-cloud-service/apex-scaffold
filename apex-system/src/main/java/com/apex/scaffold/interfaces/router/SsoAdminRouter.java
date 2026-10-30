@@ -36,7 +36,17 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class SsoAdminRouter {
 
-    /** 注册〈SSO 单点登录〉管理路由，涵盖提供商、会话与审计日志管理端点。 */
+    /**
+     * 注册〈SSO 单点登录〉管理路由，涵盖提供商、会话与审计日志管理端点。
+     *
+     * <p>三个处理器分别负责提供商配置、在线会话与审计日志；端点数量多且 OpenAPI 元数据
+     * 以内联 Builder 声明，方法长度超过 PMD 阈值，故抑制 {@code MethodTooLongRule}。
+     *
+     * @param providerHandler SSO 提供商管理处理器
+     * @param sessionHandler SSO 会话管理处理器
+     * @param auditLogHandler SSO 审计日志处理器
+     * @return SSO 管理路由函数，挂载于 {@code /admin-api/v1/sso}
+     */
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/sso/providers",

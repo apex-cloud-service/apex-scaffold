@@ -24,6 +24,13 @@ public interface FileChunkRepository {
     Mono<FileChunkEntity> save(FileChunkEntity chunk);
 
     /**
+     * 原子保存分片；若同一活跃 fileId/chunkIndex 已被其他请求保存，则返回已保存的胜者记录。
+     * @param chunk 待保存分片
+     * @return 本次保存或并发胜出的活跃分片
+     */
+    Mono<FileChunkEntity> saveIfAbsent(FileChunkEntity chunk);
+
+    /**
      * 根据所属文件 ID 与分片序号查询分片信息
      *
      * @param fileId 文件 ID

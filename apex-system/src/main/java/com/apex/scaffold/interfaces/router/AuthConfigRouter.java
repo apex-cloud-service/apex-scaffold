@@ -32,7 +32,15 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class AuthConfigRouter {
 
-    /** 注册〈后台认证授权配置〉管理路由，涵盖 JWT、会话、安全策略、权限同步与 OAuth2 客户端端点。 */
+    /**
+     * 注册〈后台认证授权配置〉管理路由，涵盖 JWT、会话、安全策略、权限同步与 OAuth2 客户端端点。
+     *
+     * <p>端点数量多且 OpenAPI 元数据以内联 Builder 声明，方法长度超过 PMD 阈值，
+     * 因此抑制 {@code MethodTooLongRule}，保持单一路由声明便于与配置项逐项核对。
+     *
+     * @param handler 认证配置处理器
+     * @return 认证配置管理路由函数，挂载于 {@code /admin-api/v1/auth/config}
+     */
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/auth/config/jwt",
