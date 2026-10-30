@@ -99,6 +99,7 @@ API 接口文档、规范和版本管理。
 项目管理、实施计划和需求管理。
 
 - [P0 系统管理](./08-project-management/p0-system-management.md) - 核心系统
+- [交付文档集](./08-project-management/delivery/README.md) - 交付范围、交付物、需求追踪、质量、风险、变更、验收与交接
 - [脚手架审查](./08-project-management/scaffold-review-guide.md) - 代码审查
 - [功能需求](./08-project-management/function-enhancement-requirements.md) - 需求管理
 - [实施计划](./08-project-management/plans/) - 各类实施计划

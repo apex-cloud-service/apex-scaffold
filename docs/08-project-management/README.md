@@ -2,6 +2,7 @@
 
 本目录收录项目的项目管理，按主题维护当前有效文档。
 
+- [交付文档集](./delivery/README.md) - 交付范围与基线、交付物清单、需求追踪、质量计划、风险登记、变更控制、验收方案与交接清单
 - [实施模板](./implementation-templates.md)
 - [阶段交付清单](./phase-2-3-delivery-checklist.md)
 - [标准化总结](./project-standardization-summary.md)

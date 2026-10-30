@@ -254,6 +254,7 @@ mvnd -T4 -B -pl apex-system-service -am test
 | [集成测试指南](docs/06-testing/integration-test-guide.md) | 集成测试环境与操作 |
 | [系统架构](docs/architecture/system-architecture.md) | 架构说明 |
 | [业务流程](docs/architecture/business-flows.md) | 业务流程说明 |
+| [项目交付文档集](docs/08-project-management/delivery/README.md) | 交付范围、交付物、需求追踪、质量、风险、变更、验收与交接 |
 | [微服务验收清单](docs/08-project-management/checklists/microservice-acceptance-checklist.md) | 迁移与验收记录 |
 | [服务增强实施计划](docs/08-project-management/plans/service-enhancement-implementation-plan.md) | 增强范围、依赖边界与验收要求 |
 | [服务增强交付报告](docs/08-project-management/reports/service-enhancement-delivery-report.md) | 文件清单、真实检查结果与运行限制 |
