@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
  * <p>本测试从以下维度保证三份脚本一致且与代码（PO 类）对齐：</p>
  * <ul>
  *   <li>版本链连续且在 MySQL/PostgreSQL 两个方言目录完全一致；</li>
- *   <li>15 张表（8 张 office_* + 7 张 off_*）在两方言中的列集合完全一致（方言差异仅限类型）；</li>
+ *   <li>16 张表（9 张 office_* + 7 张 off_*，含 V5 off_message_delivery 与 V7 office_meeting_room）在两方言中的列集合完全一致（方言差异仅限类型）；</li>
  *   <li>H2 {@code basic-schema.sql} 的表集合与 Flyway 迁移表集合一致；</li>
  *   <li>以代码实现（PO 类）为唯一事实来源：每个持久化字段必然对应迁移脚本中的列
  *       （MyBatis-Plus map-underscore-to-camel-case）。</li>
