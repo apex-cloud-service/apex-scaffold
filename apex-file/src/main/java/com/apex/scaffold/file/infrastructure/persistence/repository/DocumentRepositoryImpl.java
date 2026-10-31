@@ -116,4 +116,28 @@ public class DocumentRepositoryImpl implements DocumentRepository {
                 })
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
+
+    /**
+     * 汇总租户已用存储字节数（方案批次 B5）。
+     *
+     * <p>显式 {@code tenant_id} 条件（不依赖拦截器），SUM 由数据库聚合；
+     * 文档表体量随上传增长，配额校验结果由调用方缓存。
+     */
+    @Override
+    public Mono<Long> sumSizeByTenant(String tenantId) {
+        return Mono.fromCallable(() -> {
+                    var wrapper = new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<
+                            com.apex.scaffold.file.infrastructure.persistence.po.DocumentPO>();
+                    wrapper.select("COALESCE(SUM(file_size), 0) AS used_bytes")
+                            .eq("tenant_id", tenantId)
+                            .eq("deleted", 0);
+                    var rows = documentMapper.selectMaps(wrapper);
+                    if (rows.isEmpty() || rows.get(0) == null) {
+                        return 0L;
+                    }
+                    Object value = rows.get(0).get("used_bytes");
+                    return value == null ? 0L : ((Number) value).longValue();
+                })
+                .subscribeOn(com.apex.scaffold.common.scheduler.BlockingIoSchedulers.jdbc());
+    }
 }

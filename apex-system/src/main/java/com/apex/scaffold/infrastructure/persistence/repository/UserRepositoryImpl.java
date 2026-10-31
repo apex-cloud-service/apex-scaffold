@@ -2,7 +2,9 @@ package com.apex.scaffold.infrastructure.persistence.repository;
 
 import com.apex.scaffold.common.context.DataScopeJdbcBridge;
 import com.apex.scaffold.common.dto.PageResponse;
+import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
+import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
@@ -520,9 +522,19 @@ public class UserRepositoryImpl implements UserRepository {
      */
     @Override
     public Mono<Long> countByCurrentTenant() {
-        return Mono.fromCallable(
-                        () -> userMapper.selectCount(new LambdaQueryWrapper<UserPO>().eq(UserPO::getDeleted, 0)))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        // B5：显式租户条件（不再依赖拦截器注入），配额守卫与 apex.tenant.enabled 开关解耦；
+        // 上下文缺失 fail-closed（FORBIDDEN），与 JdbcTenantScope 语义一致。
+        return Mono.defer(() -> {
+            String tenantId = com.apex.scaffold.common.context.TenantContext.currentTenantId()
+                    .orElse(null);
+            if (tenantId == null || tenantId.isBlank()) {
+                return Mono.error(new BusinessException(ResultCode.FORBIDDEN));
+            }
+            return Mono.fromCallable(() -> userMapper.selectCount(new LambdaQueryWrapper<UserPO>()
+                            .eq(UserPO::getDeleted, 0)
+                            .eq(UserPO::getTenantId, tenantId)))
+                    .subscribeOn(BlockingIoSchedulers.jdbc());
+        });
     }
 
     /**

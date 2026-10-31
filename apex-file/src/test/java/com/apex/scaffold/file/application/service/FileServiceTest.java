@@ -35,6 +35,9 @@ class FileServiceTest {
             context.registerBean(StorageService.class, () -> storage);
             context.registerBean(FileRepository.class, () -> repository);
             context.registerBean(
+                    com.apex.scaffold.file.domain.service.StorageQuotaPort.class,
+                    () -> (tenantCode, incrementBytes) -> Mono.empty());
+            context.registerBean(
                     StorageServiceProvider.class,
                     () -> new StorageServiceProvider(Map.of(StorageType.LOCAL, storage), StorageType.LOCAL));
             context.register(FileService.class);
@@ -54,7 +57,8 @@ class FileServiceTest {
                 "local",
                 "apex",
                 1024,
-                300);
+                300,
+                (code, bytes) -> Mono.empty());
     }
 
     /** @param operation 文件操作 @param <T> 结果类型 @return 带可信身份的订阅链 */

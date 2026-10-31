@@ -43,6 +43,14 @@ public interface DocumentRepository {
     Mono<DocumentEntity> save(DocumentEntity entity);
 
     /**
+     * 汇总租户已用存储字节数（方案批次 B5 存储配额聚合）。
+     *
+     * @param tenantId 租户编码
+     * @return 未删除文档的 file_size 总和（无文档时为 0）
+     */
+    Mono<Long> sumSizeByTenant(String tenantId);
+
+    /**
      * 根据ID查询文档实体。
      *
      * @param id 文档ID

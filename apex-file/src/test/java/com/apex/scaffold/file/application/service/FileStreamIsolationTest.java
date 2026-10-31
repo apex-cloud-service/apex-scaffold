@@ -35,7 +35,8 @@ class FileStreamIsolationTest {
                 "local",
                 "apex",
                 1024,
-                300);
+                300,
+                (code, bytes) -> Mono.empty());
         AtomicBoolean read = new AtomicBoolean();
         AtomicReference<String> thread = new AtomicReference<>();
         InputStream stream = new ByteArrayInputStream(new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff, 0}) {

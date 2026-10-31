@@ -229,6 +229,35 @@ public class TenantEntity extends BaseEntity {
     }
 
     /**
+     * 断言存储配额：当前已用字节数加上增量后不超出 {@code maxStorageMb}（方案批次 B5）。
+     *
+     * <p>软上限口径：先检后写，超限抛 {@link TenantQuotaExceededException}。
+     * 字节按 1MB=1024×1024 向上取整换算为 MB 后交由配额值对象断言（向上取整保证
+     * 不足 1MB 的增量也计入占用）。
+     *
+     * @param currentBytes  当前已用字节数
+     * @param incrementBytes 本次新增字节数
+     * @throws TenantLifecycleException       当租户状态不允许创建业务数据时抛出
+     * @throws TenantQuotaExceededException   当超出存储配额时抛出
+     */
+    public void assertStorageQuota(long currentBytes, long incrementBytes) {
+        if (!canCreateBusinessData()) {
+            throw new TenantLifecycleException(status, "assertStorageQuota");
+        }
+        long currentMb = bytesToCeilMb(currentBytes);
+        long incrementMb = bytesToCeilMb(incrementBytes);
+        quota.assertStorage(currentMb, incrementMb);
+    }
+
+    /** 字节 → 向上取整 MB（0 字节映射 0MB）。 */
+    private static long bytesToCeilMb(long bytes) {
+        if (bytes <= 0) {
+            return 0;
+        }
+        return (bytes + 1024L * 1024L - 1) / (1024L * 1024L);
+    }
+
+    /**
      * 校验当前状态与期望状态一致，否则抛出生命周期异常。
      *
      * @param expected 期望状态

@@ -83,7 +83,8 @@ public class FileService {
             @Value("${storage.default-type:local}") String storageType,
             @Value("${storage.bucket-name:apex}") String bucket,
             @Value("${file.upload.max-size-bytes:10485760}") long maxSize,
-            @Value("${storage.presigned-url-expire-seconds:300}") int expiry) {
+            @Value("${storage.presigned-url-expire-seconds:300}") int expiry,
+            com.apex.scaffold.file.domain.service.StorageQuotaPort storageQuotaPort) {
         this.storageService = storageService;
         this.fileRepository = repository;
         this.provider = provider;
@@ -91,11 +92,15 @@ public class FileService {
         this.defaultBucketName = bucket;
         this.maxFileSize = maxSize;
         this.presignedUrlExpireSeconds = expiry;
+        this.storageQuotaPort = storageQuotaPort;
     }
 
     private final String defaultBucketName;
     private final long maxFileSize;
     private final int presignedUrlExpireSeconds;
+
+    /** 存储配额断言端口（方案 B5；未配置基址时为空实现语义）。 */
+    private final com.apex.scaffold.file.domain.service.StorageQuotaPort storageQuotaPort;
 
     /**
      * 上传文件并返回完整对象定位信息与临时访问地址。
@@ -122,8 +127,14 @@ public class FileService {
         if (fileBytes.length > maxFileSize) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "文件大小超过限制"));
         }
+        // 方案 B5：存储配额前置校验（软上限，配额设施不可用放行；租户取可信上下文）
+        String quotaTenant =
+                com.apex.scaffold.common.context.TenantContext.currentTenantId().orElse(null);
+        Mono<Void> quotaCheck =
+                quotaTenant == null ? Mono.empty() : storageQuotaPort.assertStorageQuota(quotaTenant, fileBytes.length);
         String sanitizedObjectName = sanitizeClientFileName(objectName);
-        return upload(defaultBucketName, sanitizedObjectName, fileBytes, contentType)
+        return quotaCheck
+                .then(Mono.defer(() -> upload(defaultBucketName, sanitizedObjectName, fileBytes, contentType)))
                 .flatMap(storedObjectName -> getUrl(defaultBucketName, storedObjectName)
                         .map(url -> new FileUploadResult(
                                 defaultBucketName,
