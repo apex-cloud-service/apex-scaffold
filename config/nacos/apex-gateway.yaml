@@ -48,7 +48,7 @@ spring:
         - id: workflow-domain
           uri: ${ROUTE_WORKFLOW_URI:http://127.0.0.1:8080}
           predicates:
-            - Path=/api/v1/workflows/**,/api/workflow/**,/admin-api/v1/workflows/**
+            - Path=/api/v1/workflows/**,/api/v2/workflow-definitions/**,/api/workflow/**,/admin-api/v1/workflows/**
           filters:
             - name: CircuitBreaker
               args:

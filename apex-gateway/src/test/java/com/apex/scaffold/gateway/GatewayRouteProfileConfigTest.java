@@ -68,6 +68,9 @@ class GatewayRouteProfileConfigTest {
     /** 系统域兜底路由标识，须显式覆盖体检运营与平台租户接口前缀。 */
     private static final String SYSTEM_ROUTE_ID = "system-domain";
 
+    /** 工作流域路由标识，须显式覆盖流程定义生命周期 v2 前缀。 */
+    private static final String WORKFLOW_ROUTE_ID = "workflow-domain";
+
     /** 任务代理路由标识，整表重定义时易被整表覆盖丢失。 */
     private static final String JOB_ROUTE_ID = "job-domain";
 
@@ -168,6 +171,12 @@ class GatewayRouteProfileConfigTest {
         assertThat(pathPredicateArgs(findRoute(routes, FILE_ROUTE_ID, source)))
                 .withFailMessage("%s：file-domain 须覆盖 /admin-api/v1/charts/** 前缀", source)
                 .contains("/admin-api/v1/charts/**");
+
+        // 工作流域路由必须显式覆盖定义生命周期 v2 前缀（WorkflowDefinitionRouter），
+        // 否则 Nacos 整表重定义或生产配置下定义端点落入 system 兜底后 404。
+        assertThat(pathPredicateArgs(findRoute(routes, WORKFLOW_ROUTE_ID, source)))
+                .withFailMessage("%s：workflow-domain 须覆盖 /api/v2/workflow-definitions/** 前缀", source)
+                .contains("/api/v2/workflow-definitions/**");
 
         // 系统域兜底路由必须显式覆盖 /api/v2/operations/**（体检快照、趋势、导出、租户摘要）
         // 与 /api/v2/platform/**（平台租户管理端点），否则整表重定义后相应端点无显式路由。
