@@ -3,7 +3,6 @@ package com.apex.scaffold.auth.application.service;
 import com.apex.scaffold.auth.domain.model.entity.UserEntity;
 import com.apex.scaffold.auth.domain.repository.UserRepository;
 import com.apex.scaffold.auth.domain.service.TokenService;
-import com.apex.scaffold.contract.client.AuthFeignClient;
 import com.apex.scaffold.contract.dto.internal.TokenValidationDTO;
 import com.apex.scaffold.contract.dto.internal.TokenValidationRequest;
 import io.jsonwebtoken.Claims;
@@ -16,7 +15,7 @@ import reactor.core.publisher.Mono;
 /**
  * 认证中心内部 API 应用服务（迁移方案 Phase 2.3）.
  *
- * <p>对应 {@link AuthFeignClient} 契约的两个内部接口实现，仅供集群内服务直连调用
+ * <p>对应内部契约（/internal/v1/**）的两个接口实现，仅供集群内服务直连调用
  * （经 {@code /internal/v1/**}，不经过网关，网关层强制 403 拒绝）。
  *
  * <h2>职责范围</h2>

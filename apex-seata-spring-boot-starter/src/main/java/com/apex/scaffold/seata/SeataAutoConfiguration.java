@@ -47,6 +47,10 @@ import org.springframework.web.server.WebFilter;
             "com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration"
         })
 @EnableConfigurationProperties(SeataProperties.class)
+// JAR 级裁剪（方案 C1）：消费方排除 seata-all 时以类名字符串守卫，
+// 避免自动配置类加载期 NoClassDefFoundError
+@org.springframework.boot.autoconfigure.condition.ConditionalOnClass(
+        name = "org.apache.seata.spring.annotation.GlobalTransactionScanner")
 @ConditionalOnProperty(prefix = "apex.seata", name = "enabled", havingValue = "true")
 public class SeataAutoConfiguration {
     private static final String DYNAMIC_PRIMARY = "spring.datasource.dynamic.primary";

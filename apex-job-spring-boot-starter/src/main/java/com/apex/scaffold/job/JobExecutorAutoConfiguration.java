@@ -16,6 +16,10 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(JobExecutorProperties.class)
+// JAR 级裁剪（方案 C1）：消费方排除 xxl-job-core 时以类名字符串守卫，
+// 避免自动配置类加载期 NoClassDefFoundError（不能用 XxlJobSpringExecutor.class 引用形式）
+@org.springframework.boot.autoconfigure.condition.ConditionalOnClass(
+        name = "com.xxl.job.core.executor.impl.XxlJobSpringExecutor")
 @ConditionalOnProperty(prefix = "apex.job.executor", name = "enabled", havingValue = "true")
 public class JobExecutorAutoConfiguration {
     private static final String ADDRESS_SEPARATOR = ",";

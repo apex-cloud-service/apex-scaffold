@@ -26,8 +26,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 /**
  * 认证中心内部 API 路由配置（迁移方案 Phase 2.3）.
  *
- * <p>注册 {@code /internal/v1/**} 内部契约路由，对应 {@code apex-api-contract} 中
- * {@link com.apex.scaffold.contract.client.AuthFeignClient} 声明的两个接口：
+ * <p>注册 {@code /internal/v1/**} 内部契约路由，承载两个内部接口：
  * 查询用户权限码、校验存量 Token。该组路由不经网关（网关层对 {@code /internal/v1/**}
  * 强制 403），仅允许集群内服务通过服务发现直连调用，统一返回 {@code Result} 包装体。
  *

@@ -30,12 +30,6 @@
             <artifactId>apex-common</artifactId>
         </dependency>
 
-        <!-- Feign 客户端注解 (@FeignClient) 与 spring-web 注解 (@GetMapping 等) -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

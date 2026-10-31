@@ -11,6 +11,8 @@
         <!-- 使用真实客户端，生命周期由本模块控制，避免上游注解扫描器处理响应式方法。 -->
         <dependency>
             <groupId>org.apache.seata</groupId><artifactId>seata-all</artifactId><version>${seata.version}</version>
+            <!-- optional：basic 档可排除实现 JAR；启用分布式事务时由消费方显式声明 -->
+            <optional>true</optional>
             <exclusions>
                 <exclusion><groupId>org.springframework</groupId><artifactId>spring-webmvc</artifactId></exclusion>
             </exclusions>
