@@ -19,8 +19,11 @@ import java.util.stream.Stream;
  *
  * <p>以项目根为文档根提供 GET/HEAD 静态文件服务：目录优先返回 index.html，
  * 无索引页时生成简易目录清单；路径中的 {@code .} 与 {@code ..} 分量被忽略。
- * 默认仅监听回环地址，不向局域网暴露本地文件；确需局域网访问时由调用方显式
- * 传入绑定地址（如 {@code 0.0.0.0}）。仅用于本地文档浏览，不参与服务运行期装配。
+ * Markdown 文件默认经 {@link MarkdownPageRenderer} 渲染为带 GitHub 风格标题 id 的
+ * HTML 页面（文档内目录锚点可直接点击跳转），请求追加 {@code ?raw} 查询参数时
+ * 仍按 {@code text/plain} 返回源码。默认仅监听回环地址，不向局域网暴露本地文件；
+ * 确需局域网访问时由调用方显式传入绑定地址（如 {@code 0.0.0.0}）。仅用于本地文档浏览，
+ * 不参与服务运行期装配。
  *
  * @author Apex Team
  * @since 1.3.1
@@ -121,7 +124,11 @@ public final class DocSearchServer {
                 return;
             }
             if (Files.isRegularFile(target)) {
-                sendFile(exchange, target);
+                if (isMarkdownFile(target) && !wantsRawSource(exchange)) {
+                    sendRenderedMarkdown(exchange, target);
+                } else {
+                    sendFile(exchange, target);
+                }
                 return;
             }
             sendError(exchange, 404, "File not found");
@@ -155,6 +162,46 @@ public final class DocSearchServer {
                 : "application/octet-stream";
         byte[] body = Files.readAllBytes(file);
         exchange.getResponseHeaders().set("Content-Type", contentType);
+        if ("HEAD".equals(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(200, -1);
+            return;
+        }
+        exchange.sendResponseHeaders(200, body.length == 0 ? -1 : body.length);
+        try (OutputStream out = exchange.getResponseBody()) {
+            out.write(body);
+        }
+    }
+
+    /** 判断文件是否为 Markdown 文档（大小写不敏感）。 */
+    private static boolean isMarkdownFile(Path file) {
+        String name = file.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        return dot > 0 && name.substring(dot + 1).equalsIgnoreCase("md");
+    }
+
+    /** 请求带 {@code ?raw}（可带任意值）查询参数时返回 Markdown 源码而非渲染页面。 */
+    private static boolean wantsRawSource(HttpExchange exchange) {
+        String query = exchange.getRequestURI().getRawQuery();
+        if (query == null || query.isBlank()) {
+            return false;
+        }
+        for (String part : query.split("&")) {
+            String name = part.indexOf('=') >= 0 ? part.substring(0, part.indexOf('=')) : part;
+            if (name.equals("raw")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 将 Markdown 渲染为 HTML 页面返回；HEAD 请求仅返回响应头。 */
+    private static void sendRenderedMarkdown(HttpExchange exchange, Path file) throws IOException {
+        String markdown = Files.readString(file, StandardCharsets.UTF_8);
+        String name = file.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        String page = MarkdownPageRenderer.render(markdown, dot > 0 ? name.substring(0, dot) : name);
+        byte[] body = page.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
         if ("HEAD".equals(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(200, -1);
             return;

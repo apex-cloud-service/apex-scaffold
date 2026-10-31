@@ -22,7 +22,8 @@
         - LocalDeployment：密钥/前置配置校验、TOTP 敏感字段离线迁移包生成与回滚、Compose 配置校验
         - TokenV42Recover：显式离线 MySQL V42 结构恢复（不写 Flyway 历史）
         - DocLinksChecker：全仓 Markdown 本地链接与锚点校验（check-doc-links.sh 的 Java 实现）
-        - DocSearchServer：本地文档静态文件服务（start-doc-search.sh 的 Java 实现，仅监听回环地址）
+        - DocSearchServer：本地文档静态文件服务（start-doc-search.sh 的 Java 实现，仅监听回环地址；
+          Markdown 经 MarkdownPageRenderer 渲染为带 GitHub 风格标题 id 的 HTML，?raw 保留源码）
         - 仅由 scripts/utils/、scripts/ci/check-doc-links.sh 脚本
           与 podman-compose.yml 的 security-key-check 调用；不参与业务服务运行期装配
         - 打包为带依赖的 fat jar：target/local-deployment.jar
@@ -37,6 +38,28 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
+        </dependency>
+
+        <!-- ===== Markdown 渲染（本地文档服务将 .md 渲染为带锚点的 HTML；各构件均无传递依赖） ===== -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>0.24.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-gfm-tables</artifactId>
+            <version>0.24.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-gfm-strikethrough</artifactId>
+            <version>0.24.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark-ext-task-list-items</artifactId>
+            <version>0.24.0</version>
         </dependency>
 
         <!-- ===== 测试依赖 ===== -->

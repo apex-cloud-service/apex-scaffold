@@ -471,36 +471,17 @@ public final class DocLinksChecker {
         return result;
     }
 
+    /**
+     * 由标题源码文本生成 GitHub 风格 slug：先剥离行内链接、HTML 标签并解码实体，
+     * 字符过滤与空格折叠统一交给 {@link GitHubHeadingSlug#of}（与渲染器同一实现）。
+     */
     private static String headingSlug(String title) {
         String value = INLINE_LINK_TEXT.matcher(title).replaceAll("$1");
         value = REFERENCE_LINK_TEXT.matcher(value).replaceAll("$1");
         value = HTML_TAG.matcher(value).replaceAll("");
         value = HtmlEntities.unescape(value).toLowerCase(Locale.ROOT);
         value = BACKSLASH_PUNCT.matcher(value).replaceAll("$1");
-        value = value.replace("`", "").replace("*", "").replace("~", "");
-        StringBuilder sb = new StringBuilder(value.length());
-        value.codePoints().forEach(cp -> {
-            if (cp == ' ' || cp == '-' || cp == '_' || isLetterNumberMark(cp)) {
-                sb.appendCodePoint(cp);
-            }
-        });
-        return sb.toString().replace(" ", "-");
-    }
-
-    /** Unicode 类别属于 L/N/M（字母、数字、组合标记）的码点在 GitHub slug 中保留。 */
-    private static boolean isLetterNumberMark(int codePoint) {
-        int type = Character.getType(codePoint);
-        return type == Character.UPPERCASE_LETTER
-                || type == Character.LOWERCASE_LETTER
-                || type == Character.TITLECASE_LETTER
-                || type == Character.MODIFIER_LETTER
-                || type == Character.OTHER_LETTER
-                || type == Character.DECIMAL_DIGIT_NUMBER
-                || type == Character.LETTER_NUMBER
-                || type == Character.OTHER_NUMBER
-                || type == Character.NON_SPACING_MARK
-                || type == Character.COMBINING_SPACING_MARK
-                || type == Character.ENCLOSING_MARK;
+        return GitHubHeadingSlug.of(value);
     }
 
     /** 宽容解析文本中的起始标签，收集 id 属性与 a 标签的 name 属性值。 */

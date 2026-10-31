@@ -18,7 +18,7 @@ cd /Users/work/apex-scaffold
 ```
 
 脚本会自动:
-- ✅ 检查 Python 环境
+- ✅ 检查 Java 环境
 - ✅ 检测可用端口
 - ✅ 启动 HTTP 服务器
 - ✅ 显示访问地址
@@ -118,8 +118,8 @@ mvnd spring-boot:run -pl apex-interfaces
 
 点击搜索结果中的文档标题:
 - ✅ 在新标签页打开
-- ✅ 显示 Markdown 源文件
-- ✅ 可以下载或复制内容
+- ✅ 自动渲染为 HTML 页面（标题锚点为 GitHub 风格 id，目录、跨文件章节链接均可直接点击跳转）
+- ✅ 在地址后追加 `?raw=1` 可查看 Markdown 源码（如 `./docs/README.md?raw=1`）
 
 ### 4. 快捷键
 
@@ -193,23 +193,16 @@ $JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \
 
 或者使用启动脚本,它会自动检测可用端口。
 
-### Q3: 点击文档链接后显示乱码?
+### Q3: 想看 Markdown 源码怎么办?
 
-**A**: 这是正常的,Markdown 文件的源代码。
+**A**: 文档服务器默认把 `.md` 渲染成带锚点的 HTML 页面，目录与章节链接可直接点击跳转。
+需要查看或复制源码时，在文档地址后追加 `?raw=1`:
 
-**解决方案**:
+```
+http://localhost:8080/docs/03-api/api-routes.md?raw=1
+```
 
-1. **安装 Markdown 浏览器扩展** (推荐):
-   - Chrome: [Markdown Viewer](https://chrome.google.com/webstore/detail/markdown-viewer/ckkdlimhmcjmikdlpkmbgfkaikojcbjk)
-   - Firefox: [Markdown Viewer Webext](https://addons.mozilla.org/zh-CN/firefox/addon/markdown-viewer-webext/)
-
-2. **使用代码编辑器**:
-   - 在 VS Code 中打开 Markdown 文件
-   - 按 `Cmd+Shift+V` (Mac) 或 `Ctrl+Shift+V` (Windows) 预览
-
-3. **使用在线 Markdown 编辑器**:
-   - 复制文档内容
-   - 粘贴到 [StackEdit](https://stackedit.io/) 或 [Dillinger](https://dillinger.io/)
+也可以在编辑器中打开 Markdown 文件后按 `Cmd+Shift+V` (Mac) 或 `Ctrl+Shift+V` (Windows) 预览。
 
 ### Q4: 某些文档找不到?
 
@@ -301,7 +294,10 @@ ls -la /Users/work/apex-scaffold/docs/integration/oauth2/integration-guide.md
 
 ---
 
-**最后更新**: 2026-09-09  
-**文档版本**: v2.0.1  
-**维护团队**: AI Agent + 架构团队  
+**最后更新**: 2026-10-31
+
+**文档版本**: v2.1.0
+
+**维护团队**: AI Agent + 架构团队
+
 **状态**: ✅ 正常使用

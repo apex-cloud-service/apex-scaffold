@@ -71,7 +71,7 @@ mvnd -T4 -B clean verify
 | `apex-masking-service`、两个增强 starter | common |
 | `apex-gateway` | common |
 | `apex-example` | common、domain、infrastructure-cache、infrastructure-integration、system（workflow 仅 test scope） |
-| `apex-tools-deployment` | 无内部依赖；仅 Jackson、SnakeYAML 与 JUnit |
+| `apex-tools-deployment` | 无内部依赖；仅 Jackson、SnakeYAML、CommonMark（本地文档 Markdown 渲染）与 JUnit |
 
 表内省略统一的 `apex-` 前缀。auth-service 对 system、example 对 workflow 的依赖仅为 test scope，不得据此引入生产耦合。新增依赖前检查目标 POM，不要机械套用“所有业务库依赖 infrastructure”的链条。
 
