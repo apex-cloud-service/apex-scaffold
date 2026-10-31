@@ -37,6 +37,16 @@ public class PermissionService {
      */
     private final TenantGuard tenantGuard;
 
+    private final TenantPackageService tenantPackageService;
+
+    /** 当前请求租户编码（无上下文退化平台租户，不裁剪）。 */
+    private Mono<String> currentTenantCode() {
+        return Mono.deferContextual(context -> Mono.justOrEmpty(context.getOrDefault(
+                                com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY, null))
+                        .map(Object::toString))
+                .defaultIfEmpty(com.apex.scaffold.domain.model.entity.TenantPackageEntity.PLATFORM_TENANT_CODE);
+    }
+
     /**
      * 根据用户 ID 获取权限列表
      *
@@ -46,6 +56,20 @@ public class PermissionService {
      * @return 权限列表
      */
     public Mono<List<PermissionEntity>> getPermissionsByUserId(Long userId) {
+        return rawPermissionsByUserId(userId)
+                // B3 套餐裁剪：非平台租户的有效权限 = 角色权限 ∩ 套餐 permission_codes
+                .flatMap(permissions -> currentTenantCode().flatMap(tenantCode -> tenantPackageService
+                        .resolveScope(tenantCode)
+                        .map(scope -> scope.unbounded()
+                                ? permissions
+                                : permissions.stream()
+                                        .filter(p -> scope.allowsPermission(p.getCode()))
+                                        .collect(java.util.stream.Collectors.toList()))))
+                .defaultIfEmpty(java.util.List.of());
+    }
+
+    /** 原始权限解析（统一授权 / 本地仓储，B3 前的既有链路）。 */
+    private Mono<List<PermissionEntity>> rawPermissionsByUserId(Long userId) {
         if (unifiedAuthorizationService != null && unifiedAuthorizationService.enabled()) {
             return unifiedAuthorizationService.permissions(userId);
         }

@@ -35,6 +35,9 @@ class PermissionServiceTest {
     @Mock
     private TenantGuard tenantGuard;
 
+    @Mock
+    private TenantPackageService tenantPackageService;
+
     @InjectMocks
     private PermissionService permissionService;
 
@@ -45,6 +48,10 @@ class PermissionServiceTest {
      */
     @BeforeEach
     void setUp() {
+        // B3 套餐裁剪：缺省桩为全量范围（平台租户口径），既有用例语义保持
+        org.mockito.Mockito.lenient()
+                .when(tenantPackageService.resolveScope(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Mono.just(TenantPackageService.PackageScope.full()));
         permission = new PermissionEntity();
         permission.setId(1L);
         permission.setName("用户管理");

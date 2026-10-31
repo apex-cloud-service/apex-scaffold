@@ -57,6 +57,8 @@ public class MenuService {
      */
     private final TenantGuard tenantGuard;
 
+    private final TenantPackageService tenantPackageService;
+
     /**
      * 查询完整菜单树。
      *
@@ -66,7 +68,49 @@ public class MenuService {
      * @return 菜单树根节点列表
      */
     public Mono<List<MenuDTO>> getMenuTree() {
-        return menuRepository.findAll().map(this::buildTree);
+        // B3 套餐裁剪：非平台租户按套餐 menu_ids 过滤（父链补全保证树完整），平台租户/未绑定不裁剪
+        return tenantContextTenantCode()
+                .flatMap(tenantCode ->
+                        tenantPackageService.resolveScope(tenantCode).map(scope -> scope))
+                .defaultIfEmpty(com.apex.scaffold.application.service.TenantPackageService.PackageScope.full())
+                .flatMap(scope -> menuRepository.findAll().map(entities -> {
+                    if (!scope.unbounded()) {
+                        var byId = new java.util.HashMap<Long, Long>();
+                        entities.forEach(e -> byId.put(e.getId(), e.getParentId()));
+                        var allowed = scope.menuIds() == null ? java.util.Set.<Long>of() : scope.menuIds();
+                        var completed = new java.util.HashSet<>(allowed);
+                        allowed.forEach(id -> {
+                            Long parent = byId.get(id);
+                            int guard = 0;
+                            while (parent != null
+                                    && parent > 0
+                                    && parent != com.apex.scaffold.domain.model.entity.MenuEntity.ROOT_PARENT_ID
+                                    && completed.add(parent)
+                                    && guard++ < 32) {
+                                parent = byId.get(parent);
+                            }
+                        });
+                        entities = entities.stream()
+                                .filter(e -> completed.contains(e.getId()))
+                                .collect(java.util.stream.Collectors.toList());
+                    }
+                    return buildTree(entities);
+                }));
+    }
+
+    /**
+     * 读取当前请求租户编码（无租户上下文时退化为平台租户，不裁剪）。
+     *
+     * @return 当前租户编码
+     */
+    private Mono<String> tenantContextTenantCode() {
+        return Mono.deferContextual(context -> Mono.justOrEmpty(
+                        com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY != null
+                                ? context.getOrDefault(
+                                        com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY, null)
+                                : null))
+                .map(Object::toString)
+                .defaultIfEmpty(com.apex.scaffold.domain.model.entity.TenantPackageEntity.PLATFORM_TENANT_CODE);
     }
 
     /**

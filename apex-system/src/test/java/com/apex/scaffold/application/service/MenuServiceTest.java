@@ -45,6 +45,9 @@ class MenuServiceTest {
     @Mock
     private TenantGuard tenantGuard;
 
+    @Mock
+    private TenantPackageService tenantPackageService;
+
     @InjectMocks
     private MenuService menuService;
 
@@ -65,6 +68,9 @@ class MenuServiceTest {
      */
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+                .when(tenantPackageService.resolveScope(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Mono.just(TenantPackageService.PackageScope.full()));
         directory = MenuEntity.create(0L, "系统管理", 0, "system", "system/index", null, 1);
         directory.setId(1L);
         childMenu = MenuEntity.create(1L, "用户管理", 1, "system/user", "system/user/index", "system:user:list", 1);
