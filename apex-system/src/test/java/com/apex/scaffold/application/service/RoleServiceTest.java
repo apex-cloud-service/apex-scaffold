@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.gateway.RoleDeletionGateway;
 import com.apex.scaffold.domain.model.entity.RoleEntity;
 import com.apex.scaffold.domain.model.entity.UserRoleEntity;
@@ -225,14 +226,20 @@ class RoleServiceTest {
      * 更新{@code role_NotFound}。
      */
     @Test
-    @DisplayName("updateRole - 角色不存在时返回空")
+    @DisplayName("updateRole - 角色不存在或跨租户不可访问时返回 NOT_FOUND（B2 租户化 fail-loud）")
     void updateRole_NotFound() {
         RoleEntity updateRole = new RoleEntity();
         updateRole.setId(999L);
 
         when(roleRepository.findById(999L)).thenReturn(Mono.empty());
 
-        roleService.updateRole(updateRole).as(StepVerifier::create).verifyComplete();
+        roleService
+                .updateRole(updateRole)
+                .as(StepVerifier::create)
+                .expectErrorSatisfies(error -> org.assertj.core.api.Assertions.assertThat(error)
+                        .isInstanceOf(BusinessException.class)
+                        .hasMessageContaining("角色不存在"))
+                .verify();
     }
 
     /**
@@ -262,6 +269,7 @@ class RoleServiceTest {
     @Test
     @DisplayName("assignRoleToUser - 成功为用户分配角色")
     void assignRoleToUser_Success() {
+        when(roleRepository.findById(2L)).thenReturn(Mono.just(role));
         when(userRoleRepository.insert(any(UserRoleEntity.class))).thenReturn(Mono.just(1));
 
         roleService
@@ -276,6 +284,8 @@ class RoleServiceTest {
     @Test
     @DisplayName("assignRoleToUser - 未插入记录返回false")
     void assignRoleToUser_NoRowsInserted() {
+        // B2 租户化：分配前校验角色在本租户可见
+        when(roleRepository.findById(2L)).thenReturn(Mono.just(role));
         when(userRoleRepository.insert(any(UserRoleEntity.class))).thenReturn(Mono.just(0));
 
         roleService

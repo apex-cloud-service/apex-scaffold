@@ -45,12 +45,11 @@ public class DefaultTenantLineHandler implements TenantLineHandler {
     /** 租户列名（与 V14 迁移及各实体 @TableField 保持一致） */
     public static final String TENANT_ID_COLUMN = "tenant_id";
 
-    /** 忽略租户隔离的系统表（全小写，MyBatis-Plus 归一化后匹配） */
+    /** 忽略租户隔离的系统表（全小写，MyBatis-Plus 归一化后匹配）；B2 起角色/角色授权已租户化，不再豁免 */
     private static final Set<String> IGNORE_TABLES = Set.of(
             "sys_menu",
             "sys_permission",
-            "sys_role",
-            "sys_role_permission",
+            "sys_tenant_package",
             "sys_dict",
             "sys_dict_item",
             "sys_dict_type",

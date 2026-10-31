@@ -44,7 +44,9 @@ class DefaultTenantLineHandlerTest {
 
     @Test
     void ignoresOnlyConfiguredSystemTablesCaseInsensitively() {
-        assertThat(handler.ignoreTable("SYS_ROLE")).isTrue();
+        // B2 起 sys_role/sys_role_permission 已租户化，参与行级隔离
+        assertThat(handler.ignoreTable("SYS_ROLE")).isFalse();
+        assertThat(handler.ignoreTable("sys_role_permission")).isFalse();
         assertThat(handler.ignoreTable("sys_config")).isTrue();
         assertThat(handler.ignoreTable("biz_report")).isFalse();
         assertThat(handler.ignoreTable("sys_user")).isFalse();

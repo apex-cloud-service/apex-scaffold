@@ -2,6 +2,8 @@ package com.apex.scaffold.application.service;
 
 import static com.apex.scaffold.common.scheduler.BlockingIoSchedulers.*;
 
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.gateway.RoleDeletionGateway;
 import com.apex.scaffold.domain.model.entity.RoleEntity;
 import com.apex.scaffold.domain.model.entity.UserRoleEntity;
@@ -141,13 +143,17 @@ public class RoleService {
      * @return 已更新的角色实体对象
      */
     public Mono<RoleEntity> updateRole(RoleEntity role) {
-        return roleRepository.findById(role.getId()).flatMap(existingRole -> {
-            existingRole.updateInfo(role.getName(), role.getDescription());
-            return roleRepository.updateById(existingRole).map(rows -> {
-                log.info("更新角色成功，id: {}, code: {}", existingRole.getId(), existingRole.getCode());
-                return existingRole;
-            });
-        });
+        // B2 租户化：findById 已被租户拦截器过滤，空结果即角色不存在或跨租户越权（fail-loud）
+        return roleRepository
+                .findById(role.getId())
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "角色不存在或不可访问")))
+                .flatMap(existingRole -> {
+                    existingRole.updateInfo(role.getName(), role.getDescription());
+                    return roleRepository.updateById(existingRole).map(rows -> {
+                        log.info("更新角色成功，id: {}, code: {}", existingRole.getId(), existingRole.getCode());
+                        return existingRole;
+                    });
+                });
     }
 
     /**
@@ -179,14 +185,20 @@ public class RoleService {
      * @return 分配结果，true-插入成功（rows &gt; 0），false-未插入任何记录
      */
     public Mono<Boolean> assignRoleToUser(Long userId, Long roleId) {
-        UserRoleEntity userRole = new UserRoleEntity();
-        userRole.setUserId(userId);
-        userRole.setRoleId(roleId);
+        // B2 租户化：分配前校验角色在本租户可见，防止向其他租户角色写入孤儿授权行
+        return roleRepository
+                .findById(roleId)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "角色不存在或不可访问")))
+                .flatMap(ignored -> {
+                    UserRoleEntity userRole = new UserRoleEntity();
+                    userRole.setUserId(userId);
+                    userRole.setRoleId(roleId);
 
-        return userRoleRepository.insert(userRole).map(rows -> {
-            log.info("为用户分配角色成功，userId: {}, roleId: {}", userId, roleId);
-            return rows > 0;
-        });
+                    return userRoleRepository.insert(userRole).map(rows -> {
+                        log.info("为用户分配角色成功，userId: {}, roleId: {}", userId, roleId);
+                        return rows > 0;
+                    });
+                });
     }
 
     /**
