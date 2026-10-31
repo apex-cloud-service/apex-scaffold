@@ -56,6 +56,18 @@ class AuthenticationApplicationServiceTest {
     @Mock
     private DomainEventPublisher domainEventPublisher;
 
+    @Mock
+    private TotpService totpService;
+
+    @Mock
+    private SessionService sessionService;
+
+    @Mock
+    private com.apex.scaffold.auth.domain.service.JwtKeyMaterialService jwtKeyMaterialService;
+
+    @Mock
+    private com.apex.scaffold.auth.domain.service.TenantStatusPort tenantStatusPort;
+
     @InjectMocks
     private AuthenticationApplicationService authenticationService;
 
@@ -72,6 +84,19 @@ class AuthenticationApplicationServiceTest {
                 .status(1)
                 .failedLoginAttempts(0)
                 .build();
+
+        // 统一认证收口（A4）：登录链现含 MFA 判定与登出会话终止，缺省桩保持既有用例语义
+        org.mockito.Mockito.lenient()
+                .when(totpService.isEnabled(
+                        org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Mono.just(Boolean.FALSE));
+        org.mockito.Mockito.lenient()
+                .when(sessionService.terminateUserSessions(
+                        org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Mono.empty());
+        org.mockito.Mockito.lenient()
+                .when(tenantStatusPort.validateLoginTenant(org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(Mono.empty());
 
         mockTokenPair = TokenPair.builder()
                 .accessToken("access-token")

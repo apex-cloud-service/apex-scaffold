@@ -6,7 +6,6 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 import com.apex.scaffold.interfaces.handler.OAuth2AuthorizationHandler;
 import com.apex.scaffold.interfaces.handler.OAuth2ClientManagementHandler;
 import com.apex.scaffold.interfaces.handler.OAuth2DiscoveryHandler;
-import com.apex.scaffold.interfaces.handler.OAuth2JwksHandler;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
@@ -47,7 +46,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * @since 1.0.0
  * @see OAuth2AuthorizationHandler
  * @see OAuth2ClientManagementHandler
- * @see OAuth2JwksHandler
  * @see OAuth2DiscoveryHandler
  */
 @SuppressWarnings({"checkstyle:TypeName", "PMD.ClassNamingShouldBeCamelRule"})
@@ -57,11 +55,22 @@ public class OAuth2RouterConfig {
 
     private final OAuth2AuthorizationHandler oauth2Handler;
     private final OAuth2ClientManagementHandler oauth2ClientHandler;
-    private final OAuth2JwksHandler jwksHandler;
     private final OAuth2DiscoveryHandler discoveryHandler;
 
-    /** 注册〈OAuth2 协议端点〉路由，涵盖授权、Token、自省、同意与 JWKS 等端点。 */
+    /**
+     * 注册〈OAuth2 协议端点〉路由（统一认证收口 A5：弃用期）。
+     *
+     * <p>OAuth2 授权服务器已收口到认证中心（RS256 + 聚合 JWKS），本组端点进入弃用周期：
+     * {@code apex.features.system-oauth2-endpoints=false} 即下线；存量客户端迁移完成后
+     * 默认值将翻转为 false 并移除。注意：system 侧 {@code /oauth2/jwks} 空壳端点
+     * （无密钥材料、误导第三方）已随收口直接移除，不再保留过渡实现。
+     */
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            prefix = "apex.features",
+            name = "system-oauth2-endpoints",
+            havingValue = "true",
+            matchIfMissing = true)
     @RouterOperations({
         @RouterOperation(
                 path = "/.well-known/oauth-authorization-server",
@@ -98,11 +107,6 @@ public class OAuth2RouterConfig {
                 method = RequestMethod.POST,
                 beanClass = OAuth2AuthorizationHandler.class,
                 beanMethod = "revokeConsent"),
-        @RouterOperation(
-                path = "/oauth2/jwks",
-                method = RequestMethod.GET,
-                beanClass = OAuth2JwksHandler.class,
-                beanMethod = "jwks")
     })
     public RouterFunction<ServerResponse> oauth2Routes() {
         return route().GET("/.well-known/oauth-authorization-server", discoveryHandler::discovery)
@@ -113,12 +117,16 @@ public class OAuth2RouterConfig {
                 .POST("/oauth2/introspect", oauth2Handler::introspect)
                 .POST("/oauth2/consent", oauth2Handler::consent)
                 .POST("/oauth2/consent/revoke", oauth2Handler::revokeConsent)
-                .GET("/oauth2/jwks", jwksHandler::jwks)
                 .build();
     }
 
     /** 注册〈OAuth2 客户端管理〉管理路由，提供客户端的增删改查与密钥重置端点。 */
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            prefix = "apex.features",
+            name = "system-oauth2-endpoints",
+            havingValue = "true",
+            matchIfMissing = true)
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/oauth2/clients",

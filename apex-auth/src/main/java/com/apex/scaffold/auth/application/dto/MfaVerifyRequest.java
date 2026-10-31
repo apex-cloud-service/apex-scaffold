@@ -31,6 +31,10 @@ public class MfaVerifyRequest {
     @Schema(description = "用户 ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "123")
     private Long userId;
 
+    /** 登录返回的 MFA 挑战凭据（短 TTL RS256 JWT，统一认证收口 A4 二步登录）；与 userId 二选一 */
+    @NotBlank(message = "MFA 挑战凭据不能为空")
+    private String challengeToken;
+
     /**
      * TOTP 验证码（6 位数字）
      *

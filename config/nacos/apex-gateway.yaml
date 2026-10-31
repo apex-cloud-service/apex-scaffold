@@ -177,6 +177,16 @@ apex:
         # - kid: rsa-2026-01
         #   alg: rsa256
         #   public-key-base64: "MIIBIjANBgkqh..."
+      # 统一认证收口（A2）：远程 JWKS 拉取认证中心轮换公钥，同 kid 覆盖静态条目；
+      # 空值表示关闭拉取，仅用上方静态清单与 HMAC 过渡密钥。
+      remote-url: ${JWKS_REMOTE_URL:}
+      remote-refresh-interval-seconds: ${JWKS_REFRESH_INTERVAL_SECONDS:300}
+    # 统一认证收口（A3）：令牌撤销流（认证中心内部撤销增量端点，集群内地址）。
+    revocation:
+      enabled: ${REVOCATION_FEED_ENABLED:false}
+      url: ${REVOCATION_FEED_URL:}
+      pull-interval-seconds: ${REVOCATION_PULL_INTERVAL_SECONDS:15}
+      lookback-seconds: ${REVOCATION_LOOKBACK_SECONDS:7200}
 
     # ==================== 全局限流（Redis 分布式令牌桶） ====================
     # ⚠️ 与 application.yml 保持一致：rules 为列表，本文件一旦下发即整表覆盖本地 rules。

@@ -82,6 +82,56 @@ public class InternalAuthHandler {
     }
 
     /**
+     * 处理「令牌撤销增量流」请求（统一认证收口 A3）.
+     *
+     * <p>查询参数 {@code since} 为撤销时间游标（epoch 毫秒，必填，允许 0 起始），
+     * {@code limit} 为单批上限（可选，默认 500，服务端收敛到 [1, 1000]）。
+     * 响应 {@code data} 为 {@code {revocations:[{jti,revokedAt}], cursor}}，
+     * 游标推进到本批最大撤销时间，供网关周期拉取。
+     *
+     * @param request 当前请求
+     * @return 撤销增量响应（{@code Result<InternalAuthService.TokenRevocationFeed>}）
+     */
+    @OperationLog(
+            module = "InternalAuth",
+            type = OperationLog.OperationType.SELECT,
+            description = "tokenRevocations",
+            saveRequest = false,
+            saveResponse = false)
+    @Operation(
+            operationId = "internalTokenRevocations",
+            summary = "令牌撤销增量流（内部）",
+            description = "集群内服务直连接口，不经网关。按撤销时间游标返回已撤销令牌的 jti 增量，" + "供网关建立本地撤销缓存（登出/踢人/撤权在撤销间隔内于网关生效）")
+    public Mono<ServerResponse> tokenRevocations(ServerRequest request) {
+        long since;
+        try {
+            String raw = request.queryParam("since").orElse(null);
+            if (raw == null || raw.isBlank()) {
+                return error(400, ResultCode.PARAM_ERROR);
+            }
+            since = Long.parseLong(raw);
+            if (since < 0) {
+                return error(400, ResultCode.PARAM_ERROR);
+            }
+        } catch (NumberFormatException invalidSince) {
+            return error(400, ResultCode.PARAM_ERROR);
+        }
+        int limit = 500;
+        String rawLimit = request.queryParam("limit").orElse(null);
+        if (rawLimit != null && !rawLimit.isBlank()) {
+            try {
+                limit = Integer.parseInt(rawLimit);
+            } catch (NumberFormatException invalidLimit) {
+                return error(400, ResultCode.PARAM_ERROR);
+            }
+        }
+        long cursor = since;
+        return service.revocationsSince(cursor, limit)
+                .flatMap(responses::buildSuccessResponse)
+                .onErrorResume(failure -> error(500, ResultCode.ERROR));
+    }
+
+    /**
      * 处理「校验存量 Token」请求.
      *
      * <p>请求体为 {@link TokenValidationRequest}（原始 Token + 可选租户 / 来源）。

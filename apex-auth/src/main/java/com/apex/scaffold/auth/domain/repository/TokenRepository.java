@@ -169,4 +169,18 @@ public interface TokenRepository {
      * @return 删除的Token数量
      */
     Mono<Long> deleteExpiredTokens();
+
+    /**
+     * 增量查询已撤销令牌（撤销流，统一认证收口 A3）。
+     *
+     * <p><b>平台级查询</b>：撤销流面向网关等基础设施消费方，跨租户返回全部已撤销
+     * 令牌的 {@code jti}；这是显式设计的受控平台入口，与租户隔离的业务查询路径
+     * 分离，仅供内部撤销流端点使用。
+     *
+     * @param sinceEpochMillis 撤销时间游标（epoch 毫秒，返回 {@code revoked_at > since} 的记录）
+     * @param limit            单批上限（实现收敛到 [1, 1000]）
+     * @return 撤销增量（按撤销时间升序）
+     */
+    reactor.core.publisher.Flux<com.apex.scaffold.auth.domain.model.TokenRevocation> findRevocationsSince(
+            long sinceEpochMillis, int limit);
 }

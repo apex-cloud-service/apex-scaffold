@@ -12,6 +12,14 @@ apex:
       # 可信反向代理网段（CIDR），逗号分隔；仅直连地址命中这些网段时才采信
       # X-Forwarded-For / X-Real-IP，否则一律使用 TCP 直连地址，防止客户端伪造转发头
       trusted-proxy-cidrs: ${APEX_TRUSTED_PROXY_CIDRS:}
+  tenant-check:
+    # 统一认证收口（A6）：登录前置租户校验（主应用内部租户状态端点）。
+    # 租户中心（主应用）内部基址；空 = 校验跳过（basic/dev 档）。
+    base-url: ${TENANT_CHECK_BASE_URL:}
+    # 判定缓存秒数（正/负结果均缓存）
+    cache-seconds: ${TENANT_CHECK_CACHE_SECONDS:60}
+    # 单次拉取超时（毫秒）
+    timeout-millis: ${TENANT_CHECK_TIMEOUT_MILLIS:3000}
 
 auth-center:
   authorization-reader-user-id: ${AUTH_CENTER_AUTHORIZATION_READER_USER_ID:}

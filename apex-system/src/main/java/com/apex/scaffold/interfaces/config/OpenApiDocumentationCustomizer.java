@@ -567,10 +567,6 @@ final class OpenApiDocumentationCustomizer {
                 addOauthIntrospectionResponses(responses);
                 return true;
             }
-            case "oauth2Jwks" -> {
-                addOauthJwksResponse(responses);
-                return true;
-            }
             case "oauth2Discovery" -> {
                 addOauthDiscoveryResponse(responses);
                 return true;
@@ -638,34 +634,6 @@ final class OpenApiDocumentationCustomizer {
                                         new IntegerSchema().format("int64")),
                                 Set.of("active"))));
         addErrorResponse(responses, "400", "缺少 token，返回 Result 错误");
-    }
-
-    /**
-     * 补充签名密钥元数据的原生响应。
-     *
-     * @param responses 操作响应集合
-     */
-    private void addOauthJwksResponse(ApiResponses responses) {
-        responses.addApiResponse(
-                "200",
-                jsonResponse(
-                        "签名密钥元数据",
-                        objectSchema(
-                                Map.of(
-                                        "keys",
-                                        new ArraySchema()
-                                                .items(objectSchema(
-                                                        Map.of(
-                                                                "kty",
-                                                                new StringSchema(),
-                                                                "kid",
-                                                                new StringSchema(),
-                                                                "alg",
-                                                                new StringSchema(),
-                                                                "use",
-                                                                new StringSchema()),
-                                                        Set.of("kty", "kid", "alg", "use")))),
-                                Set.of("keys"))));
     }
 
     /**

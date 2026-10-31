@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS auth_session (
     device_type VARCHAR(4096),
     device_id VARCHAR(4096),
     device_name VARCHAR(4096),
-    ip_address VARCHAR(4096),
+    client_ip VARCHAR(4096),
     user_agent VARCHAR(4096),
     location VARCHAR(4096),
     status VARCHAR(4096),
@@ -296,3 +296,16 @@ CREATE TABLE IF NOT EXISTS sys_domain_event_outbox (
 );
 CREATE INDEX IF NOT EXISTS idx_outbox_dispatch ON sys_domain_event_outbox(status, next_attempt_at, id);
 CREATE INDEX IF NOT EXISTS idx_outbox_locked ON sys_domain_event_outbox(status, locked_at);
+
+CREATE TABLE IF NOT EXISTS auth_oauth2_consent (
+    id BIGINT PRIMARY KEY,
+    tenant_id VARCHAR(4096),
+    principal VARCHAR(4096),
+    client_id VARCHAR(4096),
+    scope VARCHAR(4096),
+    consented_at TIMESTAMP,
+    version INT DEFAULT 0,
+    deleted INT DEFAULT 0,
+    create_time TIMESTAMP,
+    update_time TIMESTAMP
+);

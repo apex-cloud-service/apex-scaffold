@@ -47,6 +47,11 @@ class PersistenceContractTest {
         Object repository = constructor.newInstance(dependencies);
         Class<?> contract = Class.forName(PREFIX + "domain.repository." + name + "Repository");
         for (Method method : contract.getMethods()) {
+            // 统一认证收口（A3）：撤销流增量查询为显式平台级受控入口（无租户上下文执行），
+            // 不适用"缺租户先拒绝"契约，其平台语义由 tokenRevocationPlatformFeedIsAccessible 单测覆盖。
+            if ("findRevocationsSince".equals(method.getName())) {
+                continue;
+            }
             Object[] args = new Object[method.getParameterCount()];
             for (int index = 0; index < args.length; index++) {
                 Class<?> type = method.getParameterTypes()[index];
@@ -131,5 +136,35 @@ class PersistenceContractTest {
                 .dependOnClassesThat()
                 .resideInAnyPackage(PREFIX + "infrastructure..", "com.baomidou..", "org.apache.ibatis..")
                 .check(new ClassFileImporter().importPackages(PREFIX));
+    }
+
+    /** 统一认证收口（A3）：撤销流平台级查询在有租户上下文缺失时仍可执行（受控平台入口语义）。 */
+    @org.junit.jupiter.api.Test
+    void tokenRevocationPlatformFeedIsAccessible() {
+        var mapper =
+                org.mockito.Mockito.mock(com.apex.scaffold.auth.infrastructure.persistence.mapper.TokenMapper.class);
+        var converter = org.mockito.Mockito.mock(
+                com.apex.scaffold.auth.infrastructure.persistence.converter.TokenConverter.class);
+        var users = org.mockito.Mockito.mock(com.apex.scaffold.auth.infrastructure.persistence.mapper.UserMapper.class);
+        var repository = new com.apex.scaffold.auth.infrastructure.persistence.repository.TokenRepositoryImpl(
+                mapper, converter, users);
+        var po = new com.apex.scaffold.auth.infrastructure.persistence.po.TokenPO();
+        po.setJti("jti-platform-1");
+        po.setRevokedAt(java.time.LocalDateTime.of(2026, 10, 31, 12, 0));
+        org.mockito.Mockito.when(mapper.selectList(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(java.util.List.of(po));
+
+        StepVerifier.create(repository
+                        .findRevocationsSince(0L, 100)
+                        .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant("tenant-a")))
+                .assertNext(revocation -> {
+                    org.assertj.core.api.Assertions.assertThat(revocation.jti()).isEqualTo("jti-platform-1");
+                    org.assertj.core.api.Assertions.assertThat(revocation.revokedAtMillis())
+                            .isEqualTo(java.time.LocalDateTime.of(2026, 10, 31, 12, 0)
+                                    .atZone(java.time.ZoneId.systemDefault())
+                                    .toInstant()
+                                    .toEpochMilli());
+                })
+                .verifyComplete();
     }
 }

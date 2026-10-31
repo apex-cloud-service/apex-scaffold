@@ -349,23 +349,18 @@ class OpenApiDocumentationCustomizerTest {
         }
     }
 
+    /** 统一认证收口（A5）：system 侧 jwks 空壳端点已随收口移除，discovery 原生 JSON 语义保留。 */
     @Test
-    void shouldKeepDiscoveryAndJwksAsNativeJson() {
+    void shouldKeepDiscoveryAsNativeJson() {
         var discovery = operation("oauth2Discovery");
-        var jwks = operation("oauth2Jwks");
         OpenAPI api = new SpringDocConfig().apexOpenApi();
-        api.setPaths(new Paths()
-                .addPathItem("/.well-known/oauth-authorization-server", new PathItem().get(discovery))
-                .addPathItem("/oauth2/jwks", new PathItem().get(jwks)));
+        api.setPaths(new Paths().addPathItem("/.well-known/oauth-authorization-server", new PathItem().get(discovery)));
 
         new SpringDocConfig().openApiCustomizer().customise(api);
 
         assertThat(responseSchema(discovery, "200").getProperties())
                 .containsKeys("issuer", "authorization_endpoint", "token_endpoint", "scopes_supported")
                 .doesNotContainKeys("code", "data");
-        assertThat(responseSchema(jwks, "200").getProperties()).containsOnlyKeys("keys");
-        Schema<?> keys = (Schema<?>) responseSchema(jwks, "200").getProperties().get("keys");
-        assertThat(keys.getItems().getProperties()).containsOnlyKeys("kty", "kid", "alg", "use");
     }
 
     @Test

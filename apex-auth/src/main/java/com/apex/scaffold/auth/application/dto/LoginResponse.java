@@ -50,6 +50,12 @@ public class LoginResponse {
     @Schema(description = "令牌类型", example = "Bearer")
     private String tokenType;
 
+    /** MFA 挑战模式标记：true 表示未签发正式令牌，须携 challengeToken 完成 MFA 二步验证 */
+    private Boolean mfaRequired;
+
+    /** MFA 挑战凭据（短 TTL JWT，purpose=mfa_challenge），仅 mfaRequired=true 时返回 */
+    private String challengeToken;
+
     @Schema(description = "访问令牌有效期（秒）", example = "7200")
     private Long expiresIn;
 }

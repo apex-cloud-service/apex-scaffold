@@ -4,16 +4,14 @@ import com.apex.scaffold.auth.config.OAuth2Properties;
 import com.apex.scaffold.auth.domain.model.entity.AuthConfigEntity;
 import com.apex.scaffold.auth.domain.repository.AuthConfigRepository;
 import com.apex.scaffold.auth.domain.repository.UserRepository;
+import com.apex.scaffold.auth.domain.service.JwtKeyMaterialService;
 import com.apex.scaffold.auth.infrastructure.persistence.repository.OAuth2AuthorizationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -66,6 +64,12 @@ public class OAuth2Service {
     private final OAuth2Properties properties;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
+    private final JwtKeyMaterialService keyMaterialService;
+    private final com.apex.scaffold.auth.infrastructure.persistence.repository.OAuth2ConsentRepository
+            consentRepository;
+
+    /** RFC 6749：用户尚未对客户端授权时的错误码。 */
+    private static final String CONSENT_REQUIRED = "consent_required";
 
     /**
      * 校验OAuth2客户端凭证与认证方式
@@ -155,26 +159,59 @@ public class OAuth2Service {
                 return fail(INVALID_REQUEST);
             }
             String scope = scopes(config, form.get("scope"));
-            String code = randomToken();
-            return authorizationRepository
-                    .insert(
-                            tenant,
-                            UUID.randomUUID().toString(),
-                            clientId,
-                            principal,
-                            AUTHORIZATION_CODE,
-                            scope,
-                            redirect,
-                            challenge,
-                            "S256",
-                            hash(code),
-                            now().plusSeconds(300),
-                            null,
-                            null,
-                            null,
-                            null)
-                    .thenReturn(Map.of(CODE, code, "state", form.getOrDefault("state", ""), REDIRECT_URI, redirect));
+            // 统一认证收口（A5）：用户同意门控——无有效同意记录时返回 consent_required，
+            // 由前端 consent 页（方案 §12）引导用户完成 POST /oauth2/consent 后重试授权。
+            return consentRepository
+                    .hasConsent(tenant, principal, clientId)
+                    .flatMap(consented -> Boolean.TRUE.equals(consented)
+                            ? issueAuthorizationCode(form, clientId, principal, tenant, scope, redirect, challenge)
+                            : fail(CONSENT_REQUIRED));
         });
+    }
+
+    /**
+     * 记录或撤销用户对客户端的授权同意。
+     *
+     * @param tenant    租户
+     * @param principal 已认证主体
+     * @param clientId  客户端 ID
+     * @param scope     授权范围
+     * @param approved  true=同意入库；false=撤销既有同意
+     * @return 完成信号
+     */
+    public Mono<Void> recordConsent(String tenant, String principal, String clientId, String scope, boolean approved) {
+        return approved
+                ? consentRepository.save(tenant, principal, clientId, scope)
+                : consentRepository.revoke(tenant, principal, clientId);
+    }
+
+    private Mono<Map<String, Object>> issueAuthorizationCode(
+            Map<String, String> form,
+            String clientId,
+            String principal,
+            String tenant,
+            String scope,
+            String redirect,
+            String challenge) {
+        String code = randomToken();
+        return authorizationRepository
+                .insert(
+                        tenant,
+                        UUID.randomUUID().toString(),
+                        clientId,
+                        principal,
+                        AUTHORIZATION_CODE,
+                        scope,
+                        redirect,
+                        challenge,
+                        "S256",
+                        hash(code),
+                        now().plusSeconds(300),
+                        null,
+                        null,
+                        null,
+                        null)
+                .thenReturn(Map.of(CODE, code, "state", form.getOrDefault("state", ""), REDIRECT_URI, redirect));
     }
 
     /**
@@ -262,8 +299,7 @@ public class OAuth2Service {
                 .flatMap(row -> {
                     String subject = (String) row.get("principal_name");
                     String scope = (String) row.get("authorized_scopes");
-                    Map<String, Object> response = tokens(subject, clientId, scope, tenant, true);
-                    return authorizationRepository
+                    return tokens(subject, clientId, scope, tenant, true).flatMap(response -> authorizationRepository
                             .exchangeCode(
                                     tenant,
                                     hash(form.get(CODE)),
@@ -275,7 +311,7 @@ public class OAuth2Service {
                                     now().plusSeconds(REFRESH_SECONDS))
                             .filter(Boolean::booleanValue)
                             .switchIfEmpty(fail("invalid_grant"))
-                            .thenReturn(response);
+                            .thenReturn(response));
                 });
     }
 
@@ -307,50 +343,53 @@ public class OAuth2Service {
                             .containsAll(Arrays.asList(scope.split(SCOPE_SEPARATOR)))) {
                         return fail("invalid_scope");
                     }
-                    Map<String, Object> response =
-                            tokens((String) row.get("principal_name"), clientId, scope, tenant, true);
-                    String access = response.get("access_token").toString();
-                    String refresh = response.get(REFRESH_TOKEN).toString();
-                    return authorizationRepository
-                            .rotateRefresh(
-                                    tenant,
-                                    clientId,
-                                    hash(form.get(REFRESH_TOKEN)),
-                                    hash(refresh),
-                                    now().plusSeconds(REFRESH_SECONDS),
-                                    hash(access),
-                                    now().plusSeconds(ACCESS_SECONDS),
-                                    scope)
-                            .filter(Boolean::booleanValue)
-                            .switchIfEmpty(fail("invalid_grant"))
-                            .thenReturn(response);
+                    return tokens((String) row.get("principal_name"), clientId, scope, tenant, true)
+                            .flatMap(response -> {
+                                String access = response.get("access_token").toString();
+                                String refresh = response.get(REFRESH_TOKEN).toString();
+                                return authorizationRepository
+                                        .rotateRefresh(
+                                                tenant,
+                                                clientId,
+                                                hash(form.get(REFRESH_TOKEN)),
+                                                hash(refresh),
+                                                now().plusSeconds(REFRESH_SECONDS),
+                                                hash(access),
+                                                now().plusSeconds(ACCESS_SECONDS),
+                                                scope)
+                                        .filter(Boolean::booleanValue)
+                                        .switchIfEmpty(fail("invalid_grant"))
+                                        .thenReturn(response);
+                            });
                 });
     }
 
     private Mono<Map<String, Object>> issue(
             JsonNode config, String clientId, String subject, String requestedScope, String grant, String tenant) {
         String scope = scopes(config, requestedScope);
-        Map<String, Object> response = tokens(subject, clientId, scope, tenant, !"client_credentials".equals(grant));
-        String access = response.get("access_token").toString();
-        String refresh = (String) response.get(REFRESH_TOKEN);
-        return authorizationRepository
-                .insert(
-                        tenant,
-                        UUID.randomUUID().toString(),
-                        clientId,
-                        subject,
-                        grant,
-                        scope,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        hash(access),
-                        now().plusSeconds(ACCESS_SECONDS),
-                        refresh == null ? null : hash(refresh),
-                        refresh == null ? null : now().plusSeconds(REFRESH_SECONDS))
-                .thenReturn(response);
+        boolean withRefresh = !"client_credentials".equals(grant);
+        return tokens(subject, clientId, scope, tenant, withRefresh).flatMap(response -> {
+            String access = response.get("access_token").toString();
+            String refresh = (String) response.get(REFRESH_TOKEN);
+            return authorizationRepository
+                    .insert(
+                            tenant,
+                            UUID.randomUUID().toString(),
+                            clientId,
+                            subject,
+                            grant,
+                            scope,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            hash(access),
+                            now().plusSeconds(ACCESS_SECONDS),
+                            refresh == null ? null : hash(refresh),
+                            refresh == null ? null : now().plusSeconds(REFRESH_SECONDS))
+                    .thenReturn(response);
+        });
     }
 
     private Mono<JsonNode> client(String id, String secret, String tenant) {
@@ -406,34 +445,60 @@ public class OAuth2Service {
         return false;
     }
 
-    private Map<String, Object> tokens(String subject, String clientId, String scope, String tenant, boolean refresh) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("access_token", jwt(subject, clientId, scope, tenant, "access", ACCESS_SECONDS));
-        result.put("token_type", "Bearer");
-        result.put("expires_in", ACCESS_SECONDS);
-        if (refresh) {
-            result.put(REFRESH_TOKEN, jwt(subject, clientId, scope, tenant, REFRESH, REFRESH_SECONDS));
-        }
-        result.put("scope", scope);
-        return result;
+    /**
+     * 组装令牌响应体：access（必发）与 refresh（按需）经统一密钥服务串行签发。
+     *
+     * <p>统一认证收口（A2）：签名密钥由 {@link JwtKeyMaterialService} 提供（Redis 轮换
+     * RSA，header 携带 {@code kid}），与登录令牌共用同一密钥家族；配置注入的
+     * {@code auth-center.oauth2.*} 静态密钥仅在过渡期用于回退验签。
+     *
+     * @param subject 令牌主体
+     * @param clientId 客户端标识
+     * @param scope 授权范围
+     * @param tenant 租户标识
+     * @param refresh 是否同时签发刷新令牌
+     * @return OAuth2 令牌响应体
+     */
+    private Mono<Map<String, Object>> tokens(
+            String subject, String clientId, String scope, String tenant, boolean refresh) {
+        Mono<String> access = jwt(subject, clientId, scope, tenant, "access", ACCESS_SECONDS);
+        Mono<String> refreshToken =
+                refresh ? jwt(subject, clientId, scope, tenant, REFRESH, REFRESH_SECONDS) : Mono.just("");
+        return Mono.zip(access, refreshToken).map(tuple -> {
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("access_token", tuple.getT1());
+            result.put("token_type", "Bearer");
+            result.put("expires_in", ACCESS_SECONDS);
+            if (refresh) {
+                result.put(REFRESH_TOKEN, tuple.getT2());
+            }
+            result.put("scope", scope);
+            return result;
+        });
     }
 
-    private String jwt(String subject, String clientId, String scope, String tenant, String type, long seconds) {
-        Instant instant = Instant.now();
-        return Jwts.builder()
-                .setHeaderParam("kid", properties.getKeyId())
-                .setId(UUID.randomUUID().toString())
-                .setIssuer(properties.getIssuer())
-                .setSubject(subject)
-                .setAudience(clientId)
-                .claim(CLIENT_ID, clientId)
-                .claim("tenant_id", tenant)
-                .claim("token_use", type)
-                .claim("scope", scope)
-                .setIssuedAt(java.util.Date.from(instant))
-                .setExpiration(java.util.Date.from(instant.plusSeconds(seconds)))
-                .signWith(metadataService.signingKey(), SignatureAlgorithm.RS256)
-                .compact();
+    /**
+     * 签发 OAuth2 令牌：claims 携带 {@code iss}/{@code aud}/{@code jti} 与业务声明，
+     * {@code kid} 头与标准时间声明由统一密钥服务写入。
+     *
+     * @param subject 令牌主体
+     * @param clientId 客户端标识
+     * @param scope 授权范围
+     * @param tenant 租户标识
+     * @param type 令牌用途（access / refresh）
+     * @param seconds 有效期（秒）
+     * @return 紧凑型 JWT
+     */
+    private Mono<String> jwt(String subject, String clientId, String scope, String tenant, String type, long seconds) {
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("iss", properties.getIssuer());
+        claims.put("aud", clientId);
+        claims.put("jti", UUID.randomUUID().toString());
+        claims.put(CLIENT_ID, clientId);
+        claims.put("tenant_id", tenant);
+        claims.put("token_use", type);
+        claims.put("scope", scope);
+        return keyMaterialService.sign(subject, claims, seconds * 1000);
     }
 
     private static boolean revoked(Map<String, Object> row) {

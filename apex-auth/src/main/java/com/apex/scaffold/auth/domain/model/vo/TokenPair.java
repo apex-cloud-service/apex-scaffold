@@ -25,6 +25,9 @@ public class TokenPair {
      */
     private String accessToken;
 
+    /** 访问令牌持久化记录 ID（auth_token.id），供会话登记关联 */
+    private Long accessTokenId;
+
     /**
      * 刷新令牌
      */

@@ -173,6 +173,43 @@ public class InternalAuthRouter {
                                                                             implementation =
                                                                                     com.apex.scaffold.common.result
                                                                                             .Result.class)))
+                                })),
+        @RouterOperation(
+                path = "/internal/v1/tokens/revocations",
+                method = RequestMethod.GET,
+                beanClass = InternalAuthHandler.class,
+                beanMethod = "tokenRevocations",
+                operation =
+                        @Operation(
+                                operationId = "internalTokenRevocations",
+                                summary = "令牌撤销增量流（内部）",
+                                description = "内部契约接口，不经网关。按撤销时间游标返回已撤销令牌的 jti 增量"
+                                        + "（统一认证收口 A3），供网关建立本地撤销缓存；查询参数 since 必填、"
+                                        + "limit 可选（默认 500）。",
+                                tags = {"内部契约"},
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Result 封装的撤销增量与下一游标",
+                                            content =
+                                                    @Content(
+                                                            mediaType = "application/json",
+                                                            schema =
+                                                                    @Schema(
+                                                                            implementation =
+                                                                                    com.apex.scaffold.common.result
+                                                                                            .Result.class))),
+                                    @ApiResponse(
+                                            responseCode = "400",
+                                            description = "游标缺失或非法",
+                                            content =
+                                                    @Content(
+                                                            mediaType = "application/json",
+                                                            schema =
+                                                                    @Schema(
+                                                                            implementation =
+                                                                                    com.apex.scaffold.common.result
+                                                                                            .Result.class)))
                                 }))
     })
     public RouterFunction<ServerResponse> internalAuthRoutes(InternalAuthHandler handler) {
@@ -185,6 +222,7 @@ public class InternalAuthRouter {
                         "/internal/v1/tokens/validate",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
                         handler::validateToken)
+                .GET("/internal/v1/tokens/revocations", handler::tokenRevocations)
                 .build();
     }
 

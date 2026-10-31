@@ -158,6 +158,41 @@ public class OAuthEndpointHandler {
     }
 
     /**
+     * 处理 {@code POST /oauth2/consent} 端点（统一认证收口 A5）。
+     *
+     * <p>用户对客户端的授权同意/拒绝：{@code decision=approve} 时按三元键
+     * (tenant, principal, client_id) 记录同意，authorize 后续重试即可发码；
+     * 其他取值视为拒绝（撤销既有同意记录）。要求请求携带已认证用户主体。
+     *
+     * <p>表单参数：{@code client_id}（必填）、{@code scope}（可选）、
+     * {@code decision}（approve / deny，默认 deny——拒绝优先）。
+     *
+     * @param request 当前请求
+     * @return 同意结果响应（{@code {consented: true|false}}）
+     */
+    public Mono<ServerResponse> consent(ServerRequest request) {
+        return request.principal()
+                .flatMap(principal -> Mono.deferContextual(context -> {
+                    String tenant = context.get(com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY);
+                    return request.body(org.springframework.web.reactive.function.BodyExtractors.toFormData())
+                            .flatMap(formData -> {
+                                String clientId = formData.getFirst(CLIENT_ID);
+                                if (clientId == null || clientId.isBlank()) {
+                                    return error(400, "invalid_request");
+                                }
+                                String scope = formData.getFirst("scope");
+                                boolean approved = "approve".equalsIgnoreCase(formData.getFirst("decision"));
+                                return service.recordConsent(tenant, principal.getName(), clientId, scope, approved)
+                                        .then(Mono.defer(() -> approved
+                                                ? ServerResponse.ok().bodyValue(java.util.Map.of("consented", true))
+                                                : ServerResponse.ok().bodyValue(java.util.Map.of("consented", false))));
+                            });
+                }))
+                .switchIfEmpty(error(UNAUTHORIZED, "access_denied"))
+                .onErrorResume(OAuthException.class, exception -> error(400, exception.getMessage()));
+    }
+
+    /**
      * 声明授权端点的七项查询参数及 S256 PKCE 约束。
      *
      * <p>显式指定字符串模型，避免函数式端点缺少可推导的 Java 参数时生成空 schema。

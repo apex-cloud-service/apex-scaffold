@@ -311,6 +311,22 @@ apex:
       #       alg: rsa256
       #       public-key-base64: "MIIBIjANBgkqh..."
       ks: []
+      # 统一认证收口（A2）：远程 JWKS 拉取（认证中心 /.well-known/jwks.json 完整地址）。
+      # 非空时网关周期拉取认证中心轮换公钥并合并进密钥缓存（同 kid 覆盖静态条目，
+      # hmac-legacy 不受影响）；为空时仅使用 ks 静态清单与 HMAC 过渡密钥。
+      remote-url: ${JWKS_REMOTE_URL:}
+      # 远程 JWKS 拉取间隔（秒，下限 30）；认证中心密钥轮换后最迟在此时间内生效。
+      remote-refresh-interval-seconds: ${JWKS_REFRESH_INTERVAL_SECONDS:300}
+    # 统一认证收口（A3）：令牌撤销流——周期拉取认证中心撤销增量，本地缓存 jti 撤销集，
+    # 验签通过但命中撤销集的令牌收敛为 401（登出/踢人在撤销间隔内于网关生效）。
+    revocation:
+      enabled: ${REVOCATION_FEED_ENABLED:false}
+      # 认证中心撤销流端点（GET /internal/v1/tokens/revocations）完整地址；空 = 不拉取。
+      url: ${REVOCATION_FEED_URL:}
+      # 拉取间隔（秒，下限 5）；撤销生效时延上限 ≈ 间隔 + 一次请求时长。
+      pull-interval-seconds: ${REVOCATION_PULL_INTERVAL_SECONDS:15}
+      # 启动游标回看窗口（秒）：重启补拉窗口，默认覆盖 2 小时访问令牌全生命周期。
+      lookback-seconds: ${REVOCATION_LOOKBACK_SECONDS:7200}
     # 访问日志持久化（Task 4，结构化访问日志异步落库）
     access-log:
       # 落库总开关（关闭时仅保留控制台文件日志）

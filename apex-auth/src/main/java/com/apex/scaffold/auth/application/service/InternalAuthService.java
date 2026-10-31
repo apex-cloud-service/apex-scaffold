@@ -75,6 +75,41 @@ public class InternalAuthService {
     /** JWT 密钥材料服务（读取 claims 中的 accountId / clientType，用于校验快照富化） */
     private final com.apex.scaffold.auth.domain.service.JwtKeyMaterialService jwtKeyMaterialService;
 
+    /** Token 仓储（撤销流增量查询，平台级受控入口） */
+    private final com.apex.scaffold.auth.domain.repository.TokenRepository tokenRepository;
+
+    /** 撤销流响应体：增量记录 + 下一游标。 */
+    public record TokenRevocationFeed(java.util.List<Entry> revocations, long cursor) {
+
+        /** 单条撤销记录。 */
+        public record Entry(String jti, long revokedAt) {}
+    }
+
+    /**
+     * 增量查询已撤销令牌（撤销流，统一认证收口 A3）。
+     *
+     * <p>网关按 {@code cursor} 周期拉取并在本地缓存 {@code jti} 撤销集；
+     * 游标推进到本批最大撤销时间，空批时游标保持不变。
+     *
+     * @param sinceEpochMillis 撤销时间游标（epoch 毫秒）
+     * @param limit            单批上限（仓储侧收敛到 [1, 1000]）
+     * @return 撤销增量与下一游标
+     */
+    public Mono<TokenRevocationFeed> revocationsSince(long sinceEpochMillis, int limit) {
+        return tokenRepository
+                .findRevocationsSince(sinceEpochMillis, limit)
+                .collectList()
+                .map(list -> {
+                    long cursor = sinceEpochMillis;
+                    java.util.List<TokenRevocationFeed.Entry> entries = new java.util.ArrayList<>(list.size());
+                    for (com.apex.scaffold.auth.domain.model.TokenRevocation revocation : list) {
+                        cursor = Math.max(cursor, revocation.revokedAtMillis());
+                        entries.add(new TokenRevocationFeed.Entry(revocation.jti(), revocation.revokedAtMillis()));
+                    }
+                    return new TokenRevocationFeed(entries, cursor);
+                });
+    }
+
     /**
      * 查询指定账户（统一账户 ID）在指定租户下的实时权限编码列表.
      *

@@ -49,8 +49,12 @@ class InternalAuthServiceTest {
         authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
         tokenService = mock(TokenService.class);
         jwtKeyMaterialService = mock(JwtKeyMaterialService.class);
-        service =
-                new InternalAuthService(userRepository, authorizationQueryService, tokenService, jwtKeyMaterialService);
+        service = new InternalAuthService(
+                userRepository,
+                authorizationQueryService,
+                tokenService,
+                jwtKeyMaterialService,
+                org.mockito.Mockito.mock(com.apex.scaffold.auth.domain.repository.TokenRepository.class));
     }
 
     @Nested

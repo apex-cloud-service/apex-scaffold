@@ -21,12 +21,26 @@
 # ============================================================
 apex:
   features:
-    auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}
+    # 统一授权默认开启（批次 A7）：认证中心权限快照 + ≤30s 缓存 + 本地 RBAC 降级
+    auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:true}
   auth-center-permission:
     base-url: ${APEX_AUTH_CENTER_BASE_URL:}
     access-token: ${APEX_AUTH_CENTER_ACCESS_TOKEN:}
     cache-seconds: ${APEX_AUTH_CENTER_CACHE_SECONDS:0}
     mappings: []
+  system:
+    jwt-center:
+      # 统一认证收口（A1/A2）：主应用验签认证中心 RS256 令牌的公钥来源。
+      # 认证中心验签公钥静态清单（kid → X509 DER Base64），仅作 JWKS 拉取不可用时的兜底；
+      # 生产推荐配置 apex.jwks.remote-url 自动拉取（轮换公钥最迟一个刷新周期内生效）。
+      public-keys: {}
+      # 主应用自有令牌仍为 HS256 签发，迁入统一密钥体系前不得关闭。
+      legacy-hmac-enabled: true
+  jwks:
+    # 共享 JWKS 拉取地址（认证中心 /.well-known/jwks.json）；空 = 拉取关闭，仅用静态公钥兜底。
+    remote-url: ${JWKS_REMOTE_URL:}
+    # 公钥缓存刷新间隔（秒）；认证中心密钥轮换后最迟在此时间内生效。
+    refresh-interval-seconds: ${JWKS_REFRESH_INTERVAL_SECONDS:300}
   office:
     enabled: ${APEX_OFFICE_ENABLED:false}
     login-tenant-id: ${APEX_OFFICE_LOGIN_TENANT_ID:}

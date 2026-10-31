@@ -202,6 +202,11 @@ public class AuthenticationRouter {
                         "/auth/v1/refresh",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
                         authenticationHandler::refreshToken)
+                // 统一认证收口（A4）：MFA 二步验证，挑战凭据 + 验证码交换正式令牌
+                .POST(
+                        "/auth/v1/mfa/verify",
+                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                        authenticationHandler::verifyMfa)
                 .build();
     }
 }

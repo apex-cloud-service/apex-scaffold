@@ -71,6 +71,8 @@ public class OauthEndpointRouter {
     public RouterFunction<ServerResponse> oauth2EndpointRoutes(OAuthEndpointHandler handler) {
         return RouterFunctions.route()
                 .GET("/oauth2/authorize", handler::authorize)
+                // 统一认证收口（A5）：用户授权同意/拒绝端点（authorize 返回 consent_required 后引导）
+                .POST("/oauth2/consent", handler::consent)
                 .build();
     }
 

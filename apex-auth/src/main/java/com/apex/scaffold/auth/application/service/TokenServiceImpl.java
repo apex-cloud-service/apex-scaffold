@@ -162,12 +162,15 @@ public class TokenServiceImpl implements TokenService {
 
                                 return tokenRepository
                                         .save(accessTokenEntity)
-                                        .then(tokenRepository.save(refreshTokenEntity))
-                                        .flatMap(savedRefreshToken -> auditService
+                                        .flatMap(savedAccessToken -> tokenRepository
+                                                .save(refreshTokenEntity)
+                                                .thenReturn(savedAccessToken))
+                                        .flatMap(savedAccessToken -> auditService
                                                 .logTokenIssued(userId, tenantId, clientIp, deviceId, "ACCESS+REFRESH")
                                                 .thenReturn(TokenPair.builder()
                                                         .accessToken(accessToken)
                                                         .refreshToken(refreshToken)
+                                                        .accessTokenId(savedAccessToken.getId())
                                                         .expiresIn(ACCESS_TOKEN_EXPIRE_MS / 1000)
                                                         .tokenType("Bearer")
                                                         .build()));

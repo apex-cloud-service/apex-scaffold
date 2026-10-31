@@ -127,6 +127,36 @@ public class AuthenticationHandler {
             description = "login",
             saveRequest = false,
             saveResponse = false)
+    /**
+     * MFA 二步验证（统一认证收口 A4）：以挑战凭据 + TOTP 验证码交换正式令牌。
+     *
+     * <p>请求体为 {@link com.apex.scaffold.auth.application.dto.MfaVerifyRequest}；
+     * 成功返回与登录同构的 {@code LoginResponse}（正式令牌），挑战凭据无效或验证码
+     * 错误按 401 处理。
+     *
+     * @param request 当前请求
+     * @return 登录响应（正式令牌）
+     */
+    public Mono<ServerResponse> verifyMfa(ServerRequest request) {
+        String clientIp = request.remoteAddress()
+                .map(addr -> addr.getAddress().getHostAddress())
+                .orElse("unknown");
+
+        return request.bodyToMono(com.apex.scaffold.auth.application.dto.MfaVerifyRequest.class)
+                .flatMap(verifyRequest -> authenticationService.verifyMfaChallenge(
+                        verifyRequest.getChallengeToken(), verifyRequest.getCode(), clientIp))
+                .flatMap(loginResponse -> ServerResponse.ok().bodyValue(loginResponse))
+                .onErrorResume(error -> {
+                    if (error instanceof BusinessException) {
+                        BusinessException be = (BusinessException) error;
+                        return ServerResponse.status(be.getCode() == ResultCode.UNAUTHORIZED.getCode() ? 401 : 403)
+                                .bodyValue(be.getMessage());
+                    }
+                    log.error("登录处理异常: {}", error.toString(), error);
+                    return ServerResponse.status(500).bodyValue("系统错误");
+                });
+    }
+
     public Mono<ServerResponse> login(ServerRequest request) {
         String clientIp = request.remoteAddress()
                 .map(addr -> addr.getAddress().getHostAddress())
@@ -141,6 +171,7 @@ public class AuthenticationHandler {
                         return ServerResponse.status(be.getCode() == ResultCode.UNAUTHORIZED.getCode() ? 401 : 403)
                                 .bodyValue(be.getMessage());
                     }
+                    log.error("MFA 二步验证处理异常: {}", error.toString(), error);
                     return ServerResponse.status(500).bodyValue("系统错误");
                 });
     }
