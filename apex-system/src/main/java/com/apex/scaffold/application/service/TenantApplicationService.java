@@ -208,13 +208,18 @@ public class TenantApplicationService {
     /**
      * 校验租户是否可创建业务数据。
      *
+     * <p>到期与状态停用分别给出可区分的错误消息：已配置有效期且当前时间已越过
+     * 有效期的租户提示续期，状态类拒绝维持既有提示。
+     *
      * @param tenantCode 租户编码
      * @throws BusinessException 当租户不存在或不可创建业务数据时抛出
      */
     public Mono<Void> assertCanCreateBusinessData(String tenantCode) {
         return requireByCode(tenantCode).flatMap(entity -> {
             if (!entity.canCreateBusinessData()) {
-                return Mono.error(new BusinessException(ResultCode.TENANT_ILLEGAL_TRANSITION, "租户当前状态不允许创建业务数据"));
+                return Mono.error(new BusinessException(
+                        ResultCode.TENANT_ILLEGAL_TRANSITION,
+                        entity.expired() ? "租户已过有效期，续期后才能创建业务数据" : "租户当前状态不允许创建业务数据"));
             }
             return Mono.empty();
         });

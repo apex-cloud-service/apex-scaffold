@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.apex.scaffold.domain.model.exception.TenantLifecycleException;
 import com.apex.scaffold.domain.model.exception.TenantQuotaExceededException;
 import com.apex.scaffold.domain.model.valueobject.TenantQuota;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,55 @@ class TenantEntityTest {
         void shouldRejectBlankCode() {
             assertThatThrownBy(() -> TenantEntity.create(" ", TENANT_NAME, ADMIN_ID, defaultQuota()))
                     .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("有效期与业务写入门禁")
+    class ExpireTests {
+
+        @Test
+        @DisplayName("未配置有效期的租户视为长期有效，可创建业务数据")
+        void shouldAllowBusinessDataWhenExpireTimeAbsent() {
+            TenantEntity tenant = activeTenant();
+
+            assertThat(tenant.expired()).isFalse();
+            assertThat(tenant.canCreateBusinessData()).isTrue();
+        }
+
+        @Test
+        @DisplayName("状态正常但已过有效期的租户拒绝创建业务数据")
+        void shouldRejectBusinessDataWhenExpired() {
+            TenantEntity tenant = activeTenant();
+            tenant.setExpireTime(LocalDateTime.now().minusMinutes(1));
+
+            assertThat(tenant.expired()).isTrue();
+            assertThat(tenant.getStatus()).isEqualTo(TenantEntity.TenantStatus.ACTIVE);
+            assertThat(tenant.canCreateBusinessData()).isFalse();
+        }
+
+        @Test
+        @DisplayName("有效期未到的租户可创建业务数据，续期后自动恢复")
+        void shouldAllowBusinessDataWhenRenewed() {
+            TenantEntity tenant = activeTenant();
+            tenant.setExpireTime(LocalDateTime.now().minusMinutes(1));
+            assertThat(tenant.canCreateBusinessData()).isFalse();
+
+            tenant.setExpireTime(LocalDateTime.now().plusMinutes(1));
+
+            assertThat(tenant.expired()).isFalse();
+            assertThat(tenant.canCreateBusinessData()).isTrue();
+        }
+
+        @Test
+        @DisplayName("过期不影响状态机迁移：停用过期租户仍走既有约束")
+        void shouldKeepLifecycleRulesForExpiredTenant() {
+            TenantEntity tenant = activeTenant();
+            tenant.setExpireTime(LocalDateTime.now().minusMinutes(1));
+
+            tenant.disable();
+
+            assertThat(tenant.getStatus()).isEqualTo(TenantEntity.TenantStatus.DISABLED);
         }
     }
 

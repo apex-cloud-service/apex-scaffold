@@ -107,13 +107,27 @@ public class TenantEntity extends BaseEntity {
     /**
      * 领域行为：判断当前租户是否可创建业务数据。
      *
-     * <p>仅 {@link TenantStatus#ACTIVE} 状态允许创建新业务数据，
-     * 停用、冻结、注销和归档状态均拒绝。</p>
+     * <p>仅 {@link TenantStatus#ACTIVE} 且未过有效期的租户允许创建新业务数据，
+     * 停用、冻结、注销和归档状态均拒绝；已配置有效期且当前时间已越过有效期的租户，
+     * 即使状态仍为 ACTIVE 也拒绝，续期（回写 {@code expireTime}）后自动恢复。
      *
      * @return true-可创建业务数据，false-不可创建
      */
     public boolean canCreateBusinessData() {
-        return status == TenantStatus.ACTIVE;
+        return status == TenantStatus.ACTIVE && !expired();
+    }
+
+    /**
+     * 领域行为：判断当前租户是否已过有效期。
+     *
+     * <p>有效期为 {@code null} 表示长期有效；已配置有效期的租户在当前时间晚于
+     * {@code expireTime} 后视为过期。到期只阻止新增业务数据与配额增长，
+     * 不隐式改变租户状态，也不自动清理既有数据。
+     *
+     * @return true-已过期，false-未过期或长期有效
+     */
+    public boolean expired() {
+        return expireTime != null && expireTime.isBefore(LocalDateTime.now());
     }
 
     /**
