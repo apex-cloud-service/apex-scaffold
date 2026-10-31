@@ -651,15 +651,15 @@ apex-api-contract新增AccountRef、TenantMembershipSnapshot、AuthorizationSnap
 | 机会点 | 方案章节 | 模块/关键文件 | 测试场景 | 关联验收 | 当前状态 |
 | --- | --- | --- | --- | --- | --- |
 | O-BASE | 42.5、42.7 | workflow/office/system监控与路由修复 | T14起始前置 | A02/A06 | 已实施，87项定向测试通过（42.7） |
-| O01 自助密码找回 | 42.3、42.20 | auth、auth-service（后端已实施） | T14 | A02 | 邮箱与短信恢复链路均已实施：申请/校验/确认三端点、精确匿名白名单、限流与尝试次数、令牌撤销；短信走创蓝模板发送，未配置凭据时在发起 HTTP 前失败；独立前端恢复页未实施 |
-| O02 租户管理界面 | 42.3、42.20 | system（后端已实施，界面在前端项目） | T15 | A07 | 平台租户管理入口已实施：目录/开通/详情/状态动作/配额，tenant:read/create/lifecycle/quota 权限；用户创建、管理端建号与注册票据签发前已接入租户状态/配额断言，其余写链覆盖见 42.20，界面未核查 |
-| O03 流程定义生命周期 | 42.3、42.8–42.14、42.20 | workflow、workflow-service（部分已实施） | T16 | A05/A06 | 生命周期、图校验、发布、最小执行闭环与权限码已实施，T16 除设计器往返外均有测试证据；可视化设计器未实施 |
-| O04 三通道统一收件箱 | 42.3、42.22 | office、office-service（后端已实施） | T17 | A06 | 收件箱聚合已实施：off_message_delivery 投递记录表（V5 双方言）、增量游标收件箱与投递查询两端点、recordDelivery 白名单与归属校验、事件 SCHEMA_VERSION；第三方平台真实收取与多实例广播未实施 |
-| O05 文件分享链接 | 42.3、42.21 | file、file-service（后端已实施） | T18 | A05 | 限时只读分享已实施：创建/撤销/匿名兑换/代理下载四端点、token 仅存 SHA-256 摘要、过期/撤销/删文件/租户停用拒绝兑换；限流依赖网关 Sentinel 规则，独立前端分享交互未实施 |
-| O06 办公同步向导 | 42.3 | office、office-service（O06a 后端已实施） | T19 | A06/A07 | 同步向导后端已实施（42.23）：镜像幂等、任务复用与分页失败恢复、可信租户与权限码接线、v2 网关路由；真实 system 用户 ID 映射未实施 |
-| O06b 会议室资源管理 | 42.3、42.25 | office（后端已实施） | T20 | A06/A07 | 资源 CRUD 与预订/取消、并发占用裁决、跨租户隔离、代订分权已实施（42.25）；第三方日历同步补偿与 `/range`、`/my`、`/upcoming` 完整口径见 42.25 缺口，完整 T20 未达成 |
-| O07 管理员体检报告 | 42.3、42.26、42.29 | system（后端已实施） | T21 | A08 | 即时可解释体检报告（O07a，42.26）与历史快照/趋势/CSV 导出/租户侧摘要（O07b，42.29）已实施；定时留存、保留期清理与真实多实例验证未实施 |
-| O08 代码生成器向导 | 42.3、42.27 | system（后端已实施） | T22 | A09 | 模板目录、预检、预览与安全产物已实施（42.27），版本/摘要变更重验与越租户产物防护口径见 42.27；异步生成进度（O08b）已实施（42.31） |
+| O01 自助密码找回 | 42.3、42.20 | auth、auth-service（后端已实施） | T14 | A02 | 邮箱与短信恢复链路均已实施：申请/校验/确认三端点、精确匿名白名单、限流与尝试次数、令牌撤销；短信走创蓝模板发送，未配置凭据时在发起 HTTP 前失败；独立前端恢复页已实施（`/password-recovery`，登录页弹窗保留）；handler 级集成测试已补齐（42.33，9 项） |
+| O02 租户管理界面 | 42.3、42.20 | system（后端已实施，界面在前端项目） | T15 | A07 | 平台租户管理入口已实施：目录/开通/详情/状态动作/配额，tenant:read/create/lifecycle/quota 权限；用户创建、管理端建号与注册票据签发前已接入租户状态/配额断言，其余写链覆盖见 42.20；前端界面已核查存在，按钮权限绑定已补齐（42.33） |
+| O03 流程定义生命周期 | 42.3、42.8–42.14、42.20 | workflow、workflow-service（部分已实施） | T16 | A05/A06 | 生命周期、图校验、发布、最小执行闭环与权限码已实施，T16 除设计器往返外均有测试证据；可视化设计器未实施；42.28 保留的 position 解析吞整图问题已修复（42.33） |
+| O04 三通道统一收件箱 | 42.3、42.22 | office、office-service（后端已实施） | T17 | A06 | 收件箱聚合已实施：off_message_delivery 投递记录表（V5 双方言）、增量游标收件箱与投递查询两端点、recordDelivery 白名单与归属校验、事件 SCHEMA_VERSION；前端已补游标 API 封装与投递记录抽屉（42.33）；第三方平台真实收取与多实例广播未实施 |
+| O05 文件分享链接 | 42.3、42.21 | file、file-service（后端已实施） | T18 | A05 | 限时只读分享已实施：创建/撤销/匿名兑换/代理下载四端点、token 仅存 SHA-256 摘要、过期/撤销/删文件/租户停用拒绝兑换；限流依赖网关 Sentinel 规则；前端登录态分享管理页已有，匿名兑换独立页 `/share` 已实施（42.33） |
+| O06 办公同步向导 | 42.3 | office、office-service（O06a 后端已实施） | T19 | A06/A07 | 同步向导后端已实施（42.23）：镜像幂等、任务复用与分页失败恢复、可信租户与权限码接线、v2 网关路由；真实 system 用户 ID 映射已实施（42.24） |
+| O06b 会议室资源管理 | 42.3、42.25 | office（后端已实施） | T20 | A06/A07 | 资源 CRUD 与预订/取消、并发占用裁决、跨租户隔离、代订分权已实施（42.25），前端会议室页面已存在；第三方日历同步补偿与 `/range`、`/my`、`/upcoming` 完整口径见 42.25 缺口，完整 T20 未达成 |
+| O07 管理员体检报告 | 42.3、42.26、42.29 | system（后端已实施） | T21 | A08 | 即时可解释体检报告（O07a，42.26）与历史快照/趋势/CSV 导出/租户侧摘要（O07b，42.29）已实施；定时留存、保留期清理、签名校验与异步导出已实施（42.30）；前端租户摘要消费已补齐（42.33）；真实多实例验证未实施 |
+| O08 代码生成器向导 | 42.3、42.27 | system（后端已实施） | T22 | A09 | 模板目录、预检、预览与安全产物已实施（42.27），异步生成进度（O08b）已实施（42.31）；42.31 记录的静态缺口 a–h 已修复、产物清单端点已补齐（42.33）；前端向导与异步任务交互已实施（42.33） |
 
 “已实施”状态的依据为第42.7–42.29节记录的真实构建/测试执行结果（本次评审已核实对应关键类文件真实存在，见第1节评审轮次说明）；“未实施”项为方案设计阶段产出，进入实施须经本次或后续批准，不构成既成事实。
 
@@ -1403,3 +1403,51 @@ O03b 的可视化图编辑界面属于独立管理后台项目，本仓不生成
 **已知保留**：Nacos 的 auth-domain 路由 id 与基础/生产配置（auth-service）不一致，测试已兼容；限流规则 `/api/v1/auth/**` 为路径级匹配，与路由归属解耦，不受本次调整影响；`/internal/v1/**`（auth 内部接口）按既有约定不经网关暴露，未新增路由；本轮未做前端联调验证，仅静态核对路由与 Router 字面路径一致。
 
 **验证**：`mvnd -T4 -B -pl apex-gateway test` 通过，`GatewayRouteProfileConfigTest` 3 项（`application.yml`、`application-prod.yml`、`config/nacos/apex-gateway.yaml` 各一）Failures 0 / Errors 0；随后在固定 JDK 21.0.13.0+9-tem 与 mvnd 2.0.0-rc-3 环境执行 `mvnd -T4 -B clean verify`，反应堆全模块 `BUILD SUCCESS`。全仓结果覆盖执行时整个工作区，不等同于真实 Nacos 发布、生产部署或前端联调；未验证项按本节保留。
+
+### 42.33 需求评审与缺口收口：前端对齐、O08b 静态缺口修复与到期门禁（2026-10-31）
+
+> 本节记录用户 2026-10-31 指令「评审确认方案文档中所有需求是否已实现、补齐遗漏、修复错误实现、需要时在前端项目同步实现、同步完成文档/配置/测试代码/测试报告、代码按规范补齐 Javadoc」的评审结论与实施内容。评审对后端四个方向与前端项目做只读核对；修复仅覆盖可代码收口的明确缺口，P2–P5 深水区不做虚构推进。
+
+**评审结论（以当前工作区源码为准）**：
+
+- R01 构建基线已落地：`.sdkmanrc` 固定 `21.0.13.0+9-tem` 与 mvnd `2.0.0-rc-3`，根 POM `java.version=21`，CI/容器/部署脚本同基线；第 1 节状态行中「Java 21 未切换」为过时表述，实际以本节与第 3.4 节为准。
+- 42.20–42.32 记录的 O01–O08 后端实现经逐项核对与文档声称一致（含迁移版本、权限种子、菜单种子与前端页面组件路径 9/9 可达）。
+- 42.31 记录的生成器异步链 9 条静态缺口（a–i）修复前**全部保持原状**；42.32 网关收口已落地，但新发现 Nacos `workflow-domain` 路由缺 `/api/v2/workflow-definitions/**`（契约测试当时未覆盖 workflow 路径）。
+- 另发现一个方案文档未记录的缺陷：三条调度器链路（生成器任务、体检导出、体检保留期清理）仅用 `contextWrite` 传播 Reactor Context，未按项目既有模式以 `TenantContext.withTenant(Mono)` 桥接执行线程 ThreadLocal；企业档（`apex.tenant.enabled=true`）开启租户拦截器时，任务表 SQL 会因 ThreadLocal 租户缺失被 `DefaultTenantLineHandler` 拒绝，且跨租户 `DISTINCT tenant_id` 扫描本身不可执行。
+- R02–R7 深水区（`tenant_member` 模型与个人租户建档、授权快照/版本与 grant∪deny 合成引擎、资源注册表、标准 OAuth2/OIDC Provider 完整闭环、租户状态机向 PENDING/SUSPENDED/EXPIRED/CLOSING/CLOSED 扩展）仍属 P2–P5 规划，未实施；17.2 口径不变，不因本节而自动达成。
+
+**后端修复**（全部新增/修改代码按仓库 Javadoc 规范补充类/方法/字段级注释）：
+
+1. **O08b 生成器异步链**（对应 42.31 缺口 a–h；i 为历史迁移注释，按 AGENTS 不改已执行迁移，继续保留）：
+   - RUNNING 过期候选补 `attempts < maxAttempts` 条件（findNextCandidate）；
+   - `updateProgress`/`markCompleted`/`markFailed` 全部限定 `locked_by`，进度回写同时刷新 `locked_at` 充当租约心跳；0 行更新即作为「停止处理」信号；
+   - 调度器认领成功后按主键重读任务实体再执行，不使用候选内存快照；
+   - `renewLease` 以新增 `LeaseGuard` 接口接入执行链：任务入口、每单元渲染写盘前、生成历史落库前复检执行权——取消在首次写盘前即可感知，接管后旧执行者不再写历史与产物批次；
+   - 执行期重算输入摘要比对 `previewToken`（漂移即失败，不生成与预览不一致的产物）、以实际可读表重算 `totalCount` 并回写；
+   - 字段映射 JSON 损坏抛 `PARAM_ERROR` 快速失败（空值仍按空列表，兼容历史行）；
+   - 保留期清理改为「先查主键、后按主键物理删除」两步实现，替代 MySQL 专属 `DELETE ... ORDER BY ... LIMIT`，双方言可移植；
+   - 调度器租户发现改为读取白名单表 `sys_tenant` 逐租户执行；生成器、体检导出、体检保留期三条调度器链路补 `TenantContext.withTenant(Mono)` 桥接；
+   - 新增 `GET /admin-api/v1/generator/tasks/{id}/artifacts`（权限 `system:generator:task:read`，跨租户任务统一 404），补齐异步「提交→轮询→列产物→下载」闭环；
+   - `preview`/`execute` 与异步提交的空字段映射摘要统一规范化（`null` 与 `[]` 折叠为同一表示），修复省略字段映射时预览令牌在提交阶段必然失配的问题。
+2. **租户到期门禁**：`TenantEntity.canCreateBusinessData()` 纳入 `expireTime` 断言（新增 `expired()` 领域行为，null 视为长期有效），`assertCanCreateBusinessData` 按到期/状态区分错误消息；到期不改变状态机、不清理既有数据。
+3. **WorkflowQueryService.convertToNodeDTO 容错**：`position` 类型漂移仅降级该字段并记录告警、`timeoutHours` 按数值提取（容忍 Long/Double），单节点异常不再把整张定义图收敛为空。
+4. **OfficeFlywayMigrationTest 类头注释** 15 表更正为 16 表（对齐 V7 后实际断言，注释滞后修复）。
+5. **网关**：Nacos `workflow-domain` 路由补 `/api/v2/workflow-definitions/**`；`GatewayRouteProfileConfigTest` 扩展对三个配置源的 workflow 路径断言。
+6. **O01 handler 级集成测试补齐**：新增 `PasswordRecoveryHandlerIntegrationTest` 9 项（三端点成功响应形态、限流 429、短信不可用 503、业务校验 400、确认撤销 PENDING 如实返回、OpenAPI 契约、联系方式与客户端 IP 透传）。
+
+**前端对齐**（apex-admin-web 独立仓库，Vue 3 + Element Plus）：
+
+1. 生成器页面新增「生成向导」页签：模板目录、结构预检、纯渲染预览（含片段）、提交异步任务（携带预览令牌与覆盖开关）、进度对话框（2 秒轮询、取消、产物清单与按产物 ID 下载）；`api/generator.ts` 补齐向导与异步任务封装并更新头部契约注释。
+2. 运维健康页新增「租户摘要」页签，消费既有 `GET /tenant-health-summary` 封装（此前无页面消费）。
+3. 站内信：`api/message.ts` 新增游标增量收件箱（`afterId`/`limit`）与投递记录封装；消息页新增「投递记录」抽屉（渠道/状态/送达时间/失败原因）。
+4. 新增匿名可访问页面：`/share` 文件分享兑换页（token 兑换与代理下载，支持 `?token=` 直达）与 `/password-recovery` 独立密码找回页（三步流程），注册为 public 静态路由。
+5. 租户管理页按钮补齐 `v-permission` 绑定（`tenant:create`/`tenant:lifecycle`/`tenant:quota`）。
+6. 前端测试：新增 `generator.test.ts` 7 项、`message.test.ts` 扩展 3 项（游标收件箱默认/自定义参数、投递记录路径）。
+
+**验证**（固定构建环境 JDK 21.0.13.0+9-tem、mvnd 2.0.0-rc-3）：
+
+- 定向单测/集成测试：`GeneratorTaskServiceTest` 13 项、`GeneratorWizardServiceTest` 18 项（含异步链 lease/令牌漂移/损坏映射新用例）、`GeneratorTaskSchedulerTest` 9 项（含认领后重读与空租户过滤）、`GeneratorServicesTest` 4 项、`GenTaskMapperSqlContractTest` 4 项（新增，反射锁定注解 SQL 契约）、`TenantEntityTest` 20 项（含新增 ExpireTests 4 项）、`PasswordRecoveryHandlerIntegrationTest` 9 项（新增）、`GatewayRouteProfileConfigTest` 3 项、`OfficeFlywayMigrationTest` 5 项，均 Failures 0 / Errors 0；`apex-workflow` 全模块 164 项测试通过（含 convertToNodeDTO 容错改动）。
+- 受影响反应堆 `mvnd -T4 -B -pl apex-gateway,apex-system,apex-workflow,apex-office-service,apex-auth-service -am verify` 于 2026-10-31 12:30:37 +08:00 自然退出 0、BUILD SUCCESS，20 个反应堆项目全部成功；Surefire 汇总 4944 项（失败 0 / 错误 0 / 跳过 10，均为 messaging 真实 MQ 环境门控）、Failsafe 汇总 227 项（失败 0 / 错误 0 / 跳过 10：system 5 项含真实 Seata TC 门控、messaging 3 项真实 MQ、office-service 1 项、auth-service 1 项 TLS 门控），Spotless、PMD/p3c 与 JaCoCo 检查通过；`git diff --check` 无空白错误。
+- 前端：`vue-tsc --noEmit` 通过、Vitest 44/44 通过、`npm run build` 成功。
+
+**本轮缺口明确保留**：`V71` 迁移注释配置前缀与实际不符（不改已执行迁移）；生成器任务长租约依赖每单元心跳，单元间无更细粒度续租；认领后重读与终态写入仍存在极小的接管竞态窗口（以 `locked_by` 条件兜底，不保证历史表零重复）；三条调度器链路的租户桥接修复未在真实企业档 MySQL/PostgreSQL 环境联调验证；前端新页签/新页面的浏览器交互与真实后端联调未执行；O03 可视化设计器、O04 第三方平台真实收取与多实例广播、O06b 第三方日历同步补偿仍为未实施项。本轮不是全仓 clean verify 承诺，未执行部署或生产验证。
