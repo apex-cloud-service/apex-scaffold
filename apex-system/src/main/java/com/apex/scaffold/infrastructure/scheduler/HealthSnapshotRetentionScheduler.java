@@ -51,6 +51,10 @@ public class HealthSnapshotRetentionScheduler {
 
     /**
      * 定时清理超出保留期的体检快照与导出结果。
+     *
+     * <p>快照与导出任务表均属租户数据，链路以 {@link TenantContext#withTenant(Mono)}
+     * 桥接执行线程租户上下文：{@code contextWrite} 单独使用只传播 Reactor Context，
+     * 企业档开启租户拦截器时 JDBC 线程仍缺少 ThreadLocal 租户，SQL 会被拒绝执行。
      */
     @Scheduled(cron = "${apex.operations.health.retention.cron:0 30 3 * * ?}")
     @ManagedJob
@@ -63,10 +67,13 @@ public class HealthSnapshotRetentionScheduler {
         String resolvedTenant = tenant.trim();
         OperationsHealthProperties.Retention retention = properties.getRetention();
         LocalDateTime before = LocalDateTime.now().minusDays(retention.getDays());
-        Mono.defer(() -> operationsHealthService.purge(before, retention.getBatchSize(), retention.getMaxBatches()))
+        Mono<Void> chain = Mono.defer(() ->
+                        operationsHealthService.purge(before, retention.getBatchSize(), retention.getMaxBatches()))
                 .doOnNext(deleted -> log.info("体检快照清理完成: tenant={}, deleted={}", resolvedTenant, deleted))
                 .then(Mono.defer(() -> exportService.purgeExpired(resolvedTenant, EXPORT_PURGE_LIMIT)))
                 .doOnNext(deleted -> log.info("体检导出结果清理完成: tenant={}, deleted={}", resolvedTenant, deleted))
+                .then();
+        TenantContext.withTenant(chain)
                 .contextWrite(TenantContext.withTenant(resolvedTenant))
                 .subscribe(
                         null,

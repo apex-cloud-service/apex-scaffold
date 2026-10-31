@@ -149,6 +149,10 @@ public class GeneratorAdminRouter {
                 beanClass = CodeGeneratorHandler.class,
                 beanMethod = "taskProgress"),
         @RouterOperation(
+                path = "/admin-api/v1/generator/tasks/{id}/artifacts",
+                beanClass = CodeGeneratorHandler.class,
+                beanMethod = "taskArtifacts"),
+        @RouterOperation(
                 path = "/admin-api/v1/generator/tasks/{id}/cancel",
                 beanClass = CodeGeneratorHandler.class,
                 beanMethod = "cancelTask")
@@ -399,6 +403,18 @@ public class GeneratorAdminRouter {
                                 .in(ParameterIn.PATH)
                                 .required(true))
                         .response(responseBuilder().responseCode("200").description("查询成功")))
+                .GET(
+                        "/admin-api/v1/generator/tasks/{id}/artifacts",
+                        generatorHandler::taskArtifacts,
+                        ops -> ops.operationId("listGenTaskArtifacts")
+                                .summary("查询代码生成任务产物清单")
+                                .tag("代码生成器管理")
+                                .parameter(parameterBuilder()
+                                        .name("id")
+                                        .description("任务ID")
+                                        .in(ParameterIn.PATH)
+                                        .required(true))
+                                .response(responseBuilder().responseCode("200").description("查询成功")))
                 .POST("/admin-api/v1/generator/tasks/{id}/cancel", generatorHandler::cancelTask, ops -> ops.operationId(
                                 "cancelGenTask")
                         .summary("取消代码生成任务")

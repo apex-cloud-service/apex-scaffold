@@ -81,8 +81,9 @@ import reactor.core.publisher.Mono;
  *   <li>在线引擎 {@link CodeTemplateEngine} 只支持 {@code ${variable}} 变量替换，不支持 FreeMarker 指令；
  *       独立模块 {@code apex-generator} 的 FreeMarker 模板不能直接混用，需先改写语法。
  *       模板目录通过 {@code engine=VARIABLE_SUBSTITUTION} 显式声明该能力</li>
- *   <li>异步任务复用同一套渲染与写盘逻辑，按「表 × 模板」逐项推进进度，每完成一项回写一次，
- *       取消由进度监听回调返回 {@code false} 感知并中止后续单元</li>
+ *   <li>异步任务复用同一套渲染与写盘逻辑，按「表 × 模板」逐项推进进度，每完成一项回写一次；
+ *       取消由进度监听回调返回 {@code false} 感知并中止后续单元，租约守卫在渲染写盘与
+ *       历史落库前复检执行权，保证已取消或被接管的任务不再产生写入</li>
  * </ul>
  *
  * @author Apex Team
@@ -242,7 +243,7 @@ public class GeneratorWizardService {
                 .flatMap(context -> validateExecutable(context).flatMap(datasource -> renderAll(
                                 context, request.getFieldMappings())
                         .map(rendered -> {
-                            String inputDigest = inputDigest(context, request.getFieldMappings());
+                            String inputDigest = inputDigest(context, normalizeMappings(request.getFieldMappings()));
                             List<GenPreviewResponse.GenPreviewFileDTO> files =
                                     rendered.stream().map(this::toPreviewFile).toList();
                             return GenPreviewResponse.builder()
@@ -268,7 +269,7 @@ public class GeneratorWizardService {
     public Mono<GenExecutionResponse> execute(GenGenerateRequest request, Long operatorId) {
         return tenantId().flatMap(tenant -> loadContext(request.getConfigId(), tenant)
                 .flatMap(context -> validateExecutable(context).flatMap(datasource -> {
-                    String digest = inputDigest(context, request.getFieldMappings());
+                    String digest = inputDigest(context, normalizeMappings(request.getFieldMappings()));
                     if (!digest.equals(request.getPreviewToken())) {
                         return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "预览结果已失效，请重新预览后再执行"));
                     }
@@ -280,6 +281,19 @@ public class GeneratorWizardService {
                                     Boolean.TRUE.equals(request.getOverwrite()),
                                     operatorId));
                 })));
+    }
+
+    /**
+     * 规范化字段映射集合，保证摘要计算对 {@code null} 与空列表产出一致。
+     *
+     * <p>预览、执行与异步任务提交共享同一摘要算法；{@code null} 与 {@code []} 必须折叠为
+     * 同一表示，否则前端省略字段映射的预览令牌会在提交/执行时被误判为失效。
+     *
+     * @param fieldMappings 原始字段映射，可为 {@code null}
+     * @return 非空字段映射列表
+     */
+    private List<GenFieldMappingDTO> normalizeMappings(List<GenFieldMappingDTO> fieldMappings) {
+        return fieldMappings == null ? List.of() : fieldMappings;
     }
 
     /**
@@ -305,6 +319,24 @@ public class GeneratorWizardService {
                     return Mono.fromCallable(() -> readArtifact(tenant, artifact))
                             .subscribeOn(BlockingIoSchedulers.storage());
                 }));
+    }
+
+    /**
+     * 按任务查询已登记的产物清单（限定租户）。
+     *
+     * <p>异步任务的下载闭环依赖本查询：任务进度 DTO 不携带产物 ID，
+     * 前端先按任务列出产物，再按产物 ID 走 {@link #download(Long)}。
+     * 未发布的产物同样返回并以状态字段如实暴露，是否可下载由调用方判定。
+     *
+     * @param taskId 任务 ID
+     * @param tenant 租户标识
+     * @return 产物 DTO 列表；任务属于其他租户时返回空列表（归属由任务行校验拦截）
+     */
+    public Mono<List<GenArtifactDTO>> listTaskArtifacts(Long taskId, String tenant) {
+        return artifactRepository.findByTaskId(taskId).map(artifacts -> artifacts.stream()
+                .filter(artifact -> tenant.equals(artifact.getTenantId()))
+                .map(this::toArtifactDTO)
+                .toList());
     }
 
     /**
@@ -1000,6 +1032,26 @@ public class GeneratorWizardService {
         Mono<Boolean> onProgress(int processedCount, int failedCount, String errorMessage);
     }
 
+    /**
+     * 任务租约守卫。
+     *
+     * <p>异步生成任务由调度器认领后在后台渲染写盘，实例崩溃遗留的任务允许其他实例接管。
+     * 执行方在每个单元渲染写盘前与历史落库前调用本守卫，确认任务仍由本实例持有：
+     * 返回 {@code false} 即任务已被取消（{@code locked_by} 被清空）或被其他实例接管，
+     * 必须立即停止后续写操作，避免已移交的任务继续写盘或重复落历史。
+     * 实现通常复用仓储的续租条件更新，因此守卫调用同时充当租约心跳。
+     */
+    @FunctionalInterface
+    public interface LeaseGuard {
+
+        /**
+         * 校验当前实例是否仍持有任务租约。
+         *
+         * @return {@code true} 仍持有租约可继续；{@code false} 已被取消或接管，立即停止
+         */
+        Mono<Boolean> holdsLease();
+    }
+
     /** 取消信号，只在响应式链路内部流转，不暴露给调用方。 */
     private static final class TaskStoppedException extends RuntimeException {
 
@@ -1051,69 +1103,216 @@ public class GeneratorWizardService {
     /**
      * 执行一次已认领的任务，按「表 × 模板」逐项渲染写盘并推进进度。
      *
-     * <p>每个单元完成后立即回写一次进度；监听器返回 {@code false} 时抛取消信号，
-     * 由本方法收敛为空流并保留已产生的产物。
+     * <p>执行前依次完成三道前置：解析并校验任务输入（字段映射损坏或预览令牌与重算的
+     * 输入摘要不一致时直接失败，不生成与预览不一致的产物）；租约预检（已被取消或接管
+     * 的任务不再执行）；随后按单元推进，每个单元渲染写盘前再次预检租约，取消在首次
+     * 写盘前即可感知。每个单元完成后立即回写一次进度；监听器或守卫返回 {@code false}
+     * 时抛取消信号，由本方法收敛为空流并保留已产生的产物。
      *
-     * @param task     已认领的任务
+     * <p>可读表数量与提交时可能不一致（配置在提交与执行之间被修改），本方法以实际
+     * 读到的表集合重算总数并回写任务实体，后续进度与终态均以重算值为准。
+     *
+     * @param task       已认领的任务
      * @param operatorId 操作人 ID（取自任务）
-     * @param tenant   租户标识
-     * @param listener 进度监听器
+     * @param tenant     租户标识
+     * @param listener   进度监听器
+     * @param leaseGuard 租约守卫，实现通常复用续租条件更新，兼作心跳
      * @return 阶段结果
      */
     public Mono<TaskOutcome> runTask(
-            GenTaskEntity task, Long operatorId, String tenant, TaskProgressListener listener) {
+            GenTaskEntity task, Long operatorId, String tenant, TaskProgressListener listener, LeaseGuard leaseGuard) {
         AtomicInteger processed = new AtomicInteger();
         AtomicInteger failed = new AtomicInteger();
         AtomicReference<String> lastError = new AtomicReference<>();
         AtomicBoolean stopped = new AtomicBoolean();
         List<GenArtifactEntity> artifacts = new ArrayList<>();
         return loadContext(task.getConfigId(), tenant)
-                .flatMap(context -> validateExecutable(context).flatMap(datasource -> {
-                    long taskId = task.getId() == null ? nextTaskId() : task.getId();
-                    Path taskDirectory = taskDirectory(tenant, taskId);
-                    boolean overwrite = Integer.valueOf(1).equals(task.getOverwriteFlag());
-                    List<GenFieldMappingDTO> fieldMappings = parseFieldMappings(task.getFieldMappingsJson());
-                    return readTables(context, fieldMappings)
-                            .flatMapMany(tables -> {
-                                if (tables.isEmpty()) {
-                                    return Flux.error(new BusinessException(ResultCode.NOT_FOUND, "目标表不存在或不可读取"));
-                                }
-                                return Flux.fromIterable(tables).concatMap(table -> dataModel(context, table)
-                                        .flatMapMany(model -> Flux.fromIterable(context.templates())
-                                                .concatMap(template -> runUnit(
-                                                        new RenderedFile(
-                                                                table,
-                                                                template,
-                                                                null,
-                                                                resolveRelativePath(template, model)),
-                                                        context,
-                                                        tenant,
-                                                        taskId,
-                                                        taskDirectory,
-                                                        overwrite,
-                                                        model,
-                                                        processed,
-                                                        failed,
-                                                        lastError,
-                                                        artifacts,
-                                                        listener))));
-                            })
-                            .onErrorResume(TaskStoppedException.class, error -> {
-                                stopped.set(true);
-                                return Flux.empty();
-                            })
-                            .then(Mono.defer(() -> finishTask(
-                                    context, tenant, taskId, operatorId, artifacts, processed, failed, stopped)))
-                            .map(outcome -> outcome);
-                }));
+                .flatMap(context -> validateExecutable(context).flatMap(datasource -> verifyTaskInput(task, context)
+                        .flatMap(fieldMappings -> runWithLeaseCheck(
+                                task,
+                                context,
+                                tenant,
+                                operatorId,
+                                fieldMappings,
+                                listener,
+                                leaseGuard,
+                                processed,
+                                failed,
+                                lastError,
+                                artifacts,
+                                stopped))));
+    }
+
+    /**
+     * 持有租约时执行全部单元；已被取消或接管时直接返回取消结果，不渲染任何产物。
+     *
+     * @return 阶段结果
+     */
+    private Mono<TaskOutcome> runWithLeaseCheck(
+            GenTaskEntity task,
+            WizardContext context,
+            String tenant,
+            Long operatorId,
+            List<GenFieldMappingDTO> fieldMappings,
+            TaskProgressListener listener,
+            LeaseGuard leaseGuard,
+            AtomicInteger processed,
+            AtomicInteger failed,
+            AtomicReference<String> lastError,
+            List<GenArtifactEntity> artifacts,
+            AtomicBoolean stopped) {
+        return leaseGuard
+                .holdsLease()
+                .flatMap(owned -> Boolean.TRUE.equals(owned)
+                        ? runUnits(
+                                task,
+                                context,
+                                tenant,
+                                operatorId,
+                                fieldMappings,
+                                listener,
+                                leaseGuard,
+                                processed,
+                                failed,
+                                lastError,
+                                artifacts,
+                                stopped)
+                        : Mono.just(new TaskOutcome(null, 0, 0, true)));
+    }
+
+    /**
+     * 解析并校验任务输入：字段映射反序列化与预览令牌绑定校验。
+     *
+     * <p>字段映射损坏或令牌与重算摘要不一致时抛参数错误，任务交由执行方的失败收敛
+     * 落为 FAILED，绝不以回退参数继续生成，保证产物与预览一致。
+     *
+     * @param task    已认领的任务
+     * @param context 已加载的向导上下文
+     * @return 解析后的字段映射
+     */
+    private Mono<List<GenFieldMappingDTO>> verifyTaskInput(GenTaskEntity task, WizardContext context) {
+        return Mono.fromCallable(() -> {
+            List<GenFieldMappingDTO> fieldMappings = parseFieldMappings(task.getFieldMappingsJson());
+            String digest = inputDigest(context, fieldMappings);
+            if (!digest.equals(task.getPreviewToken())) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "预览结果已失效，请重新预览后再执行");
+            }
+            return fieldMappings;
+        });
+    }
+
+    /**
+     * 按「表 × 模板」逐单元渲染写盘并推进进度，最后收敛结果。
+     *
+     * @param task         已认领的任务
+     * @param context      向导上下文
+     * @param tenant       租户标识
+     * @param operatorId   操作人 ID
+     * @param fieldMappings 解析后的字段映射
+     * @param listener     进度监听器
+     * @param leaseGuard   租约守卫
+     * @param processed    已处理计数
+     * @param failed       失败计数
+     * @param lastError    最后一次失败原因
+     * @param artifacts    已产出产物收集器
+     * @param stopped      停止标记
+     * @return 阶段结果
+     */
+    private Mono<TaskOutcome> runUnits(
+            GenTaskEntity task,
+            WizardContext context,
+            String tenant,
+            Long operatorId,
+            List<GenFieldMappingDTO> fieldMappings,
+            TaskProgressListener listener,
+            LeaseGuard leaseGuard,
+            AtomicInteger processed,
+            AtomicInteger failed,
+            AtomicReference<String> lastError,
+            List<GenArtifactEntity> artifacts,
+            AtomicBoolean stopped) {
+        long taskId = task.getId() == null ? nextTaskId() : task.getId();
+        Path taskDirectory = taskDirectory(tenant, taskId);
+        boolean overwrite = Integer.valueOf(1).equals(task.getOverwriteFlag());
+        return readTables(context, fieldMappings)
+                .flatMapMany(tables -> {
+                    if (tables.isEmpty()) {
+                        return Flux.error(new BusinessException(ResultCode.NOT_FOUND, "目标表不存在或不可读取"));
+                    }
+                    task.setTotalCount(tables.size() * context.templates().size());
+                    return Flux.fromIterable(tables).concatMap(table -> dataModel(context, table)
+                            .flatMapMany(model -> Flux.fromIterable(context.templates())
+                                    .concatMap(template -> runUnit(
+                                            new RenderedFile(
+                                                    table, template, null, resolveRelativePath(template, model)),
+                                            context,
+                                            tenant,
+                                            taskId,
+                                            taskDirectory,
+                                            overwrite,
+                                            model,
+                                            processed,
+                                            failed,
+                                            lastError,
+                                            artifacts,
+                                            listener,
+                                            leaseGuard))));
+                })
+                .onErrorResume(TaskStoppedException.class, error -> {
+                    stopped.set(true);
+                    return Flux.empty();
+                })
+                .then(Mono.defer(() -> finishTask(
+                        context, tenant, taskId, operatorId, artifacts, processed, failed, stopped, leaseGuard)));
     }
 
     /**
      * 渲染并写入单个「表 × 模板」单元，随后推进一次进度。
      *
-     * @return 单元完成信号；取消时以 {@link TaskStoppedException} 终止
+     * <p>渲染写盘前先做租约预检，保证取消与接管在首次写盘前即被感知；
+     * 预检失败抛 {@link TaskStoppedException} 终止后续单元。
+     *
+     * @return 单元完成信号；取消或接管时以 {@link TaskStoppedException} 终止
      */
     private Mono<Void> runUnit(
+            RenderedFile skeleton,
+            WizardContext context,
+            String tenant,
+            long taskId,
+            Path taskDirectory,
+            boolean overwrite,
+            Map<String, Object> model,
+            AtomicInteger processed,
+            AtomicInteger failed,
+            AtomicReference<String> lastError,
+            List<GenArtifactEntity> artifacts,
+            TaskProgressListener listener,
+            LeaseGuard leaseGuard) {
+        return leaseGuard
+                .holdsLease()
+                .flatMap(owned -> Boolean.TRUE.equals(owned)
+                        ? renderAndWriteUnit(
+                                skeleton,
+                                context,
+                                tenant,
+                                taskId,
+                                taskDirectory,
+                                overwrite,
+                                model,
+                                processed,
+                                failed,
+                                lastError,
+                                artifacts,
+                                listener)
+                        : Mono.error(new TaskStoppedException()));
+    }
+
+    /**
+     * 执行单单元的模板渲染与产物写盘，完成后回写一次进度。
+     *
+     * @return 单元完成信号；进度回调返回 {@code false} 时抛 {@link TaskStoppedException}
+     */
+    private Mono<Void> renderAndWriteUnit(
             RenderedFile skeleton,
             WizardContext context,
             String tenant,
@@ -1152,7 +1351,10 @@ public class GeneratorWizardService {
     }
 
     /**
-     * 收敛执行结果：有产物时落库历史与产物，否则仅返回计数。
+     * 收敛执行结果：有产物且仍持有租约时落库历史与产物，否则仅返回计数。
+     *
+     * <p>历史落库前复检租约：任务在渲染期间被接管时，旧执行者不再写历史与产物批次，
+     * 避免接管双方重复落库；被接管以 {@code stopped=true} 表达，调用方不写终态。
      */
     private Mono<TaskOutcome> finishTask(
             WizardContext context,
@@ -1162,20 +1364,31 @@ public class GeneratorWizardService {
             List<GenArtifactEntity> artifacts,
             AtomicInteger processed,
             AtomicInteger failed,
-            AtomicBoolean stopped) {
+            AtomicBoolean stopped,
+            LeaseGuard leaseGuard) {
         if (stopped.get() || artifacts.isEmpty()) {
             return Mono.just(new TaskOutcome(null, processed.get(), failed.get(), stopped.get()));
         }
-        return saveHistory(context, tenant, taskId, operatorId, artifacts).flatMap(history -> artifactRepository
-                .insertBatch(artifacts)
-                .thenReturn(new TaskOutcome(history.getId(), processed.get(), failed.get(), stopped.get())));
+        return leaseGuard.holdsLease().flatMap(owned -> {
+            if (!Boolean.TRUE.equals(owned)) {
+                log.warn("生成任务租约已被接管，跳过历史与产物落库: taskId={}", taskId);
+                return Mono.just(new TaskOutcome(null, processed.get(), failed.get(), true));
+            }
+            return saveHistory(context, tenant, taskId, operatorId, artifacts).flatMap(history -> artifactRepository
+                    .insertBatch(artifacts)
+                    .thenReturn(new TaskOutcome(history.getId(), processed.get(), failed.get(), stopped.get())));
+        });
     }
 
     /**
      * 反序列化任务中的字段映射。
      *
+     * <p>持久化值为空（历史遗留行）返回空列表；JSON 损坏时抛参数错误而非静默回退——
+     * 字段映射决定渲染模型，静默回退会生成与预览不一致的产物。
+     *
      * @param json 持久化的 JSON
-     * @return 字段映射；为空或解析失败时返回空列表
+     * @return 字段映射；持久化值为空时返回空列表
+     * @throws BusinessException 当 JSON 无法反序列化时抛出
      */
     List<GenFieldMappingDTO> parseFieldMappings(String json) {
         if (json == null || json.isBlank()) {
@@ -1186,7 +1399,7 @@ public class GeneratorWizardService {
                     json, objectMapper.getTypeFactory().constructCollectionType(List.class, GenFieldMappingDTO.class));
         } catch (IOException error) {
             log.warn("任务字段映射解析失败: {}", error.getMessage());
-            return List.of();
+            throw new BusinessException(ResultCode.PARAM_ERROR, "任务字段映射数据已损坏，无法安全执行");
         }
     }
 }

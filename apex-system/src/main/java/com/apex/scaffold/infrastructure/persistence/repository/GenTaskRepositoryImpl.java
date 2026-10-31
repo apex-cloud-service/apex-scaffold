@@ -8,7 +8,6 @@ import com.apex.scaffold.infrastructure.persistence.converter.GenTaskPoConverter
 import com.apex.scaffold.infrastructure.persistence.mapper.GenTaskMapper;
 import com.apex.scaffold.infrastructure.persistence.po.GenTaskPO;
 import java.time.LocalDateTime;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
@@ -83,37 +82,10 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
     }
 
     /**
-     * 列出当前存在可认领任务的租户。
-     *
-     * @param maxAttempts   最大尝试次数
-     * @param leaseDeadline 租约过期阈值
-     * @param limit         单轮最多返回租户数
-     * @return 候选租户标识
-     */
-    @Override
-    public Mono<List<String>> findCandidateTenants(int maxAttempts, LocalDateTime leaseDeadline, int limit) {
-        return Mono.fromCallable(() -> taskMapper.findCandidateTenants(maxAttempts, leaseDeadline, limit))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
-    }
-
-    /**
-     * 列出当前存在过期终态任务的租户。
-     *
-     * @param finishedBefore 终态时间截止点
-     * @param limit          单轮最多返回租户数
-     * @return 租户标识
-     */
-    @Override
-    public Mono<List<String>> findFinishedTenants(LocalDateTime finishedBefore, int limit) {
-        return Mono.fromCallable(() -> taskMapper.findFinishedTenants(finishedBefore, limit))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
-    }
-
-    /**
      * 竞争认领任务。
      *
      * @param id            任务 ID
-     * @param tenantId      租户标识
+     * @param tenantId      租户 ID
      * @param lockedBy      认领实例标识
      * @param lockedAt      认领时间
      * @param leaseDeadline 租约过期阈值
@@ -127,10 +99,10 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
     }
 
     /**
-     * 续租。
+     * 续租并校验执行权。
      *
      * @param id       任务 ID
-     * @param tenantId 租户标识
+     * @param tenantId 租户 ID
      * @param lockedBy 认领实例标识
      * @param lockedAt 新的认领时间
      * @return 是否续租成功
@@ -142,10 +114,12 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
     }
 
     /**
-     * 回写处理进度。
+     * 回写处理进度并顺延续租。
      *
      * @param id             任务 ID
-     * @param tenantId       租户标识
+     * @param tenantId       租户 ID
+     * @param lockedBy       认领实例标识
+     * @param lockedAt       本次心跳时间
      * @param totalCount     总处理单元数
      * @param processedCount 已处理单元数
      * @param failedCount    失败单元数
@@ -154,10 +128,17 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
      */
     @Override
     public Mono<Boolean> updateProgress(
-            Long id, String tenantId, int totalCount, int processedCount, int failedCount, String errorMessage) {
-        return Mono.fromCallable(() ->
-                        taskMapper.updateProgress(id, tenantId, totalCount, processedCount, failedCount, errorMessage)
-                                > 0)
+            Long id,
+            String tenantId,
+            String lockedBy,
+            LocalDateTime lockedAt,
+            int totalCount,
+            int processedCount,
+            int failedCount,
+            String errorMessage) {
+        return Mono.fromCallable(() -> taskMapper.updateProgress(
+                                id, tenantId, lockedBy, lockedAt, totalCount, processedCount, failedCount, errorMessage)
+                        > 0)
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
@@ -165,7 +146,8 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
      * 标记任务完成。
      *
      * @param id             任务 ID
-     * @param tenantId       租户标识
+     * @param tenantId       租户 ID
+     * @param lockedBy       认领实例标识
      * @param historyId      生成历史 ID
      * @param totalCount     总处理单元数
      * @param processedCount 已处理单元数
@@ -177,13 +159,14 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
     public Mono<Boolean> markCompleted(
             Long id,
             String tenantId,
+            String lockedBy,
             Long historyId,
             int totalCount,
             int processedCount,
             int failedCount,
             LocalDateTime completedAt) {
         return Mono.fromCallable(() -> taskMapper.markCompleted(
-                                id, tenantId, historyId, totalCount, processedCount, failedCount, completedAt)
+                                id, tenantId, lockedBy, historyId, totalCount, processedCount, failedCount, completedAt)
                         > 0)
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
@@ -192,14 +175,16 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
      * 标记任务失败。
      *
      * @param id           任务 ID
-     * @param tenantId     租户标识
+     * @param tenantId     租户 ID
+     * @param lockedBy     认领实例标识
      * @param errorMessage 失败原因
-     * @param completedAt  完成时间
+     * @param completedAt  终态时间
      * @return 是否更新成功
      */
     @Override
-    public Mono<Boolean> markFailed(Long id, String tenantId, String errorMessage, LocalDateTime completedAt) {
-        return Mono.fromCallable(() -> taskMapper.markFailed(id, tenantId, errorMessage, completedAt) > 0)
+    public Mono<Boolean> markFailed(
+            Long id, String tenantId, String lockedBy, String errorMessage, LocalDateTime completedAt) {
+        return Mono.fromCallable(() -> taskMapper.markFailed(id, tenantId, lockedBy, errorMessage, completedAt) > 0)
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
@@ -207,7 +192,7 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
      * 请求取消任务。
      *
      * @param id         任务 ID
-     * @param tenantId   租户标识
+     * @param tenantId   租户 ID
      * @param canceledAt 取消时间
      * @return 是否取消成功（false 表示任务已是终态）
      */
@@ -220,14 +205,21 @@ public class GenTaskRepositoryImpl implements GenTaskRepository {
     /**
      * 清理已过保留期的终态任务。
      *
-     * @param tenantId       租户标识
+     * <p>两步实现：先按租户与完成时间查出过期终态任务主键（可移植的 SELECT ... ORDER BY ... LIMIT），
+     * 再按主键物理删除。查出的批次为空时直接返回 0，不发删除语句。
+     *
+     * @param tenantId       租户 ID
      * @param finishedBefore 完成时间阈值
      * @param limit          单次清理条数
      * @return 实际删除条数
      */
     @Override
     public Mono<Integer> purgeFinishedBefore(String tenantId, LocalDateTime finishedBefore, int limit) {
-        return Mono.fromCallable(() -> taskMapper.purgeFinishedBefore(tenantId, finishedBefore, limit))
-                .subscribeOn(BlockingIoSchedulers.jdbc());
+        return Mono.fromCallable(() -> taskMapper.findFinishedIdsBefore(tenantId, finishedBefore, limit))
+                .subscribeOn(BlockingIoSchedulers.jdbc())
+                .filter(ids -> !ids.isEmpty())
+                .flatMap(ids -> Mono.fromCallable(() -> taskMapper.deleteFinishedByIds(ids))
+                        .subscribeOn(BlockingIoSchedulers.jdbc()))
+                .defaultIfEmpty(0);
     }
 }

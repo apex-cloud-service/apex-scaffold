@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.application.dto.admin.ColumnInfoDTO;
@@ -25,6 +27,7 @@ import com.apex.scaffold.domain.model.generator.GenArtifactEntity;
 import com.apex.scaffold.domain.model.generator.GenConfigEntity;
 import com.apex.scaffold.domain.model.generator.GenDatasourceEntity;
 import com.apex.scaffold.domain.model.generator.GenHistoryEntity;
+import com.apex.scaffold.domain.model.generator.GenTaskEntity;
 import com.apex.scaffold.domain.model.generator.GenTemplateEntity;
 import com.apex.scaffold.domain.repository.GenArtifactRepository;
 import com.apex.scaffold.domain.repository.GenConfigRepository;
@@ -37,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
@@ -376,7 +380,168 @@ class GeneratorWizardServiceTest {
                 .verify();
     }
 
+    @Test
+    void runTaskRejectsDriftedPreviewTokenBeforeWriting() {
+        stubRenderable("sys_user");
+        GenTaskEntity task = asyncTask(700L, "stale-token", "[]");
+
+        StepVerifier.create(service.runTask(task, 7L, TENANT, proceedListener(), leaseGuard(true))
+                        .contextWrite(TenantContext.withTenant(TENANT)))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(BusinessException.class);
+                    assertThat(((BusinessException) error).getCode()).isEqualTo(ResultCode.PARAM_ERROR.getCode());
+                })
+                .verify();
+        assertThat(outputRoot.toFile().listFiles()).isNullOrEmpty();
+        verify(historyRepository, never()).insert(any(GenHistoryEntity.class));
+    }
+
+    @Test
+    void runTaskStopsBeforeWritingWhenLeaseLost() {
+        stubRenderable("sys_user");
+        GenTaskEntity task = asyncTask(701L, previewToken(), "[]");
+
+        StepVerifier.create(service.runTask(task, 7L, TENANT, proceedListener(), leaseGuard(false))
+                        .contextWrite(TenantContext.withTenant(TENANT)))
+                .assertNext(outcome -> {
+                    assertThat(outcome.stopped()).isTrue();
+                    assertThat(outcome.historyId()).isNull();
+                })
+                .verifyComplete();
+        assertThat(outputRoot.toFile().listFiles()).isNullOrEmpty();
+        verify(historyRepository, never()).insert(any(GenHistoryEntity.class));
+        verify(artifactRepository, never()).insertBatch(any());
+    }
+
+    @Test
+    void runTaskSkipsHistoryWhenLeaseTakenOverBeforeFinish() throws Exception {
+        stubRenderable("sys_user");
+        GenTaskEntity task = asyncTask(702L, previewToken(), "[]");
+        AtomicInteger guardCalls = new AtomicInteger();
+        GeneratorWizardService.LeaseGuard takeoverAtFinish = () -> Mono.just(guardCalls.incrementAndGet() < 3);
+
+        StepVerifier.create(service.runTask(task, 7L, TENANT, proceedListener(), takeoverAtFinish)
+                        .contextWrite(TenantContext.withTenant(TENANT)))
+                .assertNext(outcome -> {
+                    assertThat(outcome.historyId()).isNull();
+                    assertThat(outcome.stopped()).isTrue();
+                    assertThat(outcome.processedCount()).isEqualTo(1);
+                })
+                .verifyComplete();
+        assertThat(outputRoot.resolve(TENANT).resolve("702").resolve("sys_user.java"))
+                .exists();
+        verify(historyRepository, never()).insert(any(GenHistoryEntity.class));
+        verify(artifactRepository, never()).insertBatch(any());
+    }
+
+    @Test
+    void runTaskRecountsTotalAndPublishesUnderTenantTaskDirectory() throws Exception {
+        stubRenderable("sys_user");
+        when(historyRepository.insert(any(GenHistoryEntity.class))).thenAnswer(invocation -> {
+            GenHistoryEntity history = invocation.getArgument(0);
+            history.setId(520L);
+            return Mono.just(history);
+        });
+        when(artifactRepository.insertBatch(any())).thenAnswer(invocation -> {
+            List<GenArtifactEntity> artifacts = invocation.getArgument(0);
+            artifacts.forEach(artifact -> artifact.setId(idSequence.incrementAndGet()));
+            return Mono.just(artifacts);
+        });
+        GenTaskEntity task = asyncTask(703L, previewToken(), "[]");
+        task.setTotalCount(99);
+
+        StepVerifier.create(service.runTask(task, 7L, TENANT, proceedListener(), leaseGuard(true))
+                        .contextWrite(TenantContext.withTenant(TENANT)))
+                .assertNext(outcome -> {
+                    assertThat(outcome.historyId()).isEqualTo(520L);
+                    assertThat(outcome.processedCount()).isEqualTo(1);
+                    assertThat(outcome.stopped()).isFalse();
+                })
+                .verifyComplete();
+        assertThat(task.getTotalCount()).isEqualTo(1);
+        assertThat(outputRoot.resolve(TENANT).resolve("703").resolve("sys_user.java"))
+                .exists();
+    }
+
+    @Test
+    void runTaskFailsFastWhenFieldMappingsCorrupted() {
+        stubRenderable("sys_user");
+        GenTaskEntity task = asyncTask(704L, previewToken(), "not-json");
+
+        StepVerifier.create(service.runTask(task, 7L, TENANT, proceedListener(), leaseGuard(true))
+                        .contextWrite(TenantContext.withTenant(TENANT)))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(BusinessException.class);
+                    assertThat(((BusinessException) error).getCode()).isEqualTo(ResultCode.PARAM_ERROR.getCode());
+                })
+                .verify();
+        assertThat(outputRoot.toFile().listFiles()).isNullOrEmpty();
+    }
+
+    @Test
+    void parseFieldMappingsTreatsBlankAsEmptyAndRejectsCorruptedJson() {
+        assertThat(service.parseFieldMappings(null)).isEmpty();
+        assertThat(service.parseFieldMappings("  ")).isEmpty();
+        assertThat(service.parseFieldMappings("[]")).isEmpty();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.parseFieldMappings("not-json"))
+                .isInstanceOf(BusinessException.class);
+    }
+
     // ------------------------------------------------------------------ 夹具
+
+    /**
+     * 通过真实预览链获取绑定当前输入摘要的预览令牌。
+     *
+     * @return 16 位摘要令牌
+     */
+    private String previewToken() {
+        return service.preview(previewRequest(10L))
+                .contextWrite(TenantContext.withTenant(TENANT))
+                .block()
+                .getPreviewToken();
+    }
+
+    /**
+     * 构建异步任务夹具。
+     *
+     * @param id          任务 ID
+     * @param token       预览令牌
+     * @param mappingsJson 持久化字段映射 JSON
+     * @return 已认领状态的任务实体
+     */
+    private GenTaskEntity asyncTask(long id, String token, String mappingsJson) {
+        GenTaskEntity task = new GenTaskEntity();
+        task.setId(id);
+        task.setConfigId(10L);
+        task.setStatus("RUNNING");
+        task.setPreviewToken(token);
+        task.setFieldMappingsJson(mappingsJson);
+        task.setOverwriteFlag(0);
+        task.setOperatorId(7L);
+        task.setAttempts(1);
+        task.setTenantId(TENANT);
+        task.setLockedBy("generator-task-test");
+        return task;
+    }
+
+    /**
+     * 恒定放行的进度监听器。
+     *
+     * @return 始终继续执行的监听器
+     */
+    private GeneratorWizardService.TaskProgressListener proceedListener() {
+        return (processedCount, failedCount, errorMessage) -> Mono.just(true);
+    }
+
+    /**
+     * 恒定返回指定结果的租约守卫。
+     *
+     * @param owned 是否持有租约
+     * @return 租约守卫
+     */
+    private GeneratorWizardService.LeaseGuard leaseGuard(boolean owned) {
+        return () -> Mono.just(owned);
+    }
 
     private void stubRenderable(String tableName) {
         lenient().when(configRepository.findById(10L)).thenReturn(Mono.just(config(10L, TENANT)));

@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.dto.admin.GenArtifactDTO;
 import com.apex.scaffold.application.dto.admin.GenGenerateRequest;
 import com.apex.scaffold.application.dto.admin.GenTaskDTO;
 import com.apex.scaffold.application.dto.admin.GenTaskSubmitResponse;
@@ -8,6 +9,7 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.generator.GenTaskEntity;
 import com.apex.scaffold.domain.repository.GenTaskRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -98,6 +100,23 @@ public class GeneratorTaskService {
     }
 
     /**
+     * 查询任务的产物清单。
+     *
+     * <p>先按任务行校验当前租户归属（不存在或跨租户一律 {@link ResultCode#NOT_FOUND}，
+     * 不泄露任务存在性），再返回该任务已登记的产物列表，供前端按产物 ID 发起下载。
+     *
+     * @param taskId 任务 ID
+     * @return 产物 DTO 列表
+     */
+    public Mono<List<GenArtifactDTO>> getTaskArtifacts(Long taskId) {
+        return wizardService
+                .tenantId()
+                .flatMap(tenant -> genTaskRepository.findById(taskId, tenant))
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "生成任务不存在")))
+                .flatMap(task -> wizardService.listTaskArtifacts(taskId, task.getTenantId()));
+    }
+
+    /**
      * 请求取消任务。
      *
      * <p>PENDING 直接置 CANCELED；RUNNING 由执行方在下一次进度回写时感知并停止。
@@ -116,13 +135,17 @@ public class GeneratorTaskService {
     /**
      * 执行一条已认领的任务。
      *
-     * <p>由调度器在认领成功后调用，租户由调用方显式传入，不使用请求上下文。
+     * <p>由调度器在认领成功并重读任务后调用，租户由调用方显式传入，不使用请求上下文。
+     * 执行权以任务的 {@code lockedBy} 为准：进度回写附带心跳时间顺延续租，
+     * 租约守卫复用仓储续租条件更新，在渲染写盘与历史落库前复检执行权；
+     * 返回 {@code false} 即任务已被取消或接管，执行立即停止且不写终态。
      *
-     * @param task   已认领的任务
+     * @param task   已认领的任务（应来自认领后的数据库重读，含最新 attempts 与 lockedBy）
      * @param tenant 租户标识
      * @return 执行结果；失败但未达最大尝试次数时返回空，等待重试
      */
     public Mono<GeneratorWizardService.TaskOutcome> processTask(GenTaskEntity task, String tenant) {
+        String lockedBy = task.getLockedBy();
         return Mono.defer(() -> wizardService
                 .runTask(
                         task,
@@ -131,59 +154,76 @@ public class GeneratorTaskService {
                         (processedCount, failedCount, errorMessage) -> genTaskRepository.updateProgress(
                                 task.getId(),
                                 tenant,
+                                lockedBy,
+                                LocalDateTime.now(),
                                 totalCount(task),
                                 processedCount,
                                 failedCount,
-                                truncate(errorMessage)))
-                .flatMap(outcome -> finish(task, tenant, outcome))
-                .onErrorResume(error -> handleFailure(task, tenant, error)));
+                                truncate(errorMessage)),
+                        () -> genTaskRepository.renewLease(task.getId(), tenant, lockedBy, LocalDateTime.now()))
+                .flatMap(outcome -> finish(task, tenant, outcome, lockedBy))
+                .onErrorResume(error -> handleFailure(task, tenant, error, lockedBy)));
     }
 
     /**
      * 按执行结果收敛任务终态。
      *
-     * @param task    任务实体
-     * @param tenant  租户标识
-     * @param outcome 渲染执行结果
+     * @param task     任务实体
+     * @param tenant   租户标识
+     * @param outcome  渲染执行结果
+     * @param lockedBy 认领实例标识，写入终态 SQL 的执行者条件
      * @return 原执行结果
      */
     private Mono<GeneratorWizardService.TaskOutcome> finish(
-            GenTaskEntity task, String tenant, GeneratorWizardService.TaskOutcome outcome) {
+            GenTaskEntity task, String tenant, GeneratorWizardService.TaskOutcome outcome, String lockedBy) {
         if (outcome.stopped()) {
             return Mono.just(outcome);
         }
         if (outcome.historyId() == null) {
             return genTaskRepository
-                    .markFailed(task.getId(), tenant, "生成未产生任何产物", LocalDateTime.now())
+                    .markFailed(task.getId(), tenant, lockedBy, "生成未产生任何产物", LocalDateTime.now())
+                    .doOnNext(updated -> {
+                        if (!Boolean.TRUE.equals(updated)) {
+                            log.info("生成任务终态写入未生效（已取消或被接管）: taskId={}", task.getId());
+                        }
+                    })
                     .thenReturn(outcome);
         }
         return genTaskRepository
                 .markCompleted(
                         task.getId(),
                         tenant,
+                        lockedBy,
                         outcome.historyId(),
                         totalCount(task),
                         outcome.processedCount(),
                         outcome.failedCount(),
                         LocalDateTime.now())
+                .doOnNext(updated -> {
+                    if (!Boolean.TRUE.equals(updated)) {
+                        log.info("生成任务终态写入未生效（已取消或被接管）: taskId={}", task.getId());
+                    }
+                })
                 .thenReturn(outcome);
     }
 
     /**
      * 处理执行异常：达到最大尝试次数落 FAILED，否则保留 RUNNING 等待租约过期后重试。
      *
-     * @param task   任务实体
-     * @param tenant 租户标识
-     * @param error  执行异常
+     * @param task     任务实体
+     * @param tenant   租户标识
+     * @param error    执行异常
+     * @param lockedBy 认领实例标识，写入终态 SQL 的执行者条件
      * @return 空结果
      */
-    private Mono<GeneratorWizardService.TaskOutcome> handleFailure(GenTaskEntity task, String tenant, Throwable error) {
+    private Mono<GeneratorWizardService.TaskOutcome> handleFailure(
+            GenTaskEntity task, String tenant, Throwable error, String lockedBy) {
         String message = truncate(describe(error));
         Integer attempts = task.getAttempts();
         if (attempts != null && attempts >= maxAttempts) {
             log.warn("生成任务执行失败且已达最大尝试次数: taskId={}, attempts={}", task.getId(), attempts, error);
             return genTaskRepository
-                    .markFailed(task.getId(), tenant, message, LocalDateTime.now())
+                    .markFailed(task.getId(), tenant, lockedBy, message, LocalDateTime.now())
                     .then(Mono.<GeneratorWizardService.TaskOutcome>empty());
         }
         log.warn("生成任务执行失败，等待租约过期后重试: taskId={}, attempts={}", task.getId(), attempts, error);

@@ -64,6 +64,10 @@ public class HealthExportTaskScheduler {
 
     /**
      * 定时扫描并执行一条导出任务。
+     *
+     * <p>任务表属于租户数据，链路以 {@link TenantContext#withTenant(Mono)} 桥接执行线程
+     * 租户上下文：{@code contextWrite} 单独使用只传播 Reactor Context，企业档开启租户
+     * 拦截器时 JDBC 线程仍缺少 ThreadLocal 租户，任务表 SQL 会被拒绝执行。
      */
     @Scheduled(fixedDelayString = "${apex.operations.health.async-export.poll-delay-ms:5000}")
     @ManagedJob
@@ -75,11 +79,14 @@ public class HealthExportTaskScheduler {
         }
         String tenant = tenantId.trim();
         LocalDateTime staleBefore = LocalDateTime.now().minusMinutes(STALE_LEASE_MINUTES);
-        Mono.defer(() -> taskRepository.findNextCandidate(tenant, settings.maxAttempts(), staleBefore))
+        Mono<Void> chain = Mono.defer(
+                        () -> taskRepository.findNextCandidate(tenant, settings.maxAttempts(), staleBefore))
                 .flatMap(candidate -> taskRepository
                         .claim(candidate.getId(), tenant, WORKER_ID, staleBefore)
                         .filter(Boolean::booleanValue)
                         .flatMap(claimed -> runTask(candidate, tenant)))
+                .then();
+        TenantContext.withTenant(chain)
                 .contextWrite(TenantContext.withTenant(tenant))
                 .subscribe(null, error -> log.error("体检快照异步导出调度失败", error));
     }

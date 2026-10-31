@@ -304,6 +304,37 @@ public class CodeGeneratorHandler extends BaseHandler {
     }
 
     /**
+     * 查询异步生成任务的产物清单。
+     *
+     * <p>任务完成后的下载闭环依赖本接口：先按任务列出产物，再按产物 ID 调用下载端点。
+     * 任务不存在或属于其他租户时统一返回 404，不泄露任务存在性。
+     *
+     * @param request 服务器请求对象，包含任务 ID 路径参数
+     * @return 该任务已登记的产物列表
+     */
+    @RequirePermission("system:generator:task:read")
+    @Operation(
+            operationId = "adminListGenTaskArtifacts",
+            summary = "查询代码生成任务产物清单",
+            description = "按任务 ID 列出已登记的产物，供前端按产物 ID 发起下载；跨租户任务与不存在任务返回 404")
+    @Parameter(
+            name = "id",
+            description = "任务ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "查询成功，返回产物列表"),
+        @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:read 权限"),
+        @ApiResponse(responseCode = "404", description = "任务不存在或属于其他租户")
+    })
+    public Mono<ServerResponse> taskArtifacts(ServerRequest request) {
+        long taskId = requirePositiveId(request);
+        return generatorTaskService.getTaskArtifacts(taskId).flatMap(this::buildSuccess);
+    }
+
+    /**
      * 取消异步生成任务。
      *
      * <p>待执行任务直接置为已取消；执行中的任务在下一次推进进度时感知取消并停止。</p>

@@ -2,7 +2,6 @@ package com.apex.scaffold.domain.repository;
 
 import com.apex.scaffold.domain.model.generator.GenTaskEntity;
 import java.time.LocalDateTime;
-import java.util.List;
 import reactor.core.publisher.Mono;
 
 /**
@@ -39,7 +38,7 @@ public interface GenTaskRepository {
      * 查找下一个可认领任务。
      *
      * <p>候选为 {@code PENDING}，或 {@code RUNNING} 且认领时间早于租约截止时间的任务；
-     * 按创建时间升序保证先提交先执行。
+     * 两类候选均要求尝试次数未达上限，按创建时间升序保证先提交先执行。
      *
      * @param tenantId 租户 ID
      * @param maxAttempts 最大执行次数，超过的任务不再认领
@@ -49,31 +48,11 @@ public interface GenTaskRepository {
     Mono<GenTaskEntity> findNextCandidate(String tenantId, int maxAttempts, LocalDateTime leaseDeadline);
 
     /**
-     * 列出当前存在可认领任务的租户。
-     *
-     * @param maxAttempts 最大执行次数
-     * @param leaseDeadline 租约截止时间
-     * @param limit 单轮最多返回租户数
-     * @return 候选租户标识
-     */
-    Mono<List<String>> findCandidateTenants(int maxAttempts, LocalDateTime leaseDeadline, int limit);
-
-    /**
-     * 列出当前存在过期终态任务的租户。
-     *
-     * <p>保留期清理无法复用 {@link #findCandidateTenants}：后者只返回有可认领任务的租户，
-     * 已结束的任务不在其中。
-     *
-     * @param finishedBefore 终态时间截止点
-     * @param limit 单轮最多返回租户数
-     * @return 租户标识
-     */
-    Mono<List<String>> findFinishedTenants(LocalDateTime finishedBefore, int limit);
-
-    /**
      * 认领任务。
      *
      * <p>仅当任务仍处于可认领状态时更新成功；并发下只有一个实例能认领同一任务。
+     * 认领成功后调用方应以 {@link #findById(Long, String)} 重读任务，
+     * 以数据库中的最新 attempts/totalCount 作为执行依据，避免使用陈旧的内存快照。
      *
      * @param id 任务 ID
      * @param tenantId 租户 ID
@@ -85,7 +64,12 @@ public interface GenTaskRepository {
     Mono<Boolean> claim(Long id, String tenantId, String lockedBy, LocalDateTime lockedAt, LocalDateTime leaseDeadline);
 
     /**
-     * 刷新心跳，延长租约。
+     * 续租并校验执行权。
+     *
+     * <p>双重用途：刷新心跳避免长任务被其他实例误判为遗弃；同时作为所有权检查——
+     * 仅当任务仍处于 RUNNING 且仍由 {@code lockedBy} 认领时更新成功。
+     * 调用方在渲染关键落库步骤（如生成历史入库）前调用本方法，
+     * 返回 {@code false} 即任务已被取消或接管，应立即停止后续写操作。
      *
      * @param id 任务 ID
      * @param tenantId 租户 ID
@@ -96,34 +80,50 @@ public interface GenTaskRepository {
     Mono<Boolean> renewLease(Long id, String tenantId, String lockedBy, LocalDateTime lockedAt);
 
     /**
-     * 推进进度计数。
+     * 推进进度计数并顺延续租。
+     *
+     * <p>更新条件限定任务仍处于 RUNNING 且仍由 {@code lockedBy} 认领；更新成功即租约
+     * 顺延到 {@code lockedAt}，因此正常执行路径无需额外的心跳调用。
      *
      * @param id 任务 ID
      * @param tenantId 租户 ID
+     * @param lockedBy 认领实例标识
+     * @param lockedAt 本次心跳时间
      * @param totalCount 总数
      * @param processedCount 已处理数
      * @param failedCount 失败数
      * @param errorMessage 最近一次失败原因，可为 {@code null}
-     * @return 更新成功返回 {@code true}；任务已进入终态时返回 {@code false}
+     * @return 更新成功返回 {@code true}；任务已取消、终态或被接管时返回 {@code false}
      */
     Mono<Boolean> updateProgress(
-            Long id, String tenantId, int totalCount, int processedCount, int failedCount, String errorMessage);
+            Long id,
+            String tenantId,
+            String lockedBy,
+            LocalDateTime lockedAt,
+            int totalCount,
+            int processedCount,
+            int failedCount,
+            String errorMessage);
 
     /**
      * 标记任务完成。
      *
+     * <p>仅当前认领者可写终态；任务已被取消、终态或接管时返回 {@code false}。
+     *
      * @param id 任务 ID
      * @param tenantId 租户 ID
+     * @param lockedBy 认领实例标识
      * @param historyId 生成历史 ID
      * @param totalCount 总数
      * @param processedCount 已处理数
      * @param failedCount 失败数
      * @param completedAt 完成时间
-     * @return 更新成功返回 {@code true}；任务已被取消或已完成时返回 {@code false}
+     * @return 更新成功返回 {@code true}
      */
     Mono<Boolean> markCompleted(
             Long id,
             String tenantId,
+            String lockedBy,
             Long historyId,
             int totalCount,
             int processedCount,
@@ -133,13 +133,16 @@ public interface GenTaskRepository {
     /**
      * 标记任务失败。
      *
+     * <p>仅当前认领者可写终态；任务已被取消、终态或接管时返回 {@code false}。
+     *
      * @param id 任务 ID
      * @param tenantId 租户 ID
+     * @param lockedBy 认领实例标识
      * @param errorMessage 失败原因（调用方负责截断）
      * @param completedAt 终态时间
-     * @return 更新成功返回 {@code true}；任务已进入终态时返回 {@code false}
+     * @return 更新成功返回 {@code true}
      */
-    Mono<Boolean> markFailed(Long id, String tenantId, String errorMessage, LocalDateTime completedAt);
+    Mono<Boolean> markFailed(Long id, String tenantId, String lockedBy, String errorMessage, LocalDateTime completedAt);
 
     /**
      * 请求取消任务。
@@ -156,6 +159,9 @@ public interface GenTaskRepository {
 
     /**
      * 物理清理指定时间之前结束的任务。
+     *
+     * <p>实现为「按租户与完成时间查出主键、再按主键物理删除」的两步操作，
+     * 双数据库方言语义一致。
      *
      * @param tenantId 租户 ID
      * @param finishedBefore 终态时间截止点

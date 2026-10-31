@@ -4,17 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.apex.scaffold.application.dto.admin.GenArtifactDTO;
 import com.apex.scaffold.application.dto.admin.GenGenerateRequest;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.generator.GenTaskEntity;
 import com.apex.scaffold.domain.repository.GenTaskRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -22,7 +25,8 @@ import reactor.test.StepVerifier;
 /**
  * 验证异步生成任务的提交、进度查询、取消与终态收敛。
  *
- * <p>覆盖「进度回写失败即停止」与「未达最大尝试次数保留 RUNNING 重试」两条关键分支。
+ * <p>覆盖「进度回写失败即停止」「租约守卫以续租条件更新复检执行权」
+ * 与「未达最大尝试次数保留 RUNNING 重试」三条关键分支。
  */
 class GeneratorTaskServiceTest {
 
@@ -33,6 +37,8 @@ class GeneratorTaskServiceTest {
     private static final Long TASK_ID = 99L;
 
     private static final Long OPERATOR = 42L;
+
+    private static final String WORKER = "generator-task-worker";
 
     private static final int MAX_ATTEMPTS = 3;
 
@@ -94,6 +100,36 @@ class GeneratorTaskServiceTest {
     }
 
     @Test
+    void getTaskArtifactsRejectsForeignOrUnknownTask() {
+        when(wizardService.tenantId()).thenReturn(Mono.just(TENANT));
+        when(genTaskRepository.findById(TASK_ID, TENANT)).thenReturn(Mono.empty());
+
+        StepVerifier.create(service.getTaskArtifacts(TASK_ID))
+                .expectErrorSatisfies(error ->
+                        assertThat(error).isInstanceOf(BusinessException.class).hasMessageContaining("生成任务不存在"))
+                .verify(TIMEOUT);
+        verify(wizardService, never()).listTaskArtifacts(any(), any());
+    }
+
+    @Test
+    void getTaskArtifactsReturnsListForOwnedTask() {
+        GenTaskEntity completed = task();
+        completed.setStatus("COMPLETED");
+        when(wizardService.tenantId()).thenReturn(Mono.just(TENANT));
+        when(genTaskRepository.findById(TASK_ID, TENANT)).thenReturn(Mono.just(completed));
+        when(wizardService.listTaskArtifacts(TASK_ID, TENANT))
+                .thenReturn(Mono.just(
+                        List.of(GenArtifactDTO.builder().id(1L).taskId(TASK_ID).build())));
+
+        StepVerifier.create(service.getTaskArtifacts(TASK_ID))
+                .assertNext(artifacts -> {
+                    assertThat(artifacts).hasSize(1);
+                    assertThat(artifacts.get(0).getTaskId()).isEqualTo(TASK_ID);
+                })
+                .verifyComplete();
+    }
+
+    @Test
     void cancelSucceedsWhenTaskCancelable() {
         when(wizardService.tenantId()).thenReturn(Mono.just(TENANT));
         when(genTaskRepository.requestCancel(eq(TASK_ID), eq(TENANT), any(LocalDateTime.class)))
@@ -118,11 +154,13 @@ class GeneratorTaskServiceTest {
     void processTaskReportsProgressAndMarksCompleted() {
         GenTaskEntity running = task();
         running.setStatus("RUNNING");
-        when(genTaskRepository.updateProgress(TASK_ID, TENANT, 4, 2, 1, "boom")).thenReturn(Mono.just(true));
-        when(genTaskRepository.markCompleted(
-                        eq(TASK_ID), eq(TENANT), eq(55L), eq(4), eq(2), eq(1), any(LocalDateTime.class)))
+        when(genTaskRepository.updateProgress(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), any(LocalDateTime.class), eq(4), eq(2), eq(1), eq("boom")))
                 .thenReturn(Mono.just(true));
-        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any()))
+        when(genTaskRepository.markCompleted(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), eq(55L), eq(4), eq(2), eq(1), any(LocalDateTime.class)))
+                .thenReturn(Mono.just(true));
+        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any(), any()))
                 .thenAnswer(invocation -> {
                     GeneratorWizardService.TaskProgressListener listener = invocation.getArgument(3);
                     return listener.onProgress(2, 1, "boom")
@@ -137,17 +175,22 @@ class GeneratorTaskServiceTest {
                 })
                 .verifyComplete();
 
-        verify(genTaskRepository).updateProgress(TASK_ID, TENANT, 4, 2, 1, "boom");
         verify(genTaskRepository)
-                .markCompleted(eq(TASK_ID), eq(TENANT), eq(55L), eq(4), eq(2), eq(1), any(LocalDateTime.class));
+                .updateProgress(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), any(LocalDateTime.class), eq(4), eq(2), eq(1), eq("boom"));
+        verify(genTaskRepository)
+                .markCompleted(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), eq(55L), eq(4), eq(2), eq(1), any(LocalDateTime.class));
     }
 
     @Test
-    void processTaskSkipsTerminalWriteWhenStopped() {
+    void processTaskStopsAndSkipsTerminalWriteWhenProgressRejected() {
         GenTaskEntity running = task();
         running.setStatus("RUNNING");
-        when(genTaskRepository.updateProgress(TASK_ID, TENANT, 4, 1, 0, null)).thenReturn(Mono.just(false));
-        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any()))
+        when(genTaskRepository.updateProgress(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), any(LocalDateTime.class), eq(4), eq(1), eq(0), isNull()))
+                .thenReturn(Mono.just(false));
+        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any(), any()))
                 .thenAnswer(invocation -> {
                     GeneratorWizardService.TaskProgressListener listener = invocation.getArgument(3);
                     return listener.onProgress(1, 0, null)
@@ -158,51 +201,95 @@ class GeneratorTaskServiceTest {
                 .assertNext(outcome -> assertThat(outcome.stopped()).isTrue())
                 .verifyComplete();
 
-        verify(genTaskRepository, never()).markCompleted(any(), any(), any(), anyInt(), anyInt(), anyInt(), any());
-        verify(genTaskRepository, never()).markFailed(any(), any(), any(), any());
+        verify(genTaskRepository, never())
+                .markCompleted(any(), any(), any(), any(), anyInt(), anyInt(), anyInt(), any());
+        verify(genTaskRepository, never()).markFailed(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void processTaskUsesLeaseGuardAsOwnershipHeartbeat() {
+        GenTaskEntity running = task();
+        running.setStatus("RUNNING");
+        when(genTaskRepository.renewLease(eq(TASK_ID), eq(TENANT), eq(WORKER), any(LocalDateTime.class)))
+                .thenReturn(Mono.just(true));
+        when(genTaskRepository.updateProgress(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), any(LocalDateTime.class), eq(4), eq(1), eq(0), isNull()))
+                .thenReturn(Mono.just(true));
+        when(genTaskRepository.markCompleted(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), eq(55L), eq(4), eq(1), eq(0), any(LocalDateTime.class)))
+                .thenReturn(Mono.just(true));
+        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any(), any()))
+                .thenAnswer(invocation -> {
+                    GeneratorWizardService.TaskProgressListener listener = invocation.getArgument(3);
+                    GeneratorWizardService.LeaseGuard leaseGuard = invocation.getArgument(4);
+                    return leaseGuard
+                            .holdsLease()
+                            .flatMap(owned -> listener.onProgress(1, 0, null).thenReturn(owned))
+                            .flatMap(go -> Boolean.TRUE.equals(go)
+                                    ? Mono.just(new GeneratorWizardService.TaskOutcome(55L, 1, 0, false))
+                                    : Mono.error(new IllegalStateException("lease lost")));
+                });
+
+        StepVerifier.create(service.processTask(running, TENANT))
+                .assertNext(outcome -> {
+                    assertThat(outcome.historyId()).isEqualTo(55L);
+                    assertThat(outcome.stopped()).isFalse();
+                })
+                .verifyComplete();
+
+        verify(genTaskRepository).renewLease(eq(TASK_ID), eq(TENANT), eq(WORKER), any(LocalDateTime.class));
     }
 
     @Test
     void processTaskMarksFailedWhenNoArtifactProduced() {
         GenTaskEntity running = task();
-        when(genTaskRepository.markFailed(eq(TASK_ID), eq(TENANT), eq("生成未产生任何产物"), any(LocalDateTime.class)))
+        when(genTaskRepository.markFailed(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), eq("生成未产生任何产物"), any(LocalDateTime.class)))
                 .thenReturn(Mono.just(true));
-        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any()))
+        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any(), any()))
                 .thenReturn(Mono.just(new GeneratorWizardService.TaskOutcome(null, 0, 0, false)));
 
         StepVerifier.create(service.processTask(running, TENANT))
                 .assertNext(outcome -> assertThat(outcome.historyId()).isNull())
                 .verifyComplete();
 
-        verify(genTaskRepository).markFailed(eq(TASK_ID), eq(TENANT), eq("生成未产生任何产物"), any(LocalDateTime.class));
+        verify(genTaskRepository)
+                .markFailed(eq(TASK_ID), eq(TENANT), eq(WORKER), eq("生成未产生任何产物"), any(LocalDateTime.class));
     }
 
     @Test
     void processTaskMarksFailedWhenAttemptsExhausted() {
         GenTaskEntity running = task();
         running.setAttempts(MAX_ATTEMPTS);
-        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any()))
+        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any(), any()))
                 .thenReturn(Mono.error(new IllegalStateException("disk full")));
-        when(genTaskRepository.markFailed(eq(TASK_ID), eq(TENANT), eq("disk full"), any(LocalDateTime.class)))
+        when(genTaskRepository.markFailed(
+                        eq(TASK_ID), eq(TENANT), eq(WORKER), eq("disk full"), any(LocalDateTime.class)))
                 .thenReturn(Mono.just(true));
 
         StepVerifier.create(service.processTask(running, TENANT)).verifyComplete();
 
-        verify(genTaskRepository).markFailed(eq(TASK_ID), eq(TENANT), eq("disk full"), any(LocalDateTime.class));
+        verify(genTaskRepository)
+                .markFailed(eq(TASK_ID), eq(TENANT), eq(WORKER), eq("disk full"), any(LocalDateTime.class));
     }
 
     @Test
     void processTaskKeepsRunningWhenAttemptsRemain() {
         GenTaskEntity running = task();
         running.setAttempts(1);
-        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any()))
+        when(wizardService.runTask(eq(running), eq(OPERATOR), eq(TENANT), any(), any()))
                 .thenReturn(Mono.error(new IllegalStateException("disk full")));
 
         StepVerifier.create(service.processTask(running, TENANT)).verifyComplete();
 
-        verify(genTaskRepository, never()).markFailed(any(), any(), any(), any());
+        verify(genTaskRepository, never()).markFailed(any(), any(), any(), any(), any());
     }
 
+    /**
+     * 构建带认领者信息的任务夹具。
+     *
+     * @return 已认领状态的任务实体
+     */
     private static GenTaskEntity task() {
         GenTaskEntity task = new GenTaskEntity();
         task.setId(TASK_ID);
@@ -214,6 +301,7 @@ class GeneratorTaskServiceTest {
         task.setOperatorId(OPERATOR);
         task.setAttempts(0);
         task.setTenantId(TENANT);
+        task.setLockedBy(WORKER);
         return task;
     }
 }
