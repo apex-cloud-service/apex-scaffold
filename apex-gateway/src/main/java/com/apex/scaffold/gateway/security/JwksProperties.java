@@ -39,6 +39,34 @@ public class JwksProperties {
     /** 按 kid 组织的 RSA 公钥清单（可热更新下发） */
     private List<JwksProfile> ks = new ArrayList<>();
 
+    /**
+     * 远程 JWKS 拉取地址（认证中心 {@code /.well-known/jwks.json} 的完整 URL）。
+     *
+     * <p>统一认证收口（A2）：非空时网关按 {@link #remoteRefreshIntervalSeconds} 周期
+     * 拉取认证中心轮换公钥并合并进密钥缓存（同 kid 覆盖静态条目）；为空时仅使用
+     * 静态 {@code ks} 清单与 HMAC 过渡密钥。
+     */
+    private String remoteUrl = "";
+
+    /** 远程 JWKS 拉取间隔（秒），下限 30 */
+    private long remoteRefreshIntervalSeconds = 300;
+
+    public String getRemoteUrl() {
+        return remoteUrl == null ? "" : remoteUrl;
+    }
+
+    public void setRemoteUrl(String remoteUrl) {
+        this.remoteUrl = remoteUrl == null ? "" : remoteUrl;
+    }
+
+    public long getRemoteRefreshIntervalSeconds() {
+        return remoteRefreshIntervalSeconds;
+    }
+
+    public void setRemoteRefreshIntervalSeconds(long remoteRefreshIntervalSeconds) {
+        this.remoteRefreshIntervalSeconds = remoteRefreshIntervalSeconds;
+    }
+
     public void setHmacSecret(String hmacSecret) {
         this.hmacSecret = hmacSecret == null ? "" : hmacSecret;
     }

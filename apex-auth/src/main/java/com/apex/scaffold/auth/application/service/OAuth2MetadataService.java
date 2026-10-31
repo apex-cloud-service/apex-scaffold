@@ -1,6 +1,7 @@
 package com.apex.scaffold.auth.application.service;
 
 import com.apex.scaffold.auth.config.OAuth2Properties;
+import com.apex.scaffold.auth.domain.service.JwtKeyMaterialService;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -8,6 +9,7 @@ import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedHashMap;
@@ -15,9 +17,14 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 /**
  * OAuth2 授权服务器元数据（RFC 8414）端点服务。
+ *
+ * <p>统一认证收口（A2）：JWKS 端点聚合输出「Redis 轮换密钥（活跃 + 宽限期，经
+ * {@link JwtKeyMaterialService}）+ 配置注入静态密钥（过渡期回退，可关）」，
+ * 是登录令牌与 OAuth2 令牌唯一的公钥分发点。
  *
  * @author Apex Team
  * @version 1.3.1
@@ -32,6 +39,7 @@ public class OAuth2MetadataService {
     private final OAuth2Properties properties;
     private final RSAPublicKey publicKey;
     private final java.security.PrivateKey privateKey;
+    private final JwtKeyMaterialService keyMaterialService;
 
     /**
      * 构造服务并加载或生成RSA签名密钥对
@@ -40,10 +48,13 @@ public class OAuth2MetadataService {
      *
      * @param properties OAuth2配置属性
      * @param environment Spring环境
+     * @param keyMaterialService 统一密钥材料服务（轮换 RSA，聚合 JWKS 的数据源）
      * @throws IllegalStateException RSA密钥配置无效时抛出
      */
-    public OAuth2MetadataService(OAuth2Properties properties, Environment environment) {
+    public OAuth2MetadataService(
+            OAuth2Properties properties, Environment environment, JwtKeyMaterialService keyMaterialService) {
         this.properties = properties;
+        this.keyMaterialService = keyMaterialService;
         try {
             if (properties.getPrivateKey() != null && properties.getPublicKey() != null) {
                 KeyFactory factory = KeyFactory.getInstance("RSA");
@@ -102,26 +113,45 @@ public class OAuth2MetadataService {
     }
 
     /**
-     * 导出当前签名密钥的 JWK Set，仅包含 RSA 公钥，不暴露私钥。
+     * 导出聚合 JWK Set：Redis 轮换密钥（活跃 + 宽限期）在前，配置注入静态密钥
+     * （{@code legacyKeyInJwks=true} 且已配置时）追加在后；仅含 RSA 公钥，不暴露私钥。
      *
-     * @return 含单个 RS256 签名公钥的 keys 集合，模数和指数采用无填充 Base64URL 编码
+     * <p>统一认证收口（A2）：本端点是登录令牌与 OAuth2 令牌唯一的公钥分发点，
+     * 网关与下游服务经共享 JWKS 拉取客户端消费。
+     *
+     * @return 含全部可用 RS256 签名公钥的 keys 集合，模数和指数采用无填充 Base64URL 编码
      */
-    public Map<String, Object> jwks() {
-        return Map.of(
-                "keys",
-                List.of(Map.of(
-                        "kty",
-                        "RSA",
-                        "use",
-                        "sig",
-                        "alg",
-                        "RS256",
-                        "kid",
-                        properties.getKeyId(),
-                        "n",
-                        unsigned(publicKey.getModulus()),
-                        "e",
-                        unsigned(publicKey.getPublicExponent()))));
+    public Mono<Map<String, Object>> jwks() {
+        return keyMaterialService.availablePublicKeys().defaultIfEmpty(Map.of()).map(rotating -> {
+            List<Map<String, Object>> keys = new ArrayList<>();
+            if (properties.isLegacyKeyInJwks()) {
+                keys.add(jwk(properties.getKeyId(), publicKey));
+            }
+            rotating.forEach((kid, key) -> {
+                if (key instanceof RSAPublicKey rsa) {
+                    keys.add(jwk(kid, rsa));
+                }
+            });
+            return Map.<String, Object>of("keys", List.copyOf(keys));
+        });
+    }
+
+    /**
+     * 投影单个 RSA 公钥为 JWK 条目。
+     *
+     * @param kid 密钥ID
+     * @param key RSA 公钥
+     * @return JWK 条目（kty/use/alg/kid/n/e）
+     */
+    private Map<String, Object> jwk(String kid, RSAPublicKey key) {
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("kty", "RSA");
+        entry.put("use", "sig");
+        entry.put("alg", "RS256");
+        entry.put("kid", kid);
+        entry.put("n", unsigned(key.getModulus()));
+        entry.put("e", unsigned(key.getPublicExponent()));
+        return entry;
     }
 
     /**

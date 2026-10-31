@@ -1,6 +1,7 @@
 package com.apex.scaffold.fileservice.interfaces.security;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.security.JwksFetcher;
 import com.apex.scaffold.file.application.service.FileAccessContext;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -48,17 +49,23 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private final boolean keyedPublicKeys;
     private final SecretKey secretKey;
 
+    /** 共享 JWKS 拉取客户端；未装配时为 {@code null}（统一认证收口 A2）。 */
+    private final JwksFetcher jwksFetcher;
+
     /**
      * 加载明确配置的验签密钥；RSA 与 HMAC 验证各自限制算法，防止密钥类型混淆。
-     * @param publicKeyBase64 X509 DER 编码的 RSA 公钥
+     * @param publicKeysBase64 多公钥配置，格式 {@code kid=Base64X509,kid=Base64X509}
+     * @param publicKeyBase64 旧版单公钥（X509 DER Base64），多公钥为空时生效
      * @param secret HMAC 过渡密钥，至少 256 位
+     * @param jwksFetcher 共享 JWKS 拉取客户端（可能未装配）
      */
     @Autowired
     public IdentityRelayAuthenticationFilter(
             @Value("${file.security.jwt-public-keys-base64:}") String publicKeysBase64,
             @Value("${file.security.jwt-public-key-base64:}") String publicKeyBase64,
-            @Value("${file.security.jwt-secret:}") String secret) {
-        this(publicKeysBase64.isBlank() ? publicKeyBase64 : publicKeysBase64, secret);
+            @Value("${file.security.jwt-secret:}") String secret,
+            org.springframework.beans.factory.ObjectProvider<JwksFetcher> jwksFetcher) {
+        this(publicKeysBase64.isBlank() ? publicKeyBase64 : publicKeysBase64, secret, jwksFetcher.getIfAvailable());
     }
 
     /**
@@ -67,6 +74,10 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * @param secret HMAC 过渡密钥
      */
     public IdentityRelayAuthenticationFilter(String publicKeyConfiguration, String secret) {
+        this(publicKeyConfiguration, secret, null);
+    }
+
+    private IdentityRelayAuthenticationFilter(String publicKeyConfiguration, String secret, JwksFetcher jwksFetcher) {
         try {
             Map<String, PublicKey> configuredKeys = new HashMap<>();
             if (!publicKeyConfiguration.isBlank()) {
@@ -86,8 +97,10 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
                     }
                     keyedPublicKeys = true;
                 } else {
-                    configuredKeys.put("", keyFactory.generatePublic(new X509EncodedKeySpec(
-                            Base64.getDecoder().decode(publicKeyConfiguration))));
+                    configuredKeys.put(
+                            "",
+                            keyFactory.generatePublic(
+                                    new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyConfiguration))));
                     keyedPublicKeys = false;
                 }
             } else {
@@ -98,6 +111,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
         } catch (java.security.GeneralSecurityException | IllegalArgumentException error) {
             throw new IllegalArgumentException("文件服务 JWT 公钥配置无效", error);
         }
+        this.jwksFetcher = jwksFetcher;
     }
 
     /**
@@ -150,7 +164,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
         Claims claims = null;
         if (Jwts.SIG.RS256.getId().equals(algorithm)) {
             String keyId = keyedPublicKeys ? headerValue(token, "kid") : "";
-            PublicKey verificationKey = keyId == null ? null : publicKeys.get(keyId);
+            PublicKey verificationKey = keyId == null ? null : effectiveKeys().get(keyId);
             if (verificationKey != null) {
                 try {
                     claims = Jwts.parser()
@@ -176,6 +190,23 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
         return claims != null && claims.getExpiration() != null ? claims : null;
     }
 
+    /**
+     * 合并当前生效公钥：静态配置打底，JWKS 拉取快照覆盖同 kid 条目
+     * （{@code apex.jwks.remote-url} 启用时认证中心轮换公钥最迟一个刷新周期内生效）。
+     *
+     * @return 当前生效的公钥映射
+     */
+    private Map<String, PublicKey> effectiveKeys() {
+        if (jwksFetcher == null
+                || !jwksFetcher.enabled()
+                || jwksFetcher.snapshot().isEmpty()) {
+            return publicKeys;
+        }
+        Map<String, PublicKey> merged = new java.util.HashMap<>(publicKeys);
+        merged.putAll(jwksFetcher.snapshot());
+        return Map.copyOf(merged);
+    }
+
     private boolean isHmacAlgorithm(String algorithm) {
         return Jwts.SIG.HS256.getId().equals(algorithm)
                 || Jwts.SIG.HS384.getId().equals(algorithm)
@@ -189,8 +220,8 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
                 return null;
             }
             String header = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
-            java.util.regex.Matcher matcher = java.util.regex.Pattern
-                    .compile("\\\"" + name + "\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"")
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile(
+                            "\\\"" + name + "\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"")
                     .matcher(header);
             return matcher.find() ? matcher.group(1) : null;
         } catch (IllegalArgumentException error) {

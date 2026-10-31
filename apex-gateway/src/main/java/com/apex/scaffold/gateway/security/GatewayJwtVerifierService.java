@@ -1,5 +1,6 @@
 package com.apex.scaffold.gateway.security;
 
+import com.apex.scaffold.common.security.JwksFetcher;
 import com.apex.scaffold.common.util.JsonUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -11,15 +12,20 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 
 /**
- * 网关 JWT 验签服务（JWKS 非对称 + HMAC 过渡兼容）.
+ * 网关 JWT 验签服务（JWKS 非对称 + HMAC 过渡兼容 + 远程 JWKS 拉取）.
  *
  * <p>核心职责：
  * <ol>
@@ -27,6 +33,9 @@ import org.springframework.stereotype.Service;
  *   <li>先解析 JWT header 中的 {@code kid}，再选择对应密钥完成验签，
  *       从而同时支持 RSA（Phase 2 起 auth 服务签发）与 HMAC（过渡期旧 Token）两种算法
  *       （风险缓解：见迁移方案 §16 风险 #1 过渡期双 kid 并行验证）</li>
+ *   <li>统一认证收口（A2）：配置 {@code apex.gateway.jwks.remote-url} 时周期拉取认证中心
+ *       轮换公钥并合并进缓存（同 kid 覆盖静态条目，{@code hmac-legacy} 不受影响），
+ *       拉取失败保留上一次快照；密钥轮换最迟一个刷新周期内生效</li>
  *   <li>验签 + 过期校验一体化，失败返回 {@code null}，由过滤器统一收敛为 401 Result</li>
  * </ol>
  *
@@ -38,7 +47,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @Slf4j
-public class GatewayJwtVerifierService {
+public class GatewayJwtVerifierService implements DisposableBean {
 
     /** HMAC 过渡密钥的合成 kid（当配置未显式声明 hmac 条目时兜底使用） */
     private static final String HMAC_FALLBACK_KID = "hmac-legacy";
@@ -51,14 +60,43 @@ public class GatewayJwtVerifierService {
 
     private final JwksProperties properties;
 
+    /** 远程 JWKS 拉取函数（生产为 WebClient 实现，测试可注入替身） */
+    private final Function<String, reactor.core.publisher.Mono<Map<String, PublicKey>>> remoteFetcher;
+
+    /** 远程拉取定时订阅句柄 */
+    private volatile Disposable remoteDisposable;
+
     /**
      * 构造验签服务并预热密钥缓存.
      *
      * @param properties JWKS 配置（来自本地或 Nacos）
      */
+    @org.springframework.beans.factory.annotation.Autowired
     public GatewayJwtVerifierService(JwksProperties properties) {
+        this(properties, GatewayJwtVerifierService::defaultRemoteFetcher);
+    }
+
+    /**
+     * 构造验签服务（测试注入远程拉取替身）.
+     *
+     * @param properties    JWKS 配置
+     * @param remoteFetcher 远程 JWKS 拉取函数（URL → 公钥映射）
+     */
+    public GatewayJwtVerifierService(
+            JwksProperties properties,
+            Function<String, reactor.core.publisher.Mono<Map<String, PublicKey>>> remoteFetcher) {
         this.properties = properties;
+        this.remoteFetcher = remoteFetcher;
         refreshKeys();
+    }
+
+    /** 释放远程拉取定时订阅. */
+    @Override
+    public void destroy() {
+        Disposable disposable = remoteDisposable;
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
+        }
     }
 
     /**
@@ -184,6 +222,7 @@ public class GatewayJwtVerifierService {
      * （重新）加载密钥缓存.
      *
      * <p>支持 Nacos 配置刷新后由外部调用以热更新密钥；启动时构造阶段也会调用一次。
+     * 配置远程拉取地址时，静态密钥加载完成后追加远程 JWKS 合并调度。
      */
     public synchronized void refreshKeys() {
         keyCache.clear();
@@ -198,6 +237,73 @@ public class GatewayJwtVerifierService {
             log.info("网关已注册 HMAC 过渡密钥: kid={}（过渡期对称验证启用）", HMAC_FALLBACK_KID);
         }
         log.info("网关 JWKS 验签密钥已加载: keys={}", keyCache.size());
+        scheduleRemoteRefresh();
+    }
+
+    /**
+     * 调度远程 JWKS 拉取（A2）：立即拉取一次，此后按配置间隔刷新；
+     * 失败保留上一次快照并告警，不影响在用密钥。
+     */
+    private void scheduleRemoteRefresh() {
+        Disposable previous = remoteDisposable;
+        if (previous != null && !previous.isDisposed()) {
+            previous.dispose();
+        }
+        if (properties.getRemoteUrl() == null || properties.getRemoteUrl().isBlank()) {
+            return;
+        }
+        Duration interval = Duration.ofSeconds(Math.max(30, properties.getRemoteRefreshIntervalSeconds()));
+        remoteDisposable = loadRemote()
+                .onErrorResume(e -> {
+                    log.warn("远程 JWKS 初始拉取失败，等待下个周期重试: url={}, reason={}", properties.getRemoteUrl(), e.getMessage());
+                    return reactor.core.publisher.Mono.empty();
+                })
+                .thenMany(Flux.interval(interval, interval))
+                .concatMap(ignore -> loadRemote().onErrorResume(e -> {
+                    log.warn("远程 JWKS 周期拉取失败，保留上一次快照: url={}, reason={}", properties.getRemoteUrl(), e.getMessage());
+                    return reactor.core.publisher.Mono.empty();
+                }))
+                .subscribe();
+        log.info("网关远程 JWKS 拉取已启动: url={}, interval={}s", properties.getRemoteUrl(), interval.getSeconds());
+    }
+
+    /**
+     * 拉取远程 JWKS 并合并进密钥缓存（同 kid 覆盖静态条目，{@code hmac-legacy} 不受影响）。
+     *
+     * @return 本次合并的公钥映射
+     */
+    private reactor.core.publisher.Mono<Map<String, PublicKey>> loadRemote() {
+        return remoteFetcher.apply(properties.getRemoteUrl()).doOnNext(keys -> {
+            if (keys.isEmpty()) {
+                log.warn("远程 JWKS 未包含可用 RSA 公钥，保留现有密钥");
+                return;
+            }
+            keys.forEach((kid, publicKey) -> {
+                Key previous = keyCache.put(kid, publicKey);
+                if (previous == null) {
+                    log.info("远程 JWKS 公钥已注册: kid={}", kid);
+                } else {
+                    log.debug("远程 JWKS 公钥已覆盖静态条目: kid={}", kid);
+                }
+            });
+            log.info("网关远程 JWKS 合并完成: 总密钥数={}", keyCache.size());
+        });
+    }
+
+    /**
+     * 默认远程拉取实现（WebClient 非阻塞拉取 + 共享 JWKS 解析语义）.
+     *
+     * @param url JWKS 地址
+     * @return kid → RSA 公钥映射
+     */
+    private static reactor.core.publisher.Mono<Map<String, PublicKey>> defaultRemoteFetcher(String url) {
+        return org.springframework.web.reactive.function.client.WebClient.create()
+                .get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(String.class)
+                .timeout(Duration.ofSeconds(5))
+                .map(JwksFetcher::parseJwks);
     }
 
     /**

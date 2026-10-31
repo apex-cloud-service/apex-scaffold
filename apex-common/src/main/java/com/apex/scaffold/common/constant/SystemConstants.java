@@ -121,6 +121,9 @@ public final class SystemConstants {
      */
     public static final List<String> INTERNAL_ORG_PATHS = List.of("/internal/v1/org/**");
 
+    /** 认证期租户状态查询内部路径（统一认证收口 A6）：集群内服务直连，不经网关 */
+    public static final List<String> INTERNAL_TENANT_PATHS = List.of("/internal/v1/tenants/**");
+
     /**
      * 公开路径定义（无需认证）
      *

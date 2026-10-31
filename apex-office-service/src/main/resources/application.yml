@@ -15,12 +15,20 @@ apex:
     transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
     propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
     allowed-origins: []
+  jwks:
+    # 共享 JWKS 拉取（统一认证收口 A2）：认证中心 /.well-known/jwks.json；
+    # 空 = 拉取关闭，仅用静态公钥兜底；轮换公钥最迟一个刷新周期内生效。
+    remote-url: ${JWKS_REMOTE_URL:}
+    refresh-interval-seconds: ${JWKS_REFRESH_INTERVAL_SECONDS:300}
 
 # 办公 HTTP 独立验签；RSA 公钥为 X509 DER Base64，HMAC 仅用于显式启用的过渡环境。
 # 不配置密钥时拒绝用户认证，绝不使用 X-User-Id/X-Tenant-Id 作为认证依据。
 office:
   security:
     jwt-public-key-base64: ${OFFICE_JWT_PUBLIC_KEY_BASE64:}
+    # 多公钥格式为 kid=Base64PublicKey,kid=Base64PublicKey，按 JWT header 的 kid 选择公钥；
+    # 多公钥优先于单公钥。生产推荐配置 apex.jwks.remote-url 自动拉取认证中心轮换公钥。
+    jwt-public-keys-base64: ${OFFICE_JWT_PUBLIC_KEYS_BASE64:}
     jwt-secret: ${OFFICE_JWT_SECRET:}
     authorization:
       # 部署者确认 office JWT userId 就是 auth 用户 ID 后才能开启；默认拒绝，禁止混用 accountId。

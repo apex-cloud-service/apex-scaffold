@@ -2,12 +2,10 @@ package com.apex.scaffold.interfaces.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.apex.scaffold.common.util.JwtUtil;
 import com.apex.scaffold.domain.model.entity.RoleEntity;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.RoleRepository;
@@ -19,7 +17,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import java.util.Date;
 import java.util.Locale;
-import org.junit.jupiter.api.AfterEach;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -70,10 +67,11 @@ class JwtAuthenticationFilterTest {
     @Mock
     private MessageUtils messageUtils;
 
+    @Mock
+    private TokenVerifier tokenVerifier;
+
     @InjectMocks
     private JwtAuthenticationFilter filter;
-
-    private MockedStatic<JwtUtil> jwtUtilMockedStatic;
 
     private static final String VALID_TOKEN = "valid-token-value";
     private static final String TEST_OPEN_ID = "test-open-id";
@@ -83,13 +81,7 @@ class JwtAuthenticationFilterTest {
      */
     @BeforeEach
     void setUp() {
-        jwtUtilMockedStatic = mockStatic(JwtUtil.class);
         when(messageUtils.get(any(Locale.class), any())).thenReturn("");
-    }
-
-    @AfterEach
-    void tearDown() {
-        jwtUtilMockedStatic.close();
     }
 
     @Test
@@ -103,7 +95,7 @@ class JwtAuthenticationFilterTest {
                                 .withProperty("apex.features.auth-center-permission", "true"),
                         null);
         JwtAuthenticationFilter central = new JwtAuthenticationFilter(
-                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified);
+                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified, tokenVerifier);
         UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
         user.setId(7L);
         user.setTenantId("main");
@@ -117,7 +109,7 @@ class JwtAuthenticationFilterTest {
                         java.util.List.of(new com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.Role(
                                 "AUDITOR", "SELF")))));
         Claims centralClaims = mockClaims();
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centralClaims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(centralClaims);
         when(chain.filter(any(ServerWebExchange.class)))
                 .thenAnswer(invocation ->
                         org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()
@@ -148,14 +140,14 @@ class JwtAuthenticationFilterTest {
         when(unified.enabled()).thenReturn(true);
         when(unified.roles(7L)).thenReturn(Mono.error(new IllegalStateException("Unavailable")));
         JwtAuthenticationFilter central = new JwtAuthenticationFilter(
-                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified);
+                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified, tokenVerifier);
         UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
         user.setId(7L);
         user.setTenantId("main");
         when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.just(user));
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
         Claims centralClaims = mockClaims();
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centralClaims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(centralClaims);
         ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/internal/user/profile")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
                 .build());
@@ -295,7 +287,7 @@ class JwtAuthenticationFilterTest {
         when(roleRepository.findByUserId(user.getId())).thenReturn(Mono.just(java.util.List.of()));
         when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
 
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         Mono<Void> result = filter.filter(exchange, chain);
 
@@ -343,7 +335,7 @@ class JwtAuthenticationFilterTest {
                                                     "AuthenticatedUser[userId=2, openId=test-open-id, tenantId=tenant-a]");
                                 })
                                 .then());
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
     }
@@ -377,7 +369,7 @@ class JwtAuthenticationFilterTest {
                                         .extracting(org.springframework.security.core.GrantedAuthority::getAuthority)
                                         .containsExactly("ROLE_PHOTO_REVIEWER"))
                                 .then());
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
     }
@@ -407,7 +399,7 @@ class JwtAuthenticationFilterTest {
                                         .extracting(org.springframework.security.core.GrantedAuthority::getAuthority)
                                         .containsExactly("ROLE_AUDITOR"))
                                 .then());
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
     }
@@ -430,7 +422,7 @@ class JwtAuthenticationFilterTest {
         when(roleRepository.findByUserId(10L))
                 .thenReturn(Mono.just(java.util.List.of(editor)), Mono.just(java.util.List.of()));
         when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         StepVerifier.create(filter.filter(MockServerWebExchange.from(request), chain))
                 .verifyComplete();
@@ -450,7 +442,7 @@ class JwtAuthenticationFilterTest {
         Claims claims = mockClaims();
         when(claims.get("type", String.class)).thenReturn("refresh");
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
@@ -468,7 +460,7 @@ class JwtAuthenticationFilterTest {
         Claims claims = mockClaims();
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
         when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.empty());
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
@@ -500,7 +492,7 @@ class JwtAuthenticationFilterTest {
         when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.just(reRegisteredUser));
         when(roleRepository.findByUserId(2L)).thenReturn(Mono.just(java.util.List.of()));
         when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(oldClaims, newClaims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(oldClaims, newClaims);
 
         ServerWebExchange oldExchange = MockServerWebExchange.from(request);
         StepVerifier.create(filter.filter(oldExchange, chain)).verifyComplete();
@@ -527,7 +519,7 @@ class JwtAuthenticationFilterTest {
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
         when(userRepository.findByOpenId(TEST_OPEN_ID))
                 .thenReturn(Mono.error(new IllegalStateException("db unavailable")));
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claims);
+        when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
         StepVerifier.create(filter.filter(exchange, chain)).verifyComplete();
 
@@ -544,9 +536,7 @@ class JwtAuthenticationFilterTest {
         ServerWebExchange exchange = MockServerWebExchange.from(request);
 
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-        jwtUtilMockedStatic
-                .when(() -> JwtUtil.parseToken(VALID_TOKEN))
-                .thenThrow(new ExpiredJwtException(null, null, "Token已过期"));
+        when(tokenVerifier.parse(VALID_TOKEN)).thenThrow(new ExpiredJwtException(null, null, "Token已过期"));
 
         Mono<Void> result = filter.filter(exchange, chain);
 
@@ -564,7 +554,7 @@ class JwtAuthenticationFilterTest {
         ServerWebExchange exchange = MockServerWebExchange.from(request);
 
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-        jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenThrow(new JwtException("无效的Token"));
+        when(tokenVerifier.parse(VALID_TOKEN)).thenThrow(new JwtException("无效的Token"));
 
         Mono<Void> result = filter.filter(exchange, chain);
 
@@ -616,7 +606,7 @@ class JwtAuthenticationFilterTest {
             RoleEntity adminRole = RoleEntity.create("管理员", "ADMIN", "系统管理员");
 
             when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(centerClaims);
             when(userRepository.findById(500L)).thenReturn(Mono.just(account));
             when(roleRepository.findByUserId(500L)).thenReturn(Mono.just(java.util.List.of(adminRole)));
             when(chain.filter(any(ServerWebExchange.class)))
@@ -657,7 +647,7 @@ class JwtAuthenticationFilterTest {
             account.setStatus(0);
 
             when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(centerClaims);
             when(userRepository.findById(500L)).thenReturn(Mono.just(account));
 
             ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
@@ -677,7 +667,7 @@ class JwtAuthenticationFilterTest {
             com.apex.scaffold.domain.model.entity.UserEntity account = account(500L, "default");
 
             when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(centerClaims);
             when(userRepository.findById(500L)).thenReturn(Mono.just(account));
 
             ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
@@ -696,7 +686,7 @@ class JwtAuthenticationFilterTest {
             Claims centerClaims = centerClaims(999L, "default");
 
             when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(centerClaims);
+            when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(centerClaims);
             when(userRepository.findById(999L)).thenReturn(Mono.empty());
 
             ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
@@ -717,7 +707,7 @@ class JwtAuthenticationFilterTest {
             // accountId 未携带（如存量 auth_user 未建立映射时签发的旧令牌）
 
             when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
-            jwtUtilMockedStatic.when(() -> JwtUtil.parseToken(VALID_TOKEN)).thenReturn(claimsWithoutAccount);
+            when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claimsWithoutAccount);
 
             ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
@@ -728,6 +718,70 @@ class JwtAuthenticationFilterTest {
             assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatusCode.valueOf(401));
             verifyNoInteractions(userRepository, chain);
         }
+    }
+
+    /** 统一认证收口（A1）：真实 RS256 认证中心令牌经统一验签器走通主应用认证分支。 */
+    @Test
+    void centerRs256TokenAuthenticatesThroughRealVerifier() {
+        java.security.KeyPair keyPair = io.jsonwebtoken.Jwts.SIG.RS256.keyPair().build();
+        String kid = "key-it-0001";
+        JwtVerifierSupplier supplier = new JwtVerifierSupplier(
+                JwtVerifierSupplier.decodeConfiguredKeys(Map.of(
+                        kid,
+                        java.util.Base64.getEncoder()
+                                .encodeToString(keyPair.getPublic().getEncoded()))),
+                null,
+                "system-filter-real-rs256-secret-0123456789abcdef",
+                true);
+        com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway gateway =
+                org.mockito.Mockito.mock(com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.class);
+        com.apex.scaffold.application.service.UnifiedAuthorizationService unified =
+                new com.apex.scaffold.application.service.UnifiedAuthorizationService(
+                        gateway,
+                        new org.springframework.mock.env.MockEnvironment()
+                                .withProperty("apex.features.auth-center-permission", "true"),
+                        null);
+        JwtAuthenticationFilter real = new JwtAuthenticationFilter(
+                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified, supplier);
+        UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
+        user.setId(95302L);
+        user.setTenantId("default");
+        when(userRepository.findById(95302L)).thenReturn(Mono.just(user));
+        when(tokenBlacklistService.isBlacklisted(any(String.class))).thenReturn(Mono.just(false));
+        when(gateway.query("default", 95302L))
+                .thenReturn(Mono.just(new com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.Authorization(
+                        "default",
+                        95302L,
+                        java.util.List.of(),
+                        java.util.List.of(new com.apex.scaffold.domain.gateway.UnifiedAuthorizationGateway.Role(
+                                "ADMIN", "ALL")))));
+        String token = io.jsonwebtoken.Jwts.builder()
+                .header()
+                .keyId(kid)
+                .and()
+                .subject("95302")
+                .claim("tokenType", "ACCESS")
+                .claim("accountId", 95302L)
+                .claim("tenantId", "default")
+                .claim("username", "reader")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 300_000))
+                .signWith(keyPair.getPrivate(), io.jsonwebtoken.Jwts.SIG.RS256)
+                .compact();
+        when(chain.filter(any(ServerWebExchange.class)))
+                .thenAnswer(invocation ->
+                        org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()
+                                .switchIfEmpty(Mono.error(new AssertionError("Missing authentication")))
+                                .doOnNext(context -> assertThat(
+                                                context.getAuthentication().getAuthorities())
+                                        .extracting(org.springframework.security.core.GrantedAuthority::getAuthority)
+                                        .containsExactly("ROLE_ADMIN"))
+                                .then(Mono.empty()));
+        ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/user/profile")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .build());
+        StepVerifier.create(real.filter(exchange, chain)).verifyComplete();
+        verify(gateway).query("default", 95302L);
     }
 
     private Claims mockClaims() {

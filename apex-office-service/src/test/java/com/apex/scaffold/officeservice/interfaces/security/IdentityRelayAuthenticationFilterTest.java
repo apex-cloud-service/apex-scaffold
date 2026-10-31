@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -80,6 +81,109 @@ class IdentityRelayAuthenticationFilterTest {
                 .block();
         assertThat(exchange.getResponse().getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN);
         assertThat(registry.consume(ticket)).isEqualTo(identity);
+    }
+
+    /** 统一认证收口（A1/A2）：多公钥模式按 header kid 选钥，未知 kid 拒绝；快照合并同 kid 覆盖。 */
+    @Test
+    void multiKidModeRoutesByHeaderKid() {
+        var oldKey = io.jsonwebtoken.Jwts.SIG.RS256.keyPair().build();
+        var newKey = io.jsonwebtoken.Jwts.SIG.RS256.keyPair().build();
+        String configured =
+                "old=" + Base64.getEncoder().encodeToString(oldKey.getPublic().getEncoded()) + ",new="
+                        + Base64.getEncoder().encodeToString(newKey.getPublic().getEncoded());
+        org.springframework.beans.factory.ObjectProvider<com.apex.scaffold.common.security.JwksFetcher> empty =
+                new org.springframework.beans.factory.ObjectProvider<>() {
+                    @Override
+                    public com.apex.scaffold.common.security.JwksFetcher getObject() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public com.apex.scaffold.common.security.JwksFetcher getIfAvailable() {
+                        return null;
+                    }
+                };
+        IdentityRelayAuthenticationFilter multi = new IdentityRelayAuthenticationFilter(
+                configured, "", "", new MessageSocketRegistry(), List.of("https://app.example"), empty);
+        var registry = new MessageSocketRegistry();
+
+        var oldToken = Jwts.builder()
+                .header()
+                .keyId("old")
+                .and()
+                .claim("userId", 7)
+                .claim("tenantId", "trusted")
+                .claim("tokenType", "ACCESS")
+                .expiration(Date.from(Instant.now().plusSeconds(60)))
+                .signWith(oldKey.getPrivate(), io.jsonwebtoken.Jwts.SIG.RS256)
+                .compact();
+        var unknownKid = Jwts.builder()
+                .header()
+                .keyId("unknown")
+                .and()
+                .claim("userId", 7)
+                .claim("tenantId", "trusted")
+                .claim("tokenType", "ACCESS")
+                .expiration(Date.from(Instant.now().plusSeconds(60)))
+                .signWith(newKey.getPrivate(), io.jsonwebtoken.Jwts.SIG.RS256)
+                .compact();
+        assertThat(authenticationOf(multi, registry, oldToken)).isNotNull();
+        assertThat(authenticationOf(multi, registry, unknownKid)).isNull();
+
+        // JWKS 拉取快照覆盖同 kid 静态条目：轮换后的新公钥签发令牌即可通过
+        var rotated = io.jsonwebtoken.Jwts.SIG.RS256.keyPair().build();
+        var fetcher =
+                new com.apex.scaffold.common.security.JwksFetcher(
+                        new com.apex.scaffold.common.config.JwksFetchProperties()) {
+                    @Override
+                    public boolean enabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public java.util.Map<String, java.security.PublicKey> snapshot() {
+                        return java.util.Map.of("new", rotated.getPublic());
+                    }
+                };
+        org.springframework.beans.factory.ObjectProvider<com.apex.scaffold.common.security.JwksFetcher> provider =
+                new org.springframework.beans.factory.ObjectProvider<>() {
+                    @Override
+                    public com.apex.scaffold.common.security.JwksFetcher getObject() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public com.apex.scaffold.common.security.JwksFetcher getIfAvailable() {
+                        return fetcher;
+                    }
+                };
+        IdentityRelayAuthenticationFilter merged = new IdentityRelayAuthenticationFilter(
+                configured, "", "", registry, List.of("https://app.example"), provider);
+        var rotatedToken = Jwts.builder()
+                .header()
+                .keyId("new")
+                .and()
+                .claim("userId", 7)
+                .claim("tenantId", "trusted")
+                .claim("tokenType", "ACCESS")
+                .expiration(Date.from(Instant.now().plusSeconds(60)))
+                .signWith(rotated.getPrivate(), io.jsonwebtoken.Jwts.SIG.RS256)
+                .compact();
+        assertThat(authenticationOf(merged, registry, rotatedToken)).isNotNull();
+    }
+
+    /** 经过滤器链捕获 Bearer 令牌建立的认证身份。 */
+    private AuthenticatedUser authenticationOf(
+            IdentityRelayAuthenticationFilter target, MessageSocketRegistry registry, String jwt) {
+        var exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/v1/messages/inbox").header("Authorization", "Bearer " + jwt));
+        AtomicReference<AuthenticatedUser> seen = new AtomicReference<>();
+        target.filter(exchange, ignored -> ReactiveSecurityContextHolder.getContext()
+                        .doOnNext(context -> seen.set(
+                                (AuthenticatedUser) context.getAuthentication().getPrincipal()))
+                        .then())
+                .block();
+        return seen.get();
     }
 
     /** 正确签名的刷新令牌或过期访问令牌仍不能建立业务身份。 */

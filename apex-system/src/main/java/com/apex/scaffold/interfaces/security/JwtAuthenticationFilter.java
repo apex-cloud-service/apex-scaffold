@@ -2,7 +2,6 @@ package com.apex.scaffold.interfaces.security;
 
 import com.apex.scaffold.common.constant.SystemConstants;
 import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.common.util.JwtUtil;
 import com.apex.scaffold.domain.model.entity.RoleEntity;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.RoleRepository;
@@ -103,6 +102,12 @@ public class JwtAuthenticationFilter implements WebFilter {
      */
     private static final String ACCESS_TOKEN_TYPE_CENTER = "ACCESS";
 
+    /*
+     * 认证中心令牌为 RS256 非对称签名（header 携带轮换 kid），经 {@link TokenVerifier}
+     * 按算法选钥验签；主应用自有令牌仍为 HS256 对称签名（{@code jwt.secret}），
+     * 两者在同一验签器内双算法并存（统一认证收口 A1）。
+     */
+
     /** Token 前缀标识 */
     private static final String TOKEN_PREFIX = "Bearer ";
 
@@ -144,7 +149,11 @@ public class JwtAuthenticationFilter implements WebFilter {
     /** 角色仓储，用于根据用户ID查询用户角色列表 */
     private final RoleRepository roleRepository;
 
+    /** 统一授权服务（可为空），认证中心令牌分支优先使用 */
     private final com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService;
+
+    /** 统一令牌验签器：认证中心 RS256 公钥 + 主应用 HS256 密钥双算法组合 */
+    private final TokenVerifier tokenVerifier;
 
     /** AccessToken 过期时间（毫秒） */
     @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}")
@@ -166,7 +175,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             .build();
 
     /**
-     * 构造方法注入依赖（含统一授权服务，供 Spring 使用的主构造器）
+     * 构造方法注入依赖（含统一授权服务与统一令牌验签器，供 Spring 使用的主构造器）
      *
      * @param tokenBlacklistService Token 黑名单服务，用于验证 Token 是否已注销
      * @param tokenService          Token 服务，用于生成和存储新 AccessToken（滑动刷新）
@@ -174,6 +183,7 @@ public class JwtAuthenticationFilter implements WebFilter {
      * @param userRepository        用户仓储，用于根据 OpenID 查询用户信息
      * @param roleRepository        角色仓储，用于根据用户ID查询用户角色列表
      * @param unifiedAuthorizationService 统一授权服务，用于权限校验，可为空
+     * @param tokenVerifier         统一令牌验签器（认证中心 RS256 + 主应用 HS256 双算法）
      */
     public JwtAuthenticationFilter(
             TokenBlacklistService tokenBlacklistService,
@@ -181,13 +191,15 @@ public class JwtAuthenticationFilter implements WebFilter {
             MessageUtils messageUtils,
             UserRepository userRepository,
             RoleRepository roleRepository,
-            com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService) {
+            com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService,
+            TokenVerifier tokenVerifier) {
         this.unifiedAuthorizationService = unifiedAuthorizationService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.tokenService = tokenService;
         this.messageUtils = messageUtils;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.tokenVerifier = tokenVerifier;
     }
 
     /**
@@ -241,10 +253,11 @@ public class JwtAuthenticationFilter implements WebFilter {
      */
     private Mono<Void> authenticateToken(ServerWebExchange exchange, WebFilterChain chain, String token) {
         try {
-            Claims claims = JwtUtil.parseToken(token);
+            // 统一令牌验签：RS256（认证中心）与 HS256（主应用）按 header alg/kid 选钥
+            Claims claims = tokenVerifier.parse(token);
             String tokenType = claims.get("type", String.class);
             // 认证中心令牌分支：claims 携带 tokenType=ACCESS 与 accountId 统一账户声明
-            // （主应用令牌使用 type=access，两者以 claims 结构天然区分，签名共用 JWT_SECRET）
+            // （主应用令牌使用 type=access，两者以 claims 结构天然区分，算法/密钥按 header 选钥）
             String centerTokenType = claims.get("tokenType", String.class);
             Long accountId = claims.get("accountId", Long.class);
             if (tokenType == null && ACCESS_TOKEN_TYPE_CENTER.equals(centerTokenType) && accountId != null) {
@@ -618,6 +631,12 @@ public class JwtAuthenticationFilter implements WebFilter {
         }
         // 组织目录内部接口由集群内服务直连，不携带 JWT；租户由 X-Tenant-Id 声明并在 Handler 内绑定
         for (String internalPath : SystemConstants.INTERNAL_ORG_PATHS) {
+            if (PATH_MATCHER.match(internalPath, path)) {
+                return true;
+            }
+        }
+        // 租户状态内部接口（A6）同样由集群内服务直连（认证中心登录前置校验消费）
+        for (String internalPath : SystemConstants.INTERNAL_TENANT_PATHS) {
             if (PATH_MATCHER.match(internalPath, path)) {
                 return true;
             }

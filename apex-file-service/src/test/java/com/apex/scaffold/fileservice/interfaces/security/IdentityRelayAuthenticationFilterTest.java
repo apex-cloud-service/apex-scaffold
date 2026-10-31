@@ -7,8 +7,8 @@ import com.apex.scaffold.file.application.service.FileAccessContext;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.security.KeyPair;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicReference;
@@ -151,8 +151,9 @@ class IdentityRelayAuthenticationFilterTest {
     void acceptsConfiguredRsaKeyByKidAndRejectsUnknownOrMismatchedAlgorithms() {
         KeyPair oldKey = Jwts.SIG.RS256.keyPair().build();
         KeyPair newKey = Jwts.SIG.RS256.keyPair().build();
-        String configured = "old=" + Base64.getEncoder().encodeToString(oldKey.getPublic().getEncoded())
-                + ",new=" + Base64.getEncoder().encodeToString(newKey.getPublic().getEncoded());
+        String configured =
+                "old=" + Base64.getEncoder().encodeToString(oldKey.getPublic().getEncoded()) + ",new="
+                        + Base64.getEncoder().encodeToString(newKey.getPublic().getEncoded());
         IdentityRelayAuthenticationFilter rsaFilter = new IdentityRelayAuthenticationFilter(configured, "");
 
         assertThat(capture(rsaFilter, signedRsaToken("old", oldKey, false))).isNotNull();
@@ -212,17 +213,14 @@ class IdentityRelayAuthenticationFilterTest {
         KeyPair key = Jwts.SIG.RS256.keyPair().build();
         String publicKey = encodedPublicKey(key);
 
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter(
-                "active=" + publicKey + ",active=" + publicKey, ""))
+        assertThatThrownBy(
+                        () -> new IdentityRelayAuthenticationFilter("active=" + publicKey + ",active=" + publicKey, ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter(
-                "active=", ""))
+        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("active=", ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter(
-                "active=" + publicKey + ",", ""))
+        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("active=" + publicKey + ",", ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter(
-                "active=not-base64", ""))
+        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("active=not-base64", ""))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -230,8 +228,7 @@ class IdentityRelayAuthenticationFilterTest {
     @Test
     void acceptsSinglePublicKeyWithBase64Padding() {
         KeyPair key = Jwts.SIG.RS256.keyPair().build();
-        IdentityRelayAuthenticationFilter rsaFilter = new IdentityRelayAuthenticationFilter(
-                encodedPublicKey(key), "");
+        IdentityRelayAuthenticationFilter rsaFilter = new IdentityRelayAuthenticationFilter(encodedPublicKey(key), "");
 
         assertThat(capture(rsaFilter, signedRsaToken(null, key, false))).isNotNull();
     }

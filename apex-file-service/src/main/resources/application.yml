@@ -18,6 +18,11 @@ apex:
     application-id: apex-file-service
     transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
     propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+  jwks:
+    # 共享 JWKS 拉取（统一认证收口 A2）：认证中心 /.well-known/jwks.json；
+    # 空 = 拉取关闭，仅用静态公钥兜底；轮换公钥最迟一个刷新周期内生效。
+    remote-url: ${JWKS_REMOTE_URL:}
+    refresh-interval-seconds: ${JWKS_REFRESH_INTERVAL_SECONDS:300}
     allowed-origins: []
 
 server:
@@ -62,7 +67,7 @@ file:
     # auth 当前使用 RS256：注入 X509 DER Base64 公钥，不接受 PEM/JWK/JWKS JSON。
     # 多公钥格式为 kid=Base64PublicKey,kid=Base64PublicKey，按 JWT header 的 kid 选择公钥。
     # 多公钥配置优先于单公钥；多公钥模式缺少或未知 kid 时拒绝认证，单公钥兼容无 kid Token。
-    # 不自动同步 JWKS；轮换须更新静态配置并重启。HMAC 仅兼容显式配置的历史签发方。
+    # 静态公钥仅作共享 JWKS 拉取（apex.jwks.remote-url）不可用时的兜底。HMAC 仅兼容显式配置的历史签发方。
     # 独立验签，不信任可伪造的网关身份头；未配置信任材料时拒绝认证。
     jwt-public-keys-base64: ${FILE_JWT_PUBLIC_KEYS_BASE64:}
     jwt-public-key-base64: ${FILE_JWT_PUBLIC_KEY_BASE64:}

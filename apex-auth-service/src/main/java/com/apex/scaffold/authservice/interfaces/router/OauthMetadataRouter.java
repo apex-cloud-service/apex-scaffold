@@ -83,7 +83,8 @@ public class OauthMetadataRouter {
         return RouterFunctions.route()
                 .GET("/.well-known/openid-configuration", request -> ServerResponse.ok()
                         .bodyValue(metadata.discovery()))
-                .GET("/.well-known/jwks.json", request -> ServerResponse.ok().bodyValue(metadata.jwks()))
+                // 统一认证收口（A2）：JWKS 聚合轮换密钥与过渡静态密钥，改为响应式输出
+                .GET("/.well-known/jwks.json", request -> ServerResponse.ok().body(metadata.jwks(), Map.class))
                 .build();
     }
 }

@@ -191,4 +191,80 @@ class GatewayJwtVerifierServiceTest {
             assertThat(service.keyCount()).isEqualTo(1);
         }
     }
+
+    @Nested
+    @DisplayName("远程 JWKS 拉取合并（统一认证收口 A2）")
+    class RemoteJwksTests {
+
+        private JwksProperties remoteProperties(String url) {
+            JwksProperties properties = hmacOnlyProperties();
+            properties.setRemoteUrl(url);
+            return properties;
+        }
+
+        private java.security.PublicKey remotePublicKey() {
+            return Jwts.SIG.RS256.keyPair().build().getPublic();
+        }
+
+        private String rsaToken(java.security.KeyPair pair, String kid) {
+            Date now = new Date();
+            return Jwts.builder()
+                    .header()
+                    .keyId(kid)
+                    .and()
+                    .subject("center-user")
+                    .issuedAt(now)
+                    .expiration(new Date(now.getTime() + 60_000))
+                    .signWith(pair.getPrivate(), Jwts.SIG.RS256)
+                    .compact();
+        }
+
+        @Test
+        @DisplayName("远程公钥合并进缓存并可验签认证中心令牌")
+        void shouldMergeRemoteKeys() {
+            java.security.KeyPair pair = Jwts.SIG.RS256.keyPair().build();
+            String kid = "key-remote-0001";
+            java.util.Map<String, java.security.PublicKey> remote = java.util.Map.of(kid, pair.getPublic());
+            GatewayJwtVerifierService service = new GatewayJwtVerifierService(
+                    remoteProperties("http://auth.example/.well-known/jwks.json"),
+                    url -> reactor.core.publisher.Mono.just(remote));
+
+            assertThat(service.keyCount()).isEqualTo(2); // hmac-legacy + 远程公钥
+            assertThat(service.verifyAndParse(rsaToken(pair, kid))).isNotNull();
+        }
+
+        @Test
+        @DisplayName("远程拉取失败时保留静态密钥，令牌验签不受影响")
+        void shouldKeepStaticKeysWhenRemoteFails() {
+            GatewayJwtVerifierService service = new GatewayJwtVerifierService(
+                    remoteProperties("http://auth.example/.well-known/jwks.json"),
+                    url -> reactor.core.publisher.Mono.error(new IllegalStateException("auth unreachable")));
+
+            assertThat(service.keyCount()).isEqualTo(1);
+            assertThat(service.verifyAndParse(hmacToken("hmac-legacy", "user-6", 60_000)))
+                    .isNotNull();
+        }
+
+        @Test
+        @DisplayName("远程公钥覆盖同 kid 静态条目（轮换公钥即时生效）")
+        void shouldOverrideSameKidStaticEntry() throws Exception {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            java.security.KeyPair stale = generator.generateKeyPair();
+            java.security.KeyPair rotated = generator.generateKeyPair();
+            JwksProperties properties = new JwksProperties();
+            properties.setKs(List.of(new JwksProfile(
+                    "key-center",
+                    "rsa256",
+                    Base64.getEncoder().encodeToString(stale.getPublic().getEncoded()),
+                    null)));
+            properties.setRemoteUrl("http://auth.example/.well-known/jwks.json");
+            GatewayJwtVerifierService service = new GatewayJwtVerifierService(
+                    properties,
+                    url -> reactor.core.publisher.Mono.just(java.util.Map.of("key-center", rotated.getPublic())));
+
+            assertThat(service.verifyAndParse(rsaToken(stale, "key-center"))).isNull();
+            assertThat(service.verifyAndParse(rsaToken(rotated, "key-center"))).isNotNull();
+        }
+    }
 }

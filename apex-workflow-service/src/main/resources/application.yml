@@ -19,11 +19,19 @@ apex:
     transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
     propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
     allowed-origins: []
+  jwks:
+    # 共享 JWKS 拉取（统一认证收口 A2）：认证中心 /.well-known/jwks.json；
+    # 空 = 拉取关闭，仅用静态公钥兜底；轮换公钥最迟一个刷新周期内生效。
+    remote-url: ${JWKS_REMOTE_URL:}
+    refresh-interval-seconds: ${JWKS_REFRESH_INTERVAL_SECONDS:300}
 
 workflow:
   security:
     # auth RS256 活跃公钥，X509 DER Base64；缺失时拒绝认证。
     jwt-public-key-base64: ${WORKFLOW_JWT_PUBLIC_KEY_BASE64:}
+    # 多公钥格式为 kid=Base64PublicKey,kid=Base64PublicKey，按 JWT header 的 kid 选择公钥；
+    # 多公钥优先于单公钥。生产推荐配置 apex.jwks.remote-url 自动拉取认证中心轮换公钥。
+    jwt-public-keys-base64: ${WORKFLOW_JWT_PUBLIC_KEYS_BASE64:}
     # 仅历史 HMAC 签发方显式开启；配置 RSA 后不降级。
     jwt-hmac-enabled: ${WORKFLOW_JWT_HMAC_ENABLED:false}
     jwt-secret: ${WORKFLOW_JWT_SECRET:}

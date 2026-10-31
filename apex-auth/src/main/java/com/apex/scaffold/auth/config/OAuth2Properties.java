@@ -20,4 +20,13 @@ public class OAuth2Properties {
     private String privateKey;
     private String publicKey;
     private String keyId = "oauth2-signing";
+
+    /**
+     * 是否把配置注入的静态密钥并入 {@code /.well-known/jwks.json} 聚合输出。
+     *
+     * <p>统一认证收口（A2）：令牌签发已切换到 {@code JwtKeyMaterialService}（Redis 轮换
+     * RSA），此静态密钥仅在过渡期保留用于第三方缓存旧公钥的回退验签；过渡期结束后
+     * 置为 {@code false} 并与 {@code privateKey}/{@code publicKey} 一并移除。
+     */
+    private boolean legacyKeyInJwks = true;
 }

@@ -55,6 +55,23 @@ class IdentityRelayAuthenticationFilterTest {
         return configured(Base64.getEncoder().encodeToString(RSA.getPublic().getEncoded()), SECRET, true);
     }
 
+    /** 统一认证收口（A1）：多公钥 kid 模式装配。 */
+    private IdentityRelayAuthenticationFilter multiKidFilter(String multiKeys) {
+        try (var context = new AnnotationConfigApplicationContext()) {
+            context.getEnvironment()
+                    .getPropertySources()
+                    .addFirst(new MapPropertySource(
+                            "jwt-test",
+                            Map.of(
+                                    "workflow.security.jwt-public-keys-base64", multiKeys,
+                                    "workflow.security.jwt-secret", SECRET,
+                                    "workflow.security.jwt-hmac-enabled", false)));
+            context.register(IdentityRelayAuthenticationFilter.class);
+            context.refresh();
+            return context.getBean(IdentityRelayAuthenticationFilter.class);
+        }
+    }
+
     private JwtBuilder claims(Object user, Object tenant, String type, Instant expiration) {
         return Jwts.builder()
                 .subject("7")
@@ -112,6 +129,74 @@ class IdentityRelayAuthenticationFilterTest {
         assertThat(captured.tenant()).isEqualTo("42");
         assertThat(captured.threadTenant()).isEqualTo("42");
         assertThat(TenantContext.currentTenantId()).isEmpty();
+    }
+
+    /** 统一认证收口（A1/A2）：多公钥模式按 header kid 选钥，未知 kid 拒绝；快照合并同 kid 覆盖。 */
+    @Test
+    void multiKidModeRoutesByHeaderKid() {
+        KeyPair oldKey = Jwts.SIG.RS256.keyPair().build();
+        KeyPair newKey = Jwts.SIG.RS256.keyPair().build();
+        String configured =
+                "old=" + Base64.getEncoder().encodeToString(oldKey.getPublic().getEncoded()) + ",new="
+                        + Base64.getEncoder().encodeToString(newKey.getPublic().getEncoded());
+        var filter = multiKidFilter(configured);
+        var oldToken = claims(7L, "42", "ACCESS", Instant.now().plusSeconds(300))
+                .header()
+                .keyId("old")
+                .and()
+                .signWith(oldKey.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+        var newToken = claims(7L, "42", "ACCESS", Instant.now().plusSeconds(300))
+                .header()
+                .keyId("new")
+                .and()
+                .signWith(newKey.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+        var unknownKid = claims(7L, "42", "ACCESS", Instant.now().plusSeconds(300))
+                .header()
+                .keyId("unknown")
+                .and()
+                .signWith(newKey.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+        assertThat(capture(filter, request(oldToken)).authentication()).isNotNull();
+        assertThat(capture(filter, request(newToken)).authentication()).isNotNull();
+        assertThat(capture(filter, request(unknownKid)).authentication()).isNull();
+
+        // JWKS 拉取快照覆盖同 kid 静态条目：轮换后的新公钥签发令牌即可通过
+        KeyPair rotated = Jwts.SIG.RS256.keyPair().build();
+        var fetcher =
+                new com.apex.scaffold.common.security.JwksFetcher(
+                        new com.apex.scaffold.common.config.JwksFetchProperties()) {
+                    @Override
+                    public boolean enabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public java.util.Map<String, java.security.PublicKey> snapshot() {
+                        return java.util.Map.of("new", rotated.getPublic());
+                    }
+                };
+        org.springframework.beans.factory.ObjectProvider<com.apex.scaffold.common.security.JwksFetcher> provider =
+                new org.springframework.beans.factory.ObjectProvider<>() {
+                    @Override
+                    public com.apex.scaffold.common.security.JwksFetcher getObject() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public com.apex.scaffold.common.security.JwksFetcher getIfAvailable() {
+                        return fetcher;
+                    }
+                };
+        var merged = new IdentityRelayAuthenticationFilter(configured, "", SECRET, false, provider);
+        var rotatedToken = claims(7L, "42", "ACCESS", Instant.now().plusSeconds(300))
+                .header()
+                .keyId("new")
+                .and()
+                .signWith(rotated.getPrivate(), Jwts.SIG.RS256)
+                .compact();
+        assertThat(capture(merged, request(rotatedToken)).authentication()).isNotNull();
     }
 
     @Test
