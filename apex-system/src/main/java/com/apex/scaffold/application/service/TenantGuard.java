@@ -45,6 +45,24 @@ public class TenantGuard {
     }
 
     /**
+     * 断言当前租户为平台租户（{@code default}）——平台专属管理入口守卫（方案 B8）。
+     *
+     * <p>平台租户治理（租户目录/套餐/平台配置）仅允许平台超管在 {@code default}
+     * 租户上下文内执行；租户管理员即使持有同名权限码也被拒绝，形成权限码之外的第二道边界。
+     *
+     * @throws BusinessException 租户上下文缺失或非平台租户（{@code FORBIDDEN}）
+     */
+    public Mono<Void> assertPlatformTenant() {
+        return Mono.defer(() -> {
+            String tenantCode = requireTenantCode();
+            if (!"default".equals(tenantCode)) {
+                throw new BusinessException(ResultCode.FORBIDDEN, "该操作仅限平台租户执行");
+            }
+            return Mono.empty();
+        });
+    }
+
+    /**
      * 断言当前租户状态允许创建，且新增 {@code increment} 个用户后不超出配额。
      *
      * @param increment 本次新增用户数

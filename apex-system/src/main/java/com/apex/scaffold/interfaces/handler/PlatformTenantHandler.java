@@ -56,17 +56,25 @@ public class PlatformTenantHandler extends BaseHandler {
     /** 租户应用服务。 */
     private final TenantApplicationService tenantService;
 
+    /** 平台租户守卫（B8：平台专属入口的第二道边界） */
+    private final com.apex.scaffold.application.service.TenantGuard tenantGuard;
+
     /**
      * 创建平台租户处理器。
      *
      * @param tenantService 租户应用服务
+     * @param tenantGuard 平台租户守卫
      * @param messageUtils 国际化消息工具
      * @param validator Jakarta Bean Validation 校验器
      */
     public PlatformTenantHandler(
-            TenantApplicationService tenantService, MessageUtils messageUtils, Validator validator) {
+            TenantApplicationService tenantService,
+            com.apex.scaffold.application.service.TenantGuard tenantGuard,
+            MessageUtils messageUtils,
+            Validator validator) {
         super(messageUtils, validator);
         this.tenantService = tenantService;
+        this.tenantGuard = tenantGuard;
     }
 
     /**
@@ -238,6 +246,10 @@ public class PlatformTenantHandler extends BaseHandler {
             saveRequest = true,
             saveResponse = true)
     public Mono<ServerResponse> create(ServerRequest request) {
+        return tenantGuard.assertPlatformTenant().then(Mono.defer(() -> doCreate(request)));
+    }
+
+    private Mono<ServerResponse> doCreate(ServerRequest request) {
         return parseBody(request, TenantCreateRequest.class)
                 .flatMap(tenantService::createTenant)
                 .flatMap(this::buildSuccess);
@@ -288,6 +300,10 @@ public class PlatformTenantHandler extends BaseHandler {
             saveRequest = true,
             saveResponse = true)
     public Mono<ServerResponse> changeStatus(ServerRequest request) {
+        return tenantGuard.assertPlatformTenant().then(Mono.defer(() -> doChangeStatus(request)));
+    }
+
+    private Mono<ServerResponse> doChangeStatus(ServerRequest request) {
         long tenantId = requirePositiveId(request);
         return parseBody(request, TenantActionRequest.class)
                 .flatMap(body -> tenantService.changeStatus(tenantId, body.getAction(), body.getExpectedVersion()))
@@ -339,6 +355,10 @@ public class PlatformTenantHandler extends BaseHandler {
             saveRequest = true,
             saveResponse = true)
     public Mono<ServerResponse> updateQuota(ServerRequest request) {
+        return tenantGuard.assertPlatformTenant().then(Mono.defer(() -> doUpdateQuota(request)));
+    }
+
+    private Mono<ServerResponse> doUpdateQuota(ServerRequest request) {
         long tenantId = requirePositiveId(request);
         return parseBody(request, TenantQuotaUpdateRequest.class)
                 .flatMap(body -> tenantService.updateQuota(
