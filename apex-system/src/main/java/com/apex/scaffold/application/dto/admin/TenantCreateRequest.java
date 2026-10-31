@@ -56,4 +56,10 @@ public class TenantCreateRequest {
     @Schema(description = "备注")
     @Size(max = 500, message = "{tenant.remark_too_long}")
     private String remark;
+
+    /** 租户管理员登录名（提供时触发开通引导：部门+管理员+内置角色+授权，方案 B4） */
+    private String adminUsername;
+
+    /** 管理员初始密码（BCrypt 存储；与 adminUsername 成对提供） */
+    private String adminPassword;
 }

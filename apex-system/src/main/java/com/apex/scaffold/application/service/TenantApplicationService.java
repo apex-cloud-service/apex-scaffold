@@ -56,6 +56,8 @@ public class TenantApplicationService {
 
     private final TenantRepository tenantRepository;
 
+    private final com.apex.scaffold.domain.gateway.TenantProvisioningGateway provisioningTransaction;
+
     private final TenantAssembler tenantAssembler;
 
     /**
@@ -108,6 +110,33 @@ public class TenantApplicationService {
      * @return 租户 DTO
      * @throws BusinessException 当租户不存在时抛出 {@code TENANT_NOT_FOUND}
      */
+    /** 租户认证期状态快照（统一认证收口 A6 内部端点契约）。 */
+    public record TenantStatusSnapshot(
+            boolean exists, String status, boolean expired, Integer maxUsers, Integer maxStorageMb) {}
+
+    /**
+     * 查询租户认证期状态（统一认证收口 A6）。
+     *
+     * <p>供认证中心登录前置校验消费：未知租户以 {@code exists=false} 数据化返回
+     * （便于消费方缓存负结果），状态机与过期判定与领域模型口径一致。
+     *
+     * @param tenantCode 租户编码
+     * @return 状态快照；租户不存在时 {@code exists=false}
+     */
+    public Mono<TenantStatusSnapshot> getTenantStatusByCode(String tenantCode) {
+        if (tenantCode == null || tenantCode.isBlank()) {
+            return Mono.just(new TenantStatusSnapshot(false, null, false, null, null));
+        }
+        return getByCode(tenantCode)
+                .map(dto -> new TenantStatusSnapshot(
+                        true,
+                        dto.getStatus(),
+                        dto.getExpireTime() != null && dto.getExpireTime().isBefore(java.time.LocalDateTime.now()),
+                        dto.getMaxUsers(),
+                        dto.getMaxStorageMb()))
+                .defaultIfEmpty(new TenantStatusSnapshot(false, null, false, null, null));
+    }
+
     public Mono<TenantDTO> getByCode(String tenantCode) {
         return requireByCode(tenantCode).map(tenantAssembler::toDTO);
     }
@@ -126,6 +155,29 @@ public class TenantApplicationService {
         return tenantRepository.existsByCode(request.getTenantCode(), null).flatMap(exists -> {
             if (exists) {
                 return Mono.error(new BusinessException(ResultCode.TENANT_CODE_EXISTS));
+            }
+            // 方案 B4：提供管理员账号时走开通引导（单事务：部门+管理员+内置角色+授权+回填）；
+            // 未提供时保持既有单行创建行为（adminUserId 引用既有账号）。
+            if (request.getAdminUsername() != null
+                    && !request.getAdminUsername().isBlank()) {
+                if (request.getAdminPassword() == null
+                        || request.getAdminPassword().isBlank()) {
+                    return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "管理员初始密码不能为空"));
+                }
+                return provisioningTransaction
+                        .provision(new com.apex.scaffold.domain.gateway.TenantProvisioningGateway.ProvisioningRequest(
+                                request.getTenantCode(),
+                                request.getTenantName(),
+                                request.getAdminUsername(),
+                                request.getAdminPassword(),
+                                request.getPackageCode(),
+                                request.getMaxUsers(),
+                                request.getMaxStorageMb(),
+                                request.getRemark()))
+                        .onErrorMap(
+                                DuplicateKeyException.class, ex -> new BusinessException(ResultCode.TENANT_CODE_EXISTS))
+                        .then(requireByCode(request.getTenantCode()))
+                        .map(tenantAssembler::toDTO);
             }
             TenantQuota quota = TenantQuota.of(request.getMaxUsers(), request.getMaxStorageMb());
             TenantEntity entity = TenantEntity.create(
@@ -191,6 +243,28 @@ public class TenantApplicationService {
      * @param increment 申请增量
      * @throws BusinessException 当租户不存在、状态不允许或配额超限时抛出
      */
+    /**
+     * 断言存储配额（方案批次 B5）。
+     *
+     * @param tenantCode    租户编码
+     * @param currentBytes  当前已用字节数
+     * @param incrementBytes 本次新增字节数
+     * @throws BusinessException 租户不可写（TENANT_ILLEGAL_TRANSITION）或存储超限（TENANT_QUOTA_EXCEEDED）
+     */
+    public Mono<Void> assertStorageQuota(String tenantCode, long currentBytes, long incrementBytes) {
+        return requireByCode(tenantCode)
+                .doOnNext(entity -> {
+                    try {
+                        entity.assertStorageQuota(currentBytes, incrementBytes);
+                    } catch (TenantQuotaExceededException ex) {
+                        throw new BusinessException(ResultCode.TENANT_QUOTA_EXCEEDED, ex.getMessage());
+                    } catch (TenantLifecycleException ex) {
+                        throw new BusinessException(ResultCode.TENANT_ILLEGAL_TRANSITION, ex.getMessage());
+                    }
+                })
+                .then();
+    }
+
     public Mono<Void> assertUserQuota(String tenantCode, long current, long increment) {
         return requireByCode(tenantCode)
                 .doOnNext(entity -> {

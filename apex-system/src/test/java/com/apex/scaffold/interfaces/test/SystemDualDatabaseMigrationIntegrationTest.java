@@ -85,6 +85,7 @@ class SystemDualDatabaseMigrationIntegrationTest {
         }
         try (var connection = flyway.getConfiguration().getDataSource().getConnection();
                 var statement = connection.createStatement()) {
+            assertTenantUnificationAndRbacTenantization(statement, mysql);
             try (var rows = statement.executeQuery(
                     "SELECT config_type, config_value FROM sys_config WHERE config_key = 'workflow.version'")) {
                 assertThat(rows.next()).isTrue();
@@ -226,6 +227,77 @@ class SystemDualDatabaseMigrationIntegrationTest {
                 rows.next();
                 assertThat(rows.getString(1)).contains("DRAFT");
             }
+        }
+    }
+
+    /**
+     * 统一认证收口（B1/B2）真实双库演练断言：V76 租户编码统一 + V77 RBAC 租户化。
+     *
+     * <p>V76：默认租户编码 apex-default 已全库改名 default 且不残留；V77：sys_role
+     * 含 tenant_id 列且唯一键已重建为 (tenant_id, code)，角色授权关系租户与角色对齐。
+     */
+    private static void assertTenantUnificationAndRbacTenantization(java.sql.Statement statement, boolean mysql)
+            throws Exception {
+        try (var rows = statement.executeQuery("SELECT tenant_code FROM sys_tenant WHERE deleted = 0")) {
+            java.util.List<String> codes = new java.util.ArrayList<>();
+            while (rows.next()) {
+                codes.add(rows.getString(1));
+            }
+            org.assertj.core.api.Assertions.assertThat(codes).containsExactly("default");
+        }
+        try (var rows = statement.executeQuery("SELECT COUNT(*) FROM sys_tenant WHERE tenant_code = 'apex-default'")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isZero();
+        }
+        try (var rows = statement.executeQuery(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'sys_role' AND column_name = 'tenant_id'")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(1);
+        }
+        try (var rows = statement.executeQuery(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'sys_role_permission' AND column_name = 'tenant_id'")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(1);
+        }
+        // 唯一键重建断言：MySQL 查 information_schema.statistics，PG 查 pg_indexes
+        String uniqueIndexSql = mysql
+                ? "SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics WHERE table_name = 'sys_role' AND index_name = 'uk_tenant_code'"
+                : "SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'sys_role' AND indexname = 'uk_tenant_code'";
+        try (var rows = statement.executeQuery(uniqueIndexSql)) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(1);
+        }
+        String oldIndexSql = mysql
+                ? "SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics WHERE table_name = 'sys_role' AND index_name = 'uk_code'"
+                : "SELECT COUNT(*) FROM pg_indexes WHERE tablename = 'sys_role' AND indexname = 'uk_role_code'";
+        try (var rows = statement.executeQuery(oldIndexSql)) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isZero();
+        }
+        // 存量角色全部归属 default 租户（V63 种子角色随 V77 回填）
+        try (var rows = statement.executeQuery("SELECT COUNT(*) FROM sys_role WHERE tenant_id <> 'default'")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isZero();
+        }
+        try (var rows =
+                statement.executeQuery("SELECT COUNT(*) FROM sys_role_permission WHERE tenant_id <> 'default'")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isZero();
+        }
+        // B3：套餐定义表与 platform-full 数据驱动种子（菜单/权限码全量聚合）
+        try (var rows = statement.executeQuery(
+                "SELECT status FROM sys_tenant_package WHERE package_code = 'platform-full' AND deleted = 0")) {
+            org.assertj.core.api.Assertions.assertThat(rows.next()).isTrue();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(1);
+        }
+        String seedCoverageSql = mysql
+                ? "SELECT (SELECT COUNT(*) FROM sys_menu WHERE deleted = 0) - "
+                        + "JSON_LENGTH((SELECT menu_ids FROM sys_tenant_package WHERE package_code = 'platform-full'))"
+                : "SELECT (SELECT COUNT(*) FROM sys_menu WHERE deleted = 0) - "
+                        + "jsonb_array_length((SELECT menu_ids FROM sys_tenant_package WHERE package_code = 'platform-full'))";
+        try (var rows = statement.executeQuery(seedCoverageSql)) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isZero();
         }
     }
 }
