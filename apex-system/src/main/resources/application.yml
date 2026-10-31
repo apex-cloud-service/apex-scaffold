@@ -28,6 +28,9 @@ apex:
     access-token: ${APEX_AUTH_CENTER_ACCESS_TOKEN:}
     cache-seconds: ${APEX_AUTH_CENTER_CACHE_SECONDS:0}
     mappings: []
+  tenant:
+    # B7: 多租户行级隔离默认开启
+    enabled: true
   system:
     jwt-center:
       # 统一认证收口（A1/A2）：主应用验签认证中心 RS256 令牌的公钥来源。

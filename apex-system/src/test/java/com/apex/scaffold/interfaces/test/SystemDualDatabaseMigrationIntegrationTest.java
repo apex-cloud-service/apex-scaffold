@@ -299,5 +299,18 @@ class SystemDualDatabaseMigrationIntegrationTest {
             rows.next();
             org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isZero();
         }
+        // B6：租户级配置表存在且随租户隔离（不进白名单）
+        try (var rows = statement.executeQuery(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'sys_tenant_config' AND column_name = 'tenant_id'")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(1);
+        }
+        try (var rows = statement.executeQuery("SELECT COUNT(*) FROM sys_permission WHERE code IN "
+                + "('tenant:package:read','tenant:package:create','tenant:package:update',"
+                + "'tenant:config:read','tenant:config:update','tenant:user:manage',"
+                + "'tenant:role:manage','tenant:dept:manage')")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(8);
+        }
     }
 }

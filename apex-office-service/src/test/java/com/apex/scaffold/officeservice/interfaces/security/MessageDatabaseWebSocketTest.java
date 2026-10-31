@@ -2,6 +2,7 @@ package com.apex.scaffold.officeservice.interfaces.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.office.off.application.assembler.OffMessageAssembler;
 import com.apex.scaffold.office.off.application.service.OffMessageService;
 import com.apex.scaffold.office.off.infrastructure.persistence.converter.OffMessageDeliveryPoConverter;
@@ -15,7 +16,6 @@ import com.apex.scaffold.office.off.infrastructure.persistence.repository.Messag
 import com.apex.scaffold.office.off.infrastructure.persistence.repository.OffMessageDeliveryRepositoryImpl;
 import com.apex.scaffold.office.off.infrastructure.persistence.repository.OffMessageRecipientRepositoryImpl;
 import com.apex.scaffold.office.off.infrastructure.persistence.repository.OffMessageRepositoryImpl;
-import com.apex.scaffold.officeservice.config.MessageTenantConfig;
 import com.apex.scaffold.officeservice.config.MessageWebSocketConfig;
 import com.apex.scaffold.officeservice.interfaces.off.handler.MessageHandler;
 import com.apex.scaffold.officeservice.interfaces.off.router.MessageRouter;
@@ -76,7 +76,21 @@ class MessageDatabaseWebSocketTest {
                 "INSERT INTO off_employee(employee_code,employee_name,dept_id,user_id,tenant_id) VALUES ('e7','接收人',1,7,'a')");
         var factory = new MybatisSqlSessionFactoryBean();
         factory.setDataSource(source);
-        factory.setPlugins(new MessageTenantConfig().messageTenantInterceptor());
+        var interceptor = new com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor();
+        interceptor.addInnerInterceptor(new com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerInterceptor(
+                new com.baomidou.mybatisplus.extension.plugins.handler.TenantLineHandler() {
+                    @Override
+                    public net.sf.jsqlparser.expression.Expression getTenantId() {
+                        return new net.sf.jsqlparser.expression.StringValue(TenantContext.currentTenantId()
+                                .orElseThrow(() -> new IllegalStateException("test tenant missing")));
+                    }
+
+                    @Override
+                    public boolean ignoreTable(String tableName) {
+                        return false;
+                    }
+                }));
+        factory.setPlugins(interceptor);
         var sqlFactory = factory.getObject();
         sqlFactory.getConfiguration().addMapper(OffMessageMapper.class);
         sqlFactory.getConfiguration().addMapper(OffMessageRecipientMapper.class);

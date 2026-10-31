@@ -21,6 +21,8 @@
 # ============================================================
 # 基础版仅含核心能力，商业版差异详见 standard/enterprise。
 apex:
+  tenant:
+    enabled: false
   features:
     # ✅ JWT 认证：所有档位必备
     jwt-auth: true

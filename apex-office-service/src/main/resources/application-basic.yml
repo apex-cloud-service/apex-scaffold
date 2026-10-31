@@ -29,3 +29,7 @@ logging:
     org.springframework.security: INFO
     com.apex.scaffold.office: INFO
     com.apex.scaffold.officeservice: INFO
+# B7: basic 档多租户行级隔离维持关闭（D09：离线最小档无多租户诉求）
+apex:
+  tenant:
+    enabled: false

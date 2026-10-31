@@ -191,6 +191,8 @@ Mono.fromCallable(() -> repository.findById(id))
 ### 租户与安全
 
 - 租户作用域来自受信任认证上下文，不允许客户端任意覆盖。跨异步链路沿用项目的 Reactor Context 与上下文桥接方式。
+- 多租户行级隔离拦截器（`DefaultTenantLineHandler`）默认开启（`apex.tenant.enabled:true`，basic 档除外）；
+  workflow 与 auth 为 JdbcTemplate 持久化，维持手写 `WorkflowTenantAccess` / `JdbcTenantScope` fail-closed 例外口径。
 - 租户相关缓存键、消息与后台任务携带租户作用域；更新、删除和批量访问同样验证租户及数据权限。
 - 不通过 `@InterceptorIgnore` 绕过租户隔离；确有跨租户管理需求时使用已有受控入口与审计机制。
 - 网关和服务端各自遵守当前鉴权职责，内部接口不得因有网关而无条件公开。

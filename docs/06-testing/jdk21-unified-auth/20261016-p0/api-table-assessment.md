@@ -121,7 +121,7 @@
 
 [OffMessageService](../../../../apex-office/src/main/java/com/apex/scaffold/office/off/application/service/OffMessageService.java) L131–140 对详情要求消息 tenant 等于 Reactor tenant，且用户是发件人或同租户接收人。不存在或不可见返回空，Handler 转404。已读接口的具体更新行数/接收人条件还需仓储及运行负例确认，不能由详情方法外推。
 
-[MessageTenantConfig](../../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/config/MessageTenantConfig.java) L25–50 的 MyBatis 租户处理器缺租户即失败，且仅对 `off_message`、`off_message_recipient` 生效；**不证明模板、部门、员工及其他 office 表也被该插件隔离**。[office 身份过滤器](../../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/security/IdentityRelayAuthenticationFilter.java) L88–104 对 HTTP 调用 verify，对 WS 校验 Origin/GET/Upgrade 并消费票据；票据跨实例、身份注入、重连补偿需独立运行验证。
+[MessageTenantConfig](../../../../`apex-office-service/.../config/MessageTenantConfig.java`（B7 已移除）) L25–50 的 MyBatis 租户处理器缺租户即失败，且仅对 `off_message`、`off_message_recipient` 生效；**不证明模板、部门、员工及其他 office 表也被该插件隔离**。[office 身份过滤器](../../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/security/IdentityRelayAuthenticationFilter.java) L88–104 对 HTTP 调用 verify，对 WS 校验 Origin/GET/Upgrade 并消费票据；票据跨实例、身份注入、重连补偿需独立运行验证。
 
 ## 4. 五域真实表定义例证与 tenant/索引缺口
 

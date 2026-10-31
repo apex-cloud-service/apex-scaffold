@@ -18,6 +18,8 @@ apex:
     application-id: apex-file-service
     transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
     propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+  tenant:
+    enabled: true
   jwks:
     # 共享 JWKS 拉取（统一认证收口 A2）：认证中心 /.well-known/jwks.json；
     # 空 = 拉取关闭，仅用静态公钥兜底；轮换公钥最迟一个刷新周期内生效。

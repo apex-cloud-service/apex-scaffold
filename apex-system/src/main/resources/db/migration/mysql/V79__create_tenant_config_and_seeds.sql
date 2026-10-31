@@ -21,36 +21,36 @@ CREATE TABLE IF NOT EXISTS `sys_tenant_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='租户级参数配置表（随租户行级隔离）';
 
 -- ============ 权限种子 ============
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2605, '套餐查询', 'tenant:package:read', '查询租户套餐列表与详情', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2700, '套餐查询', 'tenant:package:read', '查询租户套餐列表与详情', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:package:read');
 
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2606, '套餐创建', 'tenant:package:create', '创建租户套餐', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2701, '套餐创建', 'tenant:package:create', '创建租户套餐', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:package:create');
 
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2607, '套餐更新', 'tenant:package:update', '更新套餐菜单/权限/能力裁剪集合', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2702, '套餐更新', 'tenant:package:update', '更新套餐菜单/权限/能力裁剪集合', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:package:update');
 
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2608, '租户配置查询', 'tenant:config:read', '查询租户级参数配置', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2703, '租户配置查询', 'tenant:config:read', '查询租户级参数配置', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:config:read');
 
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2609, '租户配置维护', 'tenant:config:update', '维护租户级参数配置', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2704, '租户配置维护', 'tenant:config:update', '维护租户级参数配置', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:config:update');
 
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2610, '租户用户自助管理', 'tenant:user:manage', '租户管理员管理本租户用户', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2705, '租户用户自助管理', 'tenant:user:manage', '租户管理员管理本租户用户', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:user:manage');
 
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2611, '租户角色自助管理', 'tenant:role:manage', '租户管理员管理本租户角色', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2706, '租户角色自助管理', 'tenant:role:manage', '租户管理员管理本租户角色', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:role:manage');
 
-INSERT INTO sys_permission (id, name, code, description, type, status)
-SELECT 2612, '租户部门自助管理', 'tenant:dept:manage', '租户管理员管理本租户部门', 1, 1 FROM DUAL
+INSERT IGNORE INTO sys_permission (id, name, code, description, type, status)
+SELECT 2707, '租户部门自助管理', 'tenant:dept:manage', '租户管理员管理本租户部门', 1, 1 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'tenant:dept:manage');
 
 -- 套餐管理/租户配置管理权限授予平台 ADMIN 角色（沿用 V63 的关联范式，role_id=1）
