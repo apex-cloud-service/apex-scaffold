@@ -486,6 +486,8 @@ public class WorkflowQueryService {
      * 将节点 JSON 数据转换为节点 DTO。
      *
      * <p>从 JSON 中提取节点的标识、类型、名称、审批人配置、超时配置与坐标位置等字段。
+     * 坐标与超时时长按容忍类型漂移的方式提取：单节点字段异常只降级该字段，
+     * 不沿外层兜底扩散成整图丢失。
      *
      * @param json 节点 JSON 数据
      * @return 节点 DTO
@@ -498,14 +500,49 @@ public class WorkflowQueryService {
         node.setApproverType((String) json.get("approverType"));
         node.setApproverValue((String) json.get("approverValue"));
         node.setApprovalStrategy((String) json.get("approvalStrategy"));
-        node.setTimeoutHours((Integer) json.get("timeoutHours"));
+        node.setTimeoutHours(asInteger(json.get("timeoutHours")));
         node.setTimeoutAction((String) json.get("timeoutAction"));
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> position = (Map<String, Object>) json.get("position");
-        node.setPosition(position != null ? position : new HashMap<>(16));
-
+        node.setPosition(extractPosition(json));
         return node;
+    }
+
+    /**
+     * 提取节点坐标信息，容忍历史数据中的类型漂移。
+     *
+     * <p>position 在历史定义中可能被序列化为字符串或其他非对象结构（例如早期设计器
+     * 直接存 JSON 字符串）。此时保留节点其余字段并返回空坐标并记录告警，
+     * 而不是让单节点的类型异常把整张定义图收敛为空。
+     *
+     * @param json 节点 JSON 数据
+     * @return 坐标映射；无法按对象解析时返回空映射
+     */
+    private Map<String, Object> extractPosition(Map<String, Object> json) {
+        Object raw = json.get("position");
+        if (raw instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> position = (Map<String, Object>) raw;
+            return position;
+        }
+        if (raw != null) {
+            log.warn(
+                    "节点 position 字段类型异常，已忽略坐标: nodeId={}, actualType={}",
+                    json.get("nodeId"),
+                    raw.getClass().getSimpleName());
+        }
+        return new HashMap<>(16);
+    }
+
+    /**
+     * 以数值方式提取整型字段，容忍 Jackson 将大数值解析为 Long、小数解析为 Double。
+     *
+     * @param raw 原始 JSON 值
+     * @return 整型值；非数值时返回 {@code null}
+     */
+    private Integer asInteger(Object raw) {
+        if (raw instanceof Number number) {
+            return number.intValue();
+        }
+        return null;
     }
 
     /**
