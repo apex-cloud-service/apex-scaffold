@@ -68,7 +68,7 @@ MinIO 的 endpoint 包含协议，例如 `https://minio.example.com`；HTTPS 不
 
 ## 3. file JWT 与访问授权
 
-当前 auth 的 `JwtKeyMaterialService` 使用活跃 RSA 私钥签发 RS256，而不是简单依赖 `JWT_SECRET`。file 的 `file.security.jwt-public-key-base64`（`FILE_JWT_PUBLIC_KEY_BASE64`）必须配置对应公钥的 X509 DER Base64，不是 PEM 文本、证书文件、JWK 或 JWKS JSON。只分发公钥，不分发 auth 私钥。
+当前 auth 的 `JwtKeyMaterialService` 使用活跃 RSA 私钥签发 RS256，而不是简单依赖 `JWT_SECRET`。file 支持单公钥和静态多公钥：`file.security.jwt-public-key-base64`（`FILE_JWT_PUBLIC_KEY_BASE64`）或 `file.security.jwt-public-keys-base64`（`FILE_JWT_PUBLIC_KEYS_BASE64`）必须配置 X509 DER Base64 公钥，不是 PEM 文本、证书文件、JWK 或 JWKS JSON。多公钥格式为 `kid=Base64PublicKey,kid=Base64PublicKey`，按 JWT header 的 `kid` 选择，且多公钥优先于单公钥。只分发公钥，不分发 auth 私钥。
 
 从可信密钥管理渠道取得公钥；若已具备同一公钥的 PEM 文件，可在受控终端转换：
 
@@ -76,7 +76,7 @@ MinIO 的 endpoint 包含协议，例如 `https://minio.example.com`；HTTPS 不
 openssl pkey -pubin -in auth-public.pem -outform DER | openssl base64 -A
 ```
 
-转换结果作为部署变量注入，不写入仓库。不要随机生成新公钥来“补齐配置”，否则现有 Token 无法验证。file 当前不自动请求 JWKS，不按 kid 同步多把公钥；auth 自动轮换后须协调 file 公钥更新与重启，旧 Token 宽限期并不自动在 file 生效。这是当前运行限制，生产发布须制定同步轮换/重新登录窗口，不能宣称透明轮换已完成。
+转换结果作为部署变量注入，不写入仓库。不要随机生成新公钥来“补齐配置”，否则现有 Token 无法验证。file 不自动请求 JWKS；多公钥模式下缺少或未知 `kid` 会拒绝认证，单公钥模式兼容无 `kid` Token。auth 自动轮换后须更新静态公钥配置并重启 file，旧 Token 宽限期并不自动在 file 生效。生产发布须制定同步轮换/重新登录窗口，不能宣称透明轮换已完成。
 
 `FILE_JWT_SECRET` 仅为历史 HMAC 签发方的兼容入口，要求与实际签名密钥完全一致、UTF-8 至少 32 字节；RS256 部署保持为空，不因为 Compose 已传入 `JWT_SECRET` 就认为 file 已获信任材料。未配置信任材料时接口拒绝认证。
 

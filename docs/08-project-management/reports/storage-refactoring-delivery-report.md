@@ -48,7 +48,8 @@
 | `storage.volcengine.enabled` | 默认关闭；显式配置 endpoint/region/access-key/secret-key |
 | `storage.aliyun-oss.enabled` | 默认关闭；显式配置 endpoint/access-key/secret-key |
 | `storage.qiniu.enabled` | 默认关闭；显式配置 region/bucket/download-domain/access-key/secret-key；下载域名需无路径的可信 HTTPS 域名并绑定桶 |
-| `file.security.jwt-public-key-base64` / `FILE_JWT_PUBLIC_KEY_BASE64` | RS256 对应公钥的 X509 DER Base64；不能填 PEM/JWK/JWKS；不得分发私钥 |
+| `file.security.jwt-public-key-base64` / `FILE_JWT_PUBLIC_KEY_BASE64` | RS256 单公钥的 X509 DER Base64；无 `kid` Token 兼容；多公钥配置存在时优先使用多公钥 |
+| `file.security.jwt-public-keys-base64` / `FILE_JWT_PUBLIC_KEYS_BASE64` | 静态多公钥，格式 `kid=Base64PublicKey,kid=Base64PublicKey`，按 JWT header 的 `kid` 选择；不能填 PEM/JWK/JWKS；不得分发私钥 |
 
 Java 不自动加载 `.env`。部署脚本仅在 `APEX_ENV_FILE` 有效时加载；Compose 插值与容器注入需分别核对。生产密钥、签名 URL 和令牌不写入本报告。
 
@@ -71,7 +72,7 @@ V4 在 file_record/file_chunk 增加 tenant_id、storage_type 及归属索引；
 
 ### 必须保留的限制
 
-1. **静态 RS256 公钥轮换**：file 当前独立静态验签，不自动同步 auth JWKS、kid 或多密钥轮换。auth 更换签名密钥时需协调 file 公钥配置及重启；切换窗口、旧令牌存续和信任材料更新需单独验证。
+1. **静态 RS256 公钥轮换**：file 当前独立静态验签，不自动获取 auth JWKS。多公钥按 Token header 的 `kid` 选择，缺少或未知 `kid` 时拒绝；多公钥优先于单公钥，单公钥兼容无 `kid` Token。auth 更换签名密钥时需更新 file 静态公钥配置并重启；切换窗口、旧令牌存续和信任材料更新需单独验证。
 2. **云与数据库非原子**：上传成功但落库失败执行删除补偿，补偿失败保存 ORPHANED 依据；若保存依据也失败，只能依据受控定位日志核查。不能宣称跨系统原子事务或零孤儿。
 3. **MERGING 中断人工恢复**：进程中断、最终对象状态不确定或 exists 查询失败时保留 MERGING，不自动释放合并锁。停写/隔离会话，核对 fileId、提供商、桶、最终键和分片清单；确认最终对象不存在才受控恢复上传，存在则核实元数据或补偿。操作前备份并审计，禁止批量改回 UPLOADING。
 4. **分片清理结果**：删除失败保留元数据，重试返回 true 是尝试语义；需运维核实对象清单与元数据，不将成功包装当成彻底清理。

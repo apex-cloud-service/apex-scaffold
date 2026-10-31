@@ -207,7 +207,8 @@
 | `STORAGE_PRESIGNED_URL_EXPIRE_SECONDS` | `300` | 预签名 URL 有效期（秒） | 文件服务 | ❌ |
 | `STORAGE_LOCAL_ENABLED` | `true` | 启用本地存储后端 | 文件服务 | ❌ |
 | `STORAGE_LOCAL_BASE_PATH` | `./data/storage` | 本地存储根目录 | 文件服务 | ❌ |
-| `FILE_JWT_PUBLIC_KEY_BASE64` | 空 | auth RS256 对应 X509 DER Base64 公钥，不自动同步轮换 | 文件服务 | RS256 必填 |
+| `FILE_JWT_PUBLIC_KEY_BASE64` | 空 | auth RS256 单公钥，X509 DER Base64；无 `kid` Token 兼容；多公钥配置存在时被覆盖 | 文件服务 | RS256 单/多公钥至少一项 |
+| `FILE_JWT_PUBLIC_KEYS_BASE64` | 空 | 静态多公钥，格式 `kid=Base64PublicKey,kid=Base64PublicKey`，按 JWT header 的 `kid` 选择；缺少或未知 `kid` 拒绝，轮换需更新配置并重启 | 文件服务 | RS256 单/多公钥至少一项 |
 | `FILE_JWT_SECRET` | 空 | 仅历史 HMAC 签发方使用，与签名密钥一致且至少 32 字节 | 文件服务 | HMAC 必填 |
 | `MINIO_ENDPOINT` | - | MinIO 端点 | 文件服务 | ❌ |
 | `MINIO_ACCESS_KEY` | - | MinIO AccessKey | 文件服务 | ❌ |

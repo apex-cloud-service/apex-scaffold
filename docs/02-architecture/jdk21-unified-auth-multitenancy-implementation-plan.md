@@ -659,7 +659,7 @@ apex-api-contract新增AccountRef、TenantMembershipSnapshot、AuthorizationSnap
 | O06 办公同步向导 | 42.3 | office、office-service（O06a 后端已实施） | T19 | A06/A07 | 同步向导后端已实施（42.23）：镜像幂等、任务复用与分页失败恢复、可信租户与权限码接线、v2 网关路由；真实 system 用户 ID 映射未实施 |
 | O06b 会议室资源管理 | 42.3、42.25 | office（后端已实施） | T20 | A06/A07 | 资源 CRUD 与预订/取消、并发占用裁决、跨租户隔离、代订分权已实施（42.25）；第三方日历同步补偿与 `/range`、`/my`、`/upcoming` 完整口径见 42.25 缺口，完整 T20 未达成 |
 | O07 管理员体检报告 | 42.3、42.26、42.29 | system（后端已实施） | T21 | A08 | 即时可解释体检报告（O07a，42.26）与历史快照/趋势/CSV 导出/租户侧摘要（O07b，42.29）已实施；定时留存、保留期清理与真实多实例验证未实施 |
-| O08 代码生成器向导 | 42.3、42.27 | system（后端已实施） | T22 | A09 | 模板目录、预检、预览与安全产物已实施（42.27），版本/摘要变更重验与越租户产物防护口径见 42.27；异步生成进度（O08b）未实施 |
+| O08 代码生成器向导 | 42.3、42.27 | system（后端已实施） | T22 | A09 | 模板目录、预检、预览与安全产物已实施（42.27），版本/摘要变更重验与越租户产物防护口径见 42.27；异步生成进度（O08b）已实施（42.31） |
 
 “已实施”状态的依据为第42.7–42.29节记录的真实构建/测试执行结果（本次评审已核实对应关键类文件真实存在，见第1节评审轮次说明）；“未实施”项为方案设计阶段产出，进入实施须经本次或后续批准，不构成既成事实。
 
@@ -1031,7 +1031,7 @@ V40原失败观察中 consent 表结构和数据前后相同；不能据此宣�
 | O06 | /api/v2/office/sync下preflight、previews、tasks、/{taskId}及受控retry | office同步预览/执行/恢复分权；凭据就绪状态和幂等system契约，office任务迁移 | 部分：实际路径为 `/sync/preview`、`/sync/tasks/{taskId}/retry`；真实内部ID映射未实施（42.23、42.24） |
 | O06b | /api/v2/office/meeting-rooms下资源CRUD及availability；/api/v2/office/room-bookings下预订/取消 | 资源维护、普通预订、代订分权；office资源/预订模型和平台补偿契约 | 部分：CRUD/预订/取消与并发裁决已兑现；第三方日历同步补偿未实施（42.25） |
 | O07 | GET /api/v2/operations/health-report；租户业务摘要使用独立受限接口 | 平台体检与租户摘要分权；规则及探测配置、范围/时间/未知语义 | 已兑现：`/api/v2/operations/tenant-health-summary` 独立路径与 `system:operations:health:tenant:read` 权限，仅返回聚合计数与近端趋势（42.26、42.29） |
-| O08 | 生成器现有资源下templates、preflight、preview、artifacts/{id}/download等增量 | 模板读取、预览、执行、下载分权；配置/模板版本、产物保留期与审计 | 部分：模板目录/预检/预览/受控下载已兑现；异步生成进度 O08b 未实施（42.27） |
+| O08 | 生成器现有资源下templates、preflight、preview、artifacts/{id}/download等增量 | 模板读取、预览、执行、下载分权；配置/模板版本、产物保留期与审计 | 已兑现：模板目录/预检/预览/受控下载（42.27）；异步生成进度 O08b 已实施（42.31） |
 
 权限编码为建议目录，须与现有resource:operation体系核对，不能直接作为已注册权限引用。新增Router+Handler、DTO Schema、输入校验、操作日志、i18n及菜单权限种子成套交付；管理前端由独立项目完成，本文仅列API与交互验收，不新建前端目录。UI应区分消息已读与送达、预检与执行、部分成功与全部成功、分享撤销与云URL残余窗口。
 
@@ -1051,7 +1051,7 @@ V40原失败观察中 consent 表结构和数据前后相同；不能据此宣�
 | 核心 O05 | P4 file对象授权、存储边界；P5租户停用策略 | file限时只读分享与撤销，独立前端分享交互；T18通过，不默认扩展密码/限次 |
 | 核心 O06a | P2/P3账号映射及system写契约、P4 office隔离 | 真实内部ID同步、预检预览、分页检查点、幂等及失败恢复；T19通过后交付同步向导。当前已落地镜像幂等、任务类型隔离、分页失败恢复、可信租户与权限码、v2网关路由（42.23）；真实内部ID映射与T19完整口径仍未达成 |
 | 核心 O07a/O08a | 相应授权/阻塞边界完成；不依赖先切换Java21来修复当前契约 | 即时体检报告；生成器契约修正、模板目录/预检/预览/安全产物；T21/T22通过 |
-| 增强 O03b/O06b/O07b/O08b | 对应核心闭环及P3/P4/P5门禁通过，独立排入产品迭代 | 设计器高级节点、会议室、历史体检、必要的异步生成进度；T20及相关扩展场景通过；无交付记录不标完成。已交付：O06b（42.25）、O07b（42.29）；未交付：O03b 高级节点、O08b 异步生成进度 |
+| 增强 O03b/O06b/O07b/O08b | 对应核心闭环及P3/P4/P5门禁通过，独立排入产品迭代 | 设计器高级节点、会议室、历史体检、必要的异步生成进度；T20及相关扩展场景通过；无交付记录不标完成。已交付：O06b（42.25）、O07b（42.29）、O08b 异步生成进度（42.31）；未交付：O03b 高级节点 |
 | 交付收口 | P6资产/Javadoc，P7首次部署 | 将已纳入本次发布的O项映射T/A及报告，执行双库与真实运行验收；明确后置范围，不将所有增强项无条件绑定原Java21上线 |
 
 责任按模块划分：auth维护恢复及身份权威；system维护租户、授权、体检、在线生成器与组织写契约；workflow维护定义及执行；file维护分享；office维护消息、同步与会议室；api-contract及五基础设施模块仅承载共享契约/技术能力。独立管理前端承担页面与交互，不从本仓库是否缺页面推断其项目状态。具体人员在阶段开始登记，不虚构负责人或工期。
@@ -1385,7 +1385,7 @@ O03b 的可视化图编辑界面属于独立管理后台项目，本仓不生成
 
 **测试静态覆盖**：`GeneratorTaskServiceTest` 10 项（提交持久化并返回任务 ID、进度字段映射、未知任务拒绝、取消成功、终态任务取消拒绝、进度推进并标记完成、停止后跳过终态写入、无产物判失败、次数耗尽判失败、次数未满保持 RUNNING 等待重试）；`GeneratorTaskSchedulerTest` 6 项（无候选租户跳过、认领后处理、认领失败跳过、单租户失败隔离、按保留期清理、无完成租户跳过）。测试文件存在不表示通过，结果以下述门禁为准。
 
-**门禁**：环境为 JDK 21.0.13.0+9-tem、mvnd 2.0.0-rc-3，执行 `mvnd -T4 -B clean verify`，反应堆全模块 `BUILD SUCCESS`。该结果覆盖执行时整个工作区，不单独代表 O08b 或其他任一主题的独立验收；本节静态缺口仍按上文保留。
+**门禁（complete verification passed）**：环境为 JDK 21.0.13.0+9-tem、mvnd 2.0.0-rc-3，执行 `mvnd -T4 -B clean verify`，31 个反应堆模块全部 `BUILD SUCCESS`，日志中无 `Failures: [1-9]`、无 `Errors: [1-9]`、无 `BUILD FAILURE`，覆盖 Surefire、Failsafe（含 `FlywayMigrationStartupTest`、`SystemDualDatabaseMigrationIntegrationTest`）、Spotless、PMD(p3c)、ArchUnit 与 JaCoCo。本次通过前修复了 PostgreSQL `V75__register_keycloak_admin_permissions.sql` 的两条 `sys_role_permission` 插入缺失显式 `id` 的问题（`sys_role_permission.id` 为 `BIGINT NOT NULL` 主键），改为与 V74 一致的 `500000 + p.id` / `3600000 + r.id * 100000 + p.id` 并保留 `ON CONFLICT DO NOTHING`；MySQL 侧该表 id 自增，无需改动。此前 `AbstractMySqlContainerBase` 的 `mysql:9.0` 容器启动失败在重跑中未复现，属负载 flake。该结果覆盖执行时整个工作区，不单独代表 O08b 或其他任一主题的独立验收；本节静态缺口仍按上文保留。
 
 ### 42.32 网关路由缺口收口：租户管理、MFA/IP、办公/图表/认证管理面（2026-10-30）
 

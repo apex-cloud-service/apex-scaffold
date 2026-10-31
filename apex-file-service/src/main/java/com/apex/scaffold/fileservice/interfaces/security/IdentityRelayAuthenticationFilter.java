@@ -10,8 +10,11 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -41,7 +44,8 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
     private static final String BEARER_PREFIX = "Bearer ";
-    private final PublicKey publicKey;
+    private final Map<String, PublicKey> publicKeys;
+    private final boolean keyedPublicKeys;
     private final SecretKey secretKey;
 
     /**
@@ -49,17 +53,49 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * @param publicKeyBase64 X509 DER 编码的 RSA 公钥
      * @param secret HMAC 过渡密钥，至少 256 位
      */
+    @Autowired
     public IdentityRelayAuthenticationFilter(
+            @Value("${file.security.jwt-public-keys-base64:}") String publicKeysBase64,
             @Value("${file.security.jwt-public-key-base64:}") String publicKeyBase64,
             @Value("${file.security.jwt-secret:}") String secret) {
+        this(publicKeysBase64.isBlank() ? publicKeyBase64 : publicKeysBase64, secret);
+    }
+
+    /**
+     * 保留旧版单公钥构造方式，供现有测试及程序化装配使用。
+     * @param publicKeyBase64 X509 DER 编码的 RSA 公钥
+     * @param secret HMAC 过渡密钥
+     */
+    public IdentityRelayAuthenticationFilter(String publicKeyConfiguration, String secret) {
         try {
-            publicKey = publicKeyBase64.isBlank()
-                    ? null
-                    : KeyFactory.getInstance("RSA")
-                            .generatePublic(
-                                    new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64)));
+            Map<String, PublicKey> configuredKeys = new HashMap<>();
+            if (!publicKeyConfiguration.isBlank()) {
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                if (publicKeyConfiguration.contains(",")) {
+                    for (String entry : publicKeyConfiguration.split(",", -1)) {
+                        String[] parts = entry.split("=", 2);
+                        String keyId = parts.length == 2 ? parts[0].trim() : "";
+                        String encodedKey = parts.length == 2 ? parts[1].trim() : "";
+                        if (keyId.isBlank() || encodedKey.isBlank() || configuredKeys.containsKey(keyId)) {
+                            throw new IllegalArgumentException("文件服务 JWT 公钥配置无效");
+                        }
+                        configuredKeys.put(
+                                keyId,
+                                keyFactory.generatePublic(new X509EncodedKeySpec(
+                                        Base64.getDecoder().decode(encodedKey))));
+                    }
+                    keyedPublicKeys = true;
+                } else {
+                    configuredKeys.put("", keyFactory.generatePublic(new X509EncodedKeySpec(
+                            Base64.getDecoder().decode(publicKeyConfiguration))));
+                    keyedPublicKeys = false;
+                }
+            } else {
+                keyedPublicKeys = false;
+            }
+            publicKeys = Map.copyOf(configuredKeys);
             secretKey = secret.isBlank() ? null : Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        } catch (java.security.GeneralSecurityException error) {
+        } catch (java.security.GeneralSecurityException | IllegalArgumentException error) {
             throw new IllegalArgumentException("文件服务 JWT 公钥配置无效", error);
         }
     }
@@ -110,18 +146,23 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
             return null;
         }
         String token = authorization.substring(BEARER_PREFIX.length()).trim();
+        String algorithm = headerValue(token, "alg");
         Claims claims = null;
-        if (publicKey != null) {
-            try {
-                var signed = Jwts.parser().verifyWith(publicKey).build().parseSignedClaims(token);
-                if (Jwts.SIG.RS256.getId().equals(signed.getHeader().getAlgorithm())) {
-                    claims = signed.getPayload();
+        if (Jwts.SIG.RS256.getId().equals(algorithm)) {
+            String keyId = keyedPublicKeys ? headerValue(token, "kid") : "";
+            PublicKey verificationKey = keyId == null ? null : publicKeys.get(keyId);
+            if (verificationKey != null) {
+                try {
+                    claims = Jwts.parser()
+                            .verifyWith(verificationKey)
+                            .build()
+                            .parseSignedClaims(token)
+                            .getPayload();
+                } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {
+                    /* 签名、结构或声明无效时拒绝认证。 */
                 }
-            } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {
-                /* 继续检查显式启用的过渡密钥。 */
             }
-        }
-        if (claims == null && secretKey != null) {
+        } else if (secretKey != null && isHmacAlgorithm(algorithm)) {
             try {
                 claims = Jwts.parser()
                         .verifyWith(secretKey)
@@ -129,9 +170,31 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
                         .parseSignedClaims(token)
                         .getPayload();
             } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {
-                return null;
+                /* HMAC 仅作为显式配置的历史过渡路径。 */
             }
         }
         return claims != null && claims.getExpiration() != null ? claims : null;
+    }
+
+    private boolean isHmacAlgorithm(String algorithm) {
+        return Jwts.SIG.HS256.getId().equals(algorithm)
+                || Jwts.SIG.HS384.getId().equals(algorithm)
+                || Jwts.SIG.HS512.getId().equals(algorithm);
+    }
+
+    private String headerValue(String token, String name) {
+        try {
+            String[] parts = token.split("\\.", -1);
+            if (parts.length != 3) {
+                return null;
+            }
+            String header = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
+            java.util.regex.Matcher matcher = java.util.regex.Pattern
+                    .compile("\\\"" + name + "\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"")
+                    .matcher(header);
+            return matcher.find() ? matcher.group(1) : null;
+        } catch (IllegalArgumentException error) {
+            return null;
+        }
     }
 }

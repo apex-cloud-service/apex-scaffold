@@ -20,15 +20,15 @@ INSERT INTO sys_permission (id, name, code, description, type, status)
 SELECT 2630, 'Keycloak 单用户同步', 'system:keycloak:user:sync', '按 sub 同步单个 Keycloak 用户', 1, 1
 WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'system:keycloak:user:sync');
 
-INSERT INTO sys_role_permission (role_id, permission_id)
-SELECT 1, p.id
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 500000 + p.id, 1, p.id
 FROM sys_permission p
 WHERE p.code IN ('system:keycloak:status', 'system:keycloak:sync', 'system:keycloak:user:sync')
 AND EXISTS (SELECT 1 FROM sys_role WHERE id = 1 AND code = 'ADMIN')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO sys_role_permission (role_id, permission_id)
-SELECT r.id, p.id
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 3600000 + r.id * 100000 + p.id, r.id, p.id
 FROM sys_role r CROSS JOIN sys_permission p
 WHERE r.code = 'SUPER_ADMIN'
   AND p.code IN ('system:keycloak:status', 'system:keycloak:sync', 'system:keycloak:user:sync')

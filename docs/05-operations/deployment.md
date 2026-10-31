@@ -25,7 +25,7 @@ bash scripts/utils/token-v42-recover.sh \
 
 2026-10-19追加复核：上述489/586为前次记录；PG两批新增7+4后有效并集为 **500/586，剩86（MySQL70、PostgreSQL16）**，恢复仍新增0。当前恢复工具在apply后若postflight仍有计划即失败，并实际查询 `v_token_health` 后才输出完成；带空格引用标识符不被规范化为另一名称，force别名及空mysql命令均拒绝。最终MySQL8.0.46隔离证据为31场景（3恢复、28拒绝），验证已有inactive v1与active v2重入保留、清理成功；首轮外键fixture失败和旧22场景证据全部保留，hash及限制见[P0本轮报告](../06-testing/jdk21-unified-auth/20261016-p0/report.md)。恢复单文件当前9个测试方法，旧13项为跨文件组合；这些验证不替代Flyway历史协调、真实旧库升级及生产恢复验收。
 
-文件服务上线前须按[对象存储接入指南](object-storage-integration.md)预创建云桶，配置七牛桶区域/绑定域名及 auth RS256 对应公钥。Compose 显式注入存储变量，并将主机 `./data/storage` 挂载到容器 `/app/data/storage`；请预先校验目录权限与备份。Java 不会自动加载 `.env`。切换默认存储不迁移历史对象，不得删除旧策略配置或直接回退归属迁移。
+文件服务上线前须按[对象存储接入指南](object-storage-integration.md)预创建云桶，配置七牛桶区域/绑定域名及 auth RS256 公钥。可通过 `FILE_JWT_PUBLIC_KEY_BASE64` 配置单公钥，或通过 `FILE_JWT_PUBLIC_KEYS_BASE64` 配置静态多公钥（格式 `kid=Base64PublicKey,kid=Base64PublicKey`，按 Token header 的 `kid` 选择，多公钥优先；缺少或未知 `kid` 拒绝）。file 不自动获取 JWKS，密钥轮换须更新配置并重启；auth 私钥不得进入仓库、镜像或 Compose 模板，真实云凭证只能放在受控部署配置中。Compose 显式注入存储变量，并将主机 `./data/storage` 挂载到容器 `/app/data/storage`；请预先校验目录权限与备份。Java 不会自动加载 `.env`。切换默认存储不迁移历史对象，不得删除旧策略配置或直接回退归属迁移。
 
 [查看部署流程图](../diagrams/45_deployment_flow.svg)
 
