@@ -7,6 +7,7 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.ConfigEntity;
 import com.apex.scaffold.domain.repository.ConfigRepository;
+import com.apex.scaffold.domain.repository.TenantConfigRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,8 @@ public class ConfigService {
      */
     private final TenantGuard tenantGuard;
 
+    private final TenantConfigRepository tenantConfigRepository;
+
     /**
      * 查询全部参数配置。
      *
@@ -69,7 +72,20 @@ public class ConfigService {
      * @return 参数键值，未找到时为 {@code null}
      */
     public Mono<String> getValueByKey(String configKey) {
-        return configRepository.findByKey(configKey).map(ConfigEntity::getConfigValue);
+        // B6：读取优先级 租户配置 → 全局配置（平台租户的租户配置即全局语义，直接走全局）
+        String tenant =
+                com.apex.scaffold.common.context.TenantContext.currentTenantId().orElse(null);
+        Mono<String> tenantValue = (tenant == null
+                        || tenant.isBlank()
+                        || com.apex.scaffold.domain.model.entity.TenantPackageEntity.PLATFORM_TENANT_CODE.equals(
+                                tenant))
+                ? Mono.empty()
+                : tenantConfigRepository
+                        .findByTenantAndKey(tenant, configKey)
+                        .filter(e -> e.getDeleted() == null || e.getDeleted() == 0)
+                        .map(com.apex.scaffold.domain.model.entity.TenantConfigEntity::getConfigValue)
+                        .onErrorResume(com.apex.scaffold.common.exception.BusinessException.class, e -> Mono.empty());
+        return tenantValue.switchIfEmpty(configRepository.findByKey(configKey).map(ConfigEntity::getConfigValue));
     }
 
     /**

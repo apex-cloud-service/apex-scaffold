@@ -100,11 +100,28 @@ jwt:
 
 ### workflow-service 独立 JWT 验签
 
-workflow-service 从 `Authorization: Bearer` 独立验签，身份只读取已签名的 `userId`、`tenantId`、`clientType`，不信任 `X-User-Id` / `X-Tenant-Id` / `X-Client-Type`。必须包含有效 `exp`、`tokenType=ACCESS`、正数用户 ID 和非空白字符串租户。当前 auth 签发 RS256，设置 `WORKFLOW_JWT_PUBLIC_KEY_BASE64`（`workflow.security.jwt-public-key-base64`）为对应活跃 RSA 公钥的 X509 DER Base64，不能填写 PEM 或 JWKS JSON，也不能用共享 `JWT_SECRET` 验证 RS256。
+workflow-service 从 `Authorization: Bearer` 独立验签，身份只读取已签名的 `userId`、`tenantId`、`clientType`，不信任 `X-User-Id` / `X-Tenant-Id` / `X-Client-Type`。必须包含有效 `exp`、`tokenType=ACCESS`、正数用户 ID 和非空白字符串租户。当前 auth 签发 RS256，设置 `WORKFLOW_JWT_PUBLIC_KEY_BASE64`（`workflow.security.jwt-public-key-base64`）为对应活跃 RSA 公钥的 X509 DER Base64，不能填写 PEM 或 JWKS JSON，也不能用共享 `JWT_SECRET` 验证 RS256。多公钥模式（统一认证收口 A1）可设置 `WORKFLOW_JWT_PUBLIC_KEYS_BASE64`（`workflow.security.jwt-public-keys-base64`，格式 `kid=Base64X509,kid=Base64X509`）按 JWT header 的 `kid` 精确选择公钥，多公钥优先于单公钥。
 
 历史 HMAC 签发方须同时显式设置 `WORKFLOW_JWT_HMAC_ENABLED=true` 和至少 32 字节的 `WORKFLOW_JWT_SECRET`，对应 `workflow.security.jwt-hmac-enabled` / `jwt-secret`；默认关闭。配置 RSA 后只接受 RS256，不因签名失败而降级到 HMAC；非法 RSA 配置拒绝启动，缺失验签密钥时不建立认证。
 
-`.env.example` 提供以上变量，`podman-compose.yml` 在 workflow 容器中显式注入；直接启动 Java 进程时仍须导出环境变量或通过安全配置注入。当前不自动拉取 JWKS，auth 轮换后须同步公钥并重启 workflow。服务只做本地签名与声明校验，不检查会话撤销、账号停用或令牌黑名单；`/internal/v1/**` 仍在现有安全链中 `permitAll`，内部接口鉴权需另行治理。
+`.env.example` 提供以上变量，`podman-compose.yml` 在 workflow 容器中显式注入；直接启动 Java 进程时仍须导出环境变量或通过安全配置注入。服务只做本地签名与声明校验，不检查会话撤销、账号停用或令牌黑名单；`/internal/v1/**` 仍在现有安全链中 `permitAll`，内部接口鉴权需另行治理。
+
+### 共享 JWKS 拉取与网关撤销流（统一认证收口 A2/A3）
+
+认证中心登录密钥（RS256，Redis 存储）以 30 天周期自动轮换并保留 7 天宽限；`GET /.well-known/jwks.json` 聚合输出轮换密钥（活跃 + 宽限期）与 OAuth2 过渡静态密钥，是登录令牌与 OAuth2 令牌唯一的公钥分发点。网关与各服务通过共享拉取客户端（apex-common `JwksAutoConfiguration`）自动获取轮换后的公钥，无需人工同步：
+
+| 配置（`apex.jwks.*` / 网关为 `apex.gateway.jwks.*`） | 环境变量 | 说明 |
+| --- | --- | --- |
+| `apex.jwks.remote-url` | `JWKS_REMOTE_URL` | JWKS 完整地址；空 = 拉取关闭，各服务使用静态公钥兜底 |
+| `apex.gateway.jwks.remote-url` | 同上 | 网关远程拉取地址；同 kid 覆盖静态 `ks` 条目，`hmac-legacy` 不受影响 |
+| `apex.jwks.refresh-interval-seconds` / `apex.gateway.jwks.remote-refresh-interval-seconds` | `JWKS_REFRESH_INTERVAL_SECONDS` | 拉取间隔（默认 300，下限 30）；密钥轮换后最迟一个周期内生效 |
+| `apex.system.jwt-center.public-keys` | — | 主应用认证中心公钥静态清单（`kid → X509 DER Base64`），仅作拉取不可用时的兜底 |
+| `auth-center.oauth2.legacy-key-in-jwks` | — | 认证中心聚合 JWKS 是否并入配置注入静态密钥（过渡期默认 true，结束后关闭并移除静态密钥配置） |
+| `apex.storage-quota.usage-cache-seconds` | — | file 侧存储已用字节聚合缓存（默认 60s，软上限口径，窗口内连续上传可能短暂低估） |
+| `apex.gateway.revocation.enabled` / `url` | `REVOCATION_FEED_ENABLED` / `REVOCATION_FEED_URL` | 网关令牌撤销流（A3）：周期拉取认证中心撤销增量（`GET /internal/v1/tokens/revocations?since=`），本地缓存 jti 撤销集；验签通过但命中撤销集的令牌收敛为 401，登出/踢人在拉取间隔内于网关生效 |
+| `apex.gateway.revocation.pull-interval-seconds` / `lookback-seconds` | `REVOCATION_PULL_INTERVAL_SECONDS` / `REVOCATION_LOOKBACK_SECONDS` | 拉取间隔（默认 15s，下限 5）与启动回看窗口（默认 7200s，覆盖访问令牌全生命周期） |
+
+行为约定：拉取失败保留上一次快照并告警，不影响在用公钥；启动时立即拉取一次；主应用自有令牌仍为 HS256（`jwt.secret`），`apex.system.jwt-center.legacy-hmac-enabled` 在主应用签发链路迁入统一密钥体系前不得关闭。轮换期间旧公钥在宽限期内持续可用，存量令牌不失效。
 
 ### 多端统一账户与微信渠道（多端对接改造新增）
 
@@ -654,7 +671,7 @@ storage:
     secret-key: ${STORAGE_QINIU_SECRET_KEY:}
 ```
 
-云桶预创建；七牛区域与 HTTPS 下载域名必须对应配置桶。Local 不提供无认证预签名 URL。旧 `storage.s3`、`storage.local.url-prefix`、`STORAGE_LOCAL_PUBLIC_BASE_URL`、`MINIO_SECURE` 不属于当前 starter 配置。auth 当前签发 RS256，file 必须配置对应 X509 DER Base64 公钥；`JWT_SECRET` 不能替代 RSA 公钥，且 file 不自动拉取 JWKS 或同步轮换。
+云桶预创建；七牛区域与 HTTPS 下载域名必须对应配置桶。Local 不提供无认证预签名 URL。旧 `storage.s3`、`storage.local.url-prefix`、`STORAGE_LOCAL_PUBLIC_BASE_URL`、`MINIO_SECURE` 不属于当前 starter 配置。auth 当前签发 RS256，file 必须配置对应 X509 DER Base64 公钥；`JWT_SECRET` 不能替代 RSA 公钥。静态公钥仅作共享 JWKS 拉取（见上文「共享 JWKS 拉取」节）不可用时的兜底，推荐配置 `JWKS_REMOTE_URL` 自动跟进认证中心轮换。
 
 ## 🧭 Nacos 配置中心（微服务化）
 
