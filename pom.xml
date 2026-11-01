@@ -185,6 +185,7 @@
     <module>apex-masking-service</module>
     <module>apex-seata-spring-boot-starter</module>
     <!-- 运维工具模块：本地部署密钥/配置校验、TOTP 离线迁移与 V42 结构恢复（不参与服务运行期装配） -->
+    <module>apex-boot-all</module>
     <module>apex-tools-deployment</module>
   </modules>
   <dependencyManagement>
