@@ -138,16 +138,34 @@ public class TenantPackageService {
      * @param menuIds         可用菜单 ID 集合（含父链补全由调用方按需执行）
      * @param permissionCodes 可用权限码集合
      */
-    public record PackageScope(boolean unbounded, java.util.Set<Long> menuIds, java.util.Set<String> permissionCodes) {
+    public record PackageScope(
+            boolean unbounded,
+            java.util.Set<Long> menuIds,
+            java.util.Set<String> permissionCodes,
+            java.util.Set<String> features) {
 
-        /** 全量范围（不裁剪）。 */
+        /** 全量范围（不裁剪、订阅全部能力）。 */
         public static PackageScope full() {
-            return new PackageScope(true, java.util.Set.of(), java.util.Set.of());
+            return new PackageScope(true, java.util.Set.of(), java.util.Set.of(), java.util.Set.of());
         }
 
         /** 依套餐实体构造范围。 */
         public static PackageScope of(TenantPackageEntity pkg) {
-            return new PackageScope(false, pkg.getMenuIds(), pkg.getPermissionCodes());
+            return new PackageScope(
+                    false,
+                    pkg.getMenuIds(),
+                    pkg.getPermissionCodes(),
+                    pkg.getFeatures() == null ? java.util.Set.of() : pkg.getFeatures());
+        }
+
+        /**
+         * 能力是否已订阅（空 features = 全量订阅，与套餐语义一致）。
+         *
+         * @param capabilityCode 能力编码
+         * @return 是否订阅
+         */
+        public boolean allowsCapability(String capabilityCode) {
+            return unbounded || features == null || features.isEmpty() || features.contains(capabilityCode);
         }
 
         /**

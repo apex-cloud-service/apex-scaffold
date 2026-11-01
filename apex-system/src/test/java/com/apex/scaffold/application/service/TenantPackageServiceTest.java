@@ -103,7 +103,7 @@ class TenantPackageServiceTest {
     @Test
     @DisplayName("PackageScope：空集合语义为全量放行")
     void emptySetMeansUnboundedWithinScope() {
-        var scope = new TenantPackageService.PackageScope(false, Set.of(), Set.of());
+        var scope = new TenantPackageService.PackageScope(false, Set.of(), Set.of(), Set.of());
         assertThat(scope.allowsMenu(7L)).isTrue();
         assertThat(scope.allowsPermission("any:code")).isTrue();
     }
