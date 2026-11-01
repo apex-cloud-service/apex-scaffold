@@ -51,8 +51,16 @@ public class StorageAutoConfiguration {
                 throw new IllegalStateException("已启用的存储策略不可用，请检查 SDK: " + type);
             }
         }
+        // C3：合并 ServiceLoader 发现的第三方后端（免改 starter 接入新后端）；
+        // 重复 type 仍由 StorageRegistry 严格拒绝
+        java.util.List<ObjectStorage> all = new java.util.ArrayList<>(providers);
+        for (ObjectStorage spi : com.apex.scaffold.storage.StorageProviderLoader.load()) {
+            if (providers.stream().noneMatch(existing -> existing.type().equals(spi.type()))) {
+                all.add(spi);
+            }
+        }
         return new StorageRegistry(
-                providers,
+                all,
                 environment
                         .getProperty("storage.default-type", "local")
                         .toLowerCase(java.util.Locale.ROOT)
