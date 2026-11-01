@@ -346,7 +346,10 @@ class OfficeOpenApiContractTest {
                 DataSourceAutoConfiguration.class,
                 ReactiveSecurityAutoConfiguration.class,
                 org.springframework.boot.actuate.autoconfigure.security.reactive
-                        .ReactiveManagementWebSecurityAutoConfiguration.class
+                        .ReactiveManagementWebSecurityAutoConfiguration.class,
+                // 契约切片测试只装配 Router（@Import 显式列举），
+                // 需排除组件入口自动装配，避免引入 Mapper/Handler 依赖（方案 C7）
+                com.apex.scaffold.office.autoconfigure.OfficeComponentAutoConfiguration.class
             })
     @Import({
         OfficeAdminRouter.class,
