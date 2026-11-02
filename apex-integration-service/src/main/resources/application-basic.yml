@@ -1,0 +1,50 @@
+# ============================================================
+# Apex Scaffold - 集成服务 basic Profile 配置
+# ============================================================
+# 【作用】
+#   基础版（basic）单机运行配置：使用 H2 内存库替代 MySQL，
+#   关闭 Flyway 改用 db/basic-schema.sql 初始化 int_*/iot_* 表结构。
+# @author Apex Team
+# ============================================================
+
+spring:
+  autoconfigure:
+    # basic profile 排除集成服务 classpath 上不适配 H2/离线环境的自动装配组件
+    exclude:
+      com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration,
+      com.apex.scaffold.infrastructure.remote.config.RemoteApiClientConfig
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:integration-service;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/basic-schema.sql
+  codec:
+    # basic 环境内存受限，收窄请求体缓冲
+    max-in-memory-size: 16MB
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    com.apex.scaffold.integration: INFO
+    com.apex.scaffold.integrationservice: INFO
+
+# basic 档与主配置一致：MQTT 桥接默认关闭；集成 HTTP 接口保持开启
+apex:
+  # B7: basic 档多租户行级隔离维持关闭（D09：离线最小档无多租户诉求）
+  tenant:
+    enabled: false
+  events:
+    outbox:
+      # basic/H2 关闭事务 Outbox（apex_integration 库暂无 outbox 表，且服务缺省即进程内发布器）
+      enabled: false
+  integration:
+    iot:
+      mqtt:
+        enabled: false

@@ -1,0 +1,128 @@
+# ============================================================
+# Apex Scaffold - 集成服务 application.yml（方案 M5 / 批次 E4）
+# ============================================================
+# 【独立库】 集成服务使用独立数据库 apex_integration，
+#   表结构（由 apex-integration 库模块迁移提供）：
+#   V1: int_connector_config / int_credential / int_outbound_call_log /
+#       int_inbound_event / int_webhook_dedup
+#   V2: iot_device / iot_device_shadow / iot_telemetry / iot_command / iot_rule
+# @author Apex Team
+# ============================================================
+
+apex:
+  seata:
+    enabled: ${APEX_SEATA_ENABLED:false}
+    application-id: apex-integration-service
+    transaction-service-group: ${APEX_SEATA_TX_GROUP:apex_tx_group}
+    propagation-secret: ${APEX_SEATA_PROPAGATION_SECRET:}
+    allowed-origins: []
+  tenant:
+    # B7 口径：多租户行级隔离默认开启（int_*/iot_* 全表含 tenant_id，不进拦截器白名单）
+    enabled: true
+  jwks:
+    # 共享 JWKS 拉取（统一认证收口 A2）：认证中心 /.well-known/jwks.json；
+    # 空 = 拉取关闭，仅用静态公钥兜底；轮换公钥最迟一个刷新周期内生效。
+    remote-url: ${JWKS_REMOTE_URL:}
+    refresh-interval-seconds: ${JWKS_REFRESH_INTERVAL_SECONDS:300}
+  events:
+    # 事件通道：auto（默认）——组合/单库拓扑退化为进程内派发，拆分拓扑可走 Outbox+MQ。
+    # 当前 apex_integration 库暂无 sys_domain_event_outbox 表，服务缺省装配进程内发布器，
+    # 见 IntegrationEventConfig；补齐 Outbox 表前不要开启 apex.events.outbox。
+    channel: ${APEX_EVENTS_CHANNEL:auto}
+    outbox:
+      enabled: false
+  component:
+    integration:
+      # 集成组件总开关与 HTTP 接口子开关（默认开启）；关闭 interfaces 后仅保留核心能力。
+      # device 为 IoT 设备子域开关（connector/device 双子域同构，互不影响）。
+      enabled: ${APEX_COMPONENT_INTEGRATION_ENABLED:true}
+      interfaces-enabled: ${APEX_COMPONENT_INTEGRATION_INTERFACES_ENABLED:true}
+      device:
+        enabled: ${APEX_COMPONENT_IOT_ENABLED:true}
+        interfaces-enabled: ${APEX_COMPONENT_IOT_INTERFACES_ENABLED:true}
+  integration:
+    iot:
+      mqtt:
+        # MQTT 桥接默认关闭：hivemq-mqtt-client 为 optional 依赖，显式置 true 才装配
+        # IotMqttSession/MqttCommandDownlinkBridge（E3）。
+        enabled: ${APEX_IOT_MQTT_ENABLED:false}
+  security:
+    # 连接器凭据 AES-256-GCM 加密密钥（32 字节）；凭据管理功能首次使用前必须注入。
+    credential-encryption-key: ${APEX_CREDENTIAL_ENCRYPTION_KEY:}
+
+server:
+  # 集成服务端口（批次 E4：业务 8094）
+  port: 8094
+
+spring:
+  application:
+    # 服务名 = Nacos 注册名 = 网关路由 lb:// 的目标名
+    name: apex-integration-service
+
+  codec:
+    max-in-memory-size: 16MB
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_integration}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    # {vendor} 按 JDBC URL 解析为 mysql/postgresql，使命名空间 db/migration/{mysql,postgresql} 双套迁移自动生效
+    locations: classpath:db/migration/{vendor}
+    out-of-order: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# ==================== 集成服务安全 ====================
+integration:
+  security:
+    # 独立验签，不信任可伪造的网关身份头；未配置信任材料时拒绝认证。
+    # auth 当前使用 RS256：注入 X509 DER Base64 公钥；多公钥格式 kid=Base64PublicKey,...
+    # 多公钥优先于单公钥；生产推荐配置 apex.jwks.remote-url 自动拉取轮换公钥。
+    jwt-public-keys-base64: ${INTEGRATION_JWT_PUBLIC_KEYS_BASE64:}
+    jwt-public-key-base64: ${INTEGRATION_JWT_PUBLIC_KEY_BASE64:}
+    jwt-secret: ${INTEGRATION_JWT_SECRET:}
+
+management:
+  server:
+    # 管理端口与业务端口物理隔离（业务 8094 / 管理 8097；8095/8096 已分别由任务代理与脱敏服务占用）
+    port: 8097
+    address: ${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.apex.scaffold.integration: DEBUG
+    com.apex.scaffold.integrationservice: DEBUG
+    org.springframework.web: INFO
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

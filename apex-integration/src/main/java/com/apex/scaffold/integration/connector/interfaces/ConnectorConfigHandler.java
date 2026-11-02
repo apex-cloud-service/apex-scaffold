@@ -1,0 +1,146 @@
+package com.apex.scaffold.integration.connector.interfaces;
+
+import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.result.Result;
+import com.apex.scaffold.integration.connector.application.ConnectorConfigManageService;
+import com.apex.scaffold.integration.connector.interfaces.dto.ConnectorConfigCreateRequest;
+import com.apex.scaffold.integration.connector.interfaces.dto.ConnectorConfigResponse;
+import com.apex.scaffold.integration.connector.interfaces.dto.ConnectorConfigUpdateRequest;
+import jakarta.validation.Validator;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+/**
+ * 连接器配置管理 Handler（方案 M5 / 批次 E2，C7 标准管理接口）。
+ *
+ * <p>租户始终取可信上下文；{@code @RequirePermission} 为元数据声明，
+ * 由宿主安全切面执行。响应不包含任何明文凭据（配置值中的敏感项本就以凭据引用表达）。
+ *
+ * @author Apex Team
+ * @version 1.3.1
+ * @since 1.3.1
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class ConnectorConfigHandler {
+
+    private static final String PAGE_NUM_DEFAULT = "1";
+
+    private static final String PAGE_SIZE_DEFAULT = "20";
+
+    private final ConnectorConfigManageService manageService;
+
+    private final Validator validator;
+
+    /**
+     * 分页查询连接器配置。
+     *
+     * @param request 当前请求（query: connectorType/pageNum/pageSize）
+     * @return 分页结果
+     */
+    @RequirePermission("integration:connector:read")
+    public Mono<ServerResponse> page(ServerRequest request) {
+        String connectorType = request.queryParam("connectorType").orElse(null);
+        int pageNum = parseIntOrDefault(request.queryParam("pageNum").orElse(PAGE_NUM_DEFAULT), 1);
+        int pageSize = parseIntOrDefault(request.queryParam("pageSize").orElse(PAGE_SIZE_DEFAULT), 20);
+        return IntegrationResponses.currentTenant(request)
+                .flatMap(tenantId -> manageService.page(tenantId, connectorType, pageNum, pageSize))
+                .flatMap(page -> ServerResponse.ok().bodyValue(Result.success(page)))
+                .onErrorResume(IntegrationResponses::error);
+    }
+
+    /**
+     * 按 ID 查询配置。
+     *
+     * @param request 当前请求（path: id）
+     * @return 配置详情
+     */
+    @RequirePermission("integration:connector:read")
+    public Mono<ServerResponse> get(ServerRequest request) {
+        return IntegrationResponses.currentTenant(request)
+                .flatMap(tenantId -> manageService
+                        .get(tenantId, Long.valueOf(request.pathVariable("id")))
+                        .map(ConnectorConfigResponse::from))
+                .flatMap(response -> ServerResponse.ok().bodyValue(Result.success(response)))
+                .onErrorResume(IntegrationResponses::error);
+    }
+
+    /**
+     * 新增连接器配置。
+     *
+     * @param request 当前请求（JSON body）
+     * @return 落库后的配置
+     */
+    @RequirePermission("integration:connector:create")
+    @OperationLog(module = "integration", type = OperationLog.OperationType.INSERT, description = "新增连接器配置")
+    public Mono<ServerResponse> create(ServerRequest request) {
+        return request.bodyToMono(ConnectorConfigCreateRequest.class)
+                .switchIfEmpty(Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                        com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(body -> IntegrationResponses.validate(body, validator))
+                .flatMap(body -> IntegrationResponses.currentTenant(request).flatMap(tenantId -> manageService
+                        .create(
+                                tenantId,
+                                body.getConnectorType(),
+                                body.getConfigKey(),
+                                body.getConfigValue(),
+                                body.getRemark())
+                        .map(ConnectorConfigResponse::from)))
+                .flatMap(response -> ServerResponse.ok().bodyValue(Result.success(response)))
+                .onErrorResume(IntegrationResponses::error);
+    }
+
+    /**
+     * 更新连接器配置。
+     *
+     * @param request 当前请求（path: id，JSON body）
+     * @return 更新后的配置
+     */
+    @RequirePermission("integration:connector:update")
+    @OperationLog(module = "integration", type = OperationLog.OperationType.UPDATE, description = "更新连接器配置")
+    public Mono<ServerResponse> update(ServerRequest request) {
+        return request.bodyToMono(ConnectorConfigUpdateRequest.class)
+                .switchIfEmpty(Mono.error(new com.apex.scaffold.common.exception.BusinessException(
+                        com.apex.scaffold.common.result.ResultCode.PARAM_ERROR, "请求体不能为空")))
+                .flatMap(body -> IntegrationResponses.validate(body, validator))
+                .flatMap(body -> IntegrationResponses.currentTenant(request).flatMap(tenantId -> manageService
+                        .update(
+                                tenantId,
+                                Long.valueOf(request.pathVariable("id")),
+                                body.getConfigValue(),
+                                body.getRemark(),
+                                body.getVersion())
+                        .map(ConnectorConfigResponse::from)))
+                .flatMap(response -> ServerResponse.ok().bodyValue(Result.success(response)))
+                .onErrorResume(IntegrationResponses::error);
+    }
+
+    /**
+     * 删除连接器配置（逻辑删除）。
+     *
+     * @param request 当前请求（path: id）
+     * @return 完成信号
+     */
+    @RequirePermission("integration:connector:delete")
+    @OperationLog(module = "integration", type = OperationLog.OperationType.DELETE, description = "删除连接器配置")
+    public Mono<ServerResponse> delete(ServerRequest request) {
+        return IntegrationResponses.currentTenant(request)
+                .flatMap(tenantId -> manageService.delete(tenantId, Long.valueOf(request.pathVariable("id"))))
+                .then(ServerResponse.ok().bodyValue(Result.success()))
+                .onErrorResume(IntegrationResponses::error);
+    }
+
+    private int parseIntOrDefault(String value, int defaultValue) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+}

@@ -1,0 +1,3 @@
+com.apex.scaffold.integration.connector.autoconfigure.IntegrationComponentAutoConfiguration
+com.apex.scaffold.integration.device.autoconfigure.IotDeviceComponentAutoConfiguration
+com.apex.scaffold.integration.device.autoconfigure.IotMqttAutoConfiguration

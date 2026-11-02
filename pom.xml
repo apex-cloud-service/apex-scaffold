@@ -186,6 +186,9 @@
     <module>apex-seata-spring-boot-starter</module>
     <!-- 运维工具模块：本地部署密钥/配置校验、TOTP 离线迁移与 V42 结构恢复（不参与服务运行期装配） -->
     <module>apex-boot-all</module>
+    <module>apex-integration</module>
+    <!-- 集成服务：启动类/Router 装配/独立 apex_integration 库（方案 M5 / 批次 E4） -->
+    <module>apex-integration-service</module>
     <module>apex-tools-deployment</module>
   </modules>
   <dependencyManagement>

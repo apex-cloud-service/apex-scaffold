@@ -56,6 +56,13 @@
             <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-office</artifactId>
         </dependency>
+        <!-- 集成组件：连接器/凭据 + IoT 设备双子域（方案 M5 / 批次 E4）；
+             apex-services-bom 未纳管 apex-integration，须显式声明版本 -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-integration</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

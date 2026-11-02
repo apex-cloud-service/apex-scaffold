@@ -1,0 +1,4 @@
+com.apex.scaffold.integration.connector.domain.connector.HttpConnector
+com.apex.scaffold.integration.connector.domain.connector.WebhookOutboundConnector
+com.apex.scaffold.integration.connector.domain.connector.WeChatConnector
+com.apex.scaffold.integration.connector.domain.connector.ChuanglanConnector
