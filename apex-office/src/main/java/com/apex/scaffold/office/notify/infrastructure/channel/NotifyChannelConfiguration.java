@@ -3,6 +3,7 @@ package com.apex.scaffold.office.notify.infrastructure.channel;
 import com.apex.scaffold.office.infrastructure.spi.OfficePlatformMessageClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -55,5 +56,45 @@ public class NotifyChannelConfiguration {
     @ConditionalOnMissingBean(name = "wecomNotifyChannel")
     public ImNotifyChannel wecomNotifyChannel(ObjectProvider<OfficePlatformMessageClient> clients) {
         return new ImNotifyChannel("WECOM", clients);
+    }
+
+    /**
+     * 短信通道（可选）：消费方提供 {@code smsNotifySender} 函数（手机号, 内容）→ 结果时启用。
+     *
+     * <p>office 不直接依赖 {@code apex-infrastructure-integration}（保持模块边界）：
+     * 需要短信能力的部署在依赖该模块的装配层注册发送函数即可，未注册时本通道不存在。
+     *
+     * @param sender 短信发送函数（可能不存在）
+     * @return 短信通知通道；未提供发送函数时为 null（不注册 Bean）
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "smsNotifyChannel")
+    @ConditionalOnProperty(prefix = "apex.notify.sms", name = "enabled", havingValue = "true")
+    public SmsNotifyChannel smsNotifyChannel(
+            ObjectProvider<java.util.function.BiFunction<String, String, reactor.core.publisher.Mono<String>>> sender) {
+        java.util.function.BiFunction<String, String, reactor.core.publisher.Mono<String>> fn = sender.getIfAvailable();
+        if (fn == null) {
+            throw new IllegalStateException(
+                    "apex.notify.sms.enabled=true 但未提供短信发送函数 Bean" + "（BiFunction<String,String,Mono<String>>，如创蓝适配器）");
+        }
+        return new SmsNotifyChannel(fn);
+    }
+
+    /**
+     * 邮件通道（可选）：消费方提供 {@code mailNotifySender} Bean 时启用。
+     *
+     * @param sender 邮件发送函数（可能不存在）
+     * @return 邮件通知通道
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "emailNotifyChannel")
+    @ConditionalOnProperty(prefix = "apex.notify.email", name = "enabled", havingValue = "true")
+    public EmailNotifyChannel emailNotifyChannel(ObjectProvider<EmailNotifyChannel.MailSender> sender) {
+        EmailNotifyChannel.MailSender fn = sender.getIfAvailable();
+        if (fn == null) {
+            throw new IllegalStateException("apex.notify.email.enabled=true 但未提供邮件发送函数 Bean"
+                    + "（EmailNotifyChannel.MailSender，如 MailService 适配器）");
+        }
+        return new EmailNotifyChannel(fn);
     }
 }

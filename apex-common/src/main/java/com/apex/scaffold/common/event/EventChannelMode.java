@@ -1,4 +1,4 @@
-package com.apex.scaffold.infrastructure.event;
+package com.apex.scaffold.common.event;
 
 /**
  * 领域事件通道模式（方案 M3 / 批次 C8）。

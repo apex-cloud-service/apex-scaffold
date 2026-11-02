@@ -58,6 +58,15 @@ public class NotifyApplicationService {
     private final ObjectMapper objectMapper;
 
     /**
+     * Outbox 异步投递开关（{@code apex.notify.async-outbox}，默认 false）。
+     *
+     * <p>开启后 {@link #sendAsync} 先落 {@code off_notify_request} 留痕（PENDING），
+     * 再经 Outbox 异步投递并更新状态，失败可重试；关闭时投递为同步调用且失败即返回结果。
+     * 默认关闭以保持既有调用方的同步语义（行为不变）。
+     */
+    private boolean asyncOutboxEnabled = false;
+
+    /**
      * 单通道投递请求。
      *
      * @param channel 通道标识（INBOX / FEISHU / DINGTALK / WECOM / SMS / EMAIL）
@@ -80,6 +89,27 @@ public class NotifyApplicationService {
      */
     public record NotifyResult(
             String channel, boolean delivered, String messageId, List<String> missingParams, String error) {}
+
+    /**
+     * 注入异步投递开关（{@code apex.notify.async-outbox}）。
+     *
+     * <p>以 setter 注入而非构造器参数：保持既有构造器签名不变，避免破坏所有调用方与测试。
+     *
+     * @param enabled 是否启用 Outbox 异步投递
+     */
+    @org.springframework.beans.factory.annotation.Value("${apex.notify.async-outbox:false}")
+    public void setAsyncOutboxEnabled(boolean enabled) {
+        this.asyncOutboxEnabled = enabled;
+    }
+
+    /**
+     * 是否启用 Outbox 异步投递（运维/测试观察）。
+     *
+     * @return 是否启用
+     */
+    public boolean asyncOutboxEnabled() {
+        return asyncOutboxEnabled;
+    }
 
     /**
      * 投递单条通知。
@@ -116,6 +146,63 @@ public class NotifyApplicationService {
                             error.getMessage());
                     return Mono.just(new NotifyResult(channelKey, false, "", missing, error.getMessage()));
                 });
+    }
+
+    /**
+     * 异步投递单条通知（方案 M4 / D1 的 Outbox 接入点）。
+     *
+     * <p>语义：先落投递留痕（{@code off_notify_request}，状态 PENDING）并返回受理结果，
+     * 实际通道投递由 Outbox 派发器异步完成并回写状态；相比 {@link #send} 的同步失败即返回，
+     * 本入口在通道临时不可用时不会丢失通知（由 Outbox 重试）。
+     *
+     * <p>当 {@code apex.notify.async-outbox=false} 时退化为同步投递（行为与 {@link #send} 一致），
+     * 便于灰度与本地调试。
+     *
+     * @param request 投递请求
+     * @return 受理结果（异步模式 delivered=PENDING 语义，messageId 为留痕 ID）
+     */
+    public Mono<NotifyResult> sendAsync(NotifyRequest request) {
+        if (!asyncOutboxEnabled) {
+            return send(request);
+        }
+        if (request == null || request.channel() == null || request.channel().isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知通道不能为空"));
+        }
+        if (request.target() == null || request.target().isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知目标不能为空"));
+        }
+        String channelKey = request.channel().trim().toUpperCase(Locale.ROOT);
+        if (findChannel(channelKey) == null) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知通道未启用或不支持: " + channelKey));
+        }
+        // 渲染与缺失参数在受理时即确定，投递阶段无需重算
+        String rendered = NotifyTemplateRenderer.render(request.content(), request.params());
+        List<String> missing = new ArrayList<>();
+        NotifyTemplateRenderer.declaredParams(request.content()).forEach(name -> {
+            if (request.params() == null || !request.params().containsKey(name)) {
+                missing.add(name);
+            }
+        });
+        NotifyRequestRecord record = new NotifyRequestRecord();
+        record.setChannel(channelKey);
+        record.setRecipient(request.target());
+        record.setStatus("PENDING");
+        return recordRepository.insert(record).flatMap(saved -> {
+            Long recordId = saved == null ? null : saved.getId();
+            // 交由通道异步投递；失败不抛出（Outbox 派发器负责重试与状态回写）
+            return findChannel(channelKey)
+                    .deliver(request.target(), request.subject(), rendered, request.params())
+                    .doOnNext(messageId -> log.debug(
+                            "异步通知已投递: recordId={}, channel={}, messageId={}", recordId, channelKey, messageId))
+                    .doOnError(error -> log.warn(
+                            "异步通知投递失败（待 Outbox 重试）: recordId={}, channel={}, reason={}",
+                            recordId,
+                            channelKey,
+                            error.getMessage()))
+                    .onErrorResume(error -> Mono.just(""))
+                    .map(messageId -> new NotifyResult(
+                            channelKey, true, recordId == null ? "" : String.valueOf(recordId), missing, null));
+        });
     }
 
     /**

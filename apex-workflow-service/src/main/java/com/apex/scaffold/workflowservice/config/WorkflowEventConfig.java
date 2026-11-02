@@ -1,77 +1,104 @@
 package com.apex.scaffold.workflowservice.config;
 
+import com.apex.scaffold.common.event.EventChannelMode;
+import com.apex.scaffold.common.event.EventChannelProperties;
 import com.apex.scaffold.workflowservice.infrastructure.event.LocalWorkflowEventPublisher;
 import com.apex.scaffold.workflowservice.infrastructure.event.MqWorkflowEventPublisher;
 import com.apex.scaffold.workflowservice.infrastructure.event.WorkflowEventPublisher;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 工作流事件发布器装配配置（迁移方案 Phase 3.4 事件改造）.
+ * 工作流事件发布器装配配置（方案 M3 / 批次 C8 事件通道自适应）.
  *
- * <p>按运行环境选择 {@link WorkflowEventPublisher} 的实现，保证容器内始终恰好存在一个
- * 发布器 Bean，供 {@code WorkflowHandler} 注入使用。</p>
+ * <p>本配置消费共享的事件通道抽象 {@link EventChannelMode}（{@code apex.events.channel}），
+ * 由它统一决定"用哪条路"：
  *
- * <h2>设计说明</h2>
  * <ul>
- *   <li><strong>生产/开发（{@code apex.events.outbox.enabled=true}，默认）且存在
- *       {@link RocketMQTemplate} Bean</strong>：注册 {@link MqWorkflowEventPublisher}，
- *       将审批事件直发到主题 {@code apex-workflow-events}。</li>
- *   <li><strong>basic/H2（{@code apex.events.outbox.enabled=false}）或无 RocketMQ</strong>：
- *       注册轻量级 {@link LocalWorkflowEventPublisher}，仅记录日志、不投递，
- *       保证服务在无消息中间件的环境下可正常启动与完成审批流程。</li>
+ *   <li>{@code REMOTE}：需要跨服务投递 → {@link MqWorkflowEventPublisher}；</li>
+ *   <li>{@code LOCAL}：进程内派发 → {@link LocalWorkflowEventPublisher}；</li>
+ *   <li>{@code AUTO}（默认）：按环境能力解析——存在 {@link RocketMQTemplate} 且
+ *       Outbox 启用则等同 {@code REMOTE}，否则 {@code LOCAL}。组合部署（apex-boot-all）
+ *       无 MQ 时自动退化为进程内派发，拆分部署自动走 MQ，业务代码零感知。</li>
  * </ul>
  *
- * <p>沿用认证中心 {@code AuthCenterEventConfig} 的装配惯例：以既有的
- * {@code apex.events.outbox.enabled} 开关作为主判据（basic profile 已置为 {@code false}），
- * 并以 {@link ConditionalOnMissingBean} 兜底覆盖"开关开启但缺 RocketMQ"的边界场景。</p>
+ * <p>与既有 {@code apex.events.outbox.enabled} 的关系：通道模式决定"用哪条路"，
+ * Outbox 开关决定"是否持久化投递"。两者正交，AUTO 模式下同时作为远程能力判据之一。
+ *
+ * <p>装配保证：容器内始终<b>恰好一个</b> {@link WorkflowEventPublisher}，供
+ * {@code WorkflowHandler} 注入使用。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.1
  * @since 1.3.1
+ * @see EventChannelMode
  * @see MqWorkflowEventPublisher
  * @see LocalWorkflowEventPublisher
  */
 @Configuration
+@EnableConfigurationProperties(EventChannelProperties.class)
 public class WorkflowEventConfig {
 
-    /** Outbox 开关配置前缀（与认证中心保持一致，basic profile 置为 false）。 */
+    /** Outbox 开关配置前缀（basic profile 置为 false）。 */
     private static final String OUTBOX_ENABLED_PREFIX = "apex.events.outbox";
 
     /**
-     * 基于 RocketMQ 的工作流事件发布器 Bean（生产环境）。
+     * 注册工作流事件发布器（按通道模式解析结果二选一）。
      *
-     * <p>仅当启用 Outbox（默认启用）且容器内存在 {@link RocketMQTemplate} 时注册，
-     * 将审批事件异步直发到 {@code apex-workflow-events} 主题。</p>
+     * <p>解析顺序：{@link EventChannelMode#resolve(boolean)} 依据
+     * "Outbox 启用 且 存在 RocketMQTemplate"判定远程能力；结果为 {@code REMOTE}
+     * 且 MQ 模板可用时装配 MQ 实现，否则装配本地实现。
      *
-     * @param mqTemplate RocketMQ 模板
-     * @return WorkflowEventPublisher 实例
-     */
-    @Bean
-    @ConditionalOnProperty(
-            prefix = OUTBOX_ENABLED_PREFIX,
-            name = "enabled",
-            havingValue = "true",
-            matchIfMissing = true)
-    @ConditionalOnBean(RocketMQTemplate.class)
-    public WorkflowEventPublisher mqWorkflowEventPublisher(RocketMQTemplate mqTemplate) {
-        return new MqWorkflowEventPublisher(mqTemplate);
-    }
-
-    /**
-     * 轻量级工作流事件发布器 Bean（basic/H2 或无 RocketMQ 时兜底）。
-     *
-     * <p>当上述 RocketMQ 实现未注册时启用，仅记录日志不投递，保证服务可正常启动。</p>
-     *
-     * @return WorkflowEventPublisher 实例
+     * @param properties    事件通道配置（{@code apex.events.channel}）
+     * @param mqTemplate    RocketMQ 模板（可能不存在）
+     * @param outboxEnabled Outbox 开关（远程能力判据之一）
+     * @return 唯一的事件发布器
      */
     @Bean
     @ConditionalOnMissingBean(WorkflowEventPublisher.class)
-    public WorkflowEventPublisher localWorkflowEventPublisher() {
+    public WorkflowEventPublisher workflowEventPublisher(
+            EventChannelProperties properties,
+            ObjectProvider<RocketMQTemplate> mqTemplate,
+            @Value("${" + OUTBOX_ENABLED_PREFIX + ".enabled:true}") boolean outboxEnabled) {
+        RocketMQTemplate template = mqTemplate.getIfAvailable();
+        boolean remoteCapable = outboxEnabled && template != null;
+        EventChannelMode effective = properties.channelMode().resolve(remoteCapable);
+        if (effective == EventChannelMode.REMOTE && template != null) {
+            return new MqWorkflowEventPublisher(template);
+        }
         return new LocalWorkflowEventPublisher();
+    }
+
+    /**
+     * 强制 REMOTE 却缺少 MQ 能力时的快速失败守卫。
+     *
+     * <p>当 {@code apex.events.channel=remote} 但容器内没有 {@link RocketMQTemplate}
+     * 或 Outbox 未启用时，静默退化为本地派发会让运维误以为消息已跨服务投递——
+     * 这是危险的空洞配置。本 Bean 在该组合下启动即失败。
+     *
+     * @param mqTemplate    RocketMQ 模板（可能不存在）
+     * @param outboxEnabled Outbox 开关
+     * @return 校验哨兵（无实际用途）
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "apex.events", name = "channel", havingValue = "remote")
+    public Object workflowRemoteChannelGuard(
+            ObjectProvider<RocketMQTemplate> mqTemplate,
+            @Value("${" + OUTBOX_ENABLED_PREFIX + ".enabled:true}") boolean outboxEnabled) {
+        if (mqTemplate.getIfAvailable() == null) {
+            throw new IllegalStateException(
+                    "apex.events.channel=remote 需要 RocketMQTemplate，但容器中不存在；" + "请配置 RocketMQ 或改用 channel=auto/local");
+        }
+        if (!outboxEnabled) {
+            throw new IllegalStateException(
+                    "apex.events.channel=remote 需要 apex.events.outbox.enabled=true（可靠投递依赖 Outbox），" + "当前为 false");
+        }
+        return new Object();
     }
 }

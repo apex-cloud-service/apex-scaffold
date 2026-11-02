@@ -1,4 +1,4 @@
-package com.apex.scaffold.infrastructure.event;
+package com.apex.scaffold.common.event;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -23,13 +23,13 @@ import net.sf.jsqlparser.expression.StringValue;
  *
  * <h2>设计说明</h2>
  * <p>以下系统配置级表不参与租户隔离：
- * {@code sys_menu / sys_permission / sys_role / sys_role_permission /
+ * {@code sys_menu / sys_permission /
  * sys_dict_type / sys_dict_data / sys_tenant / sys_config / sys_oss /
  * scheduler_job / scheduler_job_log / sys_domain_event_outbox / flyway_schema_history}。这些表要么是平台级元数据，要么由超级管理员统一维护。
  * 若未来新增系统字典类表，应在此补充。</p>
  *
  * <h2>设计说明</h2>
- * <p>由 {@code apex.tenant.enabled=true}（仅 Enterprise 档默认开启）控制
+ * <p>由 {@code apex.tenant.enabled} 控制（B7 起 system/file/office/integration 默认开启，basic 档关闭）
  * {@code TenantLineInnerInterceptor} 是否注册；开关关闭时该 Handler
  * 不被装配，所有 SQL 保持原样，不做租户改写。</p>
  *
