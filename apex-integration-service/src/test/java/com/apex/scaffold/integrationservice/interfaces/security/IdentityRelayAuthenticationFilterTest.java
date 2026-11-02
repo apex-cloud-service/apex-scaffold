@@ -169,8 +169,24 @@ class IdentityRelayAuthenticationFilterTest {
     void rejectsMalformedBearerAndTamperedSignature() {
         assertThat(capture(filter, exchange("not-a-jwt"))).isNull();
         String valid = validToken();
-        String tampered = valid.substring(0, valid.length() - 1) + (valid.endsWith("a") ? "b" : "a");
+        // 篡改签名段的中间字符（而非末位）：RS256 签名段 Base64URL 长度为 342（342 % 4 = 2），
+        // 末位字符只有低位有效，改写末位可能解码出完全相同的字节、签名仍然有效——
+        // 这是 Base64 编码特性，不是验签缺陷。中间字符改动必定改变解码字节。
+        int signatureStart = valid.lastIndexOf('.') + 1;
+        int tamperIndex = signatureStart + (valid.length() - signatureStart) / 2;
+        char original = valid.charAt(tamperIndex);
+        char replacement = original == 'A' ? 'B' : 'A';
+        String tampered = valid.substring(0, tamperIndex) + replacement + valid.substring(tamperIndex + 1);
         assertThat(capture(filter, exchange(tampered))).isNull();
+
+        // 补充：篡改声明段（payload）也必须被拒
+        int payloadStart = valid.indexOf('.') + 1;
+        int payloadTamper = payloadStart + 1;
+        char payloadOriginal = valid.charAt(payloadTamper);
+        String tamperedPayload = valid.substring(0, payloadTamper)
+                + (payloadOriginal == 'A' ? 'B' : 'A')
+                + valid.substring(payloadTamper + 1);
+        assertThat(capture(filter, exchange(tamperedPayload))).isNull();
     }
 
     @Test
