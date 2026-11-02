@@ -32,6 +32,14 @@ import reactor.netty.resources.ConnectionProvider;
  * @since 2.1.0
  */
 @AutoConfiguration
+// 显式启用配置属性绑定：本自动配置反序列化 RemoteApiProperties，
+// 若仅依赖消费方 @ConfigurationPropertiesScan 会因扫描范围不同而失败（实测启动报缺 Bean）
+@org.springframework.boot.context.properties.EnableConfigurationProperties(RemoteApiProperties.class)
+// 组件扫描精确限定 logging 包：ApiCallLogService 等 @Service 必须随自动配置一并装配
+// （消费方未扫描 com.apex.scaffold.infrastructure.remote 时启动即失败，已实测）。
+// 不能扫整个 remote 包——会把 @ConfigurationProperties 的 RemoteApiProperties 再注册一次，
+// 与 @EnableConfigurationProperties 重复（实测启动报 "required a single bean, but 2 were found"）
+@org.springframework.context.annotation.ComponentScan("com.apex.scaffold.infrastructure.remote.logging")
 @Slf4j
 public class RemoteApiClientConfig {
 

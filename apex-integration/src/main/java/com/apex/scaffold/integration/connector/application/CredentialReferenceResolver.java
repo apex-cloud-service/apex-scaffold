@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
@@ -25,6 +26,7 @@ import reactor.core.publisher.Mono;
  * @since 1.3.1
  */
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class CredentialReferenceResolver {
 

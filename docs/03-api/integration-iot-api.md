@@ -62,10 +62,34 @@
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
 | POST | `/internal/v1/iot/mqtt/auth` | EMQX 认证钩子（设备凭据校验 + 租户解析） |
+| POST | `/internal/v1/iot/mqtt/acl` | **EMQX HTTP Authorize 钩子**：pub/sub 时按租户命名空间返回 `{"result":"allow"\|"deny"}`；越权一律 deny（fail-closed） |
 | POST | `/internal/v1/iot/devices/{key}/commands` | 命令下发（幂等 commandId） |
 | GET | `/internal/v1/iot/devices/stats` | 设备统计（供 D5 聚合门面消费） |
 
 ## 6. 设备通信约定
+
+**EMQX 授权配置（生产必须）**：将 EMQX 授权源指向 `POST /internal/v1/iot/mqtt/acl`，并设 `authorization.no_match = deny`：
+
+```hocon
+authorization {
+  no_match = deny
+  sources = [
+    {
+      type = http
+      enable = true
+      url  = "http://apex-integration-service:8094/internal/v1/iot/mqtt/acl"
+      method = post
+      body {
+        username = "${username}"
+        topic    = "${topic}"
+        action   = "${action}"
+      }
+    }
+  ]
+}
+```
+
+已验证：未配置该授权源时跨租户订阅在 broker 层畅通（仅应用层策略生效）；配置后 EMQX 实际拒绝越权订阅（`authorization_permission_denied`，source: http）。
 
 | 项 | 约定 |
 | --- | --- |
@@ -107,6 +131,6 @@
 ## 10. 未实现项（如实声明）
 
 - **HTTP/Webhook 连接器的真实外部联调**：契约与实现已就位，未对真实第三方端点做端到端联调。
-- **EMQX 生产集群验证**：MQTT 认证钩子与 topic ACL 已实现，未在真实 EMQX 集群验证。
-- **吞吐基线**：设备遥测上行吞吐未做压测，无 SLA 承诺。
+- **EMQX 生产集群**：本地 EMQX 5.8.6 已验证认证钩子与 HTTP 授权钩子（越权订阅被 broker 拒绝）；多节点集群与 ACL 缓存策略未验证。
+- **吞吐基线**：本地实测单连接 331 msg/s、10 设备并发 907 msg/s（QoS 1，0 丢失）；仅容量参考，不构成 SLA。
 - **前端页面**（设备管理 / 连接器管理 UI）：按用户要求**不在本次范围**。

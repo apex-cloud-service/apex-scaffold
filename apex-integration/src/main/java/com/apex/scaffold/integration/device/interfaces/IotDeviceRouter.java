@@ -56,6 +56,11 @@ public class IotDeviceRouter {
                         "/internal/v1/iot/mqtt/auth",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
                         internalHandler::mqttAuth)
+                // EMQX HTTP Authorize 钩子：pub/sub 时按租户命名空间返回 allow/deny
+                .POST(
+                        "/internal/v1/iot/mqtt/acl",
+                        RequestPredicates.contentType(MediaType.APPLICATION_JSON),
+                        internalHandler::mqttAcl)
                 .POST(
                         "/internal/v1/iot/devices/{key}/commands",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),

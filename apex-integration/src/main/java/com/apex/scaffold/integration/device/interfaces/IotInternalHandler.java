@@ -10,6 +10,7 @@ import com.apex.scaffold.integration.device.application.DeviceRegistryService;
 import com.apex.scaffold.integration.device.interfaces.dto.CommandDispatchRequest;
 import com.apex.scaffold.integration.device.interfaces.dto.CommandResponse;
 import com.apex.scaffold.integration.device.interfaces.dto.DeviceStatsResponse;
+import com.apex.scaffold.integration.device.interfaces.dto.MqttAclRequest;
 import com.apex.scaffold.integration.device.interfaces.dto.MqttAuthRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -80,6 +81,49 @@ public class IotInternalHandler {
                         credential.tenantId(), credential.deviceKey(), credential.secret()))
                 .flatMap(device -> ServerResponse.ok().bodyValue(Result.success(Map.of("authenticated", true))))
                 .onErrorResume(IotResponses::error);
+    }
+
+    /**
+     * MQTT 授权钩子（EMQX HTTP Authorize 口径，方案 M5 / 批次 E3 ACL 收口）。
+     *
+     * <p>EMQX 在设备 pub/sub 时调用：按 {@code username = {tenantCode}/{deviceKey}} 解析身份，
+     * 用 {@link DeviceRegistryService#authorizeTopic} 判定 topic 是否落在本租户本设备命名空间。
+     * 返回 EMQX 规范的 {@code {"result": "allow"|"deny"}}——这是 <b>broker 层强制隔离</b>的关键，
+     * 仅靠应用层策略无法阻止越权订阅。
+     *
+     * <p>解析失败、设备身份缺失或 topic 越权一律返回 {@code deny}（fail-closed）。
+     *
+     * @param request 当前请求（JSON body：username / topic / action）
+     * @return {@code {"result":"allow"}} 或 {@code {"result":"deny"}}
+     */
+    public Mono<ServerResponse> mqttAcl(ServerRequest request) {
+        return request.bodyToMono(MqttAclRequest.class)
+                .defaultIfEmpty(new MqttAclRequest())
+                .map(acl -> {
+                    String[] identity = parseIdentity(acl.getUsername());
+                    boolean allowed = identity != null
+                            && registryService.authorizeTopic(identity[0], identity[1], acl.getTopic());
+                    return Map.of("result", allowed ? "allow" : "deny");
+                })
+                .onErrorReturn(Map.of("result", "deny"))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result));
+    }
+
+    /**
+     * 解析 EMQX username 为 {@code [tenantCode, deviceKey]}。
+     *
+     * @param username EMQX username（{@code {tenantCode}/{deviceKey}}）
+     * @return 解析结果；非法时为 null
+     */
+    private String[] parseIdentity(String username) {
+        if (username == null || username.isBlank()) {
+            return null;
+        }
+        String[] parts = username.split("/", 2);
+        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+            return null;
+        }
+        return new String[] {parts[0].trim(), parts[1].trim()};
     }
 
     /**

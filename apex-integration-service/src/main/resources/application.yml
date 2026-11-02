@@ -67,6 +67,16 @@ spring:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_integration}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
+    # dynamic-datasource 要求显式声明 primary：与上面的主数据源指向同一库，
+    # 保证 dev/prod 单库场景可启动（多库/读写分离时再扩展 datasource.dynamic.datasource 映射）
+    dynamic:
+      primary: master
+      datasource:
+        master:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_integration}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+          username: ${DB_USERNAME:root}
+          password: ${DB_PASSWORD:root}
 
   flyway:
     enabled: true
