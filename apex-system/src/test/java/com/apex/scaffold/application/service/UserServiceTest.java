@@ -12,15 +12,18 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.contract.event.UserChangedEvent;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.CacheConsistencyPort;
+import com.apex.scaffold.domain.service.DomainEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -52,6 +55,9 @@ class UserServiceTest {
     @Mock
     private TenantGuard tenantGuard;
 
+    @Mock
+    private DomainEventPublisher domainEventPublisher;
+
     @InjectMocks
     private UserService userService;
 
@@ -73,6 +79,7 @@ class UserServiceTest {
                 .thenReturn(Mono.just(true));
         lenient().when(tenantGuard.assertUserQuota(1)).thenReturn(Mono.empty());
         lenient().when(tenantGuard.assertActive()).thenReturn(Mono.empty());
+        lenient().when(domainEventPublisher.publish(any())).thenReturn(Mono.empty());
     }
 
     @Test
@@ -145,6 +152,35 @@ class UserServiceTest {
                 .as(StepVerifier::create)
                 .expectNextMatches(u -> u.getId().equals(1L))
                 .verifyComplete();
+
+        // D5：创建成功后发布用户主数据变更事件（负载仅含非敏感标识字段）
+        ArgumentCaptor<UserChangedEvent> captor = ArgumentCaptor.forClass(UserChangedEvent.class);
+        verify(domainEventPublisher).publish(captor.capture());
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().getUserId())
+                .isEqualTo(1L);
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().getAction())
+                .isEqualTo(UserChangedEvent.ACTION_CREATED);
+    }
+
+    /**
+     * D5：事件发布失败随链路传播，不吞错误（用户已落库，由调用方决定补偿）。
+     */
+    @Test
+    @DisplayName("create - 事件发布失败时错误传播")
+    void create_PublishErrorPropagates() {
+        when(userRepository.save(any(UserEntity.class))).thenReturn(Mono.just(testUser));
+        when(domainEventPublisher.publish(any()))
+                .thenReturn(Mono.error(new IllegalStateException("outbox unavailable")));
+
+        userService
+                .create(new UserEntity())
+                .as(StepVerifier::create)
+                .expectErrorMatches(error ->
+                        error instanceof IllegalStateException && "outbox unavailable".equals(error.getMessage()))
+                .verify();
+
+        verify(userRepository).save(any(UserEntity.class));
+        verify(domainEventPublisher).publish(any());
     }
 
     /**
@@ -205,6 +241,14 @@ class UserServiceTest {
                 .as(StepVerifier::create)
                 .expectNextMatches(u -> u.getId().equals(1L))
                 .verifyComplete();
+
+        // D5：更新成功后发布用户主数据变更事件
+        ArgumentCaptor<UserChangedEvent> captor = ArgumentCaptor.forClass(UserChangedEvent.class);
+        verify(domainEventPublisher).publish(captor.capture());
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().getUserId())
+                .isEqualTo(1L);
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().getAction())
+                .isEqualTo(UserChangedEvent.ACTION_UPDATED);
     }
 
     /**

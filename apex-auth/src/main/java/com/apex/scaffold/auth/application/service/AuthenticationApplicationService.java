@@ -71,6 +71,9 @@ public class AuthenticationApplicationService {
     /** 租户认证期状态校验端口（统一认证收口 A6，登录前置；未配置时适配器跳过）。 */
     private final com.apex.scaffold.auth.domain.service.TenantStatusPort tenantStatusPort;
 
+    /** MFA 挑战一次性消费存储（Redis SETNX，TTL 与挑战凭据一致）。 */
+    private final org.springframework.data.redis.core.ReactiveStringRedisTemplate challengeRedisTemplate;
+
     /**
      * 用户名密码登录
      *
@@ -127,7 +130,7 @@ public class AuthenticationApplicationService {
                                     .then(Mono.defer(() -> totpService
                                             .isEnabled(user.getId(), tenantId)
                                             .flatMap(mfaEnabled -> Boolean.TRUE.equals(mfaEnabled)
-                                                    ? issueMfaChallenge(user, tenantId, username, deviceId)
+                                                    ? issueMfaChallenge(user, tenantId, username, deviceId, clientType)
                                                     : issueTokensAndRegisterSession(
                                                             user, tenantId, username, deviceId, clientType, clientIp))
                                             .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(
@@ -150,13 +153,18 @@ public class AuthenticationApplicationService {
             com.apex.scaffold.auth.domain.model.entity.UserEntity user,
             String tenantId,
             String username,
-            String deviceId) {
+            String deviceId,
+            String clientType) {
         java.util.Map<String, Object> claims = new java.util.LinkedHashMap<>();
         claims.put("purpose", MFA_CHALLENGE_PURPOSE);
+        // jti：挑战凭据唯一标识，验证交换时按其一次性消费（防 5 分钟窗口内重放）
+        claims.put("jti", java.util.UUID.randomUUID().toString());
         claims.put("accountId", user.getId());
         claims.put("tenantId", tenantId);
         claims.put("username", username);
         claims.put("deviceId", deviceId == null ? "" : deviceId);
+        // clientType 随挑战凭据透传，二步交换签发令牌时不丢失端类型
+        claims.put("clientType", clientType == null ? "" : clientType);
         return jwtKeyMaterialService
                 .sign(String.valueOf(user.getId()), claims, MFA_CHALLENGE_TTL_MS)
                 .map(challenge -> LoginResponse.builder()
@@ -214,8 +222,9 @@ public class AuthenticationApplicationService {
     /**
      * MFA 二步验证：以挑战凭据交换正式令牌（统一认证收口 A4）。
      *
-     * <p>校验挑战凭据签名、有效期与 purpose 声明后，验证 TOTP 验证码；通过即按登录链路
-     * 签发令牌并登记会话。挑战凭据一次性语义由短 TTL 保证，验证失败按未授权处理。
+     * <p>校验挑战凭据签名、有效期与 purpose 声明后，按 jti 原子消费挑战（一次性语义，
+     * 同一凭据仅能交换一次），再验证 TOTP 验证码；通过即重新校验租户状态与账户锁定，
+     * 按登录链路签发令牌并登记会话。验证失败按未授权处理。
      *
      * @param challengeToken 登录返回的挑战凭据
      * @param code           TOTP 验证码
@@ -230,38 +239,80 @@ public class AuthenticationApplicationService {
                 .parse(challengeToken)
                 .flatMap(claims -> {
                     String purpose = claims.get("purpose", String.class);
+                    String jti = claims.get("jti", String.class);
                     Long accountId = claims.get("accountId", Long.class);
                     String tenantId = claims.get("tenantId", String.class);
                     String username = claims.get("username", String.class);
                     String deviceId = claims.get("deviceId", String.class);
+                    String clientType = claims.get("clientType", String.class);
                     if (!MFA_CHALLENGE_PURPOSE.equals(purpose)
+                            || jti == null
+                            || jti.isBlank()
                             || accountId == null
                             || tenantId == null
                             || tenantId.isBlank()) {
                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战凭据无效"));
                     }
-                    return totpService.verifyCode(accountId, code, tenantId).flatMap(valid -> {
-                        if (!Boolean.TRUE.equals(valid)) {
-                            return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 验证码错误"));
-                        }
-                        return userRepository
-                                .findById(accountId)
-                                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战凭据无效")))
-                                .flatMap(user -> {
-                                    if (!user.isActive()) {
-                                        return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "账户已禁用"));
-                                    }
-                                    return issueTokensAndRegisterSession(
-                                                    user, tenantId, username, deviceId, null, clientIp)
-                                            .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(
-                                                    tenantId));
-                                });
-                    });
+                    // 一次性消费（fail-closed）：无法确认未消费（含存储故障）即拒绝交换
+                    return consumeChallenge(jti)
+                            .flatMap(consumed -> Boolean.TRUE.equals(consumed)
+                                    ? tenantStatusPort
+                                            // 二步交换重新过租户门：挑战签发后租户可能被停用/冻结
+                                            .validateLoginTenant(tenantId)
+                                            .then(Mono.defer(() -> totpService.verifyCode(accountId, code, tenantId)))
+                                    : Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战已使用，请重新登录")))
+                            .flatMap(valid -> {
+                                if (!Boolean.TRUE.equals(valid)) {
+                                    return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 验证码错误"));
+                                }
+                                return userRepository
+                                        .findById(accountId)
+                                        .switchIfEmpty(Mono.error(
+                                                new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战凭据无效")))
+                                        .flatMap(user -> {
+                                            if (!user.isActive()) {
+                                                return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "账户已禁用"));
+                                            }
+                                            if (user.isLocked()) {
+                                                return Mono.error(
+                                                        new BusinessException(ResultCode.FORBIDDEN, "账户已锁定，请稍后重试"));
+                                            }
+                                            return issueTokensAndRegisterSession(
+                                                            user,
+                                                            tenantId,
+                                                            username,
+                                                            deviceId,
+                                                            clientType == null || clientType.isBlank()
+                                                                    ? null
+                                                                    : clientType,
+                                                            clientIp)
+                                                    .contextWrite(
+                                                            com.apex.scaffold.common.context.TenantContext.withTenant(
+                                                                    tenantId));
+                                        });
+                            });
                 })
                 .onErrorResume(
                         io.jsonwebtoken.JwtException.class,
                         e -> Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战凭据无效")))
                 .doOnError(e -> log.debug("MFA 二步验证失败: error={}", e.getClass().getSimpleName()));
+    }
+
+    /**
+     * 按 jti 原子消费 MFA 挑战（Redis SETNX + TTL，与挑战凭据有效期一致）。
+     *
+     * @param jti 挑战凭据唯一标识
+     * @return 首次消费返回 true；已被消费或存储不可用返回 false（fail-closed）
+     */
+    private Mono<Boolean> consumeChallenge(String jti) {
+        return challengeRedisTemplate
+                .opsForValue()
+                .setIfAbsent("auth:mfa:challenge:" + jti, "1", java.time.Duration.ofMillis(MFA_CHALLENGE_TTL_MS))
+                .map(Boolean.TRUE::equals)
+                .onErrorResume(e -> {
+                    log.warn("MFA 挑战消费检查失败，fail-closed 拒绝: {}", e.getClass().getSimpleName());
+                    return Mono.just(false);
+                });
     }
 
     /**
@@ -278,11 +329,19 @@ public class AuthenticationApplicationService {
 
         return tokenService
                 .revokeAllUserTokens(userId, tenantId)
-                // 令牌撤销成功后再发布撤销事件：延迟构造事件，确保撤销失败时不产生事件
-                .then(Mono.defer(
-                        () -> domainEventPublisher.publish(new TokenRevokedEvent(userId, tenantId, LOGOUT_REASON))))
-                // 会话登记接线（A4）：终止该用户全部在线会话，SessionRouter 端点从空壳变为可用
+                // 会话登记接线（A4）：先终止该用户全部在线会话，再做事件广播，
+                // 避免事件发布失败阻断会话终止（登出核心路径优先保证会话清理）。
                 .then(sessionService.terminateUserSessions(userId, tenantId))
+                // 令牌撤销与会话终止成功后再发布撤销事件；发布失败仅记录告警，不阻断登出
+                .then(Mono.defer(() -> domainEventPublisher
+                        .publish(new TokenRevokedEvent(userId, tenantId, LOGOUT_REASON))
+                        .onErrorResume(e -> {
+                            log.warn(
+                                    "登出撤销事件发布失败（不阻断登出）: userId={}, error={}",
+                                    userId,
+                                    e.getClass().getSimpleName());
+                            return Mono.empty();
+                        })))
                 .doOnSuccess(v -> log.debug("登出成功: userId={}", userId))
                 .doOnError(e -> log.debug(
                         "登出失败: userId={}, error={}", userId, e.getClass().getSimpleName()));
@@ -291,7 +350,7 @@ public class AuthenticationApplicationService {
     /**
      * 刷新Token
      *
-     * <p>使用刷新令牌换取新的访问令牌，刷新令牌不轮换
+     * <p>使用刷新令牌换取新的令牌对：刷新令牌按轮换语义消费（旧刷新令牌撤销并签发新对）
      *
      * @param refreshToken 刷新令牌
      * @return 新的Token对

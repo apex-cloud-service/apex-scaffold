@@ -2,6 +2,7 @@ package com.apex.scaffold.auth.application.service;
 
 import com.apex.scaffold.auth.domain.model.entity.SessionEntity;
 import com.apex.scaffold.auth.domain.repository.SessionRepository;
+import com.apex.scaffold.auth.domain.repository.TokenRepository;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import java.time.LocalDateTime;
@@ -27,6 +28,9 @@ import reactor.core.publisher.Mono;
 public class SessionService {
 
     private final SessionRepository sessionRepository;
+
+    /** 令牌仓储：会话终止/踢出时联动撤销关联访问令牌（统一认证收口 A4 安全加固）。 */
+    private final TokenRepository tokenRepository;
 
     /**
      * 会话默认有效期（小时）
@@ -179,29 +183,38 @@ public class SessionService {
     /**
      * 终止会话
      *
+     * <p>终止前联动撤销会话关联的访问令牌，旧令牌不再有效至自然过期。
+     *
      * @param sessionId 会话唯一标识
      */
     public Mono<Void> terminateSession(String sessionId) {
         return sessionRepository
-                .terminateBySessionId(sessionId)
+                .findBySessionId(sessionId)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "会话不存在")))
+                .flatMap(session -> revokeSessionToken(session, "SESSION_TERMINATED")
+                        .then(sessionRepository.terminateBySessionId(sessionId)))
                 .flatMap(success -> {
                     if (!success) {
                         return Mono.error(new BusinessException(ResultCode.ERROR, "会话终止失败"));
                     }
                     return Mono.<Void>empty();
                 })
+                .then()
                 .doOnSuccess(v -> log.debug("会话终止成功"));
     }
 
     /**
      * 终止用户的所有会话
      *
+     * <p>终止前联动撤销该用户在租户下的全部令牌（幂等，重复调用安全）。
+     *
      * @param userId 用户ID
      * @param tenantId 租户ID
      */
     public Mono<Void> terminateUserSessions(Long userId, String tenantId) {
-        return sessionRepository
-                .terminateByUserId(userId, tenantId)
+        return tokenRepository
+                .revokeByUserId(userId, tenantId, "SESSION", "SESSION_TERMINATED")
+                .then(sessionRepository.terminateByUserId(userId, tenantId))
                 .flatMap(success -> {
                     if (!success) {
                         return Mono.error(new BusinessException(ResultCode.ERROR, "用户会话终止失败"));
@@ -214,18 +227,41 @@ public class SessionService {
     /**
      * 踢出指定会话
      *
+     * <p>踢出前联动撤销会话关联的访问令牌，被踢端的既有令牌立即失效。
+     *
      * @param sessionId 会话唯一标识
      */
     public Mono<Void> kickOutSession(String sessionId) {
         return sessionRepository
                 .findBySessionId(sessionId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "会话不存在")))
-                .flatMap(session -> {
+                .flatMap(session -> revokeSessionToken(session, "KICKED_OUT").then(Mono.defer(() -> {
                     session.kickOut();
                     return sessionRepository.update(session);
-                })
+                })))
                 .then()
                 .doOnSuccess(v -> log.debug("会话踢出成功"));
+    }
+
+    /**
+     * 撤销会话关联的访问令牌（按会话记录的令牌持久化 ID 定位，再按 jti 撤销）。
+     *
+     * <p>令牌记录缺失或已被清理时静默跳过（会话终止语义不受影响）。
+     *
+     * @param session 会话实体
+     * @param reason  撤销原因
+     * @return 完成信号
+     */
+    private Mono<Void> revokeSessionToken(SessionEntity session, String reason) {
+        if (session.getTokenId() == null) {
+            return Mono.empty();
+        }
+        return tokenRepository
+                .findById(session.getTokenId())
+                .flatMap(token -> token.getJti() == null
+                        ? Mono.just(Boolean.FALSE)
+                        : tokenRepository.revokeByJti(token.getJti(), "SESSION", reason))
+                .then();
     }
 
     /**

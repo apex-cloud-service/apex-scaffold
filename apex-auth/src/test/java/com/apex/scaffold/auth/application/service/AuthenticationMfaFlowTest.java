@@ -44,6 +44,12 @@ class AuthenticationMfaFlowTest {
     private final SessionService sessionService = mock(SessionService.class);
     private final com.apex.scaffold.auth.domain.service.TenantStatusPort tenantStatusPort =
             mock(com.apex.scaffold.auth.domain.service.TenantStatusPort.class);
+    private final org.springframework.data.redis.core.ReactiveStringRedisTemplate challengeRedisTemplate =
+            mock(org.springframework.data.redis.core.ReactiveStringRedisTemplate.class);
+
+    @SuppressWarnings("unchecked")
+    private final org.springframework.data.redis.core.ReactiveValueOperations<String, String> challengeValueOps =
+            mock(org.springframework.data.redis.core.ReactiveValueOperations.class);
 
     private final KeyPair keyPair = Jwts.SIG.RS256.keyPair().build();
     private final JwtKeyMaterialService keyMaterialService = keyMaterialService();
@@ -57,7 +63,8 @@ class AuthenticationMfaFlowTest {
                 totpService,
                 sessionService,
                 keyMaterialService,
-                tenantStatusPort);
+                tenantStatusPort,
+                challengeRedisTemplate);
     }
 
     /** 真实 RS256 密钥材料服务（轮换服务 Mockito 打桩，范式同 JwtKeyMaterialServiceTest）。 */
@@ -95,6 +102,12 @@ class AuthenticationMfaFlowTest {
         org.mockito.Mockito.lenient()
                 .when(tenantStatusPort.validateLoginTenant(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(Mono.empty());
+        // MFA 挑战一次性消费：默认首次消费成功
+        org.mockito.Mockito.lenient().when(challengeRedisTemplate.opsForValue()).thenReturn(challengeValueOps);
+        org.mockito.Mockito.lenient()
+                .when(challengeValueOps.setIfAbsent(
+                        anyString(), anyString(), org.mockito.ArgumentMatchers.any(java.time.Duration.class)))
+                .thenReturn(Mono.just(Boolean.TRUE));
     }
 
     /** 统一认证收口（A6）：租户门拒绝时登录在用户查询前终止。 */
@@ -195,6 +208,41 @@ class AuthenticationMfaFlowTest {
         when(totpService.verifyCode(95302L, "000000", "default")).thenReturn(Mono.just(Boolean.FALSE));
 
         StepVerifier.create(service().verifyMfaChallenge(challenge.getChallengeToken(), "000000", "127.0.0.1"))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(tokenService, sessionService);
+    }
+
+    /** 挑战凭据一次性语义：已被消费的挑战（Redis SETNX 返回 false）拒绝再次交换。 */
+    @org.junit.jupiter.api.Test
+    void verifyMfaChallengeRejectsReplayedChallenge() {
+        stubSuccessfulPasswordLogin();
+        when(totpService.isEnabled(95302L, "default")).thenReturn(Mono.just(Boolean.TRUE));
+        LoginResponse challenge = service().login(loginRequest(), "127.0.0.1").block();
+
+        when(challengeValueOps.setIfAbsent(
+                        anyString(), anyString(), org.mockito.ArgumentMatchers.any(java.time.Duration.class)))
+                .thenReturn(Mono.just(Boolean.FALSE));
+
+        StepVerifier.create(service().verifyMfaChallenge(challenge.getChallengeToken(), "123456", "127.0.0.1"))
+                .expectError(BusinessException.class)
+                .verify();
+        verifyNoInteractions(tokenService, sessionService);
+    }
+
+    /** 二步交换重新过租户门（A6）：挑战签发后租户被冻结时交换失败。 */
+    @org.junit.jupiter.api.Test
+    void verifyMfaChallengeRejectsWhenTenantGateRejects() {
+        stubSuccessfulPasswordLogin();
+        when(totpService.isEnabled(95302L, "default")).thenReturn(Mono.just(Boolean.TRUE));
+        LoginResponse challenge = service().login(loginRequest(), "127.0.0.1").block();
+
+        when(totpService.verifyCode(95302L, "123456", "default")).thenReturn(Mono.just(Boolean.TRUE));
+        org.mockito.Mockito.when(tenantStatusPort.validateLoginTenant("default"))
+                .thenReturn(Mono.error(
+                        new BusinessException(com.apex.scaffold.common.result.ResultCode.UNAUTHORIZED, "租户不可用")));
+
+        StepVerifier.create(service().verifyMfaChallenge(challenge.getChallengeToken(), "123456", "127.0.0.1"))
                 .expectError(BusinessException.class)
                 .verify();
         verifyNoInteractions(tokenService, sessionService);

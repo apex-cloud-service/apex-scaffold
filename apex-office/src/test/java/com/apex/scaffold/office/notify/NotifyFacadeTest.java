@@ -9,7 +9,10 @@ import static org.mockito.Mockito.when;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.office.notify.application.NotifyApplicationService;
 import com.apex.scaffold.office.notify.domain.NotifyChannelPort;
+import com.apex.scaffold.office.notify.domain.NotifyRequestRecordRepository;
 import com.apex.scaffold.office.notify.domain.NotifyTemplateRenderer;
+import com.apex.scaffold.office.notify.domain.NotifyTemplateRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +24,8 @@ import reactor.test.StepVerifier;
  * 统一消息门面测试（方案 M4 / 批次 D1）。
  *
  * <p>覆盖：模板渲染（占位符替换/缺失保留）、单通道投递、未知通道拒绝、
- * 通道失败收敛为结果、多通道扇出独立成败。
+ * 通道失败收敛为结果、多通道扇出独立成败。模板与留痕仓储为桩对象，
+ * 仅用于满足构造注入；门面行为细节见 {@link NotifyTemplateFacadeTest}。
  *
  * @author Apex Team
  * @version 1.3.1
@@ -29,6 +33,15 @@ import reactor.test.StepVerifier;
  */
 @DisplayName("统一消息门面测试")
 class NotifyFacadeTest {
+
+    /** 构造门面：模板/留痕仓储为桩对象，JSON 序列化用真实 ObjectMapper。 */
+    private NotifyApplicationService service(List<NotifyChannelPort> channels) {
+        return new NotifyApplicationService(
+                channels,
+                mock(NotifyTemplateRepository.class),
+                mock(NotifyRequestRecordRepository.class),
+                new ObjectMapper());
+    }
 
     private NotifyChannelPort stubChannel(String name, boolean fail) {
         NotifyChannelPort port = mock(NotifyChannelPort.class);
@@ -56,7 +69,7 @@ class NotifyFacadeTest {
     @Test
     @DisplayName("单通道投递成功并回报缺失参数")
     void sendsToChannel() {
-        NotifyApplicationService service = new NotifyApplicationService(List.of(stubChannel("SMS", false)));
+        NotifyApplicationService service = service(List.of(stubChannel("SMS", false)));
         StepVerifier.create(service.send(new NotifyApplicationService.NotifyRequest(
                         "sms", "13800138000", "通知", "你好 ${name}，${missing}", Map.of("name", "张三"))))
                 .assertNext(result -> {
@@ -71,7 +84,7 @@ class NotifyFacadeTest {
     @Test
     @DisplayName("未知通道与空目标拒绝")
     void rejectsUnknownChannelAndBlankTarget() {
-        NotifyApplicationService service = new NotifyApplicationService(List.of(stubChannel("SMS", false)));
+        NotifyApplicationService service = service(List.of(stubChannel("SMS", false)));
         StepVerifier.create(
                         service.send(new NotifyApplicationService.NotifyRequest("PIGEON", "x", null, "c", Map.of())))
                 .expectError(BusinessException.class)
@@ -84,7 +97,7 @@ class NotifyFacadeTest {
     @Test
     @DisplayName("通道失败收敛为失败结果，不中断调用链")
     void convergesChannelFailure() {
-        NotifyApplicationService service = new NotifyApplicationService(List.of(stubChannel("EMAIL", true)));
+        NotifyApplicationService service = service(List.of(stubChannel("EMAIL", true)));
         StepVerifier.create(service.send(
                         new NotifyApplicationService.NotifyRequest("EMAIL", "a@example.com", "主题", "正文", Map.of())))
                 .assertNext(result -> {
@@ -97,11 +110,12 @@ class NotifyFacadeTest {
     @Test
     @DisplayName("多通道扇出：逐通道独立成败")
     void fansOutAcrossChannels() {
-        NotifyApplicationService service =
-                new NotifyApplicationService(List.of(stubChannel("INBOX", false), stubChannel("SMS", true)));
-        StepVerifier.create(service.sendFanout(Map.of("INBOX", "42", "SMS", "13800138000"), "主题", "正文", Map.of()))
-                .assertNext(first -> assertThat(first.delivered()).isTrue())
-                .assertNext(second -> assertThat(second.delivered()).isFalse())
+        NotifyApplicationService service = service(List.of(stubChannel("INBOX", false), stubChannel("SMS", true)));
+        // Map.of 迭代顺序未指定，扇出结果按集合断言，只验证逐通道独立成败
+        StepVerifier.create(service.sendFanout(Map.of("INBOX", "42", "SMS", "13800138000"), "主题", "正文", Map.of())
+                        .map(NotifyApplicationService.NotifyResult::delivered)
+                        .collectList())
+                .assertNext(delivered -> assertThat(delivered).containsExactlyInAnyOrder(true, false))
                 .verifyComplete();
     }
 }

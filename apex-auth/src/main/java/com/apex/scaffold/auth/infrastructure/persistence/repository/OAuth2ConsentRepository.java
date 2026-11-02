@@ -27,29 +27,34 @@ public class OAuth2ConsentRepository {
     private final JdbcTemplate jdbcTemplate;
 
     /**
-     * 查询主体对客户端的历史同意记录。
+     * 查询主体对客户端的有效同意 scope。
      *
      * @param tenant    租户
      * @param principal 已认证主体
      * @param clientId  客户端 ID
-     * @return 存在有效同意记录时为 true
+     * @return 有效同意记录的 scope（空串表示同意记录未限定范围）；无有效同意记录时为空 Mono
      */
-    public Mono<Boolean> hasConsent(String tenant, String principal, String clientId) {
-        return Mono.fromCallable(() -> {
-                    Integer count = jdbcTemplate.queryForObject(
-                            "SELECT COUNT(*) FROM auth_oauth2_consent "
-                                    + "WHERE tenant_id = ? AND principal = ? AND client_id = ? AND deleted = 0",
-                            Integer.class,
-                            tenant,
-                            principal,
-                            clientId);
-                    return count != null && count > 0;
-                })
+    public Mono<String> findActiveScope(String tenant, String principal, String clientId) {
+        return Mono.fromCallable(() -> jdbcTemplate
+                        .query(
+                                "SELECT scope FROM auth_oauth2_consent "
+                                        + "WHERE tenant_id = ? AND principal = ? AND client_id = ? AND deleted = 0",
+                                (rs, rowNum) -> rs.getString("scope"),
+                                tenant,
+                                principal,
+                                clientId)
+                        .stream()
+                        .findFirst()
+                        .map(scope -> scope == null ? "" : scope)
+                        .orElse(null))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
     /**
-     * 记录同意（幂等：唯一键冲突视为已同意）。
+     * 记录同意（upsert：唯一键冲突时恢复未删除标记并刷新 scope 与同意时间）。
+     *
+     * <p>撤销后重新同意、扩大授权范围的场景必须更新既有行，否则表面成功而
+     * 实际仍沿用旧的 deleted/scope 状态。
      *
      * @param tenant    租户
      * @param principal 已认证主体
@@ -76,7 +81,17 @@ public class OAuth2ConsentRepository {
                                 now,
                                 now);
                     } catch (DuplicateKeyException ignored) {
-                        // 幂等：重复同意保持既有记录
+                        // upsert：恢复逻辑删除并刷新 scope/同意时间（version 递增避免乐观锁滞后）
+                        jdbcTemplate.update(
+                                "UPDATE auth_oauth2_consent "
+                                        + "SET scope = ?, consented_at = ?, deleted = 0, version = version + 1, update_time = ? "
+                                        + "WHERE tenant_id = ? AND principal = ? AND client_id = ?",
+                                scope,
+                                now,
+                                now,
+                                tenant,
+                                principal,
+                                clientId);
                     }
                     return (Void) null;
                 })

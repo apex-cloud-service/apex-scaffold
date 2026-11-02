@@ -73,6 +73,11 @@ public class TotpPO {
     private LocalDateTime lastVerifiedAt;
 
     /**
+     * 最近一次成功验证的 TOTP 时间步（防重放；NULL 表示尚无成功验证记录）
+     */
+    private Long lastUsedStep;
+
+    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)

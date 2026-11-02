@@ -7,6 +7,7 @@ import com.apex.scaffold.auth.infrastructure.persistence.mapper.TotpMapper;
 import com.apex.scaffold.auth.infrastructure.persistence.po.TotpPO;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -95,6 +96,21 @@ public class TotpRepositoryImpl implements TotpRepository {
     @Override
     public Mono<Boolean> existsByUserId(Long userId, String tenantId) {
         return Mono.fromCallable(() -> totpMapper.existsByUserIdAndTenantId(userId, tenantId) > 0)
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    @Override
+    public Mono<Boolean> markStepUsed(Long userId, String tenantId, long step) {
+        return Mono.fromCallable(() -> {
+                    // 条件更新原子消费：仅当 last_used_step 为空或小于当前步时写入，
+                    // 并发验证同一验证码时仅有一个请求生效，其余判定为重放。
+                    LambdaUpdateWrapper<TotpPO> wrapper = new LambdaUpdateWrapper<>();
+                    wrapper.eq(TotpPO::getUserId, userId)
+                            .eq(TotpPO::getTenantId, tenantId)
+                            .and(w -> w.isNull(TotpPO::getLastUsedStep).or().lt(TotpPO::getLastUsedStep, step))
+                            .set(TotpPO::getLastUsedStep, step);
+                    return totpMapper.update(null, wrapper) > 0;
+                })
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

@@ -47,6 +47,11 @@
             <groupId>com.apex.scaffold</groupId>
             <artifactId>apex-domain</artifactId>
         </dependency>
+        <!-- 跨服务事件契约（D5 主数据变更事件 UserChangedEvent/TenantChangedEvent） -->
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-api-contract</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>

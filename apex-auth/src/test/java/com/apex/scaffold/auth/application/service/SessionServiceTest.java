@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.auth.domain.model.entity.SessionEntity;
 import com.apex.scaffold.auth.domain.repository.SessionRepository;
+import com.apex.scaffold.auth.domain.repository.TokenRepository;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import java.time.LocalDateTime;
@@ -34,6 +35,9 @@ class SessionServiceTest {
 
     @Mock
     private SessionRepository sessionRepository;
+
+    @Mock
+    private TokenRepository tokenRepository;
 
     @InjectMocks
     private SessionService sessionService;
@@ -264,18 +268,29 @@ class SessionServiceTest {
     class TerminateSessionTest {
 
         @Test
-        @DisplayName("终止会话成功")
+        @DisplayName("终止会话成功（联动撤销关联令牌）")
         void testTerminateSessionSuccess() {
+            when(sessionRepository.findBySessionId("session-uuid-001")).thenReturn(Mono.just(mockSession));
+            when(tokenRepository.findById(1001L))
+                    .thenReturn(Mono.just(com.apex.scaffold.auth.domain.model.entity.TokenEntity.builder()
+                            .id(1001L)
+                            .jti("jti-1001")
+                            .build()));
+            when(tokenRepository.revokeByJti("jti-1001", "SESSION", "SESSION_TERMINATED"))
+                    .thenReturn(Mono.just(true));
             when(sessionRepository.terminateBySessionId("session-uuid-001")).thenReturn(Mono.just(true));
 
             Mono<Void> result = sessionService.terminateSession("session-uuid-001");
 
             StepVerifier.create(result).verifyComplete();
+            verify(tokenRepository).revokeByJti("jti-1001", "SESSION", "SESSION_TERMINATED");
         }
 
         @Test
         @DisplayName("终止失败时抛出异常")
         void testTerminateSessionFailure() {
+            when(sessionRepository.findBySessionId("session-uuid-001")).thenReturn(Mono.just(mockSession));
+            when(tokenRepository.findById(1001L)).thenReturn(Mono.empty());
             when(sessionRepository.terminateBySessionId("session-uuid-001")).thenReturn(Mono.just(false));
 
             Mono<Void> result = sessionService.terminateSession("session-uuid-001");
@@ -292,8 +307,10 @@ class SessionServiceTest {
     class TerminateUserSessionsTest {
 
         @Test
-        @DisplayName("终止用户所有会话成功")
+        @DisplayName("终止用户所有会话成功（联动撤销全部令牌）")
         void testTerminateUserSessionsSuccess() {
+            when(tokenRepository.revokeByUserId(100L, "test-tenant", "SESSION", "SESSION_TERMINATED"))
+                    .thenReturn(Mono.just(2));
             when(sessionRepository.terminateByUserId(100L, "test-tenant")).thenReturn(Mono.just(true));
 
             Mono<Void> result = sessionService.terminateUserSessions(100L, "test-tenant");
@@ -304,6 +321,8 @@ class SessionServiceTest {
         @Test
         @DisplayName("终止失败时抛出异常")
         void testTerminateUserSessionsFailure() {
+            when(tokenRepository.revokeByUserId(100L, "test-tenant", "SESSION", "SESSION_TERMINATED"))
+                    .thenReturn(Mono.just(0));
             when(sessionRepository.terminateByUserId(100L, "test-tenant")).thenReturn(Mono.just(false));
 
             Mono<Void> result = sessionService.terminateUserSessions(100L, "test-tenant");
@@ -320,15 +339,23 @@ class SessionServiceTest {
     class KickOutSessionTest {
 
         @Test
-        @DisplayName("踢出会话成功")
+        @DisplayName("踢出会话成功（联动撤销关联令牌）")
         void testKickOutSessionSuccess() {
             when(sessionRepository.findBySessionId("session-uuid-001")).thenReturn(Mono.just(mockSession));
+            when(tokenRepository.findById(1001L))
+                    .thenReturn(Mono.just(com.apex.scaffold.auth.domain.model.entity.TokenEntity.builder()
+                            .id(1001L)
+                            .jti("jti-1001")
+                            .build()));
+            when(tokenRepository.revokeByJti("jti-1001", "SESSION", "KICKED_OUT"))
+                    .thenReturn(Mono.just(true));
             when(sessionRepository.update(any(SessionEntity.class)))
                     .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
 
             Mono<Void> result = sessionService.kickOutSession("session-uuid-001");
 
             StepVerifier.create(result).verifyComplete();
+            verify(tokenRepository).revokeByJti("jti-1001", "SESSION", "KICKED_OUT");
         }
 
         @Test
@@ -582,6 +609,7 @@ class SessionServiceTest {
     void kickOutUpdateFailureIsPropagated() {
         IllegalStateException failure = new IllegalStateException("update failed");
         when(sessionRepository.findBySessionId("session-uuid-001")).thenReturn(Mono.just(mockSession));
+        when(tokenRepository.findById(1001L)).thenReturn(Mono.empty());
         when(sessionRepository.update(mockSession)).thenReturn(Mono.error(failure));
 
         StepVerifier.create(sessionService.kickOutSession("session-uuid-001"))

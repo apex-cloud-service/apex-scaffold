@@ -91,6 +91,63 @@ spring:
               args:
                 name: maskingService
                 fallbackUri: forward:/__gateway/fallback
+        # ---- 开放平台路由组（/open-api/**，D2）：scope 断言 + 租户能力门禁见 OpenApiScopeGatewayFilter ----
+        - id: open-api-file
+          uri: ${ROUTE_FILE_URI:lb://apex-file-service}
+          predicates:
+            - Path=/open-api/file/**,/open-api/files/**
+          metadata:
+            open-api:
+              capability: file-storage
+              read-scopes: ["open:file:read"]
+              write-scopes: ["open:file:write"]
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: fileService
+                fallbackUri: forward:/__gateway/fallback
+        - id: open-api-workflow
+          uri: ${ROUTE_WORKFLOW_URI:lb://apex-workflow-service}
+          predicates:
+            - Path=/open-api/workflow/**
+          metadata:
+            open-api:
+              capability: workflow
+              read-scopes: ["open:workflow:read"]
+              write-scopes: ["open:workflow:write"]
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: workflowService
+                fallbackUri: forward:/__gateway/fallback
+        - id: open-api-system
+          uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
+          predicates:
+            - Path=/open-api/users/**,/open-api/user/**
+          metadata:
+            open-api:
+              capability: user-org
+              read-scopes: ["open:user:read"]
+              write-scopes: []
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: systemService
+                fallbackUri: forward:/__gateway/fallback
+        - id: open-api-office
+          uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
+          predicates:
+            - Path=/open-api/messages/**
+          metadata:
+            open-api:
+              capability: office-message
+              read-scopes: []
+              write-scopes: ["open:message:send"]
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: officeService
+                fallbackUri: forward:/__gateway/fallback
         # 兜底路由：Phase 6 完成后切换为 lb://apex-system-service
         # 💡 /api/v2/platform/** 为平台租户管理端点（PlatformTenantRouter）。
         - id: system-domain

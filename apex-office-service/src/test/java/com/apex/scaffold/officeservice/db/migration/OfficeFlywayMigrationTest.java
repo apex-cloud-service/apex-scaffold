@@ -11,6 +11,8 @@ import com.apex.scaffold.office.infrastructure.po.ApprovalProcessPO;
 import com.apex.scaffold.office.infrastructure.po.CalendarEventPO;
 import com.apex.scaffold.office.infrastructure.po.DocumentInfoPO;
 import com.apex.scaffold.office.meetingroom.infrastructure.persistence.po.MeetingRoomPO;
+import com.apex.scaffold.office.notify.infrastructure.persistence.po.NotifyRequestRecordPO;
+import com.apex.scaffold.office.notify.infrastructure.persistence.po.NotifyTemplatePO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffDepartmentPO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffEmployeePO;
 import com.apex.scaffold.office.off.infrastructure.persistence.po.OffMessageDeliveryPO;
@@ -43,7 +45,8 @@ import org.junit.jupiter.api.Test;
  * <p>本测试从以下维度保证三份脚本一致且与代码（PO 类）对齐：</p>
  * <ul>
  *   <li>版本链连续且在 MySQL/PostgreSQL 两个方言目录完全一致；</li>
- *   <li>16 张表（9 张 office_* + 7 张 off_*，含 V5 off_message_delivery 与 V7 office_meeting_room）在两方言中的列集合完全一致（方言差异仅限类型）；</li>
+ *   <li>18 张表（9 张 office_* + 9 张 off_*，含 V5 off_message_delivery、V7 office_meeting_room
+ *       与 V8 off_notify_template/off_notify_request）在两方言中的列集合完全一致（方言差异仅限类型）；</li>
  *   <li>H2 {@code basic-schema.sql} 的表集合与 Flyway 迁移表集合一致；</li>
  *   <li>以代码实现（PO 类）为唯一事实来源：每个持久化字段必然对应迁移脚本中的列
  *       （MyBatis-Plus map-underscore-to-camel-case）。</li>
@@ -63,8 +66,8 @@ class OfficeFlywayMigrationTest {
     private static final String POSTGRESQL = "postgresql";
 
     /**
-     * 迁移声明的 16 张办公服务表（V1 八张 office_* + V2 六张 off_* + V5 一张 off_message_delivery
-     * + V7 一张 office_meeting_room）。
+     * 迁移声明的 18 张办公服务表（V1 八张 office_* + V2 六张 off_* + V5 一张 off_message_delivery
+     * + V7 一张 office_meeting_room + V8 两张 off_notify_template/off_notify_request）。
      */
     private static final Set<String> EXPECTED_TABLES = Set.of(
             "office_platform_app",
@@ -82,7 +85,9 @@ class OfficeFlywayMigrationTest {
             "off_department",
             "off_employee",
             "off_sync_history",
-            "office_meeting_room");
+            "office_meeting_room",
+            "off_notify_template",
+            "off_notify_request");
 
     /** 各表必须具备的索引名（MySQL 带反引号，PostgreSQL 不带，故按裸名断言）。 */
     private static final Map<String, Set<String>> REQUIRED_INDEXES = Map.ofEntries(
@@ -160,7 +165,11 @@ class OfficeFlywayMigrationTest {
                     Set.of(
                             "uk_office_meeting_room_tenant_code",
                             "uk_office_meeting_room_tenant_name",
-                            "idx_office_meeting_room_tenant_status")));
+                            "idx_office_meeting_room_tenant_status")),
+            Map.entry("off_notify_template", Set.of("uk_off_notify_template", "idx_off_notify_template_tenant_status")),
+            Map.entry(
+                    "off_notify_request",
+                    Set.of("idx_off_notify_request_tenant_status", "idx_off_notify_request_template")));
 
     /** 以 PO 类为唯一事实来源：表名 → 持久化对象。 */
     private static final Map<String, Class<?>> PO_TABLES = Map.ofEntries(
@@ -179,7 +188,9 @@ class OfficeFlywayMigrationTest {
             Map.entry("off_department", OffDepartmentPO.class),
             Map.entry("off_employee", OffEmployeePO.class),
             Map.entry("off_sync_history", OffSyncHistoryPO.class),
-            Map.entry("office_meeting_room", MeetingRoomPO.class));
+            Map.entry("office_meeting_room", MeetingRoomPO.class),
+            Map.entry("off_notify_template", NotifyTemplatePO.class),
+            Map.entry("off_notify_request", NotifyRequestRecordPO.class));
 
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {

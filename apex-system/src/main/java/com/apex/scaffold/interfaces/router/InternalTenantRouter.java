@@ -52,11 +52,33 @@ public class InternalTenantRouter {
                                             content =
                                                     @io.swagger.v3.oas.annotations.media.Content(
                                                             mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                })),
+        @RouterOperation(
+                path = "/internal/v1/tenants/{code}/capabilities",
+                method = org.springframework.web.bind.annotation.RequestMethod.GET,
+                beanClass = InternalTenantHandler.class,
+                beanMethod = "getCapabilities",
+                operation =
+                        @Operation(
+                                operationId = "internalTenantCapabilities",
+                                summary = "查询租户能力订阅快照（内部）",
+                                description = "集群内服务直连接口，不经网关。返回租户存在性与能力订阅集合"
+                                        + "（unbounded/空 features = 全量订阅），供网关开放接口能力门禁消费（D4）；"
+                                        + "未知租户以 exists=false 数据化返回。",
+                                tags = {"内部契约"},
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Result 封装的能力订阅快照",
+                                            content =
+                                                    @io.swagger.v3.oas.annotations.media.Content(
+                                                            mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
     public RouterFunction<ServerResponse> internalTenantRoutes(InternalTenantHandler handler) {
         return RouterFunctions.route()
                 .GET("/internal/v1/tenants/{code}/status", handler::getStatus)
+                .GET("/internal/v1/tenants/{code}/capabilities", handler::getCapabilities)
                 .build();
     }
 }

@@ -382,7 +382,18 @@ public enum ResultCode {
     RECOMMENDATION_FEEDBACK_CONFLICT(4207, "该推荐已经处理，不能重复选择", "biz.recommendation_feedback_conflict"),
 
     /** 当前业务日期内成功钉住次数已达到会员等级配置上限 */
-    PIN_DAILY_LIMIT_REACHED(4208, "今日钉住次数已用完", "biz.pin_daily_limit_reached");
+    PIN_DAILY_LIMIT_REACHED(4208, "今日钉住次数已用完", "biz.pin_daily_limit_reached"),
+
+    // ========== 开放平台错误（/open-api/**） ==========
+
+    /** 开放接口令牌 scope 不足（网关按路由断言校验令牌 scope） */
+    OPEN_SCOPE_INSUFFICIENT(40301, "开放接口 scope 不足", "biz.open.scope_insufficient"),
+
+    /** 开放接口对应能力租户未订阅（网关能力门禁拒绝） */
+    CAPABILITY_NOT_SUBSCRIBED(40302, "能力未开通", "biz.open.capability_not_subscribed"),
+
+    /** 开放接口不接受用户个人令牌（仅接受客户端凭证类 OAuth2 令牌） */
+    OPEN_PERSONAL_TOKEN_REJECTED(40303, "开放接口不接受用户个人令牌", "biz.open.personal_token_rejected");
 
     /** 状态码 */
     private final Integer code;

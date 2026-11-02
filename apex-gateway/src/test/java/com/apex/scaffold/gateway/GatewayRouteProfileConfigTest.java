@@ -83,6 +83,48 @@ class GatewayRouteProfileConfigTest {
     /** 熔断回退目标，与网关全局回退约定一致。 */
     private static final String FALLBACK_URI = "forward:/__gateway/fallback";
 
+    /** 开放接口路由标识（D2/D4）：整表重定义的配置源必须显式保留。 */
+    private static final List<String> OPEN_API_ROUTE_IDS =
+            List.of("open-api-file", "open-api-workflow", "open-api-system", "open-api-office");
+
+    /** 路由元数据键：scope/能力断言契约 {@code metadata.open-api}。 */
+    private static final String OPEN_API_METADATA_KEY = "open-api";
+
+    /**
+     * 开放接口路由契约条目：Path 前缀 + 路由元数据 {@code open-api} 节.
+     *
+     * <p>空 scope 清单表示对应方法族一律拒绝（如 user 写接口、office 读接口不开放）。
+     */
+    private record OpenApiContract(
+            List<String> paths, String capability, List<String> readScopes, List<String> writeScopes) {}
+
+    /**
+     * 开放接口路由契约（D2/D4）：整表重定义的配置源必须逐条保留，否则
+     * {@code /open-api/**} 会落入系统域兜底路由并绕过 scope/能力门禁。
+     */
+    private static final java.util.Map<String, OpenApiContract> OPEN_API_CONTRACT = java.util.Map.of(
+            "open-api-file",
+            new OpenApiContract(
+                    List.of("/open-api/file/**", "/open-api/files/**"),
+                    "file-storage",
+                    List.of("open:file:read"),
+                    List.of("open:file:write")),
+            "open-api-workflow",
+            new OpenApiContract(
+                    List.of("/open-api/workflow/**"),
+                    "workflow",
+                    List.of("open:workflow:read"),
+                    List.of("open:workflow:write")),
+            "open-api-system",
+            new OpenApiContract(
+                    List.of("/open-api/users/**", "/open-api/user/**"),
+                    "user-org",
+                    List.of("open:user:read"),
+                    List.of()),
+            "open-api-office",
+            new OpenApiContract(
+                    List.of("/open-api/messages/**"), "office-message", List.of(), List.of("open:message:send")));
+
     @Test
     @DisplayName("application.yml 应声明站内信路由且 WS 优先于办公域通配路由")
     void baseConfigKeepsMessageRoutes() {
@@ -202,6 +244,70 @@ class GatewayRouteProfileConfigTest {
         assertThat(pathPredicateArgs(findRoute(routes, MASKING_ROUTE_ID, source)))
                 .withFailMessage("%s：masking-domain 须覆盖脱敏前缀", source)
                 .contains("/api/v1/masking/**");
+
+        assertOpenApiRoutes(routes, source);
+    }
+
+    /**
+     * 校验单个配置源中的开放接口路由契约（D2/D4）.
+     *
+     * <p>逐条断言：路由存在、Path 前缀完整、{@code metadata.open-api} 的 capability 与
+     * read/write-scopes 与契约一致（含空清单语义），且挂有熔断回退。
+     *
+     * @param routes 该配置源绑定的路由定义
+     * @param source 配置源名称，仅用于失败信息
+     */
+    private static void assertOpenApiRoutes(List<RouteDefinition> routes, String source) {
+        for (String routeId : OPEN_API_ROUTE_IDS) {
+            RouteDefinition route = findRoute(routes, routeId, source);
+            OpenApiContract contract = OPEN_API_CONTRACT.get(routeId);
+
+            assertThat(pathPredicateArgs(route))
+                    .withFailMessage("%s：%s 须覆盖开放接口前缀", source, routeId)
+                    .containsAll(contract.paths());
+            assertThat(route.getFilters())
+                    .withFailMessage("%s：%s 须挂熔断回退", source, routeId)
+                    .anySatisfy(filter -> {
+                        assertThat(filter.getName()).isEqualTo("CircuitBreaker");
+                        assertThat(filter.getArgs()).containsEntry("fallbackUri", FALLBACK_URI);
+                    });
+
+            assertThat(route.getMetadata().get(OPEN_API_METADATA_KEY))
+                    .withFailMessage("%s：%s 须声明 metadata.%s 节", source, routeId, OPEN_API_METADATA_KEY)
+                    .isInstanceOf(java.util.Map.class);
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> metadata =
+                    (java.util.Map<String, Object>) route.getMetadata().get(OPEN_API_METADATA_KEY);
+
+            assertThat(metadata.get("capability"))
+                    .withFailMessage("%s：%s 的 capability 契约不一致", source, routeId)
+                    .isEqualTo(contract.capability());
+            assertThat(scopeList(metadata.get("read-scopes")))
+                    .withFailMessage("%s：%s 的 read-scopes 契约不一致 actual=%s", source, routeId, metadata)
+                    .containsExactlyInAnyOrderElementsOf(contract.readScopes());
+            assertThat(scopeList(metadata.get("write-scopes")))
+                    .withFailMessage("%s：%s 的 write-scopes 契约不一致 actual=%s", source, routeId, metadata)
+                    .containsExactlyInAnyOrderElementsOf(contract.writeScopes());
+        }
+    }
+
+    /**
+     * 归一化路由元数据中的 scope 清单.
+     *
+     * <p>Spring Boot Binder 将 Object 值下的 YAML 列表绑定为 {@code {0=v, 1=v}} 形式的 Map，
+     * 与 {@code OpenApiScopeGatewayFilter.OpenApiMetadata#scopeList} 的兼容口径一致。
+     *
+     * @param raw 元数据原始值
+     * @return scope 字符串列表
+     */
+    private static List<String> scopeList(Object raw) {
+        if (raw instanceof List<?> list) {
+            return list.stream().map(String::valueOf).toList();
+        }
+        if (raw instanceof java.util.Map<?, ?> map) {
+            return map.values().stream().map(String::valueOf).toList();
+        }
+        return List.of();
     }
 
     /**

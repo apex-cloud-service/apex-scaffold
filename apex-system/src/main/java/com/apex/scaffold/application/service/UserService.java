@@ -4,9 +4,11 @@ import com.apex.scaffold.application.assembler.UserAssembler;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.contract.event.UserChangedEvent;
 import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.CacheConsistencyPort;
+import com.apex.scaffold.domain.service.DomainEventPublisher;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Set;
@@ -85,6 +87,14 @@ public class UserService {
      * </p>
      */
     private final TenantGuard tenantGuard;
+
+    /**
+     * 领域事件发布器（D5 主数据分发）
+     *
+     * <p>用户创建/更新成功后经既有 Outbox + MQ 通道发布 {@link UserChangedEvent}，
+     * 事件负载仅含非敏感标识字段。
+     */
+    private final DomainEventPublisher domainEventPublisher;
 
     private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of("create_time", "nick_name", "status", "id");
 
@@ -225,6 +235,10 @@ public class UserService {
                 .then(Mono.defer(() -> assertWechatRegistrationAllowed(user.getOpenId())))
                 .then(Mono.defer(() -> userRepository
                         .save(user)
+                        // D5：创建成功后发布用户主数据变更事件；发布失败随链路传播，不吞错误
+                        .flatMap(u -> domainEventPublisher
+                                .publish(new UserChangedEvent(u.getId(), UserChangedEvent.ACTION_CREATED))
+                                .thenReturn(u))
                         .doOnSuccess(u -> {
                             log.info("用户创建成功，userId: {}, openId: {}", u.getId(), u.getOpenId());
                         })
@@ -279,6 +293,9 @@ public class UserService {
                                     cacheConsistencyService.evictWithDelayedDoubleDelete(
                                             "user:id", String.valueOf(userId)),
                                     cacheConsistencyService.evictWithDelayedDoubleDelete("user:openId", openId))
+                            // D5：更新成功后发布用户主数据变更事件；发布失败随链路传播，不吞错误
+                            .then(domainEventPublisher.publish(
+                                    new UserChangedEvent(userId, UserChangedEvent.ACTION_UPDATED)))
                             .thenReturn(updated);
                 })
                 .doOnSuccess(u -> log.info("用户更新成功，userId: {}", u.getId()))

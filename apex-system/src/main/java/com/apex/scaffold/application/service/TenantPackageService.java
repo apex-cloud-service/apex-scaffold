@@ -89,6 +89,34 @@ public class TenantPackageService {
     }
 
     /**
+     * 查询租户能力订阅快照（D4，内部端点 {@code GET /internal/v1/tenants/{code}/capabilities} 消费）。
+     *
+     * <p>未知租户以 {@code exists=false} 数据化返回（fail-closed，消费方按未订阅处理并缓存负结果）；
+     * 判定口径与 {@link PackageScope#allowsCapability(String)} 一致（unbounded 或空 features = 全量订阅）。
+     *
+     * @param tenantCode 租户编码
+     * @return 能力订阅快照
+     */
+    public Mono<CapabilitySnapshot> getTenantCapabilities(String tenantCode) {
+        return tenantRepository
+                .findByCode(tenantCode)
+                .flatMap(tenant -> resolveScope(tenantCode, tenant.getPackageCode())
+                        .map(scope -> new CapabilitySnapshot(tenantCode, true, scope.unbounded(), scope.features())))
+                .defaultIfEmpty(new CapabilitySnapshot(tenantCode, false, false, java.util.Set.of()));
+    }
+
+    /**
+     * 租户能力订阅快照（D4）。
+     *
+     * @param tenantCode 租户编码
+     * @param exists 租户是否存在（未知租户 fail-closed）
+     * @param unbounded 是否不限量租户（平台租户/未绑定套餐）
+     * @param features 已订阅特性编码（空集合 = 全量订阅语义，与套餐语义一致）
+     */
+    public record CapabilitySnapshot(
+            String tenantCode, boolean exists, boolean unbounded, java.util.Set<String> features) {}
+
+    /**
      * 按编码查询套餐。
      *
      * @param packageCode 套餐编码

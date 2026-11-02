@@ -68,6 +68,12 @@ class AuthenticationApplicationServiceTest {
     @Mock
     private com.apex.scaffold.auth.domain.service.TenantStatusPort tenantStatusPort;
 
+    @Mock
+    private org.springframework.data.redis.core.ReactiveStringRedisTemplate challengeRedisTemplate;
+
+    @Mock
+    private org.springframework.data.redis.core.ReactiveValueOperations<String, String> challengeValueOps;
+
     @InjectMocks
     private AuthenticationApplicationService authenticationService;
 
@@ -97,6 +103,12 @@ class AuthenticationApplicationServiceTest {
         org.mockito.Mockito.lenient()
                 .when(tenantStatusPort.validateLoginTenant(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(Mono.empty());
+        // MFA 挑战一次性消费：缺省桩保持首次消费成功
+        org.mockito.Mockito.lenient().when(challengeRedisTemplate.opsForValue()).thenReturn(challengeValueOps);
+        org.mockito.Mockito.lenient()
+                .when(challengeValueOps.setIfAbsent(
+                        anyString(), anyString(), org.mockito.ArgumentMatchers.any(java.time.Duration.class)))
+                .thenReturn(Mono.just(Boolean.TRUE));
 
         mockTokenPair = TokenPair.builder()
                 .accessToken("access-token")

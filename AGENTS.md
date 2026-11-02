@@ -1,6 +1,6 @@
 # AGENTS.md — Apex Scaffold
 
-本文件定义仓库的开发、验证和协作约束。项目使用 Java 21、Spring Boot、Spring WebFlux 和 DDD，当前运行架构为网关加五个业务服务，以及任务代理和可选脱敏服务。修改前阅读目标模块的代码、POM、配置和测试，沿用现有模式；只完成任务需要的变更。
+本文件定义仓库的开发、验证和协作约束。项目使用 Java 21、Spring Boot、Spring WebFlux 和 DDD，当前运行架构为网关加六个业务服务（system/auth/workflow/file/office/integration），以及任务代理和可选脱敏服务。修改前阅读目标模块的代码、POM、配置和测试，沿用现有模式；只完成任务需要的变更。
 
 项目介绍与运行指引见 [README.md](README.md)。版本与聚合模块以根 [pom.xml](pom.xml) 为准，构建环境以 [.sdkmanrc](.sdkmanrc) 为准。历史文档、注释中的迁移阶段名称不能替代当前实现。本文件是仓库协作约束的唯一权威来源；`.trae/rules/project_rules.md` 只是部分编辑器的本地镜像，不入版本库，也不得与本文件冲突。
 
@@ -25,7 +25,7 @@ mvnd -T4 -B clean verify
 
 ## 模块与物理边界
 
-根 POM 聚合 31 个模块：共享基础、共享领域、五个按能力拆分的共享设施 JAR（`apex-infrastructure` 仅保留旧坐标兼容）、共享契约、服务父 POM、五个业务库、六个运行模块、服务增强、对象存储、授权、示例与工具，以及离线运维工具 `apex-tools-deployment`。
+根 POM 聚合 34 个模块：共享基础、共享领域、五个按能力拆分的共享设施 JAR（`apex-infrastructure` 仅保留旧坐标兼容）、共享契约、服务父 POM、六个业务库、七个运行模块、服务增强、对象存储、授权、示例与工具、组合部署包，以及离线运维工具 `apex-tools-deployment`。
 
 | 分类 | 模块及职责 |
 | --- | --- |
@@ -33,9 +33,10 @@ mvnd -T4 -B clean verify
 | 共享领域 | `apex-domain`：基础实体、通用事件与服务端口/Gateway 契约 |
 | 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration`：分别提供持久化、缓存、消息、远程调用和第三方集成能力；`apex-infrastructure` 仅保留旧坐标兼容，不再承载实现源码 |
 | 共享契约 | `apex-api-contract`：跨服务内部 API 与 DTO，无具体业务实体 |
-| 服务父 POM | `apex-services-bom`：网关、五个业务服务及任务代理、脱敏服务的 parent |
-| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office` |
-| 运行模块 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-file-service`、`apex-office-service` |
+| 服务父 POM | `apex-services-bom`：网关、六个业务服务、集成能力库、组合部署包及任务代理、脱敏服务的 parent |
+| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office`、`apex-integration`：`apex-integration` 含 connector（连接器/租户凭据/出站调用/入站 webhook）与 device（设备注册/影子/遥测/命令/规则）两个包结构隔离的子域 |
+| 运行模块 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-file-service`、`apex-office-service`、`apex-integration-service` |
+| 组合部署 | `apex-boot-all`：basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 |
 | 服务增强 | `apex-job-spring-boot-starter`：默认禁用的 XXL 执行器；`apex-seata-spring-boot-starter`：默认禁用的多模式分布式事务（`apex.seata.mode` 选择 AT/TCC/SAGA/XA，缺省 AT）；`apex-job-service`：固定 system 代理；`apex-masking-service`：无持久化的脱敏接口 |
 | 对象存储 | `apex-storage-spring-boot-starter`：无业务域依赖的五后端存储自动装配 |
 | 授权模块 | `apex-license-spring-boot-starter`、`apex-license-tools` |
@@ -57,19 +58,22 @@ mvnd -T4 -B clean verify
 | `apex-infrastructure-integration` | common、domain、infrastructure-remote；缓存仅 test scope |
 | `apex-infrastructure` | 五个能力 JAR，仅兼容旧坐标 |
 | `apex-api-contract` | common |
-| `apex-system` | common、domain、五个 infrastructure 能力 JAR、license-spring-boot-starter |
+| `apex-system` | common、domain、api-contract、五个 infrastructure 能力 JAR、license-spring-boot-starter |
 | `apex-auth` | common、domain、infrastructure-integration、api-contract |
 | `apex-workflow`、`apex-office` | common、domain |
 | `apex-file` | common、domain、storage-spring-boot-starter |
+| `apex-integration` | common、domain、infrastructure-persistence、infrastructure-remote；MQTT 客户端 hivemq-mqtt-client 为 optional |
 | `apex-storage-spring-boot-starter` | common |
 | `apex-system-service` | common、domain、api-contract、system、job-spring-boot-starter、seata-spring-boot-starter（能力由 system 装配） |
 | `apex-auth-service` | common、domain、api-contract、auth、infrastructure-cache、infrastructure-messaging、infrastructure-integration、job-spring-boot-starter、seata-spring-boot-starter |
 | `apex-workflow-service` | common、domain、api-contract、workflow、job-spring-boot-starter、seata-spring-boot-starter |
 | `apex-file-service` | common、domain、file、job-spring-boot-starter、seata-spring-boot-starter |
 | `apex-office-service` | common、domain、api-contract、office、job-spring-boot-starter、seata-spring-boot-starter |
+| `apex-integration-service` | common、domain、integration、job-spring-boot-starter、seata-spring-boot-starter |
 | `apex-job-service` | infrastructure-remote |
 | `apex-masking-service`、两个增强 starter | common |
 | `apex-gateway` | common |
+| `apex-boot-all` | common、domain、api-contract、system、auth、workflow、file、office、integration |
 | `apex-example` | common、domain、infrastructure-cache、infrastructure-integration、system（workflow 仅 test scope） |
 | `apex-tools-deployment` | 无内部依赖；仅 Jackson、SnakeYAML、CommonMark（本地文档 Markdown 渲染）与 JUnit |
 
@@ -77,7 +81,8 @@ mvnd -T4 -B clean verify
 
 ### 服务增强边界
 
-- 五业务 service 均直接依赖 job 与 seata starter；job-service 仅直接内部依赖 infrastructure-remote，masking-service 与两个 starter 仅直接内部依赖 common。
+- 六个业务 service（system/auth/workflow/file/office/integration）均直接依赖 job 与 seata starter；job-service 仅直接内部依赖 infrastructure-remote，masking-service 与两个 starter 仅直接内部依赖 common。
+- 集成服务与 `apex-integration` 的对外集成、设备接入一律使用 `WebClient`（HTTP），不引入 Feign；MQTT 客户端依赖 optional，classpath 无该依赖时零 Bean，生产由外部 EMQX 提供接入。
 - job-service 不迁移 system 数据所有权；只代理九个任务接口。XXL 仅接管配置的一个 system 任务及 workflow 超时扫描，中心 cron 人工同步。
 - 脱敏策略为启动配置，无 CRUD 或热刷新；租户来自已验证 JWT。
 - Seata 默认关闭，通过 `apex.seata.mode` 选择 AT（缺省）/TCC/SAGA/XA 四种模式；AT/SAGA/XA 要求同步单 JDBC 数据源，拒绝动态数据源与 Publisher 回调；全局事务内拒绝当前 Outbox 写入。AT 需各业务库 undo_log，SAGA 需存储三表（建表脚本随 starter 发布），XA 依赖数据库 XA 能力；TCC 由扫描器代理 `@LocalTCC` 动作。缺省 AT 与既有接入行为兼容。真实 TC 环境下四模式端到端测试缺少 TC/双库时跳过，不能记为通过。
@@ -178,6 +183,7 @@ Mono.fromCallable(() -> repository.findById(id))
 | workflow | `apex-workflow-service/src/main/resources/db/migration/{mysql,postgresql}/` |
 | file | `apex-file-service/src/main/resources/db/migration/{mysql,postgresql}/` |
 | office | `apex-office-service/src/main/resources/db/migration/{mysql,postgresql}/` |
+| integration | `apex-integration/src/main/resources/db/migration/{mysql,postgresql}/` |
 
 - system-service 通过 system 依赖加载生产迁移；各域的数据库和版本链独立，不能按全仓最大版本分配新版本。
 - 命名使用 `V{版本号}__{描述}.sql`。先读取所属域当前脚本，再追加版本，不修改、删除、重排已经执行的历史迁移。
@@ -206,7 +212,7 @@ Mono.fromCallable(() -> repository.findById(id))
 - 配置变更核对对应服务的 `application*.yml`、`bootstrap.yml`、`.env.example` 与部署注入；必要时同步 [配置文档](docs/05-operations/configuration.md)。
 - Java 不自动加载 `.env`；部署 app.sh 只在 `APEX_ENV_FILE` 指定有效文件时 source；Compose `.env` 插值不等于全部变量注入容器。
 - 关闭 Nacos 时核对 config/discovery/register 开关；网关 `lb://` 路由同时改为明确 HTTP 地址。
-- system 默认业务端口 8082、管理端口 8083；workflow 同机开发可用 8093 避开冲突。example 与 gateway 默认均为 8080。
+- system 默认业务端口 8082、管理端口 8083；workflow 同机开发可用 8093 避开冲突；集成服务默认业务端口 8094、管理端口 8097。example 与 gateway 默认均为 8080。
 - Compose 部署核对外部 `apex-observability` 网络、前端镜像、数据库/Redis 凭据、生产 CORS 和 auth JDBC/R2DBC TLS 配置，不把模板复制描述为可直接上线。
 - 已用于持久数据的加密密钥需要稳定保存，轮换配合迁移，不能每次启动随机重建。
 - 新增 Bash 脚本复用 [公共函数库](scripts/lib/common.sh)，使用其根目录、日志与安全查找函数，不重复手写排除规则。修改旧脚本只处理当前任务所需内容。
@@ -252,6 +258,7 @@ git diff --check
 | auth `PersistenceContractTest` | auth domain 与持久化边界及相关契约 |
 | system `NoBoundedElasticArchGuardTest` | 指定共享/system 源码目录的直接 boundedElastic 使用检查 |
 | system-service `SystemServiceBoundaryTest` | 扫描声明与类可加载性，不是实际服务启动 |
+| integration-service `IntegrationServiceBoundaryTest` | 扫描声明与类可加载性，不是实际服务启动 |
 | system `FlywayMigrationVersionTest` | MySQL/PostgreSQL 版本集合一致与 system 版本连续性 |
 
 这些检查只覆盖其声明的范围，不证明全仓调度器、所有租户缓存键、SQL 语义或运行服务均正确。业务变更还需验证实际调用链、失败路径、事务回滚与权限行为。

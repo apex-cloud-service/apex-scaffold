@@ -2,12 +2,14 @@ package com.apex.scaffold.officeservice.interfaces.router;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.apex.scaffold.officeservice.interfaces.handler.InternalNotifyHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.OfficeAdminHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.OfficeHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeApprovalHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeCalendarHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeDocumentHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeMessageHandler;
+import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeNotifyHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeOrganizationHandler;
 import com.apex.scaffold.officeservice.interfaces.handler.office.OfficeSyncWizardHandler;
 import com.apex.scaffold.officeservice.interfaces.off.handler.MessageHandler;
@@ -19,6 +21,7 @@ import com.apex.scaffold.officeservice.interfaces.router.office.OfficeApprovalRo
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeCalendarRouter;
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeDocumentRouter;
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeMessageRouter;
+import com.apex.scaffold.officeservice.interfaces.router.office.OfficeNotifyRouter;
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeOrganizationRouter;
 import com.apex.scaffold.officeservice.interfaces.router.office.OfficeSyncWizardRouter;
 import java.lang.reflect.Method;
@@ -179,6 +182,18 @@ class OfficeRouterRegressionTest {
             new Endpoint("GET", "/api/v2/office/sync/tasks/{taskId}"),
             new Endpoint("POST", "/api/v2/office/sync/tasks/{taskId}/retry"));
 
+    /** 统一通知管理端点。 */
+    private static final Set<Endpoint> NOTIFY_ENDPOINTS = Set.of(
+            new Endpoint("POST", "/api/v2/office/notify/templates"),
+            new Endpoint("GET", "/api/v2/office/notify/templates"),
+            new Endpoint("GET", "/api/v2/office/notify/requests"),
+            new Endpoint("GET", "/api/v2/office/notify/templates/{templateId}"),
+            new Endpoint("PUT", "/api/v2/office/notify/templates/{templateId}"),
+            new Endpoint("DELETE", "/api/v2/office/notify/templates/{templateId}"));
+
+    /** 统一通知内部契约端点。 */
+    private static final Set<Endpoint> INTERNAL_NOTIFY_ENDPOINTS = Set.of(new Endpoint("POST", "/internal/v1/notify"));
+
     /** 验证统一认证与状态接口正确注册。 */
     @Test
     @DisplayName("统一认证与状态接口全部正确注册")
@@ -249,9 +264,23 @@ class OfficeRouterRegressionTest {
         assertThat(collectEndpoints()).containsAll(SYNC_WIZARD_ENDPOINTS);
     }
 
+    /** 验证统一通知管理接口正确注册。 */
+    @Test
+    @DisplayName("统一通知管理接口全部正确注册")
+    void shouldExposeNotifyEndpoints() {
+        assertThat(collectEndpoints()).containsAll(NOTIFY_ENDPOINTS);
+    }
+
+    /** 验证统一通知内部契约接口正确注册。 */
+    @Test
+    @DisplayName("统一通知内部契约接口全部正确注册")
+    void shouldExposeInternalNotifyEndpoints() {
+        assertThat(collectEndpoints()).containsAll(INTERNAL_NOTIFY_ENDPOINTS);
+    }
+
     /** 验证对外暴露的端点集合与预期完全一致（数量、路径、方法一一对应）。 */
     @Test
-    @DisplayName("对外暴露端点集合与预期精确一致（共 72 个）")
+    @DisplayName("对外暴露端点集合与预期精确一致（共 79 个）")
     void shouldExposeExactlyExpectedEndpoints() {
         Set<Endpoint> expected = new LinkedHashSet<>();
         expected.addAll(OFFICE_ENDPOINTS);
@@ -265,6 +294,8 @@ class OfficeRouterRegressionTest {
         expected.addAll(MESSAGE_TEMPLATE_ENDPOINTS);
         expected.addAll(ORG_SYNC_ENDPOINTS);
         expected.addAll(SYNC_WIZARD_ENDPOINTS);
+        expected.addAll(NOTIFY_ENDPOINTS);
+        expected.addAll(INTERNAL_NOTIFY_ENDPOINTS);
 
         Set<Endpoint> actual = collectEndpoints();
 
@@ -335,6 +366,17 @@ class OfficeRouterRegressionTest {
         OfficeSyncWizardRouter syncWizardRouter =
                 new OfficeSyncWizardRouter(Mockito.mock(OfficeSyncWizardHandler.class));
         collect(endpoints, syncWizardRouter, "officeSyncWizardRoutes", null, null);
+
+        OfficeNotifyRouter notifyRouter = new OfficeNotifyRouter(Mockito.mock(OfficeNotifyHandler.class));
+        collect(endpoints, notifyRouter, "officeNotifyRoutes", null, null);
+
+        InternalNotifyRouter internalNotifyRouter = new InternalNotifyRouter();
+        collect(
+                endpoints,
+                internalNotifyRouter,
+                "internalNotifyRoutes",
+                InternalNotifyHandler.class,
+                Mockito.mock(InternalNotifyHandler.class));
 
         return endpoints;
     }

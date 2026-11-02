@@ -312,5 +312,20 @@ class SystemDualDatabaseMigrationIntegrationTest {
             rows.next();
             org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(8);
         }
+        // M4/M5：V81–V84 权限种子（office 通知 / 开放平台 / 集成与 IoT / 能力用量）
+        try (var rows = statement.executeQuery("SELECT COUNT(DISTINCT code) FROM sys_permission WHERE "
+                + "code LIKE 'office:notify:%' OR code LIKE 'open:%' OR code LIKE 'integration:%' "
+                + "OR code LIKE 'iot:%' OR code LIKE 'capability:%'")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1))
+                    .as("V81-V84 权限种子应全部入库")
+                    .isGreaterThanOrEqualTo(8);
+        }
+        // B8：租户自助管理菜单（V80）可达
+        try (var rows =
+                statement.executeQuery("SELECT COUNT(*) FROM sys_menu WHERE id IN (7200,7201,7202) AND deleted = 0")) {
+            rows.next();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isEqualTo(3);
+        }
     }
 }

@@ -299,11 +299,11 @@ class ResultCodeTest {
             assertEquals(0, ResultCode.SUCCESS.ordinal());
         }
 
-        /** 钉住日限额错误码是当前枚举定义的最后一项。 */
+        /** 开放平台个人令牌拒绝错误码是当前枚举定义的最后一项。 */
         @Test
-        @DisplayName("PIN_DAILY_LIMIT_REACHED 应为最后一个枚举值")
-        void pinDailyLimitReachedShouldBeLast() {
-            assertEquals(ResultCode.values().length - 1, ResultCode.PIN_DAILY_LIMIT_REACHED.ordinal());
+        @DisplayName("OPEN_PERSONAL_TOKEN_REJECTED 应为最后一个枚举值")
+        void openPersonalTokenRejectedShouldBeLast() {
+            assertEquals(ResultCode.values().length - 1, ResultCode.OPEN_PERSONAL_TOKEN_REJECTED.ordinal());
         }
     }
 }

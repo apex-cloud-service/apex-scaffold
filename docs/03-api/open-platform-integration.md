@@ -1,6 +1,6 @@
 # 开放平台接入契约（M4 / D2 + D6）
 
-本文件描述第三方与前台应用接入中台能力中心的完整流程。实现基线：认证中心 `OpenAppScopes` scope 注册表、`/admin-api/v1/open-apps` 管理端点、认证中心 OAuth2 授权服务器。
+本文件描述第三方与前台应用接入中台能力中心的完整流程。实现基线：认证中心 `OpenAppScopes` scope 注册表、`/admin-api/v1/open-apps` 管理端点、认证中心 OAuth2 授权服务器，以及网关 `OpenApiScopeGatewayFilter` 与 `/open-api/**` 路由组。
 
 ## 1. 接入流程
 
@@ -16,7 +16,7 @@ sequenceDiagram
     App->>Auth: 授权码 + PKCE 或 client_credentials
     Auth-->>App: access_token（含 scope）
     App->>GW: 携带 Bearer 调用 /open-api/**
-    GW->>GW: 验签 + scope 断言 + client 限流
+    GW->>GW: 验签 + 令牌来源断言 + scope 断言 + 租户能力门禁
     GW-->>App: 业务响应
 ```
 
@@ -42,9 +42,9 @@ sequenceDiagram
 
 ## 4. 调用约定
 
-- 网关开放路由组：`/open-api/**`（**不接受用户个人令牌**，仅接受开放应用令牌）
+- 网关开放路由组：`/open-api/**`（**不接受用户个人令牌**，仅接受开放应用令牌），由 `OpenApiScopeGatewayFilter`（order 25）执行令牌来源、scope 与能力三道断言；通过后注入可信头 `X-Client-Scopes`，外部伪造值由 `JwtSignatureFilter` 剥离
 - 令牌类型：`client_credentials`（服务间调用）或授权码 + PKCE（代用户访问）
-- 限流：按 `clientId` 分档（`rateLimitTier`），与租户维度限流叠加
+- 限流：沿用网关既有租户 → 用户 → IP + 路径维度的 Redis 令牌桶（order 30）；按 `clientId` 分档的 `rateLimitTier` **尚未实现**，该字段目前仅随应用注册保存
 - 审计：开放访问写入访问日志（含 client 维度）
 - 错误：统一 `Result<T>` 包装；scope 不足返回 403，令牌无效/过期返回 401
 
@@ -61,6 +61,8 @@ sequenceDiagram
 
 ## 7. 未实现项（如实声明）
 
-- `/open-api/**` 网关路由组、scope 断言过滤器与 client 限流档：**尚未实现**（本文件为契约基线，网关侧实现列入后续批次）
+- 按 `clientId` 分档的 `rateLimitTier` 限流：**尚未实现**；当前仅复用网关既有租户/用户/IP + 路径维度限流，应用注册中的 `rateLimitTier` 字段暂不参与网关判定
 - 自定义 HMAC 请求签名：明确不做（Bearer 令牌已满足 v1）
 - 开放平台计费：不做
+
+`/open-api/**` 网关路由组、令牌来源断言、scope 断言与租户能力门禁均已实现，见 `OpenApiScopeGatewayFilter` 与网关路由 `metadata.open-api`。

@@ -7,11 +7,13 @@ import com.apex.scaffold.application.dto.admin.TenantPageQuery;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.contract.event.TenantChangedEvent;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
 import com.apex.scaffold.domain.model.exception.TenantLifecycleException;
 import com.apex.scaffold.domain.model.exception.TenantQuotaExceededException;
 import com.apex.scaffold.domain.model.valueobject.TenantQuota;
 import com.apex.scaffold.domain.repository.TenantRepository;
+import com.apex.scaffold.domain.service.DomainEventPublisher;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -59,6 +61,9 @@ public class TenantApplicationService {
     private final com.apex.scaffold.domain.gateway.TenantProvisioningGateway provisioningTransaction;
 
     private final TenantAssembler tenantAssembler;
+
+    /** 领域事件发布器（D5 主数据分发）：租户创建/状态迁移/配额更新成功后发布变更事件。 */
+    private final DomainEventPublisher domainEventPublisher;
 
     /**
      * 查询全部租户。
@@ -177,6 +182,11 @@ public class TenantApplicationService {
                         .onErrorMap(
                                 DuplicateKeyException.class, ex -> new BusinessException(ResultCode.TENANT_CODE_EXISTS))
                         .then(requireByCode(request.getTenantCode()))
+                        // D5：开通引导成功后发布租户主数据变更事件；发布失败随链路传播，不吞错误
+                        .flatMap(entity -> domainEventPublisher
+                                .publish(new TenantChangedEvent(
+                                        entity.getTenantCode(), TenantChangedEvent.ACTION_CREATED))
+                                .thenReturn(entity))
                         .map(tenantAssembler::toDTO);
             }
             TenantQuota quota = TenantQuota.of(request.getMaxUsers(), request.getMaxStorageMb());
@@ -187,6 +197,10 @@ public class TenantApplicationService {
             return tenantRepository
                     .insert(entity)
                     .onErrorMap(DuplicateKeyException.class, ex -> new BusinessException(ResultCode.TENANT_CODE_EXISTS))
+                    // D5：创建成功后发布租户主数据变更事件；发布失败随链路传播，不吞错误
+                    .flatMap(rows -> domainEventPublisher
+                            .publish(new TenantChangedEvent(entity.getTenantCode(), TenantChangedEvent.ACTION_CREATED))
+                            .thenReturn(rows))
                     .map(rows -> {
                         log.info("创建租户成功，code: {}", entity.getTenantCode());
                         return tenantAssembler.toDTO(entity);
@@ -228,6 +242,10 @@ public class TenantApplicationService {
         return requireById(tenantId).flatMap(entity -> {
             entity.setQuota(TenantQuota.of(maxUsers, maxStorageMb));
             return persistWithVersion(entity, expectedVersion)
+                    // D5：配额更新成功后发布租户主数据变更事件；发布失败随链路传播，不吞错误
+                    .flatMap(saved -> domainEventPublisher
+                            .publish(new TenantChangedEvent(saved.getTenantCode(), TenantChangedEvent.ACTION_UPDATED))
+                            .thenReturn(saved))
                     .map(tenantAssembler::toDTO)
                     .doOnSuccess(dto -> log.info("更新租户配额，code: {}, maxUsers: {}", entity.getTenantCode(), maxUsers));
         });
@@ -341,7 +359,12 @@ public class TenantApplicationService {
                         return Mono.<TenantEntity>error(
                                 new BusinessException(ResultCode.TENANT_ILLEGAL_TRANSITION, ex.getMessage()));
                     }
-                    return persistWithVersion(entity, expectedVersion);
+                    return persistWithVersion(entity, expectedVersion)
+                            // D5：状态迁移成功后发布租户主数据变更事件；发布失败随链路传播，不吞错误
+                            .flatMap(saved -> domainEventPublisher
+                                    .publish(new TenantChangedEvent(
+                                            saved.getTenantCode(), TenantChangedEvent.ACTION_UPDATED))
+                                    .thenReturn(saved));
                 })
                 .map(tenantAssembler::toDTO)
                 .doOnSuccess(dto -> log.info("租户状态迁移成功，code: {}, op: {}", entity.getTenantCode(), operationName));

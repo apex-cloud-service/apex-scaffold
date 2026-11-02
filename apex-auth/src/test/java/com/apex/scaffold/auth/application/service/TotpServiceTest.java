@@ -81,6 +81,11 @@ class TotpServiceTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+
+        // 防重放（A4）：缺省桩保持时间步消费成功
+        lenient()
+                .when(totpRepository.markStepUsed(anyLong(), anyString(), anyLong()))
+                .thenReturn(Mono.just(Boolean.TRUE));
     }
 
     @Nested

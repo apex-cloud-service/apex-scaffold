@@ -24,6 +24,9 @@
 --   off_employee                 办公组织员工（V2 迁入）
 --   off_sync_history             办公组织同步历史（V2 迁入）
 --   off_message_delivery         办公消息渠道投递记录（V5 新增）
+--   office_meeting_room          会议室资源（V7 新增）
+--   off_notify_template          统一通知模板（V8 新增）
+--   off_notify_request           统一通知投递请求留痕（V8 新增）
 --
 -- @author Apex Team
 -- @version 1.0.0
@@ -454,3 +457,44 @@ CREATE TABLE IF NOT EXISTS office_meeting_room (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_office_meeting_room_tenant_code ON office_meeting_room (tenant_id, room_code, deleted);
 CREATE UNIQUE INDEX IF NOT EXISTS uk_office_meeting_room_tenant_name ON office_meeting_room (tenant_id, room_name, deleted);
 CREATE INDEX IF NOT EXISTS idx_office_meeting_room_tenant_status ON office_meeting_room (tenant_id, status, deleted);
+
+-- ------------------------------------------------------------
+-- 统一通知模板（V8）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS off_notify_template (
+    id            BIGINT       NOT NULL AUTO_INCREMENT,
+    tenant_id     VARCHAR(64)  NOT NULL,
+    template_code VARCHAR(64)  NOT NULL,
+    channel       VARCHAR(16)  NOT NULL,
+    title         VARCHAR(255),
+    body          CLOB,
+    params_schema VARCHAR(1024),
+    status        VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+    create_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted       TINYINT      NOT NULL DEFAULT 0,
+    version       INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_off_notify_template ON off_notify_template (tenant_id, template_code, deleted);
+CREATE INDEX IF NOT EXISTS idx_off_notify_template_tenant_status ON off_notify_template (tenant_id, status, deleted);
+
+-- ------------------------------------------------------------
+-- 统一通知投递请求留痕（V8）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS off_notify_request (
+    id              BIGINT      NOT NULL AUTO_INCREMENT,
+    tenant_id       VARCHAR(64) NOT NULL,
+    channel         VARCHAR(16) NOT NULL,
+    template_code   VARCHAR(64) NOT NULL,
+    recipient       CLOB,
+    params          CLOB,
+    status          VARCHAR(16) NOT NULL DEFAULT 'PENDING',
+    error_message   VARCHAR(512),
+    outbox_event_id BIGINT,
+    create_time     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_off_notify_request_tenant_status ON off_notify_request (tenant_id, status, create_time);
+CREATE INDEX IF NOT EXISTS idx_off_notify_request_template ON off_notify_request (tenant_id, template_code, create_time);

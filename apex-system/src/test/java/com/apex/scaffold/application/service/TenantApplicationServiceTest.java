@@ -3,6 +3,7 @@ package com.apex.scaffold.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,14 +15,17 @@ import com.apex.scaffold.application.dto.admin.TenantPageQuery;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.contract.event.TenantChangedEvent;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
 import com.apex.scaffold.domain.model.valueobject.TenantQuota;
 import com.apex.scaffold.domain.repository.TenantRepository;
+import com.apex.scaffold.domain.service.DomainEventPublisher;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -50,6 +54,9 @@ class TenantApplicationServiceTest {
     @Mock
     private TenantAssembler tenantAssembler;
 
+    @Mock
+    private DomainEventPublisher domainEventPublisher;
+
     @InjectMocks
     private TenantApplicationService tenantApplicationService;
 
@@ -69,6 +76,7 @@ class TenantApplicationServiceTest {
         mockTenantDTO.setMaxUsers(100);
         mockTenantDTO.setMaxStorageMb(10240);
         mockTenantDTO.setStatus("ACTIVE");
+        lenient().when(domainEventPublisher.publish(any())).thenReturn(Mono.empty());
     }
 
     @Test
@@ -96,6 +104,12 @@ class TenantApplicationServiceTest {
                 .verifyComplete();
 
         verify(tenantRepository).insert(any(TenantEntity.class));
+
+        // D5：创建成功后发布租户主数据变更事件
+        ArgumentCaptor<TenantChangedEvent> captor = ArgumentCaptor.forClass(TenantChangedEvent.class);
+        verify(domainEventPublisher).publish(captor.capture());
+        assertThat(captor.getValue().getTenantCode()).isEqualTo(TENANT_CODE);
+        assertThat(captor.getValue().getAction()).isEqualTo(TenantChangedEvent.ACTION_CREATED);
     }
 
     @Test
@@ -208,6 +222,12 @@ class TenantApplicationServiceTest {
                 .verifyComplete();
 
         verify(tenantRepository).updateById(eq(activeTenant));
+
+        // D5：状态迁移成功后发布租户主数据变更事件
+        ArgumentCaptor<TenantChangedEvent> captor = ArgumentCaptor.forClass(TenantChangedEvent.class);
+        verify(domainEventPublisher).publish(captor.capture());
+        assertThat(captor.getValue().getTenantCode()).isEqualTo(TENANT_CODE);
+        assertThat(captor.getValue().getAction()).isEqualTo(TenantChangedEvent.ACTION_UPDATED);
     }
 
     @Test
@@ -364,6 +384,12 @@ class TenantApplicationServiceTest {
                 .verifyComplete();
 
         verify(tenantRepository).updateById(eq(activeTenant));
+
+        // D5：配额更新成功后发布租户主数据变更事件
+        ArgumentCaptor<TenantChangedEvent> captor = ArgumentCaptor.forClass(TenantChangedEvent.class);
+        verify(domainEventPublisher).publish(captor.capture());
+        assertThat(captor.getValue().getTenantCode()).isEqualTo(TENANT_CODE);
+        assertThat(captor.getValue().getAction()).isEqualTo(TenantChangedEvent.ACTION_UPDATED);
     }
 
     @Test

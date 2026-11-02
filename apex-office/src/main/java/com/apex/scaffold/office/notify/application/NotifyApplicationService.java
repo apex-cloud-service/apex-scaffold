@@ -1,9 +1,16 @@
 package com.apex.scaffold.office.notify.application;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.office.notify.domain.NotifyChannelPort;
+import com.apex.scaffold.office.notify.domain.NotifyRequestRecord;
+import com.apex.scaffold.office.notify.domain.NotifyRequestRecordRepository;
+import com.apex.scaffold.office.notify.domain.NotifyTemplate;
 import com.apex.scaffold.office.notify.domain.NotifyTemplateRenderer;
+import com.apex.scaffold.office.notify.domain.NotifyTemplateRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +47,15 @@ public class NotifyApplicationService {
 
     /** 通道适配器集合（按 channel() 索引）。 */
     private final List<NotifyChannelPort> channels;
+
+    /** 通知模板仓储（按租户隔离的模板 CRUD 与编码查询）。 */
+    private final NotifyTemplateRepository templateRepository;
+
+    /** 投递留痕仓储（按次落库投递结果）。 */
+    private final NotifyRequestRecordRepository recordRepository;
+
+    /** JSON 序列化（留痕的 recipient/params 文本）。 */
+    private final ObjectMapper objectMapper;
 
     /**
      * 单通道投递请求。
@@ -119,6 +135,226 @@ public class NotifyApplicationService {
         return Flux.fromIterable(channelTargets.entrySet())
                 .concatMap(
                         entry -> send(new NotifyRequest(entry.getKey(), entry.getValue(), subject, content, params)));
+    }
+
+    /**
+     * 按模板投递单条通知（统一消息门面收口入口）。
+     *
+     * <p>流程：按（租户，模板编码）加载模板（未命中报业务异常）→ 校验模板状态 →
+     * 渲染并复用 {@link #send(NotifyRequest)} 投递（channel 缺省取模板默认通道）→
+     * 投递结果落 {@code off_notify_request} 留痕（成功与失败均落库）。
+     * 留痕失败视为整体失败向上传播，不静默吞掉。
+     *
+     * @param tenantId     租户标识（取自可信上下文）
+     * @param templateCode 模板编码
+     * @param channel      通道标识（可空，缺省用模板默认通道）
+     * @param target       目标（用户 ID / 外部 ID / 手机号 / 邮箱）
+     * @param params       渲染参数
+     * @return 投递结果
+     */
+    public Mono<NotifyResult> sendByTemplate(
+            String tenantId, String templateCode, String channel, String target, Map<String, Object> params) {
+        if (tenantId == null || tenantId.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "租户不能为空"));
+        }
+        if (templateCode == null || templateCode.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "模板编码不能为空"));
+        }
+        if (target == null || target.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知目标不能为空"));
+        }
+        return templateRepository
+                .findByCode(tenantId, templateCode)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知模板不存在: " + templateCode)))
+                .flatMap(template -> {
+                    if (!template.isEnabled()) {
+                        return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知模板已停用: " + templateCode));
+                    }
+                    String channelKey = channel == null || channel.isBlank() ? template.getChannel() : channel;
+                    // 标题与正文均按模板渲染占位符；send() 只渲染正文，主题在进入前完成渲染
+                    String subject = template.getTitle() == null
+                            ? null
+                            : NotifyTemplateRenderer.render(template.getTitle(), params);
+                    return send(new NotifyRequest(channelKey, target, subject, template.getBody(), params))
+                            .flatMap(result -> recordDelivery(tenantId, templateCode, target, params, result)
+                                    .thenReturn(result));
+                });
+    }
+
+    /**
+     * 创建通知模板。
+     *
+     * @param tenantId 租户标识
+     * @param entity   模板实体（租户以入参为准）
+     * @return 创建后的模板（含主键）
+     */
+    public Mono<NotifyTemplate> createTemplate(String tenantId, NotifyTemplate entity) {
+        if (tenantId == null || tenantId.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "租户不能为空"));
+        }
+        if (entity.getTemplateCode() == null || entity.getTemplateCode().isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "模板编码不能为空"));
+        }
+        if (entity.getChannel() == null || entity.getChannel().isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知通道不能为空"));
+        }
+        entity.setTenantId(tenantId);
+        if (entity.getStatus() == null || entity.getStatus().isBlank()) {
+            entity.setStatus(NotifyTemplate.STATUS_ENABLED);
+        }
+        // 后续步骤统一 defer，避免前置校验失败时仍触发下游写入调用
+        return templateRepository
+                .findByCode(tenantId, entity.getTemplateCode())
+                .flatMap(existing -> Mono.<NotifyTemplate>error(
+                        new BusinessException(ResultCode.PARAM_ERROR, "模板编码已存在: " + entity.getTemplateCode())))
+                .switchIfEmpty(Mono.defer(() -> templateRepository.insert(entity)))
+                .doOnSuccess(saved ->
+                        log.info("通知模板创建成功 - tenantId: {}, templateCode: {}", tenantId, saved.getTemplateCode()));
+    }
+
+    /**
+     * 更新通知模板（局部变更，仅非空字段生效）。
+     *
+     * @param tenantId 租户标识
+     * @param id       模板主键
+     * @param changes  变更数据
+     * @return 更新后的模板
+     */
+    public Mono<NotifyTemplate> updateTemplate(String tenantId, Long id, NotifyTemplate changes) {
+        return requireTemplate(tenantId, id)
+                .flatMap(existing -> {
+                    if (changes.getTemplateCode() != null
+                            && !changes.getTemplateCode().equals(existing.getTemplateCode())) {
+                        return templateRepository
+                                .findByCode(tenantId, changes.getTemplateCode())
+                                .flatMap(conflict -> Mono.<NotifyTemplate>error(new BusinessException(
+                                        ResultCode.PARAM_ERROR, "模板编码已存在: " + changes.getTemplateCode())))
+                                .switchIfEmpty(Mono.just(existing));
+                    }
+                    return Mono.just(existing);
+                })
+                .flatMap(existing -> {
+                    applyTemplateChanges(existing, changes);
+                    return templateRepository.update(existing);
+                })
+                .doOnSuccess(updated -> log.info("通知模板更新成功 - tenantId: {}, templateId: {}", tenantId, id));
+    }
+
+    /**
+     * 删除通知模板（逻辑删除），历史投递留痕保留。
+     *
+     * @param tenantId 租户标识
+     * @param id       模板主键
+     * @return 是否删除成功
+     */
+    public Mono<Boolean> deleteTemplate(String tenantId, Long id) {
+        return requireTemplate(tenantId, id)
+                .flatMap(template -> templateRepository.deleteById(tenantId, id))
+                .doOnSuccess(deleted ->
+                        log.info("通知模板删除 - tenantId: {}, templateId: {}, deleted: {}", tenantId, id, deleted));
+    }
+
+    /**
+     * 查询通知模板详情。
+     *
+     * @param tenantId 租户标识
+     * @param id       模板主键
+     * @return 模板详情
+     */
+    public Mono<NotifyTemplate> getTemplate(String tenantId, Long id) {
+        return requireTemplate(tenantId, id);
+    }
+
+    /**
+     * 分页查询通知模板。
+     *
+     * @param tenantId 租户标识
+     * @param pageNum  页码，从 1 开始
+     * @param pageSize 每页大小
+     * @param channel  通道过滤（可空）
+     * @param keyword  编码或主题模糊匹配（可空）
+     * @return 模板分页结果
+     */
+    public Mono<PageResponse<NotifyTemplate>> listTemplates(
+            String tenantId, Integer pageNum, Integer pageSize, String channel, String keyword) {
+        return templateRepository.findPage(tenantId, pageNum, pageSize, channel, keyword);
+    }
+
+    /**
+     * 分页查询投递留痕。
+     *
+     * @param tenantId     租户标识
+     * @param pageNum      页码，从 1 开始
+     * @param pageSize     每页大小
+     * @param channel      通道过滤（可空）
+     * @param templateCode 模板编码过滤（可空）
+     * @param status       投递状态过滤（可空）
+     * @return 留痕分页结果
+     */
+    public Mono<PageResponse<NotifyRequestRecord>> listRecords(
+            String tenantId, Integer pageNum, Integer pageSize, String channel, String templateCode, String status) {
+        return recordRepository.findPage(tenantId, pageNum, pageSize, channel, templateCode, status);
+    }
+
+    /**
+     * 加载租户内模板，未命中报业务异常。
+     */
+    private Mono<NotifyTemplate> requireTemplate(String tenantId, Long id) {
+        if (tenantId == null || tenantId.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "租户不能为空"));
+        }
+        return templateRepository
+                .findById(tenantId, id)
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "通知模板不存在")));
+    }
+
+    /**
+     * 将局部变更合并到既有模板（仅非空字段生效）。
+     */
+    private void applyTemplateChanges(NotifyTemplate existing, NotifyTemplate changes) {
+        if (changes.getChannel() != null && !changes.getChannel().isBlank()) {
+            existing.setChannel(changes.getChannel());
+        }
+        if (changes.getTitle() != null) {
+            existing.setTitle(changes.getTitle());
+        }
+        if (changes.getBody() != null) {
+            existing.setBody(changes.getBody());
+        }
+        if (changes.getParamsSchema() != null) {
+            existing.setParamsSchema(changes.getParamsSchema());
+        }
+        if (changes.getStatus() != null && !changes.getStatus().isBlank()) {
+            existing.setStatus(changes.getStatus());
+        }
+    }
+
+    /**
+     * 投递结果落留痕表：成功与失败均按次记录，失败原因原样保存。
+     */
+    private Mono<NotifyRequestRecord> recordDelivery(
+            String tenantId, String templateCode, String target, Map<String, Object> params, NotifyResult result) {
+        NotifyRequestRecord record = new NotifyRequestRecord();
+        record.setTenantId(tenantId);
+        record.setChannel(result.channel());
+        record.setTemplateCode(templateCode);
+        record.setRecipient(writeJson(List.of(target), target));
+        record.setParams(writeJson(params, String.valueOf(params)));
+        record.setStatus(result.delivered() ? NotifyRequestRecord.STATUS_SUCCESS : NotifyRequestRecord.STATUS_FAILED);
+        record.setErrorMessage(result.error());
+        return recordRepository.insert(record);
+    }
+
+    /**
+     * 序列化留痕 JSON 文本；序列化失败时回退为原始字符串并告警，避免丢失留痕。
+     */
+    private String writeJson(Object value, String fallback) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            log.warn("通知留痕 JSON 序列化失败，按原始字符串落库: {}", e.getMessage());
+            return fallback;
+        }
     }
 
     /**

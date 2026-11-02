@@ -25,6 +25,8 @@
 | --- | --- |
 | `OpenAppScopes` | 平台 scope 注册表：6 个开放 scope（file/workflow/user/message 的读写）+ scope→服务侧权限码映射 + `covers` 收窄校验（RFC 6749 §3.3） |
 | `OpenAppHandler` + `OpenAppRouter` | `/admin-api/v1/open-apps`：应用列表、详情（含 `invalidScopes` 合法性回报）、平台 scope 目录 |
+| `OpenApiScopeGatewayFilter`（网关，order 25） | 令牌来源断言（拒绝个人令牌与非开放授予类型）、`metadata.open-api` 的 read/write scope any-of 断言、租户能力门禁（`TenantCapabilityClient`，内部端点不可达 fail-closed 503）；通过后注入可信 `X-Client-Scopes`，外部伪造值由 `JwtSignatureFilter` 剥离 |
+| `/open-api/**` 网关路由组 | file/workflow/users/messages 四组路由，`metadata.open-api` 声明 `capability` 与 read/write scope，复用既有熔断 |
 
 **复用设计**：开放应用复用认证中心 `OAUTH2_CLIENT` 注册表（`auth_config`，租户级），凭据签发/轮换沿用既有端点，不新建第二套客户端体系。
 
@@ -40,7 +42,7 @@
 
 ### D6 接入契约文档
 
-新增 [开放平台接入契约](../../03-api/open-platform-integration.md)：接入流程图、应用注册、scope 目录与权限映射表、调用约定、事件订阅、与套餐订阅的关系，并**如实声明** `/open-api/**` 网关路由与 scope 断言尚未实现。
+新增 [开放平台接入契约](../../../03-api/open-platform-integration.md)：接入流程图、应用注册、scope 目录与权限映射表、调用约定、事件订阅、与套餐订阅的关系；网关侧 `/open-api/**` 路由组、scope 断言与租户能力门禁已随 D2 落地，按 `clientId` 分档的 `rateLimitTier` 限流仍为未实现项，文档已如实声明。
 
 ## 2. 测试
 

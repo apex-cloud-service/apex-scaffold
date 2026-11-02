@@ -150,6 +150,8 @@ public class SecurityConfig {
                             .permitAll()
                             .pathMatchers(SystemConstants.INTERNAL_TENANT_PATHS.toArray(new String[0]))
                             .permitAll()
+                            .pathMatchers(SystemConstants.INTERNAL_OVERVIEW_PATHS.toArray(new String[0]))
+                            .permitAll()
                             .pathMatchers(SystemConstants.AUTHENTICATED_USER_PATHS.toArray(new String[0]))
                             .authenticated();
                     if (rbacEnabled) {

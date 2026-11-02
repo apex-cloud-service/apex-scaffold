@@ -73,4 +73,17 @@ public interface TotpRepository {
      * @return 是否已配置
      */
     Mono<Boolean> existsByUserId(Long userId, String tenantId);
+
+    /**
+     * 原子消费 TOTP 时间步（防重放，统一认证收口 A4）
+     *
+     * <p>仅当已记录的时间步小于给定步（或尚无记录）时写入并返回 true；
+     * 并发验证同一时间步时仅有一个请求成功，实现同一验证码只能使用一次。
+     *
+     * @param userId   用户 ID
+     * @param tenantId 租户 ID
+     * @param step     匹配成功的 TOTP 时间步
+     * @return 消费成功返回 true；该时间步已被使用返回 false
+     */
+    Mono<Boolean> markStepUsed(Long userId, String tenantId, long step);
 }

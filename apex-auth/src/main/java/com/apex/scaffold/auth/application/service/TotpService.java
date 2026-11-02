@@ -117,12 +117,25 @@ public class TotpService {
     public Mono<Boolean> verifyCode(Long userId, String code, String tenantId) {
         return totpRepository
                 .findByUserId(userId, tenantId)
-                .map(totp -> {
+                .flatMap(totp -> {
                     if (!totp.isEnabled()) {
                         log.warn("TOTP 未启用: userId={}", userId);
-                        return false;
+                        return Mono.just(false);
                     }
-                    return verifyTotpCode(totp.getSecret(), code);
+                    // 防重放（统一认证收口 A4）：匹配时间步后原子消费，
+                    // 同一时间步验证码仅能成功验证一次。
+                    Long step = matchTotpStep(totp.getSecret(), code);
+                    if (step == null) {
+                        return Mono.just(false);
+                    }
+                    return totpRepository
+                            .markStepUsed(userId, tenantId, step)
+                            .doOnNext(consumed -> {
+                                if (!Boolean.TRUE.equals(consumed)) {
+                                    log.warn("TOTP 验证码重放拦截: userId={}, step={}", userId, step);
+                                }
+                            })
+                            .map(Boolean.TRUE::equals);
                 })
                 .defaultIfEmpty(false);
     }
@@ -139,15 +152,17 @@ public class TotpService {
         return totpRepository
                 .findByUserId(userId, tenantId)
                 .flatMap(totp -> {
-                    boolean valid = verifyTotpCode(totp.getSecret(), code);
-                    if (!valid) {
+                    // 防重放：取真实匹配步并原子消费，保证该验证码此后不可复用
+                    Long step = matchTotpStep(totp.getSecret(), code);
+                    if (step == null) {
                         log.warn("TOTP 验证码错误: userId={}", userId);
                         return Mono.just(false);
                     }
                     totp.markAsVerified();
                     totp.enable();
                     return totpRepository
-                            .update(totp)
+                            .markStepUsed(userId, tenantId, step)
+                            .then(totpRepository.update(totp))
                             .then(Mono.fromCallable(() -> {
                                 // 同步创建 MFA 配置
                                 MfaConfigEntity mfaConfig = MfaConfigEntity.builder()
@@ -250,8 +265,19 @@ public class TotpService {
      * @return 验证是否成功
      */
     private boolean verifyTotpCode(String secret, String code) {
+        return matchTotpStep(secret, code) != null;
+    }
+
+    /**
+     * 匹配验证码对应的 TOTP 时间步（含 ±1 窗口容差）
+     *
+     * @param secret Base32 编码的密钥
+     * @param code   用户输入的验证码
+     * @return 匹配成功的时间步；未匹配返回 {@code null}
+     */
+    private Long matchTotpStep(String secret, String code) {
         if (secret == null || code == null || code.length() != CODE_DIGITS) {
-            return false;
+            return null;
         }
 
         long currentTime = System.currentTimeMillis() / 1000;
@@ -262,13 +288,13 @@ public class TotpService {
             long step = currentStep + i;
             String expectedCode = generateTotpCode(secret, step);
             if (expectedCode.isEmpty()) {
-                return false;
+                return null;
             }
             if (code.equals(expectedCode)) {
-                return true;
+                return step;
             }
         }
-        return false;
+        return null;
     }
 
     /**

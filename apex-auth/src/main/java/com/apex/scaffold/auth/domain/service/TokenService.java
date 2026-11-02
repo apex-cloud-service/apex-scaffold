@@ -80,8 +80,8 @@ public interface TokenService {
     /**
      * 刷新Token
      *
-     * <p>使用刷新令牌获取新的访问令牌。
-     * 刷新令牌本身不会被刷新，仍使用原有的刷新令牌。
+     * <p>使用刷新令牌换取新的令牌对：刷新令牌按轮换语义消费——校验通过后撤销旧
+     * 刷新令牌（含重放检测），并签发新的访问/刷新令牌对。
      *
      * @param refreshToken 刷新令牌
      * @return 新的Token对的Mono

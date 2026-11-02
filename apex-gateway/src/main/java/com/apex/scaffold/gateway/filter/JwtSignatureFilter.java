@@ -89,6 +89,8 @@ public class JwtSignatureFilter implements GlobalFilter, Ordered {
                     headers.remove("X-User-Id");
                     headers.remove("X-Tenant-Id");
                     headers.remove("X-Client-Type");
+                    // X-Client-Scopes 是网关在 /open-api/** 注入的可信 scope 头，外部伪造值一律剥离
+                    headers.remove("X-Client-Scopes");
                     // 外部请求不能注入内部身份或事务上下文；保留原始认证凭据供下游复验。
                     headers.remove("X-Apex-Seata-Xid");
                     headers.remove("X-Apex-Seata-Key");

@@ -159,10 +159,13 @@ public class OAuth2Service {
                 return fail(INVALID_REQUEST);
             }
             String scope = scopes(config, form.get("scope"));
-            // 统一认证收口（A5）：用户同意门控——无有效同意记录时返回 consent_required，
-            // 由前端 consent 页（方案 §12）引导用户完成 POST /oauth2/consent 后重试授权。
+            // 统一认证收口（A5）：用户同意门控——无有效同意记录，或请求 scope 超出已同意
+            // 范围时返回 consent_required，由前端 consent 页（方案 §12）引导用户完成
+            // POST /oauth2/consent 后重试授权。
             return consentRepository
-                    .hasConsent(tenant, principal, clientId)
+                    .findActiveScope(tenant, principal, clientId)
+                    .map(granted -> scopeSubset(scope, granted))
+                    .defaultIfEmpty(false)
                     .flatMap(consented -> Boolean.TRUE.equals(consented)
                             ? issueAuthorizationCode(form, clientId, principal, tenant, scope, redirect, challenge)
                             : fail(CONSENT_REQUIRED));
@@ -299,19 +302,20 @@ public class OAuth2Service {
                 .flatMap(row -> {
                     String subject = (String) row.get("principal_name");
                     String scope = (String) row.get("authorized_scopes");
-                    return tokens(subject, clientId, scope, tenant, true).flatMap(response -> authorizationRepository
-                            .exchangeCode(
-                                    tenant,
-                                    hash(form.get(CODE)),
-                                    clientId,
-                                    form.get(REDIRECT_URI),
-                                    hash(response.get("access_token").toString()),
-                                    now().plusSeconds(ACCESS_SECONDS),
-                                    hash(response.get(REFRESH_TOKEN).toString()),
-                                    now().plusSeconds(REFRESH_SECONDS))
-                            .filter(Boolean::booleanValue)
-                            .switchIfEmpty(fail("invalid_grant"))
-                            .thenReturn(response));
+                    return tokens(subject, clientId, scope, tenant, true, AUTHORIZATION_CODE)
+                            .flatMap(response -> authorizationRepository
+                                    .exchangeCode(
+                                            tenant,
+                                            hash(form.get(CODE)),
+                                            clientId,
+                                            form.get(REDIRECT_URI),
+                                            hash(response.get("access_token").toString()),
+                                            now().plusSeconds(ACCESS_SECONDS),
+                                            hash(response.get(REFRESH_TOKEN).toString()),
+                                            now().plusSeconds(REFRESH_SECONDS))
+                                    .filter(Boolean::booleanValue)
+                                    .switchIfEmpty(fail("invalid_grant"))
+                                    .thenReturn(response));
                 });
     }
 
@@ -343,7 +347,8 @@ public class OAuth2Service {
                             .containsAll(Arrays.asList(scope.split(SCOPE_SEPARATOR)))) {
                         return fail("invalid_scope");
                     }
-                    return tokens((String) row.get("principal_name"), clientId, scope, tenant, true)
+                    return tokens((String) row.get("principal_name"), clientId, scope, tenant, true, (String)
+                                    row.get("authorization_grant_type"))
                             .flatMap(response -> {
                                 String access = response.get("access_token").toString();
                                 String refresh = response.get(REFRESH_TOKEN).toString();
@@ -368,7 +373,7 @@ public class OAuth2Service {
             JsonNode config, String clientId, String subject, String requestedScope, String grant, String tenant) {
         String scope = scopes(config, requestedScope);
         boolean withRefresh = !"client_credentials".equals(grant);
-        return tokens(subject, clientId, scope, tenant, withRefresh).flatMap(response -> {
+        return tokens(subject, clientId, scope, tenant, withRefresh, grant).flatMap(response -> {
             String access = response.get("access_token").toString();
             String refresh = (String) response.get(REFRESH_TOKEN);
             return authorizationRepository
@@ -433,6 +438,28 @@ public class OAuth2Service {
         return normalized;
     }
 
+    /**
+     * 判断请求 scope 是否为已同意 scope 的子集。
+     *
+     * <p>已同意 scope 为空串时表示同意记录未限定范围，视为全量同意；
+     * 请求 scope 为空串时无需扩权，恒为子集。
+     *
+     * @param requested 本次请求的 scope（空格分隔）
+     * @param granted   已同意记录的 scope（空格分隔；空串表示未限定）
+     * @return 请求 scope 均在已同意范围内返回 true
+     */
+    private boolean scopeSubset(String requested, String granted) {
+        if (requested == null || requested.isBlank()) {
+            return true;
+        }
+        if (granted == null || granted.isBlank()) {
+            return true;
+        }
+        java.util.Set<String> grantedSet =
+                new java.util.HashSet<>(Arrays.asList(granted.trim().split("\\s+")));
+        return Arrays.stream(requested.trim().split("\\s+")).allMatch(grantedSet::contains);
+    }
+
     private boolean allowed(JsonNode config, String field, String value) {
         if (value == null || !config.path(field).isArray()) {
             return false;
@@ -457,13 +484,14 @@ public class OAuth2Service {
      * @param scope 授权范围
      * @param tenant 租户标识
      * @param refresh 是否同时签发刷新令牌
+     * @param grant 授权类型（写入令牌 {@code grant_type} claim，供网关区分开放接口令牌来源）
      * @return OAuth2 令牌响应体
      */
     private Mono<Map<String, Object>> tokens(
-            String subject, String clientId, String scope, String tenant, boolean refresh) {
-        Mono<String> access = jwt(subject, clientId, scope, tenant, "access", ACCESS_SECONDS);
+            String subject, String clientId, String scope, String tenant, boolean refresh, String grant) {
+        Mono<String> access = jwt(subject, clientId, scope, tenant, "access", ACCESS_SECONDS, grant);
         Mono<String> refreshToken =
-                refresh ? jwt(subject, clientId, scope, tenant, REFRESH, REFRESH_SECONDS) : Mono.just("");
+                refresh ? jwt(subject, clientId, scope, tenant, REFRESH, REFRESH_SECONDS, grant) : Mono.just("");
         return Mono.zip(access, refreshToken).map(tuple -> {
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("access_token", tuple.getT1());
@@ -487,9 +515,11 @@ public class OAuth2Service {
      * @param tenant 租户标识
      * @param type 令牌用途（access / refresh）
      * @param seconds 有效期（秒）
+     * @param grant 授权类型；历史数据可能为空，为空时不写入该 claim（向后兼容）
      * @return 紧凑型 JWT
      */
-    private Mono<String> jwt(String subject, String clientId, String scope, String tenant, String type, long seconds) {
+    private Mono<String> jwt(
+            String subject, String clientId, String scope, String tenant, String type, long seconds, String grant) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("iss", properties.getIssuer());
         claims.put("aud", clientId);
@@ -498,6 +528,9 @@ public class OAuth2Service {
         claims.put("tenant_id", tenant);
         claims.put("token_use", type);
         claims.put("scope", scope);
+        if (grant != null && !grant.isBlank()) {
+            claims.put("grant_type", grant);
+        }
         return keyMaterialService.sign(subject, claims, seconds * 1000);
     }
 

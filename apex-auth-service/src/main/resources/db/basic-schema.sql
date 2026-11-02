@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS auth_totp (
     used_backup_codes VARCHAR(4096),
     enabled INT,
     last_verified_at TIMESTAMP,
+    last_used_step BIGINT,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
     version INT,
