@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.application;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.integration.device.domain.DeviceRule;
@@ -105,5 +106,20 @@ public class DeviceRuleManageService {
         return ruleRepository
                 .findById(tenantId, id)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "规则不存在")));
+    }
+
+    /**
+     * 规则分页列表（管理端，E3 补强）。
+     *
+     * @param tenantId 租户编码
+     * @param keyword  规则名关键字（可空）
+     * @param enabled  启停过滤（可空）
+     * @param pageNum  页码（从 1 开始）
+     * @param pageSize 每页条数
+     * @return 分页结果
+     */
+    public Mono<PageResponse<DeviceRule>> page(
+            String tenantId, String keyword, Boolean enabled, int pageNum, int pageSize) {
+        return ruleRepository.page(tenantId, keyword, enabled, pageNum, pageSize);
     }
 }

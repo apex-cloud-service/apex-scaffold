@@ -1,8 +1,15 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.GenArtifactDTO;
+import com.apex.scaffold.application.dto.admin.GenExecutionResponse;
 import com.apex.scaffold.application.dto.admin.GenGenerateRequest;
 import com.apex.scaffold.application.dto.admin.GenPreflightRequest;
+import com.apex.scaffold.application.dto.admin.GenPreflightResponse;
 import com.apex.scaffold.application.dto.admin.GenPreviewRequest;
+import com.apex.scaffold.application.dto.admin.GenPreviewResponse;
+import com.apex.scaffold.application.dto.admin.GenTaskDTO;
+import com.apex.scaffold.application.dto.admin.GenTaskSubmitResponse;
+import com.apex.scaffold.application.dto.admin.GenTemplateCatalogDTO;
 import com.apex.scaffold.application.service.GeneratorTaskService;
 import com.apex.scaffold.application.service.GeneratorWizardService;
 import com.apex.scaffold.application.service.UserService;
@@ -100,7 +107,13 @@ public class CodeGeneratorHandler extends BaseHandler {
             summary = "查询代码生成模板目录",
             description = "返回当前可见的在线模板及其引擎能力，用于向导第一步选择模板")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为模板目录（含引擎能力）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenTemplateCatalogDTO.class))),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:template:list 权限")
     })
     public Mono<ServerResponse> templates(ServerRequest request) {
@@ -118,9 +131,21 @@ public class CodeGeneratorHandler extends BaseHandler {
             operationId = "adminGenPreflight",
             summary = "代码生成结构化预检",
             description = "校验配置、数据源、模板与目标表，返回阻塞项与提示，不写任何文件")
-    @RequestBody(description = "预检参数", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "预检参数（配置、数据源、模板与目标表）",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenPreflightRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "预检完成"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "预检完成，data 为阻塞项与提示清单",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenPreflightResponse.class))),
         @ApiResponse(responseCode = "400", description = "参数错误"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:preflight 权限")
     })
@@ -141,9 +166,21 @@ public class CodeGeneratorHandler extends BaseHandler {
             operationId = "adminGenPreview",
             summary = "代码生成预览",
             description = "在内存中渲染目标文件并返回摘要令牌，不写服务器文件；执行时须携带同一令牌")
-    @RequestBody(description = "预览参数", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "预览参数（配置、模板与字段映射覆盖）",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenPreviewRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "预览成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "预览成功，data 为渲染结果与预览令牌",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenPreviewResponse.class))),
         @ApiResponse(responseCode = "400", description = "参数错误"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:preview 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在")
@@ -177,9 +214,18 @@ public class CodeGeneratorHandler extends BaseHandler {
     @RequestBody(
             description = "代码生成执行参数（预览令牌、字段映射覆盖、是否覆盖）",
             required = true,
-            content = @Content(mediaType = "application/json"))
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenGenerateRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "代码生成成功，返回产物列表与部分失败说明"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "代码生成成功，data 为产物列表与部分失败说明",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenExecutionResponse.class))),
         @ApiResponse(responseCode = "400", description = "参数错误或预览令牌失效"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:generate 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在"),
@@ -220,7 +266,10 @@ public class CodeGeneratorHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "下载成功，返回文件流"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "下载成功，返回二进制文件流（Content-Disposition 附件，非 JSON）",
+                content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足或产物属于其他租户"),
         @ApiResponse(responseCode = "404", description = "产物不存在或未成功发布")
@@ -255,9 +304,18 @@ public class CodeGeneratorHandler extends BaseHandler {
     @RequestBody(
             description = "异步生成参数（与同步执行一致，含配置 ID、表清单、模板与预览令牌）",
             required = true,
-            content = @Content(mediaType = "application/json"))
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenGenerateRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "任务已受理，返回任务ID与状态"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "任务已受理，data 为任务 ID 与初始状态",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenTaskSubmitResponse.class))),
         @ApiResponse(responseCode = "400", description = "参数错误或预览令牌失效"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:create 权限")
     })
@@ -293,7 +351,11 @@ public class CodeGeneratorHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为任务进度（状态、总项数、已处理数、失败数）",
+                content =
+                        @Content(mediaType = "application/json", schema = @Schema(implementation = GenTaskDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:read 权限"),
         @ApiResponse(responseCode = "404", description = "任务不存在或属于其他租户")
@@ -324,7 +386,13 @@ public class CodeGeneratorHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功，返回产物列表"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为产物清单",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenArtifactDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:read 权限"),
         @ApiResponse(responseCode = "404", description = "任务不存在或属于其他租户")
@@ -354,7 +422,11 @@ public class CodeGeneratorHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "取消请求已受理"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "取消请求已受理，data 为是否成功提交取消（布尔值）",
+                content =
+                        @Content(mediaType = "application/json", schema = @Schema(type = "boolean", example = "true"))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:task:cancel 权限"),
         @ApiResponse(responseCode = "404", description = "任务不存在或属于其他租户")

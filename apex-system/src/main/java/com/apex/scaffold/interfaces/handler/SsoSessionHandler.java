@@ -1,5 +1,7 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.SsoSessionDTO;
+import com.apex.scaffold.application.dto.admin.SsoStatisticsDTO;
 import com.apex.scaffold.application.service.SysSsoSessionService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
@@ -7,6 +9,7 @@ import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -87,10 +90,10 @@ public class SsoSessionHandler extends BaseHandler {
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", example = "20"))
     @Parameter(
-            name = "username",
-            description = "用户名(模糊查询)",
+            name = "userId",
+            description = "用户 ID",
             in = ParameterIn.QUERY,
-            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @Parameter(
             name = "providerId",
             description = "SSO 提供商 ID",
@@ -102,7 +105,15 @@ public class SsoSessionHandler extends BaseHandler {
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功,data 为 SSO 会话列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @io.swagger.v3.oas.annotations.media.Schema(
+                                                implementation = SsoSessionDTO.class))),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:list 权限")
     })
@@ -144,7 +155,7 @@ public class SsoSessionHandler extends BaseHandler {
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @RequestBody(description = "撤销原因(可选)")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "撤销成功"),
+        @ApiResponse(responseCode = "200", description = "撤销成功,data 含 revoked(是否撤销成功)"),
         @ApiResponse(responseCode = "400", description = "参数错误,ID 必须为正整数"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:revoke 权限"),
@@ -185,7 +196,7 @@ public class SsoSessionHandler extends BaseHandler {
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @RequestBody(description = "撤销原因(可选)")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "撤销成功"),
+        @ApiResponse(responseCode = "200", description = "撤销成功,data 含 revokedCount(撤销的会话数量)"),
         @ApiResponse(responseCode = "400", description = "参数错误,ID 必须为正整数"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:revoke 权限"),
@@ -218,7 +229,15 @@ public class SsoSessionHandler extends BaseHandler {
             summary = "获取 SSO 会话统计信息",
             description = "获取当前租户下的 SSO 会话统计信息,包括活跃会话数、过期会话数、按提供商分组等")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功,data 为会话统计信息",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @io.swagger.v3.oas.annotations.media.Schema(
+                                                implementation = SsoStatisticsDTO.class))),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:session:stat 权限")
     })

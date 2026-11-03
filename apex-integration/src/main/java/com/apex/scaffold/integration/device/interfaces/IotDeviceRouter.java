@@ -19,8 +19,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *   <li>GET {@code /internal/v1/iot/devices/stats}（D5 聚合门面消费，契约固定）</li>
  *   <li>GET/POST {@code /integration/v1/iot/devices}、GET/DELETE
  *       {@code /integration/v1/iot/devices/{id}}、GET
- *       {@code /integration/v1/iot/devices/{id}/telemetry}</li>
- *   <li>POST {@code /integration/v1/iot/rules}、GET {@code /integration/v1/iot/rules/{id}}、
+ *       {@code /integration/v1/iot/devices/{id}/telemetry}、GET
+ *       {@code /integration/v1/iot/devices/{id}/shadow}、GET/POST
+ *       {@code /integration/v1/iot/devices/{id}/commands}</li>
+ *   <li>GET/POST {@code /integration/v1/iot/rules}、GET {@code /integration/v1/iot/rules/{id}}、
  *       PUT {@code /integration/v1/iot/rules/{id}/toggle}</li>
  * </ul>
  *
@@ -84,7 +86,24 @@ public class IotDeviceRouter {
                         "/integration/v1/iot/devices/{id}/telemetry",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
                         adminHandler::telemetry)
+                // 设备影子查询与命令下发/历史（E3 管理面补强）
+                .GET(
+                        "/integration/v1/iot/devices/{id}/shadow",
+                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                        adminHandler::shadow)
+                .GET(
+                        "/integration/v1/iot/devices/{id}/commands",
+                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                        adminHandler::commands)
+                .POST(
+                        "/integration/v1/iot/devices/{id}/commands",
+                        RequestPredicates.contentType(MediaType.APPLICATION_JSON),
+                        adminHandler::dispatchCommand)
                 // 规则管理端点
+                .GET(
+                        "/integration/v1/iot/rules",
+                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                        ruleHandler::page)
                 .POST(
                         "/integration/v1/iot/rules",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),

@@ -5,6 +5,7 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.domain.model.entity.TenantPackageEntity;
 import com.apex.scaffold.domain.repository.TenantPackageRepository;
 import com.apex.scaffold.domain.repository.TenantRepository;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -113,8 +114,12 @@ public class TenantPackageService {
      * @param unbounded 是否不限量租户（平台租户/未绑定套餐）
      * @param features 已订阅特性编码（空集合 = 全量订阅语义，与套餐语义一致）
      */
+    @Schema(name = "CapabilitySnapshot", description = "租户能力订阅快照（内部端点契约）")
     public record CapabilitySnapshot(
-            String tenantCode, boolean exists, boolean unbounded, java.util.Set<String> features) {}
+            @Schema(description = "租户编码", example = "T001") String tenantCode,
+            @Schema(description = "租户是否存在（未知租户 fail-closed 返回 false）") boolean exists,
+            @Schema(description = "是否不限量租户（平台租户/未绑定套餐）") boolean unbounded,
+            @Schema(description = "已订阅特性编码（空集合 = 全量订阅语义）") java.util.Set<String> features) {}
 
     /**
      * 按编码查询套餐。

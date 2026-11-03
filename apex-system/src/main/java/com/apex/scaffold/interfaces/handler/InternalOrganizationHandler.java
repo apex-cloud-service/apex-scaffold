@@ -4,10 +4,14 @@ import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.interfaces.dto.internal.OrgUserResolveRequest;
+import com.apex.scaffold.interfaces.dto.internal.OrgUserResolveResponse;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -69,10 +73,23 @@ public class InternalOrganizationHandler extends BaseHandler {
     @Operation(
             operationId = "internalResolveOrgUsers",
             summary = "批量解析真实系统用户",
-            description = "按手机号、邮箱或登录名把外部通讯录身份解析为本租户真实系统用户；仅集群内调用")
+            description = "按手机号、邮箱或登录名把外部通讯录身份解析为本租户真实系统用户；" + "集群内服务直连，不经网关，调用方不携带 JWT，须通过 X-Tenant-Id 声明目标租户")
     @Parameter(name = TENANT_HEADER, description = "目标租户 ID", required = true, in = ParameterIn.HEADER)
+    @RequestBody(
+            description = "批量解析请求",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = OrgUserResolveRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "解析完成"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "解析完成,data 为命中的系统用户列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OrgUserResolveResponse.class))),
         @ApiResponse(responseCode = "400", description = "租户头缺失或请求体非法")
     })
     public Mono<ServerResponse> resolveUsers(ServerRequest request) {

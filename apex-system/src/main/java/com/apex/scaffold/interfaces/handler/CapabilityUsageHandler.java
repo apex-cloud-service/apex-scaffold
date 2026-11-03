@@ -2,8 +2,17 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.service.CapabilityUsageService;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +46,61 @@ public class CapabilityUsageHandler {
      * @param request 当前请求（查询参数：capability 必填；tenantId/from/to/pageNum/pageSize 可选）
      * @return 用量分页结果（{@code Result<PageResponse<CapabilityUsageDTO>>}）
      */
+    @Operation(
+            operationId = "queryCapabilityUsage",
+            summary = "查询能力调用用量",
+            description = "按 租户 × 能力 输出接口调用次数统计（只读，基于操作审计日志聚合）；"
+                    + "单租户查询时按源补充存量维度（存储用量/设备数/消息量），数据源降级时该字段为 null；"
+                    + "时间区间缺省近 7 天，最大跨度 92 天；需 capability:usage:read 权限")
+    @Parameters({
+        @Parameter(
+                name = "capability",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "能力编码（如 file-storage/workflow/user-org/office-message）",
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "tenantId",
+                in = ParameterIn.QUERY,
+                required = false,
+                description = "租户标识（缺省为平台全量视角，存量维度不填充）",
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "from",
+                in = ParameterIn.QUERY,
+                required = false,
+                description = "起始日期（ISO yyyy-MM-dd，含当天）",
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "to",
+                in = ParameterIn.QUERY,
+                required = false,
+                description = "截止日期（ISO yyyy-MM-dd，含当天）",
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "pageNum",
+                in = ParameterIn.QUERY,
+                required = false,
+                description = "页码，从 1 开始",
+                schema = @Schema(type = "integer")),
+        @Parameter(
+                name = "pageSize",
+                in = ParameterIn.QUERY,
+                required = false,
+                description = "每页条数（服务端上限 200）",
+                schema = @Schema(type = "integer"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Result 封装的用量分页结果",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = PageResponse.class))),
+        @ApiResponse(responseCode = "400", description = "capability 缺失或日期/分页参数非法"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 capability:usage:read 权限")
+    })
     @RequirePermission("capability:usage:read")
     public Mono<ServerResponse> queryUsage(ServerRequest request) {
         String capability = request.queryParam("capability").map(String::trim).orElse(null);

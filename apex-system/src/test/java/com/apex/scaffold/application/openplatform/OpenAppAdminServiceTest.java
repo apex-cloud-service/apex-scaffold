@@ -82,6 +82,39 @@ class OpenAppAdminServiceTest {
     }
 
     @Test
+    @DisplayName("限流档查询应返回注册档位（D2 rateLimitTier）")
+    void shouldReturnDeclaredRateLimitTier() {
+        String settings = "{\"openPlatform.appName\": \"合作方数据平台\", \"openPlatform.rateLimitTier\": \"standard\"}";
+        when(clientRepository.findByClientId(CLIENT_ID)).thenReturn(Mono.just(entity(settings)));
+
+        assertThat(service.getRateLimitTier(CLIENT_ID).block()).isEqualTo("standard");
+    }
+
+    @Test
+    @DisplayName("未声明档位/非开放应用/未知客户端应回退 default（fail-open）")
+    void shouldFallbackToDefaultTier() {
+        when(clientRepository.findByClientId(CLIENT_ID))
+                .thenReturn(Mono.just(entity("{\"openPlatform.appName\": \"合作方数据平台\"}")));
+        assertThat(service.getRateLimitTier(CLIENT_ID).block()).isEqualTo("default");
+
+        when(clientRepository.findByClientId(CLIENT_ID)).thenReturn(Mono.just(entity("{}")));
+        assertThat(service.getRateLimitTier(CLIENT_ID).block()).isEqualTo("default");
+
+        when(clientRepository.findByClientId(CLIENT_ID)).thenReturn(Mono.empty());
+        assertThat(service.getRateLimitTier(CLIENT_ID).block()).isEqualTo("default");
+
+        assertThat(service.getRateLimitTier(" ").block()).isEqualTo("default");
+    }
+
+    @Test
+    @DisplayName("元数据损坏时限流档查询应 fail-open 回退 default")
+    void shouldFailOpenOnCorruptSettings() {
+        when(clientRepository.findByClientId(CLIENT_ID)).thenReturn(Mono.just(entity("not-json")));
+
+        assertThat(service.getRateLimitTier(CLIENT_ID).block()).isEqualTo("default");
+    }
+
+    @Test
     @DisplayName("创建应用应拒绝未登记 scope 并列出非法清单（scope 越权反例）")
     void shouldRejectUnknownScopes() {
         OpenAppRequest request = request()

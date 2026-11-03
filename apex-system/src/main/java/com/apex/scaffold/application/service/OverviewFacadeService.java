@@ -76,8 +76,10 @@ public class OverviewFacadeService {
                 "file", buildUrl("file", "/internal/v1/file/stats?tenantId=" + encode(tenantId)), authorization);
         Mono<SourceResult> workflow =
                 fetchSource("workflow", buildUrl("workflow", "/internal/v1/workflow/stats"), authorization);
-        Mono<SourceResult> integration =
-                fetchSource("integration", buildUrl("integration", "/internal/v1/iot/devices/stats"), authorization);
+        Mono<SourceResult> integration = fetchSource(
+                "integration",
+                buildUrl("integration", "/internal/v1/iot/devices/stats?tenantId=" + encode(tenantId)),
+                authorization);
         return Mono.zip(file, workflow, integration)
                 .map(tuple -> {
                     Map<String, SourceResult> sources = new LinkedHashMap<>();

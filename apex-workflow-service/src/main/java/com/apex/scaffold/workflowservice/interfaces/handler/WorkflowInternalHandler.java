@@ -3,6 +3,12 @@ package com.apex.scaffold.workflowservice.interfaces.handler;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.workflow.application.query.WorkflowInternalStatsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +36,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "内部契约", description = "集群内服务直连接口，不经网关")
 public class WorkflowInternalHandler {
 
     private final WorkflowInternalStatsService workflowInternalStatsService;
@@ -40,6 +47,23 @@ public class WorkflowInternalHandler {
      * @param request 当前请求
      * @return {@code Result<{ "inProgressInstances": N }>}
      */
+    @Operation(
+            operationId = "internalWorkflowStats",
+            summary = "进行中流程实例统计（内部）",
+            description = "集群内服务直连接口，不经网关。返回当前租户进行中流程实例数，"
+                    + "供 system 聚合门面（D5）消费；租户取自验签 JWT 建立的可信 Reactor Context，"
+                    + "不接受请求参数指定租户")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为 {\"inProgressInstances\": 进行中实例数}",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(type = "object", example = "{\"inProgressInstances\": 12}"))),
+        @ApiResponse(responseCode = "401", description = "未认证或缺少可信租户上下文"),
+        @ApiResponse(responseCode = "500", description = "统计查询失败")
+    })
     public Mono<ServerResponse> stats(ServerRequest request) {
         return workflowInternalStatsService
                 .countInProgressInstances()

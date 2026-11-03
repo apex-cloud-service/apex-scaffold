@@ -14,6 +14,15 @@ import com.apex.scaffold.integration.device.interfaces.dto.MqttAclRequest;
 import com.apex.scaffold.integration.device.interfaces.dto.MqttAuthRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +53,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "内部契约-IoT", description = "设备域内部端点与 EMQX 认证/授权钩子")
 @ConditionalOnProperty(
         prefix = "apex.component.integration.device",
         name = "interfaces-enabled",
@@ -73,6 +83,27 @@ public class IotInternalHandler {
      * @param request 当前请求（JSON body）
      * @return 200（认证通过）或 401（拒绝）
      */
+    @Operation(
+            operationId = "iotMqttAuth",
+            summary = "MQTT 认证钩子（EMQX 调用）",
+            description = "EMQX HTTP 认证回调：凭据优先取 tenant/deviceKey/secret，兼容 username={tenantCode}/{deviceKey} "
+                    + "复合形态与 password 别名；认证失败（含设备不存在与密码错误）统一 401，避免设备枚举。"
+                    + "topic ACL 校验为独立入口（/internal/v1/iot/mqtt/acl），不在认证链内强制绑定")
+    @RequestBody(
+            description = "MQTT 认证请求（tenant/deviceKey/secret 或 username/password 别名）",
+            required = true,
+            content =
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = MqttAuthRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "认证通过，data 为 {\"authenticated\": true}",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(type = "object", example = "{\"authenticated\": true}"))),
+        @ApiResponse(responseCode = "401", description = "认证拒绝（请求体缺失/设备不存在/凭据错误）")
+    })
     public Mono<ServerResponse> mqttAuth(ServerRequest request) {
         return request.bodyToMono(MqttAuthRequest.class)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "认证请求体缺失")))
@@ -96,6 +127,25 @@ public class IotInternalHandler {
      * @param request 当前请求（JSON body：username / topic / action）
      * @return {@code {"result":"allow"}} 或 {@code {"result":"deny"}}
      */
+    @Operation(
+            operationId = "iotMqttAcl",
+            summary = "MQTT 授权钩子（EMQX 调用）",
+            description = "EMQX HTTP Authorize 回调：按 username={tenantCode}/{deviceKey} 解析身份，判定 topic 是否落在"
+                    + "本租户本设备命名空间。返回 EMQX 规范的 {\"result\":\"allow\"|\"deny\"}，是 broker 层强制隔离的关键；"
+                    + "解析失败、身份缺失或 topic 越权一律 deny（fail-closed）")
+    @RequestBody(
+            description = "MQTT 授权请求（username/topic/action）",
+            required = false,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MqttAclRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "授权判定结果，data 为 {\"result\": \"allow\"} 或 {\"result\": \"deny\"}",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(type = "object", example = "{\"result\": \"allow\"}")))
+    })
     public Mono<ServerResponse> mqttAcl(ServerRequest request) {
         return request.bodyToMono(MqttAclRequest.class)
                 .defaultIfEmpty(new MqttAclRequest())
@@ -132,6 +182,35 @@ public class IotInternalHandler {
      * @param request 当前请求（path: key 设备标识，JSON body）
      * @return 命令受理结果
      */
+    @Operation(
+            operationId = "iotDispatchDeviceCommand",
+            summary = "下发设备命令（内部）",
+            description =
+                    "集群内服务直连接口。幂等 commandId：重复提交返回既有命令并标记 duplicate=true，不重复发布；" + "命令载荷序列化为 JSON 后经 MQTT 下行；租户取可信上下文")
+    @Parameter(
+            name = "key",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "设备标识（device_key）",
+            schema = @Schema(type = "string"))
+    @RequestBody(
+            description = "命令下发请求（commandId/payload/timeoutSeconds）",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CommandDispatchRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "命令受理结果",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CommandResponse.class))),
+        @ApiResponse(responseCode = "400", description = "请求体为空或参数校验失败"),
+        @ApiResponse(responseCode = "401", description = "缺少可信租户上下文")
+    })
     @OperationLog(module = "iot", type = OperationLog.OperationType.INSERT, description = "下发设备命令")
     public Mono<ServerResponse> dispatchCommand(ServerRequest request) {
         String deviceKey = request.pathVariable("key");
@@ -151,17 +230,59 @@ public class IotInternalHandler {
     }
 
     /**
-     * 设备统计（D5 聚合门面消费；契约固定勿改字段名）。
+     * 设备统计（D5 聚合门面与 D4 计量消费；契约固定勿改字段名）。
      *
-     * @param request 当前请求
+     * <p>租户标识优先取 {@code tenantId} 请求参数（system 计量/聚合门面显式传递，
+     * 与 file 域 {@code /internal/v1/file/stats} 口径一致）；缺失时回退可信租户上下文。
+     *
+     * @param request 当前请求（可选查询参数 {@code tenantId}）
      * @return {@code Result<{ "deviceCount": N }>}
      */
+    @Operation(
+            operationId = "iotDeviceStats",
+            summary = "设备统计（内部）",
+            description = "集群内服务直连接口，不经网关。返回租户设备总数，供 system 聚合门面（D5）与能力计量"
+                    + "（D4 设备维度）消费；租户标识优先取 tenantId 参数（显式传递），缺失时回退可信租户上下文")
+    @Parameter(
+            name = "tenantId",
+            in = ParameterIn.QUERY,
+            required = false,
+            description = "租户标识（计量/聚合门面显式传递；缺省回退可信租户上下文）",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为 {\"deviceCount\": 设备总数}",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(
+                                                implementation = DeviceStatsResponse.class,
+                                                example = "{\"deviceCount\": 36}"))),
+        @ApiResponse(responseCode = "401", description = "缺少可信租户标识"),
+        @ApiResponse(responseCode = "500", description = "统计查询失败")
+    })
     public Mono<ServerResponse> stats(ServerRequest request) {
-        return IotResponses.currentTenant(request)
+        return resolveTenant(request)
                 .flatMap(queryService::deviceCount)
                 .map(DeviceStatsResponse::new)
                 .flatMap(response -> ServerResponse.ok().bodyValue(Result.success(response)))
                 .onErrorResume(IotResponses::error);
+    }
+
+    /**
+     * 解析租户标识：请求参数优先，缺失时回退可信租户上下文。
+     *
+     * @param request 当前请求
+     * @return 租户标识
+     */
+    private Mono<String> resolveTenant(ServerRequest request) {
+        String tenantId = request.queryParam("tenantId").map(String::trim).orElse(null);
+        if (tenantId != null && !tenantId.isBlank()) {
+            return Mono.just(tenantId);
+        }
+        return IotResponses.currentTenant(request);
     }
 
     private record Credential(String tenantId, String deviceKey, String secret) {}

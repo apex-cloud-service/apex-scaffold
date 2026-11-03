@@ -1,6 +1,7 @@
 package com.apex.scaffold.officeservice.interfaces.handler.office;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.office.application.OfficeCalendarService;
 import com.apex.scaffold.office.domain.calendar.CalendarEventType;
@@ -72,6 +73,7 @@ public class OfficeCalendarHandler {
     @Schema(name = "OfficeCalendarBooleanResult")
     public static class CalendarBooleanResult extends Result<Boolean> {}
 
+    @RequirePermission("office:calendar:create")
     /**
      * 创建日历事件
      *
@@ -142,6 +144,7 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:calendar:query")
     /**
      * 查询日历事件详情
      *
@@ -190,6 +193,7 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:calendar:update")
     /**
      * 更新日历事件
      *
@@ -260,6 +264,7 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:calendar:delete")
     /**
      * 删除日历事件
      *
@@ -307,6 +312,7 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:calendar:list")
     /**
      * 查询时间范围内的日历事件
      *
@@ -365,6 +371,7 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:calendar:my")
     /**
      * 查询我的日历事件
      *
@@ -415,6 +422,7 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:calendar:my")
     /**
      * 查询即将到来的日历事件
      *

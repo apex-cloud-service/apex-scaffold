@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
@@ -71,8 +72,18 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public Mono<Long> count(String tenantId) {
-        return Mono.fromCallable(() ->
-                        mapper.selectCount(ConditionUtil.lambda(DevicePO.class).eq(DevicePO::getTenantId, tenantId)))
+        return Mono.fromCallable(() -> {
+                    // 统计可由内部端点以显式 tenantId 参数调用（无租户上下文），
+                    // 在执行线程内绑定租户后再走 MP 通道，保证租户拦截器 fail-closed 语义可满足；
+                    // 既有带上下文调用为同租户重设，行为不变。
+                    String previous = TenantContext.setTenantId(tenantId);
+                    try {
+                        return mapper.selectCount(
+                                ConditionUtil.lambda(DevicePO.class).eq(DevicePO::getTenantId, tenantId));
+                    } finally {
+                        TenantContext.restoreTenantId(previous);
+                    }
+                })
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

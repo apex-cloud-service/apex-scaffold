@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.domain.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.integration.device.domain.DeviceCommand;
 import reactor.core.publisher.Mono;
 
@@ -14,6 +15,17 @@ import reactor.core.publisher.Mono;
  * @since 1.3.1
  */
 public interface DeviceCommandRepository {
+
+    /**
+     * 按设备分页查询命令历史（管理端，E3 管理面补强）。
+     *
+     * @param tenantId  租户编码
+     * @param deviceKey 设备标识
+     * @param pageNum   页码（从 1 开始）
+     * @param pageSize  每页条数
+     * @return 分页结果（按创建时间倒序）
+     */
+    Mono<PageResponse<DeviceCommand>> pageByDevice(String tenantId, String deviceKey, int pageNum, int pageSize);
 
     /**
      * 按业务命令 ID 查询（租户限定）。

@@ -2,9 +2,15 @@ package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.domain.repository.SystemMessageRepository;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,8 +83,31 @@ public class SystemMessageHandler extends BaseHandler {
             operationId = "listInboxMessages",
             summary = "分页查询站内信收件箱",
             description = "按创建时间倒序分页返回当前登录用户的站内信，可通过 unreadOnly 过滤未读消息")
+    @Parameters({
+        @Parameter(
+                name = "page",
+                description = "页码，从 1 开始",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "1")),
+        @Parameter(
+                name = "size",
+                description = "每页大小",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", defaultValue = "10")),
+        @Parameter(
+                name = "unreadOnly",
+                description = "是否仅返回未读消息",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "boolean", defaultValue = "false"))
+    })
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "分页查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "分页查询成功,data 为站内信分页数据",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = PageResponse.class))),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
     @OperationLog(
@@ -105,7 +134,10 @@ public class SystemMessageHandler extends BaseHandler {
      */
     @Operation(operationId = "countUnreadMessages", summary = "查询未读站内信数量", description = "统计当前登录用户尚未标记已读的站内信数量，可用于角标展示")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "统计成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "统计成功,data 为未读消息数",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Long.class))),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
     @OperationLog(
@@ -129,8 +161,17 @@ public class SystemMessageHandler extends BaseHandler {
      * @return 统一 JSON 响应，data 为本次是否由未读转为已读
      */
     @Operation(operationId = "markMessageRead", summary = "标记站内信已读", description = "将当前登录用户的指定站内信标记为已读，重复调用幂等返回成功")
+    @Parameter(
+            name = "id",
+            description = "消息 ID",
+            required = true,
+            in = ParameterIn.PATH,
+            schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "标记成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "标记成功,data 为本次是否由未读转为已读",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Boolean.class))),
         @ApiResponse(responseCode = "400", description = "消息 ID 格式错误"),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
@@ -160,7 +201,10 @@ public class SystemMessageHandler extends BaseHandler {
             summary = "全部标记已读",
             description = "将当前登录用户的所有未读站内信一次性标记为已读，返回本次实际标记的数量")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "标记成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "标记成功,data 为本次实际标记已读的消息数量",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = Long.class))),
         @ApiResponse(responseCode = "401", description = "未授权，用户未登录或认证信息无效")
     })
     @OperationLog(

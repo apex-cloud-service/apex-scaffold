@@ -1,7 +1,9 @@
 package com.apex.scaffold.gateway.ratelimit;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -27,10 +29,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *         - resource: "/api/v1/workflows/**"
  *           capacity: 2000
  *           refill-rate: 200
+ *       open-api-tiers:                 # D2 按应用分档（tier → 阈值）
+ *         default:
+ *           capacity: 1000
+ *           refill-rate: 100
+ *         premium:
+ *           capacity: 10000
+ *           refill-rate: 1000
  * }</pre>
  *
  * <p><b>Key 约定</b>：{@code {key-prefix}{scope}:{identity}:{path}}，
- * {@code scope ∈ {tenant,user,ip}}（维度优先级 tenant → user → ip）。
+ * {@code scope ∈ {tenant,user,ip,client}}（普通流量维度优先级 tenant → user → ip；
+ * {@code /open-api/**} 开放流量固定按 {@code client:{clientId}} 维度，D2）。
  *
  * @author Apex Team
  * @since 1.3.1
@@ -62,9 +72,35 @@ public class GatewayRateLimitProperties {
     /** 按资源（路径通配）覆盖的限流规则，命中后覆盖默认容量与速率 */
     private List<Rule> rules = new ArrayList<>();
 
+    /** 开放接口按应用分档阈值（D2 {@code rateLimitTier}）：档位编码 → 阈值；未知档回退 {@code default} 档 */
+    private Map<String, Tier> openApiTiers = new LinkedHashMap<>(Map.of(DEFAULT_TIER_KEY, new Tier()));
+
     public void setRules(List<Rule> rules) {
         this.rules = rules == null ? new ArrayList<>() : rules;
     }
+
+    public void setOpenApiTiers(Map<String, Tier> openApiTiers) {
+        this.openApiTiers = openApiTiers == null ? new LinkedHashMap<>() : new LinkedHashMap<>(openApiTiers);
+    }
+
+    /**
+     * 解析档位阈值：未知档回退 {@code default} 档，缺省字段回退全局默认值.
+     *
+     * @param tier 档位编码（可空）
+     * @return 生效阈值（容量 + 补充速率）
+     */
+    public Tier resolveTierThreshold(String tier) {
+        Tier resolved = openApiTiers.get(tier == null || tier.isBlank() ? DEFAULT_TIER_KEY : tier);
+        if (resolved == null) {
+            resolved = openApiTiers.getOrDefault(DEFAULT_TIER_KEY, new Tier());
+        }
+        return new Tier(
+                resolved.getCapacity() != null ? resolved.getCapacity() : defaultCapacity,
+                resolved.getRefillRate() != null ? resolved.getRefillRate() : defaultRefillRate);
+    }
+
+    /** 默认档位编码（与 system 侧 {@code OpenAppAdminService} 兜底口径一致） */
+    public static final String DEFAULT_TIER_KEY = "default";
 
     /**
      * 单条按资源覆盖的限流规则（{@code null} 字段表示沿用默认值）.
@@ -81,5 +117,32 @@ public class GatewayRateLimitProperties {
 
         /** 令牌补充速率（令牌/秒，覆盖 {@link #defaultRefillRate}） */
         private Double refillRate;
+    }
+
+    /**
+     * 开放应用限流档阈值（{@code null} 字段表示沿用全局默认值）。
+     */
+    @Getter
+    @Setter
+    public static class Tier {
+
+        /** 桶容量 */
+        private Long capacity;
+
+        /** 令牌补充速率（令牌/秒） */
+        private Double refillRate;
+
+        public Tier() {}
+
+        /**
+         * 创建指定阈值的档位。
+         *
+         * @param capacity   桶容量（令牌数）
+         * @param refillRate 令牌补充速率（令牌/秒）
+         */
+        public Tier(Long capacity, Double refillRate) {
+            this.capacity = capacity;
+            this.refillRate = refillRate;
+        }
     }
 }

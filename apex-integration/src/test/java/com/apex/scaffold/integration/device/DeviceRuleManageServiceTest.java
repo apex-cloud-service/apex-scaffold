@@ -165,4 +165,24 @@ class DeviceRuleManageServiceTest {
                 .assertNext(result -> assertThat(result.getId()).isEqualTo(1L))
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("列表：透传关键字、启停过滤与分页参数")
+    void pagePassesFiltersThrough() {
+        DeviceRule rule = new DeviceRule();
+        rule.setId(2L);
+        rule.setTenantId("t1");
+        com.apex.scaffold.common.dto.PageResponse<DeviceRule> page =
+                com.apex.scaffold.common.dto.PageResponse.of(java.util.List.of(rule), 1L, 2, 10);
+        when(repository.page("t1", "温度", true, 2, 10)).thenReturn(Mono.just(page));
+
+        StepVerifier.create(service.page("t1", "温度", true, 2, 10))
+                .assertNext(result -> {
+                    assertThat(result.getTotal()).isEqualTo(1L);
+                    assertThat(result.getList()).extracting(DeviceRule::getId).containsExactly(2L);
+                })
+                .verifyComplete();
+
+        verify(repository).page("t1", "温度", true, 2, 10);
+    }
 }

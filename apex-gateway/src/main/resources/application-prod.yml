@@ -148,12 +148,24 @@ spring:
               args:
                 name: officeService
                 fallbackUri: forward:/__gateway/fallback
+        # 集成中心与物联网设备（apex-integration-service）
+        # ⚠️ /internal/v1/** 为集群内部端点，不在此路由组内（网关对 /internal/** 强制 403）
+        - id: integration-domain
+          uri: ${ROUTE_INTEGRATION_URI:lb://apex-integration-service}
+          predicates:
+            - Path=/integration/v1/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: integrationService
+                fallbackUri: forward:/__gateway/fallback
         # 兜底路由：Phase 6 完成后切换为 lb://apex-system-service
-        # 💡 /api/v2/platform/** 为平台租户管理端点（PlatformTenantRouter）。
+        # 💡 /api/v2/** 逐前缀显式列出：operations / platform / tenant-packages /
+        #    capabilities / capability-usage / overview（不放开整个 v2 通配）。
         - id: system-domain
           uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
           predicates:
-            - Path=/api/v1/**,/api/v2/operations/**,/api/v2/platform/**,/admin-api/v1/**,/health,/actuator/**
+            - Path=/api/v1/**,/api/v2/operations/**,/api/v2/platform/**,/api/v2/tenant-packages/**,/api/v2/capabilities/**,/api/v2/capability-usage/**,/api/v2/overview/**,/admin-api/v1/**,/health,/actuator/**
 
 management:
   tracing:

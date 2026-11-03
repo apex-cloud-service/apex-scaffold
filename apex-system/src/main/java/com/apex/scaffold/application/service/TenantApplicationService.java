@@ -14,6 +14,7 @@ import com.apex.scaffold.domain.model.exception.TenantQuotaExceededException;
 import com.apex.scaffold.domain.model.valueobject.TenantQuota;
 import com.apex.scaffold.domain.repository.TenantRepository;
 import com.apex.scaffold.domain.service.DomainEventPublisher;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -116,8 +117,13 @@ public class TenantApplicationService {
      * @throws BusinessException 当租户不存在时抛出 {@code TENANT_NOT_FOUND}
      */
     /** 租户认证期状态快照（统一认证收口 A6 内部端点契约）。 */
+    @Schema(name = "TenantStatusSnapshot", description = "租户认证期状态快照（内部端点契约）")
     public record TenantStatusSnapshot(
-            boolean exists, String status, boolean expired, Integer maxUsers, Integer maxStorageMb) {}
+            @Schema(description = "租户是否存在（未知租户 false，便于消费方缓存负结果）") boolean exists,
+            @Schema(description = "租户状态机取值（如 ACTIVE/DISABLED）", example = "ACTIVE") String status,
+            @Schema(description = "是否已过期") boolean expired,
+            @Schema(description = "用户数配额上限；未配置为 null", example = "100") Integer maxUsers,
+            @Schema(description = "存储配额上限（MB）；未配置为 null", example = "10240") Integer maxStorageMb) {}
 
     /**
      * 查询租户认证期状态（统一认证收口 A6）。

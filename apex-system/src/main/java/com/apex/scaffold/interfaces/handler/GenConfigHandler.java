@@ -1,16 +1,21 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.GenConfigDTO;
 import com.apex.scaffold.application.dto.admin.GenConfigRequest;
+import com.apex.scaffold.application.dto.admin.TableInfoDTO;
 import com.apex.scaffold.application.service.CodeGenerationService;
 import com.apex.scaffold.application.service.GenConfigService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -81,23 +86,36 @@ public class GenConfigHandler extends BaseHandler {
             operationId = "adminListGenConfigs",
             summary = "查询生成配置列表",
             description = "分页查询代码生成器配置列表，返回包含配置名称、数据源、表名、模块名等信息")
-    @Parameter(
-            name = "page",
-            description = "页码（从1开始）",
-            in = ParameterIn.QUERY,
-            schema = @Schema(type = "integer", example = "1"))
-    @Parameter(
-            name = "size",
-            description = "每页数量",
-            in = ParameterIn.QUERY,
-            schema = @Schema(type = "integer", example = "20"))
-    @Parameter(
-            name = "configName",
-            description = "配置名称（模糊查询）",
-            in = ParameterIn.QUERY,
-            schema = @Schema(type = "string"))
+    @Parameters({
+        @Parameter(
+                name = "page",
+                description = "页码（从1开始）",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", example = "1")),
+        @Parameter(
+                name = "size",
+                description = "每页数量",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", example = "20")),
+        @Parameter(
+                name = "configName",
+                description = "配置名称（模糊查询）",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "datasourceId",
+                description = "数据源ID（精确过滤）",
+                in = ParameterIn.QUERY,
+                schema = @Schema(type = "integer", format = "int64"))
+    })
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为生成配置分页列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = PageResponse.class))),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:list 权限")
     })
     @OperationLog(
@@ -126,9 +144,19 @@ public class GenConfigHandler extends BaseHandler {
             operationId = "adminCreateGenConfig",
             summary = "新增生成配置",
             description = "创建新的代码生成配置，指定数据源、表名、包名、模块名、输出路径和模板等参数")
-    @RequestBody(description = "生成配置创建请求信息", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "生成配置创建请求信息",
+            required = true,
+            content =
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = GenConfigRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功，data 为已创建的生成配置",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenConfigDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:add 权限")
     })
@@ -161,9 +189,19 @@ public class GenConfigHandler extends BaseHandler {
             required = true,
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
-    @RequestBody(description = "生成配置更新请求信息", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "生成配置更新请求信息",
+            required = true,
+            content =
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = GenConfigRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功，data 为已更新的生成配置",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenConfigDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:edit 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在")
@@ -196,7 +234,16 @@ public class GenConfigHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "删除成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "删除成功，data 为 {\"deleted\": 是否删除成功}",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(
+                                                type = "object",
+                                                additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:config:remove 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在")
@@ -228,7 +275,13 @@ public class GenConfigHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为表名列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                array = @ArraySchema(schema = @Schema(type = "string", example = "sys_user")))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:table:list 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
@@ -268,7 +321,13 @@ public class GenConfigHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "string", example = "sys_user"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为表字段元数据（字段名、类型、长度、主键、可空、注释）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = TableInfoDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数错误"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:table:list 权限"),
         @ApiResponse(responseCode = "404", description = "数据源或表不存在")
@@ -317,7 +376,13 @@ public class GenConfigHandler extends BaseHandler {
             in = ParameterIn.QUERY,
             schema = @Schema(type = "integer", example = "20"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为生成历史分页列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = PageResponse.class))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:history:list 权限"),
         @ApiResponse(responseCode = "404", description = "生成配置不存在")

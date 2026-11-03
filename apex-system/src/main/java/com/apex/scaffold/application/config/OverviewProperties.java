@@ -30,11 +30,12 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "apex.overview")
 public class OverviewProperties {
 
-    /** 数据源名称 → 服务基址；键固定为 file/workflow/integration。 */
+    /** 数据源名称 → 服务基址；键固定为 file/workflow/integration/office。 */
     private Map<String, String> sources = new LinkedHashMap<>(Map.of(
             "file", "http://127.0.0.1:8085",
             "workflow", "http://127.0.0.1:8093",
-            "integration", "http://127.0.0.1:8086"));
+            "integration", "http://127.0.0.1:8086",
+            "office", "http://127.0.0.1:8084"));
 
     /** 聚合结果短 TTL 缓存秒数。 */
     private long cacheTtlSeconds = 30;

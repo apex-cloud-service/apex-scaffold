@@ -1,9 +1,11 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.GenDatasourceDTO;
 import com.apex.scaffold.application.dto.admin.GenDatasourceRequest;
 import com.apex.scaffold.application.service.GenDatasourceService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -84,7 +86,13 @@ public class GenDatasourceHandler extends BaseHandler {
             schema = @Schema(type = "integer", example = "20"))
     @Parameter(name = "name", description = "数据源名称（模糊查询）", in = ParameterIn.QUERY, schema = @Schema(type = "string"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为数据源分页列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = PageResponse.class))),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:list 权限")
     })
     @OperationLog(
@@ -112,9 +120,21 @@ public class GenDatasourceHandler extends BaseHandler {
             operationId = "adminCreateGenDatasource",
             summary = "新增数据源",
             description = "创建新的数据源配置，支持 MySQL、PostgreSQL、Oracle、SQL Server 等数据库类型")
-    @RequestBody(description = "数据源创建请求信息", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "数据源创建请求信息",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenDatasourceRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "创建成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功，data 为已创建的数据源",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenDatasourceDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:add 权限")
     })
@@ -147,9 +167,21 @@ public class GenDatasourceHandler extends BaseHandler {
             required = true,
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
-    @RequestBody(description = "数据源更新请求信息", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "数据源更新请求信息",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = GenDatasourceRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功，data 为已更新的数据源",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = GenDatasourceDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:edit 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")
@@ -185,7 +217,16 @@ public class GenDatasourceHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "删除成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "删除成功，data 为 {\"deleted\": 是否删除成功}",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(
+                                                type = "object",
+                                                additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:remove 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在"),
@@ -221,7 +262,11 @@ public class GenDatasourceHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "测试完成（包含连接成功或失败结果）"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "测试完成，data 为连接是否成功（布尔值）",
+                content =
+                        @Content(mediaType = "application/json", schema = @Schema(type = "boolean", example = "true"))),
         @ApiResponse(responseCode = "400", description = "参数错误，ID必须为正整数"),
         @ApiResponse(responseCode = "403", description = "权限不足，需要 system:generator:datasource:test 权限"),
         @ApiResponse(responseCode = "404", description = "数据源不存在")

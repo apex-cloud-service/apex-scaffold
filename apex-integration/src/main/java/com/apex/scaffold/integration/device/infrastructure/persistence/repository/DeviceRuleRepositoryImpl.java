@@ -1,11 +1,13 @@
 package com.apex.scaffold.integration.device.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.integration.device.domain.DeviceRule;
 import com.apex.scaffold.integration.device.domain.repository.DeviceRuleRepository;
 import com.apex.scaffold.integration.device.infrastructure.persistence.mapper.DeviceRuleMapper;
 import com.apex.scaffold.integration.device.infrastructure.persistence.po.DeviceRulePO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
@@ -37,6 +39,31 @@ public class DeviceRuleRepositoryImpl implements DeviceRuleRepository {
                         .stream()
                         .map(this::toEntity)
                         .toList())
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
+
+    @Override
+    public Mono<PageResponse<DeviceRule>> page(
+            String tenantId, String keyword, Boolean enabled, int pageNum, int pageSize) {
+        int safePageNum = Math.max(1, pageNum);
+        int safePageSize = Math.min(Math.max(1, pageSize), 100);
+        return Mono.fromCallable(() -> {
+                    LambdaQueryWrapper<DeviceRulePO> wrapper =
+                            ConditionUtil.lambda(DeviceRulePO.class).eq(DeviceRulePO::getTenantId, tenantId);
+                    if (keyword != null && !keyword.isBlank()) {
+                        wrapper.like(DeviceRulePO::getRuleName, keyword.trim());
+                    }
+                    if (enabled != null) {
+                        wrapper.eq(DeviceRulePO::getEnabled, enabled ? 1 : 0);
+                    }
+                    Long total = mapper.selectCount(wrapper);
+                    wrapper.orderByDesc(DeviceRulePO::getId)
+                            .last("LIMIT " + safePageSize + " OFFSET " + (long) (safePageNum - 1) * safePageSize);
+                    List<DeviceRule> records = mapper.selectList(wrapper).stream()
+                            .map(this::toEntity)
+                            .toList();
+                    return PageResponse.of(records, total == null ? 0L : total, safePageNum, safePageSize);
+                })
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

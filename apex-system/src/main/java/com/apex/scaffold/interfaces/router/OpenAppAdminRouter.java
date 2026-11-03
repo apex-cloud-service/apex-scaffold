@@ -71,6 +71,24 @@ public class OpenAppAdminRouter {
                                                             mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 })),
         @RouterOperation(
+                path = "/api/v1/open-apps/scopes",
+                method = org.springframework.web.bind.annotation.RequestMethod.GET,
+                beanClass = OpenAppAdminHandler.class,
+                beanMethod = "listScopes",
+                operation =
+                        @Operation(
+                                operationId = "listOpenAppScopes",
+                                summary = "平台 scope 目录",
+                                tags = {"开放应用管理"},
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "scope 与权限码映射",
+                                            content =
+                                                    @io.swagger.v3.oas.annotations.media.Content(
+                                                            mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                })),
+        @RouterOperation(
                 path = "/api/v1/open-apps/{clientId}",
                 method = org.springframework.web.bind.annotation.RequestMethod.GET,
                 beanClass = OpenAppAdminHandler.class,
@@ -129,6 +147,8 @@ public class OpenAppAdminRouter {
         return RouterFunctions.route()
                 .POST("/api/v1/open-apps", handler::createApp)
                 .GET("/api/v1/open-apps", handler::listApps)
+                // scope 目录须先于 /{clientId} 声明，避免被路径变量吞掉
+                .GET("/api/v1/open-apps/scopes", handler::listScopes)
                 .GET("/api/v1/open-apps/{clientId}", handler::getApp)
                 .PUT("/api/v1/open-apps/{clientId}", handler::updateApp)
                 .POST("/api/v1/open-apps/{clientId}/reset-secret", handler::resetSecret)

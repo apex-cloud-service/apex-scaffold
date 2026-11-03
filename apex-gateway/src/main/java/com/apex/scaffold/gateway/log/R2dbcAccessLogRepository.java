@@ -43,11 +43,11 @@ public class R2dbcAccessLogRepository implements AccessLogRepository {
                 INSERT INTO %s
                     (id, trace_id, method, path, route_id, service_id, gray_tag,
                      status, cost_ms, client_ip, user_agent, request_headers,
-                     user_id, tenant_id, create_time)
+                     user_id, tenant_id, client_id, create_time)
                 VALUES
                     (:id, :traceId, :method, :path, :routeId, :serviceId, :grayTag,
                      :status, :costMs, :clientIp, :userAgent, :requestHeaders,
-                     :userId, :tenantId, :createTime)
+                     :userId, :tenantId, :clientId, :createTime)
                 """
                         .formatted(TABLE_NAME);
 
@@ -68,6 +68,7 @@ public class R2dbcAccessLogRepository implements AccessLogRepository {
                 .bind("requestHeaders", nvl(record.requestHeadersJson()))
                 .bind("userId", nvl(record.userId()))
                 .bind("tenantId", nvl(record.tenantId()))
+                .bind("clientId", nvl(record.clientId()))
                 .bind("createTime", record.createTime() != null ? record.createTime() : LocalDateTime.now())
                 .fetch()
                 .rowsUpdated()

@@ -1,12 +1,24 @@
 package com.apex.scaffold.interfaces.handler;
 
 import com.apex.scaffold.application.dto.OpenAppRequest;
+import com.apex.scaffold.application.dto.OpenAppResponse;
 import com.apex.scaffold.application.openplatform.OpenAppAdminService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -55,6 +67,21 @@ public class OpenAppAdminHandler {
             operationId = "createOpenApp",
             summary = "创建开放应用",
             description = "注册开放平台应用，scope 须在开放平台 scope 注册表内；明文密钥仅本次返回")
+    @RequestBody(
+            description = "开放应用注册请求",
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = OpenAppRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功，data 为应用详情（含一次性明文密钥）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OpenAppResponse.class))),
+        @ApiResponse(responseCode = "400", description = "参数非法或 scope 未注册"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:manage 权限")
+    })
     @OperationLog(
             module = "OpenAppAdmin",
             type = OperationLog.OperationType.INSERT,
@@ -78,6 +105,30 @@ public class OpenAppAdminHandler {
             operationId = "listOpenApps",
             summary = "分页查询开放应用",
             description = "基于 OAUTH2_CLIENT 注册表的分页查询，含未开通开放元数据的普通客户端")
+    @Parameters({
+        @Parameter(
+                name = "page",
+                in = ParameterIn.QUERY,
+                required = false,
+                description = "页码，从 0 开始",
+                schema = @Schema(type = "integer", defaultValue = "0")),
+        @Parameter(
+                name = "size",
+                in = ParameterIn.QUERY,
+                required = false,
+                description = "每页数量",
+                schema = @Schema(type = "integer", defaultValue = "20"))
+    })
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为开放应用列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OpenAppResponse.class))),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:read 权限")
+    })
     public Mono<ServerResponse> listApps(ServerRequest request) {
         int page = intParam(request, "page", 0);
         int size = intParam(request, "size", 20);
@@ -92,6 +143,23 @@ public class OpenAppAdminHandler {
      */
     @RequirePermission("open:app:read")
     @Operation(operationId = "getOpenApp", summary = "查询开放应用详情", description = "按客户端 ID 查询开放应用注册信息与 scope 清单")
+    @Parameter(
+            name = "clientId",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "开放应用客户端 ID",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为应用详情（不含密钥）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OpenAppResponse.class))),
+        @ApiResponse(responseCode = "404", description = "客户端不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:read 权限")
+    })
     public Mono<ServerResponse> getApp(ServerRequest request) {
         return openAppAdminService
                 .getApp(request.pathVariable("clientId"))
@@ -106,6 +174,28 @@ public class OpenAppAdminHandler {
      */
     @RequirePermission("open:app:manage")
     @Operation(operationId = "updateOpenApp", summary = "更新开放应用", description = "更新回调、scope 清单与开放元数据；请求缺省字段保持原值")
+    @Parameter(
+            name = "clientId",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "开放应用客户端 ID",
+            schema = @Schema(type = "string"))
+    @RequestBody(
+            description = "开放应用更新请求（缺省字段保持原值）",
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = OpenAppRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功，data 为更新后的应用",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OpenAppResponse.class))),
+        @ApiResponse(responseCode = "400", description = "参数非法或 scope 未注册"),
+        @ApiResponse(responseCode = "404", description = "客户端不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:manage 权限")
+    })
     @OperationLog(
             module = "OpenAppAdmin",
             type = OperationLog.OperationType.UPDATE,
@@ -127,6 +217,23 @@ public class OpenAppAdminHandler {
      */
     @RequirePermission("open:app:manage")
     @Operation(operationId = "resetOpenAppSecret", summary = "重置开放应用密钥", description = "生成新的随机密钥并加密落库，明文仅本次返回")
+    @Parameter(
+            name = "clientId",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "开放应用客户端 ID",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "重置成功，data 为应用信息（clientSecret 为一次性明文）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OpenAppResponse.class))),
+        @ApiResponse(responseCode = "404", description = "客户端不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:manage 权限")
+    })
     @OperationLog(
             module = "OpenAppAdmin",
             type = OperationLog.OperationType.UPDATE,
@@ -137,6 +244,45 @@ public class OpenAppAdminHandler {
         return openAppAdminService
                 .resetSecret(request.pathVariable("clientId"))
                 .flatMap(response -> ok(Result.success(response)));
+    }
+
+    /**
+     * 查询平台 scope 目录（scope → 权限码映射）。
+     *
+     * <p>管理端注册开放应用时用于下拉选择；数据源为 {@code OpenPlatformScopeRegistry}
+     * （内置 scope + {@code apex.open-platform.scopes} 配置扩展），与创建/更新时的
+     * 合法性校验同一注册表，避免「目录可选但提交被拒」。
+     *
+     * @param request 当前请求（无参数）
+     * @return scope 目录（元素含 scope/permission/name/capability）
+     */
+    @RequirePermission("open:app:read")
+    @Operation(operationId = "listOpenAppScopes", summary = "平台 scope 目录", description = "返回开放平台 scope 注册表与权限码映射")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为 scope 目录（元素含 scope/permission/name/capability）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(
+                                                type = "object",
+                                                additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:read 权限")
+    })
+    public Mono<ServerResponse> listScopes(ServerRequest request) {
+        List<Map<String, String>> scopes = openAppAdminService.listScopes().stream()
+                .map(definition -> {
+                    Map<String, String> item = new LinkedHashMap<>();
+                    item.put("scope", definition.getScope());
+                    item.put("permission", definition.getPermission());
+                    item.put("name", definition.getName());
+                    item.put("capability", definition.getCapability());
+                    return item;
+                })
+                .toList();
+        return ok(Result.success(scopes));
     }
 
     private static Mono<ServerResponse> ok(Result<?> body) {

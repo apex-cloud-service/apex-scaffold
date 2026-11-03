@@ -1,6 +1,7 @@
 package com.apex.scaffold.officeservice.interfaces.off.handler;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.office.off.application.dto.MessageTemplateDTO;
@@ -37,6 +38,7 @@ public class MessageTemplateHandler {
     private final OffMessageTemplateService templateService;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    @RequirePermission("office:notify:template:read")
     /**
      * 按编码查询模板；不存在时返回 HTTP 400，业务码为 NOT_FOUND。
      * @param request 包含 templateCode 路径参数的请求
@@ -83,6 +85,7 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:notify:template:read")
     /**
      * 查询全部启用模板，不读取类型过滤参数。
      * @param request HTTP 请求
@@ -122,6 +125,7 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:notify:template:manage")
     /**
      * 校验并创建消息模板。
      * @param request JSON 请求体为 MessageTemplateDTO
@@ -167,6 +171,7 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:notify:template:manage")
     /**
      * 更新模板；无效 ID 或模板不存在时返回 HTTP 400。
      * @param request 包含 templateId 路径参数与 MessageTemplateDTO 请求体
@@ -224,6 +229,7 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:notify:template:manage")
     /**
      * 删除指定模板。
      * @param request 包含 templateId 路径参数的请求

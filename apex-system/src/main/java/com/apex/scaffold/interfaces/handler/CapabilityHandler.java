@@ -5,6 +5,11 @@ import com.apex.scaffold.application.service.TenantPackageService;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -41,6 +46,20 @@ public class CapabilityHandler {
      * @param request 当前请求
      * @return 能力列表
      */
+    @Operation(
+            operationId = "listCapabilities",
+            summary = "查询能力目录",
+            description = "返回平台已登记的全部能力（展示顺序 = 登记顺序）；需 tenant:read 权限")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Result 封装的能力列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CapabilityCatalog.Capability.class))),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 tenant:read 权限")
+    })
     @RequirePermission("tenant:read")
     public Mono<ServerResponse> listCapabilities(ServerRequest request) {
         return ServerResponse.ok().bodyValue(Result.success(CapabilityCatalog.all()));
@@ -52,6 +71,20 @@ public class CapabilityHandler {
      * @param request 当前请求
      * @return 已订阅能力列表
      */
+    @Operation(
+            operationId = "listSubscribedCapabilities",
+            summary = "查询当前租户已订阅能力",
+            description = "按当前可信租户上下文过滤能力目录：复用套餐 features 判定，features 为空表示全量订阅")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Result 封装的已订阅能力列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CapabilityCatalog.Capability.class))),
+        @ApiResponse(responseCode = "500", description = "缺少可信租户上下文或查询失败")
+    })
     public Mono<ServerResponse> listSubscribed(ServerRequest request) {
         return Mono.deferContextual(context -> {
                     String tenant = context.getOrDefault(

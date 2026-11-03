@@ -251,14 +251,30 @@ spring:
                 name: officeService
                 fallbackUri: forward:/__gateway/fallback
 
+        # ---- 集成中心与物联网设备（apex-integration-service） ----
+        # 💡 可用 ROUTE_INTEGRATION_URI 环境变量临时指回其它实例以实现一键回滚。
+        # ⚠️ /internal/v1/** 为集群内部端点（MQTT 认证钩子、命令下行、聚合统计），
+        #    不在此路由组内；网关 JwtSignatureFilter 对 /internal/** 强制 403。
+        - id: integration-domain
+          uri: ${ROUTE_INTEGRATION_URI:lb://apex-integration-service}
+          predicates:
+            - Path=/integration/v1/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: integrationService
+                fallbackUri: forward:/__gateway/fallback
+
         # ---- 兜底：系统管理与其余全部接口（Phase 6 收敛为 apex-system-service） ----
         # 💡 可用 ROUTE_SYSTEM_URI 环境变量临时指回单体地址（http://127.0.0.1:8080）
         #    以实现一键回滚。
-        # 💡 /api/v2/platform/** 为平台租户管理端点（PlatformTenantRouter：目录/开通/详情/状态动作/配额）。
+        # 💡 /api/v2/** 逐前缀显式列出（不用通配，避免误放行未来新增的 v2 端点）：
+        #    operations（运维健康）、platform（平台租户）、tenant-packages（租户套餐）、
+        #    capabilities / capability-usage（能力目录与计量）、overview（数据总览）。
         - id: system-domain
           uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
           predicates:
-            - Path=/api/v1/**,/api/v2/operations/**,/api/v2/platform/**,/admin-api/v1/**,/health,/actuator/**
+            - Path=/api/v1/**,/api/v2/operations/**,/api/v2/platform/**,/api/v2/tenant-packages/**,/api/v2/capabilities/**,/api/v2/capability-usage/**,/api/v2/overview/**,/admin-api/v1/**,/health,/actuator/**
           filters:
             - name: CircuitBreaker
               args:

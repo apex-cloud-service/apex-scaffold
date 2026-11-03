@@ -16,6 +16,8 @@ import java.time.LocalDateTime;
  *   <li>{@code requestHeadersJson} —— <b>已脱敏</b>的请求头 JSON 快照，
  *       敏感凭据一律以 {@code ***} 占位（安全红线，见 {@link AccessLogService#sanitizeHeaders}）</li>
  *   <li>{@code userId}/{@code tenantId} —— 由网关注入的可信身份头，匿名请求可为空</li>
+ *   <li>{@code clientId} —— 开放应用客户端 ID（已验签令牌 {@code client_id} claim，
+ *       D2 开放访问审计 client 维度），普通用户请求为 {@code null}</li>
  * </ul>
  *
  * @param id                 雪花 ID 主键（可为 {@code null}，落库前生成）
@@ -32,6 +34,7 @@ import java.time.LocalDateTime;
  * @param requestHeadersJson 脱敏后的请求头 JSON 快照
  * @param userId             用户 ID（可空）
  * @param tenantId           租户 ID（可空）
+ * @param clientId           开放应用客户端 ID（可空，D2 审计维度）
  * @param createTime         记录产生时间
  * @author Apex Team
  * @since 1.3.1
@@ -51,4 +54,5 @@ public record AccessLogRecord(
         String requestHeadersJson,
         String userId,
         String tenantId,
+        String clientId,
         LocalDateTime createTime) {}

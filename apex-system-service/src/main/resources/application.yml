@@ -41,6 +41,11 @@ apex:
     allowed-origins: []
   features:
     auth-center-permission: ${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}
+  open-api:
+    guard:
+      # D4 服务侧能力二次校验：携带网关 X-Open-Api-Capability 标记头的请求须通过能力订阅复核
+      enabled: true
+      base-url: ${APEX_SYSTEM_BASE_URL:http://127.0.0.1:8082}
   auth-center-permission:
     base-url: ${APEX_AUTH_CENTER_BASE_URL:}
     access-token: ${APEX_AUTH_CENTER_ACCESS_TOKEN:}

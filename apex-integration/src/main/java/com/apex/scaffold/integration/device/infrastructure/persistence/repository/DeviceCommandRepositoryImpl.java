@@ -1,11 +1,13 @@
 package com.apex.scaffold.integration.device.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.integration.device.domain.DeviceCommand;
 import com.apex.scaffold.integration.device.domain.repository.DeviceCommandRepository;
 import com.apex.scaffold.integration.device.infrastructure.persistence.mapper.DeviceCommandMapper;
 import com.apex.scaffold.integration.device.infrastructure.persistence.po.DeviceCommandPO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,6 +33,26 @@ import reactor.core.publisher.Mono;
 public class DeviceCommandRepositoryImpl implements DeviceCommandRepository {
 
     private final DeviceCommandMapper mapper;
+
+    @Override
+    public Mono<PageResponse<DeviceCommand>> pageByDevice(
+            String tenantId, String deviceKey, int pageNum, int pageSize) {
+        int safePageNum = Math.max(1, pageNum);
+        int safePageSize = Math.min(Math.max(1, pageSize), 100);
+        return Mono.fromCallable(() -> {
+                    LambdaQueryWrapper<DeviceCommandPO> wrapper = ConditionUtil.lambda(DeviceCommandPO.class)
+                            .eq(DeviceCommandPO::getTenantId, tenantId)
+                            .eq(DeviceCommandPO::getDeviceKey, deviceKey);
+                    Long total = mapper.selectCount(wrapper);
+                    wrapper.orderByDesc(DeviceCommandPO::getId)
+                            .last("LIMIT " + safePageSize + " OFFSET " + (long) (safePageNum - 1) * safePageSize);
+                    List<DeviceCommand> records = mapper.selectList(wrapper).stream()
+                            .map(this::toEntity)
+                            .toList();
+                    return PageResponse.of(records, total == null ? 0L : total, safePageNum, safePageSize);
+                })
+                .subscribeOn(BlockingIoSchedulers.jdbc());
+    }
 
     @Override
     public Mono<DeviceCommand> findByCommandId(String tenantId, String commandId) {

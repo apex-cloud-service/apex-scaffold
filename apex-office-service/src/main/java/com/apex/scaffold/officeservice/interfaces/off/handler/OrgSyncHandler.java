@@ -1,6 +1,7 @@
 package com.apex.scaffold.officeservice.interfaces.off.handler;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.office.off.application.dto.DepartmentDTO;
 import com.apex.scaffold.office.off.application.service.OrgSyncService;
@@ -34,6 +35,7 @@ public class OrgSyncHandler {
     private final OrgSyncService orgSyncService;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    @RequirePermission("office:organization:list")
     /**
      * 分页查询部门，支持按状态原值过滤。
      *
@@ -60,6 +62,7 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:organization:query")
     /**
      * 根据数值 ID 查询部门详情。
      *
@@ -86,6 +89,7 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:organization:dept")
     /**
      * 解析并校验部门 DTO，调用本地部门创建用例。
      *
@@ -107,6 +111,7 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:organization:dept")
     /**
      * 按路径 ID 更新本地部门。
      *
@@ -134,6 +139,7 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:organization:dept")
     /**
      * 按 ID 删除部门，不额外检查记录是否存在。
      *
@@ -159,6 +165,7 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:organization:list")
     /**
      * 分页查询员工，支持按部门 ID 和状态过滤。
      *
@@ -187,6 +194,7 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:organization:user")
     /**
      * 根据数值 ID 查询员工详情。
      *
@@ -213,6 +221,7 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:sync:read")
     /**
      * 分页查询组织同步历史，支持按来源和状态原值过滤。
      *

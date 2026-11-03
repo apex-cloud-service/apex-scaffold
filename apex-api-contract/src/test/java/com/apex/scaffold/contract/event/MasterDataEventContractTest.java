@@ -3,6 +3,7 @@ package com.apex.scaffold.contract.event;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.apex.scaffold.common.event.AbstractDomainEvent;
+import com.apex.scaffold.common.event.DistributedDomainEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -101,6 +102,14 @@ class MasterDataEventContractTest {
             assertThat(event.getTenantId()).isEqualTo("tenant-1");
             event.markAsProcessed();
             assertThat(event.isProcessed()).isTrue();
+        }
+
+        @Test
+        @DisplayName("实现分布式事件标记且 tag 为事件类型（D5 跨服务分发）")
+        void isDistributedDomainEvent() {
+            TenantChangedEvent event = new TenantChangedEvent("T001", TenantChangedEvent.ACTION_UPDATED);
+            assertThat(event).isInstanceOf(DistributedDomainEvent.class);
+            assertThat(((DistributedDomainEvent) event).mqTag()).isEqualTo("TENANT_CHANGED");
         }
     }
 }

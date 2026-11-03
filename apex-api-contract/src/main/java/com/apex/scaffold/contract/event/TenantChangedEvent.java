@@ -1,6 +1,7 @@
 package com.apex.scaffold.contract.event;
 
 import com.apex.scaffold.common.event.AbstractDomainEvent;
+import com.apex.scaffold.common.event.DistributedDomainEvent;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -15,7 +16,9 @@ import lombok.Getter;
  * <ul>
  *   <li>发布方：apex-system-service（{@code TenantApplicationService} 创建/状态迁移/配额更新）</li>
  *   <li>订阅方：需要本地缓存失效或主数据投影的业务服务（file、office 等）</li>
- *   <li>Topic：{@code apex-domain-event}（由 {@code apex.mq.domain-event-topic} 配置）</li>
+ *   <li>Topic：{@code apex-domain-event}（由 {@code apex.mq.domain-event-topic} 配置）；
+ *       实现 {@link DistributedDomainEvent} 标记，由 {@code DomainEventMqBridge} 在 Outbox
+ *       重放点以 {@code topic:tag} 异步广播，tag 为事件类型</li>
  *   <li>负载以租户编码唯一标识被变更租户：平台管理操作中信封 {@code tenantId} 为发布者
  *       上下文租户（可能不是被变更租户），且编码是租户跨服务的唯一业务标识；
  *       负载不含配额数值、备注等配置内容</li>
@@ -30,7 +33,7 @@ import lombok.Getter;
  * @see AbstractDomainEvent
  */
 @Getter
-public class TenantChangedEvent extends AbstractDomainEvent {
+public class TenantChangedEvent extends AbstractDomainEvent implements DistributedDomainEvent {
 
     /** 动作：租户创建。 */
     public static final String ACTION_CREATED = "CREATED";

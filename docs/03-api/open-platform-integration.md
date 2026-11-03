@@ -42,10 +42,11 @@ sequenceDiagram
 
 ## 4. 调用约定
 
-- 网关开放路由组：`/open-api/**`（**不接受用户个人令牌**，仅接受开放应用令牌），由 `OpenApiScopeGatewayFilter`（order 25）执行令牌来源、scope 与能力三道断言；通过后注入可信头 `X-Client-Scopes`，外部伪造值由 `JwtSignatureFilter` 剥离
+- 网关开放路由组：`/open-api/**`（**不接受用户个人令牌**，仅接受开放应用令牌），由 `OpenApiScopeGatewayFilter`（order 25）执行令牌来源、scope 与能力三道断言；通过后注入可信头 `X-Client-Scopes`、`X-Client-Id` 与 `X-Open-Api-Capability`（能力标记，服务侧二次校验的触发依据），外部伪造值由 `JwtSignatureFilter` 剥离
 - 令牌类型：`client_credentials`（服务间调用）或授权码 + PKCE（代用户访问）
-- 限流：沿用网关既有租户 → 用户 → IP + 路径维度的 Redis 令牌桶（order 30）；按 `clientId` 分档的 `rateLimitTier` **尚未实现**，该字段目前仅随应用注册保存
-- 审计：开放访问写入访问日志（含 client 维度）
+- 限流：`/open-api/**` 固定按应用维度 `client:{clientId}` 判定（order 30），阈值按应用注册档位 `rateLimitTier` 经 system 内部端点 `GET /internal/v1/open-apps/{clientId}/rate-limit-tier` 查询（TTL 缓存，fail-open 回退 `default` 档），档位 → 阈值映射配置于网关 `apex.gateway.rate-limit.open-api-tiers`；无法识别 client_id 时回退既有租户 → 用户 → IP 维度
+- 服务侧二次校验（D4）：业务服务对携带 `X-Open-Api-Capability` 的请求经共享 `CapabilityGate` 复核租户订阅（`apex.open-api.guard.enabled=true` 启用，TTL 缓存，fail-closed），与网关门禁同源判定
+- 审计：开放访问写入网关访问日志（含 `client_id` 维度，迁移 V87）
 - 错误：统一 `Result<T>` 包装；scope 不足返回 403，令牌无效/过期返回 401
 
 ## 5. 事件订阅（可选）
@@ -59,9 +60,10 @@ sequenceDiagram
 - 两者同时生效：scope 允许 + 租户已订阅能力，调用才成功
 - 套餐未订阅某能力时，即使应用持有对应 scope 也应被拒绝（网关按路由→能力映射校验）
 
-## 7. 未实现项（如实声明）
+## 7. 边界与明确不做项
 
-- 按 `clientId` 分档的 `rateLimitTier` 限流：**尚未实现**；当前仅复用网关既有租户/用户/IP + 路径维度限流，应用注册中的 `rateLimitTier` 字段暂不参与网关判定
+- 按 `clientId` 分档的 `rateLimitTier` 限流：**已实现**（应用维度限流 + 档位阈值映射 + system 内部档位查询端点）；档位数值映射（`open-api-tiers`）按部署配置
+- 下游承接路径：网关 `/open-api/**` 路由组当前以原路径转发，业务服务的开放承接路由（含开放应用令牌的服务侧认证语义）仍在演进中，开放链路的端到端调用未验证（见能力目录文档与批次报告的未验证项）
 - 自定义 HMAC 请求签名：明确不做（Bearer 令牌已满足 v1）
 - 开放平台计费：不做
 

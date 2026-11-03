@@ -333,6 +333,32 @@ class OpenApiScopeGatewayFilterTest {
         }
 
         @Test
+        @DisplayName("放行时应注入可信 X-Client-Id（D2 分档限流/审计维度）")
+        void shouldInjectTrustedClientIdHeaderWhenSubscribed() {
+            ServerWebExchange[] holder = new ServerWebExchange[1];
+            MockServerWebExchange exchange = exchangeWith(
+                    HttpMethod.GET, "/open-api/files/x", claims(appClaims("open:file:read")), FILE_METADATA);
+
+            filter.filter(exchange, capturingChain(holder)).block();
+
+            assertThat(holder[0].getRequest().getHeaders().getFirst("X-Client-Id"))
+                    .isEqualTo("partner-app");
+        }
+
+        @Test
+        @DisplayName("放行时应注入能力标记头（服务侧二次校验触发依据，D4）")
+        void shouldInjectCapabilityMarkerHeaderWhenSubscribed() {
+            ServerWebExchange[] holder = new ServerWebExchange[1];
+            MockServerWebExchange exchange = exchangeWith(
+                    HttpMethod.GET, "/open-api/files/x", claims(appClaims("open:file:read")), FILE_METADATA);
+
+            filter.filter(exchange, capturingChain(holder)).block();
+
+            assertThat(holder[0].getRequest().getHeaders().getFirst("X-Open-Api-Capability"))
+                    .isEqualTo("file-storage");
+        }
+
+        @Test
         @DisplayName("能力未订阅应返回 403 + 能力未开通（40302）")
         void shouldRejectWhenCapabilityNotSubscribed() throws Exception {
             client = new StubCapabilityClient(Map.of(), false);

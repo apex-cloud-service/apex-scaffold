@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.SsoProviderDTO;
 import com.apex.scaffold.application.dto.admin.SsoProviderRequest;
 import com.apex.scaffold.application.service.SysSsoProviderService;
 import com.apex.scaffold.common.annotation.OperationLog;
@@ -94,13 +95,16 @@ public class SsoProviderHandler extends BaseHandler {
             description = "提供商名称(模糊查询)",
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
-    @Parameter(
-            name = "protocolType",
-            description = "协议类型(SAML/CAS/LDAP/OIDC)",
-            in = ParameterIn.QUERY,
-            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功,data 为 SSO 提供商列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @io.swagger.v3.oas.annotations.media.Schema(
+                                                implementation = SsoProviderDTO.class))),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:list 权限")
     })
@@ -132,10 +136,26 @@ public class SsoProviderHandler extends BaseHandler {
             operationId = "adminCreateSsoProvider",
             summary = "创建 SSO 提供商",
             description = "创建新的 SSO 提供商配置,支持 SAML、CAS、LDAP、OIDC 等协议")
-    @RequestBody(description = "SSO 提供商配置信息", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "SSO 提供商配置信息",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema =
+                                    @io.swagger.v3.oas.annotations.media.Schema(
+                                            implementation = SsoProviderRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "创建成功"),
-        @ApiResponse(responseCode = "400", description = "参数校验失败"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功,data 为已创建的 SSO 提供商",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @io.swagger.v3.oas.annotations.media.Schema(
+                                                implementation = SsoProviderDTO.class))),
+        @ApiResponse(responseCode = "400", description = "参数校验失败或提供商名称已存在"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:add 权限")
     })
@@ -171,9 +191,25 @@ public class SsoProviderHandler extends BaseHandler {
             required = true,
             in = ParameterIn.PATH,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
-    @RequestBody(description = "SSO 提供商更新信息", required = true, content = @Content(mediaType = "application/json"))
+    @RequestBody(
+            description = "SSO 提供商更新信息",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema =
+                                    @io.swagger.v3.oas.annotations.media.Schema(
+                                            implementation = SsoProviderRequest.class)))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "更新成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功,data 为已更新的 SSO 提供商",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @io.swagger.v3.oas.annotations.media.Schema(
+                                                implementation = SsoProviderDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数校验失败"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:edit 权限"),
@@ -213,7 +249,7 @@ public class SsoProviderHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "删除成功"),
+        @ApiResponse(responseCode = "200", description = "删除成功,data 含 deleted(是否删除成功)"),
         @ApiResponse(responseCode = "400", description = "参数错误,ID 必须为正整数"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:remove 权限"),
@@ -249,7 +285,15 @@ public class SsoProviderHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功,data 为 SSO 提供商详情",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @io.swagger.v3.oas.annotations.media.Schema(
+                                                implementation = SsoProviderDTO.class))),
         @ApiResponse(responseCode = "400", description = "参数错误,ID 必须为正整数"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:query 权限"),
@@ -286,7 +330,7 @@ public class SsoProviderHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "测试完成(包含连接成功或失败结果)"),
+        @ApiResponse(responseCode = "200", description = "测试完成(包含连接成功或失败结果),data 含 success(是否连通)、message(结果说明)"),
         @ApiResponse(responseCode = "400", description = "参数错误,ID 必须为正整数"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:test 权限"),
@@ -323,7 +367,9 @@ public class SsoProviderHandler extends BaseHandler {
             in = ParameterIn.PATH,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "获取成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "获取成功,data 为协议元数据(SAML 返回 SP 元数据,OIDC 返回 Discovery 信息,CAS 返回服务配置)"),
         @ApiResponse(responseCode = "400", description = "参数错误,ID 必须为正整数"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:provider:metadata 权限"),

@@ -641,6 +641,12 @@ public class JwtAuthenticationFilter implements WebFilter {
                 return true;
             }
         }
+        // 开放应用限流档内部接口（D2）由集群内网关直连（/open-api/** 分档限流消费）
+        for (String internalPath : SystemConstants.INTERNAL_OPEN_APP_PATHS) {
+            if (PATH_MATCHER.match(internalPath, path)) {
+                return true;
+            }
+        }
         return false;
     }
 

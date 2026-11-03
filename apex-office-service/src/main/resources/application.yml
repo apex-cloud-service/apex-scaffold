@@ -17,6 +17,11 @@ apex:
     allowed-origins: []
   tenant:
     enabled: true
+  open-api:
+    guard:
+      # D4 服务侧能力二次校验：携带网关 X-Open-Api-Capability 标记头的请求须通过能力订阅复核
+      enabled: true
+      base-url: ${APEX_SYSTEM_BASE_URL:http://127.0.0.1:8082}
   jwks:
     # 共享 JWKS 拉取（统一认证收口 A2）：认证中心 /.well-known/jwks.json；
     # 空 = 拉取关闭，仅用静态公钥兜底；轮换公钥最迟一个刷新周期内生效。

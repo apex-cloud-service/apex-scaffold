@@ -1,6 +1,7 @@
 package com.apex.scaffold.officeservice.interfaces.handler.office;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.office.application.OfficeApprovalService;
 import com.apex.scaffold.officeservice.interfaces.assembler.office.ApprovalProcessAssembler;
@@ -39,6 +40,7 @@ public class OfficeApprovalHandler {
     private final ApprovalProcessAssembler assembler;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    @RequirePermission("office:approval:initiate")
     /**
      * 校验请求并发起审批流程。
      * @param request 包含审批平台、流程定义、发起人与表单数据的请求
@@ -92,6 +94,7 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
+    @RequirePermission("office:approval:query")
     /**
      * 按平台流程实例 ID 查询审批详情。
      * @param request 包含 processInstanceId 路径参数的请求
@@ -142,6 +145,7 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
+    @RequirePermission("office:approval:approve")
     /**
      * 使用请求体中的审批人与操作类型执行审批。
      * @param request 包含流程实例 ID 和审批操作请求体的请求
@@ -197,6 +201,7 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
+    @RequirePermission("office:approval:cancel")
     /**
      * 按流程实例 ID 请求撤销审批。
      * @param request 包含 processInstanceId 路径参数的请求
@@ -246,6 +251,7 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
+    @RequirePermission("office:approval:pending")
     /**
      * 查询指定审批人的待审批流程。
      * @param request 必须包含 approverId 查询参数
@@ -298,6 +304,7 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
+    @RequirePermission("office:approval:list")
     /**
      * 查询当前登录用户已执行审批操作的流程。
      * @param request 当前认证请求
@@ -345,6 +352,7 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
+    @RequirePermission("office:approval:initiated")
     /**
      * 查询指定发起人的审批流程。
      * @param request 必须包含 initiatorId 查询参数

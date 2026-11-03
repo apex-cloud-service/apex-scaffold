@@ -97,7 +97,12 @@ public class RemoteTenantStatusAdapter implements TenantStatusPort {
                     }
                     return reject(tenantCode, "租户不可用（状态: " + snapshot.status() + "）");
                 })
+                // fail-closed 兜底只针对回源失败：业务拒绝（租户不存在/过期/不可用）原样传播，
+                // 不被兜底改写文案（否则审计无法区分"查不到"与"确认拒绝"）
                 .onErrorResume(e -> {
+                    if (e instanceof BusinessException) {
+                        return Mono.error(e);
+                    }
                     log.warn("租户状态查询失败，fail-closed（平台租户白名单除外）: tenant={}, reason={}", tenantCode, e.getMessage());
                     if (PLATFORM_TENANT.equals(tenantCode)) {
                         return Mono.empty();
@@ -134,6 +139,23 @@ public class RemoteTenantStatusAdapter implements TenantStatusPort {
         String status = feed.get("status") == null ? null : String.valueOf(feed.get("status"));
         boolean expired = Boolean.TRUE.equals(feed.get("expired"));
         return new Snapshot(exists, status, expired);
+    }
+
+    /**
+     * 失效指定租户的判定缓存（主数据事件驱动，方案 D5）。
+     *
+     * <p>租户禁用/过期等状态变更经 {@code TENANT_CHANGED} 事件通知后立即失效本地
+     * 判定缓存，下一次登录校验强制回源——租户状态变更最迟在一个事件投递周期内生效，
+     * 而不必等待 {@code cache-seconds} TTL 自然过期。消费天然幂等（重复失效同键）。
+     *
+     * @param tenantCode 租户编码；空白时清空全部缓存
+     */
+    public void invalidate(String tenantCode) {
+        if (tenantCode == null || tenantCode.isBlank()) {
+            decisions.clear();
+            return;
+        }
+        decisions.remove(tenantCode);
     }
 
     private Mono<Void> reject(String tenantCode, String reason) {

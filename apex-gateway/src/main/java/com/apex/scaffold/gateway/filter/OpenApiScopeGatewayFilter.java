@@ -57,6 +57,12 @@ public class OpenApiScopeGatewayFilter implements GlobalFilter, Ordered {
     /** 注入下游的可信 scope 头（令牌 scope 原文，空格分隔） */
     public static final String SCOPE_HEADER = "X-Client-Scopes";
 
+    /** 注入下游的可信客户端 ID 头（开放应用 client_id，供分档限流/服务侧审计消费） */
+    public static final String CLIENT_ID_HEADER = "X-Client-Id";
+
+    /** 注入下游的能力标记头（服务侧据此做能力订阅二次校验，D4 纵深防御） */
+    public static final String CAPABILITY_HEADER = "X-Open-Api-Capability";
+
     /** 路由元数据键（{@code spring.cloud.gateway.routes[].metadata.open-api}） */
     public static final String METADATA_KEY = "open-api";
 
@@ -125,7 +131,11 @@ public class OpenApiScopeGatewayFilter implements GlobalFilter, Ordered {
                     }
                     ServerHttpRequest request = exchange.getRequest()
                             .mutate()
-                            .headers(headers -> headers.set(SCOPE_HEADER, String.join(" ", tokenScopes)))
+                            .headers(headers -> {
+                                headers.set(SCOPE_HEADER, String.join(" ", tokenScopes));
+                                headers.set(CLIENT_ID_HEADER, str(claims.get(CLAIM_CLIENT_ID)));
+                                headers.set(CAPABILITY_HEADER, metadata.capability());
+                            })
                             .build();
                     return chain.filter(exchange.mutate().request(request).build());
                 })

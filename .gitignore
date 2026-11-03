@@ -111,7 +111,9 @@ __pycache__/
 *.pyc
 podman-compose.yml.bak.*
 
-# ===== 每日报告等本地产物 =====
-daily-report-*.md
-daily-report-*.html
-daily-report-*.docx
+# ===== 每日报告等本地产物（仅项目根目录散落件）=====
+# 周期报告已统一归档至 docs/08-project-management/periodic-reports/，
+# 以下规则锚定根目录，避免误伤归档目录下的 .md/.html/.docx
+/daily-report-*.md
+/daily-report-*.html
+/daily-report-*.docx

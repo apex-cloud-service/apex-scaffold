@@ -54,6 +54,9 @@ public class OpenAppAdminService {
     private static final String STATUS_ENABLED = "ENABLED";
     private static final String STATUS_DISABLED = "DISABLED";
 
+    /** 默认限流档编码（未声明档位/未知客户端的 fail-open 兜底） */
+    private static final String DEFAULT_RATE_LIMIT_TIER = "default";
+
     private final OAuth2ClientManagementService clientManagementService;
     private final OAuth2RegisteredClientRepository clientRepository;
     private final OpenPlatformScopeRegistry scopeRegistry;
@@ -115,6 +118,31 @@ public class OpenAppAdminService {
     }
 
     /**
+     * 查询开放应用限流档（D2 {@code rateLimitTier}，网关内部消费）。
+     *
+     * <p>读取开放应用元数据 {@code openPlatform.rateLimitTier}。非开放应用、未声明档位
+     * 或客户端不存在时返回 {@code default}——限流判定的 fail-open 口径：网关对未知/异常
+     * 客户端一律按默认档阈值放行判定，不因档位查询失败阻断开放调用。
+     *
+     * @param clientId 客户端 ID（空视为未声明）
+     * @return 限流档编码（如 {@code default}/{@code standard}/{@code premium}）
+     */
+    public Mono<String> getRateLimitTier(String clientId) {
+        if (clientId == null || clientId.isBlank()) {
+            return Mono.just(DEFAULT_RATE_LIMIT_TIER);
+        }
+        return clientRepository
+                .findByClientId(clientId)
+                .map(entity -> {
+                    String tier = textOrNull(parseSettings(entity.getClientSettings()), KEY_RATE_LIMIT_TIER);
+                    return tier == null || tier.isBlank() ? DEFAULT_RATE_LIMIT_TIER : tier;
+                })
+                // 元数据损坏等解析异常不阻断限流判定，回退默认档
+                .onErrorResume(error -> Mono.just(DEFAULT_RATE_LIMIT_TIER))
+                .defaultIfEmpty(DEFAULT_RATE_LIMIT_TIER);
+    }
+
+    /**
      * 分页查询客户端注册表（含未开通开放元数据的普通客户端）.
      *
      * @param page 页码（从 0 开始）
@@ -125,6 +153,15 @@ public class OpenAppAdminService {
         return clientRepository
                 .findAll(Math.max(0, page), Math.min(Math.max(1, size), 100))
                 .map(entity -> toResponse(entity, null));
+    }
+
+    /**
+     * 平台 scope 目录（与创建/更新的合法性校验同源注册表）。
+     *
+     * @return scope 定义列表（内置 + 配置扩展）
+     */
+    public List<OpenPlatformScopeRegistry.ScopeDefinition> listScopes() {
+        return scopeRegistry.list();
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.apex.scaffold.officeservice.interfaces.handler.office;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.office.application.OfficeOrganizationSyncService;
 import com.apex.scaffold.office.domain.OfficePlatform;
@@ -72,6 +73,7 @@ public class OfficeOrganizationHandler {
     public static class OrganizationTaskListResult
             extends Result<java.util.List<com.apex.scaffold.office.domain.OfficeSyncTask>> {}
 
+    @RequirePermission("office:organization:sync")
     /**
      * 同步组织（部门或成员）
      *
@@ -141,6 +143,7 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:organization:query")
     /**
      * 查询部门映射
      *
@@ -200,6 +203,7 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:organization:query")
     /**
      * 查询成员映射
      *
@@ -259,6 +263,7 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:organization:list")
     /**
      * 查询组织映射列表
      *
@@ -308,6 +313,7 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:sync:read")
     /**
      * 查询同步任务列表
      *

@@ -9,6 +9,15 @@ import com.apex.scaffold.integration.connector.application.CredentialManageServi
 import com.apex.scaffold.integration.connector.interfaces.dto.CredentialRegisterRequest;
 import com.apex.scaffold.integration.connector.interfaces.dto.CredentialResponse;
 import com.apex.scaffold.integration.connector.interfaces.dto.CredentialRotateRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +40,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "集成中心-凭据管理", description = "集成凭据登记与轮换（响应永不回显明文/密文）")
 public class CredentialHandler {
 
     private final CredentialManageService manageService;
@@ -44,6 +54,27 @@ public class CredentialHandler {
      * @return 凭据元数据列表（不含密文/明文）
      */
     @RequirePermission("integration:credential:read")
+    @Operation(
+            operationId = "integrationListCredentials",
+            summary = "查询租户凭据列表",
+            description = "返回凭据元数据列表（不含密文/明文），可按凭据类型过滤")
+    @Parameter(
+            name = "credentialType",
+            in = ParameterIn.QUERY,
+            required = false,
+            description = "凭据类型过滤",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为凭据元数据列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CredentialResponse.class))),
+        @ApiResponse(responseCode = "401", description = "缺少可信租户上下文"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 integration:credential:read 权限")
+    })
     public Mono<ServerResponse> list(ServerRequest request) {
         String credentialType = request.queryParam("credentialType").orElse(null);
         return IntegrationResponses.currentTenant(request)
@@ -62,6 +93,27 @@ public class CredentialHandler {
      * @return 凭据元数据（不含密文/明文）
      */
     @RequirePermission("integration:credential:read")
+    @Operation(
+            operationId = "integrationGetCredential",
+            summary = "按 ID 查询凭据元数据",
+            description = "按凭据主键查询元数据（租户归属校验），不含密文/明文")
+    @Parameter(
+            name = "id",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "凭据主键 ID",
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为凭据元数据",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CredentialResponse.class))),
+        @ApiResponse(responseCode = "404", description = "凭据不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 integration:credential:read 权限")
+    })
     public Mono<ServerResponse> get(ServerRequest request) {
         return IntegrationResponses.currentTenant(request)
                 .flatMap(tenantId -> manageService
@@ -78,6 +130,28 @@ public class CredentialHandler {
      * @return 凭据元数据（不含密文/明文）
      */
     @RequirePermission("integration:credential:manage")
+    @Operation(
+            operationId = "integrationRegisterCredential",
+            summary = "登记新凭据",
+            description = "入参含明文 secret，落库前由应用服务加密；响应仅返回元数据，永不回显明文/密文")
+    @RequestBody(
+            description = "凭据登记请求（凭据标识、类型、明文 secret）",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CredentialRegisterRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "登记成功，data 为凭据元数据",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CredentialResponse.class))),
+        @ApiResponse(responseCode = "400", description = "请求体为空或参数校验失败"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 integration:credential:manage 权限")
+    })
     @OperationLog(
             module = "integration",
             type = OperationLog.OperationType.INSERT,
@@ -101,6 +175,35 @@ public class CredentialHandler {
      * @return 轮换后的凭据元数据
      */
     @RequirePermission("integration:credential:manage")
+    @Operation(
+            operationId = "integrationRotateCredential",
+            summary = "轮换凭据",
+            description = "以新明文 secret 轮换既有凭据（落库前加密），响应仅返回元数据")
+    @Parameter(
+            name = "id",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "凭据主键 ID",
+            schema = @Schema(type = "integer", format = "int64"))
+    @RequestBody(
+            description = "凭据轮换请求（新明文 secret）",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CredentialRotateRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "轮换成功，data 为轮换后的凭据元数据",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = CredentialResponse.class))),
+        @ApiResponse(responseCode = "400", description = "请求体为空或参数校验失败"),
+        @ApiResponse(responseCode = "404", description = "凭据不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 integration:credential:manage 权限")
+    })
     @OperationLog(
             module = "integration",
             type = OperationLog.OperationType.UPDATE,
@@ -124,6 +227,18 @@ public class CredentialHandler {
      * @return 完成信号
      */
     @RequirePermission("integration:credential:manage")
+    @Operation(operationId = "integrationDeleteCredential", summary = "删除凭据", description = "按主键逻辑删除（租户归属校验）")
+    @Parameter(
+            name = "id",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "凭据主键 ID",
+            schema = @Schema(type = "integer", format = "int64"))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "删除成功，data 为空"),
+        @ApiResponse(responseCode = "404", description = "凭据不存在"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 integration:credential:manage 权限")
+    })
     @OperationLog(module = "integration", type = OperationLog.OperationType.DELETE, description = "删除集成凭据")
     public Mono<ServerResponse> delete(ServerRequest request) {
         return IntegrationResponses.currentTenant(request)

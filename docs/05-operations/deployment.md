@@ -91,7 +91,11 @@ bash scripts/utils/token-v42-recover.sh \
 │  :8093(宿主)→8083       │   │  DB apex_office                   │
 │  DB apex_workflow       │   ├──────────────────────────────────┤
 ├─────────────────────────┤   │ apex-file-service:8085            │
-│  共享: Redis / Nacos /  │   │  DB apex_file                     │
+│ apex-integration-service│   │  DB apex_file                     │
+│  :8094 (管理 8097)      │   │                                    │
+│  DB apex_integration    │   │                                    │
+├─────────────────────────┤   │                                    │
+│  共享: Redis / Nacos /  │   │                                    │
 │  RocketMQ / License     │   │                                    │
 └─────────────────────────┘   └──────────────────────────────────┘
                           │
@@ -416,6 +420,7 @@ curl http://localhost:8080/api/v1/health
 | apex-workflow-service | 本地构建 | `${WORKFLOW_PORT:-8093}`→8083 | apex_workflow | 工作流/审批 |
 | apex-office-service | 本地构建 | `${OFFICE_PORT:-8084}` | apex_office | 组织/办公 |
 | apex-file-service | 本地构建 | `${FILE_PORT:-8085}` | apex_file | 文件/文档 |
+| apex-integration-service | 本地构建 | `${INTEGRATION_PORT:-8094}` / 管理 `${INTEGRATION_MANAGEMENT_PORT:-8097}` | apex_integration | 集成中心连接器/凭据 + 物联网设备/规则；MQTT 桥接默认关闭 |
 | nacos | nacos/nacos-server:v2.4.3 | `${NACOS_PORT:-8848}` / gRPC `${NACOS_GRPC_PORT:-9848}` | — | 服务发现 + 配置中心 |
 | mysql | mysql:9.0 | `${MYSQL_PORT:-3306}` | apex_system（引导库） | 各服务经 createDatabaseIfNotExist 自建独立库 |
 | redis | redis:7-alpine | `${REDIS_PORT:-6379}` | — | AOF 持久化 |

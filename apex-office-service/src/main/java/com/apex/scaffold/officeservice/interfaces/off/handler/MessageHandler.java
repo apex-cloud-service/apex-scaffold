@@ -1,6 +1,7 @@
 package com.apex.scaffold.officeservice.interfaces.off.handler;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
@@ -64,6 +65,7 @@ public class MessageHandler {
     private final OffMessageService messageService;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    @RequirePermission("office:message:send")
     /**
      * 处理发送消息请求。
      *
@@ -111,6 +113,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:list")
     /**
      * 处理获取收件箱请求。
      *
@@ -161,6 +164,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:list")
     /**
      * 处理获取发件箱请求。
      *
@@ -211,6 +215,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:query")
     /**
      * 处理获取消息详情请求。
      *
@@ -264,6 +269,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:list")
     /**
      * 处理标记消息为已读请求。
      *
@@ -308,6 +314,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:list")
     /**
      * 处理全部标记为已读请求。
      *
@@ -339,6 +346,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:query")
     /**
      * 处理获取未读消息数请求。
      *
@@ -370,6 +378,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:list")
     /**
      * 处理收件箱增量游标查询请求。
      *
@@ -427,6 +436,7 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
+    @RequirePermission("office:message:query")
     /**
      * 处理查询消息渠道投递记录请求。
      *

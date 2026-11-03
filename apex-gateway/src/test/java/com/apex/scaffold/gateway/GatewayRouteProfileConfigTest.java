@@ -77,6 +77,9 @@ class GatewayRouteProfileConfigTest {
     /** 脱敏服务路由标识，整表重定义时易被整表覆盖丢失。 */
     private static final String MASKING_ROUTE_ID = "masking-domain";
 
+    /** 集成中心路由标识（E1-E3 管理端点），整表重定义时易被整表覆盖丢失。 */
+    private static final String INTEGRATION_ROUTE_ID = "integration-domain";
+
     /** 站内信 WebSocket 握手路径。 */
     private static final String WEBSOCKET_PATH = "/api/v1/messages/ws";
 
@@ -244,6 +247,20 @@ class GatewayRouteProfileConfigTest {
         assertThat(pathPredicateArgs(findRoute(routes, MASKING_ROUTE_ID, source)))
                 .withFailMessage("%s：masking-domain 须覆盖脱敏前缀", source)
                 .contains("/api/v1/masking/**");
+
+        // 集成中心（E1-E3）：管理端点须有独立路由，且不得把内部端点 /internal/v1/** 暴露到网关
+        RouteDefinition integration = findRoute(routes, INTEGRATION_ROUTE_ID, source);
+        assertThat(pathPredicateArgs(integration))
+                .withFailMessage("%s：integration-domain 须覆盖集成与 IoT 管理前缀", source)
+                .contains("/integration/v1/**")
+                .withFailMessage("%s：integration-domain 不得暴露内部端点", source)
+                .noneMatch(path -> path.startsWith("/internal/"));
+        assertThat(integration.getFilters())
+                .withFailMessage("%s：integration-domain 须挂熔断回退", source)
+                .anySatisfy(filter -> {
+                    assertThat(filter.getName()).isEqualTo("CircuitBreaker");
+                    assertThat(filter.getArgs()).containsEntry("fallbackUri", FALLBACK_URI);
+                });
 
         assertOpenApiRoutes(routes, source);
     }

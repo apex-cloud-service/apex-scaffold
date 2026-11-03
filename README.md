@@ -4,7 +4,7 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.15-brightgreen)
 ![Java](https://img.shields.io/badge/Java-21.0.13-orange)
 
-基于 Spring Boot、Spring WebFlux 和 DDD 的 Java 后端脚手架，提供认证、系统管理、工作流、办公集成和文件服务。当前运行架构为 **API 网关 + 五个业务服务 + 任务代理及可选脱敏服务**，业务代码以库模块复用，各服务通过独立启动模块装配。
+基于 Spring Boot、Spring WebFlux 和 DDD 的 Java 后端脚手架，提供认证、系统管理、工作流、办公集成、文件与对外集成/物联网设备接入服务。当前运行架构为 **API 网关 + 六个业务服务 + 任务代理及可选脱敏服务**，业务代码以库模块复用，各服务通过独立启动模块装配。
 
 [模块结构](#模块结构) · [快速开始](#快速开始) · [配置与部署](#配置与部署) · [验证与开发](#验证与开发) · [文档入口](#文档入口) · [许可证](#许可证)
 
@@ -45,7 +45,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 
 ## 模块结构
 
-根 POM 当前聚合 31 个模块。
+根 POM 当前聚合 34 个模块。
 
 | 分类 | 模块 | 职责 |
 | --- | --- | --- |
@@ -53,9 +53,10 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | 共享领域 | `apex-domain` | 基础实体、通用事件、端口与 Gateway 契约 |
 | 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration` | 按持久化、缓存、消息、远程调用和第三方集成拆分发布；`apex-infrastructure` 保留为旧坐标兼容聚合，不再承载实现源码 |
 | 跨服务契约 | `apex-api-contract` | 内部 API 接口和共享 DTO |
-| 服务父 POM | `apex-services-bom` | 网关、五业务服务及任务代理、脱敏服务的 parent，统一依赖与构建配置 |
-| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file` | 各业务域的领域、应用与专属基础设施实现 |
-| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service` | 网关或业务服务的启动、配置与装配 |
+| 服务父 POM | `apex-services-bom` | 网关、六个业务服务、集成能力库、组合部署包及任务代理、脱敏服务的 parent，统一依赖与构建配置 |
+| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration` | 各业务域的领域、应用与专属基础设施实现；`apex-integration` 含连接器与物联网设备两个子域 |
+| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service` | 网关或业务服务的启动、配置与装配 |
+| 组合部署 | `apex-boot-all` | basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 |
 | 服务增强 | `apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter`、`apex-job-service`、`apex-masking-service` | XXL 执行器、多模式分布式事务（AT/TCC/SAGA/XA）、固定任务代理与脱敏服务 |
 | 对象存储 | `apex-storage-spring-boot-starter` | 仅内部依赖 common，提供五后端策略和自动装配 |
 | 授权 | `apex-license-spring-boot-starter`、`apex-license-tools` | 运行时许可证校验与离线授权工具 |
@@ -71,10 +72,11 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
         ├─ apex-workflow-service → apex-workflow
         ├─ apex-office-service   → apex-office
         ├─ apex-file-service     → apex-file → apex-storage-spring-boot-starter → apex-common
+        ├─ apex-integration-service → apex-integration（连接器 + 物联网设备）
         ├─ apex-job-service      → system 任务管理接口
         └─ apex-masking-service  → common 脱敏工具（可选）
 
-共享依赖：persistence/cache → domain、common；messaging → persistence、domain、common；remote → domain、common；integration → remote、domain、common；兼容聚合 infrastructure → 五个能力 JAR
+共享依赖：persistence/cache → domain、common；messaging → persistence、domain、common；remote → domain、common；infrastructure-integration → remote、domain、common；兼容聚合 infrastructure → 五个能力 JAR
 跨服务契约：api-contract → common
 ```
 
@@ -90,13 +92,14 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | `apex-workflow-service` | `WorkflowServiceApplication` | 8083 | `apex_workflow` |
 | `apex-office-service` | `OfficeServiceApplication` | 8084 | `apex_office` |
 | `apex-file-service` | `FileServiceApplication` | 8085 | `apex_file` |
+| `apex-integration-service` | `IntegrationServiceApplication` | 8094 | `apex_integration` |
 | `apex-job-service` | `JobServiceApplication` | 8095 | 无独立数据库，固定代理 system |
 | `apex-masking-service` | `MaskingServiceApplication` | 8096 | 无持久化 |
 | `apex-example` | `ExampleApplication` | 8080 | `apex_example` |
 
-system 的默认管理端口为 8083，与 workflow 的业务端口冲突。同一宿主机联调时可将 workflow 的 `server.port` 改为 8093；应用 Compose 已将其宿主机端口映射为 8093。example 与 gateway 也不能同时占用默认 8080。
+system 的默认管理端口为 8083，与 workflow 的业务端口冲突。同一宿主机联调时可将 workflow 的 `server.port` 改为 8093；应用 Compose 已将其宿主机端口映射为 8093。集成服务管理端口为 8097（避开任务代理 8095 与脱敏服务 8096）。example 与 gateway 也不能同时占用默认 8080。
 
-数据库由各服务分别管理。system 的迁移资源位于 `apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；其他四个业务服务的迁移资源位于各自 service 模块。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
+数据库由各服务分别管理。system 的迁移资源位于 `apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；integration 的迁移资源位于 `apex-integration/src/main/resources/db/migration/`；其他四个业务服务的迁移资源位于各自 service 模块。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
 
 <a id="快速开始"></a>
 
@@ -258,7 +261,7 @@ mvnd -T4 -B -pl apex-system-service -am test
 | [微服务验收清单](docs/08-project-management/checklists/microservice-acceptance-checklist.md) | 迁移与验收记录 |
 | [服务增强实施计划](docs/08-project-management/plans/service-enhancement-implementation-plan.md) | 增强范围、依赖边界与验收要求 |
 | [服务增强交付报告](docs/08-project-management/reports/service-enhancement-delivery-report.md) | 文件清单、真实检查结果与运行限制 |
-| [周报归档](docs/08-project-management/weekly-reports/README.md) | 按周记录的实施与验证进展 |
+| [周期报告归档](docs/08-project-management/periodic-reports/README.md) | 日报、周报、月报的归档位置与命名口径 |
 
 历史文档可能保留迁移阶段名称；当前模块、入口、依赖和配置以根 POM、服务代码及脚本为准。
 

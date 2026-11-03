@@ -50,12 +50,16 @@
 | --- | --- | --- |
 | POST | `/integration/v1/iot/devices` | 注册设备（返回 deviceKey + 一次性凭据） |
 | GET | `/integration/v1/iot/devices` | 设备列表（分页） |
-| GET | `/integration/v1/iot/devices/{id}` | 设备详情（含影子 reported/desired） |
+| GET | `/integration/v1/iot/devices/{id}` | 设备详情（基础字段，**不含影子**；影子走 `/shadow` 子资源） |
 | DELETE | `/integration/v1/iot/devices/{id}` | 注销设备 |
 | GET | `/integration/v1/iot/devices/{id}/telemetry` | 遥测历史 |
+| GET | `/integration/v1/iot/devices/{id}/shadow` | 设备影子（desired/reported JSON + version 乐观锁，只读视图） |
+| GET | `/integration/v1/iot/devices/{id}/commands` | 命令历史分页（pageNum/pageSize） |
+| POST | `/integration/v1/iot/devices/{id}/commands` | 命令下发（commandId 幂等，权限码 `iot:command:send`） |
+| GET | `/integration/v1/iot/rules` | 规则分页（keyword/enabled/pageNum/pageSize） |
 | POST | `/integration/v1/iot/rules` | 创建规则（结构化条件 + 动作） |
 | GET | `/integration/v1/iot/rules/{id}` | 规则详情 |
-| POST | `/integration/v1/iot/rules/{id}/toggle` | 启停规则 |
+| POST | `/integration/v1/iot/rules/{id}/toggle` | 启停规则（请求体 `enabled` 为字符串 `"true"`/`"false"`） |
 
 **内部端点**（集群内直连，不经网关）：
 
@@ -114,12 +118,13 @@ authorization {
 | 权限码 | 说明 |
 | --- | --- |
 | `integration:connector:read` / `create` / `update` / `delete` | 连接器管理 |
-| `integration:credential:read` / `create` / `rotate` / `delete` | 凭据管理 |
-| `iot:device:read` / `register` / `deregister` | 设备管理 |
-| `iot:command:send` | 命令下发 |
-| `iot:rule:read` / `create` / `update` | 规则管理 |
+| `integration:credential:read` / `manage` | 凭据查询 / 注册与轮换删除 |
+| `iot:device:read` / `iot:device:manage` | 设备查询（含影子与命令历史）/ 注册注销 |
+| `iot:telemetry:read` | 遥测查询 |
+| `iot:command:send` | 命令下发（V85 登记） |
+| `iot:rule:read` / `iot:rule:manage` | 规则列表与详情（V85）/ 创建与启停（V83） |
 
-种子见 `apex-system/src/main/resources/db/migration/{mysql,postgresql}/V83__register_integration_iot_permissions.sql`。
+种子见 `apex-system/src/main/resources/db/migration/{mysql,postgresql}/V83__register_integration_iot_permissions.sql` 与 `V85__register_iot_rule_read_and_command_permissions.sql`；菜单种子见 `V86__register_frontend_management_menus.sql`。
 
 ## 9. 事件契约
 
@@ -133,4 +138,4 @@ authorization {
 - **HTTP/Webhook 连接器的真实外部联调**：契约与实现已就位，未对真实第三方端点做端到端联调。
 - **EMQX 生产集群**：本地 EMQX 5.8.6 已验证认证钩子与 HTTP 授权钩子（越权订阅被 broker 拒绝）；多节点集群与 ACL 缓存策略未验证。
 - **吞吐基线**：本地实测单连接 331 msg/s、10 设备并发 907 msg/s（QoS 1，0 丢失）；仅容量参考，不构成 SLA。
-- **前端页面**（设备管理 / 连接器管理 UI）：按用户要求**不在本次范围**。
+- **影子 desired 写接口**：影子当前为只读查询；desired 的管理端写入未实现（下行生效依赖设备侧上报）。

@@ -106,7 +106,7 @@ public class SsoAuthHandler extends BaseHandler {
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64", example = "1"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "生成认证请求成功,返回重定向 URL"),
+        @ApiResponse(responseCode = "200", description = "生成认证请求成功,data 为协议相关数据,多数协议含 redirectUrl 重定向地址"),
         @ApiResponse(responseCode = "400", description = "参数错误,提供商 ID 必填且为正整数"),
         @ApiResponse(responseCode = "404", description = "SSO 提供商不存在或已禁用")
     })
@@ -217,7 +217,7 @@ public class SsoAuthHandler extends BaseHandler {
             summary = "SSO 登出",
             description = "注销当前用户的 SSO 会话,撤销本地会话并可选择性地重定向到 SSO 提供商的登出端点")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "登出成功"),
+        @ApiResponse(responseCode = "200", description = "登出成功,data 含 success、revokedCount、message"),
         @ApiResponse(responseCode = "401", description = "未授权,需要先登录"),
         @ApiResponse(responseCode = "404", description = "SSO 会话不存在")
     })

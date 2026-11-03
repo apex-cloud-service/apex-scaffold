@@ -1,5 +1,7 @@
 package com.apex.scaffold.application.capability;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +32,14 @@ public final class CapabilityCatalog {
      * @param openScopes    对外可申请的开放 scope（无则不对外开放）
      * @param description   能力说明
      */
+    @Schema(name = "Capability", description = "能力目录条目（平台级登记，展示顺序 = 登记顺序）")
     public record Capability(
-            String code, String name, String center, String component, Set<String> openScopes, String description) {}
+            @Schema(description = "能力编码（与套餐 features 取值一致）", example = "file-storage") String code,
+            @Schema(description = "能力名称", example = "文件存储") String name,
+            @Schema(description = "归属能力中心", example = "文件中心") String center,
+            @Schema(description = "提供该能力的组件（Maven 模块名）", example = "apex-file-service") String component,
+            @Schema(description = "对外可申请的开放 scope（空集合 = 不对外开放）") Set<String> openScopes,
+            @Schema(description = "能力说明") String description) {}
 
     /** 能力目录（插入顺序稳定，便于文档与前端展示）。 */
     private static final Map<String, Capability> CATALOG = buildCatalog();
@@ -102,7 +110,8 @@ public final class CapabilityCatalog {
                         "apex-integration",
                         Set.of(),
                         "设备注册/认证、遥测上行、命令下行、规则引擎（M5 交付）"));
-        return Map.copyOf(catalog);
+        // LinkedHashMap 保序包装：all()/目录页的展示顺序 = 登记顺序（Map.copyOf 不保序）
+        return Collections.unmodifiableMap(catalog);
     }
 
     private static void register(Map<String, Capability> catalog, Capability capability) {

@@ -1,8 +1,16 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.internal.OverviewResponse;
 import com.apex.scaffold.application.service.OverviewFacadeService;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -36,6 +44,29 @@ public class InternalOverviewHandler {
      * @param request 当前请求（查询参数 {@code tenantId}）
      * @return 聚合响应（{@code Result<OverviewResponse>}）
      */
+    @Operation(
+            operationId = "internalOverview",
+            summary = "跨域只读概览聚合（内部）",
+            description = "集群内服务直连接口，不经网关。并行拉取文件/工作流/集成统计并聚合；"
+                    + "任一数据源不可达时该源按 DEGRADED 降级（部分可用）；"
+                    + "Authorization 头原样透传给需要认证的数据源")
+    @Parameter(
+            name = "tenantId",
+            in = ParameterIn.QUERY,
+            required = true,
+            description = "租户标识（内部契约显式声明，长度上限 64）",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Result 封装的聚合响应（降级源以 DEGRADED 呈现）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = OverviewResponse.class))),
+        @ApiResponse(responseCode = "400", description = "tenantId 缺失或超长"),
+        @ApiResponse(responseCode = "500", description = "聚合门面查询失败")
+    })
     public Mono<ServerResponse> getOverview(ServerRequest request) {
         String tenantId = request.queryParam("tenantId").map(String::trim).orElse(null);
         if (tenantId == null || tenantId.isBlank() || tenantId.length() > 64) {

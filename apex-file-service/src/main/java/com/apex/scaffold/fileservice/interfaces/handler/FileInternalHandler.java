@@ -5,6 +5,14 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.file.application.service.StorageStatsService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +40,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "内部契约", description = "集群内服务直连接口，不经网关")
 public class FileInternalHandler {
 
     private final StorageStatsService storageStatsService;
@@ -42,6 +51,30 @@ public class FileInternalHandler {
      * @param request 当前请求（可选查询参数 {@code tenantId}）
      * @return {@code Result<{ "storageUsageBytes": N }>}
      */
+    @Operation(
+            operationId = "internalFileStats",
+            summary = "租户存储用量统计（内部）",
+            description = "集群内服务直连接口，不经网关。返回租户已用存储字节数，"
+                    + "供 system 聚合门面（D5）与能力计量（D4 存储维度）消费；"
+                    + "租户标识优先取 tenantId 参数，缺失时回退可信租户上下文，两者均缺失返回 401")
+    @Parameter(
+            name = "tenantId",
+            in = ParameterIn.QUERY,
+            required = false,
+            description = "租户标识（聚合门面显式传递；缺省回退可信租户上下文）",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为 {\"storageUsageBytes\": 已用字节数}",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(type = "object", example = "{\"storageUsageBytes\": 2048}"))),
+        @ApiResponse(responseCode = "400", description = "参数错误"),
+        @ApiResponse(responseCode = "401", description = "缺少可信租户标识"),
+        @ApiResponse(responseCode = "500", description = "统计查询失败")
+    })
     public Mono<ServerResponse> stats(ServerRequest request) {
         return resolveTenant(request)
                 .flatMap(storageStatsService::tenantStorageUsage)

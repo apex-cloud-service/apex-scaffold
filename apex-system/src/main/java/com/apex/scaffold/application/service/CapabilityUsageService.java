@@ -53,6 +53,8 @@ public class CapabilityUsageService {
 
     private final CapabilityUsageProperties properties;
 
+    private final CapabilityMetricClient capabilityMetricClient;
+
     /**
      * 分页查询能力调用用量。
      *
@@ -105,9 +107,58 @@ public class CapabilityUsageService {
         int effectivePageSize = pageSize != null ? Math.min(Math.max(pageSize, 1), MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
         LocalDateTime fromTime = effectiveFrom.atStartOfDay();
         LocalDateTime toTime = effectiveTo.atTime(LocalTime.MAX);
-        return capabilityUsageQueryRepository
+        Mono<PageResponse<CapabilityUsageDTO>> pageMono = capabilityUsageQueryRepository
                 .countCallsByUriPrefixes(uriPrefixes, fromTime, toTime, scopedTenant)
                 .map(rows -> paginate(rows, capability, effectivePageNum, effectivePageSize));
+        if (scopedTenant == null || scopedTenant.isBlank()) {
+            // 平台全量视角：存量维度按租户逐个拉取代价过高，仅返回调用次数
+            return pageMono;
+        }
+        return pageMono.flatMap(page -> attachStockMetric(page, capability, scopedTenant));
+    }
+
+    /**
+     * 为单租户查询补充存量维度（D4 四维度计量）。
+     *
+     * <p>存量指标（存储用量/设备数/消息量）来自对应域内部统计端点；按源降级——
+     * 指标不可得时保持 {@code null}，不影响调用次数维度。
+     *
+     * @param page       调用次数分页结果
+     * @param capability 能力编码
+     * @param tenantId   租户标识（单租户查询）
+     * @return 补充存量维度后的分页结果
+     */
+    private Mono<PageResponse<CapabilityUsageDTO>> attachStockMetric(
+            PageResponse<CapabilityUsageDTO> page, String capability, String tenantId) {
+        CapabilityUsageProperties.MetricSource source = properties.getMetrics().get(capability);
+        if (source == null) {
+            return Mono.just(page);
+        }
+        return capabilityMetricClient
+                .fetch(capability, tenantId)
+                .map(value -> {
+                    page.getList().forEach(row -> applyMetric(row, source.field(), value));
+                    return page;
+                })
+                .defaultIfEmpty(page);
+    }
+
+    /**
+     * 按存量指标字段名写入 DTO 对应维度。
+     *
+     * @param row    用量行
+     * @param field  指标字段名（{@code CapabilityUsageProperties.MetricSource#field}）
+     * @param value  指标数值
+     */
+    private void applyMetric(CapabilityUsageDTO row, String field, long value) {
+        switch (field) {
+            case "storageUsageBytes" -> row.setStorageUsageBytes(value);
+            case "deviceCount" -> row.setDeviceCount(value);
+            case "messageCount" -> row.setMessageCount(value);
+            default -> {
+                // 未知指标字段：忽略（配置错误由配置评审拦截，不影响用量查询）
+            }
+        }
     }
 
     /**

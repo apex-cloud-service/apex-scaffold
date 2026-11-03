@@ -1,6 +1,7 @@
 package com.apex.scaffold.officeservice.interfaces.handler.office;
 
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.office.application.OfficeDocumentService;
 import com.apex.scaffold.office.domain.document.DocumentType;
@@ -73,6 +74,7 @@ public class OfficeDocumentHandler {
     private final DocumentInfoAssembler assembler;
     private final RequestHandlerUtil requestHandlerUtil;
 
+    @RequirePermission("office:document:create")
     /**
      * 创建文档
      *
@@ -133,6 +135,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:create")
     /**
      * 上传文件
      *
@@ -189,6 +192,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:query")
     /**
      * 查询文档详情
      *
@@ -237,6 +241,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:list")
     /**
      * 查询文件夹下的文档
      *
@@ -295,6 +300,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:my")
     /**
      * 查询我的文档
      *
@@ -342,6 +348,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:query")
     /**
      * 下载文档
      *
@@ -396,6 +403,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:delete")
     /**
      * 删除文档
      *
@@ -443,6 +451,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:move")
     /**
      * 移动文档
      *
@@ -498,6 +507,7 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
+    @RequirePermission("office:document:copy")
     /**
      * 复制文档
      *

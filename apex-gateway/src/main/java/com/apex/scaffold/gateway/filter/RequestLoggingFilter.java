@@ -155,6 +155,7 @@ public class RequestLoggingFilter implements GlobalFilter, Ordered {
         String userId = requestHeaders.getFirst(UserContextRelayFilter.HEADER_USER_ID);
         String tenantId = requestHeaders.getFirst(UserContextRelayFilter.HEADER_TENANT_ID);
         String userAgent = requestHeaders.getFirst(HttpHeaders.USER_AGENT);
+        String clientId = resolveClientId(exchange);
 
         AccessLogRecord record = new AccessLogRecord(
                 null,
@@ -171,8 +172,23 @@ public class RequestLoggingFilter implements GlobalFilter, Ordered {
                 accessLogService.sanitizeHeaders(requestHeaders),
                 userId,
                 tenantId,
+                clientId,
                 LocalDateTime.now());
         accessLogService.save(record).subscribe();
+    }
+
+    /**
+     * 从已验签令牌声明提取开放应用客户端 ID（D2 审计 client 维度）。
+     *
+     * <p>普通用户令牌与匿名请求返回 {@code null}，落库列保持为空。
+     *
+     * @param exchange 当前交换
+     * @return client_id claim 原文；缺失时 {@code null}
+     */
+    private String resolveClientId(ServerWebExchange exchange) {
+        io.jsonwebtoken.Claims claims = exchange.getAttribute(JwtSignatureFilter.ATTR_CLAIMS);
+        Object clientId = claims == null ? null : claims.get("client_id");
+        return clientId == null || clientId.toString().isBlank() ? null : clientId.toString();
     }
 
     /**

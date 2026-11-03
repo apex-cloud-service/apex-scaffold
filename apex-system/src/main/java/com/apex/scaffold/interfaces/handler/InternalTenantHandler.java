@@ -4,6 +4,13 @@ import com.apex.scaffold.application.service.TenantApplicationService;
 import com.apex.scaffold.application.service.TenantPackageService;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -38,6 +45,29 @@ public class InternalTenantHandler {
      * @param request 当前请求（路径参数 {@code code}）
      * @return 状态快照（{@code Result<TenantApplicationService.TenantStatusSnapshot>}）
      */
+    @Operation(
+            operationId = "internalTenantStatus",
+            summary = "查询租户认证期状态（内部）",
+            description = "集群内服务直连接口，不经网关。返回租户存在性、状态机、过期与配额摘要，"
+                    + "供认证中心登录前置校验消费（统一认证收口 A6）；未知租户以 exists=false 数据化返回（HTTP 200）")
+    @Parameter(
+            name = "code",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "租户编码（长度上限 64）",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Result 封装的状态快照（未知租户 exists=false）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(implementation = TenantApplicationService.TenantStatusSnapshot.class))),
+        @ApiResponse(responseCode = "400", description = "code 缺失或超长"),
+        @ApiResponse(responseCode = "500", description = "租户状态查询失败")
+    })
     public Mono<ServerResponse> getStatus(ServerRequest request) {
         String code = request.pathVariable("code");
         if (code == null || code.isBlank() || code.length() > 64) {
@@ -58,6 +88,29 @@ public class InternalTenantHandler {
      * @param request 当前请求（路径参数 {@code code}）
      * @return 能力订阅快照（{@code Result<TenantPackageService.CapabilitySnapshot>}）
      */
+    @Operation(
+            operationId = "internalTenantCapabilities",
+            summary = "查询租户能力订阅快照（内部）",
+            description = "集群内服务直连接口，不经网关。返回租户存在性与能力订阅集合"
+                    + "（unbounded/空 features = 全量订阅），供网关开放接口能力门禁消费（D4）；"
+                    + "未知租户以 exists=false 数据化返回（HTTP 200）")
+    @Parameter(
+            name = "code",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "租户编码（长度上限 64）",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Result 封装的能力订阅快照（未知租户 exists=false）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = TenantPackageService.CapabilitySnapshot.class))),
+        @ApiResponse(responseCode = "400", description = "code 缺失或超长"),
+        @ApiResponse(responseCode = "500", description = "能力订阅查询失败")
+    })
     public Mono<ServerResponse> getCapabilities(ServerRequest request) {
         String code = request.pathVariable("code");
         if (code == null || code.isBlank() || code.length() > 64) {

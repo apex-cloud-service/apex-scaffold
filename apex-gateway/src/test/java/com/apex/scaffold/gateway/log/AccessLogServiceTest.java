@@ -74,6 +74,7 @@ class AccessLogServiceTest {
                 "{}",
                 "1001",
                 "1",
+                null,
                 LocalDateTime.now());
     }
 

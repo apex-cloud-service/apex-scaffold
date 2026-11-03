@@ -10,4 +10,5 @@
 - [微服务化迁移方案](./plans/microservice-migration-plan.md) - 单体到五服务架构的迁移设计
 - [设计模式 / Starter / SPI 优化方案](./plans/design-pattern-starter-spi-optimization-plan.md) - 评审结论、可 Starter 化候选与 SPI 化路线，本轮不含代码调整
 - [工作区治理与本地运维交付物](./workspace-governance/README.md) - 工作区管理规范、清理复核报告、系统卡顿诊断等（原项目根目录散落文件，2026-10-21 迁入）
-- [工作周报](./weekly-reports/README.md) - 按周归档的工作周报（原 `docs/工作周报/` 与项目根目录散落文件，2026-10-27 迁入）
+- [周期报告（日报 / 周报 / 月报）](./periodic-reports/README.md) - 按报告类型归档的周期性过程记录，原项目根目录、`reports/2026-10/`、`weekly-reports/` 三处散落件于 2026-10-31 统一迁入
+- [技术报告](./reports/) - 交付、审计与专项技术报告

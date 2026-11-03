@@ -1,5 +1,6 @@
 package com.apex.scaffold.interfaces.handler;
 
+import com.apex.scaffold.application.dto.admin.SsoAuditLogDTO;
 import com.apex.scaffold.application.service.SysSsoAuditLogService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
@@ -9,6 +10,7 @@ import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -95,10 +97,10 @@ public class SsoAuditLogHandler extends BaseHandler {
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", example = "20"))
     @Parameter(
-            name = "username",
-            description = "用户名(模糊查询)",
+            name = "userId",
+            description = "用户 ID",
             in = ParameterIn.QUERY,
-            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
+            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @Parameter(
             name = "providerId",
             description = "SSO 提供商 ID",
@@ -107,11 +109,6 @@ public class SsoAuditLogHandler extends BaseHandler {
     @Parameter(
             name = "operationType",
             description = "操作类型(LOGIN/LOGOUT/REVOKE/TEST_CONNECTION/CONFIG_UPDATE)",
-            in = ParameterIn.QUERY,
-            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
-    @Parameter(
-            name = "result",
-            description = "操作结果(SUCCESS/FAILED)",
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string"))
     @Parameter(
@@ -125,7 +122,15 @@ public class SsoAuditLogHandler extends BaseHandler {
             in = ParameterIn.QUERY,
             schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "date-time"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功,data 为 SSO 审计日志列表",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @io.swagger.v3.oas.annotations.media.Schema(
+                                                implementation = SsoAuditLogDTO.class))),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:auditlog:list 权限")
     })
@@ -167,17 +172,22 @@ public class SsoAuditLogHandler extends BaseHandler {
             summary = "获取 SSO 审计日志统计信息",
             description = "获取当前租户下的 SSO 审计日志统计信息,包括操作类型分布、成功/失败比例、按提供商分组等")
     @Parameter(
-            name = "startTime",
-            description = "开始时间(ISO 8601 格式)",
+            name = "providerId",
+            description = "SSO 提供商 ID(必填)",
+            required = true,
             in = ParameterIn.QUERY,
-            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "date-time"))
+            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", format = "int64"))
     @Parameter(
-            name = "endTime",
-            description = "结束时间(ISO 8601 格式)",
+            name = "days",
+            description = "统计最近天数",
             in = ParameterIn.QUERY,
-            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "string", format = "date-time"))
+            schema = @io.swagger.v3.oas.annotations.media.Schema(type = "integer", defaultValue = "30"))
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "查询成功"),
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功,data 含 providerId、days、totalCount、successCount、failureCount、"
+                        + "successRate、actionCounts(按操作类型分组计数)、startTime、endTime"),
+        @ApiResponse(responseCode = "400", description = "providerId 缺失或非法"),
         @ApiResponse(responseCode = "401", description = "未授权,需要登录"),
         @ApiResponse(responseCode = "403", description = "权限不足,需要 system:sso:auditlog:stat 权限")
     })

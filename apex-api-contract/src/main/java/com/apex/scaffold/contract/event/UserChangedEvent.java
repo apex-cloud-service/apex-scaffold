@@ -1,6 +1,7 @@
 package com.apex.scaffold.contract.event;
 
 import com.apex.scaffold.common.event.AbstractDomainEvent;
+import com.apex.scaffold.common.event.DistributedDomainEvent;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -15,7 +16,9 @@ import lombok.Getter;
  * <ul>
  *   <li>发布方：apex-system-service（{@code UserService#create} / {@code UserService#update}）</li>
  *   <li>订阅方：需要本地缓存失效或主数据投影的业务服务（file、office 等）</li>
- *   <li>Topic：{@code apex-domain-event}（由 {@code apex.mq.domain-event-topic} 配置）</li>
+ *   <li>Topic：{@code apex-domain-event}（由 {@code apex.mq.domain-event-topic} 配置）；
+ *       实现 {@link DistributedDomainEvent} 标记，由 {@code DomainEventMqBridge} 在 Outbox
+ *       重放点以 {@code topic:tag} 异步广播，tag 为事件类型</li>
  *   <li>负载仅含非敏感标识字段（用户 ID 与动作类型），不含手机号、姓名等个人数据</li>
  * </ul>
  *
@@ -28,7 +31,7 @@ import lombok.Getter;
  * @see AbstractDomainEvent
  */
 @Getter
-public class UserChangedEvent extends AbstractDomainEvent {
+public class UserChangedEvent extends AbstractDomainEvent implements DistributedDomainEvent {
 
     /** 动作：用户创建。 */
     public static final String ACTION_CREATED = "CREATED";

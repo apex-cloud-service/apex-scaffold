@@ -7,6 +7,14 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -37,6 +45,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "开放平台应用（认证中心）", description = "开放应用注册表查询与 scope 目录")
 public class OpenAppHandler {
 
     /** 注册表类型：OAuth2 客户端。 */
@@ -52,6 +61,23 @@ public class OpenAppHandler {
      * @param request 当前请求（租户取自可信上下文）
      * @return 应用列表
      */
+    @Operation(
+            operationId = "authListOpenApps",
+            summary = "列出当前租户开放应用",
+            description = "基于 OAUTH2_CLIENT 注册表列出本租户开放应用摘要（应用名、scope、限流档、启停）；" + "租户取自可信上下文，缺失以 500 失败")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为应用摘要列表（clientId/appName/scopes/rateLimitTier/enabled）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(
+                                                type = "object",
+                                                additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+        @ApiResponse(responseCode = "500", description = "缺少可信租户上下文或查询失败")
+    })
     public Mono<ServerResponse> listApps(ServerRequest request) {
         return Mono.deferContextual(context -> {
                     String tenant = context.getOrDefault(
@@ -75,6 +101,31 @@ public class OpenAppHandler {
      * @param request 当前请求（路径参数 clientId）
      * @return 应用详情
      */
+    @Operation(
+            operationId = "authGetOpenApp",
+            summary = "查询开放应用详情",
+            description = "按客户端 ID 查询本租户开放应用详情（含已声明 scope 与非法 scope 校验结果）；不存在返回 404")
+    @Parameter(
+            name = "clientId",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "开放应用客户端 ID",
+            schema = @Schema(type = "string"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 含 clientId/appName/description/scopes/invalidScopes/"
+                        + "rateLimitTier/redirectUris/enabled",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(
+                                                type = "object",
+                                                additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+        @ApiResponse(responseCode = "404", description = "开放应用不存在"),
+        @ApiResponse(responseCode = "500", description = "缺少可信租户上下文或查询失败")
+    })
     public Mono<ServerResponse> getApp(ServerRequest request) {
         String clientId = request.pathVariable("clientId");
         return Mono.deferContextual(context -> {
@@ -99,6 +150,22 @@ public class OpenAppHandler {
      * @param request 当前请求
      * @return scope 列表与权限码映射
      */
+    @Operation(
+            operationId = "authListOpenAppScopes",
+            summary = "平台 scope 目录",
+            description = "返回开放平台 scope 注册表与权限码映射（scope/permission），供注册应用时选择")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为 scope 目录（元素含 scope/permission）",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema =
+                                        @Schema(
+                                                type = "object",
+                                                additionalProperties = Schema.AdditionalPropertiesValue.TRUE)))
+    })
     public Mono<ServerResponse> listScopes(ServerRequest request) {
         java.util.List<java.util.Map<String, String>> scopes = OpenAppScopes.catalog().stream()
                 .map(scope -> java.util.Map.of(

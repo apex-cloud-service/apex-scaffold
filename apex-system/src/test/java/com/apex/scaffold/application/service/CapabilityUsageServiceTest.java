@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.application.config.CapabilityUsageProperties;
+import com.apex.scaffold.application.config.OverviewProperties;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
@@ -50,10 +51,27 @@ class CapabilityUsageServiceTest {
 
     private CapabilityUsageService capabilityUsageService;
 
+    /** 桩指标客户端：默认无指标，可按能力/租户投喂数值。 */
+    private CapabilityMetricClient metricClient;
+
     @BeforeEach
     void setUp() {
-        capabilityUsageService =
-                new CapabilityUsageService(capabilityUsageQueryRepository, new CapabilityUsageProperties());
+        CapabilityUsageProperties properties = new CapabilityUsageProperties();
+        metricClient = new CapabilityMetricClient(properties, new OverviewProperties()) {
+            @Override
+            public Mono<Long> fetch(String capability, String tenantId) {
+                return stubMetric(capability, tenantId);
+            }
+        };
+        capabilityUsageService = new CapabilityUsageService(capabilityUsageQueryRepository, properties, metricClient);
+    }
+
+    /** 测试投喂的存量指标：{@code capability:tenant} → 数值。 */
+    private final java.util.Map<String, Long> metrics = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private Mono<Long> stubMetric(String capability, String tenantId) {
+        Long value = metrics.get(capability + ":" + tenantId);
+        return value == null ? Mono.empty() : Mono.just(value);
     }
 
     @Test
@@ -70,6 +88,50 @@ class CapabilityUsageServiceTest {
                     assertThat(page.getList().get(0).getCapability()).isEqualTo("file-storage");
                     assertThat(page.getList().get(0).getCallCount()).isEqualTo(5L);
                     assertThat(page.getHasNext()).isFalse();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("单租户查询应补充存量维度（D4 四维度计量）")
+    void queryUsage_scopedTenant_attachesStockMetric() {
+        metrics.put("file-storage:T001", 2048L);
+        when(capabilityUsageQueryRepository.countCallsByUriPrefixes(anyList(), any(), any(), eq("T001")))
+                .thenReturn(Mono.just(List.of(new TenantUsageCount("T001", 5L))));
+
+        StepVerifier.create(capabilityUsageService.queryUsage("T001", "file-storage", null, null, 1, 20))
+                .assertNext(page -> {
+                    assertThat(page.getList().get(0).getCallCount()).isEqualTo(5L);
+                    assertThat(page.getList().get(0).getStorageUsageBytes()).isEqualTo(2048L);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("平台全量视角不填充存量维度")
+    void queryUsage_platformView_skipsStockMetric() {
+        metrics.put("file-storage:*", 999L);
+        when(capabilityUsageQueryRepository.countCallsByUriPrefixes(anyList(), any(), any(), isNull()))
+                .thenReturn(Mono.just(List.of(new TenantUsageCount("T001", 3L), new TenantUsageCount("T002", 4L))));
+
+        StepVerifier.create(capabilityUsageService.queryUsage(null, "file-storage", null, null, 1, 20))
+                .assertNext(page -> {
+                    assertThat(page.getList()).allSatisfy(row -> assertThat(row.getStorageUsageBytes())
+                            .isNull());
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("存量指标源失败时按源降级为 null，不影响调用次数")
+    void queryUsage_metricFailure_degradesGracefully() {
+        when(capabilityUsageQueryRepository.countCallsByUriPrefixes(anyList(), any(), any(), eq("T001")))
+                .thenReturn(Mono.just(List.of(new TenantUsageCount("T001", 5L))));
+
+        StepVerifier.create(capabilityUsageService.queryUsage("T001", "file-storage", null, null, 1, 20))
+                .assertNext(page -> {
+                    assertThat(page.getList().get(0).getCallCount()).isEqualTo(5L);
+                    assertThat(page.getList().get(0).getStorageUsageBytes()).isNull();
                 })
                 .verifyComplete();
     }
