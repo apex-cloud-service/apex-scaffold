@@ -180,7 +180,6 @@ public class OAuth2Service {
      * @param clientId  客户端 ID
      * @param scope     授权范围
      * @param approved  true=同意入库；false=撤销既有同意
-     * @return 完成信号
      */
     public Mono<Void> recordConsent(String tenant, String principal, String clientId, String scope, boolean approved) {
         return approved

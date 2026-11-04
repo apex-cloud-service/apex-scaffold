@@ -250,7 +250,6 @@ public class SessionService {
      *
      * @param session 会话实体
      * @param reason  撤销原因
-     * @return 完成信号
      */
     private Mono<Void> revokeSessionToken(SessionEntity session, String reason) {
         if (session.getTokenId() == null) {

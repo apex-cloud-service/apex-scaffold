@@ -13,9 +13,9 @@ package com.apex.scaffold.domain.gateway;
 public interface RemoteClientFailure {
 
     /**
-     * Whether the remote system rejected the request as deterministic client input.
+     * 远端是否以确定性的客户端输入错误拒绝了请求。
      *
-     * @return {@code true} for a 4xx-style input rejection
+     * @return 4xx 类输入拒绝返回 {@code true}，可据此判定重试无意义
      */
     boolean isClientError();
 }

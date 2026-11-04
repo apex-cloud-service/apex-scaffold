@@ -129,7 +129,6 @@ public class CredentialManageService {
      *
      * @param tenantId 租户编码
      * @param id       主键
-     * @return 完成信号
      */
     public Mono<Void> delete(String tenantId, Long id) {
         return credentialRepository.delete(tenantId, id);

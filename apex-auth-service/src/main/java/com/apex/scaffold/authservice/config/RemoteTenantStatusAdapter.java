@@ -54,13 +54,6 @@ public class RemoteTenantStatusAdapter implements TenantStatusPort {
     /**
      * 构造适配器。
      *
-     * @param baseUrl      租户中心内部基址（主应用）；空 = 校验跳过
-     * @param cacheSeconds 判定缓存秒数
-     * @param timeoutMillis 单次拉取超时
-     */
-    /**
-     * 构造适配器。
-     *
      * @param baseUrl 租户中心内部基址（主应用）；空 = 校验跳过
      * @param cacheSeconds 判定缓存秒数
      * @param timeoutMillis 单次拉取超时

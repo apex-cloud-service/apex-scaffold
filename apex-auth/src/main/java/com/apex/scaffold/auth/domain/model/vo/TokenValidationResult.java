@@ -32,7 +32,7 @@ public class TokenValidationResult {
     private String failureReason;
 
     /**
-     * Token ID
+     * 令牌标识。
      */
     private Long tokenId;
 

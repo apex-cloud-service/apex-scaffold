@@ -9,7 +9,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/** 开放应用内部注册契约；租户只来自已验证的内部调用身份。 */
+/**
+ * 开放应用内部注册契约。
+ *
+ * <p>租户只来自已验证的内部调用身份，不读取请求体中的租户字段。
+ *
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -476,7 +476,13 @@ public class ChunkUploadService {
         }
     }
 
-    /** @param fileId 已完成会话编号 @return 所有者授权后的分片清理重试，失败仍保留元数据 */
+    /**
+     * 重试清理已完成会话的分片对象。
+     *
+     * <p>仅文件属主可重试；删除失败时保留分片元数据，供下一次重试继续确认。
+     *
+     * @param fileId 已完成会话编号
+     */
     public Mono<Void> retryCleanup(Long fileId) {
         return authorized(fileId).flatMap(file -> {
             if (!STORED.equals(file.getStorageStatus())) {
@@ -489,7 +495,13 @@ public class ChunkUploadService {
         });
     }
 
-    /** @param parts 已合并分片 @return 全部对象确认删除才移除元数据，删除失败保留记录供重试 */
+    /**
+     * 删除已合并分片对应的存储对象与元数据。
+     *
+     * <p>全部对象确认删除后才移除元数据；任一删除失败即保留记录供后续重试。
+     *
+     * @param parts 已合并分片
+     */
     private Mono<Void> cleanup(List<FileChunkEntity> parts) {
         if (parts.isEmpty()) {
             return Mono.empty();

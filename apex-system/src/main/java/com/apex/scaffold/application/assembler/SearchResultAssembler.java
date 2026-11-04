@@ -19,36 +19,21 @@ public interface SearchResultAssembler {
 
     DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    @Mapping(target = "createdAt", expression = "java(formatDateTime(entity.getCreatedAt()))")
-    @Mapping(target = "updatedAt", expression = "java(formatDateTime(entity.getUpdatedAt()))")
     /**
-     *
-     * 将搜索结果实体转换为DTO。
-     *
-     *
+     * 将搜索结果实体转换为 DTO。
      *
      * @param entity 搜索结果实体
-     *
-     * @return 搜索结果DTO
-     *
+     * @return 搜索结果 DTO
      */
+    @Mapping(target = "createdAt", expression = "java(formatDateTime(entity.getCreatedAt()))")
+    @Mapping(target = "updatedAt", expression = "java(formatDateTime(entity.getUpdatedAt()))")
     SearchResultDTO toDTO(SearchResultEntity entity);
 
     /**
-     *
-     *
      * 格式化日期时间。
      *
-     *
-     *
-     *
-     *
      * @param dateTime 日期时间
-     *
-     *
      * @return 格式化后的日期时间字符串
-     *
-     *
      */
     default String formatDateTime(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(FORMATTER) : null;

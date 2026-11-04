@@ -29,7 +29,16 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** auth_config是开放应用唯一注册/签发源；不访问system旧注册表。 */
+/**
+ * 开放应用注册与签发服务。
+ *
+ * <p>{@code auth_config} 是开放应用的唯一注册与签发源，本服务不访问 system 旧注册表；
+ * 所有读写都在调用方租户作用域内完成。
+ *
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthOpenAppRegistryService {
@@ -40,6 +49,13 @@ public class AuthOpenAppRegistryService {
     private final Validator validator;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
+    /**
+     * 创建一个开放应用，未提供密钥时生成随机密钥并只返回一次。
+     *
+     * @param request 注册请求；{@code clientSecret} 为空时由服务端生成
+     * @return 注册结果，含本次明文密钥
+     * @throws BusinessException 请求非法或 clientId 已存在时抛出
+     */
     public Mono<OpenAppRegistrationResponse> create(OpenAppRegistrationRequest request) {
         return tenant(tenant -> Mono.defer(() -> {
             validate(request, true);
@@ -64,6 +80,14 @@ public class AuthOpenAppRegistryService {
         }));
     }
 
+    /**
+     * 更新开放应用的非敏感字段；不允许借更新接口修改 clientId 或密钥。
+     *
+     * @param clientId 应用标识
+     * @param request 更新请求
+     * @return 更新后的注册信息（不含密钥）
+     * @throws BusinessException 请求非法或应用不存在时抛出
+     */
     public Mono<OpenAppRegistrationResponse> update(String clientId, OpenAppRegistrationRequest request) {
         return tenant(tenant -> Mono.defer(() -> {
             validate(request, false);
@@ -83,10 +107,25 @@ public class AuthOpenAppRegistryService {
         }));
     }
 
+    /**
+     * 查询单个开放应用。
+     *
+     * @param clientId 应用标识
+     * @return 注册信息（不含密钥）
+     * @throws BusinessException 应用不存在时抛出
+     */
     public Mono<OpenAppRegistrationResponse> get(String clientId) {
         return tenant(tenant -> required(clientId, tenant).map(entity -> response(entity, null)));
     }
 
+    /**
+     * 分页查询当前租户的开放应用。
+     *
+     * @param page 页码，从 0 开始
+     * @param size 每页条数，取值 1~100
+     * @return 当前页应用列表（不含密钥）
+     * @throws BusinessException 分页参数越界时抛出
+     */
     public Flux<OpenAppRegistrationResponse> list(int page, int size) {
         return tenant(tenant -> {
                     if (page < 0 || size < 1 || size > 100) {
@@ -100,6 +139,14 @@ public class AuthOpenAppRegistryService {
                 .flatMapMany(Flux::fromIterable);
     }
 
+    /**
+     * 启用或停用开放应用。
+     *
+     * @param clientId 应用标识
+     * @param enabled true=启用；false=停用
+     * @return 更新后的注册信息（不含密钥）
+     * @throws BusinessException 应用不存在时抛出
+     */
     public Mono<OpenAppRegistrationResponse> status(String clientId, boolean enabled) {
         return tenant(tenant -> required(clientId, tenant).flatMap(entity -> {
             ObjectNode value = parse(entity);
@@ -108,6 +155,13 @@ public class AuthOpenAppRegistryService {
         }));
     }
 
+    /**
+     * 轮换客户端密钥，新密钥只在本方法返回值中出现一次。
+     *
+     * @param clientId 应用标识
+     * @return 注册信息，{@code clientSecret} 为本次新生成的明文密钥
+     * @throws BusinessException 应用不存在时抛出
+     */
     public Mono<OpenAppRegistrationResponse> rotateSecret(String clientId) {
         return tenant(tenant -> required(clientId, tenant).flatMap(entity -> {
             String secret = randomSecret();
@@ -119,6 +173,12 @@ public class AuthOpenAppRegistryService {
         }));
     }
 
+    /**
+     * 删除开放应用。
+     *
+     * @param clientId 应用标识
+     * @throws BusinessException 应用不存在时抛出
+     */
     public Mono<Void> delete(String clientId) {
         return tenant(
                 tenant -> required(clientId, tenant).flatMap(entity -> repository.deleteById(entity.getId(), tenant)));

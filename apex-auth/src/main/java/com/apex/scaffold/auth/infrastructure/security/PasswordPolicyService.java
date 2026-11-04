@@ -74,7 +74,7 @@ public class PasswordPolicyService {
      *
      * @param password 密码
      * @param username 用户名（用于检查密码是否包含用户名）
-     * @return 验证结果，如果不符合则抛出异常
+     * @throws BusinessException 密码不符合策略时抛出，消息携带全部不满足项
      */
     public Mono<Void> validatePassword(String password, String username) {
         return Mono.fromRunnable(() -> {
@@ -143,7 +143,6 @@ public class PasswordPolicyService {
      * @param newPassword 新密码（明文）
      * @param oldPasswordHash 旧密码哈希
      * @param passwordEncoder 密码编码器（用于比对）
-     * @return 验证结果
      */
     public Mono<Void> validatePasswordNotReused(
             String newPassword,

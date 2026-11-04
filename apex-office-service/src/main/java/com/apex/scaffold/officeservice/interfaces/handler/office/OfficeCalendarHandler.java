@@ -73,7 +73,6 @@ public class OfficeCalendarHandler {
     @Schema(name = "OfficeCalendarBooleanResult")
     public static class CalendarBooleanResult extends Result<Boolean> {}
 
-    @RequirePermission("office:calendar:create")
     /**
      * 创建日历事件
      *
@@ -82,6 +81,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，包含请求体和参数
      * @return Mono&lt;ServerResponse&gt; 包含创建成功的事件信息
      */
+    @RequirePermission("office:calendar:create")
     @Operation(operationId = "createCalendarEvent", summary = "创建日历事件", description = "在指定办公平台创建日历事件，支持设置标题、时间、参与者和提醒")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -136,7 +136,7 @@ public class OfficeCalendarHandler {
                             req.getAttendeeNames() != null
                                     ? req.getAttendeeNames().toArray(new String[0])
                                     : new String[0],
-                            null, // meetingRoomId
+                            null, // 会议室 ID 暂不接线，保留空值由后续会议模块补齐
                             req.getReminderMinutes());
                 }))
                 .map(assembler::toResponse)
@@ -144,7 +144,6 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:calendar:query")
     /**
      * 查询日历事件详情
      *
@@ -153,6 +152,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，路径参数包含eventId
      * @return Mono&lt;ServerResponse&gt; 包含事件详细信息
      */
+    @RequirePermission("office:calendar:query")
     @Operation(operationId = "getCalendarEventDetail", summary = "查询日历事件详情", description = "根据事件ID查询日历事件的详细信息")
     @Parameters({
         @Parameter(
@@ -193,7 +193,6 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:calendar:update")
     /**
      * 更新日历事件
      *
@@ -202,6 +201,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，包含eventId和更新内容
      * @return 包含更新操作布尔结果的统一响应
      */
+    @RequirePermission("office:calendar:update")
     @Operation(
             operationId = "updateCalendarEvent",
             summary = "更新日历事件",
@@ -264,7 +264,6 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:calendar:delete")
     /**
      * 删除日历事件
      *
@@ -273,6 +272,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，路径参数包含eventId
      * @return Mono&lt;ServerResponse&gt; 包含删除结果
      */
+    @RequirePermission("office:calendar:delete")
     @Operation(operationId = "deleteCalendarEvent", summary = "删除日历事件", description = "删除指定的日历事件，data为布尔结果")
     @Parameters({
         @Parameter(
@@ -312,7 +312,6 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:calendar:list")
     /**
      * 查询时间范围内的日历事件
      *
@@ -321,6 +320,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，查询参数包含不带时区的startTime、endTime
      * @return Mono&lt;ServerResponse&gt; 包含事件列表
      */
+    @RequirePermission("office:calendar:list")
     @Operation(operationId = "getCalendarEventsByTimeRange", summary = "查询时间范围内的日历事件", description = "查询指定时间范围内的所有日历事件")
     @Parameters({
         @Parameter(
@@ -371,7 +371,6 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:calendar:my")
     /**
      * 查询我的日历事件
      *
@@ -380,6 +379,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，查询参数包含userId
      * @return Mono&lt;ServerResponse&gt; 包含事件列表
      */
+    @RequirePermission("office:calendar:my")
     @Operation(
             operationId = "getMyCalendarEvents",
             summary = "查询用户组织的日历事件",
@@ -422,7 +422,6 @@ public class OfficeCalendarHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:calendar:my")
     /**
      * 查询即将到来的日历事件
      *
@@ -431,6 +430,7 @@ public class OfficeCalendarHandler {
      * @param request ServerRequest对象，查询参数包含userId
      * @return Mono&lt;ServerResponse&gt; 包含事件列表
      */
+    @RequirePermission("office:calendar:my")
     @Operation(
             operationId = "getUpcomingEvents",
             summary = "查询即将到来的日历事件",

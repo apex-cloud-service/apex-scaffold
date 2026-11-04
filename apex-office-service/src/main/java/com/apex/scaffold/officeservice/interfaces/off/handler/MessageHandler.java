@@ -65,7 +65,6 @@ public class MessageHandler {
     private final OffMessageService messageService;
     private final RequestHandlerUtil requestHandlerUtil;
 
-    @RequirePermission("office:message:send")
     /**
      * 处理发送消息请求。
      *
@@ -75,6 +74,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，请求体为消息发送参数 JSON
      * @return 包含已发送消息信息的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:send")
     @Operation(
             operationId = "sendMessage",
             summary = "发送消息",
@@ -113,7 +113,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:list")
     /**
      * 处理获取收件箱请求。
      *
@@ -122,6 +121,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，查询参数包含 pageNum、pageSize
      * @return 包含收件箱消息列表的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:list")
     @Operation(operationId = "getInbox", summary = "获取收件箱", description = "分页查询当前用户收件箱，data 为消息数组")
     @Parameters({
         @Parameter(
@@ -164,7 +164,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:list")
     /**
      * 处理获取发件箱请求。
      *
@@ -173,6 +172,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，查询参数包含 pageNum、pageSize
      * @return 包含已发送消息列表的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:list")
     @Operation(operationId = "getSentMessages", summary = "获取发件箱", description = "分页查询当前用户发件箱，data 为消息数组")
     @Parameters({
         @Parameter(
@@ -215,7 +215,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:query")
     /**
      * 处理获取消息详情请求。
      *
@@ -225,6 +224,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，路径参数包含消息 ID
      * @return 包含消息详情的统一成功响应，不存在时返回 HTTP 400 错误响应
      */
+    @RequirePermission("office:message:query")
     @Parameters({
         @Parameter(
                 name = "messageId",
@@ -269,7 +269,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:list")
     /**
      * 处理标记消息为已读请求。
      *
@@ -278,6 +277,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，路径参数包含消息 ID
      * @return 标记成功的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:list")
     @Parameters({
         @Parameter(
                 name = "messageId",
@@ -314,7 +314,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:list")
     /**
      * 处理全部标记为已读请求。
      *
@@ -323,6 +322,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象
      * @return 标记成功的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:list")
     @Operation(operationId = "markAllAsRead", summary = "全部标记为已读", description = "将当前用户的所有未读消息标记为已读，data 为空")
     @ApiResponses({
         @ApiResponse(
@@ -346,7 +346,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:query")
     /**
      * 处理获取未读消息数请求。
      *
@@ -355,6 +354,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象
      * @return 包含未读消息数量的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:query")
     @Operation(operationId = "getUnreadCount", summary = "获取未读消息数", description = "获取当前用户的未读消息数量")
     @ApiResponses({
         @ApiResponse(
@@ -378,7 +378,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:list")
     /**
      * 处理收件箱增量游标查询请求。
      *
@@ -388,6 +387,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，查询参数包含 afterId、limit
      * @return 包含收件箱条目列表的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:list")
     @Operation(
             operationId = "getInboxCursor",
             summary = "增量查询收件箱",
@@ -436,7 +436,6 @@ public class MessageHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:message:query")
     /**
      * 处理查询消息渠道投递记录请求。
      *
@@ -446,6 +445,7 @@ public class MessageHandler {
      * @param request HTTP 请求对象，路径参数包含消息 ID
      * @return 包含投递记录列表的统一成功响应，失败时返回错误响应
      */
+    @RequirePermission("office:message:query")
     @Parameters({
         @Parameter(
                 name = "messageId",

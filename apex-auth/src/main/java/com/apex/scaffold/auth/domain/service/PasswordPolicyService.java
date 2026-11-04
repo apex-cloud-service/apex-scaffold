@@ -222,7 +222,6 @@ public class PasswordPolicyService {
      *
      * @param userId 用户ID
      * @param passwordHash 密码哈希
-     * @return 完成标识
      */
     public Mono<Void> addPasswordToHistory(String userId, String passwordHash) {
         if (!com.apex.scaffold.common.util.PasswordUtil.isBcryptHash(passwordHash)) {

@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * Append-only audit writer for privileged review state transitions.
+ * 特权审核状态迁移的只追加审计写入器。
  *
  * @author Apex Team
  * @version 1.0.0

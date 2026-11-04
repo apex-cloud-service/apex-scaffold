@@ -38,12 +38,12 @@ public class MessageTemplateHandler {
     private final OffMessageTemplateService templateService;
     private final RequestHandlerUtil requestHandlerUtil;
 
-    @RequirePermission("office:notify:template:read")
     /**
      * 按编码查询模板；不存在时返回 HTTP 400，业务码为 NOT_FOUND。
      * @param request 包含 templateCode 路径参数的请求
      * @return data 为模板的统一响应
      */
+    @RequirePermission("office:notify:template:read")
     @Operation(
             operationId = "getTemplateByCode",
             summary = "根据编码获取模板",
@@ -85,12 +85,12 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:notify:template:read")
     /**
      * 查询全部启用模板，不读取类型过滤参数。
      * @param request HTTP 请求
      * @return data 为模板数组的统一响应
      */
+    @RequirePermission("office:notify:template:read")
     @Operation(
             operationId = "getEnabledTemplates",
             summary = "获取所有启用的模板",
@@ -125,12 +125,12 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:notify:template:manage")
     /**
      * 校验并创建消息模板。
      * @param request JSON 请求体为 MessageTemplateDTO
      * @return data 为已创建模板的统一响应
      */
+    @RequirePermission("office:notify:template:manage")
     @Operation(
             operationId = "createTemplate",
             summary = "创建消息模板",
@@ -171,12 +171,12 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:notify:template:manage")
     /**
      * 更新模板；无效 ID 或模板不存在时返回 HTTP 400。
      * @param request 包含 templateId 路径参数与 MessageTemplateDTO 请求体
      * @return data 为更新后模板的统一响应
      */
+    @RequirePermission("office:notify:template:manage")
     @Operation(
             operationId = "updateTemplate",
             summary = "更新消息模板",
@@ -229,12 +229,12 @@ public class MessageTemplateHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:notify:template:manage")
     /**
      * 删除指定模板。
      * @param request 包含 templateId 路径参数的请求
      * @return data 为空的统一响应
      */
+    @RequirePermission("office:notify:template:manage")
     @Operation(
             operationId = "deleteTemplate",
             summary = "删除消息模板",

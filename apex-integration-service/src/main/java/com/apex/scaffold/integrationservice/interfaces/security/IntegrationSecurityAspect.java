@@ -121,7 +121,7 @@ public class IntegrationSecurityAspect {
      *
      * @param user 已认证主体
      * @param required 权限注解；为 null 时不查询授权中心
-     * @return 授权通过的空信号；失败时为访问拒绝
+     * @throws org.springframework.security.access.AccessDeniedException 权限码不匹配时抛出
      */
     private Mono<Void> authorize(AuthenticatedUser user, RequirePermission required) {
         if (required == null) {
@@ -149,7 +149,6 @@ public class IntegrationSecurityAspect {
      * @param operation 操作声明
      * @param method 目标方法
      * @param signal 物化后的调用信号
-     * @return 审计完成信号
      */
     private Mono<Void> record(AuthenticatedUser user, OperationLog operation, Method method, Signal<Object> signal) {
         Map<String, Object> details = new LinkedHashMap<>();

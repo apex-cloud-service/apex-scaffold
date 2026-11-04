@@ -86,7 +86,6 @@ public class OpenApiScopeGatewayFilter implements GlobalFilter, Ordered {
      *
      * @param exchange 请求交换对象
      * @param chain 网关后续过滤链
-     * @return 过滤链完成信号
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

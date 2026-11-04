@@ -451,11 +451,20 @@ public class RemoteApiClient {
     }
 
     /**
-     * Send a paid single-file multipart operation exactly once.
+     * 发送一次计费的单文件 multipart 请求，且只发送一次。
      *
-     * <p>This deliberately bypasses the generic network/5xx retry policy.  A
-     * lost response is an ambiguous submission and must be reconciled by the
-     * caller rather than charged a second time.</p>
+     * <p>刻意绕过通用网络/5xx 重试策略：响应丢失属于提交结果不确定，
+     * 必须由调用方对账，而不能重复计费。</p>
+     *
+     * @param serviceName 目标服务名
+     * @param path 请求路径
+     * @param fileFieldName 文件表单项名
+     * @param fileResource 文件资源
+     * @param formData 其他表单字段
+     * @param headers 附加请求头
+     * @param typeReference 响应体类型
+     * @param <T> 响应体类型
+     * @return 远程响应的异步结果
      */
     public <T> Mono<T> postMultipartOnce(
             String serviceName,
@@ -475,11 +484,19 @@ public class RemoteApiClient {
     }
 
     /**
-     * Send a paid multi-file multipart operation exactly once.
+     * 发送一次计费的多文件 multipart 请求，且只发送一次。
      *
-     * <p>This is the multi-file equivalent of {@link #postMultipartOnce(String,
-     * String, String, Resource, Map, Map, ParameterizedTypeReference)} and
-     * deliberately never applies the generic retry policy.</p>
+     * <p>与 {@link #postMultipartOnce(String, String, String, Resource, Map, Map,
+     * ParameterizedTypeReference)} 的单文件语义一致，同样不套用通用重试策略。
+     *
+     * @param serviceName 目标服务名
+     * @param path 请求路径
+     * @param fileParts 多文件表单项
+     * @param formData 其他表单字段
+     * @param headers 附加请求头
+     * @param typeReference 响应体类型
+     * @param <T> 响应体类型
+     * @return 远程响应的异步结果
      */
     public <T> Mono<T> postMultipartOnce(
             String serviceName,
@@ -815,7 +832,13 @@ public class RemoteApiClient {
         return execute(request, true);
     }
 
-    /** Execute one request without the generic retry policy. */
+    /**
+     * 执行单次请求，不套用通用重试策略。
+     *
+     * @param request 已完整声明的不可变请求
+     * @param <T> 响应体类型
+     * @return 远程响应的异步结果
+     */
     public <T> Mono<T> executeOnce(RemoteRequest<T> request) {
         return execute(request, false);
     }

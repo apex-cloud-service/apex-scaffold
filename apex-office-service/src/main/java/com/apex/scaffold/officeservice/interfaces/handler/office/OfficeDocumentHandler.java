@@ -74,7 +74,6 @@ public class OfficeDocumentHandler {
     private final DocumentInfoAssembler assembler;
     private final RequestHandlerUtil requestHandlerUtil;
 
-    @RequirePermission("office:document:create")
     /**
      * 创建文档
      *
@@ -83,6 +82,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，包含请求体和参数
      * @return Mono&lt;ServerResponse&gt; 包含创建成功的文档信息
      */
+    @RequirePermission("office:document:create")
     @Operation(operationId = "createDocument", summary = "创建文档", description = "在指定办公平台创建新文档，支持多种文档类型")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -135,7 +135,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:create")
     /**
      * 上传文件
      *
@@ -144,6 +143,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，包含文件内容和参数
      * @return Mono&lt;ServerResponse&gt; 包含上传成功的文档信息
      */
+    @RequirePermission("office:document:create")
     @Operation(operationId = "uploadFile", summary = "上传文件", description = "上传文件到指定办公平台，文件内容需Base64编码")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
@@ -192,7 +192,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:query")
     /**
      * 查询文档详情
      *
@@ -201,6 +200,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId
      * @return Mono&lt;ServerResponse&gt; 包含文档详细信息
      */
+    @RequirePermission("office:document:query")
     @Operation(operationId = "getDocumentDetail", summary = "查询文档详情", description = "根据文档ID查询文档的详细信息")
     @Parameters({
         @Parameter(
@@ -241,7 +241,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:list")
     /**
      * 查询文件夹下的文档
      *
@@ -250,6 +249,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，查询参数包含platform和folderId
      * @return Mono&lt;ServerResponse&gt; 包含文档列表
      */
+    @RequirePermission("office:document:list")
     @Operation(
             operationId = "getDocumentsInFolder",
             summary = "查询文件夹下的文档",
@@ -300,7 +300,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:my")
     /**
      * 查询我的文档
      *
@@ -309,6 +308,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，查询参数包含ownerId
      * @return Mono&lt;ServerResponse&gt; 包含文档列表
      */
+    @RequirePermission("office:document:my")
     @Operation(operationId = "getMyDocuments", summary = "按所有者查询文档", description = "按请求中的ownerId查询文档，未传时使用空字符串")
     @Parameters({
         @Parameter(
@@ -348,7 +348,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:query")
     /**
      * 下载文档
      *
@@ -357,6 +356,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId
      * @return 包含文档下载 URL 的统一响应
      */
+    @RequirePermission("office:document:query")
     @Operation(operationId = "downloadDocument", summary = "获取文档下载地址", description = "按导出格式获取下载URL，data为地址字符串")
     @Parameters({
         @Parameter(
@@ -403,7 +403,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:delete")
     /**
      * 删除文档
      *
@@ -412,6 +411,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId
      * @return Mono&lt;ServerResponse&gt; 包含删除结果
      */
+    @RequirePermission("office:document:delete")
     @Operation(operationId = "deleteDocument", summary = "删除文档", description = "删除指定的文档")
     @Parameters({
         @Parameter(
@@ -451,7 +451,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:move")
     /**
      * 移动文档
      *
@@ -460,6 +459,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
      * @return 包含移动操作布尔结果的统一响应
      */
+    @RequirePermission("office:document:move")
     @Operation(operationId = "moveDocument", summary = "移动文档", description = "移动文档到指定的文件夹")
     @Parameters({
         @Parameter(
@@ -507,7 +507,6 @@ public class OfficeDocumentHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:document:copy")
     /**
      * 复制文档
      *
@@ -516,6 +515,7 @@ public class OfficeDocumentHandler {
      * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
      * @return Mono&lt;ServerResponse&gt; 包含复制后的文档信息
      */
+    @RequirePermission("office:document:copy")
     @Operation(operationId = "copyDocument", summary = "复制文档", description = "复制指定的文档到目标文件夹")
     @Parameters({
         @Parameter(

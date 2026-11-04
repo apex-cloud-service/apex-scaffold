@@ -29,10 +29,22 @@ public class OpenMessageHandler {
 
     private final OfficeMessageService messages;
 
+    /**
+     * 构造处理器。
+     *
+     * @param messages 办公消息服务
+     */
     public OpenMessageHandler(OfficeMessageService messages) {
         this.messages = messages;
     }
 
+    /**
+     * 以开放应用身份投递单条文本消息。
+     *
+     * @param request 服务器请求，请求体为 {@link SendRequest}
+     * @return 统一响应，{@code data.messageId} 为平台返回的消息标识
+     * @throws BusinessException 请求体缺失、platform/text 为空或目标不合法时抛出
+     */
     public Mono<ServerResponse> send(ServerRequest request) {
         return request.bodyToMono(SendRequest.class)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体缺失")))

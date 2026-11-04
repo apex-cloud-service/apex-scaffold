@@ -22,7 +22,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** 默认签名调用auth源；网络、签名或业务失败均不写local、不降级为成功。 */
+/**
+ * 开放应用注册源远程适配器。
+ *
+ * <p>默认以内部签名调用 auth 源；网络、签名或业务失败均不写本地副本，也不降级为成功。
+ *
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
+ */
 @Component
 public class AuthOpenAppRegistryRemoteAdapter implements OpenAppRegistryGateway {
     private static final String PATH = "/internal/v1/open-apps";

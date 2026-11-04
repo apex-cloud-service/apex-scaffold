@@ -294,12 +294,12 @@ public class RouterOpenApiConfig {
                                 security = {},
                                 responses = @ApiResponse(responseCode = "302", description = "重定向到微信授权页")))
     })
-    @Bean
     /**
      * 构建登录认证接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 登录认证接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> authRoutesDocs() {
         return placeholderRoute("/__openapi_auth_placeholder");
     }
@@ -489,12 +489,12 @@ public class RouterOpenApiConfig {
                 beanMethod = "removeRoleFromUser",
                 operation = @Operation(operationId = "removeRoleFromUser", summary = "移除用户角色"))
     })
-    @Bean
     /**
      * 构建授权（角色与权限）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 授权接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> authorizationRoutesDocs() {
         return placeholderRoute("/__openapi_authorization_placeholder");
     }
@@ -584,12 +584,12 @@ public class RouterOpenApiConfig {
                                                                                         AccountDeletionRequest
                                                                                                 .class)))))
     })
-    @Bean
     /**
      * 构建个人中心（用户账号）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 个人中心接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> userRoutesDocs() {
         return placeholderRoute("/__openapi_user_placeholder");
     }
@@ -615,12 +615,12 @@ public class RouterOpenApiConfig {
                 beanMethod = "root",
                 operation = @Operation(operationId = "rootProbe", summary = "根路径探活"))
     })
-    @Bean
     /**
      * 构建健康检查（探活）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 健康检查接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> healthRoutesDocs() {
         return placeholderRoute("/__openapi_health_placeholder");
     }
@@ -819,12 +819,12 @@ public class RouterOpenApiConfig {
                                                                                 implementation =
                                                                                         AdminRoleResponse.class)))))
     })
-    @Bean
     /**
      * 构建系统管理-用户管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 用户管理接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminUserManagementRoutesDocs() {
         return placeholderRoute("/__openapi_admin_user_placeholder");
     }
@@ -892,12 +892,12 @@ public class RouterOpenApiConfig {
                                 summary = "启用或停用菜单",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-菜单管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 菜单管理接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminMenuRoutesDocs() {
         return placeholderRoute("/__openapi_admin_menu_placeholder");
     }
@@ -1025,12 +1025,12 @@ public class RouterOpenApiConfig {
                                 summary = "启用或停用字典数据",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-字典管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 字典管理接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminDictRoutesDocs() {
         return placeholderRoute("/__openapi_admin_dict_placeholder");
     }
@@ -1098,12 +1098,12 @@ public class RouterOpenApiConfig {
                                 summary = "启用或停用参数配置",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-参数配置接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 参数配置接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminConfigRoutesDocs() {
         return placeholderRoute("/__openapi_admin_config_placeholder");
     }
@@ -1201,12 +1201,12 @@ public class RouterOpenApiConfig {
                                 summary = "查询任务执行日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-定时任务接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 定时任务接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminJobRoutesDocs() {
         return placeholderRoute("/__openapi_admin_job_placeholder");
     }
@@ -1224,12 +1224,12 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询登录日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-登录日志接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 登录日志接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminLoginLogRoutesDocs() {
         return placeholderRoute("/__openapi_admin_login_log_placeholder");
     }
@@ -1247,12 +1247,12 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询审计日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-审计日志接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 审计日志接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminAuditLogRoutesDocs() {
         return placeholderRoute("/__openapi_admin_audit_log_placeholder");
     }
@@ -1270,7 +1270,6 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询API调用日志",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * API调用日志管理模块在线接口文档
      *
@@ -1278,6 +1277,7 @@ public class RouterOpenApiConfig {
      *
      * @return 占位符路由函数
      */
+    @Bean
     public RouterFunction<ServerResponse> adminApiCallLogRoutesDocs() {
         return placeholderRoute("/__openapi_admin_api_call_log_placeholder");
     }
@@ -1334,12 +1334,12 @@ public class RouterOpenApiConfig {
                                 summary = "删除部门",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-部门管理接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 部门管理接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminDeptRoutesDocs() {
         return placeholderRoute("/__openapi_admin_dept_placeholder");
     }
@@ -1356,12 +1356,12 @@ public class RouterOpenApiConfig {
                                 summary = "导出用户列表（xlsx）",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建系统管理-数据导出接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 数据导出接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> adminExportRoutesDocs() {
         return placeholderRoute("/__openapi_admin_export_placeholder");
     }
@@ -1379,12 +1379,12 @@ public class RouterOpenApiConfig {
                                 summary = "订阅当前用户通知流（SSE）",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建消息通知（SSE 推送）接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 消息通知接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> notificationSseRoutesDocs() {
         return placeholderRoute("/__openapi_notification_sse_placeholder");
     }
@@ -1431,12 +1431,12 @@ public class RouterOpenApiConfig {
                                 summary = "全部标记已读",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建站内信接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 站内信接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> systemMessageRoutesDocs() {
         return placeholderRoute("/__openapi_system_message_placeholder");
     }
@@ -1453,7 +1453,6 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询在线用户",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 在线用户管理模块在线接口文档
      *
@@ -1461,6 +1460,7 @@ public class RouterOpenApiConfig {
      *
      * @return 占位符路由函数
      */
+    @Bean
     public RouterFunction<ServerResponse> adminOnlineUserRoutesDocs() {
         return placeholderRoute("/__openapi_admin_online_user_placeholder");
     }
@@ -1523,7 +1523,6 @@ public class RouterOpenApiConfig {
                                 description = "登录/注册/上传/信用变动等核心业务指标与近 10 分钟趋势",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 核心业务监控模块在线接口文档
      *
@@ -1531,6 +1530,7 @@ public class RouterOpenApiConfig {
      *
      * @return 占位符路由函数
      */
+    @Bean
     public RouterFunction<ServerResponse> adminMonitorRoutesDocs() {
         return placeholderRoute("/__openapi_admin_monitor_placeholder");
     }
@@ -1558,12 +1558,12 @@ public class RouterOpenApiConfig {
                                 summary = "校验图形验证码",
                                 security = {}))
     })
-    @Bean
     /**
      * 构建图形验证码接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 图形验证码接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> captchaRoutesDocs() {
         return placeholderRoute("/__openapi_captcha_placeholder");
     }
@@ -1593,12 +1593,12 @@ public class RouterOpenApiConfig {
                                 description = "重建全文搜索索引，用于索引数据更新或修复",
                                 security = @SecurityRequirement(name = "BearerAuth")))
     })
-    @Bean
     /**
      * 构建统一搜索接口的 OpenAPI 占位路由，保证 OpenAPI 文档分组展示。
      *
      * @return 统一搜索接口的 OpenAPI 占位路由
      */
+    @Bean
     public RouterFunction<ServerResponse> unifiedSearchRoutesDocs() {
         return placeholderRoute("/__openapi_unified_search_placeholder");
     }

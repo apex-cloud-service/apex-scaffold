@@ -25,6 +25,11 @@ public class JobProxy {
 
     private final WebClient client;
 
+    /**
+     * 构造任务代理。
+     *
+     * @param client 指向 system 管理端口的 WebClient
+     */
     public JobProxy(WebClient client) {
         this.client = client;
     }

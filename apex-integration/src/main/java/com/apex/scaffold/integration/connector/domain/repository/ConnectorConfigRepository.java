@@ -66,7 +66,7 @@ public interface ConnectorConfigRepository {
      *
      * @param tenantId 租户编码
      * @param id       主键
-     * @return 完成信号；删除 0 行时以错误终止
+     * @throws com.apex.scaffold.common.exception.BusinessException 删除 0 行时以 {@code NOT_FOUND} 终止
      */
     Mono<Void> delete(String tenantId, Long id);
 }

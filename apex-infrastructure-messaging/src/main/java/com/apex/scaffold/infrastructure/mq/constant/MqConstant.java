@@ -45,10 +45,10 @@ public class MqConstant {
     /** 照片人工审核结果主题。 */
     public static final String TOPIC_PHOTO_MODERATION_RESULT = "apex-photo-moderation-result";
 
-    /** User photo reports destined for the administration review system. */
+    /** 进入人工审核队列的用户照片举报主题。 */
     public static final String TOPIC_PHOTO_REPORT = "apex-photo-report";
 
-    /** A report submitted for a photo shown in a vote. */
+    /** 投票展示照片被举报时携带的标签。 */
     public static final String TAG_PHOTO_REPORTED = "photo-reported-v1";
 
     /** 人工审核请求标签。 */

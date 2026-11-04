@@ -4,13 +4,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Resolves the application log directory before Spring Boot initializes Logback.
+ * 在 Spring Boot 初始化 Logback 之前解析应用日志目录。
  *
- * <p>A relative {@code logs} directory is resolved against the process working directory. Maven,
- * an IDE, and an executable JAR can use different working directories, which previously created
- * multiple log trees. During development this resolver anchors logs to the Maven reactor root. In
- * deployed environments {@code APEX_LOG_DIR} (or {@code -Dapex.log.dir}) can select an explicit
- * location.
+ * <p>相对路径 {@code logs} 按进程工作目录解析；Maven、IDE 与可执行 JAR 的工作目录可能不同，
+ * 曾因此产生多份日志目录树。开发期本类把日志锚定到 Maven 反应堆根目录，部署环境可用
+ * {@code APEX_LOG_DIR}（或 {@code -Dapex.log.dir}）指定明确位置。
  *
  * <p>此外，本类负责设置 Sentinel SDK 的内部日志目录（{@code csp.sentinel.log.dir}）。
  * Sentinel 的 BlockLog 与指标日志使用原生文件写入，必须通过 JVM 系统属性指定其输出目录，
@@ -42,10 +40,10 @@ public final class LogDirectoryConfigurer {
      */
     private static final String SENTINEL_LOG_DIR_PROPERTY = "csp.sentinel.log.dir";
 
-    /** Prevents instantiation of the startup utility. */
+    /** 工具类禁止实例化。 */
     private LogDirectoryConfigurer() {}
 
-    /** Configures the absolute log directory system property if it was not already supplied. */
+    /** 在系统属性尚未提供时解析并写入绝对日志目录。 */
     public static void configure() {
         String systemValue = System.getProperty(LOG_DIRECTORY_PROPERTY);
         if (systemValue != null && !systemValue.isBlank()) {
@@ -91,10 +89,10 @@ public final class LogDirectoryConfigurer {
     }
 
     /**
-     * Resolves the default directory, preferring the Maven reactor root when it is available.
+     * 解析默认日志目录，可用时优先锚定到 Maven 反应堆根目录。
      *
-     * @param workingDirectory process working directory
-     * @return absolute normalized log directory
+     * @param workingDirectory 进程工作目录
+     * @return 绝对且规范化后的日志目录
      */
     static Path resolveDefaultDirectory(Path workingDirectory) {
         Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
@@ -109,11 +107,11 @@ public final class LogDirectoryConfigurer {
     }
 
     /**
-     * Resolves an explicitly configured absolute or working-directory-relative path.
+     * 解析显式配置的绝对路径或相对工作目录的路径。
      *
-     * @param workingDirectory process working directory
-     * @param configuredValue configured log path
-     * @return absolute normalized log directory
+     * @param workingDirectory 进程工作目录
+     * @param configuredValue 配置的日志路径
+     * @return 绝对且规范化后的日志目录
      */
     private static Path resolveConfiguredDirectory(Path workingDirectory, String configuredValue) {
         Path configuredPath = Path.of(configuredValue);
@@ -124,10 +122,10 @@ public final class LogDirectoryConfigurer {
     }
 
     /**
-     * Checks whether a directory is the root of this Maven reactor.
+     * 判断目录是否为本 Maven 反应堆根目录。
      *
-     * @param directory candidate directory
-     * @return {@code true} when the root and system module POM files exist
+     * @param directory 待判定目录
+     * @return 根 POM 与 system 模块 POM 同时存在时为 {@code true}
      */
     private static boolean isProjectRoot(Path directory) {
         return Files.isRegularFile(directory.resolve("pom.xml"))

@@ -114,7 +114,7 @@ public class DeviceCommandService {
      * @param tenantId  租户编码
      * @param deviceKey 设备标识
      * @param commandId 业务命令 ID
-     * @return 完成信号；命令不存在以 404 终止
+     * @throws BusinessException 命令不存在时抛出，错误码为 {@code NOT_FOUND}（HTTP 404）
      */
     public Mono<Void> ack(String tenantId, String deviceKey, String commandId) {
         return commandRepository
@@ -129,7 +129,6 @@ public class DeviceCommandService {
      * 将已超时的单条命令置为 TIMEOUT（超时扫描逐条调用；命令须携带租户归属）。
      *
      * @param command 超时命令
-     * @return 完成信号
      */
     public Mono<Void> timeout(DeviceCommand command) {
         if (command == null

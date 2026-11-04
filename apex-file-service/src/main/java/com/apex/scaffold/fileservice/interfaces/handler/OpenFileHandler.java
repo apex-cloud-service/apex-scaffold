@@ -36,6 +36,13 @@ public class OpenFileHandler {
 
     private final String defaultBucket;
 
+    /**
+     * 构造处理器。
+     *
+     * @param files 文件应用服务
+     * @param responses 统一响应工具
+     * @param defaultBucket 未指定桶时的默认桶名
+     */
     public OpenFileHandler(
             FileService files,
             RequestHandlerUtil responses,

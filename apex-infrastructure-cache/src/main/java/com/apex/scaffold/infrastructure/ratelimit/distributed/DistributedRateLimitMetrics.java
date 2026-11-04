@@ -93,7 +93,6 @@ public class DistributedRateLimitMetrics {
         try {
             Object result = joinPoint.proceed();
 
-            // 处理 Mono 返回值
             if (result instanceof Mono) {
                 return ((Mono<?>) result)
                         .doOnSuccess(allowed -> {

@@ -127,7 +127,6 @@ public class ConnectorConfigManageService {
      *
      * @param tenantId 租户编码
      * @param id       主键
-     * @return 完成信号
      */
     public Mono<Void> delete(String tenantId, Long id) {
         return configRepository.delete(tenantId, id);

@@ -29,11 +29,24 @@ public class OpenWorkflowHandler {
 
     private final WorkflowService workflows;
 
+    /**
+     * 构造处理器。
+     *
+     * @param queries 流程查询服务
+     * @param workflows 流程实例服务
+     */
     public OpenWorkflowHandler(WorkflowQueryService queries, WorkflowService workflows) {
         this.queries = queries;
         this.workflows = workflows;
     }
 
+    /**
+     * 分页查询已发布的流程定义。
+     *
+     * @param request 服务器请求（query 参数 pageNum/pageSize）
+     * @return 统一响应，{@code data} 为分页结果
+     * @throws BusinessException 分页参数非法时抛出
+     */
     public Mono<ServerResponse> definitions(ServerRequest request) {
         int page = parse(request.queryParam("pageNum").orElse("1"));
         int size = parse(request.queryParam("pageSize").orElse("20"));
@@ -41,11 +54,24 @@ public class OpenWorkflowHandler {
                 .flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)));
     }
 
+    /**
+     * 查询单个流程定义详情。
+     *
+     * @param request 服务器请求，路径参数 {@code workflowCode}
+     * @return 统一响应，{@code data} 为流程定义详情
+     */
     public Mono<ServerResponse> definition(ServerRequest request) {
         return queries.getDefinitionDetail(request.pathVariable("workflowCode"))
                 .flatMap(result -> ServerResponse.ok().bodyValue(Result.success(result)));
     }
 
+    /**
+     * 以开放应用绑定的主体账号发起流程实例。
+     *
+     * @param request 服务器请求，请求体为 {@link StartRequest}
+     * @return 统一响应，{@code data} 为流程实例
+     * @throws BusinessException 请求体缺失、主体账号未绑定或流程定义不存在时抛出
+     */
     public Mono<ServerResponse> start(ServerRequest request) {
         return request.bodyToMono(StartRequest.class)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "请求体缺失")))
@@ -55,6 +81,13 @@ public class OpenWorkflowHandler {
                         .flatMap(instance -> ServerResponse.ok().bodyValue(Result.success(instance)))));
     }
 
+    /**
+     * 分页查询本人待办任务。
+     *
+     * @param request 服务器请求（query 参数 pageNum/pageSize）
+     * @return 统一响应，{@code data} 为分页结果
+     * @throws BusinessException 主体账号未绑定或分页参数非法时抛出
+     */
     public Mono<ServerResponse> myTasks(ServerRequest request) {
         int page = parse(request.queryParam("pageNum").orElse("1"));
         int size = parse(request.queryParam("pageSize").orElse("20"));

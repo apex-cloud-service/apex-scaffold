@@ -25,7 +25,6 @@ public interface InboundEventRepository {
      *
      * @param tenantId 租户编码
      * @param id       主键
-     * @return 完成信号
      */
     Mono<Void> markProcessed(String tenantId, Long id);
 }

@@ -20,6 +20,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class OpenMessageRouter {
 
     @Bean
+    /**
+     * 注册开放消息路由。
+     *
+     * @param handler 开放消息处理器
+     * @return 路由函数
+     */
     public RouterFunction<ServerResponse> openMessageRoutes(OpenMessageHandler handler) {
         return RouterFunctions.route()
                 .POST("/open-api/messages", RequestPredicates.contentType(MediaType.APPLICATION_JSON), handler::send)

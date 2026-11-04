@@ -86,7 +86,6 @@ public class DeviceRuleManageService {
      * @param tenantId 租户编码
      * @param id       规则主键
      * @param enabled  是否启用
-     * @return 完成信号
      */
     public Mono<Void> toggle(String tenantId, Long id, boolean enabled) {
         return ruleRepository

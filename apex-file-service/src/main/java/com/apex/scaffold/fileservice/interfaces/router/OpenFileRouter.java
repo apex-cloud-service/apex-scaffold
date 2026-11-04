@@ -23,6 +23,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class OpenFileRouter {
 
     @Bean
+    /**
+     * 注册开放文件路由。
+     *
+     * @param handler 开放文件处理器
+     * @return 路由函数
+     */
     public RouterFunction<ServerResponse> openFileRoutes(OpenFileHandler handler) {
         return RouterFunctions.route()
                 .POST(

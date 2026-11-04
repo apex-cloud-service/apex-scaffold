@@ -152,7 +152,6 @@ public class GeneratorTaskScheduler {
      * 应用服务执行；整条链路桥接租户上下文，保证任务表 SQL 在租户拦截器下可执行。
      *
      * @param tenant 租户标识
-     * @return 执行完成信号
      */
     private Mono<Void> pollTenant(String tenant) {
         LocalDateTime now = LocalDateTime.now();
@@ -181,7 +180,6 @@ public class GeneratorTaskScheduler {
      *
      * @param tenant 租户标识
      * @param before 终态时间截止点
-     * @return 清理完成信号
      */
     private Mono<Void> purgeTenant(String tenant, LocalDateTime before) {
         Mono<Void> chain = Mono.defer(() -> genTaskRepository.purgeFinishedBefore(tenant, before, PURGE_BATCH_LIMIT))

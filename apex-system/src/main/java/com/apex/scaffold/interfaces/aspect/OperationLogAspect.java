@@ -77,7 +77,7 @@ public class OperationLogAspect {
     private static final int IP_PRIVATE_172_RANGE_END = 31;
     private static final int IP_SPLIT_PARTS_THRESHOLD = 2;
 
-    /** Jackson ObjectMapper */
+    /** Jackson 序列化器，用于记录请求参数与响应体。 */
     private final ObjectMapper objectMapper;
 
     /** 操作日志服务，负责持久化操作日志记录。 */

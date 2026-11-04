@@ -49,7 +49,7 @@ public class WorkflowEventOutboxDispatcher {
      * @param dataSource 工作流库数据源
      * @param localBus 进程内事件总线
      * @param remotePublisher 远程发布器（本地模式为空信号）
-     * @param remoteChannel 是否使用远程通道
+     * @param channel 事件通道选择（{@code apex.events.channel}）；{@code local} 之外的取值都启用远程通道
      * @param maxAttempts 最大尝试次数
      */
     public WorkflowEventOutboxDispatcher(

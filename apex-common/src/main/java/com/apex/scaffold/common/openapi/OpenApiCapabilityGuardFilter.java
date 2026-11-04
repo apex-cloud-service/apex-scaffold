@@ -132,7 +132,6 @@ public class OpenApiCapabilityGuardFilter implements WebFilter, Ordered {
      * @param exchange 当前交换
      * @param status HTTP 状态码
      * @param resultCode 业务错误码
-     * @return 写出完成信号
      */
     private Mono<Void> reject(ServerWebExchange exchange, HttpStatus status, ResultCode resultCode) {
         ServerHttpResponse response = exchange.getResponse();

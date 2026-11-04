@@ -24,10 +24,21 @@ public class OpenUserHandler {
 
     private final UserService users;
 
+    /**
+     * 构造处理器。
+     *
+     * @param users 用户查询服务
+     */
     public OpenUserHandler(UserService users) {
         this.users = users;
     }
 
+    /**
+     * 分页查询当前租户用户，仅返回 id/username/nickname/deptId/status。
+     *
+     * @param request 服务器请求（query 参数 pageNum/pageSize，越界自动收敛）
+     * @return 统一响应，{@code data.rows} 为用户精简列表
+     */
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = parse(request.queryParam("pageNum").orElse("1"));
         int size = parse(request.queryParam("pageSize").orElse("20"));

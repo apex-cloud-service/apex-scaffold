@@ -7,7 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/** auth注册源响应；哈希永不出现在返回值中。 */
+/**
+ * auth 注册源响应。
+ *
+ * <p>密钥哈希永不出现在返回值中；{@code clientSecret} 仅在创建与轮换时携带一次明文。
+ *
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
+ */
 @Data
 @Builder
 @NoArgsConstructor

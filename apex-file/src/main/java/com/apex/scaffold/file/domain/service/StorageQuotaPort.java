@@ -20,7 +20,8 @@ public interface StorageQuotaPort {
      *
      * @param tenantCode     租户编码
      * @param incrementBytes 本次写入字节数
-     * @return 通过时为完成信号；超限以 {@code BusinessException(TENANT_QUOTA_EXCEEDED)} 终止
+     * @throws com.apex.scaffold.common.exception.BusinessException 超限时以
+     *         {@code TENANT_QUOTA_EXCEEDED} 终止
      */
     Mono<Void> assertStorageQuota(String tenantCode, long incrementBytes);
 }

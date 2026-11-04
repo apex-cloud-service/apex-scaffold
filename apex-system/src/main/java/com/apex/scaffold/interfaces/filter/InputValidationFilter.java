@@ -160,7 +160,6 @@ public class InputValidationFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 {@link Mono}{@code <Void>}
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -267,7 +266,6 @@ public class InputValidationFilter implements WebFilter {
      *
      * @param exchange 当前 HTTP 请求-响应交换对象
      * @param chain    WebFlux 过滤器链
-     * @return 表示过滤完成的 {@link Mono}{@code <Void>}
      */
     private Mono<Void> filterRequestBody(ServerWebExchange exchange, WebFilterChain chain) {
         DataBufferFactory bufferFactory = exchange.getResponse().bufferFactory();

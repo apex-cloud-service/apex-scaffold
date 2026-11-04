@@ -73,7 +73,6 @@ public class OfficeOrganizationHandler {
     public static class OrganizationTaskListResult
             extends Result<java.util.List<com.apex.scaffold.office.domain.OfficeSyncTask>> {}
 
-    @RequirePermission("office:organization:sync")
     /**
      * 同步组织（部门或成员）
      *
@@ -83,6 +82,7 @@ public class OfficeOrganizationHandler {
      * @param request HTTP 请求
      * @return 同步结果，包含任务ID、同步数量和状态消息
      */
+    @RequirePermission("office:organization:sync")
     @Operation(
             operationId = "syncOrganization",
             summary = "同步组织",
@@ -143,7 +143,6 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:organization:query")
     /**
      * 查询部门映射
      *
@@ -152,6 +151,7 @@ public class OfficeOrganizationHandler {
      * @param request HTTP 请求
      * @return 组织映射信息
      */
+    @RequirePermission("office:organization:query")
     @Operation(
             operationId = "getDepartmentMapping",
             summary = "查询部门映射",
@@ -203,7 +203,6 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:organization:query")
     /**
      * 查询成员映射
      *
@@ -212,6 +211,7 @@ public class OfficeOrganizationHandler {
      * @param request HTTP 请求
      * @return 组织映射信息
      */
+    @RequirePermission("office:organization:query")
     @Operation(
             operationId = "getMemberMapping",
             summary = "查询成员映射",
@@ -263,7 +263,6 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:organization:list")
     /**
      * 查询组织映射列表
      *
@@ -272,6 +271,7 @@ public class OfficeOrganizationHandler {
      * @param request HTTP 请求
      * @return 组织映射列表
      */
+    @RequirePermission("office:organization:list")
     @Operation(
             operationId = "listOrganizationMappings",
             summary = "查询组织映射列表",
@@ -313,7 +313,6 @@ public class OfficeOrganizationHandler {
                 .onErrorResume(e -> requestHandlerUtil.handleError(e));
     }
 
-    @RequirePermission("office:sync:read")
     /**
      * 查询同步任务列表
      *
@@ -323,6 +322,7 @@ public class OfficeOrganizationHandler {
      * @param request HTTP 请求
      * @return 同步任务列表
      */
+    @RequirePermission("office:sync:read")
     @Operation(
             operationId = "listSyncTasks",
             summary = "查询同步任务列表",

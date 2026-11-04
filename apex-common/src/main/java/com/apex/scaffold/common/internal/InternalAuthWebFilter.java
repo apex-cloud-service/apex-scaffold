@@ -21,7 +21,15 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/** 内部调用正文与查询串完整验签，校验调用方路径白名单并固定可信租户。 */
+/**
+ * 内部调用验签过滤器。
+ *
+ * <p>对正文与查询串完整验签，校验调用方路径白名单并固定可信租户。
+ *
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
+ */
 public class InternalAuthWebFilter implements WebFilter, Ordered {
     public static final String INTERNAL_PREFIX = "/internal/v1/";
     private static final int MAX_BODY_BYTES = 1024 * 1024;
@@ -30,6 +38,13 @@ public class InternalAuthWebFilter implements WebFilter, Ordered {
     private final boolean loopbackOnly;
     private final AntPathMatcher paths = new AntPathMatcher();
 
+    /**
+     * 构造过滤器。
+     *
+     * @param properties 内部认证配置
+     * @param signer 内部签名器
+     * @param loopbackOnly 是否只接受回环地址调用
+     */
     public InternalAuthWebFilter(
             InternalAuthProperties properties, InternalServiceSigner signer, boolean loopbackOnly) {
         this.properties = properties;
@@ -137,11 +152,28 @@ public class InternalAuthWebFilter implements WebFilter, Ordered {
         return Ordered.HIGHEST_PRECEDENCE + 5;
     }
 
+    /**
+     * 按配置构造签名器。
+     *
+     * @param properties 内部认证配置
+     * @param clock 计算签名时间戳所用的时钟
+     * @return 内部签名器
+     */
     public static InternalServiceSigner signer(InternalAuthProperties properties, Clock clock) {
         return new InternalServiceSigner(
                 properties.getSecret(), Duration.ofSeconds(Math.max(1, properties.getAllowedSkewSeconds())), clock);
     }
 
+    /**
+     * 生成内部调用签名头。
+     *
+     * @param properties 内部认证配置
+     * @param signer 内部签名器
+     * @param method HTTP 方法
+     * @param path 请求路径
+     * @param tenant 租户编码
+     * @return 签名字段与取值
+     */
     public static Map<String, String> signHeaders(
             InternalAuthProperties properties,
             InternalServiceSigner signer,

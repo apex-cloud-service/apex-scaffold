@@ -16,6 +16,13 @@ public final class SystemJobBridge {
     private final String tenant;
     private final Long jobId;
 
+    /**
+     * 构造固定任务桥接。
+     *
+     * @param service system 任务端口
+     * @param tenant 固定执行租户
+     * @param jobId 固定任务 ID（正数）
+     */
     public SystemJobBridge(SystemJobPort service, String tenant, Long jobId) {
         if (tenant == null || tenant.isBlank() || jobId == null || jobId <= 0) {
             throw new IllegalArgumentException("system XXL 桥接需要固定租户和正数任务ID");

@@ -147,11 +147,10 @@ public class SentinelConfig {
     }
 
     /**
-     * Excludes health probes from Sentinel traffic governance.
+     * 将健康探针排除在 Sentinel 流量治理之外。
      *
-     * <p>Liveness and readiness are control-plane signals. Applying global CPU protection to these
-     * paths makes an otherwise healthy process report HTTP 503 precisely when operators need the
-     * probes. Business API paths continue to use the standard Sentinel WebFlux resource cleaner.
+     * <p>存活与就绪探针属于控制面信号；若对这些路径施加全局 CPU 保护，本健康的进程会在
+     * 运维最需要探针时返回 503。业务 API 路径仍走标准 Sentinel WebFlux 资源清理器。
      */
     @PostConstruct
     public void configureWebFluxCallbacks() {

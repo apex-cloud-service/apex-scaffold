@@ -53,37 +53,37 @@ public class SecurityMetricsRecorder {
         this.circuitBreakerOpenedCounter = circuitBreakerOpenedCounter;
     }
 
-    /** Records a request rejected by rate limiting. */
+    /** 记录一次被限流拒绝的请求。 */
     public void recordRateLimitRejected() {
         rateLimitRejectedCounter.increment();
     }
 
-    /** Records an IP added to the blacklist. */
+    /** 记录一次 IP 加入黑名单的操作。 */
     public void recordIpBlocked() {
         ipBlockedCounter.increment();
     }
 
-    /** Records a failed login attempt. */
+    /** 记录一次登录失败。 */
     public void recordLoginFailed() {
         loginFailedCounter.increment();
     }
 
-    /** Records an intercepted XSS request. */
+    /** 记录一次被拦截的 XSS 请求。 */
     public void recordXssIntercepted() {
         xssInterceptedCounter.increment();
     }
 
-    /** Records a request rejected by replay protection. */
+    /** 记录一次被防重放拒绝的请求。 */
     public void recordAntiReplayRejected() {
         antiReplayRejectedCounter.increment();
     }
 
-    /** Records a request rejected by HTTP idempotency deduplication. */
+    /** 记录一次被 HTTP 幂等去重拒绝的请求。 */
     public void recordRepeatSubmitRejected() {
         repeatSubmitRejectedCounter.increment();
     }
 
-    /** Records a circuit breaker opened (degradation triggered). */
+    /** 记录一次熔断器打开（触发降级）。 */
     public void recordCircuitBreakerOpened() {
         circuitBreakerOpenedCounter.increment();
     }

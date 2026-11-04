@@ -101,7 +101,6 @@ public class LogSampler {
             cleanup(currentTime);
         }
 
-        // 获取上次记录时间
         Long lastTime = SAMPLE_MAP.get(key);
 
         if (lastTime == null || currentTime - lastTime >= windowMs) {

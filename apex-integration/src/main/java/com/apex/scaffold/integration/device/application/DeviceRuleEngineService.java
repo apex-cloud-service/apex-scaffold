@@ -82,7 +82,6 @@ public class DeviceRuleEngineService {
      * @param tenantId   租户编码
      * @param deviceKey  设备标识
      * @param metricJson 遥测指标 JSON（对象）
-     * @return 完成信号
      */
     public Mono<Void> evaluate(String tenantId, String deviceKey, String metricJson) {
         Map<String, Object> metric = parseMetric(metricJson);

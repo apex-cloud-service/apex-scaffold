@@ -35,7 +35,6 @@ public class AuditLogServiceImpl implements AuditLogService {
                 auditLog.getUserId(),
                 auditLog.getTenantId());
 
-        // 设置事件时间和创建时间
         if (auditLog.getEventTime() == null) {
             auditLog.setEventTime(LocalDateTime.now());
         }

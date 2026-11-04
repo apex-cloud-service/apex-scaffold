@@ -425,10 +425,9 @@ public class ResourcePermissionService {
             String resourceId,
             String requiredPermission,
             PermissionContext context) {
-        // TODO(Apex Team): 实现组织层级权限检查
-        // 1. 查询用户的组织角色（部门经理、项目管理员等）
-        // 2. 查询资源所属的组织单元
-        // 3. 判断用户角色是否有该组织单元的权限
+        // 组织层级权限检查尚未实现：需要先接入组织单元归属查询与角色授权快照，
+        // 在此之前一律拒绝，避免越权放行。接入顺序：查询用户组织角色 → 查询资源所属
+        // 组织单元 → 判定角色在该单元是否具备所需权限。
 
         if (context.getOrganizationRoles().contains(ROLE_DEPT_MANAGER)) {
             return Mono.just(false);

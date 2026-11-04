@@ -52,6 +52,15 @@ public class OverviewFacadeService {
     /** 租户维度短 TTL 缓存。 */
     private final ConcurrentHashMap<String, CachedOverview> cache = new ConcurrentHashMap<>();
 
+    /**
+     * 构造聚合门面。
+     *
+     * @param properties 概览聚合配置
+     * @param objectMapper JSON 序列化器
+     * @param webClientBuilder Boot 管理的客户端构建器
+     * @param internalAuthProperties 内部认证配置
+     * @param internalServiceSigner 内部签名器
+     */
     public OverviewFacadeService(
             OverviewProperties properties,
             ObjectMapper objectMapper,

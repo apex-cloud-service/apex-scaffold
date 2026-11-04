@@ -94,8 +94,8 @@ public class ConfigEncryptionService {
         this.secureRandom = new SecureRandom();
     }
 
-    @PostConstruct
     /** 初始化完成回调，打印就绪日志。 */
+    @PostConstruct
     public void init() {
         log.info("配置加密服务已初始化");
     }

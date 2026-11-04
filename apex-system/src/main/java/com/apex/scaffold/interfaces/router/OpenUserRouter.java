@@ -17,6 +17,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class OpenUserRouter {
 
+    /**
+     * 注册开放用户只读路由。
+     *
+     * @param handler 开放用户处理器
+     * @return 路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> openUserRoutes(OpenUserHandler handler) {
         return RouterFunctions.route().GET("/open-api/users", handler::list).build();

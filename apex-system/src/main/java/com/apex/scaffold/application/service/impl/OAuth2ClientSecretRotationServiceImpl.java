@@ -100,7 +100,7 @@ public class OAuth2ClientSecretRotationServiceImpl implements OAuth2ClientSecret
                                         .logClientSecretRotation(
                                                 clientId,
                                                 operatorUserId != null ? String.valueOf(operatorUserId) : null,
-                                                null, // IP will be captured by request context
+                                                null, // IP 由请求上下文补齐
                                                 details)
                                         .thenReturn(saved);
                             })

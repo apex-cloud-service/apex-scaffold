@@ -109,13 +109,6 @@ public class TenantApplicationService {
         return requireById(tenantId).map(tenantAssembler::toDTO);
     }
 
-    /**
-     * 根据租户编码查询租户详情。
-     *
-     * @param tenantCode 租户编码
-     * @return 租户 DTO
-     * @throws BusinessException 当租户不存在时抛出 {@code TENANT_NOT_FOUND}
-     */
     /** 租户认证期状态快照（统一认证收口 A6 内部端点契约）。 */
     @Schema(name = "TenantStatusSnapshot", description = "租户认证期状态快照（内部端点契约）")
     public record TenantStatusSnapshot(
@@ -148,6 +141,13 @@ public class TenantApplicationService {
                 .defaultIfEmpty(new TenantStatusSnapshot(false, null, false, null, null));
     }
 
+    /**
+     * 根据租户编码查询租户详情。
+     *
+     * @param tenantCode 租户编码
+     * @return 租户 DTO
+     * @throws BusinessException 当租户不存在时抛出 {@code TENANT_NOT_FOUND}
+     */
     public Mono<TenantDTO> getByCode(String tenantCode) {
         return requireByCode(tenantCode).map(tenantAssembler::toDTO);
     }
@@ -258,16 +258,6 @@ public class TenantApplicationService {
     }
 
     /**
-     * 校验租户用户数配额增长。
-     *
-     * <p>供业务模块在创建用户等场景调用，确保租户配额与状态允许增长。</p>
-     *
-     * @param tenantCode 租户编码
-     * @param current 当前用户数
-     * @param increment 申请增量
-     * @throws BusinessException 当租户不存在、状态不允许或配额超限时抛出
-     */
-    /**
      * 断言存储配额（方案批次 B5）。
      *
      * @param tenantCode    租户编码
@@ -289,6 +279,16 @@ public class TenantApplicationService {
                 .then();
     }
 
+    /**
+     * 校验租户用户数配额增长。
+     *
+     * <p>供业务模块在创建用户等场景调用，确保租户配额与状态允许增长。
+     *
+     * @param tenantCode 租户编码
+     * @param current 当前用户数
+     * @param increment 申请增量
+     * @throws BusinessException 当租户不存在、状态不允许或配额超限时抛出
+     */
     public Mono<Void> assertUserQuota(String tenantCode, long current, long increment) {
         return requireByCode(tenantCode)
                 .doOnNext(entity -> {

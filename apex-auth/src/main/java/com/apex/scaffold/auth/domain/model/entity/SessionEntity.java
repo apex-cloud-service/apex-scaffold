@@ -66,7 +66,7 @@ public class SessionEntity {
     private String ipAddress;
 
     /**
-     * User-Agent
+     * 客户端 User-Agent 原文，保留用于安全审计与异常登录识别。
      */
     private String userAgent;
 

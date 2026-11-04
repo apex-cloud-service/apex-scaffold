@@ -60,7 +60,6 @@ public class OAuth2ConsentRepository {
      * @param principal 已认证主体
      * @param clientId  客户端 ID
      * @param scope     同意的授权范围
-     * @return 完成信号
      */
     public Mono<Void> save(String tenant, String principal, String clientId, String scope) {
         return Mono.fromCallable(() -> {
@@ -104,7 +103,6 @@ public class OAuth2ConsentRepository {
      * @param tenant    租户
      * @param principal 已认证主体
      * @param clientId  客户端 ID
-     * @return 完成信号
      */
     public Mono<Void> revoke(String tenant, String principal, String clientId) {
         return Mono.fromCallable(() -> {

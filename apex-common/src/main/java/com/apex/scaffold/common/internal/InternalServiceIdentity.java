@@ -7,6 +7,9 @@ import java.security.Principal;
  *
  * @param serviceName 已认证调用方
  * @param tenantId 签名绑定的租户；为空只允许明确的无租户端点
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
  */
 public record InternalServiceIdentity(String serviceName, String tenantId) implements Principal {
     public static final String ATTR_IDENTITY = InternalServiceIdentity.class.getName();

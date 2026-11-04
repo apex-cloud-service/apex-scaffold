@@ -86,7 +86,6 @@ public class DeviceRegistryService {
      *
      * @param tenantId 租户编码
      * @param id       设备主键
-     * @return 完成信号
      */
     public Mono<Void> deregister(String tenantId, Long id) {
         return deviceRepository.delete(tenantId, id);

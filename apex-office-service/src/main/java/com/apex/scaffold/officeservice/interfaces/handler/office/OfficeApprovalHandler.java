@@ -40,12 +40,12 @@ public class OfficeApprovalHandler {
     private final ApprovalProcessAssembler assembler;
     private final RequestHandlerUtil requestHandlerUtil;
 
-    @RequirePermission("office:approval:initiate")
     /**
      * 校验请求并发起审批流程。
      * @param request 包含审批平台、流程定义、发起人与表单数据的请求
      * @return Result 包装的审批详情，失败时 HTTP 400
      */
+    @RequirePermission("office:approval:initiate")
     @OperationLog(
             module = "办公平台审批管理",
             type = OperationLog.OperationType.INSERT,
@@ -94,12 +94,12 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
-    @RequirePermission("office:approval:query")
     /**
      * 按平台流程实例 ID 查询审批详情。
      * @param request 包含 processInstanceId 路径参数的请求
      * @return Result 包装的审批详情，业务失败时 HTTP 400
      */
+    @RequirePermission("office:approval:query")
     @Operation(
             operationId = "getApprovalDetail",
             summary = "查询审批流程详情",
@@ -145,12 +145,12 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
-    @RequirePermission("office:approval:approve")
     /**
      * 使用请求体中的审批人与操作类型执行审批。
      * @param request 包含流程实例 ID 和审批操作请求体的请求
      * @return Result 包装的更新后审批详情，失败时 HTTP 400
      */
+    @RequirePermission("office:approval:approve")
     @OperationLog(
             module = "办公平台审批管理",
             type = OperationLog.OperationType.UPDATE,
@@ -201,12 +201,12 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
-    @RequirePermission("office:approval:cancel")
     /**
      * 按流程实例 ID 请求撤销审批。
      * @param request 包含 processInstanceId 路径参数的请求
      * @return Result 包装的布尔操作结果，业务失败时 HTTP 400
      */
+    @RequirePermission("office:approval:cancel")
     @OperationLog(
             module = "办公平台审批管理",
             type = OperationLog.OperationType.DELETE,
@@ -251,12 +251,12 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
-    @RequirePermission("office:approval:pending")
     /**
      * 查询指定审批人的待审批流程。
      * @param request 必须包含 approverId 查询参数
      * @return Result 包装的审批列表
      */
+    @RequirePermission("office:approval:pending")
     @Operation(
             operationId = "getPendingApprovals",
             summary = "查询待审批列表",
@@ -304,12 +304,12 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
-    @RequirePermission("office:approval:list")
     /**
      * 查询当前登录用户已执行审批操作的流程。
      * @param request 当前认证请求
      * @return Result 包装的已办审批列表
      */
+    @RequirePermission("office:approval:list")
     @Operation(
             operationId = "getCompletedApprovals",
             summary = "查询已办审批",
@@ -352,12 +352,12 @@ public class OfficeApprovalHandler {
                 .onErrorResume(requestHandlerUtil::handleError);
     }
 
-    @RequirePermission("office:approval:initiated")
     /**
      * 查询指定发起人的审批流程。
      * @param request 必须包含 initiatorId 查询参数
      * @return Result 包装的审批列表
      */
+    @RequirePermission("office:approval:initiated")
     @Operation(
             operationId = "getMyInitiatedApprovals",
             summary = "查询发起的审批",

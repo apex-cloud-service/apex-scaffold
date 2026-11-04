@@ -60,7 +60,7 @@ public class SecurityProperties {
      */
     private String adminRole = "ADMIN";
 
-    /** Roles allowed to enter the dedicated administration API security boundary. */
+    /** 允许进入独立管理 API 安全边界的角色。 */
     private List<String> adminRoles = List.of(
             "ADMIN",
             "SUPER_ADMIN",

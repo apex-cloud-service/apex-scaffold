@@ -67,7 +67,6 @@ public class SecurityMetricsService {
         this.activeSessionsByUser = new ConcurrentHashMap<>();
         this.failedLoginsByIp = new ConcurrentHashMap<>();
 
-        // 初始化计数器
         this.authSuccessCounter =
                 Counter.builder("auth.success.total").description("认证成功总次数").register(meterRegistry);
 
@@ -94,7 +93,6 @@ public class SecurityMetricsService {
                 .description("权限拒绝总次数")
                 .register(meterRegistry);
 
-        // 初始化计时器
         this.authenticationTimer =
                 Timer.builder("auth.duration").description("认证耗时").register(meterRegistry);
 

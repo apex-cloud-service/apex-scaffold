@@ -137,16 +137,13 @@ public class LicenseValidator {
         // 解析JSON
         this.licenseInfo = objectMapper.readValue(json, LicenseInfo.class);
 
-        // 验证签名
         validateSignature(json);
 
-        // 验证公钥指纹
         validateFingerprint();
 
         // 验证机器指纹（1.2.1 新增）
         validateMachineFingerprint();
 
-        // 验证有效期
         validateExpiration();
 
         this.validated = true;

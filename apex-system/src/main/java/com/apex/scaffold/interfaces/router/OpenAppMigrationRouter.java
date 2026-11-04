@@ -20,6 +20,12 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class OpenAppMigrationRouter {
 
     @Bean
+    /**
+     * 注册存量开放应用迁移路由。
+     *
+     * @param handler 迁移处理器
+     * @return 路由函数
+     */
     public RouterFunction<ServerResponse> openAppMigrationRoutes(OpenAppMigrationHandler handler) {
         return RouterFunctions.route()
                 .GET("/admin-api/v1/open-apps/migration/export", handler::export)

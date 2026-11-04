@@ -21,7 +21,7 @@ public class VaultKmsProperties {
     private String address = "http://localhost:8200";
 
     /**
-     * Vault Token
+     * Vault 访问令牌。
      */
     @ToString.Exclude
     private String token;

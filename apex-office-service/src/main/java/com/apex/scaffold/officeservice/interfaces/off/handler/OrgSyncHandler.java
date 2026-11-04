@@ -35,13 +35,13 @@ public class OrgSyncHandler {
     private final OrgSyncService orgSyncService;
     private final RequestHandlerUtil requestHandlerUtil;
 
-    @RequirePermission("office:organization:list")
     /**
      * 分页查询部门，支持按状态原值过滤。
      *
      * @param request 查询参数 pageNum、pageSize、status；分页缺失、非法或负数时分别默认 1、10
      * @return 包含部门分页数据的 Result 成功响应，处理失败返回 HTTP 400
      */
+    @RequirePermission("office:organization:list")
     @Operation(operationId = "getDepartmentList", summary = "获取部门列表", description = "分页获取部门列表")
     @OperationLog(
             module = "组织同步",
@@ -62,13 +62,13 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:organization:query")
     /**
      * 根据数值 ID 查询部门详情。
      *
      * @param request 路径参数 id 为部门 Long ID
      * @return 包含部门 DTO 的 Result；ID 非法、部门不存在或处理失败时返回 HTTP 400
      */
+    @RequirePermission("office:organization:query")
     @Operation(operationId = "getDepartmentDetail", summary = "获取部门详情", description = "根据ID获取部门详情")
     @OperationLog(
             module = "组织同步",
@@ -89,13 +89,13 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:organization:dept")
     /**
      * 解析并校验部门 DTO，调用本地部门创建用例。
      *
      * @param request JSON 请求体为 DepartmentDTO
      * @return 包含部门 DTO 的 Result；校验或处理失败返回 HTTP 400
      */
+    @RequirePermission("office:organization:dept")
     @Operation(operationId = "createDepartment", summary = "创建部门", description = "创建本地部门")
     @OperationLog(
             module = "组织同步",
@@ -111,13 +111,13 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:organization:dept")
     /**
      * 按路径 ID 更新本地部门。
      *
      * @param request 路径参数 id 为 Long ID，JSON 请求体为 DepartmentDTO
      * @return 包含更新后 DTO 的 Result；ID 非法、部门不存在或处理失败返回 HTTP 400
      */
+    @RequirePermission("office:organization:dept")
     @Operation(operationId = "updateDepartment", summary = "更新部门", description = "更新本地部门信息")
     @OperationLog(
             module = "组织同步",
@@ -139,13 +139,13 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:organization:dept")
     /**
      * 按 ID 删除部门，不额外检查记录是否存在。
      *
      * @param request 路径参数 id 为部门 Long ID
      * @return data 为空的 Result；ID 非法或处理失败返回 HTTP 400
      */
+    @RequirePermission("office:organization:dept")
     @Operation(operationId = "deleteDepartment", summary = "删除部门", description = "删除指定部门")
     @OperationLog(
             module = "组织同步",
@@ -165,13 +165,13 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:organization:list")
     /**
      * 分页查询员工，支持按部门 ID 和状态过滤。
      *
      * @param request 查询参数 pageNum、pageSize 默认 1、10；deptId 无法解析时不按部门过滤；status 按原值匹配
      * @return 包含员工分页数据的 Result；处理失败返回 HTTP 400
      */
+    @RequirePermission("office:organization:list")
     @Operation(operationId = "getEmployeeList", summary = "获取员工列表", description = "分页获取员工列表")
     @OperationLog(
             module = "组织同步",
@@ -194,13 +194,13 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:organization:user")
     /**
      * 根据数值 ID 查询员工详情。
      *
      * @param request 路径参数 id 为员工 Long ID
      * @return 包含员工 DTO 的 Result；ID 非法、员工不存在或处理失败返回 HTTP 400
      */
+    @RequirePermission("office:organization:user")
     @Operation(operationId = "getEmployeeDetail", summary = "获取员工详情", description = "根据ID获取员工详情")
     @OperationLog(
             module = "组织同步",
@@ -221,13 +221,13 @@ public class OrgSyncHandler {
                 .onErrorResume(this::handleError);
     }
 
-    @RequirePermission("office:sync:read")
     /**
      * 分页查询组织同步历史，支持按来源和状态原值过滤。
      *
      * @param request 查询参数 pageNum、pageSize 默认 1、10，syncSource、syncStatus 为可选过滤条件
      * @return 包含同步历史分页数据的 Result；处理失败返回 HTTP 400
      */
+    @RequirePermission("office:sync:read")
     @Operation(operationId = "getSyncHistory", summary = "获取同步历史", description = "分页获取同步历史记录")
     @OperationLog(
             module = "组织同步",

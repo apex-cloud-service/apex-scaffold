@@ -21,7 +21,14 @@ public class LocalStorageServiceImpl extends ObjectStorageServiceAdapter {
         root = Path.of(basePath).toAbsolutePath().normalize();
     }
 
-    /** @param bucket 本地桶名 @return 创建目录完成信号 */
+    /**
+     * 创建本地桶目录。
+     *
+     * <p>桶名校验拒绝路径分隔符与相对段；已存在目录视为幂等成功。
+     *
+     * @param bucket 本地桶名
+     * @throws IllegalArgumentException 桶名非法时抛出
+     */
     public Mono<Void> createBucket(String bucket) {
         return Mono.fromCallable(() -> {
                     if (bucket == null

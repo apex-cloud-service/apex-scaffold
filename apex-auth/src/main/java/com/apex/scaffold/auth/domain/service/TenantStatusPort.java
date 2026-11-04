@@ -18,8 +18,8 @@ public interface TenantStatusPort {
      * 校验租户可登录性。
      *
      * @param tenantCode 登录请求声明的租户编码
-     * @return 通过时为完成信号；拒绝时以 {@link com.apex.scaffold.common.exception.BusinessException}
-     *         （UNAUTHORIZED/FORBIDDEN）终止登录链
+     * @throws com.apex.scaffold.common.exception.BusinessException 拒绝登录时抛出，
+     *         错误码为 {@code UNAUTHORIZED} 或 {@code FORBIDDEN}
      */
     Mono<Void> validateLoginTenant(String tenantCode);
 }

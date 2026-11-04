@@ -45,9 +45,7 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private final MeilisearchProperties properties;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Mappers
-     */
+    /** 用户 Mapper，用于补齐搜索结果的用户展示字段。 */
     private final UserMapper userMapper;
 
     private final RoleMapper roleMapper;

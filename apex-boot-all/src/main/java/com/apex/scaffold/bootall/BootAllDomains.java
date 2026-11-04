@@ -34,14 +34,22 @@ public final class BootAllDomains {
             this.defaultPort = defaultPort;
         }
 
+        /** 返回域编码（用于配置键与日志）。 */
         public String code() {
             return code;
         }
 
+        /** 返回域默认业务端口。 */
         public int defaultPort() {
             return defaultPort;
         }
 
+        /**
+         * 按名称或编码解析域。
+         *
+         * @param raw 配置原始值
+         * @return 对应域
+         */
         public static Domain of(String raw) {
             String value = raw.trim().toUpperCase(Locale.ROOT).replace('-', '_');
             for (Domain domain : values()) {

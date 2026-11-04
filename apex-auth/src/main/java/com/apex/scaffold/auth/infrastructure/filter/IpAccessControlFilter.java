@@ -31,7 +31,6 @@ public class IpAccessControlFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        // 获取客户端IP
         String clientIp = getClientIp(exchange);
 
         // 获取租户ID（从请求头或JWT中获取）

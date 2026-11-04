@@ -259,20 +259,14 @@ public class ClientSecretRotationService {
     public void scheduledSecretRotation() {
         log.info("执行定时OAuth2客户端密钥轮换检查");
 
-        // TODO(Apex Team): 从数据库获取所有客户端列表
-        // 这里仅作为示例框架
-
-        /*
-        clientRepository.findAll()
-            .flatMap(client -> {
-                return checkAndRotateSecret(client.getClientId());
-            })
-            .subscribe(
-                null,
-                e -> log.error("定时密钥轮换失败", e),
-                () -> log.info("定时密钥轮换检查完成")
-            );
-        */
+        // 当前仅记录调度日志：客户端清单来源尚未接入，待 OAuth2 客户端仓储提供
+        // 跨租户扫描接口后启用下方逐客户端轮换；届时删除本说明。
+        // 保留原调用形态供接线参考：
+        //
+        // clientRepository.findAll()
+        //     .flatMap(client -> checkAndRotateSecret(client.getClientId()))
+        //     .subscribe(null, e -> log.error("定时密钥轮换失败", e),
+        //         () -> log.info("定时密钥轮换检查完成"));
     }
 
     /**
@@ -321,10 +315,8 @@ public class ClientSecretRotationService {
      * @param daysUntilRotation 距离轮换的天数
      */
     private Mono<Void> notifyClientSecretRotation(String clientId, long daysUntilRotation) {
-        // TODO(Apex Team): 实现实际的通知逻辑
-        // 1. 发送邮件通知
-        // 2. 调用Webhook
-        // 3. 在管理后台显示提醒
+        // 通知渠道尚未接线：当前只写审计事件，待邮件/Webhook 通知适配器接入后替换，
+        // 并同步在管理后台展示提醒。
 
         log.info("通知客户端密钥轮换: clientId={}, daysUntil={}", clientId, daysUntilRotation);
 

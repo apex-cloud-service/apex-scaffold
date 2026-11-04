@@ -13,7 +13,11 @@ import lombok.ToString;
  * 旧注册源离线导入契约。源数据库只能由运维工具读取，不允许auth跨库读取。
  *
  * <p>importId是稳定的源行标识，sourceFingerprint为源导出内容的SHA256；
- * 两者与请求体一起受内部HMAC签名保护。重放不修改已经由管理面更新的目标。
+ * 两者与请求体一起受内部 HMAC 签名保护。重放不修改已经由管理面更新的目标。
+ *
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @NoArgsConstructor

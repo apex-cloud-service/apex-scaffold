@@ -598,7 +598,7 @@ public class JwtAuthenticationFilter implements WebFilter {
         return authorities;
     }
 
-    /** Normalizes persisted role codes without ever producing ROLE_ROLE_* authorities. */
+    /** 规范化持久化的角色编码，避免产生 {@code ROLE_ROLE_*} 形式的权限。 */
     private static String normalizeRoleAuthority(String roleCode) {
         String normalized = roleCode.trim().toUpperCase(java.util.Locale.ROOT);
         return normalized.startsWith("ROLE_") ? normalized : "ROLE_" + normalized;

@@ -29,11 +29,23 @@ public class OpenAppMigrationHandler {
 
     private final OpenAppAdminService admin;
 
+    /**
+     * 构造处理器。
+     *
+     * @param migration 迁移导出服务
+     * @param admin 开放应用管理服务，导入复用其单源写入
+     */
     public OpenAppMigrationHandler(OpenAppMigrationService migration, OpenAppAdminService admin) {
         this.migration = migration;
         this.admin = admin;
     }
 
+    /**
+     * 导出待迁移的存量开放应用清单（含哈希，不含明文密钥）。
+     *
+     * @param request 服务器请求
+     * @return 统一响应，{@code data} 为待导入清单
+     */
     @RequirePermission("open:app:manage")
     @OperationLog(
             module = "OpenAppMigration",
@@ -43,6 +55,14 @@ public class OpenAppMigrationHandler {
         return migration.export().flatMap(items -> ServerResponse.ok().bodyValue(Result.success(items)));
     }
 
+    /**
+     * 批量导入存量开放应用，逐条汇总成功与失败。
+     *
+     * <p>单条失败不影响其余条目；返回的失败项只含异常类型，不带敏感信息。
+     *
+     * @param request 服务器请求，请求体为 {@link OpenAppImportRequest} 数组
+     * @return 统一响应，{@code data} 为导入汇总
+     */
     @RequirePermission("open:app:manage")
     @OperationLog(
             module = "OpenAppMigration",

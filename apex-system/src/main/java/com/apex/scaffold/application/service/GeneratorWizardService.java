@@ -1270,9 +1270,8 @@ public class GeneratorWizardService {
      * 渲染并写入单个「表 × 模板」单元，随后推进一次进度。
      *
      * <p>渲染写盘前先做租约预检，保证取消与接管在首次写盘前即被感知；
-     * 预检失败抛 {@link TaskStoppedException} 终止后续单元。
-     *
-     * @return 单元完成信号；取消或接管时以 {@link TaskStoppedException} 终止
+     * 预检失败抛 {@link TaskStoppedException} 终止后续单元；执行中取消或接管同样以
+     * 该异常终止，调用方据此判停。
      */
     private Mono<Void> runUnit(
             RenderedFile skeleton,
@@ -1310,7 +1309,7 @@ public class GeneratorWizardService {
     /**
      * 执行单单元的模板渲染与产物写盘，完成后回写一次进度。
      *
-     * @return 单元完成信号；进度回调返回 {@code false} 时抛 {@link TaskStoppedException}
+     * <p>进度回调返回 {@code false} 时抛 {@link TaskStoppedException}，停止后续写盘。
      */
     private Mono<Void> renderAndWriteUnit(
             RenderedFile skeleton,

@@ -24,7 +24,6 @@ public class IntegrationLocalEventPublisher implements DomainEventPublisher {
      * 进程内发布领域事件（不持久化）。
      *
      * @param event 领域事件对象，不能为 null
-     * @return 完成信号
      */
     @Override
     public Mono<Void> publish(AbstractDomainEvent event) {

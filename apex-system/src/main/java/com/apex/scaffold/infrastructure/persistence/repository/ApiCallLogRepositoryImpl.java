@@ -57,7 +57,7 @@ public class ApiCallLogRepositoryImpl
         return save(entity);
     }
 
-    /** MyBatis-Plus Mapper。 */
+    /** 调用日志 Mapper。 */
     private final ApiCallLogMapper mapper;
 
     /**

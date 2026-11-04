@@ -57,7 +57,6 @@ public class ResourcePermissionAspect {
         Method method = signature.getMethod();
         RequireResourcePermission annotation = method.getAnnotation(RequireResourcePermission.class);
 
-        // 获取资源类型和所需权限
         String resourceType = annotation.resourceType();
         String requiredPermission = annotation.permission();
         String errorMessage = annotation.errorMessage();

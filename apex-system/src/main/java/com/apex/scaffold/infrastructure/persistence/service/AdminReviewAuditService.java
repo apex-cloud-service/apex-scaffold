@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
- * JDBC adapter that only exposes append semantics for the review audit table.
+ * 审核审计表的 JDBC 适配器，只暴露追加语义，不提供更新与删除。
  *
  * @author Apex Team
  * @version 1.0.0

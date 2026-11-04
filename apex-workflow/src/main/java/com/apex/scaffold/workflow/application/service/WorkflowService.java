@@ -427,7 +427,6 @@ public class WorkflowService {
      * @param approverId 审批人ID
      * @param comment 审批意见
      * @param eventFactory 由已完成任务与实例构造事件；可空
-     * @return 完成信号
      */
     public Mono<Void> completeTask(
             Long taskId,
@@ -553,7 +552,6 @@ public class WorkflowService {
      * @param operatorId 操作人ID
      * @param reason 回退原因
      * @param eventFactory 由新任务构造事件；可空
-     * @return 回退完成信号
      */
     public Mono<Void> rollbackToNode(
             Long taskId,
@@ -637,7 +635,6 @@ public class WorkflowService {
      * @param operatorId 操作人
      * @param reason 转办原因
      * @param eventFactory 由更新后任务构造事件；可空
-     * @return 转办完成信号
      */
     public Mono<Void> transferTask(
             Long taskId,
@@ -714,7 +711,6 @@ public class WorkflowService {
      * @param operatorId 操作人
      * @param reason 委派原因
      * @param eventFactory 由新建委派任务构造事件；可空
-     * @return 委派完成信号
      */
     public Mono<Void> delegateTask(
             Long taskId,

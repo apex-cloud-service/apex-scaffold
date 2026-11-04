@@ -21,7 +21,6 @@ public interface NotifyActionPort {
      * @param ruleName  规则名
      * @param deviceKey 设备标识
      * @param content   通知内容（含命中指标摘要）
-     * @return 完成信号
      */
     Mono<Void> notify(String tenantId, String ruleName, String deviceKey, String content);
 }

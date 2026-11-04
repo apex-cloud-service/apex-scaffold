@@ -39,7 +39,6 @@ public class LocalWorkflowEventPublisher implements WorkflowEventPublisher {
      * 在订阅时把事件派发给本地监听器。
      *
      * @param event 工作流领域事件对象，不能为 {@code null}
-     * @return 派发完成信号
      */
     @Override
     public Mono<Void> publish(AbstractDomainEvent event) {

@@ -43,9 +43,7 @@ public enum MaskType {
      */
     IP_ADDRESS,
 
-    /**
-     * URL
-     */
+    /** URL 地址脱敏（保留协议与域名，路径与参数按规则遮蔽）。 */
     URL,
 
     /**

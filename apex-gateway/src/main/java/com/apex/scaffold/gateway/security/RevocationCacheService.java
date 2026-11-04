@@ -156,7 +156,6 @@ public class RevocationCacheService implements InitializingBean, DisposableBean 
     /**
      * 执行一次拉取（初始 + 周期共用；测试可经包内可见性注入替身响应）。
      *
-     * @return 拉取完成信号
      */
     Mono<Void> pull() {
         String uri = properties.getUrl()

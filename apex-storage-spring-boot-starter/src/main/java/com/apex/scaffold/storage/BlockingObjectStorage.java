@@ -19,7 +19,6 @@ public abstract class BlockingObjectStorage implements ObjectStorage {
         return Mono.fromCallable(action).subscribeOn(BlockingIoSchedulers.storage());
     }
 
-    /** @param stream 待关闭资源 @return 专用存储池上的关闭信号 */
     static Mono<Void> closeStream(InputStream stream) {
         return io(() -> {
                     stream.close();

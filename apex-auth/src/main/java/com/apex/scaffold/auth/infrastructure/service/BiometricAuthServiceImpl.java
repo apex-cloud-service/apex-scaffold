@@ -55,7 +55,6 @@ public class BiometricAuthServiceImpl implements BiometricAuthService {
             String deviceId,
             String deviceName,
             String publicKey) {
-        // 生成模板ID
         String templateId = UUID.randomUUID().toString();
 
         return encryptionService

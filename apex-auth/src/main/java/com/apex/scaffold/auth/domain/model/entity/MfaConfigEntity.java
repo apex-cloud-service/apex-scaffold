@@ -107,9 +107,7 @@ public class MfaConfigEntity {
      * MFA 类型枚举
      */
     public enum MfaType {
-        /**
-         * TOTP（Time-based One-Time Password）
-         */
+        /** TOTP（基于时间的一次性密码）因子。 */
         TOTP,
 
         /**
