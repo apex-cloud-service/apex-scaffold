@@ -4,10 +4,15 @@ import com.apex.scaffold.application.dto.OAuth2ClientRequest;
 import com.apex.scaffold.application.dto.OpenAppRequest;
 import com.apex.scaffold.application.dto.OpenAppResponse;
 import com.apex.scaffold.application.service.OAuth2ClientManagementService;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.contract.dto.internal.OpenAppRegistrationRequest;
+import com.apex.scaffold.contract.dto.internal.OpenAppRegistrationResponse;
+import com.apex.scaffold.domain.gateway.OpenAppRegistryGateway;
 import com.apex.scaffold.domain.model.entity.OAuth2RegisteredClientEntity;
 import com.apex.scaffold.domain.repository.OAuth2RegisteredClientRepository;
+import com.apex.scaffold.domain.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -16,7 +21,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -39,7 +43,6 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public class OpenAppAdminService {
 
@@ -61,6 +64,61 @@ public class OpenAppAdminService {
     private final OAuth2RegisteredClientRepository clientRepository;
     private final OpenPlatformScopeRegistry scopeRegistry;
     private final ObjectMapper objectMapper;
+    private final OpenAppRegistryGateway authRegistry;
+    private final UserRepository userRepository;
+    private final boolean localRegistry;
+
+    /**
+     * Spring 主构造器（唯一 public 构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}）。
+     *
+     * <p>本类不使用 {@code @RequiredArgsConstructor}：Lombok 会再生成一个构造器，
+     * 导致 Spring 无法按唯一构造器注入；构造器在此显式声明以便校验
+     * {@code apex.open-app.registry} 配置值。
+     *
+     * @param clientManagementService OAuth2 客户端管理服务
+     * @param clientRepository 已注册客户端仓储
+     * @param scopeRegistry 开放平台 scope 注册表
+     * @param objectMapper JSON 序列化器
+     * @param authRegistry 认证服务开放应用注册网关
+     * @param userRepository 用户仓储
+     * @param registry 注册表实现选择（{@code auth} 或 {@code local}）
+     */
+    public OpenAppAdminService(
+            OAuth2ClientManagementService clientManagementService,
+            OAuth2RegisteredClientRepository clientRepository,
+            OpenPlatformScopeRegistry scopeRegistry,
+            ObjectMapper objectMapper,
+            OpenAppRegistryGateway authRegistry,
+            UserRepository userRepository,
+            @org.springframework.beans.factory.annotation.Value("${apex.open-app.registry:auth}") String registry) {
+        if (!"auth".equals(registry) && !"local".equals(registry)) {
+            throw new IllegalArgumentException("apex.open-app.registry must be auth or local");
+        }
+        this.clientManagementService = clientManagementService;
+        this.clientRepository = clientRepository;
+        this.scopeRegistry = scopeRegistry;
+        this.objectMapper = objectMapper;
+        this.authRegistry = authRegistry;
+        this.userRepository = userRepository;
+        this.localRegistry = "local".equals(registry);
+    }
+
+    /**
+     * 测试与程序化装配入口：仅使用本地注册表、无认证网关与用户仓储的过渡形态。
+     *
+     * @param management OAuth2 客户端管理服务
+     * @param repository 已注册客户端仓储
+     * @param scopes 开放平台 scope 注册表
+     * @param mapper JSON 序列化器
+     * @return 构建完成的服务实例
+     */
+    public static OpenAppAdminService forTesting(
+            OAuth2ClientManagementService management,
+            OAuth2RegisteredClientRepository repository,
+            OpenPlatformScopeRegistry scopes,
+            ObjectMapper mapper) {
+        return new OpenAppAdminService(management, repository, scopes, mapper, null, null, "local");
+    }
 
     /**
      * 创建开放应用.
@@ -73,7 +131,13 @@ public class OpenAppAdminService {
      * @return 创建后的应用（含一次性明文密钥）
      */
     public Mono<OpenAppResponse> createApp(OpenAppRequest request) {
-        return validate(request, true).then(Mono.defer(() -> {
+        if (!localRegistry) {
+            return validate(request, true)
+                    .then(validateSubject(request))
+                    .then(Mono.defer(() -> authRegistry.create(registration(request))))
+                    .map(this::fromRegistration);
+        }
+        return validate(request, true).then(validateSubject(request)).then(Mono.defer(() -> {
             String secret = resolveSecret(request.getClientSecret());
             OAuth2ClientRequest base = baseRequest(request);
             base.setClientSecret(secret);
@@ -92,6 +156,12 @@ public class OpenAppAdminService {
      * @return 更新后的应用
      */
     public Mono<OpenAppResponse> updateApp(String clientId, OpenAppRequest request) {
+        if (!localRegistry) {
+            return validate(request, false)
+                    .then(validateSubject(request))
+                    .then(Mono.defer(() -> authRegistry.update(clientId, registration(request))))
+                    .map(this::fromRegistration);
+        }
         if (clientId == null || clientId.isBlank()) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "clientId 不能为空"));
         }
@@ -99,6 +169,7 @@ public class OpenAppAdminService {
                 .findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "客户端不存在")))
                 .then(validate(request, false))
+                .then(validateSubject(request))
                 .then(clientManagementService.updateClient(clientId, baseRequest(request)))
                 .then(mergeMetadata(clientId, request))
                 .map(entity -> toResponse(entity, null));
@@ -111,10 +182,28 @@ public class OpenAppAdminService {
      * @return 应用信息（不含密钥）
      */
     public Mono<OpenAppResponse> getApp(String clientId) {
+        if (!localRegistry) {
+            return Mono.defer(() -> authRegistry.get(clientId)).map(this::fromRegistration);
+        }
         return clientRepository
                 .findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "客户端不存在")))
                 .map(entity -> toResponse(entity, null));
+    }
+
+    /**
+     * 导入一条旧源开放应用（D25 迁移窗口）。
+     *
+     * <p>仅在 auth 单源模式下可用；本地回退模式拒绝，避免把导入写回已弃用的旧注册表。
+     *
+     * @param request 导入请求（含 bcrypt 哈希与幂等指纹）
+     * @return 导入后的应用（不含明文密钥）
+     */
+    public Mono<OpenAppResponse> importApp(com.apex.scaffold.contract.dto.internal.OpenAppImportRequest request) {
+        if (localRegistry) {
+            return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "迁移导入仅在 auth 单源模式可用"));
+        }
+        return Mono.defer(() -> authRegistry.importApp(request)).map(this::fromRegistration);
     }
 
     /**
@@ -128,6 +217,13 @@ public class OpenAppAdminService {
      * @return 限流档编码（如 {@code default}/{@code standard}/{@code premium}）
      */
     public Mono<String> getRateLimitTier(String clientId) {
+        if (!localRegistry) {
+            return getApp(clientId)
+                    .map(app -> app.getRateLimitTier() == null
+                                    || app.getRateLimitTier().isBlank()
+                            ? DEFAULT_RATE_LIMIT_TIER
+                            : app.getRateLimitTier());
+        }
         if (clientId == null || clientId.isBlank()) {
             return Mono.just(DEFAULT_RATE_LIMIT_TIER);
         }
@@ -150,6 +246,10 @@ public class OpenAppAdminService {
      * @return 应用信息流
      */
     public Flux<OpenAppResponse> listApps(int page, int size) {
+        if (!localRegistry) {
+            return Flux.defer(() -> authRegistry.list(Math.max(0, page), Math.min(Math.max(1, size), 100)))
+                    .map(this::fromRegistration);
+        }
         return clientRepository
                 .findAll(Math.max(0, page), Math.min(Math.max(1, size), 100))
                 .map(entity -> toResponse(entity, null));
@@ -171,6 +271,9 @@ public class OpenAppAdminService {
      * @return 应用信息（{@code clientSecret} 为一次性明文）
      */
     public Mono<OpenAppResponse> resetSecret(String clientId) {
+        if (!localRegistry) {
+            return Mono.defer(() -> authRegistry.rotateSecret(clientId)).map(this::fromRegistration);
+        }
         return clientRepository
                 .findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "客户端不存在")))
@@ -178,8 +281,63 @@ public class OpenAppAdminService {
                 .flatMap(secret -> clientRepository.findByClientId(clientId).map(entity -> toResponse(entity, secret)));
     }
 
+    private Mono<Void> validateSubject(OpenAppRequest request) {
+        if (request == null || request.getSubjectUserId() == null) {
+            return Mono.empty();
+        }
+        return Mono.deferContextual(context -> {
+            String tenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+            if (tenant == null || tenant.isBlank() || userRepository == null || request.getSubjectUserId() <= 0) {
+                return Mono.error(new BusinessException(ResultCode.FORBIDDEN));
+            }
+            return TenantContext.withTenant(userRepository.findById(request.getSubjectUserId()))
+                    .filter(user -> tenant.equals(user.getTenantId()) && user.isEnabled() && !user.isDeleted())
+                    .switchIfEmpty(Mono.error(new BusinessException(ResultCode.FORBIDDEN)))
+                    .then();
+        });
+    }
+
+    private OpenAppRegistrationRequest registration(OpenAppRequest request) {
+        return OpenAppRegistrationRequest.builder()
+                .clientId(request.getClientId())
+                .clientSecret(request.getClientSecret())
+                .appName(request.getAppName())
+                .description(request.getDescription())
+                .redirectUris(request.getRedirectUris())
+                .scopes(request.getScopes())
+                .rateLimitTier(request.getRateLimitTier())
+                .contact(request.getContact())
+                .enabled(
+                        request.getStatus() == null || request.getStatus().isBlank()
+                                ? null
+                                : STATUS_ENABLED.equals(
+                                        request.getStatus().trim().toUpperCase(Locale.ROOT)))
+                .subjectUserId(request.getSubjectUserId())
+                .subjectValidated(request.getSubjectUserId() != null)
+                .build();
+    }
+
+    private OpenAppResponse fromRegistration(OpenAppRegistrationResponse app) {
+        return OpenAppResponse.builder()
+                .clientId(app.getClientId())
+                .appName(app.getAppName())
+                .description(app.getDescription())
+                .redirectUris(app.getRedirectUris())
+                .scopes(app.getScopes())
+                .rateLimitTier(app.getRateLimitTier())
+                .contact(app.getContact())
+                .status(Boolean.TRUE.equals(app.getEnabled()) ? STATUS_ENABLED : STATUS_DISABLED)
+                .createdAt(app.getCreatedAt())
+                .clientSecret(app.getClientSecret())
+                .subjectUserId(app.getSubjectUserId())
+                .build();
+    }
+
     private Mono<Void> validate(OpenAppRequest request, boolean create) {
         return Mono.defer(() -> {
+            if (request == null) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
+            }
             if (create
                     && (request.getClientId() == null || request.getClientId().isBlank())) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "clientId 不能为空"));

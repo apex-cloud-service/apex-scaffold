@@ -74,6 +74,11 @@ public final class InternalServiceSigner {
      * @return 需要附带的请求头
      */
     public Map<String, String> sign(String service, String method, String path, String tenant) {
+        return sign(service, method, path, tenant, new byte[0]);
+    }
+
+    /** 签名绑定完整原始路径及查询串、租户和已编码的请求正文。 */
+    public Map<String, String> sign(String service, String method, String path, String tenant, byte[] body) {
         if (secret == null) {
             throw new IllegalStateException("未配置 apex.internal-auth.secret，无法签名内部调用");
         }
@@ -83,8 +88,7 @@ public final class InternalServiceSigner {
         String timestamp = String.valueOf(clock.instant().getEpochSecond());
         String nonce = java.util.UUID.randomUUID().toString().replace("-", "");
         String normalizedTenant = tenant == null ? "" : tenant;
-        String signature =
-                hmac(service + ":" + timestamp + ":" + nonce + ":" + method + ":" + path + ":" + normalizedTenant);
+        String signature = hmac(payload(service, timestamp, nonce, method, path, normalizedTenant, body));
         Map<String, String> headers = new java.util.LinkedHashMap<>();
         headers.put(HEADER_SERVICE, service);
         headers.put(HEADER_TIMESTAMP, timestamp);
@@ -116,6 +120,19 @@ public final class InternalServiceSigner {
             String method,
             String path,
             String tenant) {
+        return verify(service, timestamp, nonce, signature, method, path, tenant, new byte[0]);
+    }
+
+    /** 对原始查询串和请求正文做验签，重复请求不得重新消费 nonce。 */
+    public boolean verify(
+            String service,
+            String timestamp,
+            String nonce,
+            String signature,
+            String method,
+            String path,
+            String tenant,
+            byte[] body) {
         if (secret == null
                 || service == null
                 || service.isBlank()
@@ -137,8 +154,7 @@ public final class InternalServiceSigner {
             return false;
         }
         String normalizedTenant = tenant == null ? "" : tenant;
-        String expected =
-                hmac(service + ":" + timestamp + ":" + nonce + ":" + method + ":" + path + ":" + normalizedTenant);
+        String expected = hmac(payload(service, timestamp, nonce, method, path, normalizedTenant, body));
         if (!MessageDigest.isEqual(
                 expected.getBytes(StandardCharsets.UTF_8), signature.getBytes(StandardCharsets.UTF_8))) {
             return false;
@@ -151,6 +167,17 @@ public final class InternalServiceSigner {
     private void pruneExpiredNonces() {
         Instant now = clock.instant();
         nonces.entrySet().removeIf(entry -> entry.getValue().isBefore(now));
+    }
+
+    private String payload(
+            String service, String timestamp, String nonce, String method, String path, String tenant, byte[] body) {
+        try {
+            String digest = HexFormat.of()
+                    .formatHex(MessageDigest.getInstance("SHA-256").digest(body == null ? new byte[0] : body));
+            return String.join("\n", "v2", service, timestamp, nonce, method, path, tenant, digest);
+        } catch (java.security.NoSuchAlgorithmException error) {
+            throw new IllegalStateException("SHA-256 unavailable", error);
+        }
     }
 
     private String hmac(String payload) {

@@ -225,7 +225,7 @@ spring:
         - id: open-api-system
           uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
           predicates:
-            - Path=/open-api/users/**,/open-api/user/**
+            - Path=/open-api/users,/open-api/users/**,/open-api/user/**
           metadata:
             open-api:
               capability: user-org

@@ -1,49 +1,35 @@
 package com.apex.scaffold.common.internal;
 
+import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.result.Result;
+import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.common.util.JsonUtil;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * 内部契约请求签名过滤器（{@code /internal/v1/**}）。
- *
- * <p>把内部端点从"网络信任 + permitAll"改为"共享密钥 HMAC 签名 + 短时间窗 + nonce 防重放"。
- * 不依赖用户 JWT，也不引入第二授权服务器；因此登录前的租户状态查询、网关撤销流拉取等
- * 引导链路可以继续使用。签名串包含方法、路径与显式租户，拒绝篡改与跨租户重放。
- *
- * <p>{@code apex.internal-auth.enabled=false} 时完全跳过（仅供本地开发）；
- * 启用但未配置密钥时一律 503 拒绝，避免误以为已受保护。
- *
- * @author Apex Team
- * @version 1.3.2
- * @since 1.3.2
- */
+/** 内部调用正文与查询串完整验签，校验调用方路径白名单并固定可信租户。 */
 public class InternalAuthWebFilter implements WebFilter, Ordered {
-
-    /** 内部契约前缀。 */
     public static final String INTERNAL_PREFIX = "/internal/v1/";
-
+    private static final int MAX_BODY_BYTES = 1024 * 1024;
     private final InternalAuthProperties properties;
-
     private final InternalServiceSigner signer;
-
     private final boolean loopbackOnly;
+    private final AntPathMatcher paths = new AntPathMatcher();
 
-    /**
-     * 构造过滤器。
-     *
-     * @param properties 内部认证配置
-     * @param signer 签名器
-     * @param loopbackOnly 是否额外要求直连地址为回环（本地开发加固）
-     */
     public InternalAuthWebFilter(
             InternalAuthProperties properties, InternalServiceSigner signer, boolean loopbackOnly) {
         this.properties = properties;
@@ -54,82 +40,108 @@ public class InternalAuthWebFilter implements WebFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
-        if (!path.startsWith(INTERNAL_PREFIX)) {
+        if (!path.startsWith(INTERNAL_PREFIX) || !properties.isEnabled()) {
             return chain.filter(exchange);
         }
-        if (!properties.isEnabled()) {
+        if (properties.getExemptPaths().contains(path)) {
             return chain.filter(exchange);
-        }
-        for (String exempt : properties.getExemptPaths()) {
-            if (path.startsWith(exempt)) {
-                return chain.filter(exchange);
-            }
         }
         if (!signer.configured()) {
-            return reject(exchange, HttpStatus.SERVICE_UNAVAILABLE);
+            return reject(exchange, HttpStatus.SERVICE_UNAVAILABLE, ResultCode.SERVICE_UNAVAILABLE);
         }
         var headers = exchange.getRequest().getHeaders();
-        boolean valid = signer.verify(
-                headers.getFirst(InternalServiceSigner.HEADER_SERVICE),
-                headers.getFirst(InternalServiceSigner.HEADER_TIMESTAMP),
-                headers.getFirst(InternalServiceSigner.HEADER_NONCE),
-                headers.getFirst(InternalServiceSigner.HEADER_SIGNATURE),
-                exchange.getRequest().getMethod().name(),
-                path,
-                headers.getFirst(InternalServiceSigner.HEADER_TENANT));
-        if (!valid) {
-            return reject(exchange, HttpStatus.UNAUTHORIZED);
+        String caller = headers.getFirst(InternalServiceSigner.HEADER_SERVICE);
+        String tenant = headers.getFirst(InternalServiceSigner.HEADER_TENANT);
+        if (caller == null
+                || properties.getCallers().getOrDefault(caller, java.util.List.of()).stream()
+                        .noneMatch(pattern -> paths.match(pattern, path))) {
+            return reject(exchange, HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN);
         }
-        if (loopbackOnly && !isLoopback(exchange)) {
-            return reject(exchange, HttpStatus.FORBIDDEN);
+        boolean unscoped = properties.getUnscopedPaths().stream().anyMatch(pattern -> paths.match(pattern, path));
+        if (!unscoped && (tenant == null || tenant.isBlank())) {
+            return reject(exchange, HttpStatus.UNAUTHORIZED, ResultCode.UNAUTHORIZED);
         }
-        return chain.filter(exchange);
+        String target = exchange.getRequest().getURI().getRawPath();
+        if (exchange.getRequest().getURI().getRawQuery() != null) {
+            target += "?" + exchange.getRequest().getURI().getRawQuery();
+        }
+        String signedTarget = target;
+        return DataBufferUtils.join(exchange.getRequest().getBody(), MAX_BODY_BYTES)
+                .map(buffer -> {
+                    byte[] bytes = new byte[buffer.readableByteCount()];
+                    try {
+                        buffer.read(bytes);
+                        return bytes;
+                    } finally {
+                        DataBufferUtils.release(buffer);
+                    }
+                })
+                .defaultIfEmpty(new byte[0])
+                .flatMap(bytes -> {
+                    boolean valid = signer.verify(
+                            caller,
+                            headers.getFirst(InternalServiceSigner.HEADER_TIMESTAMP),
+                            headers.getFirst(InternalServiceSigner.HEADER_NONCE),
+                            headers.getFirst(InternalServiceSigner.HEADER_SIGNATURE),
+                            exchange.getRequest().getMethod().name(),
+                            signedTarget,
+                            tenant,
+                            bytes);
+                    if (!valid) {
+                        return reject(exchange, HttpStatus.UNAUTHORIZED, ResultCode.UNAUTHORIZED);
+                    }
+                    if (loopbackOnly && !isLoopback(exchange)) {
+                        return reject(exchange, HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN);
+                    }
+                    String supplied = headers.getFirst("X-Tenant-Id");
+                    String queried = exchange.getRequest().getQueryParams().getFirst("tenantId");
+                    if ((supplied != null && !supplied.equals(tenant))
+                            || (queried != null && !queried.equals(tenant))) {
+                        return reject(exchange, HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN);
+                    }
+                    var request = new ServerHttpRequestDecorator(exchange.getRequest()) {
+                        @Override
+                        public Flux<DataBuffer> getBody() {
+                            return Flux.defer(() -> Flux.just(
+                                    exchange.getResponse().bufferFactory().wrap(bytes)));
+                        }
+                    };
+                    ServerWebExchange trusted =
+                            exchange.mutate().request(request).build();
+                    trusted.getAttributes()
+                            .put(InternalServiceIdentity.ATTR_IDENTITY, new InternalServiceIdentity(caller, tenant));
+                    Mono<Void> invocation = chain.filter(trusted);
+                    return tenant == null || tenant.isBlank()
+                            ? invocation
+                            : TenantContext.withTenant(invocation).contextWrite(TenantContext.withTenant(tenant));
+                });
     }
 
     private boolean isLoopback(ServerWebExchange exchange) {
         var remote = exchange.getRequest().getRemoteAddress();
-        if (remote == null || remote.getAddress() == null) {
-            return false;
-        }
-        return remote.getAddress().isLoopbackAddress();
+        return remote != null
+                && remote.getAddress() != null
+                && remote.getAddress().isLoopbackAddress();
     }
 
-    private Mono<Void> reject(ServerWebExchange exchange, HttpStatus status) {
+    private Mono<Void> reject(ServerWebExchange exchange, HttpStatus status, ResultCode code) {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        byte[] body = "{\"code\":401,\"msg\":\"内部调用未通过认证\"}".getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = JsonUtil.toJson(Result.error(code)).getBytes(StandardCharsets.UTF_8);
         return exchange.getResponse()
-                .writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(body)));
+                .writeWith(Mono.just(exchange.getResponse().bufferFactory().wrap(bytes)));
     }
 
     @Override
     public int getOrder() {
-        // 先于业务安全链与能力守卫，保证内部端点在任何情况下都先验签。
         return Ordered.HIGHEST_PRECEDENCE + 5;
     }
 
-    /**
-     * 按配置构建签名器。
-     *
-     * @param properties 配置
-     * @param clock 时钟
-     * @return 签名器
-     */
     public static InternalServiceSigner signer(InternalAuthProperties properties, Clock clock) {
         return new InternalServiceSigner(
                 properties.getSecret(), Duration.ofSeconds(Math.max(1, properties.getAllowedSkewSeconds())), clock);
     }
 
-    /**
-     * 读取当前配置的调用头（供内部客户端复用）。
-     *
-     * @param properties 配置
-     * @param signer 签名器
-     * @param method 方法
-     * @param path 路径
-     * @param tenant 租户
-     * @return 请求头
-     */
     public static Map<String, String> signHeaders(
             InternalAuthProperties properties,
             InternalServiceSigner signer,

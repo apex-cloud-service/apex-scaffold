@@ -373,28 +373,32 @@ public class OAuth2Service {
             JsonNode config, String clientId, String subject, String requestedScope, String grant, String tenant) {
         String scope = scopes(config, requestedScope);
         boolean withRefresh = !"client_credentials".equals(grant);
-        return tokens(subject, clientId, scope, tenant, withRefresh, grant).flatMap(response -> {
-            String access = response.get("access_token").toString();
-            String refresh = (String) response.get(REFRESH_TOKEN);
-            return authorizationRepository
-                    .insert(
-                            tenant,
-                            UUID.randomUUID().toString(),
-                            clientId,
-                            subject,
-                            grant,
-                            scope,
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
-                            hash(access),
-                            now().plusSeconds(ACCESS_SECONDS),
-                            refresh == null ? null : hash(refresh),
-                            refresh == null ? null : now().plusSeconds(REFRESH_SECONDS))
-                    .thenReturn(response);
-        });
+        Long subjectUserId = config.path("subjectUserId").isNumber()
+                ? config.path("subjectUserId").asLong()
+                : null;
+        return tokens(subject, clientId, scope, tenant, withRefresh, grant, subjectUserId)
+                .flatMap(response -> {
+                    String access = response.get("access_token").toString();
+                    String refresh = (String) response.get(REFRESH_TOKEN);
+                    return authorizationRepository
+                            .insert(
+                                    tenant,
+                                    UUID.randomUUID().toString(),
+                                    clientId,
+                                    subject,
+                                    grant,
+                                    scope,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    hash(access),
+                                    now().plusSeconds(ACCESS_SECONDS),
+                                    refresh == null ? null : hash(refresh),
+                                    refresh == null ? null : now().plusSeconds(REFRESH_SECONDS))
+                            .thenReturn(response);
+                });
     }
 
     private Mono<JsonNode> client(String id, String secret, String tenant) {
@@ -489,9 +493,22 @@ public class OAuth2Service {
      */
     private Mono<Map<String, Object>> tokens(
             String subject, String clientId, String scope, String tenant, boolean refresh, String grant) {
-        Mono<String> access = jwt(subject, clientId, scope, tenant, "access", ACCESS_SECONDS, grant);
-        Mono<String> refreshToken =
-                refresh ? jwt(subject, clientId, scope, tenant, REFRESH, REFRESH_SECONDS, grant) : Mono.just("");
+        return tokens(subject, clientId, scope, tenant, refresh, grant, null);
+    }
+
+    /** 签发令牌并写入开放应用主体账号（仅当注册声明了同租户主体）。 */
+    private Mono<Map<String, Object>> tokens(
+            String subject,
+            String clientId,
+            String scope,
+            String tenant,
+            boolean refresh,
+            String grant,
+            Long subjectUserId) {
+        Mono<String> access = jwt(subject, clientId, scope, tenant, "access", ACCESS_SECONDS, grant, subjectUserId);
+        Mono<String> refreshToken = refresh
+                ? jwt(subject, clientId, scope, tenant, REFRESH, REFRESH_SECONDS, grant, subjectUserId)
+                : Mono.just("");
         return Mono.zip(access, refreshToken).map(tuple -> {
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("access_token", tuple.getT1());
@@ -520,6 +537,18 @@ public class OAuth2Service {
      */
     private Mono<String> jwt(
             String subject, String clientId, String scope, String tenant, String type, long seconds, String grant) {
+        return jwt(subject, clientId, scope, tenant, type, seconds, grant, null);
+    }
+
+    private Mono<String> jwt(
+            String subject,
+            String clientId,
+            String scope,
+            String tenant,
+            String type,
+            long seconds,
+            String grant,
+            Long subjectUserId) {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("iss", properties.getIssuer());
         claims.put("aud", clientId);
@@ -530,6 +559,9 @@ public class OAuth2Service {
         claims.put("scope", scope);
         if (grant != null && !grant.isBlank()) {
             claims.put("grant_type", grant);
+        }
+        if (subjectUserId != null) {
+            claims.put("sub_uid", subjectUserId);
         }
         return keyMaterialService.sign(subject, claims, seconds * 1000);
     }

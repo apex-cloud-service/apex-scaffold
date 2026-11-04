@@ -37,9 +37,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class InternalAuthRouter {
 
     /**
-     * 注册内部认证路由.
+     * 注册内部认证与开放应用注册路由（注册端点复用同一签名校验）.
      *
      * @param handler 内部认证处理器
+     * @param registry 开放应用注册处理器
      * @return 路由函数
      */
     @Bean
@@ -211,8 +212,16 @@ public class InternalAuthRouter {
                                                                                             .Result.class)))
                                 }))
     })
-    public RouterFunction<ServerResponse> internalAuthRoutes(InternalAuthHandler handler) {
-        return RouterFunctions.route()
+    public RouterFunction<ServerResponse> internalAuthRoutes(
+            InternalAuthHandler handler,
+            com.apex.scaffold.authservice.interfaces.handler.InternalOpenAppRegistryHandler registry) {
+        return buildInternalRoutes(handler, registry);
+    }
+
+    private RouterFunction<ServerResponse> buildInternalRoutes(
+            InternalAuthHandler handler,
+            com.apex.scaffold.authservice.interfaces.handler.InternalOpenAppRegistryHandler registry) {
+        RouterFunctions.Builder builder = RouterFunctions.route()
                 .GET(
                         "/internal/v1/users/{accountId}/permissions",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
@@ -221,8 +230,30 @@ public class InternalAuthRouter {
                         "/internal/v1/tokens/validate",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
                         handler::validateToken)
-                .GET("/internal/v1/tokens/revocations", handler::tokenRevocations)
-                .build();
+                .GET("/internal/v1/tokens/revocations", handler::tokenRevocations);
+        if (registry != null) {
+            builder.POST(
+                            "/internal/v1/open-apps",
+                            RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                            registry::create)
+                    .GET("/internal/v1/open-apps", registry::list)
+                    .GET("/internal/v1/open-apps/{clientId}", registry::get)
+                    .PUT(
+                            "/internal/v1/open-apps/{clientId}",
+                            RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                            registry::update)
+                    .PUT(
+                            "/internal/v1/open-apps/{clientId}/status",
+                            RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                            registry::status)
+                    .POST("/internal/v1/open-apps/{clientId}/reset-secret", registry::rotateSecret)
+                    .DELETE("/internal/v1/open-apps/{clientId}", registry::delete)
+                    .POST(
+                            "/internal/v1/open-apps/import",
+                            RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                            registry::importApp);
+        }
+        return builder.build();
     }
 
     /** 内部令牌校验的实际 Result 包装，仅用于 OpenAPI 建模。 */

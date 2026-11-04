@@ -56,7 +56,8 @@ public class OpenApiGuardProperties {
             "/open-api/file/", "file-storage",
             "/open-api/files/", "file-storage",
             "/open-api/workflow/", "workflow",
-            "/open-api/users/", "user-org",
+            "/open-api/users", "user-org",
             "/open-api/user/", "user-org",
+            "/open-api/messages", "office-message",
             "/open-api/messages/", "office-message"));
 }

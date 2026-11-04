@@ -46,6 +46,31 @@ public class AuthConfigRepositoryImpl implements AuthConfigRepository {
     }
 
     @Override
+    public Mono<AuthConfigEntity> updateOpenApp(AuthConfigEntity entity, int expectedVersion) {
+        return JdbcTenantScope.call(entity.getTenantId(), tenant -> {
+            AuthConfigPO po = converter.toPo(entity);
+            int changed = mapper.update(
+                    po,
+                    JdbcTenantScope.<AuthConfigPO>update(tenant)
+                            .eq("id", entity.getId())
+                            .eq("config_type", "OAUTH2_CLIENT")
+                            .eq("version", expectedVersion));
+            if (changed != 1) {
+                throw new com.apex.scaffold.common.exception.BusinessException(
+                        409, "Open application version conflict");
+            }
+            return converter.toEntity(po);
+        });
+    }
+
+    @Override
+    public Flux<AuthConfigEntity> findOAuth2Clients(String tenantId, int page, int size) {
+        return query(tenantId, q -> q.eq("config_type", "OAUTH2_CLIENT")
+                .orderByAsc("id")
+                .last("LIMIT " + size + " OFFSET " + ((long) page * size)));
+    }
+
+    @Override
     public Mono<Void> deleteById(Long id, String tenantId) {
         return JdbcTenantScope.call(
                         tenantId,

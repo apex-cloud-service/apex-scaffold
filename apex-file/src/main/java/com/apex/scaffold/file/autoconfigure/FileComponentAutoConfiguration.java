@@ -45,6 +45,16 @@ public class FileComponentAutoConfiguration {
     static class FileCoreConfiguration {}
 
     /**
+     * 组件级 Mapper 注册：拆分部署由 service 的 MapperScan 负责，组合部署依赖本入口，
+     * 保证组件可独立启动而不需要宿主再扫描。
+     */
+    @Configuration(proxyBeanMethods = false)
+    @org.mybatis.spring.annotation.MapperScan(
+            basePackages = "com.apex.scaffold.file.infrastructure.persistence.mapper",
+            annotationClass = org.apache.ibatis.annotations.Mapper.class)
+    static class FileMapperConfiguration {}
+
+    /**
      * 协议层（interfaces）：可由 {@code interfaces-enabled=false} 单独关闭。
      */
     @Configuration(proxyBeanMethods = false)

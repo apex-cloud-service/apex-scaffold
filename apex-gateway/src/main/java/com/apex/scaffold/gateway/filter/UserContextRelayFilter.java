@@ -49,6 +49,9 @@ public class UserContextRelayFilter implements GlobalFilter, Ordered {
     /** 请求头：客户端类型（网关注入） */
     public static final String HEADER_CLIENT_TYPE = "X-Client-Type";
 
+    /** 请求头：开放应用绑定的主体用户（网关注入；无绑定不出现） */
+    public static final String HEADER_OPEN_API_SUBJECT = "X-Open-Api-Subject";
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         Object attr = exchange.getAttributes().get(JwtSignatureFilter.ATTR_CLAIMS);
@@ -104,8 +107,13 @@ public class UserContextRelayFilter implements GlobalFilter, Ordered {
                 .headers(headers -> {
                     headers.remove(HEADER_USER_ID);
                     headers.remove(HEADER_CLIENT_TYPE);
+                    headers.remove(HEADER_OPEN_API_SUBJECT);
                     headers.set(HEADER_TENANT_ID, tenant);
                     headers.set(OpenApiScopeGatewayFilter.CLIENT_ID_HEADER, clientId);
+                    String subject = resolveFirstNonBlank(claims, "sub_uid");
+                    if (subject != null && subject.matches("[1-9][0-9]{0,18}")) {
+                        headers.set(HEADER_OPEN_API_SUBJECT, subject);
+                    }
                 })
                 .build();
         return chain.filter(exchange.mutate().request(request).build());

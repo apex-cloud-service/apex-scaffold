@@ -61,4 +61,8 @@ public class OpenAppRequest {
     /** 状态（ENABLED/DISABLED，缺省 ENABLED） */
     @Schema(description = "状态", example = "ENABLED")
     private String status;
+
+    @jakarta.validation.constraints.Positive
+    @Schema(description = "主体用户ID，必须为同租户的启用用户；文件/工作流开放写必填")
+    private Long subjectUserId;
 }

@@ -259,6 +259,28 @@ public class JwtAuthenticationFilter implements WebFilter {
             // 认证中心令牌分支：claims 携带 tokenType=ACCESS 与 accountId 统一账户声明
             // （主应用令牌使用 type=access，两者以 claims 结构天然区分，算法/密钥按 header 选钥）
             String centerTokenType = claims.get("tokenType", String.class);
+            String capability = exchange.getRequest()
+                    .getHeaders()
+                    .getFirst(com.apex.scaffold.common.openapi.OpenApiTokenSupport.CAPABILITY_HEADER);
+            if (com.apex.scaffold.common.openapi.OpenApiTokenSupport.isOpenApplication(
+                    exchange.getRequest().getPath().value(), capability, claims)) {
+                String tenant = com.apex.scaffold.common.openapi.OpenApiTokenSupport.tenantId(claims);
+                Long subject = com.apex.scaffold.common.openapi.OpenApiTokenSupport.subjectUserId(claims);
+                if (tenant == null || tenant.isBlank()) {
+                    return handleError(exchange, ResultCode.UNAUTHORIZED);
+                }
+                var principal =
+                        new com.apex.scaffold.interfaces.security.AuthenticatedUser(subject, null, tenant, null);
+                var authentication =
+                        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                                principal, null, java.util.List.of());
+                exchange.getAttributes().put("tenantId", tenant);
+                return com.apex.scaffold.common.context.TenantContext.withTenant(chain.filter(exchange))
+                        .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(tenant))
+                        .contextWrite(
+                                org.springframework.security.core.context.ReactiveSecurityContextHolder
+                                        .withAuthentication(authentication));
+            }
             Long accountId = claims.get("accountId", Long.class);
             if (tokenType == null && ACCESS_TOKEN_TYPE_CENTER.equals(centerTokenType) && accountId != null) {
                 return authenticateCenterToken(exchange, chain, claims, accountId);

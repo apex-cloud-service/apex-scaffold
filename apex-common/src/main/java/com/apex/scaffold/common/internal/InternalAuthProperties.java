@@ -31,6 +31,32 @@ public class InternalAuthProperties {
     /** 允许的时钟偏差（秒），默认 60。 */
     private long allowedSkewSeconds = 60;
 
+    /** 调用方服务名到可访问的内部路径模式；未登记调用方默认拒绝。 */
+    private java.util.Map<String, java.util.List<String>> callers = new java.util.LinkedHashMap<>(java.util.Map.of(
+            "apex-gateway",
+                    java.util.List.of(
+                            "/internal/v1/tenants/**", "/internal/v1/open-apps/**", "/internal/v1/tokens/revocations"),
+            "apex-system-service",
+                    java.util.List.of(
+                            "/internal/v1/open-apps/**",
+                            "/internal/v1/file/stats",
+                            "/internal/v1/workflow/stats",
+                            "/internal/v1/iot/devices/stats",
+                            "/internal/v1/office/messages/stats",
+                            "/internal/v1/users/**",
+                            "/internal/v1/tokens/**"),
+            "apex-auth-service", java.util.List.of("/internal/v1/tenants/**", "/internal/v1/open-app-subjects/**"),
+            "apex-file-service", java.util.List.of("/internal/v1/tenants/**", "/internal/v1/open-app-subjects/**"),
+            "apex-workflow-service", java.util.List.of("/internal/v1/tenants/**", "/internal/v1/open-app-subjects/**"),
+            "apex-office-service",
+                    java.util.List.of(
+                            "/internal/v1/tenants/**", "/internal/v1/org/**", "/internal/v1/open-app-subjects/**"),
+            "apex-integration-service", java.util.List.of("/internal/v1/notify", "/internal/v1/tenants/**")));
+
+    /** 仅撤销流与平台应用档位查询允许无租户签名；其他路径必须绑定租户。 */
+    private java.util.List<String> unscopedPaths =
+            java.util.List.of("/internal/v1/tokens/revocations", "/internal/v1/open-apps/*/rate-limit-tier");
+
     /**
      * 豁免签名的内部路径前缀。
      *

@@ -94,6 +94,7 @@ public class JwtSignatureFilter implements GlobalFilter, Ordered {
                     headers.remove("X-Client-Scopes");
                     headers.remove("X-Client-Id");
                     headers.remove("X-Open-Api-Capability");
+                    headers.remove("X-Open-Api-Subject");
                     // 外部请求不能注入内部身份或事务上下文；保留原始认证凭据供下游复验。
                     headers.remove("X-Apex-Seata-Xid");
                     headers.remove("X-Apex-Seata-Key");

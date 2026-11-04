@@ -25,10 +25,10 @@ import org.springframework.context.annotation.Configuration;
 @org.springframework.boot.context.properties.ConfigurationPropertiesScan("com.apex.scaffold.integration")
 public class IntegrationComponentAutoConfiguration {
 
-    /** 组件核心（connector + device 双子域；interfaces 由独立开关装配）。 */
+    /** 连接器子域核心；设备子域由 {@code apex.component.integration.device.enabled} 独立控制。 */
     @Configuration(proxyBeanMethods = false)
     @ComponentScan(
-            basePackages = "com.apex.scaffold.integration",
+            basePackages = "com.apex.scaffold.integration.connector",
             excludeFilters = {
                 @ComponentScan.Filter(
                         type = org.springframework.context.annotation.FilterType.REGEX,

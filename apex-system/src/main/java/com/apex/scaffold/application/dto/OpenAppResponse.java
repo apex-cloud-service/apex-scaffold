@@ -62,5 +62,9 @@ public class OpenAppResponse {
 
     /** 明文密钥（仅创建/重置时返回一次） */
     @Schema(description = "客户端密钥明文，仅创建/重置时返回")
+    @lombok.ToString.Exclude
     private String clientSecret;
+
+    @Schema(description = "主体用户ID")
+    private Long subjectUserId;
 }

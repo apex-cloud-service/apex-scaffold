@@ -30,6 +30,12 @@ public interface AuthConfigRepository {
      */
     Mono<AuthConfigEntity> update(AuthConfigEntity config);
 
+    /** 开放应用单行CAS更新；版本冲突不得覆盖并发管理操作。 */
+    Mono<AuthConfigEntity> updateOpenApp(AuthConfigEntity config, int expectedVersion);
+
+    /** 在数据库中分页读取OAuth客户端，页码从0开始。 */
+    Flux<AuthConfigEntity> findOAuth2Clients(String tenantId, int page, int size);
+
     /**
      * 根据ID删除认证配置
      *
