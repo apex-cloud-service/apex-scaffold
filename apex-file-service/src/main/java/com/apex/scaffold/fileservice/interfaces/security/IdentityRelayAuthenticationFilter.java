@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -53,57 +52,48 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private final JwksFetcher jwksFetcher;
 
     /**
-     * 加载明确配置的验签密钥；RSA 与 HMAC 验证各自限制算法，防止密钥类型混淆。
+     * Spring 主构造器：加载明确配置的验签密钥；RSA 与 HMAC 验证各自限制算法，防止密钥类型混淆。
+     *
+     * <p>本类仅有此一个构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}。
+     * 测试与程序化装配请使用 {@link #forTesting(String, String)}。
+     *
      * @param publicKeysBase64 多公钥配置，格式 {@code kid=Base64X509,kid=Base64X509}
      * @param publicKeyBase64 旧版单公钥（X509 DER Base64），多公钥为空时生效
      * @param secret HMAC 过渡密钥，至少 256 位
      * @param jwksFetcher 共享 JWKS 拉取客户端（可能未装配）
      */
-    @Autowired
     public IdentityRelayAuthenticationFilter(
             @Value("${file.security.jwt-public-keys-base64:}") String publicKeysBase64,
             @Value("${file.security.jwt-public-key-base64:}") String publicKeyBase64,
             @Value("${file.security.jwt-secret:}") String secret,
             org.springframework.beans.factory.ObjectProvider<JwksFetcher> jwksFetcher) {
-        this(publicKeysBase64.isBlank() ? publicKeyBase64 : publicKeysBase64, secret, jwksFetcher.getIfAvailable());
-    }
-
-    /**
-     * 保留旧版单公钥构造方式，供现有测试及程序化装配使用。
-     * @param publicKeyBase64 X509 DER 编码的 RSA 公钥
-     * @param secret HMAC 过渡密钥
-     */
-    public IdentityRelayAuthenticationFilter(String publicKeyConfiguration, String secret) {
-        this(publicKeyConfiguration, secret, null);
-    }
-
-    private IdentityRelayAuthenticationFilter(String publicKeyConfiguration, String secret, JwksFetcher jwksFetcher) {
+        this.jwksFetcher = jwksFetcher.getIfAvailable();
+        String publicKeyConfiguration = publicKeysBase64.isBlank() ? publicKeyBase64 : publicKeysBase64;
         try {
             Map<String, PublicKey> configuredKeys = new HashMap<>();
-            if (!publicKeyConfiguration.isBlank()) {
+            if (publicKeyConfiguration.isBlank()) {
+                keyedPublicKeys = false;
+            } else if (publicKeyConfiguration.contains(",")) {
                 KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                if (publicKeyConfiguration.contains(",")) {
-                    for (String entry : publicKeyConfiguration.split(",", -1)) {
-                        String[] parts = entry.split("=", 2);
-                        String keyId = parts.length == 2 ? parts[0].trim() : "";
-                        String encodedKey = parts.length == 2 ? parts[1].trim() : "";
-                        if (keyId.isBlank() || encodedKey.isBlank() || configuredKeys.containsKey(keyId)) {
-                            throw new IllegalArgumentException("文件服务 JWT 公钥配置无效");
-                        }
-                        configuredKeys.put(
-                                keyId,
-                                keyFactory.generatePublic(new X509EncodedKeySpec(
-                                        Base64.getDecoder().decode(encodedKey))));
+                for (String entry : publicKeyConfiguration.split(",", -1)) {
+                    String[] parts = entry.split("=", 2);
+                    String keyId = parts.length == 2 ? parts[0].trim() : "";
+                    String encodedKey = parts.length == 2 ? parts[1].trim() : "";
+                    if (keyId.isBlank() || encodedKey.isBlank() || configuredKeys.containsKey(keyId)) {
+                        throw new IllegalArgumentException("文件服务 JWT 公钥配置无效");
                     }
-                    keyedPublicKeys = true;
-                } else {
                     configuredKeys.put(
-                            "",
+                            keyId,
                             keyFactory.generatePublic(
-                                    new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyConfiguration))));
-                    keyedPublicKeys = false;
+                                    new X509EncodedKeySpec(Base64.getDecoder().decode(encodedKey))));
                 }
+                keyedPublicKeys = true;
             } else {
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                configuredKeys.put(
+                        "",
+                        keyFactory.generatePublic(
+                                new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyConfiguration))));
                 keyedPublicKeys = false;
             }
             publicKeys = Map.copyOf(configuredKeys);
@@ -111,7 +101,36 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
         } catch (java.security.GeneralSecurityException | IllegalArgumentException error) {
             throw new IllegalArgumentException("文件服务 JWT 公钥配置无效", error);
         }
-        this.jwksFetcher = jwksFetcher;
+    }
+
+    /**
+     * 测试与程序化装配入口：保留旧版单公钥/多公钥构造方式。
+     *
+     * @param publicKeyConfiguration X509 DER 编码的 RSA 公钥，或 {@code kid=Base64X509} 多键配置
+     * @param secret HMAC 过渡密钥
+     * @return 构建完成的过滤器实例
+     */
+    public static IdentityRelayAuthenticationFilter forTesting(String publicKeyConfiguration, String secret) {
+        return new IdentityRelayAuthenticationFilter(
+                publicKeyConfiguration.contains("=") ? publicKeyConfiguration : "",
+                publicKeyConfiguration.contains("=") ? "" : publicKeyConfiguration,
+                secret,
+                EmptyJwksFetcher.PROVIDER);
+    }
+
+    /** 空 JWKS 提供者：测试与程序化装配不装配共享拉取客户端。 */
+    private enum EmptyJwksFetcher implements org.springframework.beans.factory.ObjectProvider<JwksFetcher> {
+        PROVIDER;
+
+        @Override
+        public JwksFetcher getObject() {
+            throw new java.util.NoSuchElementException("未装配 JwksFetcher");
+        }
+
+        @Override
+        public JwksFetcher getIfAvailable() {
+            return null;
+        }
     }
 
     /**
@@ -125,6 +144,22 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
         Claims claims = verify(authorization);
         if (claims == null) {
             return chain.filter(exchange);
+        }
+        String path = exchange.getRequest().getPath().value();
+        String capability = exchange.getRequest()
+                .getHeaders()
+                .getFirst(com.apex.scaffold.common.openapi.OpenApiTokenSupport.CAPABILITY_HEADER);
+        if (com.apex.scaffold.common.openapi.OpenApiTokenSupport.isOpenApplication(path, capability, claims)) {
+            String tenant = com.apex.scaffold.common.openapi.OpenApiTokenSupport.tenantId(claims);
+            Long subject = com.apex.scaffold.common.openapi.OpenApiTokenSupport.subjectUserId(claims);
+            if (tenant == null || tenant.isBlank()) {
+                return chain.filter(exchange);
+            }
+            AuthenticatedUser principal = new AuthenticatedUser(subject, null, tenant);
+            var applicationAuthentication = new UsernamePasswordAuthenticationToken(principal, null, List.of());
+            return TenantContext.withTenant(chain.filter(exchange))
+                    .contextWrite(TenantContext.withTenant(tenant))
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(applicationAuthentication));
         }
         Long userId;
         String tenant;

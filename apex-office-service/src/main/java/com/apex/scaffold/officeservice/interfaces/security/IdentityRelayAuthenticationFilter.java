@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -74,7 +73,10 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private final List<String> origins;
 
     /**
-     * 加载验签密钥及浏览器来源白名单（Spring 主构造器）：多公钥优先，旧版单公钥保持兼容。
+     * Spring 主构造器：加载验签密钥及浏览器来源白名单（多公钥优先，旧版单公钥保持兼容）。
+     *
+     * <p>本类仅此一个 public 构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}。
+     * 测试与程序化装配请使用 {@link #forTesting(String, String, MessageSocketRegistry, List)}。
      *
      * @param publicKeysBase64 多公钥配置，格式 {@code kid=Base64X509,kid=Base64X509}
      * @param publicKeyBase64 旧版单公钥的 X509 DER Base64，多公钥为空时生效
@@ -83,7 +85,6 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * @param origins 明确允许的浏览器来源
      * @param jwksFetcher 共享 JWKS 拉取客户端（可能未装配）
      */
-    @Autowired
     public IdentityRelayAuthenticationFilter(
             @Value("${office.security.jwt-public-keys-base64:}") String publicKeysBase64,
             @Value("${office.security.jwt-public-key-base64:}") String publicKeyBase64,
@@ -101,31 +102,58 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     }
 
     /**
-     * 兼容旧版四参构造（单公钥 + HMAC 密钥 + 票据 + 来源），供既有测试使用。
+     * 测试与程序化装配入口：兼容旧版四参构造（单公钥 + HMAC 密钥 + 票据 + 来源）。
      *
      * @param rsa RSA 公钥的 X509 DER Base64
      * @param secret HMAC 过渡密钥
      * @param sockets 票据存储
      * @param origins 明确允许的浏览器来源
+     * @return 构建完成的过滤器实例
      */
-    public IdentityRelayAuthenticationFilter(
+    public static IdentityRelayAuthenticationFilter forTesting(
             String rsa, String secret, MessageSocketRegistry sockets, List<String> origins) {
-        this("", rsa, secret, sockets, origins, null);
+        return new IdentityRelayAuthenticationFilter("", rsa, secret, sockets, origins, null);
     }
 
-    private IdentityRelayAuthenticationFilter(
-            Map<String, PublicKey> publicKeys,
-            boolean keyedPublicKeys,
-            SecretKey secretKey,
+    /**
+     * 测试与程序化装配入口：无 JWKS 拉取客户端。
+     *
+     * @param publicKeysBase64 多公钥配置
+     * @param publicKeyBase64 旧版单公钥配置
+     * @param secret HMAC 过渡密钥
+     * @param sockets 票据存储
+     * @param origins 明确允许的浏览器来源
+     * @return 构建完成的过滤器实例
+     */
+    public static IdentityRelayAuthenticationFilter forTesting(
+            String publicKeysBase64,
+            String publicKeyBase64,
+            String secret,
+            MessageSocketRegistry sockets,
+            List<String> origins) {
+        return new IdentityRelayAuthenticationFilter(publicKeysBase64, publicKeyBase64, secret, sockets, origins, null);
+    }
+
+    /**
+     * 测试与程序化装配入口：显式传入 JWKS 拉取客户端，覆盖静态公钥与拉取快照合并语义。
+     *
+     * @param publicKeysBase64 多公钥配置
+     * @param publicKeyBase64 旧版单公钥配置
+     * @param secret HMAC 过渡密钥
+     * @param sockets 票据存储
+     * @param origins 明确允许的浏览器来源
+     * @param jwksFetcher 共享 JWKS 拉取客户端提供者
+     * @return 构建完成的过滤器实例
+     */
+    public static IdentityRelayAuthenticationFilter forTesting(
+            String publicKeysBase64,
+            String publicKeyBase64,
+            String secret,
             MessageSocketRegistry sockets,
             List<String> origins,
-            JwksFetcher jwksFetcher) {
-        this.publicKeys = publicKeys;
-        this.keyedPublicKeys = keyedPublicKeys;
-        this.secretKey = secretKey;
-        this.sockets = sockets;
-        this.origins = origins;
-        this.jwksFetcher = jwksFetcher;
+            org.springframework.beans.factory.ObjectProvider<JwksFetcher> jwksFetcher) {
+        return new IdentityRelayAuthenticationFilter(
+                publicKeysBase64, publicKeyBase64, secret, sockets, origins, jwksFetcher);
     }
 
     /**
@@ -190,7 +218,25 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
             }
             user = sockets.consume(exchange.getRequest().getQueryParams().getFirst("ticket"));
         } else {
-            user = verify(exchange.getRequest().getHeaders().getFirst("Authorization"));
+            String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
+            io.jsonwebtoken.Claims claims = verifyClaims(authorization);
+            String path = exchange.getRequest().getPath().value();
+            String capability = exchange.getRequest()
+                    .getHeaders()
+                    .getFirst(com.apex.scaffold.common.openapi.OpenApiTokenSupport.CAPABILITY_HEADER);
+            if (com.apex.scaffold.common.openapi.OpenApiTokenSupport.isOpenApplication(path, capability, claims)) {
+                String tenant = com.apex.scaffold.common.openapi.OpenApiTokenSupport.tenantId(claims);
+                Long subject = com.apex.scaffold.common.openapi.OpenApiTokenSupport.subjectUserId(claims);
+                if (tenant == null || tenant.isBlank()) {
+                    return chain.filter(exchange);
+                }
+                AuthenticatedUser application = new AuthenticatedUser(subject, null, tenant);
+                var applicationAuthentication = new UsernamePasswordAuthenticationToken(application, null, List.of());
+                return TenantContext.withTenant(chain.filter(exchange))
+                        .contextWrite(TenantContext.withTenant(tenant))
+                        .contextWrite(ReactiveSecurityContextHolder.withAuthentication(applicationAuthentication));
+            }
+            user = verify(authorization);
         }
         if (user == null) {
             return chain.filter(exchange);
@@ -208,6 +254,30 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * @return 合法用户或空
      */
     private AuthenticatedUser verify(String authorization) {
+        Claims claims = verifyClaims(authorization);
+        if (claims == null) {
+            return null;
+        }
+        try {
+            if (claims.getExpiration() == null
+                    || !TOKEN_TYPE_ACCESS.equals(claims.get(CLAIM_TOKEN_TYPE, String.class))) {
+                return null;
+            }
+            Long id = Long.valueOf(claims.get("userId").toString());
+            String tenant = claims.get("tenantId", String.class);
+            return id > 0 && tenant != null && !tenant.isBlank() ? new AuthenticatedUser(id, null, tenant) : null;
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * 只做签名与有效期校验，不限制令牌类型；供开放应用分支复用。
+     *
+     * @param authorization Bearer 认证头
+     * @return 已验签声明；失败返回 null
+     */
+    private Claims verifyClaims(String authorization) {
         if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
             return null;
         }
@@ -231,14 +301,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
                         .parseSignedClaims(token)
                         .getPayload();
             }
-            if (claims == null
-                    || claims.getExpiration() == null
-                    || !TOKEN_TYPE_ACCESS.equals(claims.get(CLAIM_TOKEN_TYPE, String.class))) {
-                return null;
-            }
-            Long id = Long.valueOf(claims.get("userId").toString());
-            String tenant = claims.get("tenantId", String.class);
-            return id > 0 && tenant != null && !tenant.isBlank() ? new AuthenticatedUser(id, null, tenant) : null;
+            return claims != null && claims.getExpiration() != null ? claims : null;
         } catch (RuntimeException ignored) {
             return null;
         }

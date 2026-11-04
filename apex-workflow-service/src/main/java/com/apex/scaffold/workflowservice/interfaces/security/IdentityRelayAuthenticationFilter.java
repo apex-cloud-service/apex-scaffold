@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -63,7 +62,8 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private final JwksFetcher jwksFetcher;
 
     /**
-     * 加载验签密钥（Spring 主构造器）：多公钥优先，旧版单公钥与 HMAC 开关保持兼容。
+     * 加载验签密钥（唯一 public 构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}）：
+     * 多公钥优先，旧版单公钥与 HMAC 开关保持兼容。
      *
      * @param publicKeysBase64 多公钥配置，格式 {@code kid=Base64X509,kid=Base64X509}
      * @param publicKeyBase64 旧版单公钥（X509 DER Base64），多公钥为空时生效
@@ -71,7 +71,6 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * @param hmacEnabled 是否明确允许历史 HMAC 签发方（未配置 RSA 时生效）
      * @param jwksFetcher 共享 JWKS 拉取客户端（可能未装配）
      */
-    @Autowired
     public IdentityRelayAuthenticationFilter(
             @Value("${workflow.security.jwt-public-keys-base64:}") String publicKeysBase64,
             @Value("${workflow.security.jwt-public-key-base64:}") String publicKeyBase64,
@@ -139,6 +138,22 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
         Claims claims = verify(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
         if (claims == null) {
             return chain.filter(exchange);
+        }
+        String path = exchange.getRequest().getPath().value();
+        String capability = exchange.getRequest()
+                .getHeaders()
+                .getFirst(com.apex.scaffold.common.openapi.OpenApiTokenSupport.CAPABILITY_HEADER);
+        if (com.apex.scaffold.common.openapi.OpenApiTokenSupport.isOpenApplication(path, capability, claims)) {
+            String tenant = com.apex.scaffold.common.openapi.OpenApiTokenSupport.tenantId(claims);
+            Long subject = com.apex.scaffold.common.openapi.OpenApiTokenSupport.subjectUserId(claims);
+            if (tenant == null || tenant.isBlank()) {
+                return chain.filter(exchange);
+            }
+            AuthenticatedUser application = new AuthenticatedUser(subject, null, tenant);
+            var applicationAuthentication = new UsernamePasswordAuthenticationToken(application, null, List.of());
+            return TenantContext.withTenant(chain.filter(exchange))
+                    .contextWrite(TenantContext.withTenant(tenant))
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(applicationAuthentication));
         }
         Long userId;
         String tenant;

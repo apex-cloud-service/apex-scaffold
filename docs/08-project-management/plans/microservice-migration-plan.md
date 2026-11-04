@@ -1,5 +1,7 @@
 # Apex Scaffold 微服务架构改造方案
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 > **版本**：v1.0 | **日期**：2026-10-07（2026-10-09 同步实施状态） | **状态**：实施中（已按执行计划推进：Phase 1 共享层/BOM、网关、内部契约、Nacos 配置分层及 Phase 1 验收均已完成并产出测试报告与离线契约基线；Phase 2.1 JWT 对称→非对称（JWKS）、Phase 2.2 auth 库治理、Phase 2.3 Nacos 注册 + 内部 API、Phase 2.4 网关 /auth 切流 + 灰度、Phase 2.5 主应用双通道兼容、Phase 2.6 登出传播（TokenRevokedEvent + Outbox + V56）均已完成，`mvn -pl apex-auth-center -am verify` 全门禁绿）
 >
 > 本方案基于对当前仓库全部 11 个 Maven 模块的实际代码调研形成，所有图表与结论均以真实文件路径为证据。

@@ -107,12 +107,12 @@ mq:
 
 **MySQL**:
 ```sql
-source apex-interfaces/src/main/resources/db/migration/mysql/V29__add_message_outbox.sql
+source apex-system/src/main/resources/db/migration/mysql/V29__add_message_outbox.sql
 ```
 
 **PostgreSQL**:
 ```sql
-\i apex-interfaces/src/main/resources/db/migration/postgresql/V29__add_message_outbox.sql
+\i apex-system/src/main/resources/db/migration/postgresql/V29__add_message_outbox.sql
 ```
 
 验证表创建:

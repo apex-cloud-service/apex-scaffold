@@ -1,6 +1,9 @@
 # 中台收尾方案：开放 API 闭环、注册表统一、boot-all 隔离与外部端到端验收
 
-- 状态：**待确认**（含 5 个决策点，见 §11；批准后按批次实施）
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
+- 状态：**实施中**（D21/D22/D23/D24/D25 已按推荐方案采纳；F/G/H 批主要代码已落地，外部端到端验收仍待环境）
+- 实施进展（2026-11-04）：F 批四域开放路由与机器身份、G 批 auth 单源注册与 system 代理/迁移导入、H 批分域子上下文与 file 域真实启动验证已完成；I 批脚本与真实外部联调未完成，见 §12
 - 编制日期：2026-11-04
 - 前置事实：本方案承接 [统一认证/多租户/中台收口方案](unified-auth-tenant-platform-remediation-plan.md) 收口后的遗留项，并假定其配套修复已入库——开放应用停用校验、内部契约 HMAC 签名（`apex.internal-auth.*`）、能力守卫路径化判定、工作流 Outbox 同事务落箱、能力计量零调用口径。上述基础改变了本方案若干批次的技术前提（如注册表同步可直接复用已签名的内部通道）。
 - 关联文档：[开放平台接入契约](../../03-api/open-platform-integration.md)、[能力目录](../../02-architecture/capability-catalog.md)、[验收计划](../delivery/acceptance-plan.md)、[AGENTS.md](../../../AGENTS.md)
@@ -112,10 +115,21 @@ H1→H2→H3→H4→H5（boot-all，H1 的发布脚本改动须先于 H4 落地�
 I1→I2→I3→I4→I5（外部验收，I3 依赖 F/G/H 收口）
 ```
 
-## 11. 待确认清单（批准时请逐项给出结论）
+## 11. 决策采纳记录
 
-1. **D21** 机器身份模型：A 主体服务账号绑定（推荐）还是 B 仅租户级端点？
-2. **D22** 注册表单源：确认 auth `auth_config` 为唯一签发源、system 本地写弃用？
-3. **D23** boot-all：确认 service adapter classifier + 子上下文形态（含发布脚本联动改动）？
-4. **D24** file 开放写语义：随 D21 结论执行，或本期不开放 file 写？
-5. **D25** 兼容窗口：确认"一次性迁移 + 一个发布周期只读比对"的节奏？
+| 编号 | 采纳结论 | 落地情况 |
+| --- | --- | --- |
+| D21 | A：主体服务账号绑定（`sub_uid` + `X-Open-Api-Subject`） | 已实现：auth 令牌写 `sub_uid`、网关注入并剥离伪造头、四域过滤器识别应用令牌 |
+| D22 | auth `auth_config` 为唯一签发源 | 已实现：`AuthOpenAppRegistryService` + `/internal/v1/open-apps`；system 默认代理，`local` 仅显式回退 |
+| D23 | 分域子上下文，不合并单上下文 | 已实现：`BootAllDomains` + `BootAllDomainConfiguration`，为单域生成互斥开关 |
+| D24 | file 开放写以主体为属主 | 已实现：`OpenFileHandler` 复用 `FileAccessContext`，未绑定主体即拒绝 |
+| D25 | 一次性迁移 + 只读比对窗口 | 部分实现：`OpenAppMigrationService` 导出与 auth 幂等导入；比对报告与旧表下线脚本未完成 |
+
+## 12. 未完成项与已知边界
+
+| 项 | 现状 | 后续 |
+| --- | --- | --- |
+| 开放端点端到端 | 四域 Router/Handler 与令牌判定已落地并通过单元测试；未在真实六服务栈上跑通"取令牌→调用→审计" | 部署环境执行 I3 |
+| 注册表迁移执行 | 导出/导入代码完成，未在真实存量库执行，也未产出比对报告 | 按 D25 在隔离库演练后执行 |
+| boot-all 全量 | 仅 file 域在 H2 上真实启动；system 需 MySQL/Redis/License，其余域未逐一验证 | 逐域补齐启动矩阵 |
+| 外部组件验收 | 真实 RocketMQ/EMQX/告警/备份恢复未执行 | 执行 I1/I2/I4 并记录 |

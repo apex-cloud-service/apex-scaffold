@@ -12,7 +12,7 @@
 
 环境特定配置:
 - `application-dev.yml` - 开发环境
-- `application-test.yml` - 测试环境
+- `application-it.yml` - 集成测试环境（仅 `apex-system/src/test/resources`，不参与运行态装配）
 - `application-prod.yml` - 生产环境
 
 通过 `spring.profiles.active` 激活对应环境:
@@ -231,8 +231,8 @@ spring:
       primary: master
       datasource:
         master:
-          # 数据库URL（默认库 apex_data；dev 默认 root/apex-root，prod 必须环境变量注入）
-          url: jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+          # 数据库URL（默认库 apex_system；dev 默认 root/apex-root，prod 必须环境变量注入）
+          url: jdbc:mysql://127.0.0.1:3306/apex_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
           # 用户名
           username: root
           # 密码(生产环境建议使用环境变量 DB_MASTER_PASSWORD)
@@ -267,7 +267,7 @@ spring:
               use-global-data-source-stat: true
         # 从库（与 master 参数完全一致，仅环境变量前缀 DB_SLAVE_*；prod 必须注入真实只读副本地址）
         slave:
-          url: jdbc:mysql://127.0.0.1:3306/apex_data?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+          url: jdbc:mysql://127.0.0.1:3306/apex_system?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
           username: root
           # 密码(生产环境建议使用环境变量 DB_SLAVE_PASSWORD)
           password: ${DB_SLAVE_PASSWORD:apex-root}
@@ -1229,25 +1229,19 @@ BENCH_JAVA_OPTS="-Dspring.flyway.enabled=true -Dspring.datasource.dynamic.p6spy=
 
 ### Q3: 如何加密敏感配置?
 
-推荐使用 Jasypt:
+项目不依赖 Jasypt，使用自研 `ConfigEncryptionService`（`apex-common/src/main/java/com/apex/scaffold/common/security/ConfigEncryptionService.java`）做配置字段的 AES-256-GCM 加解密，密钥通过 `security.config.encryption.key` 注入：
 
 ```yaml
-# 添加依赖
-# <dependency>
-#   <groupId>com.github.ulisesbocchio</groupId>
-#   <artifactId>jasypt-spring-boot-starter</artifactId>
-# </dependency>
-
-# 配置加密
-jasypt:
-  encryptor:
-    password: ${JASYPT_ENCRYPTOR_PASSWORD}
-
-# 使用加密值
-spring:
-  datasource:
-    password: ENC(encrypted_value_here)
+security:
+  config:
+    encryption:
+      # 由环境变量或密钥管理服务注入，禁止写入版本库
+      key: ${APEX_CONFIG_ENCRYPTION_KEY}
 ```
+
+密文格式为裸 `Base64(12 字节 IV + AES-256-GCM 密文 + 16 字节标签)`，不是 Jasypt 的 `ENC(...)` 包装。已用于持久数据的密钥必须稳定保存，轮换需配合迁移（参见 `apex-tools-deployment` 的 TOTP 敏感字段迁移能力）。
+
+数据库口令、JWT 密钥、外部凭据等仍应优先通过部署环境变量注入（见 [配置文档 §密钥与环境变量](../05-operations/configuration.md) 与 `.env.example`），配置加密仅用于确需落库的字段。
 
 ---
 

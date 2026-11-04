@@ -3,7 +3,7 @@
 > 基于 MyBatis-Plus 内部拦截器（`InnerInterceptor`）实现的**自定义数据权限**能力：
 > 在 SELECT 执行前自动注入部门/用户过滤条件，业务代码无需手动拼接 `dept_id` / `user_id`。
 >
-> 版本：2.3.0+ ｜ 模块：`apex-common`（契约）+ `apex-infrastructure`（拦截器）+ `apex-interfaces`（装配）
+> 版本：2.3.0+ ｜ 模块：`apex-common`（契约）+ `apex-infrastructure-persistence`（拦截器）+ `apex-system` 的 `interfaces` 包（装配）
 >
 > 📖 **使用手册**（快速上手/注解参考/FAQ）见 [DATA_SCOPE_USAGE.md](./data-scope-usage.md)；
 > 本文档为架构与设计说明。
@@ -77,7 +77,7 @@ DataScopeContext.setDataScope(
 
 拦截器通过 `DataScopeProvider` 接口解析当前用户的数据范围，与数据来源解耦。
 
-**默认实现 `MdcDataScopeProvider`**（`apex-infrastructure`）解析顺序：
+**默认实现 `MdcDataScopeProvider`**（`apex-infrastructure-persistence`）解析顺序：
 
 1. `DataScopeContext`（ThreadLocal）—— 显式装配（切面 / 业务代码），优先级最高；
 2. MDC 键：
@@ -166,9 +166,9 @@ return Mono.fromCallable(() -> mapper.selectPage(...)).subscribeOn(BlockingIoSch
 
 - 契约：`apex-common/.../common/annotation/DataScope.java`、
   `common/enums/DataScopeType.java`、`common/context/{DataScopeInfo,DataScopeConfig,DataScopeContext,DataScopeProvider}.java`
-- 拦截器：`apex-infrastructure/.../persistence/datapermission/`
+- 拦截器：`apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/`
   `{DataScopeInnerInterceptor, DataScopeConditionBuilder, DataScopeSqlRewriter, MdcDataScopeProvider}.java`
-- 装配：`apex-interfaces/.../interfaces/aspect/DataScopeAspect.java`、
+- 装配：`apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java`、
   `interfaces/security/JwtAuthenticationFilter.java`
-- 注册：`apex-infrastructure/.../persistence/config/MybatisPlusConfig.java`
-- 演示：`apex-application/.../application/service/AdminUserManagementService.java#search`
+- 注册：`apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java`
+- 演示：`apex-system/src/main/java/com/apex/scaffold/application/service/AdminUserManagementService.java#search`

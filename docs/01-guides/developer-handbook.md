@@ -127,7 +127,7 @@ mvnd --version   # 应显示 2.0.0-rc-3
 podman-compose -f podman-compose.infra.yml up -d mysql redis
 
 # 2. 运行应用 (basic profile)
-mvnd spring-boot:run -pl apex-interfaces -P basic
+mvnd -pl apex-system-service -am spring-boot:run -Pbasic
 
 # 3. 访问应用
 # API: http://localhost:8080
@@ -283,16 +283,16 @@ public class LoginStrategyProvider {
 
 ```
 ┌────────────────────────────────────────┐
-│ apex-interfaces (接口层)                │
+│ apex-system/interfaces (接口层)         │
 │ Handler + Router + Filter + Config      │
 ├────────────────────────────────────────┤
-│ apex-application (应用层)               │
+│ apex-system/application (应用层)        │
 │ Service + DTO + Assembler               │
 ├────────────────────────────────────────┤
 │ apex-domain (领域层)                    │
 │ Entity + Repository接口 + 领域服务       │
 ├────────────────────────────────────────┤
-│ apex-infrastructure (基础设施层)         │
+│ apex-system/infrastructure (基础设施层) │
 │ PO + Mapper + RepositoryImpl + 外部服务  │
 └────────────────────────────────────────┘
            ↑
@@ -372,7 +372,7 @@ public class UserRepositoryImpl implements UserRepository {
 }
 ```
 
-#### Step 3: 应用层 (apex-application)
+#### Step 3: 应用层（apex-system 的 application 包）
 
 ```java
 // DTO
@@ -420,7 +420,7 @@ public class UserService {
 }
 ```
 
-#### Step 4: 接口层 (apex-interfaces)
+#### Step 4: 接口层（apex-system 的 interfaces 包）
 
 ```java
 // Handler
@@ -461,7 +461,7 @@ public class UserRouter {
 
 ```bash
 # 1. 创建 Request DTO
-# apex-interfaces/src/main/java/com/apex/scaffold/interfaces/dto/user/CreateUserRequest.java
+# apex-system/src/main/java/com/apex/scaffold/interfaces/dto/user/CreateUserRequest.java
 
 # 2. 在 Handler 中添加方法
 # UserHandler.java
@@ -480,7 +480,7 @@ mvnd test -Dtest=UserHandlerIntegrationTest
 
 ```bash
 # 1. 创建迁移脚本
-# apex-interfaces/src/main/resources/db/migration/V27__add_user_email.sql
+# apex-system/src/main/resources/db/migration/mysql/V27__mfa_config.sql
 
 CREATE TABLE IF NOT EXISTS sys_user_email (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -490,7 +490,7 @@ CREATE TABLE IF NOT EXISTS sys_user_email (
 );
 
 # 2. 启动应用,Flyway 自动执行迁移
-mvnd spring-boot:run -pl apex-interfaces
+mvnd -pl apex-system-service -am spring-boot:run
 ```
 
 ### 5.3 代码生成
@@ -774,7 +774,7 @@ mvnd spotless:apply
 mvnd pmd:check
 
 # 启动应用
-mvnd spring-boot:run -pl apex-interfaces
+mvnd -pl apex-system-service -am spring-boot:run
 ```
 
 ---

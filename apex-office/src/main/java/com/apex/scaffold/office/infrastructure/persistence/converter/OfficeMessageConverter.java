@@ -1,5 +1,6 @@
 package com.apex.scaffold.office.infrastructure.persistence.converter;
 
+import com.apex.scaffold.common.util.JsonUtil;
 import com.apex.scaffold.office.domain.message.CardMessageContent;
 import com.apex.scaffold.office.domain.message.MarkdownMessageContent;
 import com.apex.scaffold.office.domain.message.MessageType;
@@ -9,7 +10,6 @@ import com.apex.scaffold.office.infrastructure.persistence.po.OfficeMessagePO;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Resource;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -33,11 +33,12 @@ public abstract class OfficeMessageConverter {
     private static final String TARGET_TYPE_GROUP = "GROUP";
 
     /**
-     * MapStruct 生成的实现类无法声明带参构造器，故采用 JSR-250 {@code @Resource} 字段注入，
-     * 以避免使用 Spring {@code @Autowired}。
+     * JSON 序列化器。
+     *
+     * <p>MapStruct 生成的实现类无法声明带参构造器，故不依赖容器注入：直接复用
+     * {@link JsonUtil#getObjectMapper()} 提供的线程安全共享实例，转换器可脱离容器独立使用。
      */
-    @Resource
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
 
     /**
      * 领域实体转持久化对象

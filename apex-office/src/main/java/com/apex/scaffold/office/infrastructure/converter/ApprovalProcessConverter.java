@@ -1,5 +1,6 @@
 package com.apex.scaffold.office.infrastructure.converter;
 
+import com.apex.scaffold.common.util.JsonUtil;
 import com.apex.scaffold.office.domain.OfficePlatform;
 import com.apex.scaffold.office.domain.approval.ApprovalProcess;
 import com.apex.scaffold.office.domain.approval.ApprovalRecord;
@@ -8,7 +9,6 @@ import com.apex.scaffold.office.infrastructure.po.ApprovalProcessPO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import org.mapstruct.Mapper;
@@ -37,11 +37,10 @@ public abstract class ApprovalProcessConverter {
      * JSON 序列化器。
      *
      * <p>MapStruct 生成的实现类只能声明无参构造器，无法转发放置在抽象基类上的带参构造器，
-     * 故沿用本模块 {@code OfficeMessageConverter} 的做法：JSR-250 {@code @Resource} 字段注入，
-     * 避免使用 Spring {@code @Autowired}，同时保留默认实例以便脱离容器（如单元测试）时可用。
+     * 故不依赖容器注入：直接复用 {@link JsonUtil#getObjectMapper()} 提供的线程安全共享实例，
+     * 转换器可脱离容器独立使用。
      */
-    @Resource
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonUtil.getObjectMapper();
 
     /**
      * 领域实体转PO

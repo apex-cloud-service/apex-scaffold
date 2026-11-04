@@ -10,19 +10,19 @@
 
 ## 1. 目标架构与加固范围
 
-目标为 **API 网关 + 5 个业务微服务 + 共享 SDK/契约模块**：
+目标为 **API 网关 + 6 个业务微服务 + 共享 SDK/契约模块**：
 
 | 角色 | 模块 | 端口 | 副本基线 |
 |---|---|---|---|
 | API 网关 | `apex-gateway` | 8080 | 2 |
-| 认证服务 | `apex-auth-center` | 8081 | 2 |
-| 系统服务 | `apex-system-service`（Phase 6） | 8082 | 2 |
-| 工作流服务 | `apex-workflow-service` | 8083 | 1 |
-| 办公服务 | `apex-office-service`（Phase 5） | 8084 | 1 |
+| 认证服务 | `apex-auth-service` | 8081 | 2 |
+| 系统服务 | `apex-system-service` | 8082（管理 8083） | 2 |
+| 工作流服务 | `apex-workflow-service` | 8083（同机开发可用 8093） | 1 |
+| 办公服务 | `apex-office-service` | 8084 | 1 |
 | 文件服务 | `apex-file-service` | 8085 | 1 |
+| 集成服务 | `apex-integration-service` | 8094（管理 8097） | 1 |
 
-> 现状：`apex-auth-center`、`apex-workflow-service`、`apex-file-service` 已建；`apex-system-service`、
-> `apex-office-service` 仍处单体抽取阶段（Phase 5/6），其加固步骤在抽取完成后复用本节同一套口径。
+> 现状：六个业务服务与网关均已独立运行（各自启动类、独立数据库与 Flyway 版本链），本节的加固口径对全部服务统一适用。任务代理（8095）与脱敏服务（8096）为轻量侧车，未注册 Nacos，走固定受信地址。
 
 加固内容对应执行计划 §7：
 
@@ -56,7 +56,7 @@ JAVA_OPTS="-Xms512m -Xmx1g -Xss512k -XX:MaxDirectMemorySize=256m \
 | 服务 | 最小副本 | 最大副本 | HPA 指标 |
 |---|---|---|---|
 | `apex-gateway` | 2 | 10 | CPU 70% / 内存 80% |
-| `apex-auth-center` | 2 | 6 | CPU 70% / 内存 80% |
+| `apex-auth-service` | 2 | 6 | CPU 70% / 内存 80% |
 | 业务服务（workflow/office/file/system） | 1–2 | 4–10 | CPU 70% / 内存 80% |
 
 > 单体时代 `k8s/deployment.yaml` 的 HPA（min 2 / max 10、CPU 70%）作为参考模板；
@@ -73,10 +73,10 @@ JAVA_OPTS="-Xms512m -Xmx1g -Xss512k -XX:MaxDirectMemorySize=256m \
 
 ```bash
 # 1) 定位 auth 进程并 kill -9 模拟硬宕机
-pkill -9 -f apex-auth-center || true
+pkill -9 -f apex-auth-service || true
 
 # 2) 观察（PromQL，可在 Grafana Explore 执行）：
-#    up{app="apex-auth-center"} == 0                      → 实例已摘除
+#    up{app="apex-auth-service"} == 0                      → 实例已摘除
 #    ubi_summary / 网关 5xx 曲线                        → 依赖方是否有兜底
 #    probe_success{job=~"blackbox.*auth.*"} == 0          → Blackbox 探测失败
 

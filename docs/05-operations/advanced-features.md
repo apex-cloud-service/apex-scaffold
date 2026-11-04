@@ -21,7 +21,7 @@ byte[] bytes = excelExportService.export("用户列表", UserExportDTO.class, ro
 ```
 
 ### 扩展
-- 新增导出：参照 `ExcelExportHandler.exportUsers`，在 `ApiRouter` 注册新路由并同步 `RouterOpenApiConfig` 文档声明（覆盖测试强制）。
+- 新增导出：参照 `ExcelExportHandler.exportUsers`，在对应业务的 Router（system 域为 `apex-system/src/main/java/com/apex/scaffold/interfaces/router/ExportRouter.java`）注册新路由并同步 `RouterOpenApiConfig` 文档声明（覆盖测试强制）。
 - 导入：EasyExcel 的 `read()` 监听器模式接入即可，脚手架未内置导入端点（按业务需要扩展）。
 
 ---

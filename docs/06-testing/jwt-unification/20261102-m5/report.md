@@ -1,5 +1,7 @@
 # 批次 E1–E4 测试报告：对外集成与物联网设备接入（M5 收官）
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 - 批次：方案 [unified-auth-tenant-platform-remediation-plan.md](../../../08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md) 批次 E1/E2/E3/E4
 - 执行日期：2026-11-01 至 2026-11-02
 - 环境：macOS、JDK `21.0.13.0+9-tem`、mvnd `2.0.0-rc-3`；双库演练容器 MySQL 9.0 / PostgreSQL 15

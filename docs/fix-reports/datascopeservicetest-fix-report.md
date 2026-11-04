@@ -1,5 +1,7 @@
 # DataScopeServiceTest 编译错误修复报告
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 ## 问题描述
 
 **文件**: `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java`

@@ -6,14 +6,16 @@
 
 ### 1. 严格遵循DDD分层
 
+system 域的四层代码位于 `apex-system` 模块内（`com.apex.scaffold.{interfaces,application,domain,infrastructure}` 包），共享能力按职责拆到 `apex-domain` 与五个 `apex-infrastructure-*` 模块：
+
 ```
-Interfaces (接口层)
+Interfaces (apex-system 的 interfaces 包)
     ↓ 调用
-Application (应用层)
+Application (apex-system 的 application 包)
     ↓ 调用
-Domain (领域层)
+Domain (apex-domain + apex-system 的 domain 包)
     ↓ 依赖
-Infrastructure (基础设施层)
+Infrastructure (apex-infrastructure-* + apex-system 的 infrastructure 包)
 ```
 
 **✅ 正确做法**:
@@ -24,10 +26,10 @@ Infrastructure (基础设施层)
 **❌ 错误做法**:
 ```java
 // 禁止: Controller直接调用Repository
-@RestController
+@RestController   // ❌ 项目统一使用 WebFlux 函数式 Router + Handler，不新增注解式 Controller
 public class UserController {
-    @Autowired
-    private UserMapper userMapper; // ❌ 应该通过Service层
+    @Autowired    // ❌ 禁止字段注入，应使用构造器注入
+    private UserMapper userMapper; // ❌ 应通过应用服务/仓储端口访问
 }
 ```
 

@@ -310,3 +310,21 @@ CREATE TABLE IF NOT EXISTS auth_oauth2_consent (
     create_time TIMESTAMP,
     update_time TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS auth_password_recovery (
+    id VARCHAR(64) PRIMARY KEY,
+    user_id BIGINT,
+    tenant_id VARCHAR(64),
+    username VARCHAR(64),
+    channel VARCHAR(16) NOT NULL,
+    contact_hash CHAR(64) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    attempt_count INT NOT NULL DEFAULT 0,
+    request_ip_hash CHAR(64),
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_apr_contact_time ON auth_password_recovery(contact_hash, created_at);
+CREATE INDEX IF NOT EXISTS idx_apr_ip_time ON auth_password_recovery(request_ip_hash, created_at);
+CREATE INDEX IF NOT EXISTS idx_apr_user ON auth_password_recovery(user_id);

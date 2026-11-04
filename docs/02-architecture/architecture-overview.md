@@ -1,10 +1,10 @@
 # 架构设计说明
 
-> 依据持续演进：本仓库正按 `docs/08-project-management/plans/microservice-migration-plan.md` 从「多模块 DDD 单体」改造为「API 网关 + 5 个业务微服务 + 共享 SDK/契约」。截至微服务改造 Phase 1，已新增 `apex-gateway`、`apex-api-contract`、`apex-services-bom` 三个模块（详见下文「微服务共享层」与 `architecture-evolution.md`）。
+> 当前运行架构为「API 网关 + 6 个业务微服务（system/auth/workflow/file/office/integration）+ 共享 SDK/契约」，另有任务代理（8095）与脱敏服务（8096）作为轻量侧车。微服务改造已完成：网关 `apex-gateway`、契约 `apex-api-contract`、版本源 `apex-services-bom` 与六个业务服务均已在根 `pom.xml` 注册。
 
 ## 当前物理边界（2026-10-12）
 
-system 的接口、应用、业务领域与专属持久化已迁入 `apex-system`，Java 包名保持不变；启动由 `apex-system-service` 装配。原 `apex-system`、`apex-system` 已退休。共享 domain 保留 BaseEntity、Token/SMS/Event/缓存/远程调用契约；共享 infrastructure 保留通用配置、缓存、MQ、Outbox、审计、加密、邮件及 HTTP 客户端，不反向依赖 system。HTTP 观测数据通过 ApiCallObservation/ApiCallLogSink 桥接，数据库业务实体留在 system。auth-service 的 system 依赖仅用于 test-scope parity 测试，example 编译使用 system 库。
+system 的接口、应用、业务领域与专属持久化已迁入 `apex-system`，Java 包名保持不变；启动由 `apex-system-service` 装配。原 `apex-interfaces`、`apex-application` 已退出 reactor。共享 domain 保留 BaseEntity、Token/SMS/Event/缓存/远程调用契约；共享 infrastructure 保留通用配置、缓存、MQ、Outbox、审计、加密、邮件及 HTTP 客户端，不反向依赖 system。HTTP 观测数据通过 ApiCallObservation/ApiCallLogSink 桥接，数据库业务实体留在 system。auth-service 的 system 依赖仅用于 test-scope parity 测试，example 编译使用 system 库。
 
 本批 application/domain/infrastructure 共 683 个文件迁入 system（281/180/222；main 560、test 123，含资源）；共享层及兄弟服务 801 个生产 Java 文件无 system 类型的直接导入。构建与测试结果以验收清单的本批验证记录为准。
 
@@ -48,20 +48,20 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 | 模块 | 定位 | 依赖 |
 |---|---|---|
 | `apex-services-bom` | 微服务统一版本清单（parent 唯一来源）：锁定 `apex-common`/`apex-api-contract`/`apex-license-starter` 及 MyBatis-Plus/Redisson/RocketMQ/Sentinel/Resilience4j 等 | 继承根 `pom.xml`，供网关/契约/各业务服务 parent 引用 |
-| `apex-api-contract` | 跨服务内部 API 契约（`/internal/v1/**`）+ Feign 基础设施（`FeignTenantTraceConfiguration`、粉丝回调）+ 阻塞 IO 桥接约定（`BlockingIoSchedulers.remote()`） | `apex-common` + OpenFeign |
+| `apex-api-contract` | 跨服务内部 API 契约（`/internal/v1/**` 的 DTO 与领域事件）+ 阻塞 IO 桥接约定（`BlockingIoSchedulers.remote()`） | `apex-common` |
 | `apex-gateway` | Spring Cloud Gateway（WebFlux）：路由 / JWT(JWKS) 验签 / 用户上下文注入 / 全局限流 / TraceId / CORS / 灰度路由 / 访问日志 | `apex-common` + gateway-webflux + nacos + Resilience4j + redis-reactive |
 
 ```
 客户端 → apex-gateway ──(lb://apex-auth-service)──→ 认证/各业务微服务
               │ 依赖 + 统一契约
               ▼
-   apex-api-contract（Feign 契约）+ apex-common（SDK）
+   apex-api-contract（内部契约：DTO 与事件）+ apex-common（SDK）
               ▲
               │ parent 统一版本
         apex-services-bom（唯一版本源）
 ```
 
-三个模块均已在根 `pom.xml` `<modules>` 注册，是微服务改造 Phase 1 的基座，后续 5 个业务服务（auth/system/workflow/office/file）均以此为模板。
+三个模块均已在根 `pom.xml` `<modules>` 注册，是微服务改造的基座；六个业务服务（auth/system/workflow/office/file/integration）均以此为模板装配。服务间同步调用一律使用 `WebClient`，项目不引入 Feign。
 
 ### 分层职责
 

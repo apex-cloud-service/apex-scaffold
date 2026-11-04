@@ -1,5 +1,7 @@
 # 批次 D1 + D2 + D4 + D6 测试报告：中台能力层（消息门面 / 开放平台 / 能力目录）
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 - 批次：方案 [unified-auth-tenant-platform-remediation-plan.md](../../../08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md) 批次 D1/D2/D4/D6（M4 中台）
 - 执行日期：2026-11-01
 - 环境：macOS、JDK `21.0.13.0+9-tem`、mvnd `2.0.0-rc-3`（构建环境校验通过）

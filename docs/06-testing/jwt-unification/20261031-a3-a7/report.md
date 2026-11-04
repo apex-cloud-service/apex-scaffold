@@ -1,5 +1,7 @@
 # 批次 A3–A7 测试报告：撤销传播、会话/MFA 接线、OAuth2 收口与统一授权默认化
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 - 批次：方案 [unified-auth-tenant-platform-remediation-plan.md](../../../08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md) 批次 A 的 A3/A4/A5/A7（A6 依赖 B1，随 B 批次实施）
 - 执行日期：2026-10-31
 - 环境：macOS（darwin 24.6.0 x64）、JDK `21.0.13.0+9-tem`、mvnd `2.0.0-rc-3`（`scripts/build/init-build-env.sh` 校验通过）

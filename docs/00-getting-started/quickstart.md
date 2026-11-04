@@ -31,7 +31,7 @@ source ~/.sdkman/bin/sdkman-init.sh
 # 检查Java版本(需要21)
 java -version
 
-# 检查构建工具版本（推荐 mvnd，Maven Daemon；mvn 亦可）
+# 检查构建工具版本（必须 mvnd，Maven Daemon；不得回退系统 mvn）
 mvnd --version
 
 # 检查 Podman 与独立 Compose CLI（可选）
@@ -198,7 +198,7 @@ curl http://localhost:8080/api/v1/health
 
 # 预期输出：
 {
-  "code": 200,
+  "code": 0,
   "msg": "操作成功",
   "data": {
     "status": "UP",
@@ -213,8 +213,8 @@ curl http://localhost:8080/api/v1/health
 ### 访问API文档
 
 浏览器打开:
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **Knife4j**: http://localhost:8080/doc.html
+- **Swagger UI**（仅 system-service 装配 springdoc）：http://localhost:8082/swagger-ui.html
+- **Knife4j**（仅 system-service）：http://localhost:8082/doc.html
 
 你应该能看到所有可用的API接口列表。
 
@@ -403,10 +403,10 @@ mvnd -T 4 clean package
 java -Xms512m -Xmx1024m \
      -XX:+UseG1GC \
      -XX:MaxGCPauseMillis=200 \
-     -jar apex-interfaces-1.3.1.jar
+     -jar apex-system-service-1.3.1.jar
 
 # 2. 启用 Profile
-java -jar apex-interfaces-1.3.1.jar \
+java -jar apex-system-service-1.3.1.jar \
      --spring.profiles.active=prod,enterprise
 ```
 

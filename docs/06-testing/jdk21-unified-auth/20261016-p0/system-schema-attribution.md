@@ -1,5 +1,7 @@
 # system 双库 schema 差异归因
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 本报告以 [schema-comparison.json](schema-comparison.json) 的 `domains[0]` 和 [final-schema-evidence.json](final-schema-evidence.json) 为输入。证据采集时间为 `2026-10-17T04:47:06.965634+00:00`，范围为既有 fresh migration TEST 库的只读元数据及 Flyway 历史。本文不证明生产存量升级、业务读写或跨库语义等价。
 
 [system-schema-attribution.json](system-schema-attribution.json) 给出全部 15 个对象和 193 项列存在性差异的逐项映射：每个对象包含迁移路径、建表/视图行号、全部列的准确行号及缺失侧对应版本说明。类型和默认值按精确值规则覆盖原始逐项记录；原始值保留在输入 JSON，不因分类而删改。

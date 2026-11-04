@@ -1,5 +1,7 @@
 # Apex Scaffold 测试报告详细解读文档
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 **文档类型**: 测试报告解读与分析  
 **关联报告**: 
 - [COMPLETE_TEST_REPORT.md](../_archive/root-reports/COMPLETE_TEST_REPORT.md) — 完整功能测试报告

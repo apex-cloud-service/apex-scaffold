@@ -1,6 +1,6 @@
 # SpringDoc 注解审计
 
-本记录依据当前工作区源码进行静态核对，范围包括主应用 `apex-interfaces` 和独立认证中心 `apex-auth-center`。代码中存在元数据不等于运行时 OpenAPI 已正确生成；本轮尚未启动两个服务验证 `/v3/api-docs`。
+本记录依据当前工作区源码进行静态核对，范围包括 system 域（`apex-system`）与认证中心（`apex-auth-service`）。代码中存在元数据不等于运行时 OpenAPI 已正确生成；本轮尚未启动两个服务验证 `/v3/api-docs`。
 
 ## 核对口径
 
@@ -11,9 +11,9 @@
 
 ## 主应用范围
 
-主应用源码路径为 `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/` 与同层 `router/`。旧记录中的“24 个 Handler、110+ 方法、100% 完整”已不适用于当前源码，不能作为验证依据。
+system 域源码路径为 `apex-system/src/main/java/com/apex/scaffold/interfaces/handler/` 与同层 `router/`。旧记录中的“24 个 Handler、110+ 方法、100% 完整”已不适用于当前源码，不能作为验证依据。
 
-当前静态核对发现 `AuthHandler` 有 10 个上述签名的方法和 9 个 `@Operation` 文本命中；这只提示需要结合路由继续核对，不能据此宣称运行时存在一个文档缺口。主应用登录、刷新和登出路径以 `ApiRouter` 中 `/api/v1/auth/*` 为准。
+当前静态核对发现 `AuthHandler` 有 10 个上述签名的方法和 9 个 `@Operation` 文本命中；这只提示需要结合路由继续核对，不能据此宣称运行时存在一个文档缺口。system 域登录、刷新和登出路径以 `PublicApiRouter` 中 `/api/v1/auth/*` 为准。
 
 仓库检查入口为：
 

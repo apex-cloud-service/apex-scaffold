@@ -43,7 +43,8 @@ class MessageWebSocketTest {
             context.registerBean(MessageSocketRegistry.class, () -> registry);
             context.registerBean(
                     IdentityRelayAuthenticationFilter.class,
-                    () -> new IdentityRelayAuthenticationFilter("", SECRET, registry, List.of("https://app.example")));
+                    () -> IdentityRelayAuthenticationFilter.forTesting(
+                            "", SECRET, registry, List.of("https://app.example")));
             context.registerBean(SecurityWebFilterChain.class, () -> ServerHttpSecurity.http()
                     .csrf(ServerHttpSecurity.CsrfSpec::disable)
                     .authorizeExchange(exchanges -> exchanges.anyExchange().authenticated())

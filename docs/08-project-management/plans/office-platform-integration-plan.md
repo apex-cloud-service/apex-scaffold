@@ -1,5 +1,7 @@
 # 企业办公平台集成实施计划
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在现有 Apex Scaffold 与 apex-admin-web 基础上，集成飞书、钉钉、企业微信，提供统一登录与绑定、组织通讯录、消息与机器人、审批、日历会议、文件文档等日常办公能力，并交付配置、脚本、文档、测试代码和测试报告。

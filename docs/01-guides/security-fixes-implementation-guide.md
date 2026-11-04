@@ -31,7 +31,7 @@
 
 #### 新增文件
 ```
-apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/crypto/
+apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/crypto/
 ├── TokenEncryptionService.java          # Token加密服务
 └── test/
     └── TokenEncryptionServiceTest.java  # 单元测试
@@ -76,7 +76,7 @@ String plainToken = encryptionService.decrypt(encryptedToken);
 
 #### 修改文件
 ```
-apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/
+apex-auth/src/main/java/com/apex/scaffold/auth/application/service/
 └── TokenServiceImpl.java  # 已集成轮换逻辑
 ```
 
@@ -102,7 +102,7 @@ apex-auth-center/src/main/java/com/apex/scaffold/authcenter/application/service/
 
 #### 新增文件
 ```
-apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/
+apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/
 ├── crypto/
 │   └── JwtKeyRotationService.java           # 密钥轮换服务
 └── scheduler/
@@ -148,7 +148,7 @@ String newVersion = keyRotationService.rotateKey().block();
 
 #### 新增文件
 ```
-apex-auth-center/src/main/java/com/apex/scaffold/authcenter/infrastructure/audit/
+apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/audit/
 └── SecurityAuditService.java  # 安全审计服务
 ```
 
@@ -371,13 +371,13 @@ tail -f /var/log/apex-scaffold/application.log | grep "SECURITY_AUDIT"
 
 ```bash
 # 运行Token加密测试
-mvn test -Dtest=TokenEncryptionServiceTest -pl apex-auth-center
+mvnd test -Dtest=TokenEncryptionServiceTest -pl apex-auth
 
 # 运行配置加密测试
 mvn test -Dtest=ConfigEncryptionServiceTest -pl apex-common
 
 # 运行所有安全相关测试
-mvn test -pl apex-auth-center,apex-common
+mvnd test -pl apex-auth,apex-common
 ```
 
 ### 集成测试

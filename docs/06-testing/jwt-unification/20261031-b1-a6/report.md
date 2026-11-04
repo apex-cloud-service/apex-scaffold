@@ -1,5 +1,7 @@
 # 批次 B1+A6 测试报告：租户编码统一与认证期租户校验
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 - 批次：方案 [unified-auth-tenant-platform-remediation-plan.md](../../../08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md) 批次 B1（M2 首批）+ A6（依赖 B1，随批实施）
 - 执行日期：2026-10-31
 - 环境：macOS、JDK `21.0.13.0+9-tem`、mvnd `2.0.0-rc-3`（构建环境校验通过）

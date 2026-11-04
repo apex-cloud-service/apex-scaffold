@@ -12,8 +12,8 @@
 
 #### 1. 数据库索引优化
 - **脚本位置**: 
-  - MySQL: `apex-interfaces/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql`
-  - PostgreSQL: `apex-interfaces/src/main/resources/db/migration/postgresql/V43__performance_optimization_indexes.sql`
+  - MySQL: `apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql`
+  - PostgreSQL: `apex-system/src/main/resources/db/migration/postgresql/V43__performance_optimization_indexes.sql`
 - **优化内容**: 添加了40+个复合索引,覆盖10个核心表
 - **预期效果**: 查询性能提升30%+,慢查询比例下降
 

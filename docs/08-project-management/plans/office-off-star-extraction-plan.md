@@ -1,5 +1,7 @@
 # off_* 组织/消息域提取方案（迁移至 apex-office-service）
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 > **状态**：已执行（2026-10-11：`V2` 建表 + 全量代码迁移 + 网关切流 + 单体侧下线均已完成，编译验证通过，进入观察期）
 > **关联决策**：用户已确认「`off_*` 目标归属 `apex-office-service`」，并选择「先出提取方案」。
 > **关联文档**：`apex-system/src/main/resources/db/migration/OFFICE_MIGRATION_OWNERSHIP.md`、`docs/08-project-management/plans/microservice-migration-plan.md §9.2/§9.3`。

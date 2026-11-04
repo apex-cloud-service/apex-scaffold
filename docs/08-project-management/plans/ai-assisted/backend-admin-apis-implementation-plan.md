@@ -1,5 +1,7 @@
 # 后端管理端 API 实施计划
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 > 依据:`/Users/work/apex-admin-web/docs/backend-development-tasks.html`
 > 范围:代码生成器 + 认证授权配置 + SSO + 办公平台增强
 > 路径冲突策略:**新增文档路径,复用现有 Service**(用户确认)

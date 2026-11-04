@@ -54,7 +54,7 @@ class OpenAppAdminServiceTest {
     void setUp() {
         managementService = mock(OAuth2ClientManagementService.class);
         clientRepository = mock(OAuth2RegisteredClientRepository.class);
-        service = new OpenAppAdminService(
+        service = OpenAppAdminService.forTesting(
                 managementService, clientRepository, new OpenPlatformScopeRegistry(), new ObjectMapper());
     }
 

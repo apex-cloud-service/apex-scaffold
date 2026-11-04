@@ -172,12 +172,12 @@ public class DataScopeConfig {
 
 * 类型枚举：`apex-common/.../common/enums/DataScopeType.java`
 
-* 拦截器：`apex-infrastructure/.../persistence/datapermission/`
+* 拦截器：`apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/`
   `{DataScopeInnerInterceptor, DataScopeConditionBuilder, DataScopeSqlRewriter, MdcDataScopeProvider}.java`
 
-* 切面：`apex-interfaces/.../interfaces/aspect/DataScopeAspect.java`
+* 切面：`apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java`
 
-* 注册：`apex-infrastructure/.../persistence/config/MybatisPlusConfig.java`
+* 注册：`apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java`
 
-* 演示：`apex-application/.../application/service/AdminUserManagementService.java#search`
+* 演示：`apex-system/src/main/java/com/apex/scaffold/application/service/AdminUserManagementService.java#search`
 

@@ -1,5 +1,7 @@
 # 批次 B2 测试报告：主库 RBAC 租户化（含 V76+V77 真实双库演练）
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 - 批次：方案 [unified-auth-tenant-platform-remediation-plan.md](../../../08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md) 批次 B2
 - 执行日期：2026-10-31
 - 环境：macOS、JDK `21.0.13.0+9-tem`、mvnd `2.0.0-rc-3`；双库演练容器 MySQL 9.0 / PostgreSQL 15（Testcontainers）

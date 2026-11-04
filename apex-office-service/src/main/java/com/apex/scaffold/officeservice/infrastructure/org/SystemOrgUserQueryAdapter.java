@@ -52,21 +52,7 @@ public class SystemOrgUserQueryAdapter implements OfficeOrgUserQueryPort {
     private final WebClient client;
 
     /**
-     * 使用 Boot 管理的客户端构建器，限制解析响应的内存解码大小。
-     *
-     * @param properties 系统服务内部接口配置
-     * @param builder    Boot 管理的客户端构建器
-     */
-    public SystemOrgUserQueryAdapter(SystemOrgUserProperties properties, WebClient.Builder builder) {
-        this.properties = properties;
-        this.client = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
-                        builder.clone().codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(MAX_RESPONSE_BYTES)),
-                        null,
-                        null)
-                .build();
-    }
-
-    /**
+     * Spring 主构造器（唯一 public 构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}）：
      * 构造适配器（带内部调用签名）。
      *
      * <p>内部认证的两个协作者用 {@link org.springframework.beans.factory.ObjectProvider} 注入：
@@ -80,7 +66,6 @@ public class SystemOrgUserQueryAdapter implements OfficeOrgUserQueryPort {
      * @param internalAuthProperties 内部认证配置提供者
      * @param internalServiceSigner 内部签名器提供者
      */
-    @org.springframework.beans.factory.annotation.Autowired
     public SystemOrgUserQueryAdapter(
             SystemOrgUserProperties properties,
             WebClient.Builder builder,

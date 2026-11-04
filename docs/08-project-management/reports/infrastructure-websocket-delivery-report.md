@@ -1,5 +1,7 @@
 # 基础设施能力拆分与 office 站内信交付报告
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 ## 状态
 
 本文记录当前工作区的交付范围。最终全仓 `source scripts/build/init-build-env.sh && mvnd -T4 -B clean verify` 已成功，日志为 `/Users/eric/apex-final-verify6.log`，于 2026-10-16 08:45:51（UTC+08:00）结束，耗时 20:08；31 个反应堆项目（根项目加 30 个模块）全部 `SUCCESS`，最终为 `BUILD SUCCESS`。当前 reactor 测试 XML 汇总为 Surefire 4689 项、Failsafe 297 项，Failures/Errors 均为 0；合计 4986 项，实际通过 4985 项、跳过 1 项。当前绑定的 Spotless、PMD/p3c、ArchUnit 和 JaCoCo 门禁通过。新增真实 H2 Mapper、事务与 Gateway 网络测试已覆盖本地消息闭环；生产数据库、多实例与 HTTPS/WSS 代理仍待验证。历史失败及主动停止的验证保留为过程记录，不能记为通过。

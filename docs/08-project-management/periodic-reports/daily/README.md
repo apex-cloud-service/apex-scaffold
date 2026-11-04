@@ -1,5 +1,7 @@
 # 工作日报
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 按自然日归档的工作日报，文件名格式为 `YYYY-MM-DD-all-projects-daily-report.md`。命名、内容要素与数据口径见 [上级 README](../README.md)。
 
 2026-11-03 起为全项目单日报口径：**每日一份，覆盖工作区全部项目（apex 后端 / 前端 / 冷链），不再按仓库拆分多份**；此前按 `<范围>` 拆分的历史日报保留为存档。
@@ -16,6 +18,7 @@
 | 2026-11-01 | apex-scaffold | B 批多租户收官、C 批组件化贯通（除 C4）、D 批中台前四项（10 提交 / 89 文件） | [2026-11-01-apex-scaffold-daily-report.md](./2026-11-01-apex-scaffold-daily-report.md) |
 | 2026-11-02 | apex-scaffold | E 批集成与 IoT 全面收口（E1–E4）、D 批 D5 数据服务层与开放路由门禁收官（5 提交 / 303 文件） | [2026-11-02-apex-scaffold-daily-report.md](./2026-11-02-apex-scaffold-daily-report.md) |
 | 2026-11-03 | all-projects | 平台运营收口：分档限流、能力二次校验、前端九页与 MFA、冷链大屏与调拨展示（附按仓详版存档） | [2026-11-03-all-projects-daily-report.md](./2026-11-03-all-projects-daily-report.md) |
+| 2026-11-04 | all-projects | 组件化装配与内部认证收口 | [2026-11-04-all-projects-daily-report.md](./2026-11-04-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 

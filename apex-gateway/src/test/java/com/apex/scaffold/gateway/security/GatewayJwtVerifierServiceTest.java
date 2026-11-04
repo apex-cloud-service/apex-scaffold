@@ -225,9 +225,14 @@ class GatewayJwtVerifierServiceTest {
             java.security.KeyPair pair = Jwts.SIG.RS256.keyPair().build();
             String kid = "key-remote-0001";
             java.util.Map<String, java.security.PublicKey> remote = java.util.Map.of(kid, pair.getPublic());
-            GatewayJwtVerifierService service = new GatewayJwtVerifierService(
-                    remoteProperties("http://auth.example/.well-known/jwks.json"),
-                    url -> reactor.core.publisher.Mono.just(remote));
+            GatewayJwtVerifierService service =
+                    new GatewayJwtVerifierService(remoteProperties("http://auth.example/.well-known/jwks.json")) {
+                        @Override
+                        protected reactor.core.publisher.Mono<java.util.Map<String, java.security.PublicKey>>
+                                fetchRemoteKeys(String url) {
+                            return reactor.core.publisher.Mono.just(remote);
+                        }
+                    };
 
             assertThat(service.keyCount()).isEqualTo(2); // hmac-legacy + 远程公钥
             assertThat(service.verifyAndParse(rsaToken(pair, kid))).isNotNull();
@@ -236,9 +241,14 @@ class GatewayJwtVerifierServiceTest {
         @Test
         @DisplayName("远程拉取失败时保留静态密钥，令牌验签不受影响")
         void shouldKeepStaticKeysWhenRemoteFails() {
-            GatewayJwtVerifierService service = new GatewayJwtVerifierService(
-                    remoteProperties("http://auth.example/.well-known/jwks.json"),
-                    url -> reactor.core.publisher.Mono.error(new IllegalStateException("auth unreachable")));
+            GatewayJwtVerifierService service =
+                    new GatewayJwtVerifierService(remoteProperties("http://auth.example/.well-known/jwks.json")) {
+                        @Override
+                        protected reactor.core.publisher.Mono<java.util.Map<String, java.security.PublicKey>>
+                                fetchRemoteKeys(String url) {
+                            return reactor.core.publisher.Mono.error(new IllegalStateException("auth unreachable"));
+                        }
+                    };
 
             assertThat(service.keyCount()).isEqualTo(1);
             assertThat(service.verifyAndParse(hmacToken("hmac-legacy", "user-6", 60_000)))
@@ -259,9 +269,13 @@ class GatewayJwtVerifierServiceTest {
                     Base64.getEncoder().encodeToString(stale.getPublic().getEncoded()),
                     null)));
             properties.setRemoteUrl("http://auth.example/.well-known/jwks.json");
-            GatewayJwtVerifierService service = new GatewayJwtVerifierService(
-                    properties,
-                    url -> reactor.core.publisher.Mono.just(java.util.Map.of("key-center", rotated.getPublic())));
+            GatewayJwtVerifierService service = new GatewayJwtVerifierService(properties) {
+                @Override
+                protected reactor.core.publisher.Mono<java.util.Map<String, java.security.PublicKey>> fetchRemoteKeys(
+                        String url) {
+                    return reactor.core.publisher.Mono.just(java.util.Map.of("key-center", rotated.getPublic()));
+                }
+            };
 
             assertThat(service.verifyAndParse(rsaToken(stale, "key-center"))).isNull();
             assertThat(service.verifyAndParse(rsaToken(rotated, "key-center"))).isNotNull();

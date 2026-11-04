@@ -6,7 +6,7 @@
 
 starter 支持通过 `apex.seata.mode` 选择 **AT（默认）/ TCC / SAGA / XA** 四种事务模式，模式决定数据源代理、必需的表结构和事务边界写法，详见下节。默认值 AT 与既有接入方式兼容：只配置 `apex.seata.enabled=true` 时行为与历史版本一致。
 
-五个业务服务添加依赖并默认关闭。已有业务方法不会自动加入全局事务；接入需明确改为下文对应模式的执行器边界。本模块不支持 R2DBC、H2、文件存储、消息发送或第三方平台写操作的 AT 回滚。
+六个业务服务（system/auth/workflow/file/office/integration）添加依赖并默认关闭。已有业务方法不会自动加入全局事务；接入需明确改为下文对应模式的执行器边界。本模块不支持 R2DBC、H2、文件存储、消息发送或第三方平台写操作的 AT 回滚。
 
 根 reactor 已注册 `apex-seata-spring-boot-starter`，Seata 2.2.0 及内部 starter 版本已收敛到根依赖管理。Compose 提供可选 `seata` profile、外部配置挂载和持久日志卷；这不代表 TC 数据库、可达性或真实事务已验证。
 
@@ -64,7 +64,7 @@ apex:
 ## 部署顺序
 
 1. 部署与客户端版本匹配的 Seata 2.2.0 TC，配置持久化存储及官方 TC 数据库表、独立数据库账号、注册中心或静态地址。TC 表与业务库 undo_log 不同，不能互相替代。TC RPC 8091 和管理端口仅允许内网访问，不能直接暴露公网。生产配置 TC 高可用、备份、认证和告警。
-2. 业务库先执行所属 Flyway 迁移：system V61、auth V57、workflow V2、file V3、office V3。每个库均有 MySQL/PostgreSQL 成对 undo_log；MySQL 使用 InnoDB，PostgreSQL rollback_info 使用 BYTEA。undo_log 是 Seata 内部表，不加租户字段或 MyBatis 业务拦截规则。**仅 AT 模式需要 undo_log**；TCC/XA 无需该表，SAGA 另需状态机存储三表（见「事务模式选择」）。开启 AT 前确认该库的迁移确实已执行。
+2. 业务库先执行所属 Flyway 迁移：system V61、auth V57、workflow V2、file V3、office V3、integration V3。每个库均有 MySQL/PostgreSQL 成对 undo_log；MySQL 使用 InnoDB，PostgreSQL rollback_info 使用 BYTEA。undo_log 是 Seata 内部表，不加租户字段或 MyBatis 业务拦截规则。**仅 AT 模式需要 undo_log**；TCC/XA 无需该表，SAGA 另需状态机存储三表（见「事务模式选择」）。开启 AT 前确认该库的迁移确实已执行。
 3. 按所选模式准备数据源：**AT / SAGA / XA** 要求单 JDBC 数据源，系统 dev/prod 等已有动态数据源配置须切换到专用单数据源配置集，并排除 dynamic-datasource 自动配置。仅设置 dynamic.seata=false 不够：当前 starter 检测动态数据源会直接拒绝启动。禁止同时启用上游数据源自动代理、手工代理及本 starter，避免双代理。**TCC** 不强制单数据源，由业务自行组织本地事务。
 4. 向 Seata 客户端提供官方 `registry.conf`、`file.conf`，或等价官方配置中心配置。配置文件放在外部 classpath；本 starter 使用 seata-all，不自动把 Spring `seata.*` 属性转换为 Seata 官方配置。文件模式示例见下节。配置中心的凭据与 TC 认证按官方版本文档设置，禁止打印密钥。
 5. 配置内部 HTTPS、网络访问控制和传播密钥；网关不向公网注册 `/internal/seata/` 路由，清除外部请求的 `X-Apex-Seata-Xid` 与 `X-Apex-Seata-Key`。独立随机密钥至少 32 字符，不能复用登录令牌或数据库密码。现有 Spring Security 的业务权限仍须保留，传播凭据不替代业务授权。
@@ -231,7 +231,7 @@ APEX_SEATA_IT=true mvnd -B -f apex-seata-spring-boot-starter/pom.xml verify
 
 依次运行四个模式时还需注意两点真实环境约束：podman 的端口转发在容器启动瞬间即接受宿主连接，因此 TC 就绪必须以容器日志出现 `seata server started` 为准；MySQL 中非 `SUPER` 账号执行 `XA RECOVER` 需显式持有 `XA_RECOVER_ADMIN`，且其结果是服务器级视图、不按库过滤。
 
-此次仅验证 MySQL（InnoDB）、TC file 存储、单机 TC 和测试进程内的分支服务；MySQL/PostgreSQL Flyway SQL 的实际数据库执行、五个业务服务启用启动、生产 HTTPS 传播、TC 持久数据库与故障恢复仍需部署环境验证。不得将这些边界记为已通过。
+此次仅验证 MySQL（InnoDB）、TC file 存储、单机 TC 和测试进程内的分支服务；MySQL/PostgreSQL Flyway SQL 的实际数据库执行、六个业务服务启用启动、生产 HTTPS 传播、TC 持久数据库与故障恢复仍需部署环境验证。不得将这些边界记为已通过。
 
 ## 运维与后续统一事项
 

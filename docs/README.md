@@ -36,7 +36,7 @@
 - [架构总览](./02-architecture/architecture-overview.md) - 系统架构概览
 - [架构演进](./02-architecture/architecture-evolution.md) - 架构演进历程
 - [逻辑架构](./02-architecture/architecture-index.md) - DDD 四层架构
-- [物理架构](./02-architecture/architecture-overview.md) - 部署架构
+- [物理架构](./architecture/02-physical-architecture-detail.md) - 部署架构
 - [技术架构](./02-architecture/architecture-overview.md) - 技术栈全景
 - [数据库设计](./architecture/database-design.md) - 数据模型设计
 - [多级缓存](./05-operations/advanced-features.md) - 缓存架构
@@ -52,8 +52,8 @@ API 接口文档、规范和版本管理。
 - [数据管理 API](./03-api/README.md) - 数据管理接口
 
 **在线文档**: 启动项目后访问
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- Knife4j UI: http://localhost:8080/doc.html
+- Swagger UI（仅 system-service 装配 springdoc）: http://localhost:8082/swagger-ui.html
+- Knife4j UI（仅 system-service）: http://localhost:8082/doc.html
 
 ### [04. 开发文档](./04-development/README.md)
 
@@ -112,7 +112,7 @@ API 接口文档、规范和版本管理。
 
 ## 🎨 架构图表
 
-完整的架构图表位于 [diagrams](./diagrams/README.md) 目录，包含 70+ 张专业 SVG 图表：
+完整的架构图表位于 [diagrams](./diagrams/README.md) 目录，包含 200+ 张 SVG 图表（含图标源素材）：
 
 - **系统架构**: 逻辑架构、物理架构、技术架构
 - **业务流程**: 登录认证、权限校验、工作流审批、文件上传

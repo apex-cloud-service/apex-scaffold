@@ -1,5 +1,7 @@
 # 基础设施能力模块设计与迁移清单
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 ## 设计与实施状态
 
 从原 25 个 reactor 模块增加五个共享 JAR，总计 30 个。旧 apex-infrastructure 已保留为仅承载五个能力 JAR 的兼容聚合 JAR，不再承载实现源码。五个实际能力模块为 `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote` 和 `apex-infrastructure-integration`；五个模块的 POM 已按能力声明直接依赖，原包名、配置前缀和本地调用语义保持兼容。

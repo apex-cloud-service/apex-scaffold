@@ -58,8 +58,8 @@
 
 | 编号 | 文件名                               | 标题            | 说明                                 |
 | -- | --------------------------------- | ------------- | ---------------------------------- |
-| 01 | `01_logical_architecture.svg`     | DDD四层逻辑架构     | 接口/应用/领域/基础设施四层,32 Handler/34 Service |
-| 02 | `02_physical_architecture.svg`    | 网络物理部署架构      | 五层拓扑(客户端/DMZ/应用/数据/监控),端口8080/8081    |
+| 01 | `01_logical_architecture.svg`     | DDD四层逻辑架构     | 接口/应用/领域/基础设施四层（数量以当前源码为准） |
+| 02 | `02_physical_architecture.svg`    | 网络物理部署架构      | 五层拓扑(客户端/DMZ/应用/数据/监控),端口见各服务 application.yml    |
 | 03 | `03_technical_architecture.svg`   | 全栈技术选型全景图     | 60+技术组件,Spring Boot 3.5.15 / Vue 3.5.13 |
 
 ### 04-07 业务流程图

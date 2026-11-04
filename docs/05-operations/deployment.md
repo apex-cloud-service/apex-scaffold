@@ -116,7 +116,7 @@ bash scripts/utils/token-v42-recover.sh \
 
 | 组件 | 版本要求 | 说明 |
 |------|---------|------|
-| JDK | 17+ | java -jar 部署必需 |
+| JDK | 21（`.sdkmanrc` 固定 `21.0.13.0+9-tem`） | java -jar 部署必需 |
 | MySQL | 8.0+ | 各服务库由 Flyway 自动迁移建表，只需保证账号可建库/建表/写数据 |
 | Redis | 6.x / 7.x | 缓存 / Token / 分布式锁；网关限流 |
 | Nacos | 2.x | 服务发现 + 配置中心（微服务拓扑默认依赖） |
@@ -126,7 +126,7 @@ bash scripts/utils/token-v42-recover.sh \
 基础环境自检：
 
 ```bash
-java -version                 # openjdk 17+
+java -version                 # openjdk 21+
 mysql --version               # 8.0+
 redis-cli --version
 podman --version

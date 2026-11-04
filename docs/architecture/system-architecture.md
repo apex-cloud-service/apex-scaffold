@@ -57,7 +57,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)思想,结合**响应式编程(Reac
 
 ### 1.2 当前运行拓扑（系统架构图）
 
-当前运行架构为**一个网关 + 五个业务服务 + 两个辅助服务**：网关负责 JWT 验签、可信头注入、限流、灰度与熔断回退；各业务服务内部保持 DDD 四层与 WebFlux 函数式路由；任务代理与脱敏服务是轻量侧车，未注册 Nacos，走固定受信地址。
+当前运行架构为**一个网关 + 六个业务服务 + 两个辅助服务**：网关负责 JWT 验签、可信头注入、限流、灰度与熔断回退；各业务服务内部保持 DDD 四层与 WebFlux 函数式路由；任务代理与脱敏服务是轻量侧车，未注册 Nacos，走固定受信地址。
 
 ```mermaid
 flowchart TB
@@ -76,6 +76,7 @@ flowchart TB
         WF["apex-workflow-service :8083<br>DAG 工作流引擎"]
         OFFICE["apex-office-service :8084<br>办公协同 + 站内信 WebSocket"]
         FILE["apex-file-service :8085<br>文件上传 / 分片 / 下载"]
+        INTEGRATION["apex-integration-service :8094<br>连接器 / MQTT 设备接入<br>管理端口 :8097"]
     end
 
     subgraph aux["辅助服务"]
@@ -103,6 +104,7 @@ flowchart TB
     GF -->|" /api/v1/workflows/** 等"| WF
     GF -->|" /api/v1/office/** /api/v1/messages/**（含 WS 握手路由）"| OFFICE
     GF -->|" /api/v1/file/** /api/v1/documents/**"| FILE
+    GF -->|" /integration/v1/**"| INTEGRATION
     GF -->|" /admin-api/v1/jobs/**"| JOB
     GF -->|" /api/v1/masking/**"| MASK
     GF -->|" 兜底 /api/v1/** /admin-api/v1/**"| SYSTEM
@@ -118,6 +120,8 @@ flowchart TB
     OFFICE --> MQ
     FILE --> MYSQL
     FILE --> ST
+    INTEGRATION --> MYSQL
+    INTEGRATION --> MQ
     JOB -->|"HTTP 转发"| SYSTEM
     XXL -.->|"执行器（默认禁用，按需开启）"| SYSTEM
     XXL -.-> WF
@@ -144,7 +148,12 @@ flowchart TB
 | file-domain | `/api/v1/file/**`、`/api/v1/files/**`、`/api/v1/documents/**`、`/admin-api/v1/documents/**`、`/admin-api/v1/charts/**`、`/api/v2/files/**`、`/api/v2/file-shares/**` | `lb://apex-file-service` |
 | job-domain | `/admin-api/v1/jobs`、`/admin-api/v1/jobs/**` | `http://127.0.0.1:8095` |
 | masking-domain | `/api/v1/masking/**` | `http://127.0.0.1:8096` |
-| system-domain（兜底） | `/api/v1/**`、`/api/v2/operations/**`、`/api/v2/platform/**`、`/admin-api/v1/**`、`/health`、`/actuator/**` | `lb://apex-system-service` |
+| integration-domain | `/integration/v1/**` | `lb://apex-integration-service` |
+| open-api-file | `/open-api/file/**`、`/open-api/files/**` | `lb://apex-file-service` |
+| open-api-workflow | `/open-api/workflow/**` | `lb://apex-workflow-service` |
+| open-api-system | `/open-api/users`、`/open-api/users/**`、`/open-api/user/**` | `lb://apex-system-service` |
+| open-api-office | `/open-api/messages/**` | `lb://apex-office-service` |
+| system-domain（兜底） | `/api/v1/**`、`/api/v2/operations/**`、`/api/v2/platform/**`、`/api/v2/tenant-packages/**`、`/api/v2/capabilities/**`、`/api/v2/capability-usage/**`、`/api/v2/overview/**`、`/admin-api/v1/**`、`/health`、`/actuator/**` | `lb://apex-system-service` |
 
 来源：`apex-gateway/src/main/resources/application.yml`（生产覆盖见同目录 `application-prod.yml`，该文件重定义 routes 列表，新增路由必须两处同步；Nacos 下发见 `config/nacos/apex-gateway.yaml`，同样整表覆盖）。
 
@@ -409,7 +418,7 @@ public interface UserRepository {
 
 ### 2.3 模块依赖关系
 
-全仓 31 个 Maven 模块的直接内部依赖（完整清单与职责见根 [AGENTS.md](../../AGENTS.md)）：
+全仓 34 个 Maven 模块的直接内部依赖（完整清单与职责见根 [AGENTS.md](../../AGENTS.md)）：
 
 ```mermaid
 flowchart LR

@@ -17,7 +17,7 @@ Apex Scaffold 采用**共享数据库、共享 Schema、tenant_id 字段隔离**
 |------|------|------|
 | TenantContext | apex-common | ThreadLocal + Reactor Context 租户上下文管理 |
 | TenantAspect | apex-interfaces | 从认证身份提取租户 ID 并装配上下文 |
-| DefaultTenantLineHandler | apex-infrastructure | MyBatis-Plus 租户隔离处理器 |
+| DefaultTenantLineHandler | apex-infrastructure-persistence | MyBatis-Plus 租户隔离处理器 |
 | TenantWebFilter | apex-interfaces | HTTP 请求租户 ID 提取与验证 |
 
 ### 架构图

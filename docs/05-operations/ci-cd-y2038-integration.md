@@ -50,7 +50,7 @@
 
 问题详情:
 ----------------------------------------
-./apex-interfaces/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql:
+apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql:
 17:    client_secret_expires_at TIMESTAMP NULL COMMENT '客户端密钥过期时间',
 ----------------------------------------
 

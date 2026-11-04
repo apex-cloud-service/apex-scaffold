@@ -12,9 +12,8 @@
 
 | 指标 | 数量 |
 |------|------|
-| **环境变量总数** | 172 个 |
-| **.env.example 已覆盖** | ~40 个 (23%) |
-| **缺失配置** | ~132 个 (77%) |
+| **`.env.example` 变量条目** | 287 行有效赋值（含注释与分组，实际生效以部署注入为准） |
+| **覆盖说明** | 模板覆盖部署常用变量；未列入模板的键按服务 `application*.yml` 默认值运行 |
 
 ### 按功能模块分类统计
 
@@ -163,7 +162,7 @@
 | 环境变量 | 默认值 | 说明 | Profile | 必填 |
 |---------|--------|------|---------|------|
 | `MANAGEMENT_SERVER_ADDRESS` | `127.0.0.1` | 管理端口监听地址 | 全部 | ❌ |
-| `MANAGEMENT_SERVER_PORT` | `8081` | 管理端口 | 全部 | ❌ |
+| `MANAGEMENT_SERVER_PORT` | 见服务配置 | 管理端口；system-service 固定 8083、integration-service 固定 8097，gateway 复用业务端口 | 部分服务 | ❌ |
 | `TRACING_ENABLED` | `true` | 启用链路追踪 | enterprise | ❌ |
 | `TRACE_SAMPLING_RATE` | `0.1` | 采样率（10%） | enterprise | ❌ |
 | `ZIPKIN_BASE_URL` | `http://localhost:9411` | Zipkin 上报端点 | enterprise | ❌ |
@@ -370,9 +369,8 @@
 
 **bootstrap.yml 命名说明**：`spring.application.name` 是 Nacos 注册名与配置
 dataId 的权威来源，也是网关路由 `lb://{service}` 的解析目标。当前
-`apex-auth-center` 的 `bootstrap.yml` 已先行采用目标名 `apex-auth-service`，
-而 `application.yml` 仍为历史名 `apex-auth-center`，两者不一致属 Phase 2.2
-「应用名与库治理」待收敛项。
+`apex-auth-service` 的 `bootstrap.yml` 与 `application.yml` 均已采用 `apex-auth-service`，
+注册名与网关 `lb://apex-auth-service` 路由目标一致。
 
 ---
 

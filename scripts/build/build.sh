@@ -4,7 +4,7 @@ set -e
 # ============================================================
 # Apex Scaffold 一键构建脚本
 # ============================================================
-# 统一构建环境：sdkman 默认 JDK（17.0.12-oracle）+ mvnd 2.0.0-rc-3
+# 需要 JDK 21.0.13.0+9-tem 与 mvnd 2.0.0-rc-3（见 .sdkmanrc）
 # （差异）项目统一使用 mvnd（Maven Daemon）而非 mvn，构建更快。
 # 用法: ./scripts/build/build.sh [-P<profile>]   # profile: basic/standard/enterprise（默认 standard）
 # 💡 shebang 用 zsh：macOS 自带 bash 3.2 不支持 sdkman 的 ${var^^} 语法，zsh 正常。

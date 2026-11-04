@@ -1,5 +1,7 @@
 # 批次 A1+A2 测试报告：统一认证收口（双算法验签统一 + JWKS 闭环）
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 - 批次：方案 [unified-auth-tenant-platform-remediation-plan.md](../../../08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md) 批次 A 的 A1+A2
 - 执行日期：2026-10-31
 - 环境：macOS（darwin 24.6.0 x64）、JDK `21.0.13.0+9-tem`（SDKMAN 固定）、mvnd `2.0.0-rc-3`（均经 `scripts/build/init-build-env.sh` 校验）

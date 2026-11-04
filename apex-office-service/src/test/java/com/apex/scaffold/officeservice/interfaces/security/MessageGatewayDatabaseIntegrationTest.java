@@ -145,7 +145,7 @@ class MessageGatewayDatabaseIntegrationTest {
                     .messageRoutes(new MessageHandler(service, new RequestHandlerUtil(validator))));
             office.registerBean(
                     IdentityRelayAuthenticationFilter.class,
-                    () -> new IdentityRelayAuthenticationFilter("", SECRET, registry, List.of(ORIGIN)));
+                    () -> IdentityRelayAuthenticationFilter.forTesting("", SECRET, registry, List.of(ORIGIN)));
             office.registerBean(
                     "observeInboundHeaders", WebFilter.class, () -> new InboundObserver(observed, rejected));
             office.registerBean(SecurityWebFilterChain.class, () -> ServerHttpSecurity.http()

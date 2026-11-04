@@ -31,7 +31,7 @@
 
 ## 1. 适用范围与基本原则
 
-本规范适用于 `apex-interfaces`、`apex-application`、`apex-domain`、`apex-infrastructure` 和 `apex-common` 模块中的新增代码、修改代码和测试代码。
+本规范适用于 `apex-system`（system 域四层代码）、`apex-domain`、五个 `apex-infrastructure-*` 能力模块和 `apex-common` 中的新增代码、修改代码和测试代码。其他业务库（`apex-auth`、`apex-workflow`、`apex-file`、`apex-office`、`apex-integration`）在各自模块内沿用相同的分层约束。
 
 基本原则：
 
@@ -61,31 +61,26 @@ mvnd spotless:apply
 
 ### 2.1 DDD 四层结构
 
+system 域的四层代码位于 `apex-system` 模块内，通过包结构分层（Java 包名沿用历史路径）：
+
 ```text
-apex-interfaces/
-├── handler/
-├── router/
-├── filter/
-└── config/
+apex-system/src/main/java/com/apex/scaffold/
+├── interfaces/          # RouterFunction、Handler、WebFilter、Web 配置
+├── application/         # 用例编排、DTO、Assembler
+├── domain/              # 实体、聚合、领域服务、仓储端口
+└── infrastructure/      # Mapper、PO、仓储实现、外部适配器
+```
 
-apex-application/
-├── service/
-├── dto/
-└── assembler/
+共享能力按职责拆分为独立模块：
 
-apex-domain/
-├── model/
-├── repository/
-├── service/
-├── event/
-└── gateway/
-
-apex-infrastructure/
-├── persistence/
-│   ├── mapper/
-│   ├── po/
-│   └── repository/
-└── gateway/
+```text
+apex-domain/                     # 跨域可复用的基础实体、事件与端口契约
+apex-infrastructure-persistence/ # MyBatis-Plus、租户与数据权限
+apex-infrastructure-cache/       # Redis、分布式锁、布隆过滤器
+apex-infrastructure-messaging/   # 消息与 Outbox
+apex-infrastructure-remote/      # 远程调用
+apex-infrastructure-integration/ # 第三方集成
+apex-common/                     # Result、异常、上下文、工具、公共注解
 ```
 
 依赖方向：
@@ -98,13 +93,15 @@ interfaces → application → domain ← infrastructure
 
 ### 2.2 模块职责
 
-| 模块                    | 负责内容                                         | 约束                          |
-| --------------------- | -------------------------------------------- | --------------------------- |
-| `apex-interfaces`     | RouterFunction、Handler、WebFilter、Web 配置、协议响应 | 不直接访问 Mapper 或数据库，不承载核心业务规则 |
-| `apex-application`    | 用例编排、事务边界、DTO 和 Assembler                    | 不直接依赖具体持久化实现                |
-| `apex-domain`         | Entity、值对象、聚合、Repository 接口、领域服务、领域事件        | 不依赖具体基础设施技术                 |
-| `apex-infrastructure` | Mapper、PO、Repository 实现、Redis、第三方网关          | 实现接口，不向上层泄漏技术细节             |
-| `apex-common`         | Result、异常、上下文、工具、公共注解                        | 只放跨模块稳定的公共能力                |
+| 模块                                 | 负责内容                                         | 约束                                 |
+| ---------------------------------- | -------------------------------------------- | ---------------------------------- |
+| `apex-system` / `interfaces` 包     | RouterFunction、Handler、WebFilter、Web 配置、协议响应 | 不直接访问 Mapper 或数据库，不承载核心业务规则        |
+| `apex-system` / `application` 包    | 用例编排、事务边界、DTO 和 Assembler                    | 不直接依赖具体持久化实现                       |
+| `apex-domain`                      | 基础 Entity、值对象、Repository 端口、领域事件            | 只放跨域可复用契约，不依赖具体基础设施技术             |
+| `apex-system` / `infrastructure` 包 | Mapper、PO、Repository 实现、第三方网关适配             | 实现端口，不向上层泄漏技术细节                    |
+| `apex-common`                      | Result、异常、上下文、工具、公共注解                        | 只放跨模块稳定的公共能力                       |
+
+> `apex-infrastructure` 模块仅保留旧坐标兼容，不再承载实现源码；实际实现位于五个 `apex-infrastructure-*` 能力模块。
 
 新增功能时先确定聚合和用例，再按 `Handler → Application Service → Domain → Repository/Gateway` 实现。禁止在 Handler 中直接拼接 SQL、操作 Redis 或调用第三方 SDK。
 
@@ -900,7 +897,7 @@ StepVerifier.create(authService.login(request))
 
 ```bash
 mvnd clean test jacoco:report
-mvnd -pl apex-interfaces -am compile -DskipTests
+mvnd -pl apex-system-service -am compile -DskipTests
 ```
 
 测试不得依赖真实生产凭证、真实用户数据或不可控的外部服务。

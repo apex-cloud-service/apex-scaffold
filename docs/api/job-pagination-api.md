@@ -2,11 +2,11 @@
 
 ## 接口概述
 
-**接口名称**: 定时任务分页查询  
-**接口路径**: `GET /api/jobs/page`  
-**接口标签**: 定时任务管理  
-**认证方式**: Bearer JWT Token  
-**版本**: v1.0.0  
+**接口名称**: 定时任务分页查询
+**接口路径**: `GET /admin-api/v1/jobs/page`
+**接口标签**: 定时任务管理
+**认证方式**: Bearer JWT Token
+**版本**: v1.0.0
 
 ---
 
@@ -57,7 +57,7 @@
 #### 示例1: 基础分页查询
 
 ```http
-GET /api/jobs/page?pageNum=1&pageSize=10 HTTP/1.1
+GET /admin-api/v1/jobs/page?pageNum=1&pageSize=10 HTTP/1.1
 Host: localhost:8080
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -65,7 +65,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 #### 示例2: 按任务名称筛选
 
 ```http
-GET /api/jobs/page?pageNum=1&pageSize=20&jobName=数据同步 HTTP/1.1
+GET /admin-api/v1/jobs/page?pageNum=1&pageSize=20&jobName=数据同步 HTTP/1.1
 Host: localhost:8080
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -73,7 +73,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 #### 示例3: 组合条件查询
 
 ```http
-GET /api/jobs/page?pageNum=2&pageSize=15&jobGroup=system&status=1 HTTP/1.1
+GET /admin-api/v1/jobs/page?pageNum=2&pageSize=15&jobGroup=system&status=1 HTTP/1.1
 Host: localhost:8080
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -236,7 +236,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```javascript
 // 基础查询
-axios.get('/api/jobs/page', {
+axios.get('/admin-api/v1/jobs/page', {
   params: {
     pageNum: 1,
     pageSize: 10
@@ -254,7 +254,7 @@ axios.get('/api/jobs/page', {
 });
 
 // 条件筛选
-axios.get('/api/jobs/page', {
+axios.get('/admin-api/v1/jobs/page', {
   params: {
     pageNum: 1,
     pageSize: 20,
@@ -288,7 +288,7 @@ params.add("status", "1");
 // 发起请求
 webClient.get()
     .uri(uriBuilder -> uriBuilder
-        .path("/api/jobs/page")
+        .path("/admin-api/v1/jobs/page")
         .queryParams(params)
         .build())
     .retrieve()
@@ -304,11 +304,11 @@ webClient.get()
 
 ```bash
 # 基础查询
-curl -X GET "http://localhost:8080/api/jobs/page?pageNum=1&pageSize=10" \
+curl -X GET "http://localhost:8080/admin-api/v1/jobs/page?pageNum=1&pageSize=10" \
   -H "Authorization: Bearer YOUR_TOKEN"
 
 # 条件查询
-curl -X GET "http://localhost:8080/api/jobs/page?pageNum=1&pageSize=20&jobName=数据同步&status=1" \
+curl -X GET "http://localhost:8080/admin-api/v1/jobs/page?pageNum=1&pageSize=20&jobName=数据同步&status=1" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -318,7 +318,7 @@ curl -X GET "http://localhost:8080/api/jobs/page?pageNum=1&pageSize=20&jobName=�
 import requests
 
 # 配置
-url = "http://localhost:8080/api/jobs/page"
+url = "http://localhost:8080/admin-api/v1/jobs/page"
 headers = {
     "Authorization": f"Bearer {token}"
 }
@@ -410,12 +410,12 @@ else:
 
 | 接口名称 | 接口路径 | 说明 |
 |---------|---------|------|
-| 创建定时任务 | POST /api/jobs | 创建新的定时任务 |
-| 获取任务详情 | GET /api/jobs/{id} | 根据ID获取任务详情 |
-| 更新定时任务 | PUT /api/jobs/{id} | 更新任务信息 |
-| 删除定时任务 | DELETE /api/jobs/{id} | 删除指定任务 |
-| 执行定时任务 | POST /api/jobs/{id}/execute | 手动执行任务 |
-| 更新任务状态 | PUT /api/jobs/{id}/status | 启用/禁用任务 |
+| 创建定时任务 | POST /admin-api/v1/jobs | 创建新的定时任务 |
+| 获取任务详情 | GET /admin-api/v1/jobs/{id} | 根据ID获取任务详情 |
+| 更新定时任务 | PUT /admin-api/v1/jobs/{id} | 更新任务信息 |
+| 删除定时任务 | DELETE /admin-api/v1/jobs/{id} | 删除指定任务 |
+| 执行定时任务 | POST /admin-api/v1/jobs/{id}/run | 手动执行任务 |
+| 更新任务状态 | PUT /admin-api/v1/jobs/{id}/status | 启用/禁用任务 |
 
 ---
 
@@ -446,7 +446,7 @@ A: 当前版本按创建时间倒序排列（最新的在前），后续版本�
 
 ---
 
-**文档维护**: Apex Team  
-**最后更新**: 2026-09-13  
-**文档版本**: v1.0.0  
+**文档维护**: Apex Team
+**最后更新**: 2026-09-13
+**文档版本**: v1.0.0
 **接口版本**: v1.0.0

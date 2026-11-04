@@ -38,7 +38,7 @@ class IdentityRelayAuthenticationFilterTest {
 
     @BeforeEach
     void setUp() {
-        filter = new IdentityRelayAuthenticationFilter(
+        filter = IdentityRelayAuthenticationFilter.forTesting(
                 java.util.Base64.getEncoder().encodeToString(RSA.getPublic().getEncoded()), "");
         TenantContext.clear();
     }
@@ -106,7 +106,7 @@ class IdentityRelayAuthenticationFilterTest {
     @Test
     void acceptsConfiguredHmacAlgorithmsButDoesNotUseRsaKeyForHmac() {
         String secret = "integration-test-signing-key-at-least-32-bytes";
-        var hmacFilter = new IdentityRelayAuthenticationFilter("", secret);
+        var hmacFilter = IdentityRelayAuthenticationFilter.forTesting("", secret);
         String token = Jwts.builder()
                 .claim("userId", 7L)
                 .claim("tenantId", "tenant-42")
@@ -124,7 +124,7 @@ class IdentityRelayAuthenticationFilterTest {
         KeyPair first = Jwts.SIG.RS256.keyPair().build();
         KeyPair second = Jwts.SIG.RS256.keyPair().build();
         String configuration = "first=" + encoded(first) + ",second=" + encoded(second);
-        var multiKeyFilter = new IdentityRelayAuthenticationFilter(configuration, "");
+        var multiKeyFilter = IdentityRelayAuthenticationFilter.forTesting(configuration, "");
 
         String known = tokenWithKid(second, "second");
         String unknown = tokenWithKid(second, "missing");
@@ -159,7 +159,8 @@ class IdentityRelayAuthenticationFilterTest {
                 return fetcher;
             }
         };
-        var mergedFilter = new IdentityRelayAuthenticationFilter("shared=" + encoded(staticKey), "", "", provider);
+        var mergedFilter =
+                IdentityRelayAuthenticationFilter.forTesting("shared=" + encoded(staticKey), "", "", provider);
 
         assertThat(capture(mergedFilter, exchange(tokenWithKid(rotatedKey, "shared"))))
                 .isNotNull();
@@ -191,9 +192,9 @@ class IdentityRelayAuthenticationFilterTest {
 
     @Test
     void rejectsInvalidKeyConfiguration() {
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("missing-equals", ""))
+        assertThatThrownBy(() -> IdentityRelayAuthenticationFilter.forTesting("missing-equals", ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("kid=invalid", ""))
+        assertThatThrownBy(() -> IdentityRelayAuthenticationFilter.forTesting("kid=invalid", ""))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -60,34 +59,30 @@ public class GatewayJwtVerifierService implements DisposableBean {
 
     private final JwksProperties properties;
 
-    /** 远程 JWKS 拉取函数（生产为 WebClient 实现，测试可注入替身） */
-    private final Function<String, reactor.core.publisher.Mono<Map<String, PublicKey>>> remoteFetcher;
-
     /** 远程拉取定时订阅句柄 */
     private volatile Disposable remoteDisposable;
 
     /**
-     * 构造验签服务并预热密钥缓存.
+     * 构造验签服务并预热密钥缓存（本类唯一构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}）.
+     *
+     * <p>远程 JWKS 拉取通过可覆写的 {@link #fetchRemoteKeys(String)} 暴露，
+     * 测试以匿名子类覆写该方法注入替身，无需额外构造器。
      *
      * @param properties JWKS 配置（来自本地或 Nacos）
      */
-    @org.springframework.beans.factory.annotation.Autowired
     public GatewayJwtVerifierService(JwksProperties properties) {
-        this(properties, GatewayJwtVerifierService::defaultRemoteFetcher);
+        this.properties = properties;
+        refreshKeys();
     }
 
     /**
-     * 构造验签服务（测试注入远程拉取替身）.
+     * 远程拉取并解析 JWKS（生产默认为 WebClient 实现；测试覆写以注入替身）.
      *
-     * @param properties    JWKS 配置
-     * @param remoteFetcher 远程 JWKS 拉取函数（URL → 公钥映射）
+     * @param url JWKS 端点地址
+     * @return 公钥映射
      */
-    public GatewayJwtVerifierService(
-            JwksProperties properties,
-            Function<String, reactor.core.publisher.Mono<Map<String, PublicKey>>> remoteFetcher) {
-        this.properties = properties;
-        this.remoteFetcher = remoteFetcher;
-        refreshKeys();
+    protected reactor.core.publisher.Mono<Map<String, PublicKey>> fetchRemoteKeys(String url) {
+        return defaultRemoteFetcher(url);
     }
 
     /** 释放远程拉取定时订阅. */
@@ -273,7 +268,7 @@ public class GatewayJwtVerifierService implements DisposableBean {
      * @return 本次合并的公钥映射
      */
     private reactor.core.publisher.Mono<Map<String, PublicKey>> loadRemote() {
-        return remoteFetcher.apply(properties.getRemoteUrl()).doOnNext(keys -> {
+        return fetchRemoteKeys(properties.getRemoteUrl()).doOnNext(keys -> {
             if (keys.isEmpty()) {
                 log.warn("远程 JWKS 未包含可用 RSA 公钥，保留现有密钥");
                 return;

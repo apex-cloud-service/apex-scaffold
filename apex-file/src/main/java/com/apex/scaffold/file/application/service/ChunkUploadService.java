@@ -51,26 +51,39 @@ public class ChunkUploadService {
     private final int maxTotalChunks;
 
     /**
-     * 创建分片服务（测试/兼容构造器，采用安全默认限制）。
+     * 测试与程序化装配入口：采用安全默认限制的分片服务。
+     *
      * @param provider 实际类型路由器
      * @param files 文件记录仓储
      * @param chunks 分片仓储
      * @param bucket 服务端默认桶
      * @param expiry 签名有效秒数
      * @param defaultType 初始化时的提供商类型
+     * @return 构建完成的服务实例
      */
-    public ChunkUploadService(
+    public static ChunkUploadService forTesting(
             StorageServiceProvider provider,
             FileRepository files,
             FileChunkRepository chunks,
             String bucket,
             int expiry,
             String defaultType) {
-        this(provider, files, chunks, bucket, expiry, defaultType, MAX_CHUNK_SIZE, MAX_TOTAL_CHUNKS);
+        return new ChunkUploadService(
+                provider, files, chunks, bucket, expiry, defaultType, MAX_CHUNK_SIZE, MAX_TOTAL_CHUNKS);
     }
 
-    /** 配置化构造器。 */
-    @org.springframework.beans.factory.annotation.Autowired
+    /**
+     * 配置化构造器（唯一 public 构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}）。
+     *
+     * @param provider 实际类型路由器
+     * @param files 文件记录仓储
+     * @param chunks 分片仓储
+     * @param bucket 服务端默认桶
+     * @param expiry 签名有效秒数
+     * @param defaultType 初始化时的提供商类型
+     * @param maxChunkBytes 单分片最大字节数
+     * @param maxTotalChunks 分片总数上限
+     */
     public ChunkUploadService(
             StorageServiceProvider provider,
             FileRepository files,

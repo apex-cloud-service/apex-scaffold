@@ -1,5 +1,7 @@
 # 办公平台增强模块开发规划
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 > **历史规划文档**：本文档为 2026-09-19 阶段的早期规划，仅供参考。实际实现已采用 `domain/office/` 端口-适配器架构（消息/审批/日历/文档四大子域），与本文档描述的 `OffXxxEntity` 分层方案存在差异。数据库方面，MySQL 端办公平台表最终落在 `V57__add_office_platform_tables.sql`（而非本文档原定的 V42）；PostgreSQL 端对应为 `V57__mysql_alignment_placeholder.sql`。最新实现请以代码与 `office-platform-integration-guide.md` 为准。
 
 **模块名称**: 办公平台集成增强  

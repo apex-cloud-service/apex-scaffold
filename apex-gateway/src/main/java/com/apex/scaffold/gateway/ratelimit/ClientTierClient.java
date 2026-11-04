@@ -38,25 +38,16 @@ public class ClientTierClient {
     private final ConcurrentHashMap<String, TierSnapshot> cache = new ConcurrentHashMap<>();
 
     /**
-     * 构造限流档查询客户端。
+     * Spring 主构造器：构造限流档查询客户端（带内部调用签名）。
      *
-     * @param properties 限流档查询配置
-     */
-    public ClientTierClient(OpenAppTierProperties properties) {
-        this(properties, new com.apex.scaffold.common.internal.InternalAuthProperties(), null);
-    }
-
-    /**
-     * 构造限流档查询客户端（带内部调用签名）。
-     *
-     * <p>标注 {@code @Autowired}：本类有两个构造器，Spring 无法自动选择；
-     * 单参构造器仅供测试/无签名场景直接 new 使用。
+     * <p>本类仅此一个构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}。
+     * 无签名场景（测试等）显式传入空的 {@link com.apex.scaffold.common.internal.InternalAuthProperties}
+     * 与 {@code null} 签名器。
      *
      * @param properties 限流档查询配置
      * @param internalAuthProperties 内部认证配置
      * @param signer 内部签名器；未配置时不签名
      */
-    @org.springframework.beans.factory.annotation.Autowired
     public ClientTierClient(
             OpenAppTierProperties properties,
             com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,

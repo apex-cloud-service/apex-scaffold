@@ -1,5 +1,7 @@
 # 设计模式、Spring Boot Starter 与 SPI 优化方案
 
+> **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+
 > 文档性质：**评审结论与待实施优化方案**。本轮只做代码评审与文档整理，未修改任何生产代码、POM、配置或测试。
 > 评审基线：`main` 分支，根 POM 聚合 31 个模块，Java 21 / Spring Boot 3.5.15 / Spring Cloud 2025.0.0。
 > 评审范围：根 `pom.xml` 全部模块的 `src/main/java` 生产源码，以及 `scripts/ci/check-doc-links.sh` 所约束的文档事实。

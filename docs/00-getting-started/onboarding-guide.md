@@ -28,25 +28,25 @@
 1. **[01_logical_architecture.svg](../diagrams/01_logical_architecture.svg)** - DDD四层逻辑架构
    - 📌 **为什么要看**: 这是理解整个项目的基础,展示了接口层、应用层、领域层、基础设施层的职责划分
    - 🔍 **重点关注**: 
-     - 32个Handler在接口层的职责
+     - 115 个 Handler 在接口层的职责
      - 34个应用服务如何编排业务逻辑
-     - 47个Repository接口如何定义数据访问规范
+     - 112 个 Repository 接口如何定义数据访问规范
      - 依赖方向:只能从上往下/从外向内
-   - 💡 **实践建议**: 打开 `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/` 目录,对照图表理解Handler职责
+   - 💡 **实践建议**: 打开 `apex-system/src/main/java/com/apex/scaffold/interfaces/handler/` 目录,对照图表理解Handler职责
 
 2. **[03_technical_architecture.svg](../diagrams/03_technical_architecture.svg)** - 全栈技术选型全景图
    - 📌 **为什么要看**: 了解项目使用的60+技术组件及版本号
    - 🔍 **重点关注**:
      - 前端: Vue 3.5.13 + Vite 6 + TypeScript 5
      - 后端: Spring Boot 3.5.15 + WebFlux + MyBatis-Plus
-     - 中间件: MySQL 8.0 + Redis 7.4 + RocketMQ 5.3
+     - 中间件: MySQL 9.0 + Redis 7 + RocketMQ 5.3.1
      - 监控: Prometheus + Grafana + Loki + Zipkin
    - 💡 **实践建议**: 打开 `pom.xml` 和 `package.json`,对照图表确认版本号
 
 3. **[02_physical_architecture.svg](../diagrams/02_physical_architecture.svg)** - 网络物理部署架构
    - 📌 **为什么要看**: 理解生产环境的5层网络拓扑
    - 🔍 **重点关注**:
-     - 端口分配:8080(业务端口)、8081(管理端口)
+     - 端口分配:gateway 8080、auth 8081、system 8082（管理 8083）、workflow 8083、office 8084、file 8085、integration 8094（管理 8097）、job 8095、masking 8096
      - Podman Compose默认栈 vs Kubernetes生产扩展
      - Profile配置:basic/standard/enterprise
    - 💡 **实践建议**: 执行 `podman-compose -f podman-compose.yml up -d` 启动本地开发环境
@@ -199,9 +199,9 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 按照DDD四层架构,创建一个 `GET /api/v1/products/{id}` 接口:
 
 1. **领域层** (`apex-domain`): 定义 `Product` 实体和 `ProductRepository` 接口
-2. **基础设施层** (`apex-infrastructure`): 实现 `ProductPO`/`ProductMapper`/`ProductRepositoryImpl`
-3. **应用层** (`apex-application`): 实现 `ProductService`
-4. **接口层** (`apex-interfaces`): 实现 `ProductHandler` + 注册路由
+2. **基础设施层** (`apex-system` 的 `infrastructure` 包): 实现 `ProductPO`/`ProductMapper`/`ProductRepositoryImpl`
+3. **应用层** (`apex-system` 的 `application` 包): 实现 `ProductService`
+4. **接口层** (`apex-system` 的 `interfaces` 包): 实现 `ProductHandler` + 注册路由
 
 参考代码生成器: `./scripts/codegen/generate.sh -i examples/product.json`
 

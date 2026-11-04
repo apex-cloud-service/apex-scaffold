@@ -42,7 +42,7 @@ class ChunkUploadServiceTest {
     /** 创建使用明确提供商的被测服务。 */
     @BeforeEach
     void setUp() {
-        service = new ChunkUploadService(
+        service = ChunkUploadService.forTesting(
                 new StorageServiceProvider(Map.of(StorageType.LOCAL, storage), StorageType.LOCAL),
                 files,
                 chunks,
@@ -330,7 +330,7 @@ class ChunkUploadServiceTest {
             value = StorageType.class,
             names = {"LOCAL", "MINIO"})
     void mergeUsesRecordedBackendAccessUrl(StorageType backend) {
-        service = new ChunkUploadService(
+        service = ChunkUploadService.forTesting(
                 new StorageServiceProvider(Map.of(backend, storage), backend), files, chunks, "apex", 123, "local");
         FileEntity file = file();
         file.setStorageType(backend.name());

@@ -35,15 +35,18 @@ class ClientTierClientTest {
     @BeforeEach
     void setUp() {
         properties = new OpenAppTierProperties();
-        client = new ClientTierClient(properties) {
-            @Override
-            Mono<String> fetch(String clientId) {
-                if (failFetch) {
-                    return Mono.error(new IllegalStateException("connection refused"));
-                }
-                return stubBody == null ? Mono.error(new IllegalStateException("no stub")) : Mono.just(stubBody);
-            }
-        };
+        client =
+                new ClientTierClient(properties, new com.apex.scaffold.common.internal.InternalAuthProperties(), null) {
+                    @Override
+                    Mono<String> fetch(String clientId) {
+                        if (failFetch) {
+                            return Mono.error(new IllegalStateException("connection refused"));
+                        }
+                        return stubBody == null
+                                ? Mono.error(new IllegalStateException("no stub"))
+                                : Mono.just(stubBody);
+                    }
+                };
         stubBody = tierBody("partner-app", "premium");
         failFetch = false;
     }

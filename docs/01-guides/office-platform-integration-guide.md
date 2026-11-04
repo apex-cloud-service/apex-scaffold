@@ -14,7 +14,7 @@
 
 ### 1.2 技术栈
 
-- Java 17 + Spring Boot 3.5.15
+- Java 21 + Spring Boot 3.5.15
 - Spring WebFlux (函数式编程)
 - MyBatis-Plus + Flyway
 - Redis (分布式 state 存储)
@@ -96,7 +96,7 @@
 ```bash
 # Flyway 会在应用启动时自动执行迁移
 # 手动执行迁移（可选）
-mvnd -pl apex-interfaces flyway:migrate
+mvnd -pl apex-office-service -am flyway:migrate
 ```
 
 迁移文件：
@@ -110,7 +110,7 @@ mvnd -pl apex-interfaces flyway:migrate
 ```bash
 # 加载环境变量并启动
 source config/office-platforms.env
-mvnd -pl apex-interfaces -am spring-boot:run -P dev
+mvnd -pl apex-office-service -am spring-boot:run -Pdev
 ```
 
 或使用 Podman：
@@ -245,7 +245,7 @@ apex-infrastructure  基础设施层
 │       ├── OfficePlatformMessageClient.java
 │       └── OfficePlatformOrganizationClient.java
 
-apex-interfaces      接口层
+apex-system / apex-office-service 接口层
 ├── handler/
 │   ├── OfficeHandler.java               公开接口（登录、回调、状态）
 │   ├── OfficeAdminHandler.java          管理接口（配置、审批）

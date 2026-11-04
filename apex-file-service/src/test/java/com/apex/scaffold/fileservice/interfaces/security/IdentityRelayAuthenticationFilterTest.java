@@ -22,7 +22,7 @@ import reactor.test.StepVerifier;
 /** 验证独立验签拒绝伪造中继头和失效凭证。 */
 class IdentityRelayAuthenticationFilterTest {
     private static final String SECRET = "test-file-signing-key-with-at-least-32-bytes";
-    private final IdentityRelayAuthenticationFilter filter = new IdentityRelayAuthenticationFilter("", SECRET);
+    private final IdentityRelayAuthenticationFilter filter = IdentityRelayAuthenticationFilter.forTesting("", SECRET);
 
     /** 捕获过滤器创建的认证主体。 */
     private Authentication capture(MockServerHttpRequest request) {
@@ -99,7 +99,7 @@ class IdentityRelayAuthenticationFilterTest {
     @Test
     void acceptsAuthCenterRs256ContractAndRejectsOtherAlgorithms() {
         var keys = Jwts.SIG.RS512.keyPair().build();
-        var rsaFilter = new IdentityRelayAuthenticationFilter(
+        var rsaFilter = IdentityRelayAuthenticationFilter.forTesting(
                 java.util.Base64.getEncoder().encodeToString(keys.getPublic().getEncoded()), "");
         for (var algorithm : java.util.List.of(Jwts.SIG.RS256, Jwts.SIG.RS512)) {
             String jwt = Jwts.builder()
@@ -154,7 +154,7 @@ class IdentityRelayAuthenticationFilterTest {
         String configured =
                 "old=" + Base64.getEncoder().encodeToString(oldKey.getPublic().getEncoded()) + ",new="
                         + Base64.getEncoder().encodeToString(newKey.getPublic().getEncoded());
-        IdentityRelayAuthenticationFilter rsaFilter = new IdentityRelayAuthenticationFilter(configured, "");
+        IdentityRelayAuthenticationFilter rsaFilter = IdentityRelayAuthenticationFilter.forTesting(configured, "");
 
         assertThat(capture(rsaFilter, signedRsaToken("old", oldKey, false))).isNotNull();
         assertThat(capture(rsaFilter, signedRsaToken("new", newKey, false))).isNotNull();
@@ -193,7 +193,7 @@ class IdentityRelayAuthenticationFilterTest {
     @Test
     void rejectsKeyedTokenWithoutKid() {
         KeyPair key = Jwts.SIG.RS256.keyPair().build();
-        IdentityRelayAuthenticationFilter rsaFilter = new IdentityRelayAuthenticationFilter(
+        IdentityRelayAuthenticationFilter rsaFilter = IdentityRelayAuthenticationFilter.forTesting(
                 "active=" + encodedPublicKey(key) + ",next=" + encodedPublicKey(key), "");
         String jwt = Jwts.builder()
                 .subject("7")
@@ -213,14 +213,14 @@ class IdentityRelayAuthenticationFilterTest {
         KeyPair key = Jwts.SIG.RS256.keyPair().build();
         String publicKey = encodedPublicKey(key);
 
-        assertThatThrownBy(
-                        () -> new IdentityRelayAuthenticationFilter("active=" + publicKey + ",active=" + publicKey, ""))
+        assertThatThrownBy(() -> IdentityRelayAuthenticationFilter.forTesting(
+                        "active=" + publicKey + ",active=" + publicKey, ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("active=", ""))
+        assertThatThrownBy(() -> IdentityRelayAuthenticationFilter.forTesting("active=", ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("active=" + publicKey + ",", ""))
+        assertThatThrownBy(() -> IdentityRelayAuthenticationFilter.forTesting("active=" + publicKey + ",", ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> new IdentityRelayAuthenticationFilter("active=not-base64", ""))
+        assertThatThrownBy(() -> IdentityRelayAuthenticationFilter.forTesting("active=not-base64", ""))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -228,7 +228,8 @@ class IdentityRelayAuthenticationFilterTest {
     @Test
     void acceptsSinglePublicKeyWithBase64Padding() {
         KeyPair key = Jwts.SIG.RS256.keyPair().build();
-        IdentityRelayAuthenticationFilter rsaFilter = new IdentityRelayAuthenticationFilter(encodedPublicKey(key), "");
+        IdentityRelayAuthenticationFilter rsaFilter =
+                IdentityRelayAuthenticationFilter.forTesting(encodedPublicKey(key), "");
 
         assertThat(capture(rsaFilter, signedRsaToken(null, key, false))).isNotNull();
     }

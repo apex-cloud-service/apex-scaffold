@@ -23,7 +23,7 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
  */
 class IdentityRelayAuthenticationFilterTest {
     private static final String SECRET = "office-test-key-0123456789-abcdef0123456789";
-    private final IdentityRelayAuthenticationFilter filter = new IdentityRelayAuthenticationFilter(
+    private final IdentityRelayAuthenticationFilter filter = IdentityRelayAuthenticationFilter.forTesting(
             "", SECRET, new MessageSocketRegistry(), List.of("https://app.example"));
 
     /** 伪造网关身份头不能创建认证。 */
@@ -70,7 +70,7 @@ class IdentityRelayAuthenticationFilterTest {
         var identity = new AuthenticatedUser(7L, null, "a");
         String ticket = registry.issue(identity);
         var handshakeFilter =
-                new IdentityRelayAuthenticationFilter("", SECRET, registry, List.of("https://app.example"));
+                IdentityRelayAuthenticationFilter.forTesting("", SECRET, registry, List.of("https://app.example"));
         var exchange = MockServerWebExchange.from(MockServerHttpRequest.post("/api/v1/messages/ws?ticket=" + ticket)
                 .header("Origin", "https://app.example")
                 .header("Upgrade", "websocket"));
@@ -103,7 +103,7 @@ class IdentityRelayAuthenticationFilterTest {
                         return null;
                     }
                 };
-        IdentityRelayAuthenticationFilter multi = new IdentityRelayAuthenticationFilter(
+        IdentityRelayAuthenticationFilter multi = IdentityRelayAuthenticationFilter.forTesting(
                 configured, "", "", new MessageSocketRegistry(), List.of("https://app.example"), empty);
         var registry = new MessageSocketRegistry();
 
@@ -157,7 +157,7 @@ class IdentityRelayAuthenticationFilterTest {
                         return fetcher;
                     }
                 };
-        IdentityRelayAuthenticationFilter merged = new IdentityRelayAuthenticationFilter(
+        IdentityRelayAuthenticationFilter merged = IdentityRelayAuthenticationFilter.forTesting(
                 configured, "", "", registry, List.of("https://app.example"), provider);
         var rotatedToken = Jwts.builder()
                 .header()

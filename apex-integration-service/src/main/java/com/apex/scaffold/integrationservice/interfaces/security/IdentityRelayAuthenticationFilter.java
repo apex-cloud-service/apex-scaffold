@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -55,36 +54,74 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private final JwksFetcher jwksFetcher;
 
     /**
-     * 加载明确配置的验签密钥；RSA 与 HMAC 验证各自限制算法，防止密钥类型混淆。
+     * Spring 主构造器：加载明确配置的验签密钥；RSA 与 HMAC 验证各自限制算法，防止密钥类型混淆。
+     *
+     * <p>本类仅此一个 public 构造器，Spring 按唯一构造器注入，无需 {@code @Autowired}。
+     * 测试与程序化装配请使用 {@link #forTesting(String, String)}。
+     *
      * @param publicKeysBase64 多公钥配置，格式 {@code kid=Base64X509,kid=Base64X509}
      * @param publicKeyBase64 旧版单公钥（X509 DER Base64），多公钥为空时生效
      * @param secret HMAC 过渡密钥，至少 256 位
      * @param jwksFetcher 共享 JWKS 拉取客户端（可能未装配）
      */
-    @Autowired
     public IdentityRelayAuthenticationFilter(
             @Value("${integration.security.jwt-public-keys-base64:}") String publicKeysBase64,
             @Value("${integration.security.jwt-public-key-base64:}") String publicKeyBase64,
             @Value("${integration.security.jwt-secret:}") String secret,
             org.springframework.beans.factory.ObjectProvider<JwksFetcher> jwksFetcher) {
-        this(buildKeys(publicKeysBase64, publicKeyBase64), secret, jwksFetcher.getIfAvailable());
+        KeyConfiguration keyConfiguration = buildKeys(publicKeysBase64, publicKeyBase64);
+        this.publicKeys = keyConfiguration.keys();
+        this.keyedPublicKeys = keyConfiguration.keyed();
+        this.secretKey = secret.isBlank() ? null : Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.jwksFetcher = jwksFetcher.getIfAvailable();
     }
 
     /**
-     * 保留旧版程序化构造方式，供测试及程序化装配使用。
+     * 测试与程序化装配入口：保留旧版程序化构造方式（单公钥或多键配置）。
+     *
      * @param publicKeyConfiguration X509 DER 编码的 RSA 公钥，或 kid=Base64X509 配置
      * @param secret HMAC 过渡密钥
+     * @return 构建完成的过滤器实例
      */
-    public IdentityRelayAuthenticationFilter(String publicKeyConfiguration, String secret) {
-        this(buildLegacyKeys(publicKeyConfiguration), secret, null);
+    public static IdentityRelayAuthenticationFilter forTesting(String publicKeyConfiguration, String secret) {
+        boolean keyed = publicKeyConfiguration != null && publicKeyConfiguration.contains("=");
+        return new IdentityRelayAuthenticationFilter(
+                keyed ? publicKeyConfiguration : "",
+                keyed ? "" : publicKeyConfiguration,
+                secret,
+                EmptyJwksFetcher.PROVIDER);
     }
 
-    private IdentityRelayAuthenticationFilter(
-            KeyConfiguration keyConfiguration, String secret, JwksFetcher jwksFetcher) {
-        publicKeys = keyConfiguration.keys();
-        keyedPublicKeys = keyConfiguration.keyed();
-        secretKey = secret.isBlank() ? null : Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.jwksFetcher = jwksFetcher;
+    /**
+     * 测试与程序化装配入口：显式传入 JWKS 拉取客户端，覆盖静态公钥与拉取快照合并语义。
+     *
+     * @param publicKeysBase64 多公钥配置
+     * @param publicKeyBase64 旧版单公钥配置
+     * @param secret HMAC 过渡密钥
+     * @param jwksFetcher 共享 JWKS 拉取客户端提供者
+     * @return 构建完成的过滤器实例
+     */
+    public static IdentityRelayAuthenticationFilter forTesting(
+            String publicKeysBase64,
+            String publicKeyBase64,
+            String secret,
+            org.springframework.beans.factory.ObjectProvider<JwksFetcher> jwksFetcher) {
+        return new IdentityRelayAuthenticationFilter(publicKeysBase64, publicKeyBase64, secret, jwksFetcher);
+    }
+
+    /** 空 JWKS 提供者：测试与程序化装配不装配共享拉取客户端。 */
+    private enum EmptyJwksFetcher implements org.springframework.beans.factory.ObjectProvider<JwksFetcher> {
+        PROVIDER;
+
+        @Override
+        public JwksFetcher getObject() {
+            throw new java.util.NoSuchElementException("未装配 JwksFetcher");
+        }
+
+        @Override
+        public JwksFetcher getIfAvailable() {
+            return null;
+        }
     }
 
     private static KeyConfiguration buildKeys(String publicKeysBase64, String publicKeyBase64) {

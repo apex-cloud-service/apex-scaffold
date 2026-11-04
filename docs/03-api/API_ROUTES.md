@@ -4,43 +4,43 @@
 >
 > 路由以 `RouterFunction`、`RouterFunctions.route()`、`RouterFunctions.nest()` 和 `SpringdocRouteBuilder` 的可执行注册代码为准。`RouterOpenApiConfig` 中仅用于 SpringDoc 展示的占位路由不视为独立业务实现。
 >
-> 项目包含两个独立的 Spring Boot 运行边界：主应用和认证中心。两者的路由、Handler、应用服务及数据源应分别理解和部署。
+> 项目包含两个独立的 Spring Boot 运行边界：system 域（`apex-system-service`）和认证中心（`apex-auth-service`）。两者的路由、Handler、应用服务及数据源应分别理解和部署。
 
 ## 1. 路径与认证约定
 
 | 路径前缀 | 运行边界 | 典型用途 | 认证约定 |
 | --- | --- | --- | --- |
-| `/api/v1/**` | 主应用 | 用户业务、办公集成、消息和工作流接口 | 默认需要认证；公开端点以安全配置和路由说明为准 |
-| `/admin-api/v1/**` | 主应用 | 管理后台和运维接口 | 需要认证；启用 RBAC 时还需命中 `securityProperties.adminRoles` 中的任一角色，具体权限以 Handler 注解为准 |
-| `/api/office/**` | 主应用 | 办公平台能力接口 | 默认需要认证 |
-| `/auth/sso/**` | 主应用 | SSO 登录、回调和登出 | 全部需要认证；当前公开白名单未放行这些路径 |
-| `/oauth2/**`、`/.well-known/**` | 主应用 | OAuth2 授权服务器标准端点 | 仅 `token`、`revoke`、`introspect` 在 Web 安全层公开，其余已注册端点需要认证 |
-| `/api/v1/auth/**` | 主应用 | 认证、授权及 Keycloak/OIDC 登录接口 | 默认需要认证；Keycloak 的三个登录/回调端点公开且仅在 `keycloak.enabled=true` 时装配 |
+| `/api/v1/**` | system 域 | 用户业务、办公集成、消息和工作流接口 | 默认需要认证；公开端点以安全配置和路由说明为准 |
+| `/admin-api/v1/**` | system 域 | 管理后台和运维接口 | 需要认证；启用 RBAC 时还需命中 `securityProperties.adminRoles` 中的任一角色，具体权限以 Handler 注解为准 |
+| `/api/office/**` | system 域 | 办公平台能力接口 | 默认需要认证 |
+| `/auth/sso/**` | system 域 | SSO 登录、回调和登出 | 全部需要认证；当前公开白名单未放行这些路径 |
+| `/oauth2/**`、`/.well-known/**` | system 域 | OAuth2 授权服务器标准端点 | 仅 `token`、`revoke`、`introspect` 在 Web 安全层公开，其余已注册端点需要认证 |
+| `/api/v1/auth/**` | system 域 | 认证、授权及 Keycloak/OIDC 登录接口 | 默认需要认证；Keycloak 的三个登录/回调端点公开且仅在 `keycloak.enabled=true` 时装配 |
 | `/api/mfa/**`、`/api/ip-access-control/**` | 认证中心 | MFA 管理和 IP 访问控制 | 需要 Bearer ACCESS 访问令牌 |
 | `/api/v1/mfa/**`、`/auth/v1/**` | 认证中心 | MFA、登录、令牌、角色、权限和会话 | 仅 `/auth/v1/login`、`/auth/v1/refresh` 公开，其余需要 Bearer ACCESS 访问令牌 |
 
-主应用认证约定以 `SecurityConfig` 和 `SystemConstants.PUBLIC_PATHS` 为准。本文业务路由中的公开端点为：`GET /`、`GET /api/v1/health`；`POST /api/v1/auth/login`、`register`、`wechat/bind-phone`、`refresh`、`sms/code`、`cl/sms/code`、`cl/validate-mobile`（后六项均拼接 `/api/v1/auth/` 前缀）；`GET /api/v1/auth/wechat/mp/authorize`（公众号网页授权跳转入口）；`GET /api/v1/auth/captcha`、`POST /api/v1/auth/captcha/verify`；`GET /api/v1/office/login`、`GET /api/v1/office/callback`；`POST /oauth2/token`、`POST /oauth2/revoke`、`POST /oauth2/introspect`；以及 Keycloak 的三个登录/回调端点。`/api/v1/info`、`/api/v1/office/status`、`/api/v1/auth/wx/phone`、`/api/v1/auth/logout` 均需要认证。白名单还包含框架或静态资源路径，不能据此推断存在业务 Router。
+ system 域认证约定以 `SecurityConfig` 和 `SystemConstants.PUBLIC_PATHS` 为准。本文业务路由中的公开端点为：`GET /`、`GET /api/v1/health`；`POST /api/v1/auth/login`、`register`、`wechat/bind-phone`、`refresh`、`sms/code`、`cl/sms/code`、`cl/validate-mobile`（后六项均拼接 `/api/v1/auth/` 前缀）；`GET /api/v1/auth/wechat/mp/authorize`（公众号网页授权跳转入口）；`GET /api/v1/auth/captcha`、`POST /api/v1/auth/captcha/verify`；`GET /api/v1/office/login`、`GET /api/v1/office/callback`；`POST /oauth2/token`、`POST /oauth2/revoke`、`POST /oauth2/introspect`；以及 Keycloak 的三个登录/回调端点。`/api/v1/info`、`/api/v1/office/status`、`/api/v1/auth/wx/phone`、`/api/v1/auth/logout` 均需要认证。白名单还包含框架或静态资源路径，不能据此推断存在业务 Router。
 
 管理端在 `rbacEnabled=true` 时按配置角色授权，关闭时 Web 安全层仅要求认证。`securityProperties.adminPaths` 命中的其他管理路径在启用 RBAC 时要求配置的 `adminRole` 或 `SUPER_ADMIN`；`/api/v1/auth/roles/my` 和 `/api/v1/auth/permissions/my` 优先按普通已认证用户放行。Handler 的权限注解仍需独立核对。
 
-认证中心仅放行登录和刷新，其余本文端点均要求 `Authorization: Bearer <access-token>`，且令牌类型必须为 `ACCESS`。两模块各有同名 `AuthConfigRouter` / `AuthConfigHandler`：主应用注册 `/admin-api/v1/auth/config/**`，认证中心注册 `/api/v1/auth/configs/**`，不能合并。
+认证中心仅放行登录和刷新，其余本文端点均要求 `Authorization: Bearer <access-token>`，且令牌类型必须为 `ACCESS`。两模块各有同名 `AuthConfigRouter` / `AuthConfigHandler`： system 域注册 `/admin-api/v1/auth/config/**`，认证中心注册 `/api/v1/auth/configs/**`，不能合并。
 
 统一响应、错误码和异常出口不由路由表决定。普通业务异常进入统一 WebFlux 异常处理边界，认证失败和权限不足分别由认证入口点与拒绝处理器返回，流控/降级异常由 Sentinel 异常处理器处理。
 
-## 2. 主应用路由
+## 2. system 域路由
 
 ### 2.1 用户、办公登录和 Keycloak
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/api/v1/user/info` | `ApiRouter` | `UserHandler.getCurrentUserInfo` | 获取当前用户信息 |
-| POST | `/api/v1/user/me/deletion-code` | `ApiRouter` | `UserHandler.sendAccountDeletionCode` | 发送账户注销验证码 |
-| DELETE | `/api/v1/user/me` | `ApiRouter` | `UserHandler.deleteCurrentUser` | 注销当前用户账户 |
-| GET | `/api/v1/user/{userId}` | `ApiRouter` | `UserHandler.getUserById` | 根据用户 ID 查询用户信息 |
-| POST | `/api/v1/user/list` | `ApiRouter` | `UserHandler.listUsers` | 分页查询用户列表 |
-| GET | `/api/v1/office/status` | `ApiRouter` | `OfficeHandler.status` | 查询办公平台认证状态 |
-| GET | `/api/v1/office/login` | `ApiRouter` | `OfficeHandler.start` | 发起办公平台登录 |
-| GET | `/api/v1/office/callback` | `ApiRouter` | `OfficeHandler.callback` | 处理办公平台登录回调 |
+| GET | `/api/v1/user/info` | `PublicApiRouter` | `UserHandler.getCurrentUserInfo` | 获取当前用户信息 |
+| POST | `/api/v1/user/me/deletion-code` | `PublicApiRouter` | `UserHandler.sendAccountDeletionCode` | 发送账户注销验证码 |
+| DELETE | `/api/v1/user/me` | `PublicApiRouter` | `UserHandler.deleteCurrentUser` | 注销当前用户账户 |
+| GET | `/api/v1/user/{userId}` | `PublicApiRouter` | `UserHandler.getUserById` | 根据用户 ID 查询用户信息 |
+| POST | `/api/v1/user/list` | `PublicApiRouter` | `UserHandler.listUsers` | 分页查询用户列表 |
+| GET | `/api/v1/office/status` | `OfficeRouter` | `OfficeHandler.status` | 查询办公平台认证状态 |
+| GET | `/api/v1/office/login` | `OfficeRouter` | `OfficeHandler.start` | 发起办公平台登录 |
+| GET | `/api/v1/office/callback` | `OfficeRouter` | `OfficeHandler.callback` | 处理办公平台登录回调 |
 | GET | `/auth/sso/initiate` | `SsoAuthRouter` | `SsoAuthHandler.initiate` | 发起 SSO 认证，需要认证 |
 | POST | `/auth/sso/callback` | `SsoAuthRouter` | `SsoAuthHandler.callback` | 处理 SSO 回调，需要认证 |
 | POST | `/auth/sso/logout` | `SsoAuthRouter` | `SsoAuthHandler.logout` | SSO 登出，需要认证 |
@@ -55,38 +55,38 @@
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/admin-api/v1/staff-roles` | `ApiRouter` | `AdminUserManagementHandler.roles` | 查询员工角色 |
-| GET | `/admin-api/v1/users` | `ApiRouter` | `AdminUserManagementHandler.list` | 查询后台用户 |
-| POST | `/admin-api/v1/users` | `ApiRouter` | `AdminUserManagementHandler.create` | 创建后台用户 |
-| GET | `/admin-api/v1/users/{userId}` | `ApiRouter` | `AdminUserManagementHandler.detail` | 查询后台用户详情 |
-| PUT | `/admin-api/v1/users/{userId}` | `ApiRouter` | `AdminUserManagementHandler.update` | 更新后台用户 |
-| POST | `/admin-api/v1/users/{userId}/sessions/revoke` | `ApiRouter` | `AdminUserManagementHandler.revokeSessions` | 撤销用户会话 |
-| PUT | `/admin-api/v1/users/{userId}/status` | `ApiRouter` | `AdminUserManagementHandler.updateStatus` | 更新用户状态 |
-| PUT | `/admin-api/v1/users/{userId}/roles` | `ApiRouter` | `AdminUserManagementHandler.replaceRoles` | 替换用户角色 |
-| GET | `/admin-api/v1/menus` | `ApiRouter` | `MenuHandler.tree` | 查询菜单树 |
-| GET | `/admin-api/v1/menus/{menuId}` | `ApiRouter` | `MenuHandler.detail` | 查询菜单详情 |
-| POST | `/admin-api/v1/menus` | `ApiRouter` | `MenuHandler.create` | 创建菜单 |
-| PUT | `/admin-api/v1/menus/{menuId}` | `ApiRouter` | `MenuHandler.update` | 更新菜单 |
-| DELETE | `/admin-api/v1/menus/{menuId}` | `ApiRouter` | `MenuHandler.delete` | 删除菜单 |
-| PUT | `/admin-api/v1/menus/{menuId}/status` | `ApiRouter` | `MenuHandler.updateStatus` | 更新菜单状态 |
-| GET | `/admin-api/v1/dict/types` | `ApiRouter` | `DictHandler.listTypes` | 查询字典类型 |
-| GET | `/admin-api/v1/dict/types/{id}` | `ApiRouter` | `DictHandler.getType` | 查询字典类型详情 |
-| POST | `/admin-api/v1/dict/types` | `ApiRouter` | `DictHandler.createType` | 创建字典类型 |
-| PUT | `/admin-api/v1/dict/types/{id}` | `ApiRouter` | `DictHandler.updateType` | 更新字典类型 |
-| DELETE | `/admin-api/v1/dict/types/{id}` | `ApiRouter` | `DictHandler.deleteType` | 删除字典类型 |
-| PUT | `/admin-api/v1/dict/types/{id}/status` | `ApiRouter` | `DictHandler.updateTypeStatus` | 更新字典类型状态 |
-| GET | `/admin-api/v1/dict/data` | `ApiRouter` | `DictHandler.listData` | 查询字典数据 |
-| GET | `/admin-api/v1/dict/data/{id}` | `ApiRouter` | `DictHandler.getData` | 查询字典数据详情 |
-| POST | `/admin-api/v1/dict/data` | `ApiRouter` | `DictHandler.createData` | 创建字典数据 |
-| PUT | `/admin-api/v1/dict/data/{id}` | `ApiRouter` | `DictHandler.updateData` | 更新字典数据 |
-| DELETE | `/admin-api/v1/dict/data/{id}` | `ApiRouter` | `DictHandler.deleteData` | 删除字典数据 |
-| PUT | `/admin-api/v1/dict/data/{id}/status` | `ApiRouter` | `DictHandler.updateDataStatus` | 更新字典数据状态 |
-| GET | `/admin-api/v1/depts` | `ApiRouter` | `DeptHandler.listTree` | 查询部门树 |
-| GET | `/admin-api/v1/depts/{id}` | `ApiRouter` | `DeptHandler.detail` | 查询部门详情 |
-| POST | `/admin-api/v1/depts` | `ApiRouter` | `DeptHandler.create` | 创建部门 |
-| PUT | `/admin-api/v1/depts/{id}` | `ApiRouter` | `DeptHandler.update` | 更新部门 |
-| DELETE | `/admin-api/v1/depts/{id}` | `ApiRouter` | `DeptHandler.delete` | 删除部门 |
-| GET | `/admin-api/v1/export/users` | `ApiRouter` | `ExcelExportHandler.exportUsers` | 导出用户 |
+| GET | `/admin-api/v1/staff-roles` | `UserAdminRouter` | `AdminUserManagementHandler.roles` | 查询员工角色 |
+| GET | `/admin-api/v1/users` | `UserAdminRouter` | `AdminUserManagementHandler.list` | 查询后台用户 |
+| POST | `/admin-api/v1/users` | `UserAdminRouter` | `AdminUserManagementHandler.create` | 创建后台用户 |
+| GET | `/admin-api/v1/users/{userId}` | `UserAdminRouter` | `AdminUserManagementHandler.detail` | 查询后台用户详情 |
+| PUT | `/admin-api/v1/users/{userId}` | `UserAdminRouter` | `AdminUserManagementHandler.update` | 更新后台用户 |
+| POST | `/admin-api/v1/users/{userId}/sessions/revoke` | `UserAdminRouter` | `AdminUserManagementHandler.revokeSessions` | 撤销用户会话 |
+| PUT | `/admin-api/v1/users/{userId}/status` | `UserAdminRouter` | `AdminUserManagementHandler.updateStatus` | 更新用户状态 |
+| PUT | `/admin-api/v1/users/{userId}/roles` | `UserAdminRouter` | `AdminUserManagementHandler.replaceRoles` | 替换用户角色 |
+| GET | `/admin-api/v1/menus` | `RbacRouter` | `MenuHandler.tree` | 查询菜单树 |
+| GET | `/admin-api/v1/menus/{menuId}` | `RbacRouter` | `MenuHandler.detail` | 查询菜单详情 |
+| POST | `/admin-api/v1/menus` | `RbacRouter` | `MenuHandler.create` | 创建菜单 |
+| PUT | `/admin-api/v1/menus/{menuId}` | `RbacRouter` | `MenuHandler.update` | 更新菜单 |
+| DELETE | `/admin-api/v1/menus/{menuId}` | `RbacRouter` | `MenuHandler.delete` | 删除菜单 |
+| PUT | `/admin-api/v1/menus/{menuId}/status` | `RbacRouter` | `MenuHandler.updateStatus` | 更新菜单状态 |
+| GET | `/admin-api/v1/dict/types` | `ConfigRouter` | `DictHandler.listTypes` | 查询字典类型 |
+| GET | `/admin-api/v1/dict/types/{id}` | `ConfigRouter` | `DictHandler.getType` | 查询字典类型详情 |
+| POST | `/admin-api/v1/dict/types` | `ConfigRouter` | `DictHandler.createType` | 创建字典类型 |
+| PUT | `/admin-api/v1/dict/types/{id}` | `ConfigRouter` | `DictHandler.updateType` | 更新字典类型 |
+| DELETE | `/admin-api/v1/dict/types/{id}` | `ConfigRouter` | `DictHandler.deleteType` | 删除字典类型 |
+| PUT | `/admin-api/v1/dict/types/{id}/status` | `ConfigRouter` | `DictHandler.updateTypeStatus` | 更新字典类型状态 |
+| GET | `/admin-api/v1/dict/data` | `ConfigRouter` | `DictHandler.listData` | 查询字典数据 |
+| GET | `/admin-api/v1/dict/data/{id}` | `ConfigRouter` | `DictHandler.getData` | 查询字典数据详情 |
+| POST | `/admin-api/v1/dict/data` | `ConfigRouter` | `DictHandler.createData` | 创建字典数据 |
+| PUT | `/admin-api/v1/dict/data/{id}` | `ConfigRouter` | `DictHandler.updateData` | 更新字典数据 |
+| DELETE | `/admin-api/v1/dict/data/{id}` | `ConfigRouter` | `DictHandler.deleteData` | 删除字典数据 |
+| PUT | `/admin-api/v1/dict/data/{id}/status` | `ConfigRouter` | `DictHandler.updateDataStatus` | 更新字典数据状态 |
+| GET | `/admin-api/v1/depts` | `RbacRouter` | `DeptHandler.listTree` | 查询部门树 |
+| GET | `/admin-api/v1/depts/{id}` | `RbacRouter` | `DeptHandler.detail` | 查询部门详情 |
+| POST | `/admin-api/v1/depts` | `RbacRouter` | `DeptHandler.create` | 创建部门 |
+| PUT | `/admin-api/v1/depts/{id}` | `RbacRouter` | `DeptHandler.update` | 更新部门 |
+| DELETE | `/admin-api/v1/depts/{id}` | `RbacRouter` | `DeptHandler.delete` | 删除部门 |
+| GET | `/admin-api/v1/export/users` | `ExportRouter` | `ExcelExportHandler.exportUsers` | 导出用户 |
 
 ### 2.3 认证配置、日志和图表
 
@@ -105,9 +105,9 @@
 | GET | `/admin-api/v1/auth/config/login-logs` | `AuthConfigRouter` | `AuthConfigHandler.listLoginLogs` | 查询登录日志 |
 | GET | `/admin-api/v1/auth/config/permissions` | `AuthConfigRouter` | `AuthConfigHandler.listPermissions` | 查询权限 |
 | POST | `/admin-api/v1/auth/config/jwt/test` | `AuthConfigRouter` | `AuthConfigHandler.testJwtConfig` | 测试 JWT 配置 |
-| GET | `/admin-api/v1/login-logs` | `ApiRouter` | `LoginLogHandler.list` | 查询登录日志 |
-| GET | `/admin-api/v1/audit-logs` | `ApiRouter` | `AuditLogHandler.list` | 查询审计日志 |
-| GET | `/admin-api/v1/api-call-logs` | `ApiRouter` | `ApiCallLogHandler.list` | 查询 API 调用日志 |
+| GET | `/admin-api/v1/login-logs` | `LogRouter` | `LoginLogHandler.list` | 查询登录日志 |
+| GET | `/admin-api/v1/audit-logs` | `LogRouter` | `AuditLogHandler.list` | 查询审计日志 |
+| GET | `/admin-api/v1/api-call-logs` | `LogRouter` | `ApiCallLogHandler.list` | 查询 API 调用日志 |
 | GET | `/admin-api/v1/charts` | `ChartRouter` | `ChartHandler.query` | 查询图表 |
 | POST | `/admin-api/v1/charts` | `ChartRouter` | `ChartHandler.create` | 创建图表 |
 | GET | `/admin-api/v1/charts/{id}` | `ChartRouter` | `ChartHandler.getById` | 查询图表详情 |
@@ -141,19 +141,6 @@
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/api/v1/office/approvals` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.getApprovalList` | 查询审批列表 |
-| POST | `/api/v1/office/approvals` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.createApproval` | 创建审批 |
-| GET | `/api/v1/office/approvals/pending` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.getPendingApprovals` | 查询待审批 |
-| GET | `/api/v1/office/approvals/{id}` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.getApprovalDetail` | 查询审批详情 |
-| PUT | `/api/v1/office/approvals/{id}` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.updateApproval` | 更新审批 |
-| DELETE | `/api/v1/office/approvals/{id}` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.deleteApproval` | 删除审批 |
-| GET | `/api/v1/office/calendar-events` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.getCalendarEventList` | 查询日历事件 |
-| POST | `/api/v1/office/calendar-events` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.createCalendarEvent` | 创建日历事件 |
-| GET | `/api/v1/office/calendar-events/upcoming` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.getUpcomingEvents` | 查询即将到来的事件 |
-| GET | `/api/v1/office/calendar-events/meeting-room-availability` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.getMeetingRoomAvailability` | 查询会议室可用性 |
-| GET | `/api/v1/office/calendar-events/{id}` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.getCalendarEventDetail` | 查询日历事件详情 |
-| PUT | `/api/v1/office/calendar-events/{id}` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.updateCalendarEvent` | 更新日历事件 |
-| DELETE | `/api/v1/office/calendar-events/{id}` | `OfficeIntegrationRouter` | `OfficeIntegrationHandler.deleteCalendarEvent` | 删除日历事件 |
 | POST | `/api/office/approvals` | `OfficeApprovalRouter` | `OfficeApprovalHandler.initiateApproval` | 发起审批流程 |
 | GET | `/api/office/approvals/{processInstanceId}` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getApprovalDetail` | 查询审批详情 |
 | POST | `/api/office/approvals/{processInstanceId}/approve` | `OfficeApprovalRouter` | `OfficeApprovalHandler.approveProcess` | 执行审批操作 |
@@ -233,6 +220,20 @@
 | POST | `/api/workflow/instances/{instanceId}/suspend` | `WorkflowRouter` | `WorkflowHandler.suspendInstance` | 挂起流程实例 |
 | POST | `/api/workflow/instances/{instanceId}/resume` | `WorkflowRouter` | `WorkflowHandler.resumeInstance` | 恢复流程实例 |
 
+### 2.8.1 工作流定义生命周期（`/api/v2`）
+
+| 方法 | 路径 | Router | Handler 方法 | 说明 |
+| --- | --- | --- | --- | --- |
+| GET | `/api/v2/workflow-definitions` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.listDefinitions` | 查询工作流定义列表 |
+| POST | `/api/v2/workflow-definitions` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.createDraft` | 创建工作流定义草稿 |
+| GET | `/api/v2/workflow-definitions/{definitionId}` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.getDefinition` | 查询工作流定义详情 |
+| PUT | `/api/v2/workflow-definitions/{definitionId}` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.updateDraft` | 更新工作流定义草稿 |
+| POST | `/api/v2/workflow-definitions/{definitionId}/validate` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.validateDefinition` | 校验工作流定义 |
+| POST | `/api/v2/workflow-definitions/{definitionId}/publish` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.publishDefinition` | 发布工作流定义 |
+| POST | `/api/v2/workflow-definitions/{definitionId}/enable` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.enableDefinition` | 启用工作流定义 |
+| POST | `/api/v2/workflow-definitions/{definitionId}/disable` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.disableDefinition` | 停用工作流定义 |
+| GET | `/api/v2/workflow-definitions/{definitionId}/versions` | `WorkflowDefinitionRouter` | `WorkflowDefinitionHandler.listVersions` | 查询工作流定义版本列表 |
+
 ### 2.9 SSO 管理和代码生成器
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
@@ -290,95 +291,95 @@
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/api/v1/auth/captcha` | `ApiRouter` | `CaptchaHandler.generate` | 生成图形验证码 |
-| POST | `/api/v1/auth/captcha/verify` | `ApiRouter` | `CaptchaHandler.verify` | 验证图形验证码 |
-| POST | `/api/v1/auth/register` | `ApiRouter` | `AuthHandler.register` | 完成用户注册 |
-| POST | `/api/v1/auth/wechat/bind-phone` | `ApiRouter` | `AuthHandler.bindWechatPhone` | 注册前验证并绑定微信手机号 |
-| POST | `/api/v1/auth/login` | `ApiRouter` | `AuthHandler.login` | 用户登录 |
-| POST | `/api/v1/auth/refresh` | `ApiRouter` | `AuthHandler.refresh` | 刷新令牌 |
-| POST | `/api/v1/auth/logout` | `ApiRouter` | `AuthHandler.logout` | 退出登录 |
-| POST | `/api/v1/auth/sms/code` | `ApiRouter` | `AuthHandler.sendSmsCode` | 发送短信验证码 |
-| POST | `/api/v1/auth/cl/sms/code` | `ApiRouter` | `AuthHandler.sendClSmsCode` | 发送创蓝短信验证码 |
-| POST | `/api/v1/auth/cl/validate-mobile` | `ApiRouter` | `AuthHandler.validateMobile` | 校验本机手机号 |
-| POST | `/api/v1/auth/wx/phone` | `ApiRouter` | `AuthHandler.bindPhone` | 绑定微信手机号 |
-| GET | `/api/v1/auth/wechat/mp/authorize` | `ApiRouter` | `AuthHandler.mpAuthorize` | 公众号网页授权跳转（签发一次性 OAuth state 并 302 跳转微信授权页；公开端点，`wechat.mp` 凭据缺失时返回 `wx.channel_not_configured`） |
-| GET | `/api/v1/auth/roles/my` | `ApiRouter` | `AuthorizationHandler.getMyRoles` | 查询本人角色 |
-| GET | `/api/v1/auth/permissions/my` | `ApiRouter` | `AuthorizationHandler.getMyPermissions` | 查询本人权限 |
-| GET | `/api/v1/auth/roles` | `ApiRouter` | `AuthorizationHandler.getAllRoles` | 查询全部角色 |
-| GET | `/api/v1/auth/permissions` | `ApiRouter` | `AuthorizationHandler.getAllPermissions` | 查询全部权限 |
-| POST | `/api/v1/auth/roles` | `ApiRouter` | `AuthorizationHandler.createRole` | 创建角色 |
-| POST | `/api/v1/auth/roles/update` | `ApiRouter` | `AuthorizationHandler.updateRole` | 更新角色 |
-| DELETE | `/api/v1/auth/roles/{id}` | `ApiRouter` | `AuthorizationHandler.deleteRole` | 删除角色 |
-| POST | `/api/v1/auth/permissions` | `ApiRouter` | `AuthorizationHandler.createPermission` | 创建权限 |
-| POST | `/api/v1/auth/permissions/update` | `ApiRouter` | `AuthorizationHandler.updatePermission` | 更新权限 |
-| DELETE | `/api/v1/auth/permissions/{id}` | `ApiRouter` | `AuthorizationHandler.deletePermission` | 删除权限 |
-| POST | `/api/v1/auth/users/{userId}/roles/{roleId}` | `ApiRouter` | `AuthorizationHandler.assignRoleToUser` | 为用户分配角色 |
-| DELETE | `/api/v1/auth/users/{userId}/roles/{roleId}` | `ApiRouter` | `AuthorizationHandler.removeRoleFromUser` | 移除用户角色 |
+| GET | `/api/v1/auth/captcha` | `CaptchaRouter` | `CaptchaHandler.generate` | 生成图形验证码 |
+| POST | `/api/v1/auth/captcha/verify` | `CaptchaRouter` | `CaptchaHandler.verify` | 验证图形验证码 |
+| POST | `/api/v1/auth/register` | `PublicApiRouter` | `AuthHandler.register` | 完成用户注册 |
+| POST | `/api/v1/auth/wechat/bind-phone` | `PublicApiRouter` | `AuthHandler.bindWechatPhone` | 注册前验证并绑定微信手机号 |
+| POST | `/api/v1/auth/login` | `PublicApiRouter` | `AuthHandler.login` | 用户登录 |
+| POST | `/api/v1/auth/refresh` | `PublicApiRouter` | `AuthHandler.refresh` | 刷新令牌 |
+| POST | `/api/v1/auth/logout` | `PublicApiRouter` | `AuthHandler.logout` | 退出登录 |
+| POST | `/api/v1/auth/sms/code` | `PublicApiRouter` | `AuthHandler.sendSmsCode` | 发送短信验证码 |
+| POST | `/api/v1/auth/cl/sms/code` | `PublicApiRouter` | `AuthHandler.sendClSmsCode` | 发送创蓝短信验证码 |
+| POST | `/api/v1/auth/cl/validate-mobile` | `PublicApiRouter` | `AuthHandler.validateMobile` | 校验本机手机号 |
+| POST | `/api/v1/auth/wx/phone` | `PublicApiRouter` | `AuthHandler.bindPhone` | 绑定微信手机号 |
+| GET | `/api/v1/auth/wechat/mp/authorize` | `PublicApiRouter` | `AuthHandler.mpAuthorize` | 公众号网页授权跳转（签发一次性 OAuth state 并 302 跳转微信授权页；公开端点，`wechat.mp` 凭据缺失时返回 `wx.channel_not_configured`） |
+| GET | `/api/v1/auth/roles/my` | `PublicApiRouter` | `AuthorizationHandler.getMyRoles` | 查询本人角色 |
+| GET | `/api/v1/auth/permissions/my` | `PublicApiRouter` | `AuthorizationHandler.getMyPermissions` | 查询本人权限 |
+| GET | `/api/v1/auth/roles` | `PublicApiRouter` | `AuthorizationHandler.getAllRoles` | 查询全部角色 |
+| GET | `/api/v1/auth/permissions` | `PublicApiRouter` | `AuthorizationHandler.getAllPermissions` | 查询全部权限 |
+| POST | `/api/v1/auth/roles` | `PublicApiRouter` | `AuthorizationHandler.createRole` | 创建角色 |
+| POST | `/api/v1/auth/roles/update` | `PublicApiRouter` | `AuthorizationHandler.updateRole` | 更新角色 |
+| DELETE | `/api/v1/auth/roles/{id}` | `PublicApiRouter` | `AuthorizationHandler.deleteRole` | 删除角色 |
+| POST | `/api/v1/auth/permissions` | `PublicApiRouter` | `AuthorizationHandler.createPermission` | 创建权限 |
+| POST | `/api/v1/auth/permissions/update` | `PublicApiRouter` | `AuthorizationHandler.updatePermission` | 更新权限 |
+| DELETE | `/api/v1/auth/permissions/{id}` | `PublicApiRouter` | `AuthorizationHandler.deletePermission` | 删除权限 |
+| POST | `/api/v1/auth/users/{userId}/roles/{roleId}` | `PublicApiRouter` | `AuthorizationHandler.assignRoleToUser` | 为用户分配角色 |
+| DELETE | `/api/v1/auth/users/{userId}/roles/{roleId}` | `PublicApiRouter` | `AuthorizationHandler.removeRoleFromUser` | 移除用户角色 |
 
 ### 2.12 文件、健康检查和通知
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/api/v1/notifications/stream` | `ApiRouter` | `NotificationSseHandler.stream` | 订阅通知 SSE 流 |
-| GET | `/` | `ApiRouter` | `HealthHandler.root` | 根路径探活 |
-| GET | `/api/v1/health` | `ApiRouter` | `HealthHandler.health` | 查询应用健康状态 |
-| GET | `/api/v1/info` | `ApiRouter` | `HealthHandler.info` | 查询应用信息 |
-| POST | `/api/v1/files/generic` | `ApiRouter` | `FileHandler.uploadGenericFile` | 上传通用文件（multipart/form-data） |
-| POST | `/api/v1/file/upload` | `ApiRouter` | `FileHandler.upload` | 上传文件 |
-| GET | `/api/v1/file/content` | `ApiRouter` | `FileHandler.content` | 读取文件内容 |
-| GET | `/api/v1/file/url` | `ApiRouter` | `FileHandler.getUrl` | 获取文件 URL |
-| DELETE | `/api/v1/file/delete` | `ApiRouter` | `FileHandler.delete` | 删除资源 |
-| GET | `/api/v1/file/exists` | `ApiRouter` | `FileHandler.exists` | 检查文件是否存在 |
+| GET | `/api/v1/notifications/stream` | `NotificationRouter` | `NotificationSseHandler.stream` | 订阅通知 SSE 流 |
+| GET | `/` | `PublicApiRouter` | `HealthHandler.root` | 根路径探活 |
+| GET | `/api/v1/health` | `PublicApiRouter` | `HealthHandler.health` | 查询应用健康状态 |
+| GET | `/api/v1/info` | `PublicApiRouter` | `HealthHandler.info` | 查询应用信息 |
+| POST | `/api/v1/files/generic` | `FileRouter` | `FileHandler.uploadGenericFile` | 上传通用文件（multipart/form-data） |
+| POST | `/api/v1/file/upload` | `FileRouter` | `FileHandler.upload` | 上传文件 |
+| GET | `/api/v1/file/content` | `FileRouter` | `FileHandler.content` | 读取文件内容 |
+| GET | `/api/v1/file/url` | `FileRouter` | `FileHandler.getUrl` | 获取文件 URL |
+| DELETE | `/api/v1/file/delete` | `FileRouter` | `FileHandler.delete` | 删除资源 |
+| GET | `/api/v1/file/exists` | `FileRouter` | `FileHandler.exists` | 检查文件是否存在 |
 
 ### 2.13 系统配置、搜索和日志
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/admin-api/v1/configs` | `ApiRouter` | `ConfigHandler.list` | 查询系统配置 |
-| GET | `/admin-api/v1/configs/{id}` | `ApiRouter` | `ConfigHandler.detail` | 查询系统配置详情 |
-| POST | `/admin-api/v1/configs` | `ApiRouter` | `ConfigHandler.create` | 创建系统配置 |
-| PUT | `/admin-api/v1/configs/{id}` | `ApiRouter` | `ConfigHandler.update` | 更新系统配置 |
-| DELETE | `/admin-api/v1/configs/{id}` | `ApiRouter` | `ConfigHandler.delete` | 删除系统配置 |
-| PUT | `/admin-api/v1/configs/{id}/status` | `ApiRouter` | `ConfigHandler.updateStatus` | 更新系统配置状态 |
-| GET | `/admin-api/v1/search` | `ApiRouter` | `UnifiedSearchHandler.search` | 统一搜索 |
-| POST | `/admin-api/v1/search/rebuild` | `ApiRouter` | `UnifiedSearchHandler.rebuildIndex` | 重建搜索索引 |
-| GET | `/admin-api/v1/logs/runtime` | `ApiRouter` | `RuntimeLogHandler.queryLogs` | 查询日志 |
-| GET | `/admin-api/v1/logs/runtime/count` | `ApiRouter` | `RuntimeLogHandler.countLogs` | 统计日志数量 |
-| GET | `/admin-api/v1/logs/business` | `ApiRouter` | `UnifiedBusinessLogHandler.queryLogs` | 查询日志 |
-| GET | `/admin-api/v1/logs/business/count` | `ApiRouter` | `UnifiedBusinessLogHandler.countLogs` | 统计日志数量 |
+| GET | `/admin-api/v1/configs` | `ConfigRouter` | `ConfigHandler.list` | 查询系统配置 |
+| GET | `/admin-api/v1/configs/{id}` | `ConfigRouter` | `ConfigHandler.detail` | 查询系统配置详情 |
+| POST | `/admin-api/v1/configs` | `ConfigRouter` | `ConfigHandler.create` | 创建系统配置 |
+| PUT | `/admin-api/v1/configs/{id}` | `ConfigRouter` | `ConfigHandler.update` | 更新系统配置 |
+| DELETE | `/admin-api/v1/configs/{id}` | `ConfigRouter` | `ConfigHandler.delete` | 删除系统配置 |
+| PUT | `/admin-api/v1/configs/{id}/status` | `ConfigRouter` | `ConfigHandler.updateStatus` | 更新系统配置状态 |
+| GET | `/admin-api/v1/search` | `SearchRouter` | `UnifiedSearchHandler.search` | 统一搜索 |
+| POST | `/admin-api/v1/search/rebuild` | `SearchRouter` | `UnifiedSearchHandler.rebuildIndex` | 重建搜索索引 |
+| GET | `/admin-api/v1/logs/runtime` | `LogRouter` | `RuntimeLogHandler.queryLogs` | 查询日志 |
+| GET | `/admin-api/v1/logs/runtime/count` | `LogRouter` | `RuntimeLogHandler.countLogs` | 统计日志数量 |
+| GET | `/admin-api/v1/logs/business` | `LogRouter` | `UnifiedBusinessLogHandler.queryLogs` | 查询日志 |
+| GET | `/admin-api/v1/logs/business/count` | `LogRouter` | `UnifiedBusinessLogHandler.countLogs` | 统计日志数量 |
 
 ### 2.14 在线用户和监控
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/admin-api/v1/online-users` | `ApiRouter` | `OnlineUserHandler.list` | 查询在线用户 |
-| GET | `/admin-api/v1/monitor/overview` | `ApiRouter` | `MonitorDashboardHandler.overview` | 查询监控概览 |
-| GET | `/admin-api/v1/monitor/system` | `ApiRouter` | `MonitorDashboardHandler.system` | 查询系统监控 |
-| GET | `/admin-api/v1/monitor/middleware` | `ApiRouter` | `MonitorDashboardHandler.middleware` | 查询中间件监控 |
-| GET | `/admin-api/v1/monitor/governance` | `ApiRouter` | `MonitorDashboardHandler.governance` | 查询治理监控 |
-| GET | `/admin-api/v1/monitor/business` | `ApiRouter` | `MonitorDashboardHandler.business` | 查询业务监控 |
+| GET | `/admin-api/v1/online-users` | `MonitorRouter` | `OnlineUserHandler.list` | 查询在线用户 |
+| GET | `/admin-api/v1/monitor/overview` | `MonitorRouter` | `MonitorDashboardHandler.overview` | 查询监控概览 |
+| GET | `/admin-api/v1/monitor/system` | `MonitorRouter` | `MonitorDashboardHandler.system` | 查询系统监控 |
+| GET | `/admin-api/v1/monitor/middleware` | `MonitorRouter` | `MonitorDashboardHandler.middleware` | 查询中间件监控 |
+| GET | `/admin-api/v1/monitor/governance` | `MonitorRouter` | `MonitorDashboardHandler.governance` | 查询治理监控 |
+| GET | `/admin-api/v1/monitor/business` | `MonitorRouter` | `MonitorDashboardHandler.business` | 查询业务监控 |
 
 ### 2.15 任务和数据库配置
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
-| GET | `/admin-api/v1/jobs` | `ApiRouter` | `JobHandler.list` | 查询任务列表 |
-| GET | `/admin-api/v1/jobs/page` | `ApiRouter` | `JobHandler.page` | 分页查询任务 |
-| GET | `/admin-api/v1/jobs/{id}` | `ApiRouter` | `JobHandler.detail` | 查询任务详情 |
-| POST | `/admin-api/v1/jobs` | `ApiRouter` | `JobHandler.create` | 创建任务 |
-| PUT | `/admin-api/v1/jobs/{id}` | `ApiRouter` | `JobHandler.update` | 更新任务 |
-| DELETE | `/admin-api/v1/jobs/{id}` | `ApiRouter` | `JobHandler.delete` | 删除任务 |
-| PUT | `/admin-api/v1/jobs/{id}/status` | `ApiRouter` | `JobHandler.updateStatus` | 更新任务状态 |
-| POST | `/admin-api/v1/jobs/{id}/run` | `ApiRouter` | `JobHandler.runOnce` | 立即执行任务 |
-| GET | `/admin-api/v1/jobs/{id}/logs` | `ApiRouter` | `JobHandler.logs` | 查询任务日志 |
-| POST | `/admin-api/v1/database/test` | `ApiRouter` | `DatabaseConfigHandler.testConnection` | 测试数据库连接 |
-| POST | `/admin-api/v1/database/generate-config` | `ApiRouter` | `DatabaseConfigHandler.generateConfig` | 生成数据库配置 |
-| GET | `/admin-api/v1/database/current` | `ApiRouter` | `DatabaseConfigHandler.getCurrentInfo` | 查询当前数据库信息 |
-| GET | `/admin-api/v1/database/datasources` | `ApiRouter` | `DatabaseConfigHandler.listDataSources` | 查询数据源 |
-| POST | `/admin-api/v1/database/datasources` | `ApiRouter` | `DatabaseConfigHandler.createDataSource` | 创建数据源 |
-| PUT | `/admin-api/v1/database/datasources/{id}` | `ApiRouter` | `DatabaseConfigHandler.updateDataSource` | 更新数据源 |
-| DELETE | `/admin-api/v1/database/datasources/{id}` | `ApiRouter` | `DatabaseConfigHandler.deleteDataSource` | 删除数据源 |
-| GET | `/admin-api/v1/database/datasources/{id}/metrics` | `ApiRouter` | `DatabaseConfigHandler.getDataSourceMetrics` | 查询数据源指标 |
+| GET | `/admin-api/v1/jobs` | `JobRouter` | `JobHandler.list` | 查询任务列表 |
+| GET | `/admin-api/v1/jobs/page` | `JobRouter` | `JobHandler.page` | 分页查询任务 |
+| GET | `/admin-api/v1/jobs/{id}` | `JobRouter` | `JobHandler.detail` | 查询任务详情 |
+| POST | `/admin-api/v1/jobs` | `JobRouter` | `JobHandler.create` | 创建任务 |
+| PUT | `/admin-api/v1/jobs/{id}` | `JobRouter` | `JobHandler.update` | 更新任务 |
+| DELETE | `/admin-api/v1/jobs/{id}` | `JobRouter` | `JobHandler.delete` | 删除任务 |
+| PUT | `/admin-api/v1/jobs/{id}/status` | `JobRouter` | `JobHandler.updateStatus` | 更新任务状态 |
+| POST | `/admin-api/v1/jobs/{id}/run` | `JobRouter` | `JobHandler.runOnce` | 立即执行任务 |
+| GET | `/admin-api/v1/jobs/{id}/logs` | `JobRouter` | `JobHandler.logs` | 查询任务日志 |
+| POST | `/admin-api/v1/database/test` | `DatabaseConfigRouter` | `DatabaseConfigHandler.testConnection` | 测试数据库连接 |
+| POST | `/admin-api/v1/database/generate-config` | `DatabaseConfigRouter` | `DatabaseConfigHandler.generateConfig` | 生成数据库配置 |
+| GET | `/admin-api/v1/database/current` | `DatabaseConfigRouter` | `DatabaseConfigHandler.getCurrentInfo` | 查询当前数据库信息 |
+| GET | `/admin-api/v1/database/datasources` | `DatabaseConfigRouter` | `DatabaseConfigHandler.listDataSources` | 查询数据源 |
+| POST | `/admin-api/v1/database/datasources` | `DatabaseConfigRouter` | `DatabaseConfigHandler.createDataSource` | 创建数据源 |
+| PUT | `/admin-api/v1/database/datasources/{id}` | `DatabaseConfigRouter` | `DatabaseConfigHandler.updateDataSource` | 更新数据源 |
+| DELETE | `/admin-api/v1/database/datasources/{id}` | `DatabaseConfigRouter` | `DatabaseConfigHandler.deleteDataSource` | 删除数据源 |
+| GET | `/admin-api/v1/database/datasources/{id}/metrics` | `DatabaseConfigRouter` | `DatabaseConfigHandler.getDataSourceMetrics` | 查询数据源指标 |
 
 ## 3. 独立认证中心路由
 
@@ -506,24 +507,38 @@
 1. 新增、删除或修改端点时，同时更新本文件中的方法、完整路径、Router、Handler 方法和认证说明。
 2. 路由路径以源码最终拼接结果记录，不保留无法直接调用的 `BASE_PATH + "/..."` 表达式。
 3. 具体权限码应以 Handler 上实际存在的 `@RequirePermission` 等注解为准；仅凭 `/admin-api` 前缀不得推断权限码。
-4. 认证中心路由和主应用路由分别维护，不能因为路径相似而合并。
+4. 认证中心路由和 system 域路由分别维护，不能因为路径相似而合并。
 5. 路由行为发生变化后，应运行 `scripts/ci/check-doc-consistency.sh`，另做方法、完整路径、运行边界及 Handler 映射的集合比对；该脚本只检查本文件存在性，不能证明路由完整。涉及代码时根据需要运行 Spotless 和项目测试。
 
 ### 4.4 核对范围
 
-当前生产业务清单包含 340 条方法与路径注册：主应用 272 条，独立认证中心 68 条，来自 27 个生产业务路由定义文件。Keycloak 的 6 条条件装配路由包含在主应用计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量。
+当前清单登记 336 条方法与路径注册：system 域（`apex-system-service` 兜底 `/api/v1/**`、`/admin-api/v1/**`）273 条，独立认证中心（`apex-auth-service`）63 条，来自本文列出的 36 个 Router 类。Keycloak 的 6 条条件装配路由包含在 system 域计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量。
+
+> 计数口径：仅为本文表格行数，用于快速核对文档自身完整性；新增或删除端点时应同步更新本表，路由完整性以各 Router 源码为准。
 
 ## 5. 主要源码索引
 
-- 主应用核心路由：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java`
-- 工作流路由：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/WorkflowRouter.java`
-- OAuth2 路由：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/OAuth2RouterConfig.java`
-- Keycloak 路由：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/KeycloakRouterConfig.java`
-- 主应用 Office 子路由：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/office/`
-- 认证中心认证路由：`apex-auth-center/src/main/java/com/apex/scaffold/authcenter/interfaces/router/AuthenticationRouter.java`
-- 认证中心 MFA/IP 路由：`apex-auth-center/src/main/java/com/apex/scaffold/authcenter/config/AuthCenterRouterConfig.java`
-- 认证中心角色、权限和会话路由：`apex-auth-center/src/main/java/com/apex/scaffold/authcenter/interfaces/router/`
-- 主应用认证配置：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/AuthConfigRouter.java`
-- 认证中心配置及审计：`apex-auth-center/src/main/java/com/apex/scaffold/authcenter/interfaces/router/AuthConfigRouter.java`、`AuditLogRouter.java`
-- 主应用安全规则：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/SecurityConfig.java`、`apex-common/src/main/java/com/apex/scaffold/common/constant/SystemConstants.java`
-- 认证中心安全规则：`apex-auth-center/src/main/java/com/apex/scaffold/authcenter/config/AuthCenterConfig.java`
+system 域（`apex-system-service` 装配，业务实现在 `apex-system`）：
+
+- 路由包：`apex-system/src/main/java/com/apex/scaffold/interfaces/router/`
+- 用户与认证路由：`PublicApiRouter.java`、`CaptchaRouter.java`、`AuthConfigRouter.java`
+- 后台用户与 RBAC 路由：`UserAdminRouter.java`、`RbacRouter.java`
+- 配置、字典、搜索、日志路由：`ConfigRouter.java`、`SearchRouter.java`、`LogRouter.java`
+- 任务与数据库配置路由：`JobRouter.java`、`DatabaseConfigRouter.java`
+- 监控、在线用户与导出：`MonitorRouter.java`、`ExportRouter.java`
+- OAuth2 与 Keycloak 路由配置：`apex-system/src/main/java/com/apex/scaffold/interfaces/config/OAuth2RouterConfig.java`、`KeycloakRouterConfig.java`
+- 安全规则：`apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityConfig.java`、`apex-common/src/main/java/com/apex/scaffold/common/constant/SystemConstants.java`
+
+认证中心（`apex-auth-service`）：
+
+- 认证、MFA 与 OAuth2 端点：`apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/`
+- MFA 与 IP 访问控制路由装配：`apex-auth-service/src/main/java/com/apex/scaffold/authservice/config/AuthCenterRouterConfig.java`
+- 配置及审计：同目录下 `AuthConfigRouter.java`、`AuditLogRouter.java`
+- 安全规则：`apex-auth-service/src/main/java/com/apex/scaffold/authservice/config/AuthCenterConfig.java`
+
+其他业务服务：
+
+- 工作流路由：`apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/`（`WorkflowRouter.java`、`WorkflowDefinitionRouter.java`）
+- 文件路由：`apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/`
+- 办公路由：`apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/`（含 `office/` 子包）
+- 集成路由：`apex-integration/src/main/java/com/apex/scaffold/integration/`

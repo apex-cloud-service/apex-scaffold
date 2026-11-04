@@ -26,7 +26,7 @@
 
 ## 2. 范围内的 Maven 模块
 
-根 POM 聚合 31 个模块。交付相关模块按职责分组如下，完整依赖关系见 [README 模块结构](../../../README.md#模块结构)。
+根 POM 聚合 34 个模块。交付相关模块按职责分组如下，完整依赖关系见 [README 模块结构](../../../README.md#模块结构)。
 
 | 分类 | 模块 | 是否随交付包发布 |
 | --- | --- | --- |
@@ -36,16 +36,17 @@
 | 兼容聚合 | `apex-infrastructure` | 作为依赖（旧坐标） |
 | 跨服务契约 | `apex-api-contract` | 作为依赖 |
 | 服务父 POM | `apex-services-bom` | 仅构建期 |
-| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file` | 作为依赖 |
-| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service` | **可执行 jar** |
+| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration` | 作为依赖 |
+| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service` | **可执行 jar** |
 | 服务增强 | `apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter`、`apex-job-service`、`apex-masking-service` | jar（前两者为依赖，后两者可选部署） |
 | 对象存储 | `apex-storage-spring-boot-starter` | 作为依赖 |
 | 授权 | `apex-license-spring-boot-starter` | 作为依赖 |
 | 授权工具 | `apex-license-tools` | **不发布**（卖方专属） |
 | 示例与工具 | `apex-example`、`apex-generator` | 示例 jar / 构建工具 |
+| 组合部署 | `apex-boot-all` | 可作为单体包发布（可选） |
 | 运维工具 | `apex-tools-deployment` | **不发布**（离线运维用） |
 
-> 发布脚本实际打包的服务清单固定为网关与五个业务服务，见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。
+> 发布脚本实际打包的服务清单为网关与六个业务服务，见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。
 
 ---
 

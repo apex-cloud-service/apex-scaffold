@@ -45,7 +45,10 @@ class OpenApiScopeGatewayFilterTest {
         private final boolean fail;
 
         StubCapabilityClient(Map<String, Boolean> results, boolean fail) {
-            super(new TenantCapabilityProperties());
+            super(
+                    new TenantCapabilityProperties(),
+                    new com.apex.scaffold.common.internal.InternalAuthProperties(),
+                    null);
             this.results = results;
             this.fail = fail;
         }
@@ -404,7 +407,8 @@ class OpenApiScopeGatewayFilterTest {
         void shouldSkipCapabilityGateWhenDisabled() {
             TenantCapabilityProperties properties = new TenantCapabilityProperties();
             properties.setEnabled(false);
-            TenantCapabilityClient disabled = new TenantCapabilityClient(properties) {};
+            TenantCapabilityClient disabled = new TenantCapabilityClient(
+                    properties, new com.apex.scaffold.common.internal.InternalAuthProperties(), null) {};
             filter = new OpenApiScopeGatewayFilter(disabled);
             MockServerWebExchange exchange = exchangeWith(
                     HttpMethod.GET, "/open-api/files/x", claims(appClaims("open:file:read")), FILE_METADATA);
