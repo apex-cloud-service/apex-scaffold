@@ -14,16 +14,55 @@ global:
 rule_files:
   - alert-rules.yml
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
 scrape_configs:
-  - job_name: apex-scaffold
+  # 网关与六个业务服务：宿主机运行时按各自业务端口抓取；容器栈内改为服务名。
+  # system 的管理端口为 8083（业务 8082），integration 管理端口 8097（业务 8094）。
+  - job_name: apex-gateway
     metrics_path: /actuator/prometheus
-    scrape_interval: 15s
     static_configs:
-      - targets:
-          - "host.containers.internal:8081"
-        labels:
-          application: apex-scaffold
-          module: interfaces
+      - targets: ["host.containers.internal:8080"]
+        labels: {application: apex-scaffold, module: gateway}
+
+  - job_name: apex-auth-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.containers.internal:8081"]
+        labels: {application: apex-scaffold, module: auth-service}
+
+  - job_name: apex-system-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.containers.internal:8083"]
+        labels: {application: apex-scaffold, module: system-service}
+
+  - job_name: apex-workflow-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.containers.internal:8093"]
+        labels: {application: apex-scaffold, module: workflow-service}
+
+  - job_name: apex-office-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.containers.internal:8084"]
+        labels: {application: apex-scaffold, module: office-service}
+
+  - job_name: apex-file-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.containers.internal:8085"]
+        labels: {application: apex-scaffold, module: file-service}
+
+  - job_name: apex-integration-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.containers.internal:8097"]
+        labels: {application: apex-scaffold, module: integration-service}
 
   - job_name: apex-sentinel
     metrics_path: /metrics
@@ -35,7 +74,7 @@ scrape_configs:
           application: apex-scaffold
           component: sentinel
 
-  # Blackbox Exporter 探测宿主机应用健康端点。
+  # Blackbox Exporter 探测宿主机应用健康端点（网关与六个业务服务）。
   - job_name: apex-scaffold-health
     metrics_path: /probe
     params:
@@ -43,7 +82,13 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
+          - "http://host.containers.internal:8080/actuator/health"
           - "http://host.containers.internal:8081/actuator/health"
+          - "http://host.containers.internal:8083/actuator/health"
+          - "http://host.containers.internal:8093/actuator/health"
+          - "http://host.containers.internal:8084/actuator/health"
+          - "http://host.containers.internal:8085/actuator/health"
+          - "http://host.containers.internal:8097/actuator/health"
         labels:
           application: apex-scaffold
     relabel_configs:
@@ -59,7 +104,7 @@ scrape_configs:
     scrape_interval: 30s
     static_configs:
       - targets:
-          - "grafana:3200"
+          - "grafana:3000"
 
   - job_name: zipkin
     metrics_path: /prometheus

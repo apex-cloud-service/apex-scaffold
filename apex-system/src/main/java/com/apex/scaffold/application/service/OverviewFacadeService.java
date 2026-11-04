@@ -53,10 +53,16 @@ public class OverviewFacadeService {
     private final ConcurrentHashMap<String, CachedOverview> cache = new ConcurrentHashMap<>();
 
     public OverviewFacadeService(
-            OverviewProperties properties, ObjectMapper objectMapper, WebClient.Builder webClientBuilder) {
+            OverviewProperties properties,
+            ObjectMapper objectMapper,
+            WebClient.Builder webClientBuilder,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner internalServiceSigner) {
         this.properties = properties;
         this.objectMapper = objectMapper;
-        this.webClient = webClientBuilder.build();
+        this.webClient = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        webClientBuilder, internalAuthProperties, internalServiceSigner)
+                .build();
     }
 
     /**

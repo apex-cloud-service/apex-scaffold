@@ -55,8 +55,24 @@ public class RevocationCacheService implements InitializingBean, DisposableBean 
      * @param properties 撤销流配置
      */
     public RevocationCacheService(RevocationProperties properties) {
+        this(properties, new com.apex.scaffold.common.internal.InternalAuthProperties(), null);
+    }
+
+    /**
+     * 构造撤销流缓存（带内部调用签名）。
+     *
+     * @param properties 撤销流配置
+     * @param internalAuthProperties 内部认证配置
+     * @param signer 内部签名器；未配置时不签名
+     */
+    public RevocationCacheService(
+            RevocationProperties properties,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner signer) {
         this.properties = properties;
-        this.webClient = WebClient.builder().build();
+        this.webClient = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        WebClient.builder(), internalAuthProperties, signer)
+                .build();
         long ttlSeconds = Math.max(60, 2 * Math.max(5, properties.getPullIntervalSeconds()));
         this.retentionMillis = ttlSeconds * 1000L;
     }

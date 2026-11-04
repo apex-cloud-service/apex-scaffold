@@ -57,12 +57,17 @@ class CapabilityUsageServiceTest {
     @BeforeEach
     void setUp() {
         CapabilityUsageProperties properties = new CapabilityUsageProperties();
-        metricClient = new CapabilityMetricClient(properties, new OverviewProperties()) {
-            @Override
-            public Mono<Long> fetch(String capability, String tenantId) {
-                return stubMetric(capability, tenantId);
-            }
-        };
+        metricClient =
+                new CapabilityMetricClient(
+                        properties,
+                        new OverviewProperties(),
+                        new com.apex.scaffold.common.internal.InternalAuthProperties(),
+                        null) {
+                    @Override
+                    public Mono<Long> fetch(String capability, String tenantId) {
+                        return stubMetric(capability, tenantId);
+                    }
+                };
         capabilityUsageService = new CapabilityUsageService(capabilityUsageQueryRepository, properties, metricClient);
     }
 
@@ -134,6 +139,40 @@ class CapabilityUsageServiceTest {
                     assertThat(page.getList().get(0).getStorageUsageBytes()).isNull();
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("未配置调用映射但已登记的能力应返回零调用行并补充存量指标")
+    void queryUsage_catalogCapabilityWithoutMapping_zeroRowWithStock() {
+        metrics.put("iot-device:T001", 7L);
+
+        StepVerifier.create(capabilityUsageService.queryUsage("T001", "iot-device", null, null, 1, 20))
+                .assertNext(page -> {
+                    assertThat(page.getTotal()).isEqualTo(1L);
+                    assertThat(page.getList()).hasSize(1);
+                    assertThat(page.getList().get(0).getCallCount()).isZero();
+                    assertThat(page.getList().get(0).getDeviceCount()).isEqualTo(7L);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("平台全量视角下未配置映射的能力不生成行")
+    void queryUsage_catalogCapabilityWithoutMapping_platformView() {
+        StepVerifier.create(capabilityUsageService.queryUsage(null, "iot-device", null, null, 1, 20))
+                .assertNext(page -> assertThat(page.getList()).isEmpty())
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("目录中已登记但未通过目录校验的能力编码应拒绝")
+    void queryUsage_catalogUnknownCapability() {
+        StepVerifier.create(capabilityUsageService.queryUsage("T001", "not-in-catalog", null, null, 1, 20))
+                .expectErrorSatisfies(error -> assertThat(error)
+                        .isInstanceOf(BusinessException.class)
+                        .extracting(e -> ((BusinessException) e).getCode())
+                        .isEqualTo(ResultCode.PARAM_ERROR.getCode()))
+                .verify();
     }
 
     @Test

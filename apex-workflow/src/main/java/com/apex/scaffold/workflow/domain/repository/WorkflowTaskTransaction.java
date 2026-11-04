@@ -89,5 +89,15 @@ public interface WorkflowTaskTransaction {
          * @return 受影响行数
          */
         int updateInstance(ProcessInstance instance);
+
+        /**
+         * 在当前事务内追加待投递领域事件。
+         *
+         * <p>实现必须使用本事务的同一 JDBC 连接，保证业务写入与事件落箱原子。
+         * 事务回滚时事件一并回滚，不会出现"业务失败但事件已发出"。
+         *
+         * @param event 待投递事件
+         */
+        void appendEvent(com.apex.scaffold.common.event.AbstractDomainEvent event);
     }
 }

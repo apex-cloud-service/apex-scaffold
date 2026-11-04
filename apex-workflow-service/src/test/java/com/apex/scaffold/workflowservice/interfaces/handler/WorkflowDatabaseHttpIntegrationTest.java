@@ -334,7 +334,9 @@ class WorkflowDatabaseHttpIntegrationTest {
                 jdbc.getDataSource(),
                 racing,
                 AopTestUtils.<ProcessInstanceRepositoryImpl>getUltimateTargetObject(instances),
-                AopTestUtils.<WorkflowDefinitionRepositoryImpl>getUltimateTargetObject(definitions));
+                AopTestUtils.<WorkflowDefinitionRepositoryImpl>getUltimateTargetObject(definitions),
+                new com.apex.scaffold.workflow.infrastructure.persistence.repository.JdbcWorkflowEventOutbox(),
+                false);
     }
 
     @Test

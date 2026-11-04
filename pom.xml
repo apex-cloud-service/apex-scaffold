@@ -75,7 +75,8 @@
     <xxl-job.version>3.1.1</xxl-job.version>
     <seata.version>2.2.0</seata.version>
     <micrometer.version>1.14.1</micrometer.version>
-    <flyway.version>10.15.0</flyway.version>
+    <!-- Flyway 11.15.0 起 MySQL 支持上限提升到 9.4，可消除 MySQL 9.0 的升级建议告警；11.x 与 Spring Boot 3.5 自动配置 API 对齐。 -->
+    <flyway.version>11.20.3</flyway.version>
     <mybatis.version>3.0.4</mybatis.version>
     <reactor-core.version>3.6.13</reactor-core.version>
     <commons-pool2.version>2.12.0</commons-pool2.version>

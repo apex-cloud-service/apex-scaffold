@@ -395,6 +395,10 @@ source scripts/build/init-build-env.sh
 mvnd -B -pl apex-tools-deployment -am verify
 bash scripts/utils/local-deployment.sh compose --env-file .env
 
+# 发布包内的 security-key-check 默认挂载 tools/local-deployment.jar；
+# 直接使用仓库源码启动 Compose 时，需指向模块产物：
+export APEX_DEPLOY_TOOL_JAR="$PWD/apex-tools-deployment/target/local-deployment.jar"
+
 # 3. 先创建观测网络，再构建并启动应用栈
 podman-compose -p apex-infra -f podman-compose.infra.yml up -d skywalking-oap skywalking-ui elasticsearch kibana filebeat
 podman-compose -f podman-compose.yml up -d --build

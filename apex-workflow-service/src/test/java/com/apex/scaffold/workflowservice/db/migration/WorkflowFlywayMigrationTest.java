@@ -58,8 +58,13 @@ class WorkflowFlywayMigrationTest {
     private static final Set<String> BUSINESS_TABLES =
             Set.of("wf_workflow_definition", "wf_process_instance", "wf_task", "wf_approval_record");
 
-    /** 仅存在于 Flyway 迁移、不出现在 H2 basic-schema 的表（Seata AT 的 undo_log）。 */
-    private static final Set<String> MIGRATION_ONLY_TABLES = Set.of("undo_log");
+    /**
+     * 仅存在于 Flyway 迁移、不出现在 H2 basic-schema 的表。
+     *
+     * <p>{@code undo_log} 属于 Seata AT；{@code sys_domain_event_outbox} 是工作流事件与
+     * 业务写同事务落箱的可靠投递表，basic 档关闭 Outbox 时不需要它。
+     */
+    private static final Set<String> MIGRATION_ONLY_TABLES = Set.of("undo_log", "sys_domain_event_outbox");
 
     /** 所有表必须具备的通用审计列（继承 BasePO，源码事实：id/create_time/update_time/deleted）。 */
     private static final Set<String> AUDIT_COLUMNS = Set.of("id", "create_time", "update_time", "deleted");

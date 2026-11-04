@@ -102,8 +102,8 @@ ON CONFLICT (id) DO UPDATE SET menu_name = EXCLUDED.menu_name, parent_id = EXCLU
 -- ============================================================
 -- 5. 授予平台 ADMIN 角色
 -- ============================================================
-INSERT INTO sys_role_permission (role_id, permission_id)
-SELECT r.id, p.id
+INSERT INTO sys_role_permission (id, role_id, permission_id)
+SELECT 500000 + p.id, r.id, p.id
 FROM sys_role r
 CROSS JOIN sys_permission p
 WHERE r.code = 'ADMIN' AND r.deleted = 0

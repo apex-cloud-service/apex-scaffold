@@ -58,14 +58,27 @@ public class RemoteTenantStatusAdapter implements TenantStatusPort {
      * @param cacheSeconds 判定缓存秒数
      * @param timeoutMillis 单次拉取超时
      */
+    /**
+     * 构造适配器。
+     *
+     * @param baseUrl 租户中心内部基址（主应用）；空 = 校验跳过
+     * @param cacheSeconds 判定缓存秒数
+     * @param timeoutMillis 单次拉取超时
+     * @param internalAuthProperties 内部认证配置
+     * @param internalServiceSigner 内部签名器；未配置时不签名
+     */
     public RemoteTenantStatusAdapter(
             @Value("${apex.tenant-check.base-url:}") String baseUrl,
             @Value("${apex.tenant-check.cache-seconds:60}") long cacheSeconds,
-            @Value("${apex.tenant-check.timeout-millis:3000}") long timeoutMillis) {
+            @Value("${apex.tenant-check.timeout-millis:3000}") long timeoutMillis,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner internalServiceSigner) {
         this.baseUrl = baseUrl == null ? "" : baseUrl.trim();
         this.cacheMillis = Math.max(5, cacheSeconds) * 1000L;
         this.timeoutMillis = Math.max(500, timeoutMillis);
-        this.webClient = WebClient.builder().build();
+        this.webClient = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        WebClient.builder(), internalAuthProperties, internalServiceSigner)
+                .build();
         if (this.baseUrl.isBlank()) {
             log.info("租户认证期校验未配置租户中心地址（apex.tenant-check.base-url 为空），登录前置校验跳过");
         }

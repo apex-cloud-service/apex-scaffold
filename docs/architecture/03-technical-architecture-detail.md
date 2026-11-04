@@ -149,7 +149,7 @@ spring:
 | **Spring Boot** | 3.5.15 | 应用框架 | Java 21 + WebFlux |
 | **MyBatis-Plus** | 3.5.10.1 | ORM 框架 | LambdaQuery + 逻辑删除 |
 | **Resilience4j** | 2.2.0 | 弹性库 | CircuitBreaker + RateLimiter |
-| **Flyway** | 10.15.0 | 数据库迁移 | V1-V20 版本化脚本 |
+| **Flyway** | 11.20.3 | 数据库迁移 | V1-V20 版本化脚本 |
 | **DDD 四层** | - | 架构模式 | 接口/应用/领域/基础设施 |
 | **AOP / Aspect** | - | 切面编程 | 审计/数据权限/租户拦截 |
 

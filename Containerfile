@@ -74,6 +74,17 @@ COPY apex-job-spring-boot-starter/pom.xml apex-job-spring-boot-starter/
 COPY apex-seata-spring-boot-starter/pom.xml apex-seata-spring-boot-starter/
 COPY apex-job-service/pom.xml apex-job-service/
 COPY apex-masking-service/pom.xml apex-masking-service/
+# 根 reactor 全部模块的 POM 都必须可见，否则 dependency:go-offline 解析反应堆失败。
+COPY apex-infrastructure-persistence/pom.xml apex-infrastructure-persistence/
+COPY apex-infrastructure-cache/pom.xml apex-infrastructure-cache/
+COPY apex-infrastructure-messaging/pom.xml apex-infrastructure-messaging/
+COPY apex-infrastructure-remote/pom.xml apex-infrastructure-remote/
+COPY apex-infrastructure-integration/pom.xml apex-infrastructure-integration/
+COPY apex-storage-spring-boot-starter/pom.xml apex-storage-spring-boot-starter/
+COPY apex-integration/pom.xml apex-integration/
+COPY apex-integration-service/pom.xml apex-integration-service/
+COPY apex-boot-all/pom.xml apex-boot-all/
+COPY apex-tools-deployment/pom.xml apex-tools-deployment/
 
 COPY .sdkmanrc .
 COPY scripts/build/init-build-env.sh scripts/build/init-build-env.sh

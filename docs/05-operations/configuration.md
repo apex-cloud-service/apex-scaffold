@@ -994,7 +994,19 @@ spring:
 
 ### 日志与审计容量边界
 
-主应用配置位于 `apex-interfaces/src/main/resources/logback-spring.xml`，认证中心配置位于 `apex-auth-center/src/main/resources/logback-spring.xml`。控制台与文件输出使用有界 `AsyncAppender`：每个队列最多 1024 条，剩余容量低于 200 时可丢弃低级别事件，`neverBlock=true` 避免日志输出阻塞请求线程。队列满时 WARN/ERROR 也可能丢失；关闭时最多等待 2000ms 刷新，因此运行日志不能作为可靠审计存储。
+主应用日志配置位于各运行模块的 `src/main/resources/logback-spring.xml`，认证服务配置位于 `apex-auth-service/src/main/resources/logback-spring.xml`。控制台与文件输出使用有界 `AsyncAppender`：每个队列最多 1024 条，剩余容量低于 200 时可丢弃低级别事件，`neverBlock=true` 避免日志输出阻塞请求线程。队列满时 WARN/ERROR 也可能丢失；关闭时最多等待 2000ms 刷新，因此运行日志不能作为可靠审计存储。
+
+### 内部服务调用签名（/internal/v1/**）
+
+集群内契约接口统一要求 HMAC 签名（`apex.internal-auth.*`）：请求需携带 `X-Internal-Service`、
+`X-Internal-Timestamp`、`X-Internal-Nonce`、`X-Internal-Signature`（可选 `X-Internal-Tenant`），
+签名串为 `service:timestamp:nonce:method:path:tenant`，时间窗默认 60 秒且 nonce 防重放。
+共享密钥经 `APEX_INTERNAL_AUTH_SECRET` 注入，全部服务必须一致；启用但未配置密钥时内部
+接口一律 503 拒绝。默认豁免 EMQX HTTP 认证/ACL 钩子（设备凭据自行约束），其余豁免须在
+`apex.internal-auth.exempt-paths` 显式声明并说明外部调用方。仅本地开发可置
+`APEX_INTERNAL_AUTH_ENABLED=false` 关闭。
+
+工作流事件的可靠投递表为 `sys_domain_event_outbox`（V6 成对迁移），与业务写在同事务落箱；`apex.events.outbox.enabled=false`（basic 档默认）时不落箱，仅保留本地通道语义。
 
 主应用 `LoggingFilter` 每个请求只记录完成或异常事件，不输出查询参数、请求体及异常消息；路径最多 256 字符，标识和 IP 最多 64 字符，User-Agent 最多 80 字符，Referer 删除查询与片段后最多 120 字符。`performance` profile 关闭此请求日志。认证配置及审计查询日志使用 DEBUG，查询标识在输出前限长并移除控制字符。
 

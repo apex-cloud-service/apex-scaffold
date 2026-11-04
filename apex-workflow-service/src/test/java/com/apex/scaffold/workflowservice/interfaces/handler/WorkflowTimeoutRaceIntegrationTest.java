@@ -149,7 +149,9 @@ class WorkflowTimeoutRaceIntegrationTest {
                 jdbc.getDataSource(),
                 controlled,
                 AopTestUtils.<ProcessInstanceRepositoryImpl>getUltimateTargetObject(instances),
-                AopTestUtils.<WorkflowDefinitionRepositoryImpl>getUltimateTargetObject(definitions));
+                AopTestUtils.<WorkflowDefinitionRepositoryImpl>getUltimateTargetObject(definitions),
+                new com.apex.scaffold.workflow.infrastructure.persistence.repository.JdbcWorkflowEventOutbox(),
+                false);
         WorkflowService competing = new WorkflowService(definitions, instances, controlled, transactions);
         var left = handler(first, competing).scanTimeoutTasks().materialize().toFuture();
         var right = handler(second, competing).scanTimeoutTasks().materialize().toFuture();

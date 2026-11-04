@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  *   <li>{@code apex.overview.sources.file}：文件服务基址（内部统计 {@code /internal/v1/file/stats}）</li>
  *   <li>{@code apex.overview.sources.workflow}：工作流服务基址（内部统计 {@code /internal/v1/workflow/stats}）</li>
  *   <li>{@code apex.overview.sources.integration}：集成服务基址（内部统计 {@code /internal/v1/iot/devices/stats}；
- *       当前 reactor 暂无独立集成运行模块，缺省地址不可达时该源按 DEGRADED 降级）</li>
+ *       缺省指向 8094 业务端口，部署时按实际拓扑覆盖）</li>
  *   <li>{@code apex.overview.cache-ttl-seconds}：聚合结果短 TTL 缓存秒数（默认 30）</li>
  *   <li>{@code apex.overview.timeout-millis}：单源调用超时毫秒数（默认 3000）</li>
  * </ul>
@@ -34,7 +34,7 @@ public class OverviewProperties {
     private Map<String, String> sources = new LinkedHashMap<>(Map.of(
             "file", "http://127.0.0.1:8085",
             "workflow", "http://127.0.0.1:8093",
-            "integration", "http://127.0.0.1:8086",
+            "integration", "http://127.0.0.1:8094",
             "office", "http://127.0.0.1:8084"));
 
     /** 聚合结果短 TTL 缓存秒数。 */

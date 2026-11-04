@@ -47,7 +47,12 @@ class OverviewFacadeServiceTest {
         private final AtomicReference<String> lastAuthorization = new AtomicReference<>();
 
         StubFacadeService(OverviewProperties properties) {
-            super(properties, objectMapperStub.mapper(), WebClient.builder());
+            super(
+                    properties,
+                    objectMapperStub.mapper(),
+                    WebClient.builder(),
+                    new com.apex.scaffold.common.internal.InternalAuthProperties(),
+                    null);
         }
 
         @Override

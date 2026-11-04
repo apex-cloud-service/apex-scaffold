@@ -48,4 +48,22 @@ public abstract class AbstractDomainEvent extends BaseDomainEvent implements jav
     protected AbstractDomainEvent(String eventType, String traceId, String eventId) {
         super(eventType, traceId, eventId);
     }
+
+    /**
+     * 从持久化信封重建事件元数据。
+     *
+     * <p>跨服务 JSON 反序列化时，子类 {@code @JsonCreator} 只接收业务负载，无法通过构造函数
+     * 回填事件 ID、发生时间与租户；此方法在反序列化后恢复信封字段，保证消费端看到稳定的
+     * {@code eventId} 与租户（幂等与租户隔离均依赖这两项）。
+     *
+     * @param eventId   原始事件 ID
+     * @param createdAt 原始发生时间
+     * @param traceId   原始追踪号
+     * @param eventType 事件类型
+     * @param tenantId  原始租户
+     */
+    public void restoreEnvelope(
+            String eventId, java.time.LocalDateTime createdAt, String traceId, String eventType, String tenantId) {
+        super.restoreEnvelope(eventId, createdAt, traceId, eventType, tenantId);
+    }
 }

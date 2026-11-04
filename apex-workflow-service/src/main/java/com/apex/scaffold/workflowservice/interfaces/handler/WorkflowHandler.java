@@ -3,7 +3,6 @@ package com.apex.scaffold.workflowservice.interfaces.handler;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.TenantAware;
 import com.apex.scaffold.common.dto.PageResponse;
-import com.apex.scaffold.common.event.AbstractDomainEvent;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.contract.event.TaskAssignedEvent;
 import com.apex.scaffold.contract.event.TaskCompletedEvent;
@@ -11,7 +10,6 @@ import com.apex.scaffold.contract.event.WorkflowInstanceStartedEvent;
 import com.apex.scaffold.workflow.application.query.WorkflowQueryService;
 import com.apex.scaffold.workflow.application.query.WorkflowStatisticsService;
 import com.apex.scaffold.workflow.application.service.WorkflowService;
-import com.apex.scaffold.workflowservice.infrastructure.event.WorkflowEventPublisher;
 import com.apex.scaffold.workflowservice.interfaces.dto.workflow.*;
 import com.apex.scaffold.workflowservice.interfaces.security.AuthenticatedUser;
 import com.apex.scaffold.workflowservice.interfaces.util.RequestHandlerUtil;
@@ -154,7 +152,6 @@ public class WorkflowHandler {
     private final WorkflowService workflowService;
     private final WorkflowQueryService workflowQueryService;
     private final WorkflowStatisticsService workflowStatisticsService;
-    private final WorkflowEventPublisher workflowEventPublisher;
     private final RequestHandlerUtil requestHandlerUtil;
 
     /**
@@ -163,19 +160,16 @@ public class WorkflowHandler {
      * @param workflowService 工作流服务
      * @param workflowQueryService 工作流查询服务
      * @param workflowStatisticsService 工作流统计服务
-     * @param workflowEventPublisher 工作流领域事件发布器
      * @param requestHandlerUtil 请求处理工具（参数校验与响应构建）
      */
     public WorkflowHandler(
             WorkflowService workflowService,
             WorkflowQueryService workflowQueryService,
             WorkflowStatisticsService workflowStatisticsService,
-            WorkflowEventPublisher workflowEventPublisher,
             RequestHandlerUtil requestHandlerUtil) {
         this.workflowService = workflowService;
         this.workflowQueryService = workflowQueryService;
         this.workflowStatisticsService = workflowStatisticsService;
-        this.workflowEventPublisher = workflowEventPublisher;
         this.requestHandlerUtil = requestHandlerUtil;
     }
 
@@ -223,15 +217,18 @@ public class WorkflowHandler {
 
         return request.bodyToMono(StartProcessInstanceRequest.class)
                 .flatMap(requestHandlerUtil::validateAndThrow)
-                .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
-                        .startProcessInstance(workflowCode, req.getBusinessKey(), userId, req.getContextJson())
-                        .flatMap(instance -> publish(new WorkflowInstanceStartedEvent(
+                .flatMap(req -> getCurrentUserId()
+                        .flatMap(userId -> workflowService.startProcessInstance(
+                                workflowCode,
+                                req.getBusinessKey(),
+                                userId,
+                                req.getContextJson(),
+                                instance -> new WorkflowInstanceStartedEvent(
                                         instance.getId(),
                                         workflowCode,
                                         instance.getBusinessKey(),
                                         instance.getInitiatorId(),
-                                        instance.getStartTime()))
-                                .thenReturn(instance))))
+                                        instance.getStartTime()))))
                 .flatMap(instance -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(instance)));
@@ -329,9 +326,18 @@ public class WorkflowHandler {
 
         return request.bodyToMono(CompleteTaskRequest.class)
                 .flatMap(requestHandlerUtil::validateAndThrow)
-                .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
-                        .completeTask(taskId, userId, req.getComment())
-                        .then(Mono.defer(() -> publishTaskCompleted(taskId, userId, req.getComment())))))
+                .flatMap(req -> getCurrentUserId()
+                        .flatMap(userId -> workflowService.completeTask(
+                                taskId,
+                                userId,
+                                req.getComment(),
+                                (task, instance) -> new TaskCompletedEvent(
+                                        task.getId(),
+                                        instance.getId(),
+                                        userId,
+                                        TaskCompletedEvent.ACTION_APPROVE,
+                                        req.getComment(),
+                                        LocalDateTime.now()))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -555,9 +561,18 @@ public class WorkflowHandler {
 
         return request.bodyToMono(RollbackTaskRequest.class)
                 .flatMap(requestHandlerUtil::validateAndThrow)
-                .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
-                        .rollbackToNode(taskId, req.getTargetNodeCode(), userId, req.getReason())
-                        .then(Mono.defer(() -> publishTaskAssigned(taskId, userId, userId)))))
+                .flatMap(req -> getCurrentUserId()
+                        .flatMap(userId -> workflowService.rollbackToNode(
+                                taskId,
+                                req.getTargetNodeCode(),
+                                userId,
+                                req.getReason(),
+                                task -> new TaskAssignedEvent(
+                                        task.getId(),
+                                        task.getProcessInstanceId(),
+                                        task.getNodeCode(),
+                                        userId,
+                                        userId))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -606,9 +621,18 @@ public class WorkflowHandler {
 
         return request.bodyToMono(TransferTaskRequest.class)
                 .flatMap(requestHandlerUtil::validateAndThrow)
-                .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
-                        .transferTask(taskId, req.getNewAssigneeId(), userId, req.getReason())
-                        .then(Mono.defer(() -> publishTaskAssigned(taskId, req.getNewAssigneeId(), userId)))))
+                .flatMap(req -> getCurrentUserId()
+                        .flatMap(userId -> workflowService.transferTask(
+                                taskId,
+                                req.getNewAssigneeId(),
+                                userId,
+                                req.getReason(),
+                                task -> new TaskAssignedEvent(
+                                        task.getId(),
+                                        task.getProcessInstanceId(),
+                                        task.getNodeCode(),
+                                        req.getNewAssigneeId(),
+                                        userId))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -657,9 +681,18 @@ public class WorkflowHandler {
 
         return request.bodyToMono(DelegateTaskRequest.class)
                 .flatMap(requestHandlerUtil::validateAndThrow)
-                .flatMap(req -> getCurrentUserId().flatMap(userId -> workflowService
-                        .delegateTask(taskId, req.getDelegateToId(), userId, req.getReason())
-                        .then(Mono.defer(() -> publishTaskAssigned(taskId, req.getDelegateToId(), userId)))))
+                .flatMap(req -> getCurrentUserId()
+                        .flatMap(userId -> workflowService.delegateTask(
+                                taskId,
+                                req.getDelegateToId(),
+                                userId,
+                                req.getReason(),
+                                task -> new TaskAssignedEvent(
+                                        task.getId(),
+                                        task.getProcessInstanceId(),
+                                        task.getNodeCode(),
+                                        req.getDelegateToId(),
+                                        userId))))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
     }
 
@@ -761,72 +794,6 @@ public class WorkflowHandler {
                 .flatMap(req -> getCurrentUserId()
                         .flatMap(userId -> workflowService.resumeInstance(instanceId, userId, req.getReason())))
                 .then(ServerResponse.ok().bodyValue(Result.success()));
-    }
-
-    /**
-     * 在请求链中发布工作流领域事件。
-     *
-     * <p>事件为最终一致的旁路信号，发布失败仅记录告警日志，不阻断主业务流程。
-     * 发送动作由 {@link WorkflowEventPublisher} 内部调度到事件专用线程池执行。
-     *
-     * @param event 待发布的领域事件
-     */
-    private Mono<Void> publish(AbstractDomainEvent event) {
-        return Mono.defer(() -> workflowEventPublisher.publish(event))
-                .doOnSuccess(v -> log.debug("工作流事件已发布: {}", event.getClass().getSimpleName()))
-                .onErrorResume(error -> {
-                    log.warn(
-                            "发布工作流事件失败: type={}, sourceId={}, error: {}",
-                            event.getClass().getSimpleName(),
-                            event.getSourceId(),
-                            error.getMessage());
-                    return Mono.empty();
-                });
-    }
-
-    /**
-     * 发布任务完成事件。
-     *
-     * <p>先按任务 ID 回查任务信息以补充所属流程实例 ID，再发布 {@link TaskCompletedEvent}。
-     * 回查失败或任务不存在时跳过发布，仅记录告警日志。
-     *
-     * @param taskId 任务 ID
-     * @param approverId 审批人账户 ID
-     * @param comment 审批意见
-     */
-    private Mono<Void> publishTaskCompleted(Long taskId, Long approverId, String comment) {
-        return Mono.defer(() -> workflowQueryService.getTaskById(taskId))
-                .flatMap(task -> publish(new TaskCompletedEvent(
-                        taskId,
-                        task.getInstanceId(),
-                        approverId,
-                        TaskCompletedEvent.ACTION_APPROVE,
-                        comment,
-                        LocalDateTime.now())))
-                .onErrorResume(error -> {
-                    log.warn("回查任务信息失败，跳过任务完成事件发布: taskId={}, error: {}", taskId, error.getMessage());
-                    return Mono.empty();
-                });
-    }
-
-    /**
-     * 发布任务分配事件。
-     *
-     * <p>先按任务 ID 回查任务信息以补充所属流程实例 ID 与节点编码，再发布
-     * {@link TaskAssignedEvent}。回查失败或任务不存在时跳过发布，仅记录告警日志。
-     *
-     * @param taskId 任务 ID
-     * @param assigneeId 办理人账户 ID
-     * @param assignedBy 分配人账户 ID
-     */
-    private Mono<Void> publishTaskAssigned(Long taskId, Long assigneeId, Long assignedBy) {
-        return Mono.defer(() -> workflowQueryService.getTaskById(taskId))
-                .flatMap(task -> publish(
-                        new TaskAssignedEvent(taskId, task.getInstanceId(), task.getNodeId(), assigneeId, assignedBy)))
-                .onErrorResume(error -> {
-                    log.warn("回查任务信息失败，跳过任务分配事件发布: taskId={}, error: {}", taskId, error.getMessage());
-                    return Mono.empty();
-                });
     }
 
     /**

@@ -13,6 +13,13 @@
 # ============================================================
 
 apex:
+  internal-auth:
+    # 内部契约（/internal/v1/**）签名校验。共享密钥必须由部署编排注入；
+    # 启用但未配置密钥时一律 503 拒绝。仅本地单测可显式关闭。
+    enabled: ${APEX_INTERNAL_AUTH_ENABLED:true}
+    secret: ${APEX_INTERNAL_AUTH_SECRET:}
+    service-name: apex-file-service
+    allowed-skew-seconds: ${APEX_INTERNAL_AUTH_SKEW_SECONDS:60}
   seata:
     enabled: ${APEX_SEATA_ENABLED:false}
     application-id: apex-file-service

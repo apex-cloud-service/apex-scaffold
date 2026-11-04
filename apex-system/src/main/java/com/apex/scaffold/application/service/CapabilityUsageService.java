@@ -1,5 +1,6 @@
 package com.apex.scaffold.application.service;
 
+import com.apex.scaffold.application.capability.CapabilityCatalog;
 import com.apex.scaffold.application.config.CapabilityUsageProperties;
 import com.apex.scaffold.application.dto.usage.CapabilityUsageDTO;
 import com.apex.scaffold.common.context.TenantContext;
@@ -89,11 +90,10 @@ public class CapabilityUsageService {
      */
     private Mono<PageResponse<CapabilityUsageDTO>> doQuery(
             String scopedTenant, String capability, LocalDate from, LocalDate to, Integer pageNum, Integer pageSize) {
-        List<String> uriPrefixes =
-                capability == null ? null : properties.getMappings().get(capability);
-        if (uriPrefixes == null || uriPrefixes.isEmpty()) {
+        if (CapabilityCatalog.find(capability) == null) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "未知能力编码: " + capability));
         }
+        List<String> uriPrefixes = properties.getMappings().getOrDefault(capability, List.of());
         LocalDate effectiveTo = to != null ? to : LocalDate.now();
         LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(DEFAULT_RANGE_DAYS - 1L);
         if (effectiveFrom.isAfter(effectiveTo)) {
@@ -107,9 +107,11 @@ public class CapabilityUsageService {
         int effectivePageSize = pageSize != null ? Math.min(Math.max(pageSize, 1), MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
         LocalDateTime fromTime = effectiveFrom.atStartOfDay();
         LocalDateTime toTime = effectiveTo.atTime(LocalTime.MAX);
-        Mono<PageResponse<CapabilityUsageDTO>> pageMono = capabilityUsageQueryRepository
-                .countCallsByUriPrefixes(uriPrefixes, fromTime, toTime, scopedTenant)
-                .map(rows -> paginate(rows, capability, effectivePageNum, effectivePageSize));
+        Mono<PageResponse<CapabilityUsageDTO>> pageMono = uriPrefixes.isEmpty()
+                ? Mono.just(emptyUsage(scopedTenant, capability, effectivePageNum, effectivePageSize))
+                : capabilityUsageQueryRepository
+                        .countCallsByUriPrefixes(uriPrefixes, fromTime, toTime, scopedTenant)
+                        .map(rows -> paginate(rows, capability, effectivePageNum, effectivePageSize));
         if (scopedTenant == null || scopedTenant.isBlank()) {
             // 平台全量视角：存量维度按租户逐个拉取代价过高，仅返回调用次数
             return pageMono;
@@ -159,6 +161,22 @@ public class CapabilityUsageService {
                 // 未知指标字段：忽略（配置错误由配置评审拦截，不影响用量查询）
             }
         }
+    }
+
+    /**
+     * 单租户查询无调用统计时生成零调用行，保留存量维度展示。
+     *
+     * @param tenantId 租户标识（可空表示平台全量视角）
+     * @param capability 能力编码
+     * @param pageNum 页码
+     * @param pageSize 页大小
+     * @return 单租户为零调用一页；平台视角为空页
+     */
+    private PageResponse<CapabilityUsageDTO> emptyUsage(String tenantId, String capability, int pageNum, int pageSize) {
+        if (tenantId == null || tenantId.isBlank()) {
+            return PageResponse.of(List.of(), 0L, pageNum, pageSize);
+        }
+        return PageResponse.of(List.of(new CapabilityUsageDTO(tenantId, capability, 0L)), 1L, pageNum, pageSize);
     }
 
     /**

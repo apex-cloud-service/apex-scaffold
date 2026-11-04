@@ -73,6 +73,18 @@ x-app-common-environment: &app-common-environment
   NACOS_REGISTER_ENABLED: ${NACOS_REGISTER_ENABLED:-true}
   NACOS_SERVER_ADDR: ${NACOS_SERVER_ADDR:-nacos:8848}
   NACOS_NAMESPACE: ${NACOS_NAMESPACE:-public}
+  # ---------- 内部服务调用签名（/internal/v1/**） ----------
+  # 全部服务必须使用同一密钥；未配置时内部接口一律 503 拒绝。
+  APEX_INTERNAL_AUTH_ENABLED: ${APEX_INTERNAL_AUTH_ENABLED:-true}
+  APEX_INTERNAL_AUTH_SECRET: ${APEX_INTERNAL_AUTH_SECRET:?APEX_INTERNAL_AUTH_SECRET is required}
+  APEX_INTERNAL_AUTH_SKEW_SECONDS: ${APEX_INTERNAL_AUTH_SKEW_SECONDS:-60}
+  # ---------- 中台内部回源（能力守卫 / 跨域聚合 / 计量） ----------
+  # 默认按服务名寻址；单进程或非 Nacos 拓扑应按实际地址覆盖。
+  APEX_SYSTEM_BASE_URL: ${APEX_SYSTEM_BASE_URL:-http://apex-system-service:8082}
+  APEX_OVERVIEW_SOURCES_FILE: ${APEX_OVERVIEW_SOURCES_FILE:-http://apex-file-service:8085}
+  APEX_OVERVIEW_SOURCES_WORKFLOW: ${APEX_OVERVIEW_SOURCES_WORKFLOW:-http://apex-workflow-service:8083}
+  APEX_OVERVIEW_SOURCES_OFFICE: ${APEX_OVERVIEW_SOURCES_OFFICE:-http://apex-office-service:8084}
+  APEX_OVERVIEW_SOURCES_INTEGRATION: ${APEX_OVERVIEW_SOURCES_INTEGRATION:-http://apex-integration-service:8094}
   # ---------- RocketMQ（公共配置提供本地默认地址；业务能力默认关闭） ----------
   # 启用消息能力：设置 ROCKETMQ_NAMESERVER=rocketmq-namesrv:9876、APEX_MQ_CONSUMER_ENABLED=true，并搭配 --profile rocketmq 启动
   ROCKETMQ_NAMESERVER: ${ROCKETMQ_NAMESERVER:-}
@@ -130,7 +142,8 @@ services:
     environment: *security-environment
     command: ["java", "-jar", "/tools/local-deployment.jar", "validate"]
     volumes:
-      - ./apex-tools-deployment/target/local-deployment.jar:/tools/local-deployment.jar:ro
+      # 发布包内路径为 tools/local-deployment.jar；源码构建时回退到模块 target。
+      - ${APEX_DEPLOY_TOOL_JAR:-./tools/local-deployment.jar}:/tools/local-deployment.jar:ro
     network_mode: none
     read_only: true
     cap_drop: ["ALL"]

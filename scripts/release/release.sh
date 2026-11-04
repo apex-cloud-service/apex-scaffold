@@ -45,14 +45,14 @@ esac
 
 source "${ROOT_DIR}/scripts/build/init-build-env.sh"
 
-SERVICES=(apex-system-service apex-auth-service apex-workflow-service apex-office-service apex-file-service apex-gateway)
-SERVICE_MODULES="${(j:,:)SERVICES}"
+SERVICES=(apex-system-service apex-auth-service apex-workflow-service apex-office-service apex-file-service apex-integration-service apex-gateway)
+SERVICE_MODULES="${(j:,:)SERVICES},apex-tools-deployment"
 
 echo "==> [1/3] 构建 ${PROFILE} 版本 (v${VERSION})"
 MAVEN_OPTS="-Xmx1024m" mvnd -o -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests \
   || MAVEN_OPTS="-Xmx1024m" mvnd -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests
 
-# 六个服务在 basic/standard/enterprise 中均属于根 reactor，产物不使用 classifier。
+# 六个业务服务、网关及组合部署包在 basic/standard/enterprise 中均属于根 reactor，产物不使用 classifier。
 SERVICE_JARS=()
 for svc in "${SERVICES[@]}"; do
   jars=("${svc}"/target/"${svc}"-*.jar(N))
@@ -65,8 +65,16 @@ done
 
 echo "==> [2/3] 组装发布目录 ${DIST_DIR}"
 rm -rf "${DIST_DIR}"
-mkdir -p "${DIST_DIR}/docs" "${DIST_DIR}/config/license" "${DIST_DIR}/scripts"
+mkdir -p "${DIST_DIR}/docs" "${DIST_DIR}/config/license" "${DIST_DIR}/scripts" "${DIST_DIR}/tools"
 cp "${SERVICE_JARS[@]}" "${DIST_DIR}/"
+
+# 离线部署校验工具：Compose security-key-check 按包内相对路径挂载，必须随包交付。
+TOOLS_JAR="apex-tools-deployment/target/local-deployment.jar"
+if [[ ! -f "${TOOLS_JAR}" ]]; then
+  echo "缺少部署校验工具 ${TOOLS_JAR}，请在发布构建中包含 apex-tools-deployment" >&2
+  exit 1
+fi
+cp "${TOOLS_JAR}" "${DIST_DIR}/tools/"
 
 # 许可证
 cp LICENSE LICENSE-COMMERCIAL.md "${DIST_DIR}/"

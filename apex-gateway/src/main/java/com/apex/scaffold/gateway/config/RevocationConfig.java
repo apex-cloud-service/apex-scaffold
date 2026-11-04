@@ -26,7 +26,10 @@ public class RevocationConfig {
      */
     @Bean
     @ConditionalOnMissingBean
-    public RevocationCacheService revocationCacheService(RevocationProperties properties) {
-        return new RevocationCacheService(properties);
+    public RevocationCacheService revocationCacheService(
+            RevocationProperties properties,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner signer) {
+        return new RevocationCacheService(properties, internalAuthProperties, signer);
     }
 }

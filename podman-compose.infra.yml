@@ -363,6 +363,28 @@ services:
     networks:
       - apex-infra
 
+  # ---------------- Alertmanager（告警路由与通知） ----------------
+  # 生产必须按 config/monitoring/prometheus/alertmanager.yml 的 receiver 配置可用通知渠道。
+  alertmanager:
+    image: docker.io/prom/alertmanager:v0.27.0
+    container_name: apex-infra-alertmanager
+    volumes:
+      - ./config/monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "9093:9093"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - apex-infra
+
   # ---------------- Grafana（可视化大盘） ----------------
   grafana:
     image: docker.io/grafana/grafana:11.1.0
@@ -407,6 +429,7 @@ volumes:
   es-data:
   filebeat-data:
   prometheus-data:
+  alertmanager-data:
   grafana-data:
 
 networks:

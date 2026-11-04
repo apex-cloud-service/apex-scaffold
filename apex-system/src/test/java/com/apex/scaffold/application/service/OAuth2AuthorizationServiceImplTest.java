@@ -77,6 +77,34 @@ class OAuth2AuthorizationServiceImplTest {
     }
 
     @Test
+    @DisplayName("开放应用已停用时拒绝签发授权码")
+    void generateAuthorizationCode_DisabledClientRejected() {
+        OAuth2RegisteredClientEntity disabled = createTestClient();
+        disabled.setClientSettings("{\"openPlatform.appName\":\"停用应用\",\"openPlatform.status\":\"DISABLED\"}");
+        when(clientRepository.findByClientId("test-client")).thenReturn(Mono.just(disabled));
+
+        StepVerifier.create(authorizationService.generateAuthorizationCode(
+                        "test-client", "user-123", "http://localhost:3000/callback", "read", "xyz", null, null))
+                .expectErrorSatisfies(error ->
+                        assertThat(error).isInstanceOf(BusinessException.class).hasMessageContaining("停用"))
+                .verify();
+    }
+
+    @Test
+    @DisplayName("开放应用已停用时 client_credentials 拒绝签发令牌")
+    void clientCredentials_DisabledClientRejected() {
+        OAuth2RegisteredClientEntity disabled = createTestClient();
+        disabled.setClientSettings("{\"openPlatform.status\":\"DISABLED\"}");
+        when(clientRepository.findByClientId("test-client")).thenReturn(Mono.just(disabled));
+
+        StepVerifier.create(
+                        authorizationService.clientCredentialsGrant("test-client", "$2a$10$encrypted-secret", "read"))
+                .expectErrorSatisfies(error ->
+                        assertThat(error).isInstanceOf(BusinessException.class).hasMessageContaining("停用"))
+                .verify();
+    }
+
+    @Test
     @DisplayName("生成授权码 - 成功")
     void generateAuthorizationCode_Success() {
         String clientId = "test-client";

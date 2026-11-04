@@ -32,13 +32,19 @@ class TenantChangedEventListenerTest {
 
     @BeforeEach
     void setUp() {
-        adapter = new RemoteTenantStatusAdapter("http://tenant-center:8082", 60, 3000) {
-            @Override
-            Mono<Snapshot> fetch(String tenantCode) {
-                boolean disabled = fetchCount.incrementAndGet() > 1;
-                return Mono.just(new Snapshot(true, disabled ? "DISABLED" : "ACTIVE", false));
-            }
-        };
+        adapter =
+                new RemoteTenantStatusAdapter(
+                        "http://tenant-center:8082",
+                        60,
+                        3000,
+                        new com.apex.scaffold.common.internal.InternalAuthProperties(),
+                        null) {
+                    @Override
+                    Mono<Snapshot> fetch(String tenantCode) {
+                        boolean disabled = fetchCount.incrementAndGet() > 1;
+                        return Mono.just(new Snapshot(true, disabled ? "DISABLED" : "ACTIVE", false));
+                    }
+                };
         listener = new TenantChangedEventListener(adapter);
     }
 

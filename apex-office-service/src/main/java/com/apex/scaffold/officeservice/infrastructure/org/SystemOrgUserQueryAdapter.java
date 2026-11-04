@@ -58,9 +58,27 @@ public class SystemOrgUserQueryAdapter implements OfficeOrgUserQueryPort {
      * @param builder    Boot 管理的客户端构建器
      */
     public SystemOrgUserQueryAdapter(SystemOrgUserProperties properties, WebClient.Builder builder) {
+        this(properties, builder, new com.apex.scaffold.common.internal.InternalAuthProperties(), null);
+    }
+
+    /**
+     * 构造适配器（带内部调用签名）。
+     *
+     * @param properties 系统服务内部接口配置
+     * @param builder Boot 管理的客户端构建器
+     * @param internalAuthProperties 内部认证配置
+     * @param internalServiceSigner 内部签名器；未配置时不签名
+     */
+    public SystemOrgUserQueryAdapter(
+            SystemOrgUserProperties properties,
+            WebClient.Builder builder,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner internalServiceSigner) {
         this.properties = properties;
-        this.client = builder.clone()
-                .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(MAX_RESPONSE_BYTES))
+        this.client = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        builder.clone().codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(MAX_RESPONSE_BYTES)),
+                        internalAuthProperties,
+                        internalServiceSigner)
                 .build();
     }
 

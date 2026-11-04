@@ -97,7 +97,31 @@ class OpenApiCapabilityGuardFilterTest {
     }
 
     @Test
-    @DisplayName("开放流量缺可信租户头应 403")
+    @DisplayName("开放路径缺少能力标记头也必须按开放流量校验，不能删头绕过")
+    void shouldNotBypassByDroppingMarkerOnOpenPath() {
+        stubSubscribed = Boolean.FALSE;
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/open-api/file/content")
+                .header("X-Tenant-Id", "tenant-a")
+                .build());
+        filter.filter(exchange, passthrough()).block();
+        assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(403);
+        assertThat(fetchCount.get()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("开放路径声明能力与路由能力不一致时应拒绝")
+    void shouldRejectCapabilityMismatchOnOpenPath() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/open-api/file/content")
+                .header("X-Open-Api-Capability", "workflow")
+                .header("X-Tenant-Id", "tenant-a")
+                .build());
+        filter.filter(exchange, passthrough()).block();
+        assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(403);
+        assertThat(fetchCount.get()).isZero();
+    }
+
+    @Test
+    @DisplayName("开放路径缺少可信租户头应 403")
     void shouldRejectWithoutTenantHeader() {
         MockServerWebExchange exchange = exchangeWith("file-storage", null);
         filter.filter(exchange, passthrough()).block();

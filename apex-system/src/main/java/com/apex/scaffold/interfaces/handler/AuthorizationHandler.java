@@ -8,6 +8,7 @@ import com.apex.scaffold.application.service.PermissionService;
 import com.apex.scaffold.application.service.RoleService;
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.annotation.OperationLog;
+import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.TraceIdUtil;
@@ -183,6 +184,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 角色列表的标准响应
      */
+    @RequirePermission("system:role:list")
     @Operation(operationId = "getAllRoles", summary = "获取所有角色", description = "查询系统中所有已定义的角色列表，用于角色管理界面展示和角色分配选择")
     @ApiResponses({
         @ApiResponse(
@@ -218,6 +220,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 权限列表的标准响应
      */
+    @RequirePermission("system:permission:list")
     @Operation(operationId = "getAllPermissions", summary = "获取所有权限", description = "查询系统中所有已定义的权限列表，用于权限管理界面展示和权限配置")
     @ApiResponses({
         @ApiResponse(
@@ -253,6 +256,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含角色创建请求体）
      * @return 创建结果的标准响应
      */
+    @RequirePermission("system:role:create")
     @Operation(operationId = "createRole", summary = "创建角色", description = "创建一个新的角色，包括角色代码、角色名称、描述等信息")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "角色创建请求信息",
@@ -295,6 +299,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含角色更新请求体，必须包含 id）
      * @return 更新结果的标准响应
      */
+    @RequirePermission("system:role:update")
     @Operation(operationId = "updateRole", summary = "更新角色", description = "更新已有角色的信息，支持更新角色代码、名称、描述等字段")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "角色更新请求信息",
@@ -337,6 +342,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable id）
      * @return 删除结果的标准响应
      */
+    @RequirePermission("system:role:remove")
     @Operation(operationId = "deleteRole", summary = "删除角色", description = "删除指定的角色，同时清理该角色的所有关联关系")
     @Parameter(
             name = "id",
@@ -391,6 +397,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含权限创建请求体）
      * @return 创建结果的标准响应
      */
+    @RequirePermission("system:permission:create")
     @Operation(operationId = "createPermission", summary = "创建权限", description = "创建一个新的权限，包括权限代码、权限名称、资源标识等信息")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "权限创建请求信息",
@@ -436,6 +443,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含权限更新请求体，必须包含 id）
      * @return 更新结果的标准响应
      */
+    @RequirePermission("system:permission:update")
     @Operation(operationId = "updatePermission", summary = "更新权限", description = "更新已有权限的信息，支持更新权限代码、名称、资源标识等字段")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "权限更新请求信息",
@@ -481,6 +489,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable id）
      * @return 删除结果的标准响应
      */
+    @RequirePermission("system:permission:remove")
     @Operation(operationId = "deletePermission", summary = "删除权限", description = "删除指定的权限，同时清理该权限的关联关系")
     @Parameter(
             name = "id",
@@ -536,6 +545,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable userId 和 roleId）
      * @return 分配结果的标准响应
      */
+    @RequirePermission("system:role:update")
     @Operation(operationId = "assignRoleToUser", summary = "分配角色", description = "为指定用户分配角色，建立用户与角色的关联关系")
     @Parameters({
         @Parameter(
@@ -603,6 +613,7 @@ public class AuthorizationHandler extends BaseHandler {
      * @param request HTTP 请求（包含 pathVariable userId/roleId）
      * @return 移除结果的标准响应
      */
+    @RequirePermission("system:role:update")
     @Operation(operationId = "removeRoleFromUser", summary = "移除角色", description = "移除用户的指定角色，解除用户与角色的关联关系")
     @Parameters({
         @Parameter(

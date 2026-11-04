@@ -43,8 +43,24 @@ public class ClientTierClient {
      * @param properties 限流档查询配置
      */
     public ClientTierClient(OpenAppTierProperties properties) {
+        this(properties, new com.apex.scaffold.common.internal.InternalAuthProperties(), null);
+    }
+
+    /**
+     * 构造限流档查询客户端（带内部调用签名）。
+     *
+     * @param properties 限流档查询配置
+     * @param internalAuthProperties 内部认证配置
+     * @param signer 内部签名器；未配置时不签名
+     */
+    public ClientTierClient(
+            OpenAppTierProperties properties,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner signer) {
         this.properties = properties;
-        this.webClient = WebClient.builder().build();
+        this.webClient = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        WebClient.builder(), internalAuthProperties, signer)
+                .build();
     }
 
     /**

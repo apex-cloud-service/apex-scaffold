@@ -22,7 +22,10 @@ public class JdbcWorkflowTaskTransaction implements WorkflowTaskTransaction {
     private final TaskRepositoryImpl tasks;
     private final ProcessInstanceRepositoryImpl instances;
     private final WorkflowDefinitionRepositoryImpl definitions;
+    private final com.apex.scaffold.workflow.domain.repository.WorkflowEventOutbox eventOutbox;
+    private final boolean outboxEnabled;
     private final TransactionTemplate transactions;
+    private final DataSource dataSource;
 
     /**
      * 构造任务事务执行器，绑定同一数据源的同步事务模板。
@@ -36,10 +39,16 @@ public class JdbcWorkflowTaskTransaction implements WorkflowTaskTransaction {
             DataSource dataSource,
             TaskRepositoryImpl tasks,
             ProcessInstanceRepositoryImpl instances,
-            WorkflowDefinitionRepositoryImpl definitions) {
+            WorkflowDefinitionRepositoryImpl definitions,
+            com.apex.scaffold.workflow.domain.repository.WorkflowEventOutbox eventOutbox,
+            @org.springframework.beans.factory.annotation.Value("${apex.events.outbox.enabled:true}")
+                    boolean outboxEnabled) {
         this.tasks = tasks;
         this.instances = instances;
         this.definitions = definitions;
+        this.eventOutbox = eventOutbox;
+        this.outboxEnabled = outboxEnabled;
+        this.dataSource = dataSource;
         this.transactions = new TransactionTemplate(new JdbcTransactionManager(dataSource));
     }
 
@@ -84,6 +93,20 @@ public class JdbcWorkflowTaskTransaction implements WorkflowTaskTransaction {
             @Override
             public int updateInstance(ProcessInstance instance) {
                 return instances.updateByIdSync(tenant, instance);
+            }
+
+            @Override
+            public void appendEvent(com.apex.scaffold.common.event.AbstractDomainEvent event) {
+                if (!outboxEnabled) {
+                    // basic/H2 关闭 Outbox 时保持既有本地通道语义，不写方言不兼容的表。
+                    return;
+                }
+                try {
+                    eventOutbox.appendSync(
+                            org.springframework.jdbc.datasource.DataSourceUtils.getConnection(dataSource), event);
+                } catch (java.sql.SQLException error) {
+                    throw new IllegalStateException("工作流事件落箱失败", error);
+                }
             }
         }));
     }

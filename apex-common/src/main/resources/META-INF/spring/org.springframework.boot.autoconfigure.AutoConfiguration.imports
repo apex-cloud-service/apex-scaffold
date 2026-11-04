@@ -1,3 +1,4 @@
 com.apex.scaffold.common.autoconfigure.OperationAuditAutoConfiguration
 com.apex.scaffold.common.autoconfigure.JwksAutoConfiguration
 com.apex.scaffold.common.autoconfigure.OpenApiGuardAutoConfiguration
+com.apex.scaffold.common.autoconfigure.InternalAuthAutoConfiguration

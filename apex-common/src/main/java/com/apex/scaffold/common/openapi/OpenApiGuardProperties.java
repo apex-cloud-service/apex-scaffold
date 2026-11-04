@@ -1,5 +1,7 @@
 package com.apex.scaffold.common.openapi;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -40,4 +42,21 @@ public class OpenApiGuardProperties {
 
     /** 可信租户头（网关上下文中继注入，服务侧据此判定租户订阅） */
     private String tenantHeader = "X-Tenant-Id";
+
+    /** 开放接口路径前缀（进入该前缀的请求一律按开放流量校验，不依赖标记头） */
+    private String pathPrefix = "/open-api/";
+
+    /**
+     * 开放路径 → 能力编码映射（路径前缀，长前缀优先）。
+     *
+     * <p>服务侧据此从实际请求路径独立推导能力，避免删除或篡改 marker 头绕过校验。
+     * 未命中映射的开放路径按拒绝处理（fail-closed）。
+     */
+    private Map<String, String> pathCapabilities = new LinkedHashMap<>(Map.of(
+            "/open-api/file/", "file-storage",
+            "/open-api/files/", "file-storage",
+            "/open-api/workflow/", "workflow",
+            "/open-api/users/", "user-org",
+            "/open-api/user/", "user-org",
+            "/open-api/messages/", "office-message"));
 }

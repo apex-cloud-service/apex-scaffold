@@ -45,8 +45,24 @@ public class TenantCapabilityVerifier {
      * @param properties 守卫配置
      */
     public TenantCapabilityVerifier(OpenApiGuardProperties properties) {
+        this(properties, new com.apex.scaffold.common.internal.InternalAuthProperties(), null);
+    }
+
+    /**
+     * 构造能力校验客户端（带内部调用签名）。
+     *
+     * @param properties 守卫配置
+     * @param internalAuthProperties 内部认证配置
+     * @param signer 内部签名器；未配置时内部调用不签名
+     */
+    public TenantCapabilityVerifier(
+            OpenApiGuardProperties properties,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner signer) {
         this.properties = properties;
-        this.webClient = WebClient.builder().build();
+        this.webClient = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        WebClient.builder(), internalAuthProperties, signer)
+                .build();
     }
 
     /**

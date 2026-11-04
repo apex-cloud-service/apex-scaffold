@@ -34,7 +34,7 @@
 | Spring Cloud Alibaba | 2025.0.0.0 |
 | Web 层 | Spring WebFlux、Reactor、函数式 Router + Handler |
 | 持久化 | MyBatis-Plus 3.5.10.1；部分服务使用 R2DBC |
-| 数据库迁移 | Flyway 10.15.0；MySQL / PostgreSQL 迁移资源 |
+| 数据库迁移 | Flyway 11.20.3；MySQL / PostgreSQL 迁移资源 |
 | 对象转换 | MapStruct 1.5.5.Final、Lombok 1.18.36 |
 | API 文档 | SpringDoc 2.8.1 |
 | 质量检查 | Surefire、Failsafe、ArchUnit、Spotless、PMD/p3c、JaCoCo |

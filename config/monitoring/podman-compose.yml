@@ -31,6 +31,24 @@ services:
     networks:
       - apex-observability
 
+  # ---- Alertmanager：告警路由与通知 ----
+  # 接收地址默认指向 /dev/null 之外的本机 webhook；生产必须按 alertmanager.yml
+  # 的 receiver 覆盖为可用通知渠道，并保证容器能解析目标主机。
+  alertmanager:
+    image: docker.io/prom/alertmanager:v0.27.0
+    container_name: apex-alertmanager
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - apex-alertmanager-data:/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - apex-observability
+
   # ---- Grafana：可视化大盘 ----
   grafana:
     image: docker.io/grafana/grafana:11.1.0
@@ -78,6 +96,7 @@ services:
 volumes:
   apex-prometheus-data:
   apex-grafana-data:
+  apex-alertmanager-data:
 
 networks:
   apex-observability:

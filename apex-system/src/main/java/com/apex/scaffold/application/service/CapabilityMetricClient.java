@@ -44,10 +44,16 @@ public class CapabilityMetricClient {
      * @param properties 计量配置（指标来源映射与超时/缓存）
      * @param overviewProperties 聚合门面数据源配置（复用基址）
      */
-    public CapabilityMetricClient(CapabilityUsageProperties properties, OverviewProperties overviewProperties) {
+    public CapabilityMetricClient(
+            CapabilityUsageProperties properties,
+            OverviewProperties overviewProperties,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner internalServiceSigner) {
         this.properties = properties;
         this.overviewProperties = overviewProperties;
-        this.webClient = WebClient.builder().build();
+        this.webClient = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        WebClient.builder(), internalAuthProperties, internalServiceSigner)
+                .build();
     }
 
     /**

@@ -35,8 +35,11 @@ public class OpenApiGuardAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public TenantCapabilityVerifier tenantCapabilityVerifier(OpenApiGuardProperties properties) {
-        return new TenantCapabilityVerifier(properties);
+    public TenantCapabilityVerifier tenantCapabilityVerifier(
+            OpenApiGuardProperties properties,
+            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
+            com.apex.scaffold.common.internal.InternalServiceSigner internalServiceSigner) {
+        return new TenantCapabilityVerifier(properties, internalAuthProperties, internalServiceSigner);
     }
 
     /**

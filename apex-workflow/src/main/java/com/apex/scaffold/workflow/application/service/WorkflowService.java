@@ -326,6 +326,28 @@ public class WorkflowService {
      */
     public Mono<ProcessInstance> startProcessInstance(
             String workflowCode, String businessKey, Long initiatorId, String contextJson) {
+        return startProcessInstance(workflowCode, businessKey, initiatorId, contextJson, null);
+    }
+
+    /**
+     * 发起流程实例并在同一事务内追加待投递事件。
+     *
+     * <p>事件工厂在实例与首个任务写入后、事务提交前调用；返回 {@code null} 时不追加。
+     *
+     * @param workflowCode 工作流编码
+     * @param businessKey 业务主键
+     * @param initiatorId 发起人ID
+     * @param contextJson 流程上下文JSON
+     * @param eventFactory 由已创建实例构造事件；可空
+     * @return 流程实例
+     */
+    public Mono<ProcessInstance> startProcessInstance(
+            String workflowCode,
+            String businessKey,
+            Long initiatorId,
+            String contextJson,
+            java.util.function.Function<ProcessInstance, com.apex.scaffold.common.event.AbstractDomainEvent>
+                    eventFactory) {
         log.info("发起流程实例: workflowCode={}, businessKey={}, initiatorId={}", workflowCode, businessKey, initiatorId);
 
         return workflowDefinitionRepository
@@ -346,15 +368,29 @@ public class WorkflowService {
                             instance.setStatus(STATUS_COMPLETED);
                             instance.setEndTime(now);
                             requireOne(operations.insertInstance(instance), "流程实例创建失败");
+                            appendStartEvent(operations, eventFactory, instance);
                             return instance;
                         }
                         instance.setStatus(STATUS_RUNNING);
                         instance.setCurrentNodeKey(first.nodeId());
                         requireOne(operations.insertInstance(instance), "流程实例创建失败");
                         requireOne(operations.insertTask(buildTask(instance, first, initiatorId, now)), "任务创建失败");
+                        appendStartEvent(operations, eventFactory, instance);
                         return instance;
                     });
                 });
+    }
+
+    private void appendStartEvent(
+            WorkflowTaskTransaction.Operations operations,
+            java.util.function.Function<ProcessInstance, com.apex.scaffold.common.event.AbstractDomainEvent> factory,
+            ProcessInstance instance) {
+        if (factory != null) {
+            com.apex.scaffold.common.event.AbstractDomainEvent event = factory.apply(instance);
+            if (event != null) {
+                operations.appendEvent(event);
+            }
+        }
     }
 
     /**
@@ -378,6 +414,27 @@ public class WorkflowService {
      * @param comment 审批意见
      */
     public Mono<Void> completeTask(Long taskId, Long approverId, String comment) {
+        return completeTask(taskId, approverId, comment, null);
+    }
+
+    /**
+     * 完成任务并在同一事务内追加待投递事件。
+     *
+     * <p>事件工厂在任务与实例状态更新之后、事务提交之前调用；落箱失败会回滚整个事务，
+     * 避免业务已提交但事件丢失。工厂返回 {@code null} 时不追加事件。
+     *
+     * @param taskId 任务ID
+     * @param approverId 审批人ID
+     * @param comment 审批意见
+     * @param eventFactory 由已完成任务与实例构造事件；可空
+     * @return 完成信号
+     */
+    public Mono<Void> completeTask(
+            Long taskId,
+            Long approverId,
+            String comment,
+            java.util.function.BiFunction<Task, ProcessInstance, com.apex.scaffold.common.event.AbstractDomainEvent>
+                    eventFactory) {
         log.info("完成任务: taskId={}, approverId={}, comment={}", taskId, approverId, comment);
 
         return inTaskTransaction(operations -> {
@@ -408,6 +465,12 @@ public class WorkflowService {
                 requireOne(operations.insertTask(buildTask(instance, next, instance.getInitiatorId(), now)), "任务创建失败");
             }
             requireOne(operations.updateInstance(instance), "流程实例更新失败");
+            if (eventFactory != null) {
+                com.apex.scaffold.common.event.AbstractDomainEvent event = eventFactory.apply(task, instance);
+                if (event != null) {
+                    operations.appendEvent(event);
+                }
+            }
         });
     }
 
@@ -479,6 +542,25 @@ public class WorkflowService {
      * @throws IllegalArgumentException 当目标节点不存在或不是前置节点时抛出
      */
     public Mono<Void> rollbackToNode(Long taskId, String targetNodeCode, Long operatorId, String reason) {
+        return rollbackToNode(taskId, targetNodeCode, operatorId, reason, null);
+    }
+
+    /**
+     * 回退任务并在同一事务内追加待投递事件。
+     *
+     * @param taskId 当前任务ID
+     * @param targetNodeCode 目标节点编码
+     * @param operatorId 操作人ID
+     * @param reason 回退原因
+     * @param eventFactory 由新任务构造事件；可空
+     * @return 回退完成信号
+     */
+    public Mono<Void> rollbackToNode(
+            Long taskId,
+            String targetNodeCode,
+            Long operatorId,
+            String reason,
+            java.util.function.Function<Task, com.apex.scaffold.common.event.AbstractDomainEvent> eventFactory) {
         log.info(
                 "流程回退: taskId={}, targetNodeCode={}, operatorId={}, reason={}",
                 taskId,
@@ -500,6 +582,12 @@ public class WorkflowService {
             newTask.setAssigneeId(operatorId);
             newTask.setCreatedTime(LocalDateTime.now());
             requireOne(operations.insertTask(newTask), "任务创建失败");
+            if (eventFactory != null) {
+                com.apex.scaffold.common.event.AbstractDomainEvent event = eventFactory.apply(newTask);
+                if (event != null) {
+                    operations.appendEvent(event);
+                }
+            }
         });
     }
 
@@ -538,6 +626,25 @@ public class WorkflowService {
      * @throws IllegalStateException 当任务已完成或不属于操作人时抛出
      */
     public Mono<Void> transferTask(Long taskId, Long newAssigneeId, Long operatorId, String reason) {
+        return transferTask(taskId, newAssigneeId, operatorId, reason, null);
+    }
+
+    /**
+     * 转办任务并在同一事务内追加待投递事件。
+     *
+     * @param taskId 任务ID
+     * @param newAssigneeId 新办理人
+     * @param operatorId 操作人
+     * @param reason 转办原因
+     * @param eventFactory 由更新后任务构造事件；可空
+     * @return 转办完成信号
+     */
+    public Mono<Void> transferTask(
+            Long taskId,
+            Long newAssigneeId,
+            Long operatorId,
+            String reason,
+            java.util.function.Function<Task, com.apex.scaffold.common.event.AbstractDomainEvent> eventFactory) {
         log.info(
                 "转办任务: taskId={}, newAssigneeId={}, operatorId={}, reason={}",
                 taskId,
@@ -550,6 +657,12 @@ public class WorkflowService {
             task.setTransferredFrom(operatorId);
             task.setAssigneeId(newAssigneeId);
             requireOne(operations.updateTask(task), "任务已被其他操作修改");
+            if (eventFactory != null) {
+                com.apex.scaffold.common.event.AbstractDomainEvent event = eventFactory.apply(task);
+                if (event != null) {
+                    operations.appendEvent(event);
+                }
+            }
         });
     }
 
@@ -590,6 +703,25 @@ public class WorkflowService {
      * @throws IllegalStateException 当任务已完成或不属于操作人时抛出
      */
     public Mono<Void> delegateTask(Long taskId, Long delegateToId, Long operatorId, String reason) {
+        return delegateTask(taskId, delegateToId, operatorId, reason, null);
+    }
+
+    /**
+     * 委派任务并在同一事务内追加待投递事件。
+     *
+     * @param taskId 任务ID
+     * @param delegateToId 受托人
+     * @param operatorId 操作人
+     * @param reason 委派原因
+     * @param eventFactory 由新建委派任务构造事件；可空
+     * @return 委派完成信号
+     */
+    public Mono<Void> delegateTask(
+            Long taskId,
+            Long delegateToId,
+            Long operatorId,
+            String reason,
+            java.util.function.Function<Task, com.apex.scaffold.common.event.AbstractDomainEvent> eventFactory) {
         log.info(
                 "委派任务: taskId={}, delegateToId={}, operatorId={}, reason={}", taskId, delegateToId, operatorId, reason);
 
@@ -606,6 +738,12 @@ public class WorkflowService {
             delegatedTask.setTransferredFrom(operatorId);
             delegatedTask.setCreatedTime(LocalDateTime.now());
             requireOne(operations.insertTask(delegatedTask), "任务创建失败");
+            if (eventFactory != null) {
+                com.apex.scaffold.common.event.AbstractDomainEvent event = eventFactory.apply(delegatedTask);
+                if (event != null) {
+                    operations.appendEvent(event);
+                }
+            }
         });
     }
 

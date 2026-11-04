@@ -19,8 +19,8 @@ import reactor.core.publisher.Mono;
  * <p>对应迁移方案 §5.3 过滤器链第 4 位（order = 20）。
  *
  * <p>读取由 {@link JwtSignatureFilter} 验签后暂存的 {@link Claims}，
- * 解析 {@code sub/accountId/tenantId/clientType} 并注入可信身份头：
- * {@code X-User-Id} / {@code X-Tenant-Id} / {@code X-Client-Type}，供下游服务信任消费。
+ * 解析用户身份或开放应用的 {@code client_id/tenant_id}，注入对应的可信身份头。
+ * 应用主体不生成 {@code X-User-Id}，也不能用于普通业务入口。
  *
  * <p><b>安全红线（方案 §5.3）</b>：
  * <ol>
@@ -57,6 +57,13 @@ public class UserContextRelayFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
+        String clientId = resolveFirstNonBlank(claims, "client_id");
+        if (clientId != null) {
+            return relayApplication(exchange, chain, claims, clientId);
+        }
+        if (exchange.getRequest().getPath().value().startsWith("/open-api/")) {
+            return GatewayWebUtil.writeError(exchange, HttpStatus.UNAUTHORIZED, ResultCode.UNAUTHORIZED);
+        }
         String userId = resolveFirstNonBlank(claims, "userId", "accountId", "sub");
         String tenantId = resolveFirstNonBlank(claims, "tenantId");
         String clientType = resolveFirstNonBlank(claims, "clientType");
@@ -75,6 +82,33 @@ public class UserContextRelayFilter implements GlobalFilter, Ordered {
                 .build();
 
         return chain.filter(exchange.mutate().request(mutated).build());
+    }
+
+    private Mono<Void> relayApplication(
+            ServerWebExchange exchange, GatewayFilterChain chain, Claims claims, String clientId) {
+        String tenant = resolveFirstNonBlank(claims, "tenant_id");
+        String legacyTenant = resolveFirstNonBlank(claims, "tenantId");
+        String grant = resolveFirstNonBlank(claims, "grant_type");
+        boolean openRoute = exchange.getRequest().getPath().value().startsWith("/open-api/");
+        if (!openRoute
+                || tenant == null
+                || (legacyTenant != null && !legacyTenant.equals(tenant))
+                || claims.get("userId") != null
+                || !"access".equals(claims.get("token_use"))
+                || !("client_credentials".equals(grant) || "authorization_code".equals(grant))) {
+            return GatewayWebUtil.writeError(exchange, HttpStatus.UNAUTHORIZED, ResultCode.UNAUTHORIZED);
+        }
+        // OAuth subject 可以是应用或授权用户，不能把它冒充成普通用户身份。
+        ServerHttpRequest request = exchange.getRequest()
+                .mutate()
+                .headers(headers -> {
+                    headers.remove(HEADER_USER_ID);
+                    headers.remove(HEADER_CLIENT_TYPE);
+                    headers.set(HEADER_TENANT_ID, tenant);
+                    headers.set(OpenApiScopeGatewayFilter.CLIENT_ID_HEADER, clientId);
+                })
+                .build();
+        return chain.filter(exchange.mutate().request(request).build());
     }
 
     /**

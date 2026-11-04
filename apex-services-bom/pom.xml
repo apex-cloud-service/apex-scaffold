@@ -132,6 +132,32 @@
                 <artifactId>apex-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- 按能力拆分的基础设施 JAR（各服务按需直接依赖） -->
+            <dependency>
+                <groupId>com.apex.scaffold</groupId>
+                <artifactId>apex-infrastructure-persistence</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.apex.scaffold</groupId>
+                <artifactId>apex-infrastructure-cache</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.apex.scaffold</groupId>
+                <artifactId>apex-infrastructure-messaging</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.apex.scaffold</groupId>
+                <artifactId>apex-infrastructure-remote</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.apex.scaffold</groupId>
+                <artifactId>apex-infrastructure-integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- 接口层（系统 Web 层：ApiRouter 拆分后的子系统路由/处理器，Phase 6 收敛） -->
             <dependency>
                 <groupId>com.apex.scaffold</groupId>

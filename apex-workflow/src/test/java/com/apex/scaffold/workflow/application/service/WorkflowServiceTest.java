@@ -102,6 +102,10 @@ class WorkflowServiceTest {
                                         .updateById(instance)
                                         .block();
                             }
+
+                            public void appendEvent(com.apex.scaffold.common.event.AbstractDomainEvent event) {
+                                // 单元测试不涉及持久化 Outbox；事件构造与落箱由集成测试覆盖。
+                            }
                         }));
         testDefinition = new WorkflowDefinition();
         testDefinition.setId(1L);

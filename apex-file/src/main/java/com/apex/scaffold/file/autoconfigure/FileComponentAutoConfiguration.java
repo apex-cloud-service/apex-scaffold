@@ -53,6 +53,10 @@ public class FileComponentAutoConfiguration {
             name = "interfaces-enabled",
             havingValue = "true",
             matchIfMissing = true)
-    @ComponentScan(basePackages = "com.apex.scaffold.file.interfaces")
+    /**
+     * 协议层（Router/Handler/Security）归属运行模块而非本业务库：此处不再扫描不存在的
+     * {@code com.apex.scaffold.file.interfaces} 包。组合部署由各 service 的协议层装配入口负责，开关仍保留以保持
+     * 配置契约兼容。
+     */
     static class FileInterfacesConfiguration {}
 }

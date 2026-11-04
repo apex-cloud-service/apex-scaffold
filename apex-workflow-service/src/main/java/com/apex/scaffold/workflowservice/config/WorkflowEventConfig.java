@@ -65,6 +65,7 @@ public class WorkflowEventConfig {
     public WorkflowEventPublisher workflowEventPublisher(
             EventChannelProperties properties,
             ObjectProvider<RocketMQTemplate> mqTemplate,
+            org.springframework.context.ApplicationEventPublisher applicationEventPublisher,
             @Value("${" + OUTBOX_ENABLED_PREFIX + ".enabled:true}") boolean outboxEnabled) {
         RocketMQTemplate template = mqTemplate.getIfAvailable();
         boolean remoteCapable = outboxEnabled && template != null;
@@ -72,7 +73,7 @@ public class WorkflowEventConfig {
         if (effective == EventChannelMode.REMOTE && template != null) {
             return new MqWorkflowEventPublisher(template);
         }
-        return new LocalWorkflowEventPublisher();
+        return new LocalWorkflowEventPublisher(applicationEventPublisher);
     }
 
     /**

@@ -1,12 +1,12 @@
 # 记忆卡 · apex-scaffold（后端基座）
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
-> **基线**：2026-11-01 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 33 个 reactor 模块
+> **基线**：2026-11-03 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 34 个 reactor 模块
 > **权威优先级**：源码 > `AGENTS.md` > `docs/` > `.workbuddy/knowledge/` > 本卡。本卡是**导航与结论**，不是规范原文。
 
 ## 1. 一句话
 
-Spring Boot 3.5.15 / Java 21 / WebFlux 纯响应式 / DDD 的 Java 后端基座：**API 网关 + 五个业务服务 + 任务代理 + 可选脱敏**，业务代码以库模块复用，运行模块只负责启动与装配。仓库不含前端源码（前端独立仓 `apex-admin-web`）。
+Spring Boot 3.5.15 / Java 21 / WebFlux 纯响应式 / DDD 的 Java 后端基座：**API 网关 + 六个业务服务 + 任务代理 + 可选脱敏 + 组合部署档**，业务代码以库模块复用，运行模块只负责启动与装配。仓库不含前端源码（前端独立仓 `apex-admin-web`）。
 
 ## 2. 构建（唯一合法路径）
 
@@ -25,18 +25,20 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 运行入口 | 端口 | 数据库 | 迁移最高版本 |
 | --- | --- | --- | --- |
 | `apex-gateway` | 8080 | `apex_gateway`（访问日志，可选） | — |
-| `apex-auth-service` | 8081 | `apex_auth`（dev `apex_auth_dev`） | V60 |
-| `apex-system-service` | 8082 | `apex_system` | V80 |
+| `apex-auth-service` | 8081 | `apex_auth`（dev `apex_auth_dev`） | V61 |
+| `apex-system-service` | 8082（管理 8083） | `apex_system` | V87 |
 | `apex-workflow-service` | 8083（同机联调 8093） | `apex_workflow` | V5 |
-| `apex-office-service` | 8084 | `apex_office` | V7 |
+| `apex-office-service` | 8084 | `apex_office` | V8 |
 | `apex-file-service` | 8085 | `apex_file` | V7 |
+| `apex-integration-service` | 8094（管理 8097） | `apex_integration` | V3 |
 | `apex-job-service` | 8095 | 无（固定代理 system） | — |
 | `apex-masking-service` | 8096 | 无 | — |
 | `apex-boot-all` | 缺省 8080 | 单进程组合多库 | 复用组件迁移 |
 
-- 迁移**按服务归位**在业务库 / 运行模块的 `src/main/resources/db/migration/{mysql,postgresql}`。注意物理位置有历史遗留：system 迁移在 **`apex-system`**（不在 `-service`）、auth 迁移在 **`apex-auth-service`**（不在 `apex-auth`）；新增时跟随现有位置，不要另起一套。
-- 规模：MySQL 116 + PostgreSQL 116 = **232 个已跟踪迁移**；`apex-integration` 另有 V1（未跟踪，随模块一起在途）。
+- 迁移**按服务归位**在业务库 / 运行模块的 `src/main/resources/db/migration/{mysql,postgresql}`。注意物理位置有历史遗留：system 迁移在 **`apex-system`**（不在 `-service`）、auth 迁移在 **`apex-auth-service`**（不在 `apex-auth`）、integration 迁移在 **`apex-integration`**（库模块，不在 `-service`）；新增时跟随现有位置，不要另起一套。
+- 规模：MySQL 128 + PostgreSQL 128 = **256 个已跟踪迁移**。
 - system 管理端口缺省 8083，**会与 workflow 冲突**，同机必改。
+- 组合档 `apex-boot-all` 只装配不实现，无自有 `application.yml`；多实例部署必须显式选 MQ，否则 `apex.events.channel=auto` 退化为进程内派发。
 
 ## 4. 硬约束（违反即返工）
 
@@ -60,25 +62,27 @@ mvnd -T4 -B clean verify                  # 全量基线
 | License 门禁不生效 | 切面被改成 `@Component` → 必须留在 `LicenseAutoConfiguration` 的 `@Bean` |
 | 分页报错 / 触发全表解析 | 误引 `mybatis-plus-jsqlparser` → 靠 PageHelper 兼容层 |
 | 汇报 LOC 失真 | `git log --shortstat` 被 HTML 产物放大 → 只报提交数 / 模块数 / 测试类数 |
+| 统一授权「默认开启」判断错误 | 组件库缺省 true，但 `apex-system-service/application.yml` 覆盖为 `${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}` → 排查按「运行模块 yml → 环境变量 → 组件默认」 |
+| 集成服务启动即失败 | 连接器/设备子域依赖外部 EMQX；本地无 broker 时需显式关闭 MQTT 并核 `hivemq-mqtt-client` 为 optional |
 
-## 6. 当前状态（2026-11-01）
+## 6. 当前状态（2026-11-03）
 
-- **规模**：主源码 1889 个 Java 文件、测试类 653 个；运行入口 9 个（8 部署单元 + `apex-boot-all` 组合档）。
+- **规模**：主源码 **2086** 个 Java 文件、测试类 **703** 个；启动入口 **10** 个（9 个部署单元 + `apex-boot-all` 组合档）。
 - **主线《评审收口调整方案》**（`docs/08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md`）：
-  - 批次 **A（A1–A7 统一认证）已完成并提交**（10-31，含测试报告 `docs/06-testing/jwt-unification/20261031-a1-a2/report.md`）。
+  - 批次 **A（A1–A7 统一认证）已完成并提交**（10-31）。
   - 批次 **B（B1–B9 多租户）已完成并提交**（10-31～11-01，B9 为 M2 收官）。
-  - 批次 **C 主体已提交**（C0–C3、C7–C9：DDD 基线、starter 裁剪、SPI、组件入口自动装配、事件通道自适应、`apex-boot-all`）；**C4（`apex-system` interfaces 迁移）未做**。
-  - 批次 **D 部分提交**（D1 统一消息门面 / D2 开放平台 / D4 能力目录 / D6 前台接入契约）；D3、D5 未启动。
-  - 批次 **E1 在途未跟踪**：`apex-integration` 新模块（连接器域 + V1 迁移），工作树 `??` 状态。
-- **工作树**：13 项（2026-11-01 15:46 实测：4 修改 + 5 删除 + 本卡新增 + 3 未跟踪；**本卡提交后为 12 项**）。修改 `.gitignore`/`README`/`pom.xml`，`weekly-reports/` 删除并迁入 `periodic-reports/`，`apex-integration` 未跟踪。
-- **结构债**：`apex-system` 仍四层合一（interfaces/application/domain/infrastructure 同包）。
+  - 批次 **C 除 C4 外完成**（C0–C3、C7–C9；11-02 补齐 C8/C9 验证）。
+  - 批次 **D 完成 D1/D2/D4/D5/D6**（D5 共享数据服务层 11-02 提交）；**D3 为文档沉淀**，`/open-api` 路由已补。
+  - 批次 **E1–E4 已完成并提交**（11-02）：`apex-integration`（connector/device 双子域）+ `apex-integration-service` 8094，含 EMQX ACL 与真实环境验证。
+- **工作树**：27 项未提交（2026-11-03 实测），集中在网关/事件桥/监控编排与部署脚本；**不得把在途改动当作已交付**。
+- **结构债**：`apex-system` 仍四层合一（interfaces/application/domain/infrastructure 同包），858 个主源码文件，C4/D07 未执行。
 
 ## 7. 下一步
 
-1. 提交 / 验收 `apex-integration`（批次 E1），补 E1 测试报告与 `apex-services-bom` 装配说明。
-2. 执行 **C4**：`apex-system` 的 interfaces 层迁至 `apex-system-service`（方案 D07）。
-3. 批次 D 剩余：D3 能力目录文档、D5 共享数据服务层。
-4. P0 迁移验证仍未准出（`verified_union` 未达 586/586），Java 21 正式切换口径未收口。
+1. 执行 **C4**：`apex-system` 的 interfaces 层迁至 `apex-system-service`（方案 D07），收口 M3。
+2. 提交当前 27 项在途改动前先跑 `mvnd -T4 -B clean verify`，并核对网关过滤器与事件桥的租户/MDC 传播。
+3. P0 迁移验证仍未准出（`verified_union` 未达 586/586），Java 21 正式切换口径未收口 —— 属口径问题，汇报须显式声明。
+4. 方案 E 之后的 P1 项（集成域规则引擎、设备影子 desired 写接口）按需排期。
 
 ## 8. 指针
 

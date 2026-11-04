@@ -32,7 +32,7 @@
 | Spring Security | 6.5.0 | `pom.xml` |
 | MyBatis-Plus | 3.5.10.1 | `pom.xml` |
 | Druid | 1.2.25 | `pom.xml` |
-| Flyway | 10.15.0 | `pom.xml` |
+| Flyway | 11.20.3 | `pom.xml` |
 
 ### 基础设施
 

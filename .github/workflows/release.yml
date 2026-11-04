@@ -47,6 +47,8 @@ jobs:
           zip -r dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-basic.zip \
             apex-gateway/target/*.jar apex-auth-service/target/*.jar apex-system-service/target/*.jar \
             apex-workflow-service/target/*.jar apex-office-service/target/*.jar apex-file-service/target/*.jar \
+            apex-integration-service/target/*.jar apex-boot-all/target/*.jar \
+            apex-tools-deployment/target/local-deployment.jar \
             apex-example/target/*.jar \
             LICENSE LICENSE-COMMERCIAL.md docs config podman-compose.yml Containerfile k8s scripts
 
@@ -60,6 +62,8 @@ jobs:
           zip -r dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-standard.zip \
             apex-gateway/target/*.jar apex-auth-service/target/*.jar apex-system-service/target/*.jar \
             apex-workflow-service/target/*.jar apex-office-service/target/*.jar apex-file-service/target/*.jar \
+            apex-integration-service/target/*.jar apex-boot-all/target/*.jar \
+            apex-tools-deployment/target/local-deployment.jar \
             apex-example/target/*.jar \
             LICENSE LICENSE-COMMERCIAL.md docs config podman-compose.yml Containerfile k8s scripts
 
@@ -73,6 +77,8 @@ jobs:
           zip -r dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-enterprise.zip \
             apex-gateway/target/*.jar apex-auth-service/target/*.jar apex-system-service/target/*.jar \
             apex-workflow-service/target/*.jar apex-office-service/target/*.jar apex-file-service/target/*.jar \
+            apex-integration-service/target/*.jar apex-boot-all/target/*.jar \
+            apex-tools-deployment/target/local-deployment.jar \
             apex-example/target/*.jar \
             LICENSE LICENSE-COMMERCIAL.md docs config podman-compose.yml Containerfile k8s scripts
 

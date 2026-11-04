@@ -26,10 +26,10 @@ import org.springframework.stereotype.Component;
  * {@code apex-domain-event}，tag = {@code mqTag()} 即事件类型），供其他服务的
  * MQ 订阅方消费。未实现标记的事件保持既有进程内语义，不跨服务广播。
  *
- * <p><b>投递语义</b>：Outbox 保证"先落库再投递"，本桥为进程内重放点的旁路
- * 异步发送——发送失败仅记录 ERROR 日志（Outbox 已标记 DELIVERED，不做重发），
- * 事件消费方以"失效 + 回源"模式消费，可容忍个别事件丢失（下次 TTL 到期自然回源）。
- * 需要严格不丢的订阅方应改用内部端点回源校验，不依赖事件必达。
+ * <p><b>投递语义</b>：Outbox 保证"先落库再投递"。本桥在重放点把事件同步发送到 broker，
+ * 只在 broker 确认后返回——发送异常向上传播，由 Outbox 重放器保留待重试，不会提前标记
+ * DELIVERED。事件载荷包含完整信封（eventId/tenantId/traceId/createdAt/eventType），
+ * 消费方可以按稳定 eventId 幂等。需要强一致的订阅方仍应回源校验，事件不替代读模型。
  *
  * @author Apex Team
  * @version 1.3.2

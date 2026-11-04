@@ -1,6 +1,7 @@
 package com.apex.scaffold.common.event;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,24 +33,24 @@ import lombok.Getter;
 public abstract class BaseDomainEvent {
 
     /** 事件唯一标识 */
-    @JsonIgnore
-    private final String eventId;
+    @JsonProperty("eventId")
+    private String eventId;
 
     /** 事件创建时间 */
-    @JsonIgnore
-    private final LocalDateTime createdAt;
+    @JsonProperty("createdAt")
+    private LocalDateTime createdAt;
 
     /** 溯源ID，用于链路追踪 */
-    @JsonIgnore
-    private final String traceId;
+    @JsonProperty("traceId")
+    private String traceId;
 
     /** 是否已处理（线程安全） */
     @JsonIgnore
     private final AtomicBoolean processed = new AtomicBoolean(false);
 
     /** 事件类型 */
-    @JsonIgnore
-    private final String eventType;
+    @JsonProperty("eventType")
+    private String eventType;
 
     /**
      * 租户 ID（发布时写入，跨线程监听器从此读取，不再依赖 TenantContext ThreadLocal）。
@@ -58,8 +59,17 @@ public abstract class BaseDomainEvent {
      * 正常业务代码不应调用 setter，只由事件发布器（如 EnhancedDomainEventPublisherImpl）
      * 在构造事件后即刻写入一次。</p>
      */
-    @JsonIgnore
     private String tenantId;
+
+    /**
+     * 恢复租户字段（仅反序列化路径使用）.
+     *
+     * @param tenantId 原始租户
+     */
+    @JsonProperty("tenantId")
+    private void setTenantIdOnDeserialize(String tenantId) {
+        this.tenantId = tenantId;
+    }
 
     /**
      * 构造函数，自动生成事件ID和时间戳。
@@ -170,6 +180,36 @@ public abstract class BaseDomainEvent {
      */
     public void attachTenantContext(String tenantId) {
         this.tenantId = tenantId;
+    }
+
+    /**
+     * 从持久化信封恢复事件元数据。
+     *
+     * <p>反序列化路径无法经过带参构造器时使用；正常构造不应调用。
+     *
+     * @param eventId   原始事件 ID；为空时保留当前值
+     * @param createdAt 原始发生时间；为空时保留当前值
+     * @param traceId   原始追踪号
+     * @param eventType 事件类型；为空时保留当前值
+     * @param tenantId  原始租户；非空时覆盖
+     */
+    protected void restoreEnvelope(
+            String eventId, LocalDateTime createdAt, String traceId, String eventType, String tenantId) {
+        if (eventId != null && !eventId.isBlank()) {
+            this.eventId = eventId;
+        }
+        if (createdAt != null) {
+            this.createdAt = createdAt;
+        }
+        if (traceId != null) {
+            this.traceId = traceId;
+        }
+        if (eventType != null && !eventType.isBlank()) {
+            this.eventType = eventType;
+        }
+        if (tenantId != null && !tenantId.isBlank()) {
+            this.tenantId = tenantId;
+        }
     }
 
     /**

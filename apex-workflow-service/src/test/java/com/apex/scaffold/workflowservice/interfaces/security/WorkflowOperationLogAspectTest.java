@@ -2,6 +2,7 @@ package com.apex.scaffold.workflowservice.interfaces.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -13,7 +14,6 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.workflow.application.query.WorkflowQueryService;
 import com.apex.scaffold.workflow.application.query.WorkflowStatisticsService;
 import com.apex.scaffold.workflow.application.service.WorkflowService;
-import com.apex.scaffold.workflowservice.infrastructure.event.WorkflowEventPublisher;
 import com.apex.scaffold.workflowservice.interfaces.dto.workflow.CompleteTaskRequest;
 import com.apex.scaffold.workflowservice.interfaces.handler.WorkflowHandler;
 import com.apex.scaffold.workflowservice.interfaces.util.RequestHandlerUtil;
@@ -62,18 +62,14 @@ class WorkflowOperationLogAspectTest {
         WorkflowService service = mock(WorkflowService.class);
         WorkflowQueryService queries = mock(WorkflowQueryService.class);
         RequestHandlerUtil util = mock(RequestHandlerUtil.class);
-        when(service.completeTask(7L, 12L, "private-comment")).thenReturn(Mono.empty());
+        when(service.completeTask(eq(7L), eq(12L), eq("private-comment"), any()))
+                .thenReturn(Mono.empty());
         when(queries.getTaskById(7L)).thenReturn(Mono.empty());
         when(util.validateAndThrow(any(CompleteTaskRequest.class))).thenAnswer(call -> Mono.just(call.getArgument(0)));
         contextRunner
                 .withBean(
                         WorkflowHandler.class,
-                        () -> new WorkflowHandler(
-                                service,
-                                queries,
-                                mock(WorkflowStatisticsService.class),
-                                mock(WorkflowEventPublisher.class),
-                                util))
+                        () -> new WorkflowHandler(service, queries, mock(WorkflowStatisticsService.class), util))
                 .run(context -> {
                     WorkflowHandler handler = context.getBean(WorkflowHandler.class);
                     assertThat(AopUtils.isAopProxy(handler)).isTrue();

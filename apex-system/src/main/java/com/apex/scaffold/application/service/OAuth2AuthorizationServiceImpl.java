@@ -97,6 +97,9 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
                 .findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "无效的客户端ID")))
                 .flatMap(client -> {
+                    if (client.isDisabled()) {
+                        return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "客户端已停用"));
+                    }
                     if (!client.supportsGrantType(GRANT_TYPE_AUTHORIZATION_CODE)) {
                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "客户端不支持授权码模式"));
                     }
@@ -235,6 +238,9 @@ public class OAuth2AuthorizationServiceImpl implements OAuth2AuthorizationServic
                 .findByClientId(clientId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "无效的客户端ID")))
                 .flatMap(client -> {
+                    if (client.isDisabled()) {
+                        return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "客户端已停用"));
+                    }
                     if (client.getClientSecret() != null
                             && !client.getClientSecret().isEmpty()) {
                         if (clientSecret == null || !passwordEncoder.matches(clientSecret, client.getClientSecret())) {

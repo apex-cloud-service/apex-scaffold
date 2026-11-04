@@ -146,7 +146,9 @@ class WorkflowAtomicityIntegrationTest {
                 jdbc.getDataSource(),
                 AopTestUtils.getUltimateTargetObject(tasks),
                 followUp,
-                AopTestUtils.<WorkflowDefinitionRepositoryImpl>getUltimateTargetObject(definitions));
+                AopTestUtils.<WorkflowDefinitionRepositoryImpl>getUltimateTargetObject(definitions),
+                new com.apex.scaffold.workflow.infrastructure.persistence.repository.JdbcWorkflowEventOutbox(),
+                false);
         WorkflowService controlled = new WorkflowService(definitions, instances, tasks, transactions);
         try {
             assertAtomicFailure("reject-zero-row", controlled.rejectTask(5001L, 100L, "fault"), false);

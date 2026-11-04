@@ -29,6 +29,7 @@ class BootAllAssemblyTest {
 
     /** 各业务库组件入口类（C7 交付，经 AutoConfiguration.imports 自动装配）。 */
     private static final String[] COMPONENT_ENTRIES = {
+        "com.apex.scaffold.autoconfigure.SystemComponentAutoConfiguration",
         "com.apex.scaffold.auth.autoconfigure.AuthComponentAutoConfiguration",
         "com.apex.scaffold.workflow.autoconfigure.WorkflowComponentAutoConfiguration",
         "com.apex.scaffold.file.autoconfigure.FileComponentAutoConfiguration",
@@ -40,6 +41,7 @@ class BootAllAssemblyTest {
 
     /** 各业务库代表性实现类（组件核心可见性）。 */
     private static final String[] COMPONENT_CORE_CLASSES = {
+        "com.apex.scaffold.application.service.UserService",
         "com.apex.scaffold.auth.application.service.AuthenticationApplicationService",
         "com.apex.scaffold.workflow.application.service.WorkflowService",
         "com.apex.scaffold.file.application.service.FileService",
@@ -49,7 +51,7 @@ class BootAllAssemblyTest {
     };
 
     @Test
-    @DisplayName("六个业务库组件入口类在组合包类路径可见")
+    @DisplayName("七个业务库组件入口类在组合包类路径可见")
     void componentEntriesAreOnClasspath() throws Exception {
         for (String entry : COMPONENT_ENTRIES) {
             Class<?> type = Class.forName(entry);
@@ -58,7 +60,7 @@ class BootAllAssemblyTest {
     }
 
     @Test
-    @DisplayName("六个业务库组件核心实现类在组合包类路径可见")
+    @DisplayName("业务库组件核心实现类在组合包类路径可见")
     void componentCoreClassesAreOnClasspath() throws Exception {
         for (String core : COMPONENT_CORE_CLASSES) {
             Class<?> type = Class.forName(core);
@@ -67,7 +69,7 @@ class BootAllAssemblyTest {
     }
 
     @Test
-    @DisplayName("组合包自动装配清单包含六个业务库组件入口")
+    @DisplayName("组合包自动装配清单包含各业务库组件入口")
     void autoConfigurationImportsDeclareComponents() throws Exception {
         java.util.List<String> declared = new java.util.ArrayList<>();
         for (java.net.URL url : java.util.Collections.list(getClass()

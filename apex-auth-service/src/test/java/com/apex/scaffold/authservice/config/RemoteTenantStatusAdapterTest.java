@@ -22,17 +22,28 @@ import reactor.test.StepVerifier;
 class RemoteTenantStatusAdapterTest {
 
     private RemoteTenantStatusAdapter adapterWith(RemoteTenantStatusAdapter.Snapshot snapshot) {
-        RemoteTenantStatusAdapter adapter = new RemoteTenantStatusAdapter("http://system.internal", 60, 3000) {
-            @Override
-            Mono<Snapshot> fetch(String tenantCode) {
-                return Mono.just(snapshot);
-            }
-        };
+        RemoteTenantStatusAdapter adapter =
+                new RemoteTenantStatusAdapter(
+                        "http://system.internal",
+                        60,
+                        3000,
+                        new com.apex.scaffold.common.internal.InternalAuthProperties(),
+                        null) {
+                    @Override
+                    Mono<Snapshot> fetch(String tenantCode) {
+                        return Mono.just(snapshot);
+                    }
+                };
         return adapter;
     }
 
     private RemoteTenantStatusAdapter failingAdapter() {
-        return new RemoteTenantStatusAdapter("http://system.internal", 60, 3000) {
+        return new RemoteTenantStatusAdapter(
+                "http://system.internal",
+                60,
+                3000,
+                new com.apex.scaffold.common.internal.InternalAuthProperties(),
+                null) {
             @Override
             Mono<Snapshot> fetch(String tenantCode) {
                 return Mono.error(new IllegalStateException("system unreachable"));
@@ -78,13 +89,19 @@ class RemoteTenantStatusAdapterTest {
     @DisplayName("判定缓存生效：第二次校验不再触发拉取")
     void cachesDecisions() {
         var fetchCount = new int[] {0};
-        RemoteTenantStatusAdapter adapter = new RemoteTenantStatusAdapter("http://system.internal", 60, 3000) {
-            @Override
-            Mono<Snapshot> fetch(String tenantCode) {
-                fetchCount[0]++;
-                return Mono.just(new RemoteTenantStatusAdapter.Snapshot(true, "ACTIVE", false));
-            }
-        };
+        RemoteTenantStatusAdapter adapter =
+                new RemoteTenantStatusAdapter(
+                        "http://system.internal",
+                        60,
+                        3000,
+                        new com.apex.scaffold.common.internal.InternalAuthProperties(),
+                        null) {
+                    @Override
+                    Mono<Snapshot> fetch(String tenantCode) {
+                        fetchCount[0]++;
+                        return Mono.just(new RemoteTenantStatusAdapter.Snapshot(true, "ACTIVE", false));
+                    }
+                };
         StepVerifier.create(adapter.validateLoginTenant("tenant-a")).verifyComplete();
         StepVerifier.create(adapter.validateLoginTenant("tenant-a")).verifyComplete();
         assertThat(fetchCount[0]).isEqualTo(1);

@@ -41,38 +41,42 @@ class WorkflowEventChannelTest {
         return factory.getBeanProvider(RocketMQTemplate.class);
     }
 
+    private org.springframework.context.ApplicationEventPublisher bus() {
+        return event -> {};
+    }
+
     @Test
     @DisplayName("AUTO + 有 MQ + Outbox 启用 → MQ 实现")
     void autoWithMqResolvesRemote() {
-        var publisher = config.workflowEventPublisher(props("auto"), mq(true), true);
+        var publisher = config.workflowEventPublisher(props("auto"), mq(true), bus(), true);
         assertThat(publisher).isInstanceOf(MqWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("AUTO + 无 MQ → 本地实现（组合拓扑退化）")
     void autoWithoutMqResolvesLocal() {
-        var publisher = config.workflowEventPublisher(props("auto"), mq(false), true);
+        var publisher = config.workflowEventPublisher(props("auto"), mq(false), bus(), true);
         assertThat(publisher).isInstanceOf(LocalWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("AUTO + 有 MQ 但 Outbox 关闭 → 本地实现")
     void autoWithMqButOutboxDisabledResolvesLocal() {
-        var publisher = config.workflowEventPublisher(props("auto"), mq(true), false);
+        var publisher = config.workflowEventPublisher(props("auto"), mq(true), bus(), false);
         assertThat(publisher).isInstanceOf(LocalWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("LOCAL 强制：即使有 MQ 也用本地派发")
     void localForcesLocal() {
-        var publisher = config.workflowEventPublisher(props("local"), mq(true), true);
+        var publisher = config.workflowEventPublisher(props("local"), mq(true), bus(), true);
         assertThat(publisher).isInstanceOf(LocalWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("REMOTE 强制：有 MQ 用 MQ 实现")
     void remoteForcesMq() {
-        var publisher = config.workflowEventPublisher(props("remote"), mq(true), true);
+        var publisher = config.workflowEventPublisher(props("remote"), mq(true), bus(), true);
         assertThat(publisher).isInstanceOf(MqWorkflowEventPublisher.class);
     }
 

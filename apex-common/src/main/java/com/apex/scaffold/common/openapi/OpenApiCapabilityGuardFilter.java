@@ -4,6 +4,7 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.JsonUtil;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -59,10 +60,22 @@ public class OpenApiCapabilityGuardFilter implements WebFilter, Ordered {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String capability = exchange.getRequest().getHeaders().getFirst(properties.getMarkerHeader());
-        if (capability == null || capability.isBlank()) {
+        String path = exchange.getRequest().getPath().value();
+        boolean openPath = path.startsWith(properties.getPathPrefix());
+        String marker = exchange.getRequest().getHeaders().getFirst(properties.getMarkerHeader());
+        String routeCapability = resolveRouteCapability(path);
+        if (!openPath && (marker == null || marker.isBlank())) {
             // 非开放流量：不受本过滤器约束
             return chain.filter(exchange);
+        }
+        String capability = openPath ? routeCapability : marker;
+        if (capability == null || capability.isBlank()) {
+            log.warn("开放路径缺少能力映射，拒绝: path={}", path);
+            return reject(exchange, HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN);
+        }
+        if (marker != null && !marker.isBlank() && !capability.equals(marker)) {
+            log.warn("开放路径能力与标记不一致，拒绝: path={}, route={}, marker={}", path, capability, marker);
+            return reject(exchange, HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN);
         }
         String tenant = exchange.getRequest().getHeaders().getFirst(properties.getTenantHeader());
         if (tenant == null || tenant.isBlank()) {
@@ -92,6 +105,25 @@ public class OpenApiCapabilityGuardFilter implements WebFilter, Ordered {
                             error.getMessage());
                     return reject(exchange, HttpStatus.SERVICE_UNAVAILABLE, ResultCode.SERVICE_UNAVAILABLE);
                 });
+    }
+
+    /**
+     * 按最长前缀从实际请求路径解析能力编码.
+     *
+     * @param path 请求路径
+     * @return 能力编码；未配置映射时返回 {@code null}
+     */
+    private String resolveRouteCapability(String path) {
+        String matched = null;
+        String capability = null;
+        for (Map.Entry<String, String> entry : properties.getPathCapabilities().entrySet()) {
+            if (path.startsWith(entry.getKey())
+                    && (matched == null || entry.getKey().length() > matched.length())) {
+                matched = entry.getKey();
+                capability = entry.getValue();
+            }
+        }
+        return capability;
     }
 
     /**

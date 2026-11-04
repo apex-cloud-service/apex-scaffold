@@ -41,7 +41,8 @@ class WorkflowDualDatabaseIntegrationTest {
     void shouldMigrateEmptyDatabaseThroughV5(String vendor) throws Exception {
         try (TestDatabase database = TestDatabase.create(vendor)) {
             Flyway flyway = database.flyway();
-            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(5);
+            int totalVersions = latestVersion();
+            assertThat(flyway.migrate().migrationsExecuted).isEqualTo(totalVersions);
             assertMigrationHistory(flyway);
             try (Connection connection = database.connect()) {
                 for (String table : new String[] {
@@ -75,7 +76,7 @@ class WorkflowDualDatabaseIntegrationTest {
                 insertTask(connection, 1, "tenant-a", "PENDING", null, 0, null, 0);
             }
             Flyway latest = database.flyway();
-            assertThat(latest.migrate().migrationsExecuted).isEqualTo(3);
+            assertThat(latest.migrate().migrationsExecuted).isEqualTo(latestVersion() - 2);
             assertMigrationHistory(latest);
             try (Connection connection = database.connect()) {
                 assertThat(scalar(connection, "SELECT version FROM wf_process_instance WHERE id = 1"))
@@ -220,7 +221,7 @@ class WorkflowDualDatabaseIntegrationTest {
         assertThat(flyway.info().pending()).isEmpty();
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         var applied = flyway.info().applied();
-        assertThat(applied).hasSize(5);
+        assertThat(applied).hasSize(latestVersion());
         for (int i = 0; i < applied.length; i++) {
             assertThat(applied[i].getVersion().toString()).isEqualTo(Integer.toString(i + 1));
             assertThat(applied[i].getState().isApplied()).isTrue();
@@ -374,6 +375,20 @@ class WorkflowDualDatabaseIntegrationTest {
         @Override
         public void close() {
             container.close();
+        }
+    }
+
+    /** 当前迁移链的最大版本号（新增迁移时无需手改断言）。 */
+    private static int latestVersion() {
+        try (java.util.stream.Stream<java.nio.file.Path> files =
+                java.nio.file.Files.list(java.nio.file.Path.of("src/main/resources/db/migration/mysql"))) {
+            return files.map(path -> path.getFileName().toString())
+                    .filter(name -> name.startsWith("V") && name.endsWith(".sql"))
+                    .mapToInt(name -> Integer.parseInt(name.substring(1, name.indexOf("__"))))
+                    .max()
+                    .orElseThrow();
+        } catch (java.io.IOException error) {
+            throw new IllegalStateException(error);
         }
     }
 }

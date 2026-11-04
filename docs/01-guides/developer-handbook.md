@@ -63,7 +63,7 @@
 | MyBatis-Plus | 3.5.10.1 | ORM 框架 |
 | MySQL | 9.0 | 关系数据库 |
 | Redisson | 3.36.0 | Redis 客户端 |
-| Flyway | 10.15.0 | 数据库迁移 |
+| Flyway | 11.20.3 | 数据库迁移 |
 
 ### 1.3 微服务治理
 

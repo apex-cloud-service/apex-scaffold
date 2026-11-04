@@ -121,8 +121,30 @@ public class AuthClientIpResolver {
             return null;
         }
         try {
-            return InetAddress.getByName(value.trim()).getHostAddress();
+            // 仅接受 IP 字面量：getByName 会触发 DNS 解析，可能把主机名（如 not-an-ip）
+            // 解析为真实地址，使非法转发项通过校验。
+            byte[] literal = parseLiteral(value.trim());
+            return literal == null ? null : InetAddress.getByAddress(literal).getHostAddress();
         } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * 解析 IPv4/IPv6 字面量为字节数组，不做任何 DNS 查询。
+     *
+     * @param value 地址文本
+     * @return 地址字节；非字面量时返回 {@code null}
+     */
+    private byte[] parseLiteral(String value) {
+        boolean ipv4 = value.matches("\\d{1,3}(\\.\\d{1,3}){3}");
+        boolean ipv6 = value.contains(":") && value.matches("[0-9a-fA-F:.]+");
+        if (!ipv4 && !ipv6) {
+            return null;
+        }
+        try {
+            return InetAddress.getByName(value).getAddress();
+        } catch (Exception error) {
             return null;
         }
     }

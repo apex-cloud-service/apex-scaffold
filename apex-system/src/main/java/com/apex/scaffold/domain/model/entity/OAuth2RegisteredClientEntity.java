@@ -130,6 +130,29 @@ public class OAuth2RegisteredClientEntity {
     }
 
     /**
+     * 判断客户端是否被开放平台停用。
+     *
+     * <p>开放应用管理把启停状态写入 {@code clientSettings.openPlatform.status}；
+     * 该字段只是元数据，真正的拒绝必须发生在令牌签发/授权码生成前。未声明状态的普通
+     * OAuth 客户端不受影响（视为启用）。
+     *
+     * @return 声明为 {@code DISABLED} 时返回 true
+     */
+    public boolean isDisabled() {
+        if (clientSettings == null || clientSettings.isBlank()) {
+            return false;
+        }
+        try {
+            com.fasterxml.jackson.databind.JsonNode node =
+                    new com.fasterxml.jackson.databind.ObjectMapper().readTree(clientSettings);
+            return "DISABLED".equalsIgnoreCase(node.path("openPlatform.status").asText(""));
+        } catch (Exception malformed) {
+            // 元数据损坏时不扩大拒绝面：仍以既有审核流程处理。
+            return false;
+        }
+    }
+
+    /**
      * 判断是否支持指定的授权类型
      *
      * @param grantType 授权类型

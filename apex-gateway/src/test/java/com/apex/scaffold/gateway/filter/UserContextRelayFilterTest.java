@@ -146,6 +146,92 @@ class UserContextRelayFilterTest {
     }
 
     @Nested
+    @DisplayName("开放应用身份中继")
+    class OpenApplicationTests {
+
+        @Test
+        void shouldRelayApplicationTenantWithoutInventingUserIdentity() {
+            ServerWebExchange[] holder = new ServerWebExchange[1];
+            MockServerWebExchange exchange = applicationExchange("/open-api/files/", "tenant-9");
+
+            reactor.test.StepVerifier.create(filter.filter(exchange, capturingChain(holder)))
+                    .verifyComplete();
+
+            var headers = holder[0].getRequest().getHeaders();
+            assertThat(headers.getFirst(UserContextRelayFilter.HEADER_TENANT_ID))
+                    .isEqualTo("tenant-9");
+            assertThat(headers.getFirst(UserContextRelayFilter.HEADER_USER_ID)).isNull();
+            assertThat(headers.getFirst(OpenApiScopeGatewayFilter.CLIENT_ID_HEADER))
+                    .isEqualTo("client-1");
+        }
+
+        @Test
+        void shouldRejectApplicationOnRegularBusinessRoute() {
+            ServerWebExchange[] holder = new ServerWebExchange[1];
+            MockServerWebExchange exchange = applicationExchange("/api/v1/users", "tenant-9");
+
+            reactor.test.StepVerifier.create(filter.filter(exchange, capturingChain(holder)))
+                    .verifyComplete();
+
+            assertThat(holder[0]).isNull();
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        void shouldRejectConflictingTenantClaims() {
+            ServerWebExchange[] holder = new ServerWebExchange[1];
+            MockServerWebExchange exchange = applicationExchange("/open-api/files/", "tenant-9");
+            exchange.getAttributes()
+                    .put(
+                            JwtSignatureFilter.ATTR_CLAIMS,
+                            Jwts.claims()
+                                    .subject("client-1")
+                                    .add("client_id", "client-1")
+                                    .add("tenant_id", "tenant-9")
+                                    .add("tenantId", "tenant-other")
+                                    .add("token_use", "access")
+                                    .add("grant_type", "client_credentials")
+                                    .build());
+
+            reactor.test.StepVerifier.create(filter.filter(exchange, capturingChain(holder)))
+                    .verifyComplete();
+
+            assertThat(holder[0]).isNull();
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        void shouldRejectApplicationWithoutTenant() {
+            ServerWebExchange[] holder = new ServerWebExchange[1];
+            MockServerWebExchange exchange = applicationExchange("/open-api/files/", "");
+
+            reactor.test.StepVerifier.create(filter.filter(exchange, capturingChain(holder)))
+                    .verifyComplete();
+
+            assertThat(holder[0]).isNull();
+            assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+        private MockServerWebExchange applicationExchange(String path, String tenant) {
+            MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get(path)
+                    .header(UserContextRelayFilter.HEADER_USER_ID, "forged-user")
+                    .header(UserContextRelayFilter.HEADER_TENANT_ID, "forged-tenant")
+                    .build());
+            exchange.getAttributes()
+                    .put(
+                            JwtSignatureFilter.ATTR_CLAIMS,
+                            Jwts.claims()
+                                    .subject("client-1")
+                                    .add("client_id", "client-1")
+                                    .add("tenant_id", tenant)
+                                    .add("token_use", "access")
+                                    .add("grant_type", "client_credentials")
+                                    .build());
+            return exchange;
+        }
+    }
+
+    @Nested
     @DisplayName("无 Claims 放行")
     class NoClaimsTests {
 

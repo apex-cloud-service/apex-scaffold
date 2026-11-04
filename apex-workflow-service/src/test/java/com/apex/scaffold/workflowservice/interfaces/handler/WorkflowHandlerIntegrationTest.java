@@ -5,13 +5,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
-import com.apex.scaffold.common.event.AbstractDomainEvent;
 import com.apex.scaffold.contract.event.TaskAssignedEvent;
 import com.apex.scaffold.contract.event.TaskCompletedEvent;
 import com.apex.scaffold.workflow.application.dto.WorkflowInstanceDTO;
@@ -24,7 +24,6 @@ import com.apex.scaffold.workflow.application.query.WorkflowStatisticsService;
 import com.apex.scaffold.workflow.application.service.WorkflowService;
 import com.apex.scaffold.workflow.domain.model.ProcessInstance;
 import com.apex.scaffold.workflowservice.WorkflowServiceSliceTestConfiguration;
-import com.apex.scaffold.workflowservice.infrastructure.event.WorkflowEventPublisher;
 import com.apex.scaffold.workflowservice.interfaces.dto.workflow.CompleteTaskRequest;
 import com.apex.scaffold.workflowservice.interfaces.dto.workflow.DelegateTaskRequest;
 import com.apex.scaffold.workflowservice.interfaces.dto.workflow.RollbackTaskRequest;
@@ -42,7 +41,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -55,7 +53,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import reactor.test.publisher.TestPublisher;
 
 /**
  * 工作流处理器审批流转集成测试。
@@ -114,9 +111,6 @@ class WorkflowHandlerIntegrationTest {
     private WorkflowStatisticsService workflowStatisticsService;
 
     @MockBean
-    private WorkflowEventPublisher workflowEventPublisher;
-
-    @MockBean
     private RequestHandlerUtil requestHandlerUtil;
 
     private ProcessInstance testInstance;
@@ -134,7 +128,6 @@ class WorkflowHandlerIntegrationTest {
                 .mutateWith(SecurityMockServerConfigurers.mockAuthentication(authentication));
 
         when(requestHandlerUtil.validateAndThrow(any())).thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(workflowEventPublisher.publish(any())).thenReturn(Mono.empty());
         when(workflowQueryService.getTaskById(anyLong())).thenReturn(Mono.empty());
 
         testInstance = new ProcessInstance();
@@ -182,7 +175,7 @@ class WorkflowHandlerIntegrationTest {
     @Test
     @DisplayName("发起流程实例 - 成功并透传参数")
     void startProcessInstance_Success() {
-        when(workflowService.startProcessInstance(anyString(), any(), anyLong(), any()))
+        when(workflowService.startProcessInstance(anyString(), any(), anyLong(), any(), any()))
                 .thenReturn(Mono.just(testInstance));
 
         client.post()
@@ -203,8 +196,8 @@ class WorkflowHandlerIntegrationTest {
                 .jsonPath("$.data.status")
                 .isEqualTo("RUNNING");
 
-        verify(workflowService).startProcessInstance("leave_approval", "LEAVE-001", USER_ID, "{\"days\":3}");
-        verify(workflowEventPublisher).publish(any());
+        verify(workflowService)
+                .startProcessInstance(eq("leave_approval"), eq("LEAVE-001"), eq(USER_ID), eq("{\"days\":3}"), any());
     }
 
     @Test
@@ -256,7 +249,7 @@ class WorkflowHandlerIntegrationTest {
     @Test
     @DisplayName("完成任务审批 - 成功并透传审批人")
     void completeTask_Success() {
-        when(workflowService.completeTask(anyLong(), anyLong(), any())).thenReturn(Mono.empty());
+        when(workflowService.completeTask(anyLong(), anyLong(), any(), any())).thenReturn(Mono.empty());
 
         client.post()
                 .uri("/api/v1/workflows/tasks/5001/complete")
@@ -270,7 +263,7 @@ class WorkflowHandlerIntegrationTest {
                 .jsonPath("$.code")
                 .isEqualTo(0);
 
-        verify(workflowService).completeTask(5001L, USER_ID, "同意");
+        verify(workflowService).completeTask(eq(5001L), eq(USER_ID), eq("同意"), any());
     }
 
     @Test
@@ -397,7 +390,7 @@ class WorkflowHandlerIntegrationTest {
     @Test
     @DisplayName("流程回退 - 成功")
     void rollbackTask_Success() {
-        when(workflowService.rollbackToNode(anyLong(), anyString(), anyLong(), any()))
+        when(workflowService.rollbackToNode(anyLong(), anyString(), anyLong(), any(), any()))
                 .thenReturn(Mono.empty());
 
         client.post()
@@ -412,13 +405,13 @@ class WorkflowHandlerIntegrationTest {
                 .jsonPath("$.code")
                 .isEqualTo(0);
 
-        verify(workflowService).rollbackToNode(5001L, "dept_leader_approve", USER_ID, "材料不完整");
+        verify(workflowService).rollbackToNode(eq(5001L), eq("dept_leader_approve"), eq(USER_ID), eq("材料不完整"), any());
     }
 
     @Test
     @DisplayName("任务转办 - 成功")
     void transferTask_Success() {
-        when(workflowService.transferTask(anyLong(), anyLong(), anyLong(), any()))
+        when(workflowService.transferTask(anyLong(), anyLong(), anyLong(), any(), any()))
                 .thenReturn(Mono.empty());
 
         client.post()
@@ -433,13 +426,13 @@ class WorkflowHandlerIntegrationTest {
                 .jsonPath("$.code")
                 .isEqualTo(0);
 
-        verify(workflowService).transferTask(5001L, 200L, USER_ID, "原审批人调岗");
+        verify(workflowService).transferTask(eq(5001L), eq(200L), eq(USER_ID), eq("原审批人调岗"), any());
     }
 
     @Test
     @DisplayName("任务委派 - 成功")
     void delegateTask_Success() {
-        when(workflowService.delegateTask(anyLong(), anyLong(), anyLong(), any()))
+        when(workflowService.delegateTask(anyLong(), anyLong(), anyLong(), any(), any()))
                 .thenReturn(Mono.empty());
 
         client.post()
@@ -454,7 +447,7 @@ class WorkflowHandlerIntegrationTest {
                 .jsonPath("$.code")
                 .isEqualTo(0);
 
-        verify(workflowService).delegateTask(5001L, 300L, USER_ID, "本人出差");
+        verify(workflowService).delegateTask(eq(5001L), eq(300L), eq(USER_ID), eq("本人出差"), any());
     }
 
     @Test
@@ -588,7 +581,7 @@ class WorkflowHandlerIntegrationTest {
     @Test
     @DisplayName("流程回退 - 服务异常返回 5xx")
     void rollbackTask_ServiceError() {
-        when(workflowService.rollbackToNode(anyLong(), anyString(), anyLong(), any()))
+        when(workflowService.rollbackToNode(anyLong(), anyString(), anyLong(), any(), any()))
                 .thenReturn(Mono.error(new IllegalStateException("service unavailable")));
 
         client.post()
@@ -647,33 +640,28 @@ class WorkflowHandlerIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
-    @DisplayName("任务操作继承租户上下文并发布原有事件")
-    void taskEvent_InheritsTenantContext(String operation) {
-        stubTaskOperation(operation, Mono.empty());
+    @DisplayName("任务操作把事件工厂交给事务内落箱，且继承租户上下文")
+    void taskEvent_BuiltInsideTransactionWithTenant(String operation) {
+        java.util.concurrent.atomic.AtomicReference<Object> built = new java.util.concurrent.atomic.AtomicReference<>();
+        stubTaskOperationFactory(operation, built);
         stubTenantTaskQuery();
-        when(workflowEventPublisher.publish(any())).thenReturn(Mono.deferContextual(context -> {
-            assertThat(context.<String>get(TenantContext.REACTOR_CONTEXT_KEY)).isEqualTo("tenant-events");
-            return Mono.empty();
-        }));
 
         StepVerifier.create(invokeTaskOperation(operation))
                 .assertNext(
                         response -> assertThat(response.statusCode().value()).isEqualTo(200))
                 .verifyComplete();
 
-        ArgumentCaptor<AbstractDomainEvent> event = ArgumentCaptor.forClass(AbstractDomainEvent.class);
-        verify(workflowEventPublisher).publish(event.capture());
+        assertThat(built.get()).isNotNull();
         if (operation.equals("complete")) {
-            assertThat(event.getValue()).isInstanceOfSatisfying(TaskCompletedEvent.class, completed -> {
+            assertThat(built.get()).isInstanceOfSatisfying(TaskCompletedEvent.class, completed -> {
                 assertThat(completed.getTaskId()).isEqualTo(5001L);
                 assertThat(completed.getProcessInstanceId()).isEqualTo(3001L);
                 assertThat(completed.getApproverId()).isEqualTo(USER_ID);
                 assertThat(completed.getAction()).isEqualTo(TaskCompletedEvent.ACTION_APPROVE);
                 assertThat(completed.getComment()).isEqualTo("同意");
-                assertThat(completed.getCompletedAt()).isNotNull();
             });
         } else {
-            assertThat(event.getValue()).isInstanceOfSatisfying(TaskAssignedEvent.class, assigned -> {
+            assertThat(built.get()).isInstanceOfSatisfying(TaskAssignedEvent.class, assigned -> {
                 assertThat(assigned.getTaskId()).isEqualTo(5001L);
                 assertThat(assigned.getProcessInstanceId()).isEqualTo(3001L);
                 assertThat(assigned.getNodeCode()).isEqualTo("node_1");
@@ -685,85 +673,15 @@ class WorkflowHandlerIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
-    @DisplayName("任务响应等待事件发布完成")
-    void taskEvent_ResponseWaitsForPublication(String operation) {
-        stubTaskOperation(operation, Mono.empty());
-        stubTenantTaskQuery();
-        TestPublisher<Void> publication = TestPublisher.create();
-        when(workflowEventPublisher.publish(any())).thenReturn(publication.mono());
-
-        java.util.concurrent.atomic.AtomicBoolean responseReceived = new java.util.concurrent.atomic.AtomicBoolean();
-        StepVerifier.create(invokeTaskOperation(operation).doOnNext(response -> responseReceived.set(true)))
-                .then(() -> {
-                    assertThat(responseReceived).isFalse();
-                    publication.assertSubscribers().complete();
-                })
-                .assertNext(
-                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
-                .verifyComplete();
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
-    @DisplayName("任务回查失败保持主操作成功")
-    void taskEvent_QueryFailureDoesNotFailOperation(String operation) {
-        stubTaskOperation(operation, Mono.empty());
-        when(workflowQueryService.getTaskById(5001L))
-                .thenReturn(Mono.error(new IllegalStateException("query unavailable")));
-
-        StepVerifier.create(invokeTaskOperation(operation))
-                .assertNext(
-                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
-                .verifyComplete();
-        verifyNoInteractions(workflowEventPublisher);
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
-    @DisplayName("事件发布失败保持主操作成功")
-    void taskEvent_PublishFailureDoesNotFailOperation(String operation) {
-        stubTaskOperation(operation, Mono.empty());
-        when(workflowQueryService.getTaskById(5001L)).thenReturn(Mono.just(testTaskDto));
-        when(workflowEventPublisher.publish(any()))
-                .thenReturn(Mono.error(new IllegalStateException("publisher unavailable")));
-
-        StepVerifier.create(invokeTaskOperation(operation))
-                .assertNext(
-                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
-                .verifyComplete();
-        verify(workflowEventPublisher).publish(any());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
-    @DisplayName("发布器同步抛错保持主操作成功")
-    void taskEvent_SynchronousPublishFailureDoesNotFailOperation(String operation) {
-        stubTaskOperation(operation, Mono.empty());
-        when(workflowQueryService.getTaskById(5001L)).thenReturn(Mono.just(testTaskDto));
-        when(workflowEventPublisher.publish(any())).thenThrow(new IllegalStateException("serialization failed"));
-
-        StepVerifier.create(invokeTaskOperation(operation))
-                .assertNext(
-                        response -> assertThat(response.statusCode().value()).isEqualTo(200))
-                .verifyComplete();
-        verify(workflowEventPublisher).publish(any());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"complete", "rollback", "transfer", "delegate"})
     @DisplayName("主操作错误原样传播且不触发事件旁路")
     void taskEvent_BusinessFailurePropagates(String operation) {
         IllegalStateException failure = new IllegalStateException("business failed");
         stubTaskOperation(operation, Mono.error(failure));
-        when(workflowQueryService.getTaskById(5001L))
-                .thenReturn(Mono.error(new IllegalStateException("query unavailable")));
-        when(workflowEventPublisher.publish(any()))
-                .thenReturn(Mono.error(new IllegalStateException("publisher unavailable")));
 
         StepVerifier.create(invokeTaskOperation(operation))
                 .expectErrorMatches(error -> error == failure)
                 .verify();
-        verifyNoInteractions(workflowQueryService, workflowEventPublisher);
+        verifyNoInteractions(workflowQueryService);
     }
 
     private void stubTenantTaskQuery() {
@@ -775,15 +693,73 @@ class WorkflowHandlerIntegrationTest {
         }));
     }
 
+    /**
+     * 按操作类型桩出“事务内事件工厂”，并记录 Handler 传给服务的事件实例。
+     *
+     * <p>新语义下事件不再经发布器直发，而是由服务在事务中调用工厂并落箱；
+     * 此处只验证 Handler 正确组装了事件，持久化由工作流集成测试覆盖。
+     *
+     * @param operation 操作类型
+     * @param built 记录 Handler 构造的事件
+     */
+    private void stubTaskOperationFactory(String operation, java.util.concurrent.atomic.AtomicReference<Object> built) {
+        com.apex.scaffold.workflow.domain.model.Task task = new com.apex.scaffold.workflow.domain.model.Task();
+        task.setId(5001L);
+        task.setProcessInstanceId(3001L);
+        task.setNodeCode("node_1");
+        task.setAssigneeId(200L);
+        switch (operation) {
+            case "complete" -> when(workflowService.completeTask(eq(5001L), eq(USER_ID), eq("同意"), any()))
+                    .thenAnswer(call -> {
+                        @SuppressWarnings("unchecked")
+                        java.util.function.BiFunction<
+                                        com.apex.scaffold.workflow.domain.model.Task,
+                                        ProcessInstance,
+                                        com.apex.scaffold.common.event.AbstractDomainEvent>
+                                factory = call.getArgument(3);
+                        built.set(factory.apply(task, testInstance));
+                        return Mono.empty();
+                    });
+            case "rollback" -> when(workflowService.rollbackToNode(
+                            eq(5001L), eq("node_1"), eq(USER_ID), eq("原因"), any()))
+                    .thenAnswer(call -> {
+                        built.set(applyTaskFactory(call, task));
+                        return Mono.empty();
+                    });
+            case "transfer" -> when(workflowService.transferTask(eq(5001L), eq(200L), eq(USER_ID), eq("原因"), any()))
+                    .thenAnswer(call -> {
+                        built.set(applyTaskFactory(call, task));
+                        return Mono.empty();
+                    });
+            case "delegate" -> when(workflowService.delegateTask(eq(5001L), eq(200L), eq(USER_ID), eq("原因"), any()))
+                    .thenAnswer(call -> {
+                        built.set(applyTaskFactory(call, task));
+                        return Mono.empty();
+                    });
+            default -> throw new IllegalArgumentException(operation);
+        }
+    }
+
+    private Object applyTaskFactory(
+            org.mockito.invocation.InvocationOnMock call, com.apex.scaffold.workflow.domain.model.Task task) {
+        @SuppressWarnings("unchecked")
+        java.util.function.Function<
+                        com.apex.scaffold.workflow.domain.model.Task,
+                        com.apex.scaffold.common.event.AbstractDomainEvent>
+                factory = call.getArgument(4);
+        return factory.apply(task);
+    }
+
     private void stubTaskOperation(String operation, Mono<Void> result) {
         switch (operation) {
-            case "complete" -> when(workflowService.completeTask(5001L, USER_ID, "同意"))
+            case "complete" -> when(workflowService.completeTask(eq(5001L), eq(USER_ID), eq("同意"), any()))
                     .thenReturn(result);
-            case "rollback" -> when(workflowService.rollbackToNode(5001L, "node_1", USER_ID, "原因"))
+            case "rollback" -> when(workflowService.rollbackToNode(
+                            eq(5001L), eq("node_1"), eq(USER_ID), eq("原因"), any()))
                     .thenReturn(result);
-            case "transfer" -> when(workflowService.transferTask(5001L, 200L, USER_ID, "原因"))
+            case "transfer" -> when(workflowService.transferTask(eq(5001L), eq(200L), eq(USER_ID), eq("原因"), any()))
                     .thenReturn(result);
-            case "delegate" -> when(workflowService.delegateTask(5001L, 200L, USER_ID, "原因"))
+            case "delegate" -> when(workflowService.delegateTask(eq(5001L), eq(200L), eq(USER_ID), eq("原因"), any()))
                     .thenReturn(result);
             default -> throw new IllegalArgumentException(operation);
         }
@@ -791,11 +767,7 @@ class WorkflowHandlerIntegrationTest {
 
     private Mono<ServerResponse> invokeTaskOperation(String operation) {
         WorkflowHandler handler = new WorkflowHandler(
-                workflowService,
-                workflowQueryService,
-                workflowStatisticsService,
-                workflowEventPublisher,
-                requestHandlerUtil);
+                workflowService, workflowQueryService, workflowStatisticsService, requestHandlerUtil);
         ObjectMapper mapper = new ObjectMapper();
         Mono<ServerResponse> response =
                 switch (operation) {
