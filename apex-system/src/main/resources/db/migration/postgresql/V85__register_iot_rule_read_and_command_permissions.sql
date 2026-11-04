@@ -33,6 +33,8 @@ WHERE NOT EXISTS (SELECT 1 FROM sys_permission WHERE code = 'iot:command:send');
 
 -- ============================================================
 -- 2. 为超级管理员角色（ADMIN，role_id=1）授权
+-- 说明：PG 的 sys_role_permission.id 为 NOT NULL 且无默认值，必须显式提供主键；
+--       主键公式 500000 + p.id 与 V50 起的既有迁移保持一致。
 -- ============================================================
 INSERT INTO sys_role_permission (id, role_id, permission_id)
 SELECT 500000 + p.id, 1, p.id

@@ -102,6 +102,8 @@ ON CONFLICT (id) DO UPDATE SET menu_name = EXCLUDED.menu_name, parent_id = EXCLU
 -- ============================================================
 -- 5. 授予平台 ADMIN 角色
 -- ============================================================
+-- 说明：iot:rule:read / iot:command:send 已由 V85 授权（同一 500000 + p.id 主键公式），
+--       此处不再重复列出，避免主键冲突与重复授权。
 INSERT INTO sys_role_permission (id, role_id, permission_id)
 SELECT 500000 + p.id, r.id, p.id
 FROM sys_role r
@@ -113,7 +115,7 @@ WHERE r.code = 'ADMIN' AND r.deleted = 0
     'capability:usage:read',
     'office:notify:template:read', 'office:notify:template:manage', 'office:notify:record:read',
     'integration:connector:read', 'integration:credential:read',
-    'iot:device:read', 'iot:telemetry:read', 'iot:rule:read', 'iot:command:send'
+    'iot:device:read', 'iot:telemetry:read'
   )
 ON CONFLICT DO NOTHING;
 

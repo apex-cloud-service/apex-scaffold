@@ -94,6 +94,7 @@ ON DUPLICATE KEY UPDATE menu_name = '物联网规则', parent_id = 7210, menu_ty
 
 -- ============================================================
 -- 5. 授予平台 ADMIN 角色（与 V73/V80 一致：菜单可见性由权限码驱动）
+-- 说明：iot:rule:read / iot:command:send 已由 V85 授权，此处不再重复列出。
 -- ============================================================
 INSERT IGNORE INTO sys_role_permission (role_id, permission_id)
 SELECT r.id, p.id
@@ -106,7 +107,7 @@ WHERE r.code = 'ADMIN' AND r.deleted = 0
     'capability:usage:read',
     'office:notify:template:read', 'office:notify:template:manage', 'office:notify:record:read',
     'integration:connector:read', 'integration:credential:read',
-    'iot:device:read', 'iot:telemetry:read', 'iot:rule:read', 'iot:command:send'
+    'iot:device:read', 'iot:telemetry:read'
   );
 
 -- ============================================================
