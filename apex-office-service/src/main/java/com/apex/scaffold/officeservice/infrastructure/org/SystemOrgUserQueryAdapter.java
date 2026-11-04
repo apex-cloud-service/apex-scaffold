@@ -58,27 +58,41 @@ public class SystemOrgUserQueryAdapter implements OfficeOrgUserQueryPort {
      * @param builder    Boot 管理的客户端构建器
      */
     public SystemOrgUserQueryAdapter(SystemOrgUserProperties properties, WebClient.Builder builder) {
-        this(properties, builder, new com.apex.scaffold.common.internal.InternalAuthProperties(), null);
+        this.properties = properties;
+        this.client = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
+                        builder.clone().codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(MAX_RESPONSE_BYTES)),
+                        null,
+                        null)
+                .build();
     }
 
     /**
      * 构造适配器（带内部调用签名）。
      *
+     * <p>内部认证的两个协作者用 {@link org.springframework.beans.factory.ObjectProvider} 注入：
+     * 它们由 {@code InternalAuthAutoConfiguration} 提供，而该自动配置带
+     * {@code @ConditionalOnWebApplication(REACTIVE)}；在 {@code webEnvironment = NONE}
+     * 的装配测试等非 Web 上下文中不存在，用 Provider 可避免上下文启动失败。
+     * 缺失时按"未配置签名"处理（{@code apply} 对 null 参数即该语义）。
+     *
      * @param properties 系统服务内部接口配置
      * @param builder Boot 管理的客户端构建器
-     * @param internalAuthProperties 内部认证配置
-     * @param internalServiceSigner 内部签名器；未配置时不签名
+     * @param internalAuthProperties 内部认证配置提供者
+     * @param internalServiceSigner 内部签名器提供者
      */
+    @org.springframework.beans.factory.annotation.Autowired
     public SystemOrgUserQueryAdapter(
             SystemOrgUserProperties properties,
             WebClient.Builder builder,
-            com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
-            com.apex.scaffold.common.internal.InternalServiceSigner internalServiceSigner) {
+            org.springframework.beans.factory.ObjectProvider<com.apex.scaffold.common.internal.InternalAuthProperties>
+                    internalAuthProperties,
+            org.springframework.beans.factory.ObjectProvider<com.apex.scaffold.common.internal.InternalServiceSigner>
+                    internalServiceSigner) {
         this.properties = properties;
         this.client = com.apex.scaffold.common.internal.InternalAuthExchangeFilter.apply(
                         builder.clone().codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(MAX_RESPONSE_BYTES)),
-                        internalAuthProperties,
-                        internalServiceSigner)
+                        internalAuthProperties.getIfAvailable(),
+                        internalServiceSigner.getIfAvailable())
                 .build();
     }
 

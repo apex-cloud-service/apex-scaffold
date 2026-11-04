@@ -65,14 +65,16 @@ class InternalAuthWebFilterTest {
     }
 
     @Test
-    @DisplayName("匿名内部调用返回 401")
+    @DisplayName("缺少调用方标识的内部调用返回 403")
     void anonymousInternalRejected() {
+        // 新语义：先按 X-Internal-Service 校验调用方白名单，无法识别调用方时按禁止访问（403）拒绝；
+        // 401 留给"调用方合法但签名/租户校验失败"的场景，避免向未授权方泄露认证细节。
         MockServerWebExchange exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.get("/internal/v1/tenants/t-1/status").build());
 
         StepVerifier.create(filter(properties()).filter(exchange, e -> Mono.empty()))
                 .verifyComplete();
-        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
@@ -80,12 +82,12 @@ class InternalAuthWebFilterTest {
     void signedInternalPasses() {
         InternalAuthProperties properties = properties();
         InternalServiceSigner signer = new InternalServiceSigner(SECRET, Duration.ofSeconds(60), CLOCK);
-        Map<String, String> headers =
-                signer.sign("apex-system-service", "GET", "/internal/v1/tenants/t-1/status", null);
+        Map<String, String> headers = signer.sign("apex-auth-service", "GET", "/internal/v1/tenants/t-1/status", "t-1");
         MockServerHttpRequest request = MockServerHttpRequest.get("/internal/v1/tenants/t-1/status")
                 .header(InternalServiceSigner.HEADER_SERVICE, headers.get(InternalServiceSigner.HEADER_SERVICE))
                 .header(InternalServiceSigner.HEADER_TIMESTAMP, headers.get(InternalServiceSigner.HEADER_TIMESTAMP))
                 .header(InternalServiceSigner.HEADER_NONCE, headers.get(InternalServiceSigner.HEADER_NONCE))
+                .header(InternalServiceSigner.HEADER_TENANT, "t-1")
                 .header(InternalServiceSigner.HEADER_SIGNATURE, headers.get(InternalServiceSigner.HEADER_SIGNATURE))
                 .build();
         MockServerWebExchange exchange = MockServerWebExchange.from(request);

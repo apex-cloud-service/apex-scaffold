@@ -100,17 +100,31 @@ public final class ComposeConfigValidator {
     /**
      * 调用 podman-compose config 并校验展开结果；失败时输出一律隐藏，避免泄露密钥。
      *
-     * @param root    仓库根目录
-     * @param envFile 可选的环境变量文件，可为 null
+     * <p>调用方的环境变量必须透传给子进程：compose 模板以 {@code ${VAR:?...}} 声明
+     * 必填密钥（如 {@code APEX_INTERNAL_AUTH_SECRET}），缺失会直接阻断编排。
+     * 测试场景下父进程环境被显式清空，若不透传则必填变量永远无法解析。
+     *
+     * @param root        仓库根目录
+     * @param envFile     可选的环境变量文件，可为 null
+     * @param environment 透传给 podman-compose 的环境变量映射，可为 null
      * @throws Exception 进程启动失败、退出码非零或内容校验失败时抛出
      */
-    public static void composeCheck(Path root, Path envFile) throws Exception {
-        Process process = new ProcessBuilder(composeCommand(root, envFile))
+    public static void composeCheck(Path root, Path envFile, Map<?, ?> environment) throws Exception {
+        ProcessBuilder builder = new ProcessBuilder(composeCommand(root, envFile))
                 .directory(root.toFile())
-                .redirectError(ProcessBuilder.Redirect.DISCARD)
-                .start();
+                .redirectErrorStream(true);
+        if (environment != null) {
+            // 只追加显式变量，保留 PATH 等父进程基础环境，避免破坏 podman-compose 自身启动
+            environment.forEach((key, value) -> {
+                if (key instanceof String name && value instanceof String text) {
+                    builder.environment().put(name, text);
+                }
+            });
+        }
+        Process process = builder.start();
         byte[] output = process.getInputStream().readAllBytes();
-        if (process.waitFor() != 0) {
+        int status = process.waitFor();
+        if (status != 0) {
             throw new IllegalArgumentException("Compose 配置验证失败；输出已隐藏");
         }
         validateCompose(new String(output, StandardCharsets.UTF_8));

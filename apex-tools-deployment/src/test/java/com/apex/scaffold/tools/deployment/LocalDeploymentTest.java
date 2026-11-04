@@ -89,6 +89,7 @@ class LocalDeploymentTest {
         }
         env.put(DeploymentKeyValidator.CONFIG_ENCRYPTION_KEY, "c".repeat(32));
         env.put(DeploymentKeyValidator.JWT_SECRET, "j".repeat(48));
+        env.put(DeploymentKeyValidator.INTERNAL_AUTH_SECRET, "i".repeat(48));
         return env;
     }
 

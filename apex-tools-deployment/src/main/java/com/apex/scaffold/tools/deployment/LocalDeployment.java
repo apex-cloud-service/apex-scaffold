@@ -115,7 +115,7 @@ public final class LocalDeployment {
             case "validate" -> DeploymentKeyValidator.validateKeys(environment);
             case "preflight" -> DeploymentKeyValidator.validatePreflight(
                     environment, command.options().get("--target"));
-            case "compose" -> ComposeConfigValidator.composeCheck(root(), envFile(command.options()));
+            case "compose" -> ComposeConfigValidator.composeCheck(root(), envFile(command.options()), environment);
             case "prepare" -> prepare(command.options(), environment, out);
             case "rollback" -> TotpMigrationBundle.rollback(
                     Path.of(command.options().get("--bundle")),

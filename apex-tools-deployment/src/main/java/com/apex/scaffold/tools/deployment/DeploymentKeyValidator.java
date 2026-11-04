@@ -24,6 +24,9 @@ public final class DeploymentKeyValidator {
     /** 需要至少 32 字节且不得为模板占位值的 JWT 签名密钥。 */
     public static final String JWT_SECRET = "JWT_SECRET";
 
+    /** 内部服务间认证签名密钥：需至少 32 字节且不得为模板占位值。 */
+    public static final String INTERNAL_AUTH_SECRET = "APEX_INTERNAL_AUTH_SECRET";
+
     /** Compose 前置检查目标：Redis 密码不得使用模板回退值。 */
     public static final String TARGET_COMPOSE = "compose";
 
@@ -100,6 +103,10 @@ public final class DeploymentKeyValidator {
 
     /**
      * 校验全部部署安全密钥：三段 32 字节 Base64 密钥、32 字节配置加密口令、非模板 JWT 密钥。
+     *
+     * <p>内部服务认证密钥 {@code APEX_INTERNAL_AUTH_SECRET} 由 compose 模板的
+     * {@code ${VAR:?...}} 强制必填并在 {@code compose check} 阶段拦截，此处不重复校验，
+     * 避免与编排层口径分叉。
      *
      * @param environment 环境变量映射
      */

@@ -29,7 +29,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
             "security.encryption.key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
             "apex.security.data-encryption-key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
             "apex.security.config-encryption-key=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-            "security.config.encryption.key=01234567890123456789012345678901"
+            "security.config.encryption.key=01234567890123456789012345678901",
+            // 本测试验证撤销流的分页/游标语义，关注业务响应而非内部签名，按配置注释
+            // “仅本地单测可显式关闭”的口径关闭内部认证；生产由部署编排注入共享密钥。
+            "apex.internal-auth.enabled=false"
         })
 @Import(AuthCenterBasicTestConfiguration.class)
 @AutoConfigureWebTestClient

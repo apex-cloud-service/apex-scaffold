@@ -52,10 +52,14 @@ public class TenantCapabilityClient {
     /**
      * 构造能力查询客户端（带内部调用签名）。
      *
+     * <p>标注 {@code @Autowired}：本类有两个构造器，Spring 无法自动选择；
+     * 单参构造器仅供测试/无签名场景直接 new 使用。
+     *
      * @param properties 能力门禁配置
      * @param internalAuthProperties 内部认证配置
      * @param signer 内部签名器；未配置时不签名
      */
+    @org.springframework.beans.factory.annotation.Autowired
     public TenantCapabilityClient(
             TenantCapabilityProperties properties,
             com.apex.scaffold.common.internal.InternalAuthProperties internalAuthProperties,
