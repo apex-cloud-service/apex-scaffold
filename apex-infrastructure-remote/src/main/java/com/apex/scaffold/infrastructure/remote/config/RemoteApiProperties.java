@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * 远程API调用配置属性
@@ -46,7 +45,9 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.0.0
  */
 @Data
-@Configuration
+// 不标注 @Configuration：本类由 @EnableConfigurationProperties / @ConfigurationPropertiesScan 注册。
+// 若同时标注 @Configuration，宽范围组件扫描（如 apex-example 的 scanBasePackages=com.apex.scaffold）
+// 会再注册一次，导致 "required a single bean, but 2 were found"。
 @ConfigurationProperties(prefix = "remote.api")
 public class RemoteApiProperties {
 

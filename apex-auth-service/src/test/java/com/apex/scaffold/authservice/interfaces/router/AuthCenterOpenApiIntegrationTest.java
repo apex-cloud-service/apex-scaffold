@@ -65,6 +65,9 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             delete|/api/ip-access-control/{ruleId}|deleteRule||EmptyResult|ruleId:path:true:integer:int64:
             post|/api/ip-access-control/cleanup|cleanupExpiredRules||CountResult|
             post|/api/ip-access-control/check|checkAccess||IpAccessResult|ipAddress:query:true:string::
+            get|/admin-api/v1/open-apps|listOpenApps||object|
+            get|/admin-api/v1/open-apps/{clientId}|getOpenApp||object|clientId:path:true:string::
+            get|/admin-api/v1/open-apps/scopes|listOpenAppScopes||object|
             get|/auth/v1/authorization/users/{userId}|queryUnifiedAuthorization||UnifiedAuthorizationResult|userId:path:true:integer:int64:
             post|/auth/v1/login|login|LoginRequest|LoginResponse|
             post|/auth/v1/logout/{userId}|logout|||userId:path:true:integer:int64:
@@ -178,7 +181,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             expected.add(contract[0] + " " + contract[1]);
             assertOperationContract(contract);
         });
-        assertThat(expected).hasSize(72);
+        assertThat(expected).hasSize(75);
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
         assertLocalReferencesResolve(document);
     }
@@ -377,7 +380,9 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
         assertThat(schema("RefreshTokenRequest").path("required").toString()).contains("refreshToken");
         assertThat(schema("LoginResponse").path("properties").has("code")).isFalse();
         assertThat(schema("TokenPair").path("properties").has("data")).isFalse();
-        assertThat(schema("TokenPair").path("properties").size()).isEqualTo(5);
+        // 6 个字段：accessToken / accessTokenId / refreshToken / refreshTokenJti / expiresIn / tokenType
+        // accessTokenId、refreshTokenJti 为撤销传播（A3）所需的令牌标识，随统一认证收口加入
+        assertThat(schema("TokenPair").path("properties").size()).isEqualTo(6);
         assertThat(property(schema("TokenPair"), "expiresIn").path("format").asText())
                 .isEqualTo("int64");
         for (String endpoint : new String[] {"login", "refresh"}) {
@@ -414,7 +419,8 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
                 .returnResult()
                 .getResponseBody();
         assertThat(refreshed).isNotNull();
-        assertThat(refreshed.size()).isEqualTo(5);
+        // 与 TokenPair schema 字段数一致（含撤销传播所需的 accessTokenId / refreshTokenJti）
+        assertThat(refreshed.size()).isEqualTo(6);
         assertThat(refreshed.path("refreshToken").asText())
                 .isNotEqualTo(login.path("refreshToken").asText());
         client.post()
@@ -490,6 +496,13 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
         JsonNode success = operation.path("responses").path("200");
         if (contract[4].isEmpty()) {
             assertThat(success.has("content")).isFalse();
+        } else if ("object".equals(contract[4])) {
+            // 匿名对象载荷（如开放应用摘要列表）：schema 为 additionalProperties=true 的内联对象，
+            // 无需为无稳定类型的分页/摘要结构强造 DTO
+            assertThat(success.at("/content/application~1json/schema/additionalProperties")
+                            .asBoolean())
+                    .as("200 response of " + contract[1] + " => " + success)
+                    .isTrue();
         } else if (contract[4].endsWith("[]")) {
             JsonNode array = success.at("/content/application~1json/schema");
             assertThat(array.path("type").asText()).isEqualTo("array");
@@ -547,9 +560,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             assertThat(parameter).as(fields[0]).isNotNull();
             assertThat(parameter.path("in").asText()).isEqualTo(fields[1]);
             assertThat(parameter.path("required").asBoolean()).isEqualTo(Boolean.parseBoolean(fields[2]));
-            assertThat(parameter.at("/schema/type").asText())
-                    .as(parameter.toString())
-                    .isEqualTo(fields[3]);
+            assertThat(parameter.at("/schema/type").asText()).isEqualTo(fields[3]);
             assertThat(parameter.at("/schema/format").asText()).isEqualTo(fields[4]);
             assertThat(parameter.at("/schema/default").asText()).isEqualTo(fields[5]);
             assertThat(parameter.path("description").asText()).isNotBlank();

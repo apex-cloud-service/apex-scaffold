@@ -8,8 +8,6 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -105,12 +103,6 @@ public class OpenAppHandler {
             operationId = "authGetOpenApp",
             summary = "查询开放应用详情",
             description = "按客户端 ID 查询本租户开放应用详情（含已声明 scope 与非法 scope 校验结果）；不存在返回 404")
-    @Parameter(
-            name = "clientId",
-            in = ParameterIn.PATH,
-            required = true,
-            description = "开放应用客户端 ID",
-            schema = @Schema(type = "string"))
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

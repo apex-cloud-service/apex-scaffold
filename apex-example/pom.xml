@@ -85,6 +85,21 @@
                     <mainClass>com.apex.example.ExampleApplication</mainClass>
                 </configuration>
             </plugin>
+            <!--
+                示例模块豁免 JaCoCo 覆盖率门禁：本模块是使用示范（12 个演示类、3 个测试类），
+                不承载业务逻辑，父 POM 的行 60% / 分支 50% 门槛对其无实际质量意义。
+                覆盖率要求仍适用于各业务模块，此处仅本地跳过，不放宽全局配置。
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>check</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>

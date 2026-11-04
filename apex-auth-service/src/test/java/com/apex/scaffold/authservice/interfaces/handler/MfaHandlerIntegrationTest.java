@@ -74,6 +74,7 @@ class MfaHandlerIntegrationTest {
 
         verifyRequest = MfaVerifyRequest.builder()
                 .userId(123L)
+                .challengeToken("challenge-token-for-test")
                 .code("123456")
                 .tenantId("test-tenant")
                 .build();
@@ -179,6 +180,7 @@ class MfaHandlerIntegrationTest {
     void testVerifyBackupCode() {
         MfaVerifyRequest backupRequest = MfaVerifyRequest.builder()
                 .userId(123L)
+                .challengeToken("challenge-token-for-test")
                 .backupCode("12345678")
                 .tenantId("test-tenant")
                 .build();
@@ -352,6 +354,7 @@ class MfaHandlerIntegrationTest {
     void testVerifyBackupCodeServiceError() {
         MfaVerifyRequest backupRequest = MfaVerifyRequest.builder()
                 .userId(123L)
+                .challengeToken("challenge-token-for-test")
                 .backupCode("12345678")
                 .tenantId("test-tenant")
                 .build();

@@ -131,7 +131,9 @@ class AuthMfaMigrationIntegrationTest {
             }
             verifyReactiveRepository(vendor, host, port, database, user, password);
             flyway.validate();
-            assertThat(flyway.info().applied()).hasSize(16);
+            // 不硬编码迁移条数：新增迁移（V59-V61 等）不应使本用例失效；
+            // 核心断言是“全部迁移已应用、无待执行、重复 migrate 无动作”
+            assertThat(flyway.info().applied()).isNotEmpty();
             assertThat(flyway.info().pending()).isEmpty();
             assertThat(flyway.migrate().migrationsExecuted).isZero();
         } finally {
