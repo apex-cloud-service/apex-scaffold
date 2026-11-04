@@ -127,6 +127,25 @@ public class AuthenticationHandler {
             description = "login",
             saveRequest = false,
             saveResponse = false)
+    public Mono<ServerResponse> login(ServerRequest request) {
+        String clientIp = request.remoteAddress()
+                .map(addr -> addr.getAddress().getHostAddress())
+                .orElse("unknown");
+
+        return request.bodyToMono(LoginRequest.class)
+                .flatMap(loginRequest -> authenticationService.login(loginRequest, clientIp))
+                .flatMap(loginResponse -> ServerResponse.ok().bodyValue(loginResponse))
+                .onErrorResume(error -> {
+                    if (error instanceof BusinessException) {
+                        BusinessException be = (BusinessException) error;
+                        return ServerResponse.status(be.getCode() == ResultCode.UNAUTHORIZED.getCode() ? 401 : 403)
+                                .bodyValue(be.getMessage());
+                    }
+                    log.error("登录处理异常: {}", error.toString(), error);
+                    return ServerResponse.status(500).bodyValue("系统错误");
+                });
+    }
+
     /**
      * MFA 二步验证（统一认证收口 A4）：以挑战凭据 + TOTP 验证码交换正式令牌。
      *
@@ -145,25 +164,6 @@ public class AuthenticationHandler {
         return request.bodyToMono(com.apex.scaffold.auth.application.dto.MfaVerifyRequest.class)
                 .flatMap(verifyRequest -> authenticationService.verifyMfaChallenge(
                         verifyRequest.getChallengeToken(), verifyRequest.getCode(), clientIp))
-                .flatMap(loginResponse -> ServerResponse.ok().bodyValue(loginResponse))
-                .onErrorResume(error -> {
-                    if (error instanceof BusinessException) {
-                        BusinessException be = (BusinessException) error;
-                        return ServerResponse.status(be.getCode() == ResultCode.UNAUTHORIZED.getCode() ? 401 : 403)
-                                .bodyValue(be.getMessage());
-                    }
-                    log.error("登录处理异常: {}", error.toString(), error);
-                    return ServerResponse.status(500).bodyValue("系统错误");
-                });
-    }
-
-    public Mono<ServerResponse> login(ServerRequest request) {
-        String clientIp = request.remoteAddress()
-                .map(addr -> addr.getAddress().getHostAddress())
-                .orElse("unknown");
-
-        return request.bodyToMono(LoginRequest.class)
-                .flatMap(loginRequest -> authenticationService.login(loginRequest, clientIp))
                 .flatMap(loginResponse -> ServerResponse.ok().bodyValue(loginResponse))
                 .onErrorResume(error -> {
                     if (error instanceof BusinessException) {
