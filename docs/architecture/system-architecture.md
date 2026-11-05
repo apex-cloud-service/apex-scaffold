@@ -149,7 +149,7 @@ flowchart TB
 | job-domain | `/admin-api/v1/jobs`、`/admin-api/v1/jobs/**` | `http://127.0.0.1:8095` |
 | masking-domain | `/api/v1/masking/**` | `http://127.0.0.1:8096` |
 | integration-domain | `/integration/v1/**` | `lb://apex-integration-service` |
-| open-api-file | `/open-api/file/**`、`/open-api/files/**` | `lb://apex-file-service` |
+| open-api-file | `/open-api/file/**` | `lb://apex-file-service` |
 | open-api-workflow | `/open-api/workflow/**` | `lb://apex-workflow-service` |
 | open-api-system | `/open-api/users`、`/open-api/users/**`、`/open-api/user/**` | `lb://apex-system-service` |
 | open-api-office | `/open-api/messages/**` | `lb://apex-office-service` |

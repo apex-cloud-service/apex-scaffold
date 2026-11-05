@@ -30,7 +30,7 @@ public class CapabilityUsageProperties {
 
     /** 能力编码 → 计量 URI 前缀清单；默认与网关 /open-api/** 四条路由的能力编码对齐。 */
     private Map<String, List<String>> mappings = new LinkedHashMap<>(Map.of(
-            "file-storage", List.of("/open-api/file/", "/open-api/files/"),
+            "file-storage", List.of("/open-api/file/"),
             "workflow", List.of("/open-api/workflow/"),
             "user-org", List.of("/open-api/users/", "/open-api/user/"),
             "office-message", List.of("/open-api/messages/")));

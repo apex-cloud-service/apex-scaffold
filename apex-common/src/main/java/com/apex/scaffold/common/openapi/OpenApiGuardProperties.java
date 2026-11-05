@@ -54,7 +54,6 @@ public class OpenApiGuardProperties {
      */
     private Map<String, String> pathCapabilities = new LinkedHashMap<>(Map.of(
             "/open-api/file/", "file-storage",
-            "/open-api/files/", "file-storage",
             "/open-api/workflow/", "workflow",
             "/open-api/users", "user-org",
             "/open-api/user/", "user-org",

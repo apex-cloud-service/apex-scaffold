@@ -108,7 +108,7 @@ class GatewayRouteProfileConfigTest {
     private static final java.util.Map<String, OpenApiContract> OPEN_API_CONTRACT = java.util.Map.of(
             "open-api-file",
             new OpenApiContract(
-                    List.of("/open-api/file/**", "/open-api/files/**"),
+                    List.of("/open-api/file/**"),
                     "file-storage",
                     List.of("open:file:read"),
                     List.of("open:file:write")),
@@ -120,7 +120,7 @@ class GatewayRouteProfileConfigTest {
                     List.of("open:workflow:write")),
             "open-api-system",
             new OpenApiContract(
-                    List.of("/open-api/users/**", "/open-api/user/**"),
+                    List.of("/open-api/users", "/open-api/users/**", "/open-api/user/**"),
                     "user-org",
                     List.of("open:user:read"),
                     List.of()),

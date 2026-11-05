@@ -95,7 +95,7 @@ spring:
         - id: open-api-file
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:
-            - Path=/open-api/file/**,/open-api/files/**
+            - Path=/open-api/file/**
           metadata:
             open-api:
               capability: file-storage
