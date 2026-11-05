@@ -42,6 +42,10 @@ TOTP 仓储只读取加密格式，不会在解密失败时回退为明文。升
 
 Token 存储加密使用 `security.encryption.key`（环境变量 `SECURITY_ENCRYPTION_KEY`）；认证中心也支持 `security.token.encryption.key`（`TOKEN_ENCRYPTION_KEY`），前者优先。密钥必须为 Base64 编码的 32 字节，跨实例和重启保持一致；缺失或长度错误会拒绝启动，不再生成临时密钥。旧临时密钥加密的 Token 需要保留原密钥迁移，否则必须重新登录。
 
+认证中心（`apex-auth-service`）除上述密钥外还要求 OAuth2 签发密钥对：`auth-center.oauth2.private-key` / `public-key`，通过 `AUTH_CENTER_OAUTH2_PRIVATE_KEY` / `AUTH_CENTER_OAUTH2_PUBLIC_KEY` 注入，值为 Base64 编码的 PKCS#8 私钥与 X.509 公钥（不含 PEM 头尾）。**非 basic 档缺失时认证服务直接拒绝启动**（`OAuth2 RSA keys must be configured outside basic profile`）。`AUTH_CENTER_OAUTH2_KEY_ID` 对应 JWT header 的 `kid`，需与 `/.well-known/jwks.json` 输出一致。
+
+认证服务的数据源必须使用 `spring.datasource.dynamic.datasource.master`（dynamic-datasource 由 `apex-infrastructure-persistence` 传递引入）。只配置普通 `spring.datasource.url` 会在启动时报 `dynamic-datasource can not find primary datasource`；basic 档位通过排除该自动配置改用 H2。认证服务的容器健康检查目标为 `GET /actuator/health/readiness`，安全链必须放行 `/actuator/health/**`，否则镜像始终为 unhealthy。
+
 Compose 强制注入 `APEX_DATA_ENCRYPTION_KEY`、`SECURITY_ENCRYPTION_KEY`、`CONFIG_ENCRYPTION_KEY`、`APEX_CONFIG_ENCRYPTION_KEY` 和 `JWT_SECRET`，缺失或为空时拒绝渲染。一次性 `security-key-check` 服务使用 Java 21 JRE 镜像和预构建的离线工具 JAR 校验格式，成功后才允许启动应用；四类加密密钥必须独立生成并安全保存，不应每次启动重新生成。三个 Base64 密钥可分别用 `openssl rand -base64 32` 生成；公共配置密钥可用 `openssl rand -hex 16` 生成（结果是 32 字节 ASCII）。`.env.example` 仅保留空值。环境变量仍可被具有 Podman 管理权限的用户查看。
 
 安全检查命令（捕获渲染结果，不把展开后的密钥打印到终端）：

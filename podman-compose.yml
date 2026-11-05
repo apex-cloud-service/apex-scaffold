@@ -1,7 +1,8 @@
 # ============================================================
 # Apex Scaffold - Podman Compose 一键编排
 # ============================================================
-# 服务: apex-gateway + 5 微服务 + nacos + mysql + redis；可选 rocketmq（--profile rocketmq）
+# 服务: apex-gateway + 6 个业务服务 + nacos + mysql + redis；可选 rocketmq（--profile rocketmq）
+#       以及可选的 apex-job-service（任务代理）与 apex-masking-service（脱敏）
 #
 # 用法:
 #   # 1) 本地/测试一键栈（默认读取 .env，需先配置全部安全密钥）

@@ -42,8 +42,9 @@
 ### 1. 服务商：生成密钥对（仅一次）
 
 ```bash
-# 使用 LicenseGenerator 命令行工具
-java -cp "<apex-common.jar>:<依赖>" com.apex.scaffold.common.license.LicenseGenerator \
+# 卖方工具位于 apex-license-tools 模块（发行包不包含）
+java -cp "apex-license-tools/target/classes:<依赖>" \
+  com.apex.scaffold.license.tools.LicenseGenerator \
   gen-keys config/license/private.key config/license/public.key
 ```
 
@@ -69,7 +70,8 @@ java -cp "<apex-common.jar>:<依赖>" com.apex.scaffold.common.license.LicenseGe
 也可以使用 CLI 手动生成：
 
 ```bash
-java -cp "<apex-common.jar>:<依赖>" com.apex.scaffold.common.license.LicenseGenerator \
+java -cp "apex-license-tools/target/classes:<依赖>" \
+  com.apex.scaffold.license.tools.LicenseGenerator \
   gen-license config/license/private.key config/license/public.key customer-license.json \
   STANDARD "示例公司" 365
 ```
@@ -81,8 +83,9 @@ java -cp "<apex-common.jar>:<依赖>" com.apex.scaffold.common.license.LicenseGe
 **步骤 1：客户采集机器指纹**
 
 ```bash
-# 客户在目标机器上运行
-java -cp "<apex-license-tools.jar>:<依赖>" com.apex.scaffold.license.tools.LicenseGenerator gen-fingerprint
+# 客户在目标机器上运行（apex-license-tools 为卖方模块，按交付约定单独提供）
+java -cp "apex-license-tools/target/classes:<依赖>" \
+  com.apex.scaffold.license.tools.LicenseGenerator gen-fingerprint
 
 # 输出示例：
 # 机器指纹（SHA-256）:
@@ -99,7 +102,8 @@ java -cp "<apex-license-tools.jar>:<依赖>" com.apex.scaffold.license.tools.Lic
 ./scripts/license/generate-license.sh ENTERPRISE "示例公司" 365 --fingerprint a1b2c3d4e5f6...
 
 # 或使用 CLI
-java -cp "<apex-license-tools.jar>:<依赖>" com.apex.scaffold.license.tools.LicenseGenerator \
+java -cp "apex-license-tools/target/classes:<依赖>" \
+  com.apex.scaffold.license.tools.LicenseGenerator \
   gen-license config/license/private.key config/license/public.key customer-license.json \
   ENTERPRISE "示例公司" 365 --fingerprint a1b2c3d4e5f6...
 ```
@@ -216,10 +220,14 @@ apex:
 
 ```bash
 export APEX_LICENSE_FILE=/opt/apex/customer-license.json
-java -jar apex-interfaces.jar
+# 启动任一当前服务；单体 apex-interfaces 已退役，组合部署使用 apex-boot-all
+java -jar apex-auth-service/target/apex-auth-service-<version>.jar
 ```
 
 重启后日志输出 `License 验证通过: 客户=xxx, 版本=STANDARD` 即激活成功。
+
+> 关闭 `apex.license.enabled` 或验证失败时，License 模块会装配降级验证器：基础路径继续可用，
+> 但 `@FeatureGate` 商业功能检查返回 false，不能理解为授权门禁被绕过。
 
 ### 4. 使用 @FeatureGate 注解标记商业功能
 

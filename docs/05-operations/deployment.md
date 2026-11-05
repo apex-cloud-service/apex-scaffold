@@ -31,7 +31,7 @@ bash scripts/utils/token-v42-recover.sh \
 
 > 版本：1.3.1 ｜ 适用：dev / it / prod 全环境
 > 本文档覆盖微服务架构下的 **java -jar 直接部署**、**Podman 单容器**、**Podman Compose 编排** 三种方式，并给出微服务拓扑、环境变量、健康检查、日志监控、License、升级回滚、安全清单等完整说明。
-> 旧单体 `apex-scaffold` 已退役：原 8080 统一入口由 **apex-gateway 网关** 承接，业务功能拆分到 5 个独立微服务（见迁移方案 §13.1/§15.1/§15.3）。
+> 旧单体 `apex-scaffold` 已退役：原 8080 统一入口由 **apex-gateway 网关** 承接，业务功能拆分到 6 个独立业务服务（system / auth / workflow / file / office / integration，见迁移方案 §13.1/§15.1/§15.3）。
 
 ---
 
@@ -71,7 +71,7 @@ bash scripts/utils/token-v42-recover.sh \
 |------|---------|------|------|
 | **java -jar** | 传统服务器 / 已有 MySQL+Redis+Nacos 的机房、云主机 | 最轻量、便于和 systemd/监控代理结合 | JDK 21 + MySQL + Redis + Nacos |
 | **Podman 单容器** | 已容器化的 K8s 以外的裸容器环境 | 一镜像一服务，多服务互不干扰 | Podman + 外部 MySQL/Redis/Nacos |
-| **Podman Compose** | 一键拉起完整微服务环境（开发/测试/生产单机） | 网关 + 5 微服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak）全部编排 | Podman + podman-compose |
+| **Podman Compose** | 一键拉起完整微服务环境（开发/测试/生产单机） | 网关 + 6 个业务服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/任务代理/脱敏）全部编排 | Podman + podman-compose |
 
 各服务共享**同一套配置体系与环境变量**（见 [§7](#7-环境变量完整参考表)），切换部署方式无需修改代码或配置。
 
@@ -80,7 +80,7 @@ bash scripts/utils/token-v42-recover.sh \
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                         统一入口 apex-gateway :8080              │
-│               （API 文档 /doc.html；按 lb:// 路由到各服务）        │
+│               （统一 API 入口；按 lb:// 路由到各服务）            │
 └───────────────┬───────────────────────────┬──────────────────────┘
                 ▼ lb://                     ▼ lb://
 ┌─────────────────────────┐   ┌──────────────────────────────────┐
@@ -117,7 +117,7 @@ bash scripts/utils/token-v42-recover.sh \
 | 组件 | 版本要求 | 说明 |
 |------|---------|------|
 | JDK | 21（`.sdkmanrc` 固定 `21.0.13.0+9-tem`） | java -jar 部署必需 |
-| MySQL | 8.0+ | 各服务库由 Flyway 自动迁移建表，只需保证账号可建库/建表/写数据 |
+| MySQL | 8.0+ | 各服务库由 Flyway 自动迁移建表（**system 的 dev 档明确关闭自动迁移**，首次空库须先显式启用或手工执行迁移），只需保证账号可建库/建表/写数据 |
 | Redis | 6.x / 7.x | 缓存 / Token / 分布式锁；网关限流 |
 | Nacos | 2.x | 服务发现 + 配置中心（微服务拓扑默认依赖） |
 | Podman | 5.x | 容器部署必需；macOS 使用 Podman machine |
@@ -216,11 +216,13 @@ export DB_PASSWORD='********'
 export REDIS_HOST=127.0.0.1
 export REDIS_PORT=6379
 export REDIS_PASSWORD='********'   # prod 配置强制要求（spring.data.redis.password=${REDIS_PASSWORD}）
-export JWT_SECRET='$(openssl rand -base64 48)'
-export APEX_DATA_ENCRYPTION_KEY='$(openssl rand -base64 32)'
-export SECURITY_ENCRYPTION_KEY='$(openssl rand -base64 32)'
-export CONFIG_ENCRYPTION_KEY='$(openssl rand -hex 16)'
-export APEX_CONFIG_ENCRYPTION_KEY='$(openssl rand -base64 32)'
+# 密钥生成：必须用双引号或命令替换赋值，单引号会导出字面量 "$(openssl ...)"。
+# 生成后请持久保存，重启/重建时复用同一组密钥；轮换需配套数据迁移。
+export JWT_SECRET="$(openssl rand -base64 48)"
+export APEX_DATA_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+export SECURITY_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+export CONFIG_ENCRYPTION_KEY="$(openssl rand -hex 16)"
+export APEX_CONFIG_ENCRYPTION_KEY="$(openssl rand -base64 32)"
 export NACOS_SERVER_ADDR=127.0.0.1:8848    # 默认 Nacos 地址
 
 export JAVA_OPTS='-Xms512m -Xmx768m -Xss512k -XX:MaxDirectMemorySize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/apex-scaffold/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/opt/apex-scaffold/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom'
@@ -320,22 +322,31 @@ sudo systemctl restart apex-auth-service  # 重启（优雅停机，等待在途
 ```bash
 # 一个镜像只包含一个微服务；用 --build-arg SERVICE_MODULE 选择目标
 # 默认档位 enterprise；可 --build-arg BUILD_PROFILE=basic|standard|enterprise
+# 非网关服务必须同时传入端口参数：Containerfile 的默认值全部是 8080，不会按模块推导。
 podman build -f Containerfile \
   --build-arg BUILD_PROFILE=enterprise \
   --build-arg SERVICE_MODULE=apex-gateway \
   -t apex-gateway:1.3.1 .
 # 其余服务同理：apex-auth-service / apex-system-service / apex-workflow-service /
 #              apex-office-service / apex-file-service
-podman build -f Containerfile --build-arg SERVICE_MODULE=apex-auth-service -t apex-auth-service:1.3.1 .
+podman build -f Containerfile \
+  --build-arg BUILD_PROFILE=enterprise \
+  --build-arg SERVICE_MODULE=apex-auth-service \
+  --build-arg SERVICE_PORT=8081 \
+  --build-arg MANAGEMENT_PORT=8081 \
+  --build-arg HEALTHCHECK_PORT=8081 \
+  -t apex-auth-service:1.3.1 .
 ```
 
 构建说明（Containerfile）：
 
 - 多阶段构建：builder 阶段编译整个反应堆（`mvnd clean package -P<profile>`），runtime 仅含 JRE + 选中微服务的可执行 jar
-- 业务端口 / 管理端口 / 健康检查端口通过 `--build-arg SERVICE_PORT/MANAGEMENT_PORT/HEALTHCHECK_PORT` 注入（网关 8080，各服务见 §1）
+- 业务端口 / 管理端口 / 健康检查端口均需通过 `--build-arg SERVICE_PORT/MANAGEMENT_PORT/HEALTHCHECK_PORT` 显式注入；
+  三者默认都是 8080，未传时非网关镜像会探测错误端口（网关 8080，各服务见 §1）
 - 非 root 用户 `appuser` 运行；时区默认 `Asia/Shanghai`（含 tzdata）
 - 默认 JVM：生产级调优集（`-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200` + OOM 堆转储/退出 + 滚动 GC 日志），可用 `JAVA_OPTS` 覆盖
-- `HEALTHCHECK` 请求 `/actuator/health/readiness`，失败自动重启
+- `HEALTHCHECK` 请求 `/actuator/health/readiness`，仅把容器标记为 healthy/unhealthy；
+  自动重启由 Podman/Compose/systemd 的重启策略决定，`HEALTHCHECK` 本身不会重启进程
 
 ### 5.2 运行容器
 
@@ -379,7 +390,7 @@ podman run -d --name apex-auth-service ...（同上参数，镜像换 1.4.0）
 
 ## 6. 部署方式三：Podman Compose 编排
 
-> 一键拉起「网关 + 5 微服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/前端）」，适合本地开发、测试环境与生产单机。
+> 一键拉起「网关 + 6 个业务服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/前端）」，适合本地开发、测试环境与生产单机。
 > 旧单体 `apex-scaffold` 服务已移除（见 `podman-compose.yml` 头部注释）。
 
 <a id="61-一键启动完整微服务栈"></a>
@@ -409,7 +420,8 @@ podman-compose -f podman-compose.yml logs -f apex-gateway
 
 # 5. 验证
 curl http://localhost:8080/api/v1/health
-# 浏览器打开 http://localhost:8080/doc.html（API 文档，经网关）
+# 浏览器打开 http://localhost:8082/doc.html（system-service 的 API 文档）
+# 网关路由表不含 /doc.html、/swagger-ui/**、/v3/api-docs/**，不能假设网关代理 API 文档
 ```
 
 > Compose 通过 `x-app-common-environment` 锚点把公共配置（安全密钥、Redis、Nacos、JWT、RocketMQ、Outbox、治理）注入所有微服务；各服务仅追加 `DB_NAME` 与 `SPRING_DATASOURCE_URL` 差异项。

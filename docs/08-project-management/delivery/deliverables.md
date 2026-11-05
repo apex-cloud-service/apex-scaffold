@@ -34,23 +34,25 @@
 
 ```bash
 source scripts/build/init-build-env.sh
-./scripts/release/release.sh <basic|standard|enterprise> <版本号>
+# 版本号可省略（读取根 POM）；显式传入时必须与 POM 版本一致
+./scripts/release/release.sh <basic|standard|enterprise> [版本号]
 ```
 
-输出 `dist/apex-scaffold-<版本>-<档位>.zip`，脚本内组装内容为：
+输出 `dist/apex-scaffold-<版本>-<档位>.zip` 及同名 `.sha256`，脚本内组装内容为：
 
 | 内容 | 来源 | 说明 |
 | --- | --- | --- |
 | 六个服务 JAR | 各服务 `target/` | 网关 + 五个业务服务 |
 | `LICENSE` / `LICENSE-COMMERCIAL.md` | 仓库根 | 双轨授权 |
 | `README.md` / `CHANGELOG.md` / `CODE_OF_CONDUCT.md` / `CONTRIBUTING.md` | 仓库根 | |
-| `docs/*.md` | `docs/` 根目录 | **当前仅含 `docs/README.md`**，见风险 R-02 |
+| `docs/` | `docs/` 全目录 | 保留子目录结构，仅复制 Markdown 与图片（排除测试证据 json/log/jfr 等） |
 | `config/` | `config/`（排除 `private.key`） | 配置模板、监控、Nacos、Sentinel |
 | `podman-compose.yml` / `podman-compose.infra.yml` / `Containerfile` | 仓库根 | |
 | `k8s/` | 仓库根 | 基础部署、金丝雀、PDB |
-| `scripts/build` / `scripts/deploy` | `scripts/` | 构建与部署脚本 |
+| `scripts/build` / `scripts/deploy` / `scripts/lib` | `scripts/` | 构建与部署脚本及其公共函数库 |
+| `tools/local-deployment.jar` | `apex-tools-deployment/target/` | Compose `security-key-check` 离线校验工具 |
 
-**不含**：`apex-license-tools`、`scripts/license/`、`config/license/private.key`、`apex-tools-deployment`、测试源码、构建中间产物。
+**不含**：`apex-license-tools`、`scripts/license/`、`config/license/private.key`、测试源码、构建中间产物。
 
 ---
 
@@ -94,9 +96,9 @@ source scripts/build/init-build-env.sh
 | 安全 | [security-protections.md](../../05-operations/security-protections.md) | 必需 |
 | 授权 | [license-management.md](../../07-commercial/license-management.md) | 商业版必需 |
 | 交付管理 | 本目录文档集 | 必需（内部与客户交接共用） |
-| 内部过程文档 | `docs/reports/`、`docs/_archive/`、需求与计划 | **不交付** |
+| 内部过程文档 | `docs/reports/`、`docs/06-testing/`、`docs/08-project-management/`、`docs/_archive/`、需求与计划 | **不作为客户交付文档**；`release.sh` 仅按名称排除 `COMMERCIAL_*`/`REFACTORING_*`/`*GAP_ANALYSIS*`，其余 Markdown 随包以保持跨目录链接可解析 |
 
-> 当前 `release.sh` 仅复制 `docs/` 根目录的 Markdown，无法自动带出上述子目录文档。发行前需按本表另行打包，或修复脚本后重新生成（见 [风险登记册](./risk-register.md) R-02）。
+> `release.sh` 已改为按目录结构复制 docs（排除 `_archive`、`06-testing`、`08-project-management`），上述客户文档会随包交付；发布流水线另有内容校验（见 [风险登记册](./risk-register.md) R-02）。
 
 ---
 
@@ -130,7 +132,7 @@ source scripts/build/init-build-env.sh
 | 档位 | `basic` / `standard` / `enterprise` |
 | 校验文件 | `apex-scaffold-<版本号>-<档位>.zip.sha256` |
 
-> [release.sh](../../../scripts/release/release.sh) 的默认版本参数为 `1.2.0`，低于当前项目版本 `1.3.1`。调用时必须显式传入版本号，否则产物命名与内容版本不一致（见 [风险登记册](./risk-register.md) R-04）。
+> [release.sh](../../../scripts/release/release.sh) 默认读取根 POM 版本；显式传入的版本必须与 POM 一致，否则脚本直接失败（见 [风险登记册](./risk-register.md) R-04）。校验文件 `.sha256` 当前需在发布流程外自行生成。
 
 ---
 

@@ -52,8 +52,8 @@ API 接口文档、规范和版本管理。
 - [数据管理 API](./03-api/README.md) - 数据管理接口
 
 **在线文档**: 启动项目后访问
-- Swagger UI（仅 system-service 装配 springdoc）: http://localhost:8082/swagger-ui.html
-- Knife4j UI（仅 system-service）: http://localhost:8082/doc.html
+- Swagger UI（system-service、auth-service 均装配 springdoc）: http://localhost:8082/swagger-ui.html
+- Knife4j UI（system-service）: http://localhost:8082/doc.html
 
 ### [04. 开发文档](./04-development/README.md)
 

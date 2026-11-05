@@ -14,16 +14,16 @@
 | `/admin-api/v1/**` | system 域 | 管理后台和运维接口 | 需要认证；启用 RBAC 时还需命中 `securityProperties.adminRoles` 中的任一角色，具体权限以 Handler 注解为准 |
 | `/api/office/**` | system 域 | 办公平台能力接口 | 默认需要认证 |
 | `/auth/sso/**` | system 域 | SSO 登录、回调和登出 | 全部需要认证；当前公开白名单未放行这些路径 |
-| `/oauth2/**`、`/.well-known/**` | system 域 | OAuth2 授权服务器标准端点 | 仅 `token`、`revoke`、`introspect` 在 Web 安全层公开，其余已注册端点需要认证 |
+| `/oauth2/**`、`/.well-known/**` | 认证中心 | OAuth2 授权服务器标准端点 | 网关把该前缀路由到 `apex-auth-service`；仅 `token`、`revoke`、`introspect` 与 `/.well-known/**` 在 Web 安全层公开，其余已注册端点需要认证。system 库仍保留一份历史 `OAuth2RouterConfig`，但网关不路由到它，不能按该实现推断线上契约 |
 | `/api/v1/auth/**` | system 域 | 认证、授权及 Keycloak/OIDC 登录接口 | 默认需要认证；Keycloak 的三个登录/回调端点公开且仅在 `keycloak.enabled=true` 时装配 |
 | `/api/mfa/**`、`/api/ip-access-control/**` | 认证中心 | MFA 管理和 IP 访问控制 | 需要 Bearer ACCESS 访问令牌 |
-| `/api/v1/mfa/**`、`/auth/v1/**` | 认证中心 | MFA、登录、令牌、角色、权限和会话 | 仅 `/auth/v1/login`、`/auth/v1/refresh` 公开，其余需要 Bearer ACCESS 访问令牌 |
+| `/api/v1/mfa/**`、`/auth/v1/**` | 认证中心 | MFA、登录、令牌、角色、权限和会话 | 仅 `/auth/v1/login`、`/auth/v1/refresh`、`/auth/v1/mfa/verify`、`/auth/v2/password-recovery/**` 与 `/.well-known/**` 公开，其余需要 Bearer ACCESS 访问令牌 |
 
  system 域认证约定以 `SecurityConfig` 和 `SystemConstants.PUBLIC_PATHS` 为准。本文业务路由中的公开端点为：`GET /`、`GET /api/v1/health`；`POST /api/v1/auth/login`、`register`、`wechat/bind-phone`、`refresh`、`sms/code`、`cl/sms/code`、`cl/validate-mobile`（后六项均拼接 `/api/v1/auth/` 前缀）；`GET /api/v1/auth/wechat/mp/authorize`（公众号网页授权跳转入口）；`GET /api/v1/auth/captcha`、`POST /api/v1/auth/captcha/verify`；`GET /api/v1/office/login`、`GET /api/v1/office/callback`；`POST /oauth2/token`、`POST /oauth2/revoke`、`POST /oauth2/introspect`；以及 Keycloak 的三个登录/回调端点。`/api/v1/info`、`/api/v1/office/status`、`/api/v1/auth/wx/phone`、`/api/v1/auth/logout` 均需要认证。白名单还包含框架或静态资源路径，不能据此推断存在业务 Router。
 
 管理端在 `rbacEnabled=true` 时按配置角色授权，关闭时 Web 安全层仅要求认证。`securityProperties.adminPaths` 命中的其他管理路径在启用 RBAC 时要求配置的 `adminRole` 或 `SUPER_ADMIN`；`/api/v1/auth/roles/my` 和 `/api/v1/auth/permissions/my` 优先按普通已认证用户放行。Handler 的权限注解仍需独立核对。
 
-认证中心仅放行登录和刷新，其余本文端点均要求 `Authorization: Bearer <access-token>`，且令牌类型必须为 `ACCESS`。两模块各有同名 `AuthConfigRouter` / `AuthConfigHandler`： system 域注册 `/admin-api/v1/auth/config/**`，认证中心注册 `/api/v1/auth/configs/**`，不能合并。
+认证中心仅匿名放行登录、刷新、MFA 二步交换（`/auth/v1/mfa/verify`）、三条自助密码找回路径与 `/.well-known/**`，其余本文端点均要求 `Authorization: Bearer <access-token>`，且令牌类型必须为 `ACCESS`。两模块各有同名 `AuthConfigRouter` / `AuthConfigHandler`： system 域注册 `/admin-api/v1/auth/config/**`，认证中心注册 `/api/v1/auth/configs/**`，不能合并。
 
 统一响应、错误码和异常出口不由路由表决定。普通业务异常进入统一 WebFlux 异常处理边界，认证失败和权限不足分别由认证入口点与拒绝处理器返回，流控/降级异常由 Sentinel 异常处理器处理。
 
@@ -267,6 +267,11 @@
 
 ### 2.10 OAuth2
 
+> **运行边界**：`/oauth2/**` 与 `/.well-known/**` 在网关路由到 `apex-auth-service`（见 §1），
+> 当前线上契约以 `OauthTokenRouter`、`OauthEndpointRouter`、`OauthMetadataRouter` 为准。
+> 下表是 system 库中历史 `OAuth2RouterConfig` 的注册清单，仅在直连 system-service 且该配置被装配时生效，
+> 不能作为网关后的实际接口清单。
+
 当前安全配置要求 discovery、JWKS、authorize、consent 和 consent/revoke 使用已认证登录态。Web 安全层公开的 token 端点仍按 grant 类型向应用服务传递客户端凭据并校验授权；revoke Handler 要求 `token` 和 `client_id`，introspect Handler 要求 `token`，二者没有在 Handler 中执行客户端密钥认证。不能将协议预期或 OpenAPI 标注替代为实际认证行为。
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
@@ -389,6 +394,7 @@
 | --- | --- | --- | --- | --- |
 | POST | `/auth/v1/login` | `AuthenticationRouter` | `AuthenticationHandler.login` | 无需认证；用户名密码登录 |
 | POST | `/auth/v1/logout/{userId}` | `AuthenticationRouter` | `AuthenticationHandler.logout` | 需要 Bearer 访问令牌；路径用户必须与认证主体一致 |
+| POST | `/auth/v1/mfa/verify` | `AuthenticationRouter` | `AuthenticationHandler.verifyMfa` | 无需访问令牌；以登录返回的挑战凭据 + TOTP 交换正式令牌，挑战一次性消费 |
 | POST | `/auth/v1/refresh` | `AuthenticationRouter` | `AuthenticationHandler.refreshToken` | 无需访问令牌；刷新令牌一次性轮换并防重放 |
 
 ### 3.2 角色、权限和会话
@@ -418,6 +424,7 @@
 ### 3.3 MFA 接口
 
 `MfaRouter` 注册的是 `/api/v1/mfa/**`，面向已认证用户的 MFA 设置、验证和状态查询。
+请求体中的 `userId` / `tenantId` 仅用于与认证主体比对；不一致返回 403，实际执行始终使用令牌中的身份。
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |

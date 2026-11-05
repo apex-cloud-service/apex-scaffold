@@ -196,12 +196,15 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 
 ### 任务2: 创建第一个接口 (30分钟)
 
-按照DDD四层架构,创建一个 `GET /api/v1/products/{id}` 接口:
+按照DDD四层架构，创建一个 `GET /api/v1/products/{id}` 接口。具体业务默认落在
+`apex-system`；`apex-domain` 只容纳跨域复用的基础契约，不承载 system 专属实体：
 
-1. **领域层** (`apex-domain`): 定义 `Product` 实体和 `ProductRepository` 接口
-2. **基础设施层** (`apex-system` 的 `infrastructure` 包): 实现 `ProductPO`/`ProductMapper`/`ProductRepositoryImpl`
-3. **应用层** (`apex-system` 的 `application` 包): 实现 `ProductService`
-4. **接口层** (`apex-system` 的 `interfaces` 包): 实现 `ProductHandler` + 注册路由
+1. **领域层**（`apex-system` 的 `domain` 包）: 定义 `Product` 实体和 `ProductRepository` 端口
+2. **基础设施层**（`apex-system` 的 `infrastructure` 包）: 实现 `ProductPO`/`ProductMapper`/`ProductRepositoryImpl`
+3. **应用层**（`apex-system` 的 `application` 包）: 实现 `ProductService`
+4. **接口层**（`apex-system` 的 `interfaces` 包）: 实现 `ProductHandler` + 注册路由
+
+新业务不放入共享 domain，也不放入仅保留旧坐标兼容的 `apex-infrastructure`。
 
 参考代码生成器: `./scripts/codegen/generate.sh -i examples/product.json`
 

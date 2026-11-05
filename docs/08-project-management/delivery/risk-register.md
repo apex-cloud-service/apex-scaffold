@@ -39,12 +39,12 @@
 | 项 | 内容 |
 | --- | --- |
 | 等级 | **高** |
-| 状态 | 开放 |
+| 状态 | 已修复（2026-11-05） |
 | 发现日期 | 2026-10-30 |
-| 现象 | [release.sh](../../../scripts/release/release.sh) 第 78 行为 `cp docs/*.md`，仅复制 `docs/` 根目录下的 Markdown；当前 `docs/` 根目录只有 `README.md` |
+| 现象 | [release.sh](../../../scripts/release/release.sh) 原为 `cp docs/*.md`，仅复制 `docs/` 根目录下的 Markdown；当前 `docs/` 根目录只有 `README.md` |
 | 影响 | 交付包内 `docs/` 仅含一个总索引，快速开始、部署、配置、接口、运维等文档全部缺失；而该索引指向的链接在包内均会失效 |
-| 现有控制 | 无 |
-| 处置建议 | 发布前修改脚本，按 [交付物清单](./deliverables.md) §4 的白名单复制子目录文档；或在打包流程中单独组装文档集 |
+| 现有控制 | 已改为 `rsync` 保留 docs 子目录结构，仅复制 Markdown 与图片资源；测试证据类大文件（json/log/jfr/tsv 等）不进入发行包 |
+| 处置建议 | 已实施；发布流水线 `Verify distribution contents` 步骤校验 `docs/05-operations/deployment.md` 存在 |
 | 责任人 | 后端开发 |
 
 ### R-03 公钥被 `.gitignore` 排除，干净克隆缺少 License 验证公钥
@@ -52,12 +52,12 @@
 | 项 | 内容 |
 | --- | --- |
 | 等级 | **高** |
-| 状态 | 开放 |
+| 状态 | 已修复（2026-11-05，公钥文件待随本次变更提交） |
 | 发现日期 | 2026-10-30 |
 | 现象 | `.gitignore` 第 56 行 `*.key` 同时排除了 `config/license/public.key` 与 `apex-common/src/main/resources/license/public.key`；两者均不在版本控制中 |
 | 影响 | 干净克隆构建的 jar 不含 `license/public.key`，`LicenseLoader` 加载失败后进入降级模式，全部商业功能被拒绝；交付包也无法提供公钥 |
-| 现有控制 | 本机构建因文件存在而正常，容易掩盖问题 |
-| 处置建议 | 增加 `.gitignore` 例外（`!config/license/public.key`、`!apex-common/src/main/resources/license/public.key`）并提交公钥；公钥非敏感信息，可安全入库 |
+| 现有控制 | 已增加 `.gitignore` 例外（`!config/license/public.key`、`!apex-common/src/main/resources/license/public.key`）；两份公钥内容一致，均需入库 |
+| 处置建议 | 已实施；提交时确认 `git status` 中两份 `public.key` 均被纳入，私钥仍保持忽略 |
 | 责任人 | 后端开发 |
 
 ### R-04 发布脚本默认版本低于项目版本
@@ -65,12 +65,12 @@
 | 项 | 内容 |
 | --- | --- |
 | 等级 | 中 |
-| 状态 | 开放 |
+| 状态 | 已修复（2026-11-05） |
 | 发现日期 | 2026-10-30 |
 | 现象 | [release.sh](../../../scripts/release/release.sh) 的 `VERSION="${2:-1.2.0}"` 默认值为 1.2.0，根 `pom.xml` 版本为 1.3.1 |
 | 影响 | 不带版本参数调用时，压缩包命名为 1.2.0 而内容为 1.3.1，易导致交付版本误标 |
-| 现有控制 | 脚本使用说明要求显式传版本号 |
-| 处置建议 | 将默认值改为读取根 POM 版本，或去掉默认值强制传入 |
+| 现有控制 | 默认值改为读取根 POM `apex-scaffold` 的 `<version>`，并校验显式传入的版本必须与 POM 一致 |
+| 处置建议 | 已实施；版本不一致时脚本直接失败 |
 | 责任人 | 后端开发 |
 
 ### R-05 工作流端口与 system 管理端口冲突

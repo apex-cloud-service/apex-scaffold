@@ -14,13 +14,14 @@
 
 - ✅ **JDK 21** - 推荐使用 `21.0.13.0+9-tem`（SDKMAN，Temurin 21 LTS）
 - ✅ **Maven** - 推荐使用 `mvnd 2.0.0-rc-3`（速度快 3 倍）
+- ✅ **Redis 7.0+** - basic 档位仍依赖 Redis（JWT 黑名单、验证码、防重放等），
+  可用 `podman-compose -f podman-compose.infra.yml up -d redis` 单独启动
+- ✅ **MySQL 9.0+** - system 的 basic 档也使用 MySQL（不是 H2）；auth/file 等服务的 basic 档可用 H2
 
 ### 可选（standard/enterprise 档位）
 
-- 🔵 **MySQL 9.0+** - 标准档位及以上需要
-- 🔵 **Redis 7.0+** - 标准档位及以上需要
-- 🟢 **RocketMQ 5.x** - 企业档位需要
-- 🟢 **Nacos 2.x** - 企业档位需要
+- 🔵 **RocketMQ 5.x** - 企业档位需要
+- 🔵 **Nacos 2.x** - 企业档位需要
 
 ### 环境检查
 
@@ -82,15 +83,25 @@ cd apex-scaffold
 
 Apex Scaffold 提供三种档位，按需选择：
 
-#### 🟢 Basic 档位（最简单，无需外部依赖）
+#### 🟢 Basic 档位（单机起步）
+
+> Basic 不是“零外部依赖”：system 的 basic 档仍使用 MySQL，auth 的 basic 档使用 H2，
+> 两者都依赖 Redis。默认 `app.sh` 只启动网关（`apex-gateway`），需要按需启动后端服务。
 
 ```bash
-# 1. 直接启动（无需配置）
+# 1. 构建
 ./scripts/build/build.sh -Pbasic
-./scripts/deploy/app.sh start dev basic
 
-# 2. 访问应用
-curl http://localhost:8080/actuator/health
+# 2. 启动依赖（Redis 必需；system 的 basic 档还需 MySQL）
+podman-compose -f podman-compose.infra.yml up -d mysql redis
+
+# 3. 启动网关与业务服务（每个服务一个进程）
+APEX_SERVICE_MODULE=apex-gateway ./scripts/deploy/app.sh start dev basic
+APEX_SERVICE_MODULE=apex-system-service ./scripts/deploy/app.sh start dev basic
+APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/app.sh start dev basic
+
+# 4. 访问应用（网关业务健康走 system 下游）
+curl http://localhost:8080/api/v1/health
 ```
 
 **适用场景**: 本地开发、快速演示、学习项目架构
@@ -109,11 +120,17 @@ podman-compose -f podman-compose.infra.yml ps
 # 2. 配置环境变量
 cp .env.example .env
 vim .env  # 修改数据库和 Redis 密码
+# Java 不会自动加载 .env：app.sh 仅在 APEX_ENV_FILE 指向有效文件时 source
+export APEX_ENV_FILE="$PWD/.env"
 
-# 3. 构建并启动
+# 3. 构建并启动（每个服务独立进程，默认仅启动网关）
 ./scripts/build/build.sh -Pstandard
-./scripts/deploy/app.sh start dev standard
+APEX_SERVICE_MODULE=apex-gateway ./scripts/deploy/app.sh start dev standard
+APEX_SERVICE_MODULE=apex-system-service ./scripts/deploy/app.sh start dev standard
 ```
+
+> system 的 dev 档关闭了 Flyway 自动迁移。首次使用空库时须显式启用迁移或先执行
+> `apex-system` 的迁移脚本，否则服务启动后没有表结构。
 
 **必填环境变量**:
 ```bash
@@ -140,10 +157,12 @@ podman-compose -f podman-compose.infra.yml up -d
 # 2. 配置环境变量（包含 RocketMQ、Nacos）
 cp .env.example .env
 vim .env
+export APEX_ENV_FILE="$PWD/.env"
 
-# 3. 构建并启动
+# 3. 构建并启动（默认仅启动网关；其余服务用 APEX_SERVICE_MODULE 分别启动）
 ./scripts/build/build.sh -Penterprise
-./scripts/deploy/app.sh start dev enterprise
+APEX_SERVICE_MODULE=apex-gateway ./scripts/deploy/app.sh start dev enterprise
+APEX_SERVICE_MODULE=apex-system-service ./scripts/deploy/app.sh start dev enterprise
 ```
 
 **额外必填环境变量**:
@@ -213,8 +232,8 @@ curl http://localhost:8080/api/v1/health
 ### 访问API文档
 
 浏览器打开:
-- **Swagger UI**（仅 system-service 装配 springdoc）：http://localhost:8082/swagger-ui.html
-- **Knife4j**（仅 system-service）：http://localhost:8082/doc.html
+- **Swagger UI**（system-service 与 auth-service 均装配 springdoc）：http://localhost:8082/swagger-ui.html
+- **Knife4j**（system-service）：http://localhost:8082/doc.html
 
 你应该能看到所有可用的API接口列表。
 

@@ -470,8 +470,8 @@ Keycloak 认证服务器配置。
 
 **示例**:
 ```bash
-# 生成授权文件
-./scripts/license/generate-license.sh --customer "Acme Inc" --expire "2027-12-31"
+# 生成授权文件（位置参数：版本 客户名称 有效天数 [功能列表]）
+./scripts/license/generate-license.sh STANDARD "Acme Inc" 365
 ```
 
 ---
