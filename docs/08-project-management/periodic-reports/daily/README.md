@@ -19,6 +19,7 @@
 | 2026-11-02 | apex-scaffold | E 批集成与 IoT 全面收口（E1–E4）、D 批 D5 数据服务层与开放路由门禁收官（5 提交 / 303 文件） | [2026-11-02-apex-scaffold-daily-report.md](./2026-11-02-apex-scaffold-daily-report.md) |
 | 2026-11-03 | all-projects | 平台运营收口：分档限流、能力二次校验、前端九页与 MFA、冷链大屏与调拨展示（附按仓详版存档） | [2026-11-03-all-projects-daily-report.md](./2026-11-03-all-projects-daily-report.md) |
 | 2026-11-04 | all-projects | 组件化装配与内部认证收口 | [2026-11-04-all-projects-daily-report.md](./2026-11-04-all-projects-daily-report.md) |
+| 2026-11-05 | all-projects | 缺陷回补与冷链移库规则 | [2026-11-05-all-projects-daily-report.md](./2026-11-05-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 
