@@ -253,31 +253,36 @@ public class AuthenticationApplicationService {
                             || tenantId.isBlank()) {
                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战凭据无效"));
                     }
-                    // 一次性消费（fail-closed）：无法确认未消费（含存储故障）即拒绝交换
-                    return consumeChallenge(jti)
-                            .flatMap(consumed -> Boolean.TRUE.equals(consumed)
-                                    ? tenantStatusPort
-                                            // 二步交换重新过租户门：挑战签发后租户可能被停用/冻结
-                                            .validateLoginTenant(tenantId)
-                                            .then(Mono.defer(() -> totpService.verifyCode(accountId, code, tenantId)))
-                                    : Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战已使用，请重新登录")))
-                            .flatMap(valid -> {
-                                if (!Boolean.TRUE.equals(valid)) {
-                                    return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "MFA 验证码错误"));
-                                }
-                                return userRepository
-                                        .findById(accountId)
-                                        .switchIfEmpty(Mono.error(
-                                                new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战凭据无效")))
-                                        .flatMap(user -> {
-                                            if (!user.isActive()) {
-                                                return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "账户已禁用"));
-                                            }
-                                            if (user.isLocked()) {
-                                                return Mono.error(
-                                                        new BusinessException(ResultCode.FORBIDDEN, "账户已锁定，请稍后重试"));
-                                            }
-                                            return issueTokensAndRegisterSession(
+                    // 挑战凭据中的租户是唯一可信来源；整条校验/查询/签发链（含 userRepository.findById
+                    // 的 JdbcTenantScope 校验）都必须在该租户上下文内执行，不能只覆盖最后的令牌签发。
+                    return Mono.defer(() -> consumeChallenge(jti)
+                                    .flatMap(consumed -> Boolean.TRUE.equals(consumed)
+                                            ? tenantStatusPort
+                                                    // 二步交换重新过租户门：挑战签发后租户可能被停用/冻结
+                                                    .validateLoginTenant(tenantId)
+                                                    .then(Mono.defer(
+                                                            () -> totpService.verifyCode(accountId, code, tenantId)))
+                                            : Mono.error(
+                                                    new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战已使用，请重新登录")))
+                                    .flatMap(valid -> {
+                                        if (!Boolean.TRUE.equals(valid)) {
+                                            return Mono.error(
+                                                    new BusinessException(ResultCode.UNAUTHORIZED, "MFA 验证码错误"));
+                                        }
+                                        return userRepository
+                                                .findById(accountId)
+                                                .switchIfEmpty(Mono.error(
+                                                        new BusinessException(ResultCode.UNAUTHORIZED, "MFA 挑战凭据无效")))
+                                                .flatMap(user -> {
+                                                    if (!user.isActive()) {
+                                                        return Mono.error(
+                                                                new BusinessException(ResultCode.FORBIDDEN, "账户已禁用"));
+                                                    }
+                                                    if (user.isLocked()) {
+                                                        return Mono.error(new BusinessException(
+                                                                ResultCode.FORBIDDEN, "账户已锁定，请稍后重试"));
+                                                    }
+                                                    return issueTokensAndRegisterSession(
                                                             user,
                                                             tenantId,
                                                             username,
@@ -285,12 +290,10 @@ public class AuthenticationApplicationService {
                                                             clientType == null || clientType.isBlank()
                                                                     ? null
                                                                     : clientType,
-                                                            clientIp)
-                                                    .contextWrite(
-                                                            com.apex.scaffold.common.context.TenantContext.withTenant(
-                                                                    tenantId));
-                                        });
-                            });
+                                                            clientIp);
+                                                });
+                                    }))
+                            .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(tenantId));
                 })
                 .onErrorResume(
                         io.jsonwebtoken.JwtException.class,

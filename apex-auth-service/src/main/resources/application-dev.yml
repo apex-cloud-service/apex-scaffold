@@ -1,15 +1,17 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/apex_auth_dev?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/apex_auth_dev?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:root}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:root}}
   
   r2dbc:
     # R2DBC MySQL 响应式数据源(与 JDBC 数据源指向同一开发库)
-    url: r2dbc:mysql://localhost:3306/apex_auth_dev?serverTimezone=Asia/Shanghai
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    # ⚠️ R2DBC 不读 spring.datasource.*，必须单独注入；否则会连到与 JDBC 不同的库。
+    #    默认按 JDBC URL 的同一主机/端口/库派生，可用 SPRING_R2DBC_URL 显式覆盖。
+    url: ${SPRING_R2DBC_URL:r2dbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_auth_dev}?serverTimezone=Asia/Shanghai}
+    username: ${SPRING_R2DBC_USERNAME:${DB_USERNAME:root}}
+    password: ${SPRING_R2DBC_PASSWORD:${DB_PASSWORD:root}}
     pool:
       initial-size: 5
       max-size: 10

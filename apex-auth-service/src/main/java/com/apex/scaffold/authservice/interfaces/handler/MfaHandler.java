@@ -8,7 +8,9 @@ import com.apex.scaffold.auth.application.service.TotpService;
 import com.apex.scaffold.authservice.interfaces.util.RequestHandlerUtil;
 import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.OperationLog.OperationType;
+import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
+import com.apex.scaffold.common.result.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -21,6 +23,8 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -29,7 +33,8 @@ import reactor.core.publisher.Mono;
 /**
  * TOTP 设置、验证、禁用与状态查询处理器，响应使用 Result 包装。
  *
- * <p>请求体中的用户和租户字段沿用现有 DTO 契约；接口访问限制由安全配置负责。
+ * <p>请求体中的用户和租户字段沿用现有 DTO 契约，但仅用于与认证主体比对；实际执行
+ * 一律使用已验证令牌中的用户与租户，客户端不能通过请求体或查询参数操作他人配置。
  *
  * @author Apex Scaffold Team
  * @since 1.3.1
@@ -41,6 +46,56 @@ import reactor.core.publisher.Mono;
 public class MfaHandler {
     private final TotpService totpService;
     private final RequestHandlerUtil requestHandlerUtil;
+
+    /** 认证主体及其可信租户。 */
+    private record TrustedIdentity(Long userId, String tenantId) {}
+
+    /**
+     * 从已验证的安全上下文解析当前用户与租户；缺少认证主体时按未授权拒绝。
+     *
+     * @return 可信身份
+     */
+    private Mono<TrustedIdentity> trustedIdentity() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .filter(authentication -> authentication != null
+                        && authentication.isAuthenticated()
+                        && authentication.getName() != null
+                        && !authentication.getName().isBlank())
+                .flatMap(authentication -> {
+                    Long userId;
+                    try {
+                        userId = Long.valueOf(authentication.getName());
+                    } catch (NumberFormatException exception) {
+                        return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED));
+                    }
+                    Object details = authentication.getDetails();
+                    String tenantId = details instanceof String value ? value : null;
+                    if (tenantId == null || tenantId.isBlank()) {
+                        return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "缺少可信租户上下文"));
+                    }
+                    return Mono.just(new TrustedIdentity(userId, tenantId));
+                })
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED)));
+    }
+
+    /**
+     * 校验请求声明的用户与租户是否与认证主体一致，防止越权操作他人 MFA。
+     *
+     * @param identity 可信身份
+     * @param userId   请求声明的用户 ID
+     * @param tenantId 请求声明的租户 ID
+     * @return 校验通过时完成
+     */
+    private Mono<Void> requireSelf(TrustedIdentity identity, Long userId, String tenantId) {
+        if (userId == null || !userId.equals(identity.userId())) {
+            return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "只能操作本人的 MFA 配置"));
+        }
+        if (tenantId == null || !tenantId.equals(identity.tenantId())) {
+            return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "租户与认证主体不一致"));
+        }
+        return Mono.empty();
+    }
 
     /**
      * 根据 JSON 请求中的用户、租户、颁发者和账号名称生成 TOTP 设置数据。
@@ -70,8 +125,10 @@ public class MfaHandler {
     public Mono<ServerResponse> setupMfa(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, MfaSetupRequest.class)
-                .flatMap(req -> totpService.generateSecret(
-                        req.getUserId(), req.getTenantId(), req.getIssuer(), req.getAccountName()))
+                .flatMap(req -> trustedIdentity().flatMap(identity -> requireSelf(
+                                identity, req.getUserId(), req.getTenantId())
+                        .then(Mono.defer(() -> totpService.generateSecret(
+                                identity.userId(), identity.tenantId(), req.getIssuer(), req.getAccountName())))))
                 .map(result -> MfaSetupResponse.builder()
                         .secret(result.secret())
                         .otpAuthUrl(result.otpAuthUrl())
@@ -114,7 +171,10 @@ public class MfaHandler {
     public Mono<ServerResponse> verifyAndEnableMfa(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, MfaVerifyRequest.class)
-                .flatMap(req -> totpService.verifyAndEnable(req.getUserId(), req.getCode(), req.getTenantId()))
+                .flatMap(req -> trustedIdentity()
+                        .flatMap(identity -> requireSelf(identity, req.getUserId(), req.getTenantId())
+                                .then(Mono.defer(() -> totpService.verifyAndEnable(
+                                        identity.userId(), req.getCode(), identity.tenantId())))))
                 .flatMap(success -> {
                     if (success) {
                         return ServerResponse.ok()
@@ -159,7 +219,10 @@ public class MfaHandler {
     public Mono<ServerResponse> verifyMfaCode(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, MfaVerifyRequest.class)
-                .flatMap(req -> totpService.verifyCode(req.getUserId(), req.getCode(), req.getTenantId()))
+                .flatMap(req -> trustedIdentity()
+                        .flatMap(identity -> requireSelf(identity, req.getUserId(), req.getTenantId())
+                                .then(Mono.defer(() -> totpService.verifyCode(
+                                        identity.userId(), req.getCode(), identity.tenantId())))))
                 .flatMap(success -> {
                     if (success) {
                         return ServerResponse.ok()
@@ -204,7 +267,10 @@ public class MfaHandler {
     public Mono<ServerResponse> verifyBackupCode(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, MfaVerifyRequest.class)
-                .flatMap(req -> totpService.verifyBackupCode(req.getUserId(), req.getBackupCode(), req.getTenantId()))
+                .flatMap(req -> trustedIdentity()
+                        .flatMap(identity -> requireSelf(identity, req.getUserId(), req.getTenantId())
+                                .then(Mono.defer(() -> totpService.verifyBackupCode(
+                                        identity.userId(), req.getBackupCode(), identity.tenantId())))))
                 .flatMap(success -> {
                     if (success) {
                         return ServerResponse.ok()
@@ -246,7 +312,9 @@ public class MfaHandler {
     public Mono<ServerResponse> disableMfa(ServerRequest request) {
         return requestHandlerUtil
                 .validateAndMap(request, MfaVerifyRequest.class)
-                .flatMap(req -> totpService.disable(req.getUserId(), req.getTenantId()))
+                .flatMap(req -> trustedIdentity()
+                        .flatMap(identity -> requireSelf(identity, req.getUserId(), req.getTenantId())
+                                .then(Mono.defer(() -> totpService.disable(identity.userId(), identity.tenantId())))))
                 .flatMap(success -> {
                     if (success) {
                         return ServerResponse.ok()
@@ -307,12 +375,17 @@ public class MfaHandler {
         } catch (NumberFormatException e) {
             return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(Result.error("userId 格式错误"));
         }
-        return totpService
-                .isEnabled(userId, tenantId)
+        Long requestedUserId = userId;
+        return trustedIdentity()
+                .flatMap(identity -> requireSelf(identity, requestedUserId, tenantId)
+                        .then(Mono.defer(() -> totpService.isEnabled(identity.userId(), identity.tenantId()))))
                 .flatMap(enabled -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(Result.success(Map.of("enabled", enabled, "mfaType", enabled ? "TOTP" : "NONE"))))
                 .onErrorResume(e -> {
+                    if (e instanceof BusinessException businessException) {
+                        return requestHandlerUtil.handleError(businessException);
+                    }
                     log.error("查询 MFA 状态失败", e);
                     return ServerResponse.ok()
                             .contentType(MediaType.APPLICATION_JSON)

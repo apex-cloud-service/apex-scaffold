@@ -30,6 +30,7 @@ class OAuth2BootTest extends EmbeddedRedisBootTestSupport {
     private final WebTestClient client;
     private final org.springframework.jdbc.core.JdbcTemplate jdbc;
     private final org.springframework.security.crypto.password.PasswordEncoder passwords;
+    private final com.apex.scaffold.auth.domain.repository.TotpRepository totps;
 
     @BeforeEach
     void setupClient() {
@@ -398,6 +399,38 @@ class OAuth2BootTest extends EmbeddedRedisBootTestSupport {
                 .expectBody()
                 .jsonPath("$.error")
                 .isEqualTo("invalid_request");
+    }
+
+    @Test
+    void passwordGrantRejectsMfaEnabledAccount() {
+        // 通过真实仓储写入：secret 会按生产路径加密，绕过加密直接写明文会导致解密失败。
+        totps.save(com.apex.scaffold.auth.domain.model.entity.TotpEntity.builder()
+                        .id(95303L)
+                        .tenantId("default")
+                        .userId(95302L)
+                        .secret("totp-test-secret")
+                        .backupCodes("12345678")
+                        .verified(true)
+                        .enabled(true)
+                        .version(1)
+                        .deleted(false)
+                        .build())
+                .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant("default"))
+                .block(java.time.Duration.ofSeconds(5));
+
+        client.post()
+                .uri("/oauth2/token")
+                .headers(headers -> headers.setBasicAuth("oauth-test", "test-secret"))
+                .body(org.springframework.web.reactive.function.BodyInserters.fromFormData("grant_type", "password")
+                        .with("username", "oauth-user")
+                        .with("password", "user-secret")
+                        .with("scope", "read"))
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody()
+                .jsonPath("$.error")
+                .isEqualTo("invalid_grant");
     }
 
     @Test

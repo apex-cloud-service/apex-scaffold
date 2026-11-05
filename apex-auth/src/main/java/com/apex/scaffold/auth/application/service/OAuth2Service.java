@@ -68,6 +68,12 @@ public class OAuth2Service {
     private final com.apex.scaffold.auth.infrastructure.persistence.repository.OAuth2ConsentRepository
             consentRepository;
 
+    /** TOTP 服务：password 授权与主登录保持同一 MFA 策略。 */
+    private final TotpService totpService;
+
+    /** 租户认证期状态校验端口：password 授权与主登录保持同一租户门。 */
+    private final com.apex.scaffold.auth.domain.service.TenantStatusPort tenantStatusPort;
+
     /** RFC 6749：用户尚未对客户端授权时的错误码。 */
     private static final String CONSENT_REQUIRED = "consent_required";
 
@@ -277,13 +283,37 @@ public class OAuth2Service {
         if (form.get(USERNAME) == null || form.get(PASSWORD) == null) {
             return fail(INVALID_REQUEST);
         }
-        return userRepository
-                .findByUsername(form.get(USERNAME), tenant)
-                .filter(user -> user.isActive()
-                        && !user.isLocked()
-                        && passwordEncoder.matches(form.get(PASSWORD), user.getPasswordHash()))
-                .switchIfEmpty(fail("invalid_grant"))
-                .flatMap(user -> issue(config, clientId, user.getId().toString(), form.get("scope"), PASSWORD, tenant));
+        // password 授权与 POST /auth/v1/login 共用同一套租户、锁定、失败计数与 MFA 口径；
+        // 任一分叉都可能让已启用 MFA 的账号经 OAuth2 直接取得正式令牌，因此此处 fail-closed。
+        return tenantStatusPort
+                .validateLoginTenant(tenant)
+                .then(Mono.defer(() -> userRepository.findByUsername(form.get(USERNAME), tenant)))
+                .flatMap(user -> {
+                    if (!user.isActive() || user.isLocked()) {
+                        return fail("invalid_grant");
+                    }
+                    if (!passwordEncoder.matches(form.get(PASSWORD), user.getPasswordHash())) {
+                        user.recordLoginFailure();
+                        return userRepository.update(user).then(fail("invalid_grant"));
+                    }
+                    return totpService.isEnabled(user.getId(), tenant).flatMap(mfaEnabled -> {
+                        if (Boolean.TRUE.equals(mfaEnabled)) {
+                            // OAuth2 password 授权没有 MFA 二步交换入口，不能绕过登录链直接签发令牌
+                            return fail("invalid_grant");
+                        }
+                        user.recordLoginSuccess(null);
+                        return userRepository
+                                .update(user)
+                                .then(Mono.defer(() -> issue(
+                                        config,
+                                        clientId,
+                                        user.getId().toString(),
+                                        form.get("scope"),
+                                        PASSWORD,
+                                        tenant)));
+                    });
+                })
+                .switchIfEmpty(fail("invalid_grant"));
     }
 
     private Mono<Map<String, Object>> authorizationCode(

@@ -141,6 +141,11 @@ public final class SystemConstants {
      * <h2>设计说明</h2>
      * <ul>
      *   <li>登录、Token 刷新、短信验证码和本机号校验 — 建立登录态前必须调用的认证接口</li>
+     *   <li>{@code /auth/v1/login}、{@code /auth/v1/refresh}、{@code /auth/v1/mfa/verify} —
+     *       认证中心登录、刷新与 MFA 二步交换；二步交换消费短 TTL 挑战凭据，此时尚未签发访问令牌，
+     *       因此也必须匿名可达。{@code /auth/v1/mfa/verify} 之外的 MFA 管理路径不在此列</li>
+     *   <li>{@code /auth/v2/password-recovery/**} — 自助密码找回的申请、校验与确认，匿名入口</li>
+     *   <li>{@code /.well-known/**} — OIDC 元数据与 JWKS 公钥，供客户端与网关验签发现</li>
      *   <li>/api/v1/onboarding/policies — 登录前可查阅的协议与隐私政策</li>
      *   <li>/api/v1/health — 应用业务健康检查</li>
      *   <li>/health — 基础健康检查端点</li>
@@ -163,6 +168,13 @@ public final class SystemConstants {
     public static final List<String> PUBLIC_PATHS = List.of(
             "/",
             "/api/v1/auth/login",
+            // 认证中心（apex-auth-service）匿名入口：登录、令牌刷新、MFA 二步交换与自助密码找回。
+            // 网关按此白名单跳过验签；其余 /auth/v1/**（注销、会话、角色、MFA 管理）仍需 ACCESS 令牌。
+            "/auth/v1/login",
+            "/auth/v1/refresh",
+            "/auth/v1/mfa/verify",
+            "/auth/v2/password-recovery/**",
+            "/.well-known/**",
             "/api/v1/auth/wechat/mp/authorize",
             "/api/v1/office/login",
             "/api/v1/office/callback",

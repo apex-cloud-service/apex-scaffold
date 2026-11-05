@@ -119,14 +119,26 @@ public class RequestHandlerUtil {
     }
 
     /**
-     * 统一错误处理
+     * 统一错误处理。
+     *
+     * <p>认证和授权类业务码分别映射为 401 / 403，其余保持既有 HTTP 400 契约。
      *
      * @param throwable 异常
      * @return 错误响应 Mono
      */
     public Mono<ServerResponse> handleError(Throwable throwable) {
         if (throwable instanceof BusinessException businessException) {
-            return buildErrorResponse(businessException.getCode(), businessException.getMessage());
+            String traceId = TraceIdUtil.getTraceId();
+            Result<Void> result = Result.error(businessException.getCode(), businessException.getMessage(), traceId);
+            org.springframework.http.HttpStatus status =
+                    switch (businessException.getCode()) {
+                        case 401 -> org.springframework.http.HttpStatus.UNAUTHORIZED;
+                        case 403 -> org.springframework.http.HttpStatus.FORBIDDEN;
+                        default -> org.springframework.http.HttpStatus.BAD_REQUEST;
+                    };
+            return ServerResponse.status(status)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(result);
         }
         return buildErrorResponse(ResultCode.ERROR, throwable.getMessage());
     }

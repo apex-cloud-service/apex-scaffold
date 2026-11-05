@@ -205,16 +205,23 @@ public class PasswordPolicyService {
     public Mono<Boolean> isPasswordInHistory(String userId, String newPassword) {
         String key = REDIS_PASSWORD_HISTORY + userId;
 
-        return redisTemplate.opsForList().range(key, 0, -1).collectList().map(historyHashes -> {
-            // 检查新密码是否与历史密码匹配
-            for (String oldHash : historyHashes) {
-                if (passwordEncoder.matches(newPassword, oldHash)) {
-                    log.warn("用户尝试使用历史密码: userId={}", userId);
-                    return true;
-                }
-            }
-            return false;
-        });
+        return redisTemplate
+                .opsForList()
+                .range(key, 0, -1)
+                .collectList()
+                // BCrypt 比对是 CPU 密集的同步调用：延迟到订阅后的阻塞池执行，
+                // 避免占用 Lettuce/Netty 线程，也不要在 map 中执行。
+                .flatMap(historyHashes -> Mono.fromCallable(() -> {
+                            // 检查新密码是否与历史密码匹配
+                            for (String oldHash : historyHashes) {
+                                if (passwordEncoder.matches(newPassword, oldHash)) {
+                                    log.warn("用户尝试使用历史密码: userId={}", userId);
+                                    return true;
+                                }
+                            }
+                            return false;
+                        })
+                        .subscribeOn(com.apex.scaffold.common.scheduler.BlockingIoSchedulers.general()));
     }
 
     /**

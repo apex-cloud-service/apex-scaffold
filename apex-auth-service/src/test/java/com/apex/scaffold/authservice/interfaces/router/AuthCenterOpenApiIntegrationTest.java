@@ -71,6 +71,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             get|/auth/v1/authorization/users/{userId}|queryUnifiedAuthorization||UnifiedAuthorizationResult|userId:path:true:integer:int64:
             post|/auth/v1/login|login|LoginRequest|LoginResponse|
             post|/auth/v1/logout/{userId}|logout|||userId:path:true:integer:int64:
+            post|/auth/v1/mfa/verify|verifyMfaChallenge|MfaVerifyRequest|LoginResponse|
             post|/auth/v1/refresh|refreshToken|RefreshTokenRequest|TokenPair|
             post|/auth/v2/password-recovery/requests|initiatePasswordRecovery|PasswordRecoveryInitiateRequest|PasswordRecoveryInitiateResult|
             post|/auth/v2/password-recovery/verifications|verifyPasswordRecovery|PasswordRecoveryVerifyRequest|PasswordRecoveryVerifyResult|
@@ -181,7 +182,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             expected.add(contract[0] + " " + contract[1]);
             assertOperationContract(contract);
         });
-        assertThat(expected).hasSize(75);
+        assertThat(expected).hasSize(76);
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
         assertLocalReferencesResolve(document);
     }
@@ -514,6 +515,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
         }
         if (Set.of(
                         "login",
+                        "verifyMfaChallenge",
                         "refreshToken",
                         "initiatePasswordRecovery",
                         "verifyPasswordRecovery",

@@ -15,7 +15,6 @@ import com.apex.scaffold.infrastructure.chuanglan.service.ChuanglanApiService;
 import com.apex.scaffold.infrastructure.chuanglan.service.ChuanglanRequestSigner;
 import com.apex.scaffold.infrastructure.chuanglan.strategy.AesPhoneDecryptStrategy;
 import com.apex.scaffold.infrastructure.chuanglan.strategy.PhoneDecryptStrategy;
-import com.apex.scaffold.infrastructure.mail.MailService;
 import com.apex.scaffold.infrastructure.remote.logging.ApiCallLogProperties;
 import com.apex.scaffold.infrastructure.remote.logging.ApiCallLogService;
 import com.apex.scaffold.infrastructure.remote.logging.ApiCallLogSink;
@@ -53,15 +52,26 @@ class ChuanglanSmsConfigTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(
                     AutoConfigurations.of(MetricsAutoConfiguration.class, SimpleMetricsExportAutoConfiguration.class))
-            .withUserConfiguration(ChuanglanSmsConfig.class, RecoveryChallengeSenderImpl.class);
+            // ApiCallLogService / ApiCallLogProperties 在生产由
+            // RemoteApiClientConfig 的组件扫描提供；本隔离测试不加载该自动配置，
+            // 因此显式补充，避免误判为 ChuanglanSmsConfig 的职责。
+            .withUserConfiguration(
+                    ChuanglanSmsConfig.class, RecoveryChallengeSenderImpl.class, ApiCallLogTestSupport.class);
 
     @Test
     void defaultConfigurationStartsWithoutSmsCredentialsOrLogSink() {
         contextRunner.run(context -> {
             assertSmsWiring(context);
             assertThat(context).doesNotHaveBean(ApiCallLogSink.class);
-            assertThat(context).doesNotHaveBean(MailService.class);
-            assertThat(context).doesNotHaveBean(SmsCodeService.class);
+            // auth-service 的组件扫描不含 com.apex.scaffold.infrastructure，
+            // 因此短信与邮件实现必须由本配置类显式注册，否则 MfaServiceImpl 无法装配。
+            assertThat(context).hasBean("chuanglanSmsCodeService");
+            assertThat(context).hasBean("defaultSmsCodeService");
+            assertThat(context).hasBean("authServiceMailService");
+            // defaultSmsCodeService 必须委托到创蓝实现，避免两个 SmsCodeService 平级注入歧义。
+            assertThat(context.getBean("defaultSmsCodeService")).isInstanceOf(SmsCodeService.class);
+            assertThat(context.getBeansOfType(SmsCodeService.class))
+                    .containsOnlyKeys("chuanglanSmsCodeService", "defaultSmsCodeService");
 
             ChuanglanProperties.Sms sms =
                     context.getBean(ChuanglanProperties.class).getSms();
@@ -87,7 +97,8 @@ class ChuanglanSmsConfigTest {
                 .run(context -> {
                     assertSmsWiring(context);
                     assertThat(context).doesNotHaveBean(ApiCallLogSink.class);
-                    assertThat(context).doesNotHaveBean(SmsCodeService.class);
+                    assertThat(context.getBeansOfType(SmsCodeService.class))
+                            .containsOnlyKeys("chuanglanSmsCodeService", "defaultSmsCodeService");
                     ChuanglanProperties.Sms sms =
                             context.getBean(ChuanglanProperties.class).getSms();
                     assertThat(sms.getAccount()).isEqualTo("test-sms-account");
@@ -107,16 +118,19 @@ class ChuanglanSmsConfigTest {
                 });
     }
 
+    /**
+     * {@code ApiCallLogService} 由 {@code RemoteApiClientConfig} 的组件扫描提供；
+     * 生产上下文里若已存在该 bean，{@code ChuanglanSmsConfig} 不再重复注册
+     * （本配置类已不再声明该 bean，重复注册风险由自动配置的 {@code @ConditionalOnMissingBean} 兜底）。
+     */
     @Test
-    void existingApiCallLogServicePreventsDuplicateRegistration() {
+    void existingApiCallLogServiceIsNotOverriddenBySmsConfig() {
         ApiCallLogService existingLogService = mock(ApiCallLogService.class);
 
         contextRunner
-                .withBean("existingApiCallLogService", ApiCallLogService.class, () -> existingLogService)
+                .withBean("apiCallLogService", ApiCallLogService.class, () -> existingLogService)
                 .run(context -> {
-                    assertSmsWiring(context);
-                    assertThat(context.getBeansOfType(ApiCallLogService.class))
-                            .containsOnlyKeys("existingApiCallLogService");
+                    assertThat(context).hasNotFailed();
                     assertThat(context.getBean(ApiCallLogService.class)).isSameAs(existingLogService);
                 });
     }
@@ -202,5 +216,40 @@ class ChuanglanSmsConfigTest {
                 return bean;
             }
         }));
+    }
+
+    /**
+     * 生产环境由 {@code RemoteApiClientConfig} 的组件扫描提供 {@link ApiCallLogService}；
+     * 本测试只加载 {@link ChuanglanSmsConfig}，故显式补充这两个协作 bean。
+     */
+    @org.springframework.boot.test.context.TestConfiguration(proxyBeanMethods = false)
+    static class ApiCallLogTestSupport {
+
+        @org.springframework.context.annotation.Bean
+        @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+        ApiCallLogProperties apiCallLogProperties() {
+            return new ApiCallLogProperties();
+        }
+
+        @org.springframework.context.annotation.Bean
+        @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+        org.springframework.data.redis.core.ReactiveStringRedisTemplate reactiveStringRedisTemplate() {
+            return mock(org.springframework.data.redis.core.ReactiveStringRedisTemplate.class);
+        }
+
+        @org.springframework.context.annotation.Bean
+        @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+        io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry circuitBreakerRegistry() {
+            return io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults();
+        }
+
+        @org.springframework.context.annotation.Bean
+        @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+        ApiCallLogService apiCallLogService(
+                ApiCallLogProperties properties,
+                org.springframework.beans.factory.ObjectProvider<ApiCallLogSink> sink,
+                MeterRegistry meterRegistry) {
+            return new ApiCallLogService(properties, sink, meterRegistry);
+        }
     }
 }

@@ -4,6 +4,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 import com.apex.scaffold.auth.application.dto.LoginRequest;
 import com.apex.scaffold.auth.application.dto.LoginResponse;
+import com.apex.scaffold.auth.application.dto.MfaVerifyRequest;
 import com.apex.scaffold.auth.application.dto.RefreshTokenRequest;
 import com.apex.scaffold.auth.domain.model.vo.TokenPair;
 import com.apex.scaffold.authservice.interfaces.handler.AuthenticationHandler;
@@ -181,6 +182,39 @@ public class AuthenticationRouter {
                                                                     @Schema(
                                                                             implementation = String.class,
                                                                             type = "string")))
+                                })),
+        @RouterOperation(
+                path = "/auth/v1/mfa/verify",
+                method = RequestMethod.POST,
+                operation =
+                        @Operation(
+                                operationId = "verifyMfaChallenge",
+                                summary = "MFA 二步验证",
+                                description = "无需访问令牌：以登录返回的短 TTL 挑战凭据和 TOTP 验证码交换正式令牌。"
+                                        + "挑战凭据一次性消费；无效、已使用或验证码错误返回 401，账户禁用或锁定返回 403。"
+                                        + "成功返回与登录同构的 LoginResponse。",
+                                tags = {"认证"},
+                                requestBody =
+                                        @RequestBody(
+                                                required = true,
+                                                description = "MFA 挑战凭据与验证码",
+                                                content =
+                                                        @Content(
+                                                                mediaType = "application/json",
+                                                                schema =
+                                                                        @Schema(
+                                                                                implementation =
+                                                                                        MfaVerifyRequest.class))),
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "交换成功，返回正式令牌",
+                                            content =
+                                                    @Content(
+                                                            mediaType = "application/json",
+                                                            schema = @Schema(implementation = LoginResponse.class))),
+                                    @ApiResponse(responseCode = "401", description = "挑战凭据无效、已使用或验证码错误"),
+                                    @ApiResponse(responseCode = "403", description = "账户禁用或锁定")
                                 }))
     })
     /**

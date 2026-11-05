@@ -17,7 +17,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.IntStream;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -30,12 +29,15 @@ import reactor.core.publisher.Mono;
 
 /**
  * 多因素认证服务实现
+ *
+ * <p>短信通道存在两个 {@link SmsCodeService} 实现（创蓝真实发送与默认适配器），
+ * 必须显式限定为 {@code defaultSmsCodeService}，否则容器装配报“expected single matching bean”。</p>
+ *
  * @author Apex Team
  * @since 1.2.0
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class MfaServiceImpl implements MfaService {
 
     private final MfaConfigRepository mfaConfigRepository;
@@ -44,6 +46,32 @@ public class MfaServiceImpl implements MfaService {
     private final ReactiveStringRedisTemplate redisTemplate;
     private final SmsCodeService smsCodeService;
     private final MailService mailService;
+
+    /**
+     * 构造多因素认证服务，显式绑定默认短信验证码实现。
+     *
+     * @param mfaConfigRepository MFA 配置仓储
+     * @param encryptionService 加密服务
+     * @param auditLogService 审计日志服务
+     * @param redisTemplate Redis 模板
+     * @param smsCodeService 默认短信验证码服务（转发到创蓝真实发送）
+     * @param mailService 邮件服务
+     */
+    public MfaServiceImpl(
+            MfaConfigRepository mfaConfigRepository,
+            EncryptionService encryptionService,
+            AuditLogService auditLogService,
+            ReactiveStringRedisTemplate redisTemplate,
+            @org.springframework.beans.factory.annotation.Qualifier("defaultSmsCodeService")
+                    SmsCodeService smsCodeService,
+            MailService mailService) {
+        this.mfaConfigRepository = mfaConfigRepository;
+        this.encryptionService = encryptionService;
+        this.auditLogService = auditLogService;
+        this.redisTemplate = redisTemplate;
+        this.smsCodeService = smsCodeService;
+        this.mailService = mailService;
+    }
 
     private static final String ISSUER = "Apex Scaffold";
     private static final String OTP_KEY_PREFIX = "mfa:otp:";

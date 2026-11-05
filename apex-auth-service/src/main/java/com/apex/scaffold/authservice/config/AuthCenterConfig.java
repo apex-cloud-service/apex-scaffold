@@ -77,6 +77,9 @@ public class AuthCenterConfig {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String LOGIN_PATH = "/auth/v1/login";
 
+    /** MFA 二步验证路径：凭挑战凭据交换正式令牌，此时尚无访问令牌，必须匿名可达。 */
+    private static final String MFA_VERIFY_PATH = "/auth/v1/mfa/verify";
+
     /** 自助密码找回：申请恢复单（匿名） */
     private static final String PASSWORD_RECOVERY_REQUESTS_PATH = "/auth/v2/password-recovery/requests";
 
@@ -172,6 +175,7 @@ public class AuthCenterConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(
                                 LOGIN_PATH,
+                                MFA_VERIFY_PATH,
                                 "/auth/v1/refresh",
                                 "/.well-known/openid-configuration",
                                 "/.well-known/jwks.json",
@@ -181,7 +185,12 @@ public class AuthCenterConfig {
                                 PASSWORD_RECOVERY_REQUESTS_PATH,
                                 PASSWORD_RECOVERY_VERIFICATIONS_PATH,
                                 PASSWORD_RECOVERY_CONFIRMATIONS_PATH,
-                                INTERNAL_API_PREFIX)
+                                INTERNAL_API_PREFIX,
+                                // 容器 HEALTHCHECK 与编排就绪探针访问该端点；若被 401 拦截，
+                                // 镜像永远无法进入 healthy，编排会一直判定启动失败。
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/info")
                         .permitAll()
                         .anyExchange()
                         .authenticated())
@@ -212,11 +221,25 @@ public class AuthCenterConfig {
                                         .contextWrite(TenantContext.withTenant(tenant));
                             }
                             return ReactiveSecurityContextHolder.getContext()
-                                    .map(context -> context.getAuthentication().getDetails())
-                                    .ofType(String.class)
-                                    .flatMap(tenant -> TenantContext.withTenant(chain.filter(exchange))
-                                            .contextWrite(TenantContext.withTenant(tenant))
-                                            .thenReturn(true))
+                                    .map(org.springframework.security.core.context.SecurityContext::getAuthentication)
+                                    .filter(org.springframework.security.core.Authentication::isAuthenticated)
+                                    .flatMap(authentication -> {
+                                        Object details = authentication.getDetails();
+                                        String tenant = details instanceof String value ? value : null;
+                                        // 可信身份属性：供 MfaManagementHandler / IpAccessControlHandler
+                                        // 读取当前用户与租户，禁止从请求体或查询参数推断操作主体。
+                                        exchange.getAttributes().put("userId", authentication.getName());
+                                        if (tenant != null && !tenant.isBlank()) {
+                                            exchange.getAttributes().put("tenantId", tenant);
+                                        }
+                                        Mono<Void> next = chain.filter(exchange);
+                                        if (tenant == null || tenant.isBlank()) {
+                                            return next.thenReturn(true);
+                                        }
+                                        return TenantContext.withTenant(next)
+                                                .contextWrite(TenantContext.withTenant(tenant))
+                                                .thenReturn(true);
+                                    })
                                     .switchIfEmpty(Mono.defer(
                                             () -> chain.filter(exchange).thenReturn(true)))
                                     .then();

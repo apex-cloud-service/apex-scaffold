@@ -267,6 +267,24 @@ class TotpServiceTest {
             // Then
             StepVerifier.create(result).expectNext(false).verifyComplete();
         }
+
+        @Test
+        @DisplayName("时间步已被消费时拒绝激活且不写任何状态")
+        void testVerifyAndEnableRejectsReplayedStep() {
+            mockTotp.setVerified(false);
+            mockTotp.setEnabled(false);
+            when(totpRepository.findByUserId(100L, "test-tenant")).thenReturn(Mono.just(mockTotp));
+            when(totpRepository.markStepUsed(eq(100L), eq("test-tenant"), anyLong()))
+                    .thenReturn(Mono.just(false));
+            String currentCode = totpService.generateCurrentCode(mockTotp.getSecret());
+
+            StepVerifier.create(totpService.verifyAndEnable(100L, currentCode, "test-tenant"))
+                    .expectNext(false)
+                    .verifyComplete();
+
+            verify(totpRepository, never()).update(any(TotpEntity.class));
+            verify(mfaConfigRepository, never()).save(any(MfaConfigEntity.class));
+        }
     }
 
     @Nested
@@ -317,6 +335,23 @@ class TotpServiceTest {
             StepVerifier.create(result).expectNext(false).verifyComplete();
 
             verify(totpRepository, never()).update(any());
+            verify(mfaConfigRepository, never()).update(any());
+        }
+
+        @Test
+        @DisplayName("MFA 配置缺失时仍视为禁用成功")
+        void testDisableWithoutMfaConfigStillSucceeds() {
+            when(totpRepository.findByUserId(100L, "test-tenant")).thenReturn(Mono.just(mockTotp));
+            when(totpRepository.update(any(TotpEntity.class)))
+                    .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+            when(mfaConfigRepository.findByUserIdAndType(100L, "TOTP", "test-tenant"))
+                    .thenReturn(Mono.empty());
+
+            StepVerifier.create(totpService.disable(100L, "test-tenant"))
+                    .expectNext(true)
+                    .verifyComplete();
+
+            verify(totpRepository).update(argThat(entity -> !entity.getEnabled()));
             verify(mfaConfigRepository, never()).update(any());
         }
     }

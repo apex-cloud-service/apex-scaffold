@@ -65,6 +65,15 @@ class MfaHandlerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // 自助 MFA 端点要求已认证主体：用户 123 / 租户 test-tenant，与请求体声明一致。
+        org.springframework.security.authentication.UsernamePasswordAuthenticationToken principal =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "123", "", List.of());
+        principal.setDetails("test-tenant");
+        webTestClient = webTestClient.mutateWith(
+                org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockAuthentication(
+                        principal));
+
         setupRequest = MfaSetupRequest.builder()
                 .userId(123L)
                 .tenantId("test-tenant")
@@ -440,6 +449,62 @@ class MfaHandlerIntegrationTest {
                 .isEqualTo("验证码错误")
                 .jsonPath("$.data")
                 .doesNotExist();
+    }
+
+    @Test
+    @DisplayName("请求体声明其他用户时拒绝，不能操作他人 MFA")
+    void testSetupMfaRejectsOtherUser() {
+        MfaSetupRequest otherUser = MfaSetupRequest.builder()
+                .userId(999L)
+                .tenantId("test-tenant")
+                .issuer("Apex")
+                .accountName("other@example.com")
+                .build();
+
+        webTestClient
+                .post()
+                .uri("/api/v1/mfa/setup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(otherUser)
+                .exchange()
+                .expectStatus()
+                .isForbidden()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(ResultCode.FORBIDDEN.getCode());
+    }
+
+    @Test
+    @DisplayName("请求体声明其他租户时拒绝，不能跨租户操作 MFA")
+    void testDisableMfaRejectsOtherTenant() {
+        MfaVerifyRequest otherTenant =
+                MfaVerifyRequest.builder().userId(123L).tenantId("other-tenant").build();
+
+        webTestClient
+                .post()
+                .uri("/api/v1/mfa/disable")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(otherTenant)
+                .exchange()
+                .expectStatus()
+                .isForbidden()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(ResultCode.FORBIDDEN.getCode());
+    }
+
+    @Test
+    @DisplayName("查询参数声明其他用户时拒绝")
+    void testGetMfaStatusRejectsOtherUser() {
+        webTestClient
+                .get()
+                .uri("/api/v1/mfa/status?userId=999&tenantId=test-tenant")
+                .exchange()
+                .expectStatus()
+                .isForbidden()
+                .expectBody()
+                .jsonPath("$.code")
+                .isEqualTo(ResultCode.FORBIDDEN.getCode());
     }
 
     @Test

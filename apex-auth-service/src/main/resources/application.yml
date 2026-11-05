@@ -59,6 +59,23 @@ spring:
     url: jdbc:mysql://localhost:3306/apex_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
     username: root
     password: ${DB_PASSWORD:root}
+    # dynamic-datasource 由 apex-infrastructure-persistence（经 apex-auth）传递引入，
+    # 其自动配置要求 spring.datasource.dynamic.datasource 下至少有一个数据源，
+    # 否则启动报 "dynamic-datasource can not find primary datasource"。
+    # auth 只使用单库，用 master 单数据源声明即可；basic 档位在 application-basic.yml
+    # 中显式排除该自动配置（改用 H2 + 普通 DataSource）。
+    # ⚠️ 一旦启用 dynamic，Spring Boot 的 spring.datasource.url/username/password 不再被消费，
+    #    必须在这里显式引用同名环境变量（SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD），
+    #    否则 Compose 与 K8s 注入的标准变量会被忽略、连接回落到 localhost。
+    dynamic:
+      primary: master
+      strict: false
+      datasource:
+        master:
+          url: ${SPRING_DATASOURCE_URL:${DB_MASTER_URL:jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apex_auth}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}}
+          username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:root}}
+          password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:root}}
+          driver-class-name: com.mysql.cj.jdbc.Driver
   
   flyway:
     enabled: true
@@ -99,6 +116,24 @@ logging:
     com.apex.scaffold.auth: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
+
+# Actuator：容器 HEALTHCHECK 请求 /actuator/health/readiness，
+# 启用 readiness/liveness 探针组并暴露 health/info；安全链对 /actuator/health/** 放行。
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,circuitbreakers
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
 
 springdoc:
   api-docs:

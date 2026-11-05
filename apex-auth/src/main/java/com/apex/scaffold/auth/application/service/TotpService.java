@@ -158,29 +158,35 @@ public class TotpService {
                         log.warn("TOTP 验证码错误: userId={}", userId);
                         return Mono.just(false);
                     }
-                    totp.markAsVerified();
-                    totp.enable();
-                    return totpRepository
-                            .markStepUsed(userId, tenantId, step)
-                            .then(totpRepository.update(totp))
-                            .then(Mono.fromCallable(() -> {
-                                // 同步创建 MFA 配置
-                                MfaConfigEntity mfaConfig = MfaConfigEntity.builder()
-                                        .tenantId(tenantId)
-                                        .userId(userId)
-                                        .mfaType(MfaConfigEntity.MfaType.TOTP.name())
-                                        .enabled(true)
-                                        .required(false)
-                                        .priority(1)
-                                        .createdAt(LocalDateTime.now())
-                                        .updatedAt(LocalDateTime.now())
-                                        .version(1)
-                                        .deleted(false)
-                                        .build();
-                                return mfaConfig;
-                            }))
-                            .flatMap(mfaConfigRepository::save)
-                            .thenReturn(true);
+                    return totpRepository.markStepUsed(userId, tenantId, step).flatMap(consumed -> {
+                        // 消费失败说明该时间步已被使用：必须拒绝，不能继续激活
+                        if (!Boolean.TRUE.equals(consumed)) {
+                            log.warn("TOTP 激活验证码重放拦截: userId={}, step={}", userId, step);
+                            return Mono.just(false);
+                        }
+                        totp.markAsVerified();
+                        totp.enable();
+                        return totpRepository
+                                .update(totp)
+                                .then(Mono.fromCallable(() -> {
+                                    // 同步创建 MFA 配置
+                                    MfaConfigEntity mfaConfig = MfaConfigEntity.builder()
+                                            .tenantId(tenantId)
+                                            .userId(userId)
+                                            .mfaType(MfaConfigEntity.MfaType.TOTP.name())
+                                            .enabled(true)
+                                            .required(false)
+                                            .priority(1)
+                                            .createdAt(LocalDateTime.now())
+                                            .updatedAt(LocalDateTime.now())
+                                            .version(1)
+                                            .deleted(false)
+                                            .build();
+                                    return mfaConfig;
+                                }))
+                                .flatMap(mfaConfigRepository::save)
+                                .thenReturn(true);
+                    });
                 })
                 .defaultIfEmpty(false);
     }
@@ -199,13 +205,17 @@ public class TotpService {
                     totp.disable();
                     return totpRepository
                             .update(totp)
+                            // MFA 配置可能因历史数据缺失而不存在：此时 TOTP 已禁用仍应返回成功，
+                            // 不能把“配置不存在”误报为禁用失败。
                             .then(mfaConfigRepository.findByUserIdAndType(
                                     userId, MfaConfigEntity.MfaType.TOTP.name(), tenantId))
                             .flatMap(config -> {
                                 config.disable();
                                 return mfaConfigRepository.update(config);
                             })
-                            .thenReturn(true);
+                            .thenReturn(true)
+                            // 配置缺失时内层为空：TOTP 已禁用，仍视为成功
+                            .switchIfEmpty(Mono.just(true));
                 })
                 .defaultIfEmpty(false);
     }

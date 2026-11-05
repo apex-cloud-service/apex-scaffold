@@ -239,51 +239,67 @@ public class PasswordRecoveryApplicationService {
 
     private Mono<PasswordRecoveryConfirmResponse> resetPasswordAndRevoke(
             PasswordRecoveryEntity entity, String newPassword) {
-        String encoded = passwordEncoder.encode(newPassword);
-        return accountDirectory
-                .updatePasswordHash(entity.getUserId(), entity.getTenantId(), encoded)
-                .flatMap(updated -> {
-                    if (!updated) {
-                        return Mono.error(genericInvalid());
-                    }
-                    return recoveryRepository.transition(
-                            entity.getId(),
-                            PasswordRecoveryEntity.STATUS_VERIFIED,
-                            PasswordRecoveryEntity.STATUS_CONSUMED);
-                })
-                .flatMap(consumed -> {
-                    if (!consumed) {
-                        // 并发的另一个确认请求已完成重设
-                        return Mono.error(genericInvalid());
-                    }
-                    return tokenService
-                            .revokeAllUserTokens(entity.getUserId(), entity.getTenantId())
-                            .thenReturn(Boolean.TRUE)
-                            .onErrorResume(ex -> {
-                                log.error(
-                                        "密码重设后撤销会话失败，撤销仍在处理: recoveryId={}, userId={}",
-                                        entity.getId(),
-                                        entity.getUserId(),
-                                        ex);
-                                return Mono.just(Boolean.FALSE);
-                            })
-                            .map(revoked -> new PasswordRecoveryConfirmResponse(
-                                    CONFIRM_STATUS_PASSWORD_RESET, revoked ? "COMPLETED" : "PENDING"))
-                            .doOnSuccess(resp -> publishRevokedEventSafely(entity, resp))
-                            .contextWrite(TenantContext.withTenant(entity.getTenantId()));
-                });
+        // BCrypt 为 CPU 密集的同步调用，必须延迟到订阅后并在阻塞池执行，
+        // 避免在 Redis/事件循环线程上直接编码密码。
+        return Mono.fromCallable(() -> passwordEncoder.encode(newPassword))
+                .subscribeOn(com.apex.scaffold.common.scheduler.BlockingIoSchedulers.general())
+                .flatMap(encoded -> accountDirectory
+                        .updatePasswordHash(entity.getUserId(), entity.getTenantId(), encoded)
+                        .flatMap(updated -> {
+                            if (!updated) {
+                                return Mono.error(genericInvalid());
+                            }
+                            return recoveryRepository.transition(
+                                    entity.getId(),
+                                    PasswordRecoveryEntity.STATUS_VERIFIED,
+                                    PasswordRecoveryEntity.STATUS_CONSUMED);
+                        })
+                        .flatMap(consumed -> {
+                            if (!consumed) {
+                                // 并发的另一个确认请求已完成重设
+                                return Mono.error(genericInvalid());
+                            }
+                            return tokenService
+                                    .revokeAllUserTokens(entity.getUserId(), entity.getTenantId())
+                                    .thenReturn(Boolean.TRUE)
+                                    .onErrorResume(ex -> {
+                                        log.error(
+                                                "密码重设后撤销会话失败，撤销仍在处理: recoveryId={}, userId={}",
+                                                entity.getId(),
+                                                entity.getUserId(),
+                                                ex);
+                                        return Mono.just(Boolean.FALSE);
+                                    })
+                                    .flatMap(revoked -> {
+                                        PasswordRecoveryConfirmResponse response = new PasswordRecoveryConfirmResponse(
+                                                CONFIRM_STATUS_PASSWORD_RESET, revoked ? "COMPLETED" : "PENDING");
+                                        // publish() 是惰性 Mono，必须组合进主链才会真正写入 Outbox；
+                                        // 撤销已完成时事件失败不改变响应，但需记录。
+                                        return publishRevokedEventSafely(entity, response)
+                                                .thenReturn(response);
+                                    })
+                                    .contextWrite(TenantContext.withTenant(entity.getTenantId()));
+                        }));
     }
 
-    private void publishRevokedEventSafely(PasswordRecoveryEntity entity, PasswordRecoveryConfirmResponse response) {
+    /**
+     * 发布撤销事件；仅在会话撤销完成时发布，失败不改变已完成的密码重设结果。
+     *
+     * @param entity   恢复单
+     * @param response 确认响应
+     * @return 发布完成信号；未完成撤销或发布失败时为空完成
+     */
+    private Mono<Void> publishRevokedEventSafely(
+            PasswordRecoveryEntity entity, PasswordRecoveryConfirmResponse response) {
         if (!"COMPLETED".equals(response.getSessionRevocation())) {
-            return;
+            return Mono.empty();
         }
-        try {
-            domainEventPublisher.publish(new com.apex.scaffold.domain.event.TokenRevokedEvent(
-                    entity.getUserId(), entity.getTenantId(), REASON_PASSWORD_RESET));
-        } catch (RuntimeException ex) {
-            log.error("发布撤销事件失败: recoveryId={}, userId={}", entity.getId(), entity.getUserId(), ex);
-        }
+        return Mono.defer(() -> domainEventPublisher.publish(new com.apex.scaffold.domain.event.TokenRevokedEvent(
+                        entity.getUserId(), entity.getTenantId(), REASON_PASSWORD_RESET)))
+                .onErrorResume(ex -> {
+                    log.error("发布撤销事件失败: recoveryId={}, userId={}", entity.getId(), entity.getUserId(), ex);
+                    return Mono.empty();
+                });
     }
 
     private Mono<PasswordRecoveryVerifyResponse> onVerifyFailure(PasswordRecoveryEntity entity) {

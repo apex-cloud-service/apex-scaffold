@@ -419,6 +419,7 @@ class PasswordRecoveryApplicationServiceTest {
                             PasswordRecoveryEntity.STATUS_CONSUMED))
                     .thenReturn(Mono.just(true));
             when(tokenService.revokeAllUserTokens(100L, "tenant-1")).thenReturn(Mono.empty());
+            when(domainEventPublisher.publish(any())).thenReturn(Mono.empty());
 
             StepVerifier.create(service.confirm(confirmRequest()))
                     .assertNext(resp -> {
@@ -431,6 +432,34 @@ class PasswordRecoveryApplicationServiceTest {
 
             verify(accountDirectory).updatePasswordHash(100L, "tenant-1", "$2a$10$hashed");
             verify(tokenService).revokeAllUserTokens(100L, "tenant-1");
+            // publish() 返回的 Mono 必须被订阅，否则 Outbox 不会真正写入
+            verify(domainEventPublisher).publish(any());
+        }
+
+        @Test
+        @DisplayName("撤销事件发布失败不影响已完成的密码重设响应")
+        void eventFailureDoesNotFailConfirm() {
+            when(recoveryRepository.findById(RECOVERY_ID)).thenReturn(Mono.just(verifiedEntity));
+            when(credentialStore.consumeConfirmToken(eq(RECOVERY_ID), anyString()))
+                    .thenReturn(Mono.just(true));
+            when(passwordPolicyService.validatePassword(anyString(), anyString(), anyBoolean()))
+                    .thenReturn(Mono.just(passed()));
+            when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$hashed");
+            when(accountDirectory.updatePasswordHash(100L, "tenant-1", "$2a$10$hashed"))
+                    .thenReturn(Mono.just(true));
+            when(recoveryRepository.transition(
+                            RECOVERY_ID,
+                            PasswordRecoveryEntity.STATUS_VERIFIED,
+                            PasswordRecoveryEntity.STATUS_CONSUMED))
+                    .thenReturn(Mono.just(true));
+            when(tokenService.revokeAllUserTokens(100L, "tenant-1")).thenReturn(Mono.empty());
+            when(domainEventPublisher.publish(any())).thenReturn(Mono.error(new IllegalStateException("outbox down")));
+
+            StepVerifier.create(service.confirm(confirmRequest()))
+                    .assertNext(resp -> org.assertj.core.api.Assertions.assertThat(resp.getSessionRevocation())
+                            .isEqualTo("COMPLETED"))
+                    .verifyComplete();
+
             verify(domainEventPublisher).publish(any());
         }
 

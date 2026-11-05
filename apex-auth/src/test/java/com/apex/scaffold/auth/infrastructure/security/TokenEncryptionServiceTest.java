@@ -152,4 +152,28 @@ class TokenEncryptionServiceTest {
             assertEquals(plainToken, result);
         }
     }
+
+    /**
+     * 加密后的存储值长度必须与生产列宽匹配。
+     *
+     * <p>真实 MySQL 联调曾出现 {@code Data too long for column 'token_value'}：
+     * 原列宽 {@code VARCHAR(500)} 小于 AES-GCM+Base64 后的 JWT 长度。
+     * 生产迁移已将列放宽为 TEXT；本用例固定“加密膨胀率”这一事实，
+     * 避免后续再次按明文长度评估列宽。</p>
+     */
+    @Test
+    void encryptedTokenExceedsLegacyVarchar500Width() {
+        // 典型 RS256 JWT：header+payload+signature 约 650~900 字符
+        String realisticJwt = "eyJraWQiOiJrZXktZjc0M2NlNTgtZGE0MS00NDA0LWI2MTEtOTk5OTExZjI5YTE2IiwiYWxnIjoiUlMyNTYifQ."
+                + "x".repeat(600)
+                + ".signature";
+
+        EncryptedToken encrypted = encryptionService.encrypt(realisticJwt);
+
+        // 明文 + 16 字节 GCM tag 后再 Base64（4/3 膨胀），必然超过 500
+        assertTrue(
+                encrypted.encryptedData().length() > 500,
+                "加密后长度应超过旧的 VARCHAR(500) 列宽，实际=" + encrypted.encryptedData().length());
+        assertEquals(realisticJwt, encryptionService.decrypt(encrypted.encryptedData(), encrypted.iv()));
+    }
 }
