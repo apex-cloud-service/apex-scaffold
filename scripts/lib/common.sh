@@ -43,6 +43,7 @@ CURRENT_LOG_LEVEL=${LOG_LEVEL:-$LOG_LEVEL_INFO}
 # 需要排除的目录列表
 readonly EXCLUDE_DIRS=(
     ".trae"
+    ".workbuddy"
     "target"
     ".git"
     ".idea"
@@ -50,6 +51,10 @@ readonly EXCLUDE_DIRS=(
     "node_modules"
     ".settings"
     "build"
+    # 发布产物目录：release.sh 会把 docs/scripts 复制进 dist/，其中相对链接
+    # 指向仓库内其他路径（如 ../../AGENTS.md），全仓扫描会产生大量误报。
+    "dist"
+    "logs"
 )
 
 ###############################################################################

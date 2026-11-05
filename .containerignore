@@ -6,6 +6,8 @@
 .vscode
 *.iml
 .DS_Store
+# 默认忽略全部构建产物；prebuilt 模式（--build-arg BUILD_MODE=prebuilt）需要
+# 复用宿主已构建的 fat jar，因此放行各运行模块的 target 目录（见文件末尾）。
 **/target
 **/classes
 logs
@@ -22,3 +24,20 @@ lr
 node_modules
 k8s
 .containerignore
+
+# prebuilt 模式复用宿主构建产物：先放行目录，再放行 fat jar（gitignore 语义下
+# 父目录被排除时，子项的 ! 放行不生效）。
+!apex-gateway/target/
+!apex-system-service/target/
+!apex-auth-service/target/
+!apex-workflow-service/target/
+!apex-office-service/target/
+!apex-file-service/target/
+!apex-integration-service/target/
+!apex-gateway/target/apex-gateway-*.jar
+!apex-system-service/target/apex-system-service-*.jar
+!apex-auth-service/target/apex-auth-service-*.jar
+!apex-workflow-service/target/apex-workflow-service-*.jar
+!apex-office-service/target/apex-office-service-*.jar
+!apex-file-service/target/apex-file-service-*.jar
+!apex-integration-service/target/apex-integration-service-*.jar

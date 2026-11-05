@@ -7,6 +7,9 @@ on:
       - develop
     paths:
       - 'docs/**/*.md'
+      - '**/README.md'
+      - 'AGENTS.md'
+      - '**/pom.xml'
       - '.github/workflows/doc-link-check.yml'
   pull_request:
     branches:
@@ -14,12 +17,15 @@ on:
       - develop
     paths:
       - 'docs/**/*.md'
+      - '**/README.md'
+      - 'AGENTS.md'
+      - '**/pom.xml'
   schedule:
     - cron: '0 0 * * 1'
   workflow_dispatch:
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: '21.0.13.0+9-tem'
   MVND_VERSION: '2.0.0-rc-3'
 
 jobs:
@@ -30,36 +36,25 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Set up Maven Daemon
+      - name: Set up SDKMAN (fixed JDK + mvnd)
         run: |
           curl -s "https://get.sdkman.io" | bash
           source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install java "${JAVA_VERSION}"
           sdk install mvnd "${MVND_VERSION}"
+          echo "${JAVA_HOME}" >> "$GITHUB_PATH"
           echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
 
       - name: 构建离线运维工具 JAR
-        run: mvnd -B -pl apex-tools-deployment -am verify
+        run: |
+          source scripts/build/init-build-env.sh
+          mvnd -B -pl apex-tools-deployment -am verify
 
+      # 仓库内部链接是本仓可判定的门禁：失败必须阻断，不能只生成报告。
       - name: 运行内部链接检查脚本
-        id: custom-check
         run: bash scripts/ci/check-doc-links.sh
-        continue-on-error: true
-      
+
+      # 外部链接受网络、限流和目标站点可用性影响，保留为非阻断巡检。
       - name: "检查 Markdown 链接 (方案1: markdown-link-check)"
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
@@ -94,7 +89,7 @@ jobs:
           echo "$(date '+%Y-%m-%d %H:%M:%S')" >> link-check-report.md
           echo "" >> link-check-report.md
           echo "## 检查结果" >> link-check-report.md
-          echo "详细结果请查看 Actions 日志" >> link-check-report.md
+          echo "内部链接检查失败会阻断本工作流；外部链接检查结果见 Actions 日志" >> link-check-report.md
           
           if [ -f "docs/LINK_CHECK_RESULTS.txt" ]; then
             echo "" >> link-check-report.md
@@ -112,7 +107,7 @@ jobs:
             .lycheecache
           retention-days: 30
       
-      - name: 评论 PR (如果有失效链接)
+      - name: 评论 PR (如果内部链接检查失败)
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
@@ -121,5 +116,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '⚠️ 文档链接检查发现问题，请检查 [Actions 日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) 获取详情。'
+              body: '⚠️ 文档内部链接检查失败，请检查 [Actions 日志](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) 获取详情。'
             })

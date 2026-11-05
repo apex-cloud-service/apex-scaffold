@@ -17,22 +17,36 @@
 # ============================================================
 # 1. Build Stage（编译 + 打包整个反应堆，按 SERVICE_MODULE 取产物）
 # ============================================================
+# 构建模式（BUILD_MODE）：
+#   source（默认）— 容器内从源码构建。需要容器内可访问 Maven 仓库；依赖预下载
+#                   （dependency:go-offline）在受限网络下可能长时间阻塞。
+#   prebuilt      — 复用宿主机/CI 已构建的 <模块>/target/*.jar，容器只做运行镜像。
+#                   适用于“先在 CI 里 mvnd verify，再打镜像”的流水线，构建最快且可离线。
+#                   用法：podman build --build-arg BUILD_MODE=prebuilt ...
+ARG BUILD_MODE=source
+
 FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
 
 # 构建档位：basic / standard / enterprise
 ARG BUILD_PROFILE=enterprise
 # 目标微服务模块（决定运行时镜像内置哪个 fat jar；默认网关）
 ARG SERVICE_MODULE=apex-gateway
+# 构建模式：source | prebuilt（见文件头说明）
+ARG BUILD_MODE=source
+# 项目版本（prebuilt 模式用于校验目标 JAR 是否存在）
+ARG BUILD_VERSION=1.3.1
 
 WORKDIR /app
 
-# 安装项目固定版本的 Maven Daemon，并配置 Maven 镜像加速。
-ENV SDKMAN_DIR=/root/.sdkman
+# 构建工具：基础镜像已自带 Temurin 21 + Maven 3.9.x，直接使用，不再经 SDKMAN 二次下载。
+# 原实现 `curl get.sdkman.io | bash && sdk install java ...` 依赖 api.sdkman.io 返回版本清单，
+# 在受限网络/CI 代理下该接口返回 400（实测），会导致镜像构建在第一步即失败。
+# 这里只安装构建所需的附加工具，并打印实际版本便于核对。
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl zip unzip \
+  && apt-get install -y --no-install-recommends curl zip unzip zsh \
   && rm -rf /var/lib/apt/lists/* \
-  && curl -s "https://get.sdkman.io" | bash \
-  && bash -c "source \"${SDKMAN_DIR}/bin/sdkman-init.sh\" && sdk install java 21.0.13.0+9-tem && sdk install mvnd 2.0.0-rc-3"
+  && java -version 2>&1 | head -1 \
+  && mvn -v | head -1
 
 RUN mkdir -p /usr/share/maven/ref && printf '%s\n' \
   '<?xml version="1.0" encoding="UTF-8"?>' \
@@ -88,26 +102,42 @@ COPY apex-tools-deployment/pom.xml apex-tools-deployment/
 
 COPY .sdkmanrc .
 COPY scripts/build/init-build-env.sh scripts/build/init-build-env.sh
-RUN apt-get update && apt-get install -y --no-install-recommends zsh && rm -rf /var/lib/apt/lists/*
 
-# 预下载依赖（仅 pom 变更时该层才失效）
-RUN zsh -c 'source scripts/build/init-build-env.sh && mvnd -T4 -B -Dmvnd.daemonStorage=/tmp/apex-build-daemon dependency:go-offline'
+# 预下载依赖（仅 source 模式；prebuilt 模式直接使用宿主产物，不联网、不编译）。
+# 容器内使用基础镜像自带的 mvn（3.9.x），不依赖 mvnd/SDKMAN：
+# 项目脚本 init-build-env.sh 会强制校验 mvnd 与固定 JDK，仅适用于开发机/CI 宿主机。
+RUN if [ "${BUILD_MODE}" = "source" ]; then mvn -B -q dependency:go-offline; else echo "prebuilt 模式：跳过依赖预下载"; fi
 
 # 下载 SkyWalking Java Agent（供运行时 -javaagent 接入，替代原 Zipkin/Brave）。
+# 可选：BUNDLE_SKYWALKING_AGENT=false 时跳过下载与打包，运行阶段需同时设置
+# SW_AGENT_ENABLED=false（默认 true 会要求探针存在）。在受限网络或不需要链路追踪时关闭。
 # 下载或探针校验失败即中止构建，避免静默丢失链路追踪。
 ARG SKYWALKING_AGENT_VERSION=9.7.0
-RUN curl -fsSL "https://archive.apache.org/dist/skywalking/java-agent/${SKYWALKING_AGENT_VERSION}/apache-skywalking-java-agent-${SKYWALKING_AGENT_VERSION}.tgz" -o /tmp/skywalking-agent.tgz \
-  && curl -fsSL "https://archive.apache.org/dist/skywalking/java-agent/${SKYWALKING_AGENT_VERSION}/apache-skywalking-java-agent-${SKYWALKING_AGENT_VERSION}.tgz.sha512" -o /tmp/skywalking-agent.sha512 \
-  && printf '%s  /tmp/skywalking-agent.tgz\n' "$(cut -d ' ' -f 1 /tmp/skywalking-agent.sha512)" | sha512sum -c - \
-  && tar -xzf /tmp/skywalking-agent.tgz -C /opt \
-  && test -s /opt/skywalking-agent/skywalking-agent.jar \
-  && cp /opt/skywalking-agent/optional-plugins/apm-spring-cloud-gateway-4.x-plugin-${SKYWALKING_AGENT_VERSION}.jar /opt/skywalking-agent/plugins/ \
-  && cp /opt/skywalking-agent/optional-plugins/apm-spring-webflux-6.x-plugin-${SKYWALKING_AGENT_VERSION}.jar /opt/skywalking-agent/plugins/ \
-  && rm -f /tmp/skywalking-agent.tgz /tmp/skywalking-agent.sha512
+ARG BUNDLE_SKYWALKING_AGENT=true
+RUN if [ "${BUNDLE_SKYWALKING_AGENT}" = "true" ]; then \
+      curl -fsSL "https://archive.apache.org/dist/skywalking/java-agent/${SKYWALKING_AGENT_VERSION}/apache-skywalking-java-agent-${SKYWALKING_AGENT_VERSION}.tgz" -o /tmp/skywalking-agent.tgz \
+      && curl -fsSL "https://archive.apache.org/dist/skywalking/java-agent/${SKYWALKING_AGENT_VERSION}/apache-skywalking-java-agent-${SKYWALKING_AGENT_VERSION}.tgz.sha512" -o /tmp/skywalking-agent.sha512 \
+      && printf '%s  /tmp/skywalking-agent.tgz\n' "$(cut -d ' ' -f 1 /tmp/skywalking-agent.sha512)" | sha512sum -c - \
+      && tar -xzf /tmp/skywalking-agent.tgz -C /opt \
+      && test -s /opt/skywalking-agent/skywalking-agent.jar \
+      && cp /opt/skywalking-agent/optional-plugins/apm-spring-cloud-gateway-4.x-plugin-${SKYWALKING_AGENT_VERSION}.jar /opt/skywalking-agent/plugins/ \
+      && cp /opt/skywalking-agent/optional-plugins/apm-spring-webflux-6.x-plugin-${SKYWALKING_AGENT_VERSION}.jar /opt/skywalking-agent/plugins/ \
+      && rm -f /tmp/skywalking-agent.tgz /tmp/skywalking-agent.sha512; \
+    else \
+      mkdir -p /opt/skywalking-agent; \
+      echo "BUNDLE_SKYWALKING_AGENT=false：镜像不内置 SkyWalking 探针，运行时请设置 SW_AGENT_ENABLED=false"; \
+    fi
 
-# 拷贝全部源码并构建（跳过测试；单元/集成测试由 CI 阶段执行）
+# 拷贝全部源码并构建（跳过测试；单元/集成测试由 CI 阶段执行）。
+# 使用基础镜像自带 mvn；BUILD_PROFILE 通过 -P 传入，与根 POM 的 basic/standard/enterprise 对应。
+# prebuilt 模式不重新编译：目标 JAR 已由 CI/宿主机构建，COPY 后直接进入运行阶段。
 COPY . .
-RUN zsh -c 'source scripts/build/init-build-env.sh && mvnd -T4 -B -Dmvnd.daemonStorage=/tmp/apex-build-daemon clean package -DskipTests -P "${BUILD_PROFILE}"'
+RUN if [ "${BUILD_MODE}" = "source" ]; then \
+      mvn -B -DskipTests -P "${BUILD_PROFILE}" clean package; \
+    else \
+      test -f "${SERVICE_MODULE}/target/${SERVICE_MODULE}-${BUILD_VERSION}.jar" \
+        || { echo "prebuilt 模式缺少 ${SERVICE_MODULE}/target/${SERVICE_MODULE}-${BUILD_VERSION}.jar，请先在宿主机执行 mvnd package" >&2; exit 1; }; \
+    fi
 
 # ============================================================
 # 2. Runtime Stage（仅含 JRE + 选中微服务的可执行 jar）
@@ -121,6 +151,8 @@ RUN apk add --no-cache tzdata
 ARG BUILD_PROFILE=enterprise
 ARG BUILD_VERSION=1.3.1
 ARG SERVICE_MODULE=apex-gateway
+# 是否内置 SkyWalking 探针（与 builder 阶段同名参数保持一致，用于运行时降级判断）
+ARG BUNDLE_SKYWALKING_AGENT=true
 # 业务端口（网关示例 8080；其余服务见 §5.1 端口规划）
 ARG SERVICE_PORT=8080
 # 管理端口（Actuator / Prometheus；网关复用业务端口，其余服务独立管理端口）
@@ -184,4 +216,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
 USER appuser
 
 # 启用 Agent 时必须存在可读且非空的探针；显式设置 SW_AGENT_ENABLED=false 可关闭。
-ENTRYPOINT ["sh", "-c", "AGENT_OPTS=''; if [ \"${SW_AGENT_ENABLED:-true}\" = \"true\" ]; then if [ ! -r \"${SW_AGENT_JAR}\" ] || [ ! -s \"${SW_AGENT_JAR}\" ]; then echo 'SkyWalking Agent is enabled but its JAR is missing, unreadable or empty' >&2; exit 1; fi; AGENT_OPTS=\"-javaagent:${SW_AGENT_JAR}\"; fi; exec java $AGENT_OPTS $JAVA_OPTS -jar /app/app.jar"]
+# 若镜像构建时 BUNDLE_SKYWALKING_AGENT=false（未内置探针），默认自动降级为不加载，
+# 避免“默认 true + 探针缺失”导致容器启动即退出。
+ENV BUNDLE_SKYWALKING_AGENT="${BUNDLE_SKYWALKING_AGENT}"
+ENTRYPOINT ["sh", "-c", "AGENT_OPTS=''; if [ \"${SW_AGENT_ENABLED:-true}\" = \"true\" ]; then if [ ! -r \"${SW_AGENT_JAR}\" ] || [ ! -s \"${SW_AGENT_JAR}\" ]; then if [ \"${BUNDLE_SKYWALKING_AGENT:-true}\" = \"false\" ]; then echo 'SkyWalking Agent not bundled (BUNDLE_SKYWALKING_AGENT=false), running without agent' >&2; else echo 'SkyWalking Agent is enabled but its JAR is missing, unreadable or empty' >&2; exit 1; fi; else AGENT_OPTS=\"-javaagent:${SW_AGENT_JAR}\"; fi; fi; exec java $AGENT_OPTS $JAVA_OPTS -jar /app/app.jar"]

@@ -156,11 +156,15 @@ readiness_passed() {
 }
 
 # ---------- 定位可执行 jar ----------
+# 源码仓库布局：<模块>/target/<模块>-*.jar
+# 发行包布局：JAR 位于包根目录，脚本位于 scripts/deploy/service/，模块目录不存在。
 if [ -n "${APEX_JAR:-}" ]; then
   JAR="${APEX_JAR}"
 else
   JAR=""
-  for candidate in "${PROJECT_ROOT}/${SERVICE_MODULE}/target/${SERVICE_MODULE}"-*.jar; do
+  for candidate in \
+    "${PROJECT_ROOT}/${SERVICE_MODULE}/target/${SERVICE_MODULE}"-*.jar \
+    "${PROJECT_ROOT}/${SERVICE_MODULE}"-*.jar; do
     [ -f "${candidate}" ] || continue
     case "${candidate}" in *-sources.jar|*-javadoc.jar) continue ;; esac
     JAR="${candidate}"

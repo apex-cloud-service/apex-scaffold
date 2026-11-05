@@ -15,15 +15,25 @@ echo "初始化构建环境..."
 
 # 加载 sdkman 环境（自动应用 .sdkmanrc 指定的 JDK）
 if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
+  # sdkman-init.sh 内部使用 `[ -z "$SDKMAN_CANDIDATES_API" ]` 等未定义变量判断，
+  # 调用方脚本常开启 `set -u`（如 release.sh 的 set -euo pipefail），会让 source 直接失败。
+  # 这里在 source 期间临时关闭 nounset，source 完成后恢复调用方原设置。
+  _apex_saved_nounset=0
+  [[ -o nounset ]] && _apex_saved_nounset=1
+  set +u
   # shellcheck disable=SC1091
   if ! source "$HOME/.sdkman/bin/sdkman-init.sh"; then
+    [[ $_apex_saved_nounset == 1 ]] && set -u
     echo "加载 sdkman 失败" >&2
     exit 1
   fi
   if ! sdk env; then
+    [[ $_apex_saved_nounset == 1 ]] && set -u
     echo "加载 sdkman 项目环境失败" >&2
     exit 1
   fi
+  [[ $_apex_saved_nounset == 1 ]] && set -u
+  unset _apex_saved_nounset
   echo "✅ 已加载 sdkman 项目环境"
 else
   echo "未找到 sdkman（$HOME/.sdkman），请安装: https://sdkman.io" >&2

@@ -1,13 +1,14 @@
 name: Release Pipeline
 
 # Apex Scaffold 发布流水线：标签 v* 触发三档构建与发布。
+# 打包统一复用 scripts/release/release.sh，保证 CI 与本地发行包结构一致。
 on:
   push:
     tags:
       - 'v*'
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: '21.0.13.0+9-tem'
   MVND_VERSION: '2.0.0-rc-3'
 
 jobs:
@@ -18,72 +19,57 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: maven
-
-      - name: Set up Maven Daemon
+      - name: Set up SDKMAN (fixed JDK + mvnd)
         run: |
           curl -s "https://get.sdkman.io" | bash
           source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install java "${JAVA_VERSION}"
           sdk install mvnd "${MVND_VERSION}"
+          echo "${JAVA_HOME}" >> "$GITHUB_PATH"
           echo "$HOME/.sdkman/candidates/mvnd/current/bin" >> "$GITHUB_PATH"
 
       - name: Extract version from tag
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Build basic tier
-        run: mvnd -q clean package -Pbasic -DskipTests
-        env:
-          MAVEN_OPTS: -Xmx1024m
-
-      - name: Package basic dist
+      - name: Verify (unit and architecture tests)
         run: |
-          mkdir -p dist
-          zip -r dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-basic.zip \
-            apex-gateway/target/*.jar apex-auth-service/target/*.jar apex-system-service/target/*.jar \
-            apex-workflow-service/target/*.jar apex-office-service/target/*.jar apex-file-service/target/*.jar \
-            apex-integration-service/target/*.jar apex-boot-all/target/*.jar \
-            apex-tools-deployment/target/local-deployment.jar \
-            apex-example/target/*.jar \
-            LICENSE LICENSE-COMMERCIAL.md docs config podman-compose.yml Containerfile k8s scripts
+          source scripts/build/init-build-env.sh
+          mvnd -T4 -B test
 
-      - name: Build standard tier
-        run: mvnd -B -q clean package -Pstandard -DskipTests
-        env:
-          MAVEN_OPTS: -Xmx1024m
-
-      - name: Package standard dist
+      - name: Build and package three tiers
         run: |
-          zip -r dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-standard.zip \
-            apex-gateway/target/*.jar apex-auth-service/target/*.jar apex-system-service/target/*.jar \
-            apex-workflow-service/target/*.jar apex-office-service/target/*.jar apex-file-service/target/*.jar \
-            apex-integration-service/target/*.jar apex-boot-all/target/*.jar \
-            apex-tools-deployment/target/local-deployment.jar \
-            apex-example/target/*.jar \
-            LICENSE LICENSE-COMMERCIAL.md docs config podman-compose.yml Containerfile k8s scripts
+          source scripts/build/init-build-env.sh
+          for profile in basic standard enterprise; do
+            ./scripts/release/release.sh "${profile}" "${{ steps.version.outputs.VERSION }}"
+          done
 
-      - name: Build enterprise tier
-        run: mvnd -B -q clean package -Penterprise -DskipTests
-        env:
-          MAVEN_OPTS: -Xmx1024m
-
-      - name: Package enterprise dist
+      - name: Verify distribution contents
         run: |
-          zip -r dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-enterprise.zip \
-            apex-gateway/target/*.jar apex-auth-service/target/*.jar apex-system-service/target/*.jar \
-            apex-workflow-service/target/*.jar apex-office-service/target/*.jar apex-file-service/target/*.jar \
-            apex-integration-service/target/*.jar apex-boot-all/target/*.jar \
-            apex-tools-deployment/target/local-deployment.jar \
-            apex-example/target/*.jar \
-            LICENSE LICENSE-COMMERCIAL.md docs config podman-compose.yml Containerfile k8s scripts
+          set -euo pipefail
+          for profile in basic standard enterprise; do
+            package="dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-${profile}"
+            archive="dist/apex-scaffold-${{ steps.version.outputs.VERSION }}-${profile}.zip"
+            test -f "${archive}"
+            test -f "${package}/tools/local-deployment.jar"
+            test -f "${package}/docs/05-operations/deployment.md"
+            test -f "${package}/podman-compose.yml"
+            if [ -e "${package}/config/license/private.key" ]; then
+              echo "发行包包含 License 私钥: ${package}" >&2
+              exit 1
+            fi
+            if [ -e "${package}/scripts/license" ]; then
+              echo "发行包包含卖方 License 签发脚本: ${package}" >&2
+              exit 1
+            fi
+            if unzip -l "${archive}" | grep -Eq 'config/license/private\.key|scripts/license/'; then
+              echo "压缩包包含禁止交付内容: ${archive}" >&2
+              exit 1
+            fi
+          done
 
       - name: List artifacts
-        run: ls -lh dist/
+        run: ls -lh dist/*.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
