@@ -31,8 +31,13 @@ public class MfaVerifyRequest {
     @Schema(description = "用户 ID", requiredMode = Schema.RequiredMode.REQUIRED, example = "123")
     private Long userId;
 
-    /** 登录返回的 MFA 挑战凭据（短 TTL RS256 JWT，统一认证收口 A4 二步登录）；与 userId 二选一 */
-    @NotBlank(message = "MFA 挑战凭据不能为空")
+    /**
+     * 登录返回的 MFA 挑战凭据（短 TTL RS256 JWT，统一认证收口 A4 二步登录）
+     *
+     * <p>仅登录二步验证（{@code /auth/v1/mfa/verify}）消费：服务层校验缺失时拒绝。
+     * {@code /api/v1/mfa/**} 自助端点不消费此字段，可空。
+     */
+    @Schema(description = "登录二步验证的 MFA 挑战凭据，仅 /auth/v1/mfa/verify 必填", example = "eyJhbGciOiJSUzI1NiJ9...")
     private String challengeToken;
 
     /**
