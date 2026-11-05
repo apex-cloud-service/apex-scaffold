@@ -1,8 +1,10 @@
 # ===== Maven / 构建产物 =====
+# 注：build/、out/ 锚定到仓库根目录。不锚定会误命中 scripts/build 等
+# 已跟踪源码目录，导致其中的已跟踪文件无法正常 git add。
 target/
 **/target/
-build/
-out/
+/build/
+/out/
 dist/
 *.class
 *.jar
@@ -102,8 +104,9 @@ rebel-remote.xml
 .freebuff/
 
 # ===== 发布产物 =====
+# 注：release/ 锚定到仓库根目录，理由同上方 build/。
 dist/
-release/
+/release/
 .scannerwork/
 
 # ===== 任务中间产物（工作区管理规范 4.1）=====
