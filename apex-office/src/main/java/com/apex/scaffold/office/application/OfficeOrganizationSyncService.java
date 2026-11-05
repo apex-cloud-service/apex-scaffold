@@ -44,9 +44,10 @@ import reactor.core.publisher.Mono;
  *
  * <p>事务边界：
  * <ul>
- *   <li>同步操作在事务内执行，确保映射关系的一致性</li>
- *   <li>使用 TransactionalOperator 支持 WebFlux 响应式事务</li>
- *   <li>失败时回滚映射关系和任务状态</li>
+ *   <li>办公服务使用阻塞式 MyBatis/JDBC，{@code TransactionalOperator} 为 no-op 降级实现，
+ *       不提供跨步骤回滚保证；同步流程依靠检查点续传与幂等 upsert 保证可重试</li>
+ *   <li>单条映射写入需长期保持原子性时，应在仓储层使用同步 {@code TransactionTemplate}，
+ *       不能依赖 {@code .as(transactionalOperator::transactional)}</li>
  * </ul>
  *
  * @author Apex Team
