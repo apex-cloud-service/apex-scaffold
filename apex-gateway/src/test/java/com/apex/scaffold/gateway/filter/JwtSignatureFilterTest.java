@@ -187,6 +187,45 @@ class JwtSignatureFilterTest {
             assertThat(holder[0]).isNotNull();
             assertThat(exchange.getResponse().getStatusCode()).isNull();
         }
+
+        @Test
+        @DisplayName("认证中心匿名入口无 Token 也应放行")
+        void shouldPassAuthCenterAnonymousPaths() {
+            for (String path : new String[] {
+                "/auth/v1/login",
+                "/auth/v1/refresh",
+                "/auth/v1/mfa/verify",
+                "/auth/v2/password-recovery/requests",
+                "/auth/v2/password-recovery/confirmations",
+                "/.well-known/jwks.json"
+            }) {
+                ServerWebExchange[] holder = new ServerWebExchange[1];
+                MockServerWebExchange exchange = MockServerWebExchange.from(
+                        MockServerHttpRequest.post(path).build());
+
+                filter.filter(exchange, capturingChain(holder)).block();
+
+                assertThat(holder[0]).as("匿名路径应放行: " + path).isNotNull();
+                assertThat(exchange.getResponse().getStatusCode()).isNull();
+            }
+        }
+
+        @Test
+        @DisplayName("认证中心受保护端点无 Token 应返回 401")
+        void shouldRejectAuthCenterProtectedPaths() {
+            for (String path : new String[] {
+                "/auth/v1/logout/1", "/auth/v1/sessions/online", "/api/v1/mfa/setup", "/api/mfa/totp/enable"
+            }) {
+                MockServerWebExchange exchange = MockServerWebExchange.from(
+                        MockServerHttpRequest.post(path).build());
+
+                filter.filter(exchange, noopChain()).block();
+
+                assertThat(exchange.getResponse().getStatusCode())
+                        .as("受保护路径应 401: " + path)
+                        .isEqualTo(HttpStatus.UNAUTHORIZED);
+            }
+        }
     }
 
     @Nested
