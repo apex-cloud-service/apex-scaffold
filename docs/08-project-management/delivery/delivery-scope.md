@@ -26,7 +26,7 @@
 
 ## 2. 范围内的 Maven 模块
 
-根 POM 聚合 34 个模块。交付相关模块按职责分组如下，完整依赖关系见 [README 模块结构](../../../README.md#模块结构)。
+根 POM 聚合 35 个模块。交付相关模块按职责分组如下，完整依赖关系见 [README 模块结构](../../../README.md#模块结构)。
 
 | 分类 | 模块 | 是否随交付包发布 |
 | --- | --- | --- |
@@ -45,6 +45,7 @@
 | 示例与工具 | `apex-example`、`apex-generator` | 示例 jar / 构建工具 |
 | 组合部署 | `apex-boot-all` | 可作为单体包发布（可选） |
 | 运维工具 | `apex-tools-deployment` | **不发布**（离线运维用） |
+| 构建管理 | `apex-tools-build` | **不发布**（模块注册表与构建/打包/部署编排入口，见 [构建发布管理模块方案](../plans/build-management-plan.md)） |
 
 > 发布脚本实际打包的服务清单为网关与六个业务服务，见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。
 

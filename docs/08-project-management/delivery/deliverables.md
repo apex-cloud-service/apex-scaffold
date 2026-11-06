@@ -42,7 +42,7 @@ source scripts/build/init-build-env.sh
 
 | 内容 | 来源 | 说明 |
 | --- | --- | --- |
-| 六个服务 JAR | 各服务 `target/` | 网关 + 五个业务服务 |
+| 七个服务 JAR | 各服务 `target/` | 网关 + 六个业务服务 |
 | `LICENSE` / `LICENSE-COMMERCIAL.md` | 仓库根 | 双轨授权 |
 | `README.md` / `CHANGELOG.md` / `CODE_OF_CONDUCT.md` / `CONTRIBUTING.md` | 仓库根 | |
 | `docs/` | `docs/` 全目录 | 保留子目录结构，仅复制 Markdown 与图片（排除测试证据 json/log/jfr 等） |
@@ -108,7 +108,7 @@ source scripts/build/init-build-env.sh
 
 | # | 校验项 | 方法 | 判定 |
 | --- | --- | --- | --- |
-| 1 | 六个服务 JAR 存在且唯一 | 每个服务 `target/` 下 `*.jar` 计数为 1 | 通过 / 不通过 |
+| 1 | 七个服务 JAR 存在且唯一 | 每个服务 `target/` 下 `*.jar` 计数为 1 | 通过 / 不通过 |
 | 2 | 档位标识正确 | `grep build.profile.id <module>/target/classes/apex-build.properties` | 与命令一致 |
 | 3 | 私钥未打入 | `unzip -l <交付包> \| grep private.key` 无输出 | 通过 / 不通过 |
 | 4 | 授权工具未打入 | 包内无 `apex-license-tools`、无 `scripts/license/` | 通过 / 不通过 |
@@ -132,7 +132,7 @@ source scripts/build/init-build-env.sh
 | 档位 | `basic` / `standard` / `enterprise` |
 | 校验文件 | `apex-scaffold-<版本号>-<档位>.zip.sha256` |
 
-> [release.sh](../../../scripts/release/release.sh) 默认读取根 POM 版本；显式传入的版本必须与 POM 一致，否则脚本直接失败（见 [风险登记册](./risk-register.md) R-04）。校验文件 `.sha256` 当前需在发布流程外自行生成。
+> [release.sh](../../../scripts/release/release.sh) 默认读取根 POM 版本；显式传入的版本必须与 POM 一致，否则脚本直接失败（见 [风险登记册](./risk-register.md) R-04）。校验文件 `.zip.sha256` 由 release.sh 打包阶段自动生成，随包分发。
 
 ---
 

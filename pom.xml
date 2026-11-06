@@ -185,12 +185,15 @@
     <module>apex-job-service</module>
     <module>apex-masking-service</module>
     <module>apex-seata-spring-boot-starter</module>
-    <!-- 运维工具模块：本地部署密钥/配置校验、TOTP 离线迁移与 V42 结构恢复（不参与服务运行期装配） -->
+    <!-- 组合部署包：basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 -->
     <module>apex-boot-all</module>
     <module>apex-integration</module>
     <!-- 集成服务：启动类/Router 装配/独立 apex_integration 库（方案 M5 / 批次 E4） -->
     <module>apex-integration-service</module>
+    <!-- 运维工具模块：本地部署密钥/配置校验、TOTP 离线迁移与 V42 结构恢复（不参与服务运行期装配） -->
     <module>apex-tools-deployment</module>
+    <!-- 构建发布管理模块：模块注册表与 build/package/deploy 统一编排入口（不参与服务运行期装配） -->
+    <module>apex-tools-build</module>
   </modules>
   <dependencyManagement>
     <dependencies>

@@ -25,7 +25,7 @@ mvnd -T4 -B clean verify
 
 ## 模块与物理边界
 
-根 POM 聚合 34 个模块：共享基础、共享领域、五个按能力拆分的共享设施 JAR（`apex-infrastructure` 仅保留旧坐标兼容）、共享契约、服务父 POM、六个业务库、七个运行模块、服务增强、对象存储、授权、示例与工具、组合部署包，以及离线运维工具 `apex-tools-deployment`。
+根 POM 聚合 35 个模块：共享基础、共享领域、五个按能力拆分的共享设施 JAR（`apex-infrastructure` 仅保留旧坐标兼容）、共享契约、服务父 POM、六个业务库、七个运行模块、服务增强、对象存储、授权、示例与工具、组合部署包，离线运维工具 `apex-tools-deployment`，以及构建发布管理模块 `apex-tools-build`。
 
 | 分类 | 模块及职责 |
 | --- | --- |
@@ -42,6 +42,7 @@ mvnd -T4 -B clean verify
 | 授权模块 | `apex-license-spring-boot-starter`、`apex-license-tools` |
 | 示例与工具 | `apex-example`、`apex-generator` |
 | 运维工具 | `apex-tools-deployment`：离线部署密钥/配置校验、TOTP 敏感字段迁移包生成与回滚、MySQL V42 结构恢复、文档链接校验与本地文档静态服务；仅由 `scripts/utils/`、`scripts/ci/check-doc-links.sh` 脚本与 Compose `security-key-check` 以 fat jar 调用，不参与服务运行期装配 |
+| 构建管理 | `apex-tools-build`：全部模块注册表 `build-manifest.yaml`（单一事实来源，`BuildManifestSyncTest` 校验其与根 POM modules、各模块打包插件/mainClass、release.sh SERVICES 一致）与编译/构建/打包/发布/镜像/部署统一编排入口 `bin/apex.sh`（只做编排，委托既有脚本与 mvnd 执行；部署覆盖 java -jar、Podman Compose、Docker Compose、K8s 四种运行时，K8s 为 fail-closed 编排）；不参与服务运行期装配，不进交付发布包 |
 
 ### 当前依赖
 
@@ -76,6 +77,7 @@ mvnd -T4 -B clean verify
 | `apex-boot-all` | common、domain、api-contract、system、auth、workflow、file、office、integration |
 | `apex-example` | common、domain、infrastructure-cache、infrastructure-integration、system（workflow 仅 test scope） |
 | `apex-tools-deployment` | 无内部依赖；仅 Jackson、SnakeYAML、CommonMark（本地文档 Markdown 渲染）与 JUnit |
+| `apex-tools-build` | 无内部依赖；仅测试 scope 使用 SnakeYAML（解析注册表）与 JUnit |
 
 表内省略统一的 `apex-` 前缀。auth-service 对 system、example 对 workflow 的依赖仅为 test scope，不得据此引入生产耦合。新增依赖前检查目标 POM，不要机械套用“所有业务库依赖 infrastructure”的链条。
 

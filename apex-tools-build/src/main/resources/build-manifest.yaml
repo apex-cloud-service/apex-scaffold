@@ -1,0 +1,196 @@
+# ============================================================
+# Apex Scaffold 模块注册表（单一事实来源 / Single Source of Truth）
+# ============================================================
+# 本文件登记全部 35 个 Maven 模块的职责分类、交付口径（是否产出可执行/交付 JAR）、
+# 默认端口与显式启动类，是 apex-tools-build 的核心配置。三处消费方：
+#
+#   1. BuildManifestSyncTest（verify 门禁）：校验本文件与根 POM <modules>、各模块 POM
+#      打包插件/显式 mainClass、scripts/release/release.sh SERVICES 数组的四方一致，
+#      任何一方单方面漂移都会构建失败；
+#   2. bin/apex.sh（运行时编排）：awk 行式解析本文件，为 package/image/deploy 子命令
+#      提供模块清单，为 deploy health 提供 readiness 端口；
+#   3. apex.sh status：按本文件渲染模块概览与 target 产物状态。
+#
+# 字段说明：
+#   artifactId     模块坐标，必须与根 POM <modules> 一致（BuildManifestSyncTest 校验）。
+#   category       职责分类，口径与 AGENTS.md「模块与物理边界」表一致：
+#                  共享基础/共享领域/共享设施/共享契约/服务父POM/业务库/运行模块/
+#                  服务增强/对象存储/授权模块/示例与工具/组合部署/运维工具/构建管理。
+#   deliverable    交付口径，四态：
+#                    none        不产出可执行/交付 JAR（库、starter、兼容聚合等）；
+#                    service-jar 进入交付包的服务 fat jar（== release.sh SERVICES 数组，
+#                                当前为网关 + 六个业务服务共 7 个，测试强校验）；
+#                    optional    按需单独构建的可执行 JAR（不进标准交付包）；
+#                    tool-jar    shade 打包的运维工具 jar（== apex-tools-deployment）。
+#                  与打包插件双向绑定：none ⇔ 无 spring-boot/shade 插件；
+#                  service-jar/optional ⇔ 必须有 spring-boot-maven-plugin；
+#                  tool-jar ⇔ 必须有 maven-shade-plugin（测试校验）。
+#   port           默认业务端口（容器内/进程内端口，与 scripts/deploy/service/app.sh
+#                  的映射对齐；java -jar 与 k8s 场景直接用它构造 readiness URL）。
+#   managementPort 默认管理端口（缺省与业务端口相同；当前仅 system-service=8083、
+#                  integration-service=8097 与业务端口不同）。
+#   hostPort       仅 Compose 场景：宿主机端口映射的宿主侧端口（缺省等于 managementPort）。
+#                  当前仅 workflow-service 登记（容器内 8083 与 system 管理端口 8083 冲突，
+#                  Compose 映射为 8093 规避）；deploy health 在 compose 运行时用它探测。
+#   mainClass      仅登记 POM 显式声明 <mainClass> 的模块（当前仅 apex-system-service、
+#                  apex-example）；其余服务由 spring-boot repackage 构建期自动探测
+#                  @SpringBootApplication，有意不在此登记，避免形成第二份可漂移副本。
+#
+# 解析契约（bin/apex.sh 的 awk 行式解析，务必遵守）：
+#   - 记录行固定为 "  - artifactId: <id>"（两空格缩进 + YAML 列表项）；
+#   - 字段行固定为四空格缩进 "    <键>: <值>"；
+#   - 注释行（# 开头）对 snakeyaml 与 awk 均不可见，可自由增删；
+#   - 修改缩进/键名/列表项语法不会触发 Java 测试失败，但会静默破坏 shell 解析——
+#     调整结构时必须同步 apex.sh 的 manifest_service_modules/manifest_field。
+#
+# 新增/删除/改名模块的同步清单（缺一会被门禁拦截或造成口径漂移）：
+#   1. 根 pom.xml <modules>；
+#   2. 本文件条目（保持与根 POM 相同的声明顺序，便于人工比对）；
+#   3. 模块自身 pom.xml 的打包插件与显式 mainClass（如适用）；
+#   4. scripts/release/release.sh 的 SERVICES 数组（仅发布服务集合变化时）；
+#   5. AGENTS.md「模块与物理边界」分类表与依赖表；
+#   6. docs/08-project-management/delivery/delivery-scope.md §2（交付口径变化时）。
+#
+# schema: 注册表结构版本；字段增删或语义变更（而非条目增删）时递增。
+schema: 1
+modules:
+  # ── 共享基础/共享领域/共享设施/共享契约/服务父POM：全局横切与契约层，全部不产出可执行 JAR。
+  #    apex-infrastructure 为旧坐标兼容聚合，不含实现源码；apex-license-tools 为卖方内部工具，
+  #    发行源码/交付包必须剥离。
+  - artifactId: apex-common
+    category: 共享基础
+    deliverable: none
+  - artifactId: apex-storage-spring-boot-starter
+    category: 对象存储
+    deliverable: none
+  - artifactId: apex-license-spring-boot-starter
+    category: 授权模块
+    deliverable: none
+  - artifactId: apex-license-tools
+    category: 授权模块
+    deliverable: none
+  - artifactId: apex-domain
+    category: 共享领域
+    deliverable: none
+  - artifactId: apex-infrastructure-persistence
+    category: 共享设施
+    deliverable: none
+  - artifactId: apex-infrastructure-cache
+    category: 共享设施
+    deliverable: none
+  - artifactId: apex-infrastructure-messaging
+    category: 共享设施
+    deliverable: none
+  - artifactId: apex-infrastructure-remote
+    category: 共享设施
+    deliverable: none
+  - artifactId: apex-infrastructure-integration
+    category: 共享设施
+    deliverable: none
+  - artifactId: apex-infrastructure
+    category: 共享设施
+    deliverable: none
+  - artifactId: apex-workflow
+    category: 业务库
+    deliverable: none
+  - artifactId: apex-system
+    category: 业务库
+    deliverable: none
+  # ── 示例与工具：apex-example 是 basic/示例档与 k8s 单体形态的聚合装配模块，
+  #    显式声明 mainClass（全仓仅两处显式声明之一），镜像构建经 Containerfile
+  #    以 SERVICE_MODULE=apex-example 产出 apex-scaffold:latest。
+  - artifactId: apex-example
+    category: 示例与工具
+    deliverable: optional
+    port: 8080
+    mainClass: com.apex.example.ExampleApplication
+  - artifactId: apex-generator
+    category: 示例与工具
+    deliverable: none
+  - artifactId: apex-services-bom
+    category: 服务父POM
+    deliverable: none
+  - artifactId: apex-api-contract
+    category: 共享契约
+    deliverable: none
+  # ── 运行模块：七个 service-jar 恰好等于 release.sh SERVICES 数组（网关 + 六个业务服务）。
+  #    端口为默认业务端口；system-service 管理端口 8083 与业务端口分离（同机开发注意与
+  #    workflow 业务端口 8083 的既有冲突，Compose 以 8093 规避）；integration-service
+  #    管理端口 8097。apex-system-service 显式声明 mainClass（第二处显式声明）。
+  - artifactId: apex-gateway
+    category: 运行模块
+    deliverable: service-jar
+    port: 8080
+  - artifactId: apex-workflow-service
+    category: 运行模块
+    deliverable: service-jar
+    port: 8083
+    hostPort: 8093
+  - artifactId: apex-file
+    category: 业务库
+    deliverable: none
+  - artifactId: apex-file-service
+    category: 运行模块
+    deliverable: service-jar
+    port: 8085
+  - artifactId: apex-office
+    category: 业务库
+    deliverable: none
+  - artifactId: apex-office-service
+    category: 运行模块
+    deliverable: service-jar
+    port: 8084
+  - artifactId: apex-system-service
+    category: 运行模块
+    deliverable: service-jar
+    port: 8082
+    managementPort: 8083
+    mainClass: com.apex.scaffold.systemservice.SystemServiceApplication
+  - artifactId: apex-auth
+    category: 业务库
+    deliverable: none
+  - artifactId: apex-auth-service
+    category: 运行模块
+    deliverable: service-jar
+    port: 8081
+  # ── 服务增强：两个 starter 默认禁用、随依赖装配（deliverable: none）；
+  #    job-service/masking-service 为可执行 JAR 但按需单独构建部署（optional，
+  #    不进标准交付包；readiness 口径特殊：job 走 /admin-api/v1/jobs、masking 走
+  #    /actuator/health，deploy health 的默认 readiness 不覆盖 optional 模块）。
+  - artifactId: apex-job-spring-boot-starter
+    category: 服务增强
+    deliverable: none
+  - artifactId: apex-job-service
+    category: 服务增强
+    deliverable: optional
+    port: 8095
+  - artifactId: apex-masking-service
+    category: 服务增强
+    deliverable: optional
+    port: 8096
+  - artifactId: apex-seata-spring-boot-starter
+    category: 服务增强
+    deliverable: none
+  # ── 组合部署：basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现；
+  #    无 repackage 插件（薄 jar，由脚本以 classpath 方式运行）。
+  - artifactId: apex-boot-all
+    category: 组合部署
+    deliverable: none
+  - artifactId: apex-integration
+    category: 业务库
+    deliverable: none
+  - artifactId: apex-integration-service
+    category: 运行模块
+    deliverable: service-jar
+    port: 8094
+    managementPort: 8097
+  # ── 运维工具：shade fat jar（target/local-deployment.jar），仅由 scripts/utils/、
+  #    scripts/ci/check-doc-links.sh 与 Compose security-key-check 调用，
+  #    不参与服务运行期装配、不进交付包。
+  - artifactId: apex-tools-deployment
+    category: 运维工具
+    deliverable: tool-jar
+  # ── 构建管理：本模块自身，注册表宿主与编排入口，零生产依赖、不进交付包。
+  - artifactId: apex-tools-build
+    category: 构建管理
+    deliverable: none
