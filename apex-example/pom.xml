@@ -13,7 +13,7 @@
     
     <artifactId>apex-example</artifactId>
     <name>Apex Example Module</name>
-    <description>示例模块 - 展示如何使用Apex Scaffold脚手架</description>
+    <description>示例与聚合运行模块 - basic/示例档与 k8s 单体形态的聚合装配入口(镜像构建经 Containerfile 以 SERVICE_MODULE=apex-example 产出 apex-scaffold:latest),含示例端点演示各库用法;artifactId 保留 example 名称以兼容既有交付与脚本</description>
     
     <dependencies>
         <!-- 依赖脚手架核心模块 -->

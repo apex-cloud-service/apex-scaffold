@@ -9,7 +9,10 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 /**
  * 示例应用启动类
  *
- * <p>展示如何独立运行示例模块
+ * <p>展示如何独立运行示例模块。本模块同时是 basic/示例档与 k8s 单体形态的
+ * 聚合运行入口：镜像构建经 Containerfile 以 {@code SERVICE_MODULE=apex-example}
+ * 产出 {@code apex-scaffold:latest}（口径见 apex-tools-build 模块注册表）；
+ * “example” 名称保留为交付兼容（2026-11-07 模块评审 F10 处置）。
  *
  * <p>MyBatis-Plus 自动装配仅扫描启动类所在包（{@code com.apex.example}），
  * 而示例复用的 Mapper 分散在各库模块（{@code com.apex.scaffold.*}，
