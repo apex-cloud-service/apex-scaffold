@@ -1,15 +1,21 @@
 package com.apex.scaffold.auth.infrastructure.persistence.repository;
 
+import com.apex.scaffold.auth.domain.model.OAuth2Authorization;
+import com.apex.scaffold.auth.domain.repository.OAuth2AuthorizationPort;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 /**
- * OAuth2 授权数据持久化仓储。
+ * OAuth2 授权记录持久化适配器。
+ *
+ * <p>凭据只以 SHA-256 哈希落库；所有访问都经 {@link JdbcTenantScope} 收口到可信租户上下文，
+ * 时间统一按 UTC 写入。
  *
  * @author Apex Team
  * @version 1.3.1
@@ -18,33 +24,124 @@ import reactor.core.publisher.Mono;
 @Repository
 @RequiredArgsConstructor
 @SuppressWarnings({"PMD.ClassNamingShouldBeCamelRule", "PMD.ClassMustHaveAuthorRule"})
-public class OAuth2AuthorizationRepository {
+public class OAuth2AuthorizationRepository implements OAuth2AuthorizationPort {
     private static final String ACCESS_TOKEN_HASH = "access_token_hash";
     private static final String AUTHORIZATION_CODE_HASH = "authorization_code_hash";
     private static final String REFRESH_TOKEN_HASH = "refresh_token_hash";
 
     private final JdbcTemplate jdbcTemplate;
 
-    /**
-     * 插入OAuth2授权记录
-     *
-     * @param tenant 租户ID
-     * @param id 授权记录ID
-     * @param clientId 客户端ID
-     * @param principal 资源所有者标识
-     * @param grantType 授权类型
-     * @param scopes 授权范围
-     * @param redirectUri 重定向URI
-     * @param challenge PKCE码挑战
-     * @param challengeMethod PKCE挑战方法
-     * @param codeHash 授权码哈希
-     * @param codeExpires 授权码过期时间
-     * @param accessHash 访问令牌哈希
-     * @param accessExpires 访问令牌过期时间
-     * @param refreshHash 刷新令牌哈希
-     * @param refreshExpires 刷新令牌过期时间
-     */
-    public Mono<Void> insert(
+    @Override
+    public Mono<Void> saveAuthorizationCode(String tenant, OAuth2AuthorizationCodeCommand command) {
+        return insert(
+                tenant,
+                command.id(),
+                command.clientId(),
+                command.principalName(),
+                "authorization_code",
+                command.authorizedScopes(),
+                command.redirectUri(),
+                command.codeChallenge(),
+                command.codeChallengeMethod(),
+                command.authorizationCodeHash(),
+                command.authorizationCodeExpiresAt(),
+                null,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public Mono<Void> saveTokenGrant(String tenant, OAuth2TokenGrantCommand command) {
+        return insert(
+                tenant,
+                command.id(),
+                command.clientId(),
+                command.principalName(),
+                command.authorizationGrantType(),
+                command.authorizedScopes(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                command.accessTokenHash(),
+                command.accessTokenExpiresAt(),
+                command.refreshTokenHash(),
+                command.refreshTokenExpiresAt());
+    }
+
+    @Override
+    public Mono<OAuth2Authorization> findByAuthorizationCode(String tenant, String codeHash) {
+        return findByHash(tenant, AUTHORIZATION_CODE_HASH, codeHash);
+    }
+
+    @Override
+    public Mono<OAuth2Authorization> findByAccessToken(String tenant, String accessTokenHash) {
+        return findByHash(tenant, ACCESS_TOKEN_HASH, accessTokenHash);
+    }
+
+    @Override
+    public Mono<OAuth2Authorization> findByRefreshToken(String tenant, String refreshTokenHash) {
+        return findByHash(tenant, REFRESH_TOKEN_HASH, refreshTokenHash);
+    }
+
+    @Override
+    public Mono<Boolean> exchangeCode(String tenant, OAuth2CodeExchangeCommand command) {
+        return JdbcTenantScope.call(
+                tenant,
+                ignored -> jdbcTemplate.update(
+                                "UPDATE oauth2_authorization SET authorization_code_hash = NULL, access_token_hash = ?, "
+                                        + "access_token_expires_at = ?, refresh_token_hash = ?, refresh_token_expires_at = ?, updated_at = CURRENT_TIMESTAMP "
+                                        + "WHERE tenant_id = ? AND authorization_code_hash = ? AND client_id = ? AND redirect_uri = ? "
+                                        + "AND revoked = false AND authorization_code_expires_at > ?",
+                                command.accessTokenHash(),
+                                command.accessTokenExpiresAt(),
+                                command.refreshTokenHash(),
+                                command.refreshTokenExpiresAt(),
+                                tenant,
+                                command.authorizationCodeHash(),
+                                command.clientId(),
+                                command.redirectUri(),
+                                LocalDateTime.now(ZoneOffset.UTC))
+                        == 1);
+    }
+
+    @Override
+    public Mono<Integer> revokeByTokenHash(String tenant, String tokenHash, String clientId) {
+        return JdbcTenantScope.call(
+                tenant,
+                ignored -> jdbcTemplate.update(
+                        "UPDATE oauth2_authorization SET revoked = true, updated_at = CURRENT_TIMESTAMP "
+                                + "WHERE tenant_id = ? AND client_id = ? AND (access_token_hash = ? OR refresh_token_hash = ?) AND revoked = false",
+                        tenant,
+                        clientId,
+                        tokenHash,
+                        tokenHash));
+    }
+
+    @Override
+    public Mono<Boolean> rotateRefresh(String tenant, OAuth2RefreshRotationCommand command) {
+        return JdbcTenantScope.call(
+                tenant,
+                ignored -> jdbcTemplate.update(
+                                "UPDATE oauth2_authorization SET refresh_token_hash = ?, refresh_token_expires_at = ?, "
+                                        + "access_token_hash = ?, access_token_expires_at = ?, authorized_scopes = ?, updated_at = CURRENT_TIMESTAMP "
+                                        + "WHERE tenant_id = ? AND client_id = ? AND refresh_token_hash = ? AND revoked = false "
+                                        + "AND refresh_token_expires_at > ?",
+                                command.newRefreshTokenHash(),
+                                command.refreshTokenExpiresAt(),
+                                command.accessTokenHash(),
+                                command.accessTokenExpiresAt(),
+                                command.authorizedScopes(),
+                                tenant,
+                                command.clientId(),
+                                command.oldRefreshTokenHash(),
+                                LocalDateTime.now(ZoneOffset.UTC))
+                        == 1);
+    }
+
+    private Mono<Void> insert(
             String tenant,
             String id,
             String clientId,
@@ -90,130 +187,72 @@ public class OAuth2AuthorizationRepository {
     }
 
     /**
-     * 按令牌/授权码哈希查询授权记录（租户内）。
+     * 按哈希列查询并映射为领域对象。
      *
-     * <p>{@code column} 只允许 {@code access_token_hash}、{@code refresh_token_hash}、
-     * {@code authorization_code_hash} 三者之一：列名直接拼入 SQL，必须在此白名单校验，
-     * 禁止由调用方传入任意列名。
+     * <p>{@code column} 只由本类常量传入，列名拼入 SQL 前已限定在三个哈希列内。
      *
      * @param tenant 租户标识
-     * @param column 哈希列名，须在允许集合内
-     * @param hash 令牌或授权码的哈希值
-     * @return 授权记录行；未命中时为空 {@link Mono}
-     * @throws IllegalArgumentException {@code column} 不在允许集合内时发出错误信号
+     * @param column 哈希列名
+     * @param hash   令牌或授权码哈希
+     * @return 授权记录；未命中时为空 {@link Mono}
      */
-    public Mono<Map<String, Object>> findByHash(String tenant, String column, String hash) {
-        if (!Set.of(ACCESS_TOKEN_HASH, REFRESH_TOKEN_HASH, AUTHORIZATION_CODE_HASH)
-                .contains(column)) {
-            return Mono.error(new IllegalArgumentException("Invalid token column"));
-        }
+    private Mono<OAuth2Authorization> findByHash(String tenant, String column, String hash) {
         return JdbcTenantScope.call(tenant, ignored -> jdbcTemplate
-                .queryForList(
-                        "SELECT * FROM oauth2_authorization WHERE tenant_id = ? AND " + column + " = ?", tenant, hash)
-                .stream()
-                .findFirst()
-                .orElse(null));
-    }
-
-    /**
-     * 用授权码兑换访问/刷新令牌（授权码一次性使用，兑换后置空）
-     *
-     * @param tenant 租户ID
-     * @param hash 授权码哈希
-     * @param clientId 客户端ID
-     * @param redirect 重定向URI
-     * @param accessHash 访问令牌哈希
-     * @param accessExpires 访问令牌过期时间
-     * @param refreshHash 刷新令牌哈希
-     * @param refreshExpires 刷新令牌过期时间
-     * @return 兑换成功时为true
-     */
-    public Mono<Boolean> exchangeCode(
-            String tenant,
-            String hash,
-            String clientId,
-            String redirect,
-            String accessHash,
-            LocalDateTime accessExpires,
-            String refreshHash,
-            LocalDateTime refreshExpires) {
-        return JdbcTenantScope.call(
-                tenant,
-                ignored -> jdbcTemplate.update(
-                                "UPDATE oauth2_authorization SET authorization_code_hash = NULL, access_token_hash = ?, "
-                                        + "access_token_expires_at = ?, refresh_token_hash = ?, refresh_token_expires_at = ?, updated_at = CURRENT_TIMESTAMP "
-                                        + "WHERE tenant_id = ? AND authorization_code_hash = ? AND client_id = ? AND redirect_uri = ? "
-                                        + "AND revoked = false AND authorization_code_expires_at > ?",
-                                accessHash,
-                                accessExpires,
-                                refreshHash,
-                                refreshExpires,
+                        .queryForList(
+                                "SELECT * FROM oauth2_authorization WHERE tenant_id = ? AND " + column + " = ?",
                                 tenant,
-                                hash,
-                                clientId,
-                                redirect,
-                                LocalDateTime.now(java.time.ZoneOffset.UTC))
-                        == 1);
+                                hash)
+                        .stream()
+                        .findFirst()
+                        .map(OAuth2AuthorizationRepository::toAuthorization)
+                        .orElse(null))
+                .map(Mono::just)
+                .defaultIfEmpty(Mono.empty())
+                .flatMap(mono -> mono);
     }
 
-    /**
-     * 按令牌哈希撤销指定客户端的授权记录
-     *
-     * @param tenant 租户ID
-     * @param hash 令牌哈希（访问或刷新令牌）
-     * @param clientId 客户端ID
-     * @return 撤销的记录数量
-     */
-    public Mono<Integer> revokeByHash(String tenant, String hash, String clientId) {
-        return JdbcTenantScope.call(
-                tenant,
-                ignored -> jdbcTemplate.update(
-                        "UPDATE oauth2_authorization SET revoked = true, updated_at = CURRENT_TIMESTAMP "
-                                + "WHERE tenant_id = ? AND client_id = ? AND (access_token_hash = ? OR refresh_token_hash = ?) AND revoked = false",
-                        tenant,
-                        clientId,
-                        hash,
-                        hash));
+    private static OAuth2Authorization toAuthorization(Map<String, Object> row) {
+        return new OAuth2Authorization(
+                string(row, "client_id"),
+                string(row, "principal_name"),
+                string(row, "authorization_grant_type"),
+                string(row, "authorized_scopes"),
+                string(row, "redirect_uri"),
+                string(row, "code_challenge"),
+                string(row, "code_challenge_method"),
+                string(row, AUTHORIZATION_CODE_HASH),
+                time(row, "authorization_code_expires_at"),
+                string(row, ACCESS_TOKEN_HASH),
+                time(row, "access_token_expires_at"),
+                string(row, REFRESH_TOKEN_HASH),
+                time(row, "refresh_token_expires_at"),
+                revoked(row));
     }
 
-    /**
-     * 轮换刷新令牌并同步更新访问令牌与授权范围
-     *
-     * @param tenant 租户ID
-     * @param clientId 客户端ID
-     * @param oldHash 旧刷新令牌哈希
-     * @param newHash 新刷新令牌哈希
-     * @param newExpires 新刷新令牌过期时间
-     * @param accessHash 新访问令牌哈希
-     * @param accessExpires 新访问令牌过期时间
-     * @param scope 授权范围
-     * @return 轮换成功时为true
-     */
-    public Mono<Boolean> rotateRefresh(
-            String tenant,
-            String clientId,
-            String oldHash,
-            String newHash,
-            LocalDateTime newExpires,
-            String accessHash,
-            LocalDateTime accessExpires,
-            String scope) {
-        return JdbcTenantScope.call(
-                tenant,
-                ignored -> jdbcTemplate.update(
-                                "UPDATE oauth2_authorization SET refresh_token_hash = ?, refresh_token_expires_at = ?, "
-                                        + "access_token_hash = ?, access_token_expires_at = ?, authorized_scopes = ?, updated_at = CURRENT_TIMESTAMP "
-                                        + "WHERE tenant_id = ? AND client_id = ? AND refresh_token_hash = ? AND revoked = false "
-                                        + "AND refresh_token_expires_at > ?",
-                                newHash,
-                                newExpires,
-                                accessHash,
-                                accessExpires,
-                                scope,
-                                tenant,
-                                clientId,
-                                oldHash,
-                                LocalDateTime.now(java.time.ZoneOffset.UTC))
-                        == 1);
+    private static String string(Map<String, Object> row, String column) {
+        Object value = row.get(column);
+        return value == null ? null : value.toString();
+    }
+
+    private static LocalDateTime time(Map<String, Object> row, String column) {
+        Object value = row.get(column);
+        if (value instanceof LocalDateTime local) {
+            return local;
+        }
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toLocalDateTime();
+        }
+        return null;
+    }
+
+    private static boolean revoked(Map<String, Object> row) {
+        Object value = row.get("revoked");
+        if (value instanceof Boolean flag) {
+            return flag;
+        }
+        if (value instanceof Number number) {
+            return number.intValue() != 0;
+        }
+        return false;
     }
 }

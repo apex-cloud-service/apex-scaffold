@@ -4,7 +4,7 @@ import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
-import com.apex.scaffold.officeservice.infrastructure.stats.OfficeInternalStatsRepository;
+import com.apex.scaffold.office.application.port.OfficeMessageStatsQueryPort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -30,8 +30,9 @@ import reactor.core.publisher.Mono;
  * （{@code /api/v2/capability-usage} 消息量维度）与聚合门面消费，字段名勿改。
  *
  * <p>信任模型：{@code /internal/v1/**} 在 office 服务为放行路径（集群内服务直连，
- * 不经网关）。租户标识优先取 {@code tenantId} 请求参数（计量门面显式传递）；
- * 缺失时回退身份中继建立的可信租户上下文，两者均缺失则以 401 失败。
+ * 不经网关）。租户标识以身份中继建立的可信租户上下文为准：上下文缺失返回 401；
+ * 请求参数 {@code tenantId} 仅作一致性校验，与上下文不一致时返回 403，
+ * 不允许客户端参数覆盖可信上下文。
  *
  * @author Apex Team
  * @version 1.3.2
@@ -43,7 +44,7 @@ import reactor.core.publisher.Mono;
 @Tag(name = "内部契约", description = "集群内服务直连接口，不经网关")
 public class OfficeInternalHandler {
 
-    private final OfficeInternalStatsRepository statsRepository;
+    private final OfficeMessageStatsQueryPort statsQueryPort;
 
     /**
      * 租户消息量统计（D4 计量消费；契约固定勿改字段名）。
@@ -56,12 +57,13 @@ public class OfficeInternalHandler {
             summary = "租户消息量统计（内部）",
             description = "集群内服务直连接口，不经网关。返回租户站内信总量（含全部状态，逻辑删除行除外），"
                     + "供 system 能力计量（D4 消息量维度）与聚合门面（D5）消费；"
-                    + "租户标识优先取 tenantId 参数，缺失时回退可信租户上下文，两者均缺失返回 401")
+                    + "租户标识以可信租户上下文为准，上下文缺失返回 401，"
+                    + "tenantId 参数与上下文不一致返回 403")
     @Parameter(
             name = "tenantId",
             in = ParameterIn.QUERY,
             required = false,
-            description = "租户标识（计量门面显式传递；缺省回退可信租户上下文）",
+            description = "租户标识（计量门面显式传递，须与可信租户上下文一致，否则返回 403）",
             schema = @Schema(type = "string"))
     @ApiResponses({
         @ApiResponse(
@@ -73,30 +75,34 @@ public class OfficeInternalHandler {
                                 schema = @Schema(type = "object", example = "{\"messageCount\": 512}"))),
         @ApiResponse(responseCode = "400", description = "参数错误"),
         @ApiResponse(responseCode = "401", description = "缺少可信租户标识"),
+        @ApiResponse(responseCode = "403", description = "tenantId 参数与可信租户上下文不一致"),
         @ApiResponse(responseCode = "500", description = "统计查询失败")
     })
     public Mono<ServerResponse> messageStats(ServerRequest request) {
         return resolveTenant(request)
-                .flatMap(statsRepository::countMessages)
+                .flatMap(statsQueryPort::countMessages)
                 .flatMap(count -> ServerResponse.ok().bodyValue(Result.success(Map.of("messageCount", count))))
                 .onErrorResume(this::toErrorResponse);
     }
 
     /**
-     * 解析租户标识：请求参数优先，缺失时回退可信租户上下文。
+     * 解析租户标识：以可信租户上下文为准，请求参数仅做一致性校验。
      *
      * @param request 当前请求
      * @return 租户标识
      */
     private Mono<String> resolveTenant(ServerRequest request) {
-        String tenantId = request.queryParam("tenantId").map(String::trim).orElse(null);
-        if (tenantId != null && !tenantId.isBlank()) {
-            return Mono.just(tenantId);
-        }
+        String paramTenant = request.queryParam("tenantId")
+                .map(String::trim)
+                .filter(tenantId -> !tenantId.isBlank())
+                .orElse(null);
         return Mono.deferContextual(context -> {
             String tenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
             if (tenant == null || tenant.isBlank()) {
                 return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "缺少可信租户标识"));
+            }
+            if (paramTenant != null && !paramTenant.equals(tenant)) {
+                return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "租户标识与认证上下文不一致"));
             }
             return Mono.just(tenant);
         });

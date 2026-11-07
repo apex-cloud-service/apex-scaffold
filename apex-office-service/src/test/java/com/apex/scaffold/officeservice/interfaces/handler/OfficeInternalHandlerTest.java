@@ -6,7 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.common.context.TenantContext;
-import com.apex.scaffold.officeservice.infrastructure.stats.OfficeInternalStatsRepository;
+import com.apex.scaffold.office.application.port.OfficeMessageStatsQueryPort;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,8 +22,9 @@ import reactor.test.StepVerifier;
 /**
  * {@link OfficeInternalHandler} 单元测试（D4 计量：消息量维度）。
  *
- * <p>覆盖：显式 {@code tenantId} 参数优先（system 计量门面无租户上下文调用）、
- * 缺失参数回退可信租户上下文、统计信封契约（{@code Result<{messageCount}>}）。
+ * <p>租户信任模型：以可信租户上下文为准。覆盖：上下文存在且参数一致时正常统计、
+ * 参数与上下文不一致返回 403、上下文缺失（含仅有参数）返回 401、
+ * 统计信封契约（{@code Result<{messageCount}>}）。
  *
  * @author Apex Team
  * @version 1.3.2
@@ -32,14 +33,14 @@ import reactor.test.StepVerifier;
 @DisplayName("OfficeInternalHandler 消息量统计测试")
 class OfficeInternalHandlerTest {
 
-    private OfficeInternalStatsRepository statsRepository;
+    private OfficeMessageStatsQueryPort statsQueryPort;
 
     private OfficeInternalHandler handler;
 
     @BeforeEach
     void setUp() {
-        statsRepository = mock(OfficeInternalStatsRepository.class);
-        handler = new OfficeInternalHandler(statsRepository);
+        statsQueryPort = mock(OfficeMessageStatsQueryPort.class);
+        handler = new OfficeInternalHandler(statsQueryPort);
     }
 
     @AfterEach
@@ -48,13 +49,13 @@ class OfficeInternalHandlerTest {
     }
 
     @Test
-    @DisplayName("显式 tenantId 参数优先并返回 messageCount 信封")
-    void messageStats_withExplicitTenantParam() {
-        when(statsRepository.countMessages("tenant-a")).thenReturn(Mono.just(42L));
+    @DisplayName("上下文存在且参数一致时返回 messageCount 信封")
+    void messageStats_withConsistentTenantParam() {
+        when(statsQueryPort.countMessages("tenant-a")).thenReturn(Mono.just(42L));
 
         ServerRequest request = officeStatsRequest("?tenantId=tenant-a");
 
-        StepVerifier.create(handler.messageStats(request))
+        StepVerifier.create(handler.messageStats(request).contextWrite(TenantContext.withTenant("tenant-a")))
                 .assertNext(response -> {
                     assertThat(response.statusCode().value()).isEqualTo(200);
                     Map<?, ?> body = readBody(response);
@@ -62,13 +63,13 @@ class OfficeInternalHandlerTest {
                 })
                 .verifyComplete();
 
-        verify(statsRepository).countMessages("tenant-a");
+        verify(statsQueryPort).countMessages("tenant-a");
     }
 
     @Test
-    @DisplayName("缺失参数时回退可信租户上下文")
-    void messageStats_fallsBackToTenantContext() {
-        when(statsRepository.countMessages("tenant-ctx")).thenReturn(Mono.just(7L));
+    @DisplayName("缺失参数时使用可信租户上下文")
+    void messageStats_usesTenantContextWhenParamAbsent() {
+        when(statsQueryPort.countMessages("tenant-ctx")).thenReturn(Mono.just(7L));
 
         StepVerifier.create(handler.messageStats(officeStatsRequest(""))
                         .contextWrite(TenantContext.withTenant("tenant-ctx")))
@@ -78,9 +79,28 @@ class OfficeInternalHandlerTest {
     }
 
     @Test
+    @DisplayName("参数与上下文不一致时返回 403")
+    void messageStats_rejectsMismatchedTenantParam() {
+        StepVerifier.create(handler.messageStats(officeStatsRequest("?tenantId=tenant-b"))
+                        .contextWrite(TenantContext.withTenant("tenant-a")))
+                .assertNext(
+                        response -> assertThat(response.statusCode().value()).isEqualTo(403))
+                .verifyComplete();
+    }
+
+    @Test
     @DisplayName("双缺失租户标识时 fail-closed 返回 401")
     void messageStats_failsClosedWithoutTenant() {
         StepVerifier.create(handler.messageStats(officeStatsRequest("")))
+                .assertNext(
+                        response -> assertThat(response.statusCode().value()).isEqualTo(401))
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("仅提供参数但无上下文时仍返回 401，不允许参数覆盖上下文")
+    void messageStats_rejectsParamWithoutContext() {
+        StepVerifier.create(handler.messageStats(officeStatsRequest("?tenantId=tenant-a")))
                 .assertNext(
                         response -> assertThat(response.statusCode().value()).isEqualTo(401))
                 .verifyComplete();

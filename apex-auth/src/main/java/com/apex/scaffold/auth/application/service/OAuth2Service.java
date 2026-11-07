@@ -1,17 +1,19 @@
 package com.apex.scaffold.auth.application.service;
 
 import com.apex.scaffold.auth.config.OAuth2Properties;
+import com.apex.scaffold.auth.domain.model.OAuth2Authorization;
 import com.apex.scaffold.auth.domain.model.entity.AuthConfigEntity;
 import com.apex.scaffold.auth.domain.repository.AuthConfigRepository;
+import com.apex.scaffold.auth.domain.repository.OAuth2AuthorizationPort;
+import com.apex.scaffold.auth.domain.repository.OAuth2ConsentPort;
 import com.apex.scaffold.auth.domain.repository.UserRepository;
 import com.apex.scaffold.auth.domain.service.JwtKeyMaterialService;
-import com.apex.scaffold.auth.infrastructure.persistence.repository.OAuth2AuthorizationRepository;
+import com.apex.scaffold.auth.domain.service.TenantStatusPort;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -59,20 +61,19 @@ public class OAuth2Service {
     private static final long REFRESH_SECONDS = 2592000;
     private final AuthConfigRepository configRepository;
     private final UserRepository userRepository;
-    private final OAuth2AuthorizationRepository authorizationRepository;
+    private final OAuth2AuthorizationPort authorizationRepository;
     private final OAuth2MetadataService metadataService;
     private final OAuth2Properties properties;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     private final JwtKeyMaterialService keyMaterialService;
-    private final com.apex.scaffold.auth.infrastructure.persistence.repository.OAuth2ConsentRepository
-            consentRepository;
+    private final OAuth2ConsentPort consentRepository;
 
     /** TOTP 服务：password 授权与主登录保持同一 MFA 策略。 */
     private final TotpService totpService;
 
     /** 租户认证期状态校验端口：password 授权与主登录保持同一租户门。 */
-    private final com.apex.scaffold.auth.domain.service.TenantStatusPort tenantStatusPort;
+    private final TenantStatusPort tenantStatusPort;
 
     /** RFC 6749：用户尚未对客户端授权时的错误码。 */
     private static final String CONSENT_REQUIRED = "consent_required";
@@ -203,22 +204,18 @@ public class OAuth2Service {
             String challenge) {
         String code = randomToken();
         return authorizationRepository
-                .insert(
+                .saveAuthorizationCode(
                         tenant,
-                        UUID.randomUUID().toString(),
-                        clientId,
-                        principal,
-                        AUTHORIZATION_CODE,
-                        scope,
-                        redirect,
-                        challenge,
-                        "S256",
-                        hash(code),
-                        now().plusSeconds(300),
-                        null,
-                        null,
-                        null,
-                        null)
+                        new OAuth2AuthorizationPort.OAuth2AuthorizationCodeCommand(
+                                UUID.randomUUID().toString(),
+                                clientId,
+                                principal,
+                                scope,
+                                redirect,
+                                challenge,
+                                "S256",
+                                hash(code),
+                                now().plusSeconds(300)))
                 .thenReturn(Map.of(CODE, code, "state", form.getOrDefault("state", ""), REDIRECT_URI, redirect));
     }
 
@@ -234,7 +231,7 @@ public class OAuth2Service {
             return fail(INVALID_REQUEST);
         }
         return authorizationRepository
-                .revokeByHash(tenant, hash(token), clientId)
+                .revokeByTokenHash(tenant, hash(token), clientId)
                 .then();
     }
 
@@ -253,29 +250,26 @@ public class OAuth2Service {
         if (token == null || token.isBlank()) {
             return fail(INVALID_REQUEST);
         }
+        String tokenHash = hash(token);
         return authorizationRepository
-                .findByHash(tenant, "access_token_hash", hash(token))
-                .switchIfEmpty(authorizationRepository.findByHash(tenant, "refresh_token_hash", hash(token)))
+                .findByAccessToken(tenant, tokenHash)
+                .switchIfEmpty(Mono.defer(() -> authorizationRepository.findByRefreshToken(tenant, tokenHash)))
                 .map(row -> {
-                    boolean access = hash(token).equals(row.get("access_token_hash"));
-                    LocalDateTime expiry =
-                            timestamp(row.get(access ? "access_token_expires_at" : "refresh_token_expires_at"));
-                    if (!clientId.equals(row.get(CLIENT_ID))
-                            || revoked(row)
-                            || expiry == null
-                            || !expiry.isAfter(now())) {
+                    boolean access = tokenHash.equals(row.accessTokenHash());
+                    LocalDateTime expiry = access ? row.accessTokenExpiresAt() : row.refreshTokenExpiresAt();
+                    if (!clientId.equals(row.clientId()) || !row.effectiveAt(expiry, now())) {
                         return Map.<String, Object>of("active", false);
                     }
                     Map<String, Object> result = new LinkedHashMap<>();
                     result.put("active", true);
-                    result.put(CLIENT_ID, row.get(CLIENT_ID));
-                    result.put("sub", row.get("principal_name"));
-                    result.put("scope", row.get("authorized_scopes"));
+                    result.put(CLIENT_ID, row.clientId());
+                    result.put("sub", row.principalName());
+                    result.put("scope", row.authorizedScopes());
                     result.put("token_type", "Bearer");
                     result.put("exp", expiry.toEpochSecond(ZoneOffset.UTC));
                     return result;
                 })
-                .defaultIfEmpty(Map.of("active", false));
+                .defaultIfEmpty(Map.<String, Object>of("active", false));
     }
 
     private Mono<Map<String, Object>> password(
@@ -322,42 +316,41 @@ public class OAuth2Service {
             return fail(INVALID_REQUEST);
         }
         return authorizationRepository
-                .findByHash(tenant, "authorization_code_hash", hash(form.get(CODE)))
-                .filter(row -> !revoked(row)
-                        && clientId.equals(row.get(CLIENT_ID))
-                        && form.get(REDIRECT_URI).equals(row.get(REDIRECT_URI))
+                .findByAuthorizationCode(tenant, hash(form.get(CODE)))
+                .filter(row -> !row.revoked()
+                        && clientId.equals(row.clientId())
+                        && form.get(REDIRECT_URI).equals(row.redirectUri())
                         && verifyPkce(row, form.get("code_verifier")))
                 .switchIfEmpty(fail("invalid_grant"))
-                .flatMap(row -> {
-                    String subject = (String) row.get("principal_name");
-                    String scope = (String) row.get("authorized_scopes");
-                    return tokens(subject, clientId, scope, tenant, true, AUTHORIZATION_CODE)
-                            .flatMap(response -> authorizationRepository
-                                    .exchangeCode(
-                                            tenant,
-                                            hash(form.get(CODE)),
-                                            clientId,
-                                            form.get(REDIRECT_URI),
-                                            hash(response.get("access_token").toString()),
-                                            now().plusSeconds(ACCESS_SECONDS),
-                                            hash(response.get(REFRESH_TOKEN).toString()),
-                                            now().plusSeconds(REFRESH_SECONDS))
-                                    .filter(Boolean::booleanValue)
-                                    .switchIfEmpty(fail("invalid_grant"))
-                                    .thenReturn(response));
-                });
+                .flatMap(row -> tokens(
+                                row.principalName(), clientId, row.authorizedScopes(), tenant, true, AUTHORIZATION_CODE)
+                        .flatMap(response -> authorizationRepository
+                                .exchangeCode(
+                                        tenant,
+                                        new OAuth2AuthorizationPort.OAuth2CodeExchangeCommand(
+                                                hash(form.get(CODE)),
+                                                clientId,
+                                                form.get(REDIRECT_URI),
+                                                hash(response.get("access_token")
+                                                        .toString()),
+                                                now().plusSeconds(ACCESS_SECONDS),
+                                                hash(response.get(REFRESH_TOKEN).toString()),
+                                                now().plusSeconds(REFRESH_SECONDS)))
+                                .filter(Boolean::booleanValue)
+                                .switchIfEmpty(fail("invalid_grant"))
+                                .thenReturn(response)));
     }
 
-    private boolean verifyPkce(Map<String, Object> row, String verifier) {
+    private boolean verifyPkce(OAuth2Authorization row, String verifier) {
         if (verifier == null
                 || !verifier.matches("[A-Za-z0-9._~-]{43,128}")
-                || !"S256".equals(row.get("code_challenge_method"))) {
+                || !"S256".equals(row.codeChallengeMethod())) {
             return false;
         }
         String challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(digest(verifier));
         return MessageDigest.isEqual(
                 challenge.getBytes(StandardCharsets.US_ASCII),
-                String.valueOf(row.get("code_challenge")).getBytes(StandardCharsets.US_ASCII));
+                String.valueOf(row.codeChallenge()).getBytes(StandardCharsets.US_ASCII));
     }
 
     private Mono<Map<String, Object>> refresh(
@@ -366,31 +359,31 @@ public class OAuth2Service {
             return fail(INVALID_REQUEST);
         }
         return authorizationRepository
-                .findByHash(tenant, "refresh_token_hash", hash(form.get(REFRESH_TOKEN)))
-                .filter(row -> clientId.equals(row.get(CLIENT_ID)))
+                .findByRefreshToken(tenant, hash(form.get(REFRESH_TOKEN)))
+                .filter(row -> clientId.equals(row.clientId()))
                 .switchIfEmpty(fail("invalid_grant"))
                 .flatMap(row -> {
-                    String originalScope = (String) row.get("authorized_scopes");
+                    String originalScope = row.authorizedScopes();
                     String scope = scopes(config, form.getOrDefault("scope", originalScope));
                     if (!Arrays.asList(originalScope.split(SCOPE_SEPARATOR))
                             .containsAll(Arrays.asList(scope.split(SCOPE_SEPARATOR)))) {
                         return fail("invalid_scope");
                     }
-                    return tokens((String) row.get("principal_name"), clientId, scope, tenant, true, (String)
-                                    row.get("authorization_grant_type"))
+                    return tokens(row.principalName(), clientId, scope, tenant, true, row.authorizationGrantType())
                             .flatMap(response -> {
                                 String access = response.get("access_token").toString();
                                 String refresh = response.get(REFRESH_TOKEN).toString();
                                 return authorizationRepository
                                         .rotateRefresh(
                                                 tenant,
-                                                clientId,
-                                                hash(form.get(REFRESH_TOKEN)),
-                                                hash(refresh),
-                                                now().plusSeconds(REFRESH_SECONDS),
-                                                hash(access),
-                                                now().plusSeconds(ACCESS_SECONDS),
-                                                scope)
+                                                new OAuth2AuthorizationPort.OAuth2RefreshRotationCommand(
+                                                        clientId,
+                                                        hash(form.get(REFRESH_TOKEN)),
+                                                        hash(refresh),
+                                                        now().plusSeconds(REFRESH_SECONDS),
+                                                        hash(access),
+                                                        now().plusSeconds(ACCESS_SECONDS),
+                                                        scope))
                                         .filter(Boolean::booleanValue)
                                         .switchIfEmpty(fail("invalid_grant"))
                                         .thenReturn(response);
@@ -410,22 +403,18 @@ public class OAuth2Service {
                     String access = response.get("access_token").toString();
                     String refresh = (String) response.get(REFRESH_TOKEN);
                     return authorizationRepository
-                            .insert(
+                            .saveTokenGrant(
                                     tenant,
-                                    UUID.randomUUID().toString(),
-                                    clientId,
-                                    subject,
-                                    grant,
-                                    scope,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    hash(access),
-                                    now().plusSeconds(ACCESS_SECONDS),
-                                    refresh == null ? null : hash(refresh),
-                                    refresh == null ? null : now().plusSeconds(REFRESH_SECONDS))
+                                    new OAuth2AuthorizationPort.OAuth2TokenGrantCommand(
+                                            UUID.randomUUID().toString(),
+                                            clientId,
+                                            subject,
+                                            grant,
+                                            scope,
+                                            hash(access),
+                                            now().plusSeconds(ACCESS_SECONDS),
+                                            refresh == null ? null : hash(refresh),
+                                            refresh == null ? null : now().plusSeconds(REFRESH_SECONDS)))
                             .thenReturn(response);
                 });
     }
@@ -593,21 +582,6 @@ public class OAuth2Service {
             claims.put("sub_uid", subjectUserId);
         }
         return keyMaterialService.sign(subject, claims, seconds * 1000);
-    }
-
-    private static boolean revoked(Map<String, Object> row) {
-        return Boolean.TRUE.equals(row.get("revoked"))
-                || row.get("revoked") instanceof Number number && number.intValue() != 0;
-    }
-
-    private static LocalDateTime timestamp(Object value) {
-        if (value instanceof LocalDateTime date) {
-            return date;
-        }
-        if (value instanceof Timestamp date) {
-            return date.toLocalDateTime();
-        }
-        return null;
     }
 
     private static LocalDateTime now() {
