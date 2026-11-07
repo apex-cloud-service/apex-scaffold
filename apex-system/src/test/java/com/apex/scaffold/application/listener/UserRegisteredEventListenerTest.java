@@ -23,7 +23,8 @@ class UserRegisteredEventListenerTest {
      * 创建不注入任何依赖的监听器实例
      */
     private UserRegisteredEventListener createEmptyListener() {
-        return new UserRegisteredEventListener(java.util.Optional.empty(), java.util.Optional.empty());
+        return new UserRegisteredEventListener(
+                java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty());
     }
 
     @Test

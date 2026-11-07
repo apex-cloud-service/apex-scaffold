@@ -1,6 +1,6 @@
 # 开放平台接入契约（M4 / D2 + D6）
 
-本文件描述第三方与前台应用接入中台能力中心的完整流程。实现基线：认证中心 `OpenAppScopes` scope 注册表、`/admin-api/v1/open-apps` 管理端点、认证中心 OAuth2 授权服务器，以及网关 `OpenApiScopeGatewayFilter` 与 `/open-api/**` 路由组。
+本文件描述第三方与前台应用接入中台能力中心的完整流程。实现基线：认证中心 `OpenAppScopes` scope 注册表、system 服务 `/api/v1/open-apps` 管理端点、认证中心 OAuth2 授权服务器，以及网关 `OpenApiScopeGatewayFilter` 与 `/open-api/**` 路由组。
 
 ## 1. 接入流程
 
@@ -8,10 +8,11 @@
 sequenceDiagram
     participant App as 第三方应用
     participant Admin as 平台管理员
+    participant System as system 服务
     participant Auth as 认证中心
     participant GW as 网关 /open-api
 
-    Admin->>Auth: 注册开放应用（clientId + scopes）
+    Admin->>System: 注册开放应用（clientId + scopes）
     Admin->>App: 交付 clientId / clientSecret
     App->>Auth: 授权码 + PKCE 或 client_credentials
     Auth-->>App: access_token（含 scope）
@@ -24,7 +25,7 @@ sequenceDiagram
 
 - 应用复用认证中心 `OAUTH2_CLIENT` 注册表（`auth_config`，租户级），凭据签发/轮换沿用既有管理端点
 - 注册时声明：`appName`、`description`、`scopes`、`rateLimitTier`、`redirectUris`
-- 声明 scope 必须来自平台目录（`GET /admin-api/v1/open-apps/scopes`），非法 scope 在详情接口的 `invalidScopes` 中回报
+- 声明 scope 必须来自平台目录（`GET /api/v1/open-apps/scopes`），非法 scope 在详情接口的 `invalidScopes` 中回报
 
 ## 3. scope 目录与权限映射
 

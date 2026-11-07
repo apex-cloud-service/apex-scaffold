@@ -65,9 +65,6 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             delete|/api/ip-access-control/{ruleId}|deleteRule||EmptyResult|ruleId:path:true:integer:int64:
             post|/api/ip-access-control/cleanup|cleanupExpiredRules||CountResult|
             post|/api/ip-access-control/check|checkAccess||IpAccessResult|ipAddress:query:true:string::
-            get|/admin-api/v1/open-apps|listOpenApps||object|
-            get|/admin-api/v1/open-apps/{clientId}|getOpenApp||object|clientId:path:true:string::
-            get|/admin-api/v1/open-apps/scopes|listOpenAppScopes||object|
             get|/auth/v1/authorization/users/{userId}|queryUnifiedAuthorization||UnifiedAuthorizationResult|userId:path:true:integer:int64:
             post|/auth/v1/login|login|LoginRequest|LoginResponse|
             post|/auth/v1/logout/{userId}|logout|||userId:path:true:integer:int64:
@@ -182,7 +179,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
             expected.add(contract[0] + " " + contract[1]);
             assertOperationContract(contract);
         });
-        assertThat(expected).hasSize(76);
+        assertThat(expected).hasSize(73);
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
         assertLocalReferencesResolve(document);
     }

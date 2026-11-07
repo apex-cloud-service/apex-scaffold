@@ -5,6 +5,7 @@ import com.apex.scaffold.common.event.BaseDomainEvent;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.event.CreditConsumedEvent;
 import com.apex.scaffold.domain.event.CreditEarnedEvent;
+import com.apex.scaffold.domain.gateway.RealtimeNotificationPort;
 import com.apex.scaffold.domain.model.entity.SystemMessageEntity;
 import com.apex.scaffold.domain.repository.SystemMessageRepository;
 import java.time.LocalDateTime;
@@ -22,7 +23,9 @@ import reactor.core.publisher.Mono;
  *
  * <p>处理积分相关的领域事件（消费低余额告警、赚取里程碑通知）。与 C2 修复一致：
  * 不使用 .block() 阻塞发布线程；管道内 withTenantFromEvent 显式安装/恢复事件 DTO
- * 带的 tenantId，避免发布线程切换后的 ThreadLocal 丢失。</p>
+ * 带的 tenantId，避免发布线程切换后的 ThreadLocal 丢失。系统消息落库成功后经
+ * {@link RealtimeNotificationPort}（MQ 广播适配）触发各实例实时 SSE 扇出；
+ * 推送失败不影响已完成的落库结果。</p>
  *
  * @author Apex Team
  * @version 3.0.0
@@ -40,13 +43,20 @@ public class CreditEventListener {
 
     private final SystemMessageRepository systemMessageRepository;
 
+    /** 站内通知实时推送端口（可选）：实现未装配时缺失，仅影响实时推送。 */
+    private final RealtimeNotificationPort realtimeNotificationPort;
+
     /**
-     * 创建监听器，系统消息仓储可选注入，未注入时跳过通知写入。
+     * 创建监听器，系统消息仓储与实时推送端口可选注入，未注入时分别跳过通知写入与实时推送。
      *
-     * @param systemMessageRepository 系统消息仓储，可选
+     * @param systemMessageRepository  系统消息仓储，可选
+     * @param realtimeNotificationPort 站内通知实时推送端口，可选
      */
-    public CreditEventListener(Optional<SystemMessageRepository> systemMessageRepository) {
+    public CreditEventListener(
+            Optional<SystemMessageRepository> systemMessageRepository,
+            Optional<RealtimeNotificationPort> realtimeNotificationPort) {
         this.systemMessageRepository = systemMessageRepository.orElse(null);
+        this.realtimeNotificationPort = realtimeNotificationPort.orElse(null);
     }
 
     /**
@@ -103,6 +113,8 @@ public class CreditEventListener {
                     .doOnSuccess(v -> log.info(
                             "低余额提醒发送成功: userId={}, balance={}", event.getUserId(), event.getRemainingBalance()))
                     .doOnError(e -> log.error("低余额提醒发送失败: userId={}", event.getUserId(), e))
+                    .flatMap(saved ->
+                            publishRealtimeNotification(event.getTenantId(), event.getUserId(), warning.getContent()))
                     .onErrorResume(e -> Mono.empty())
                     .then();
         } else if (systemMessageRepository == null) {
@@ -134,12 +146,41 @@ public class CreditEventListener {
                         .save(milestoneMsg)
                         .doOnSuccess(v -> log.info("里程碑提醒发送成功: userId={}, milestone={}", event.getUserId(), milestone))
                         .doOnError(e -> log.error("里程碑提醒发送失败: userId={}", event.getUserId(), e))
+                        .flatMap(saved -> publishRealtimeNotification(
+                                event.getTenantId(), event.getUserId(), milestoneMsg.getContent()))
                         .onErrorResume(e -> Mono.empty())
                         .then());
                 break;
             }
         }
         return writes.isEmpty() ? Mono.empty() : Mono.when(writes);
+    }
+
+    /**
+     * 消息落库成功后经 MQ 广播触发各实例 SSE 扇出。
+     *
+     * <p>发布为阻塞调用，提交到专用阻塞池执行；失败边界由端口实现收敛
+     * （推送失败仅记录日志，不向上游传播），不影响已完成的落库结果，
+     * 也不中断监听器管道。租户取自事件 DTO，缺失时跳过推送
+     * （实时通知不支持无租户广播）。</p>
+     *
+     * @param tenantId 事件携带的租户 ID
+     * @param userId   接收用户 ID
+     * @param content  消息内容
+     * @return 发布完成的空 Mono
+     */
+    private Mono<Void> publishRealtimeNotification(String tenantId, Long userId, String content) {
+        if (realtimeNotificationPort == null
+                || tenantId == null
+                || tenantId.isBlank()
+                || userId == null
+                || content == null
+                || content.isBlank()) {
+            return Mono.empty();
+        }
+        return Mono.fromRunnable(() -> realtimeNotificationPort.publish(tenantId, String.valueOf(userId), content))
+                .subscribeOn(BlockingIoSchedulers.event())
+                .then();
     }
 
     private Mono<Void> runWithTenantFromEvent(BaseDomainEvent event, Supplier<Mono<Void>> task) {

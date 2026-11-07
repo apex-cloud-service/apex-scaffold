@@ -1,6 +1,6 @@
 # WebSocket 站内信
 
-当前网关 `/api/v1/messages/**` 属于 office，持久消息保存在 `off_message` 与 `off_message_recipient`。system 的历史消息/SSE 是另一套能力，不承担此 WebSocket 链路。
+当前网关 `/api/v1/messages/**` 属于 office，持久消息保存在 `off_message` 与 `off_message_recipient`。system 的系统通知读面与 SSE 是另一套能力（`/api/v1/notifications/**`），不承担此 WebSocket 链路。
 
 ## 配置与部署
 

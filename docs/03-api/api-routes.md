@@ -351,13 +351,17 @@
 |-----------|------|--------------|----------|------|
 | GET | `/users` | `exportUsers` | `system:user:list` | 导出用户数据（Excel） |
 
-### 6.9 站内通知（NotificationSseHandler）
+### 6.9 站内通知（NotificationSseHandler / SystemMessageHandler）
 
-**路由前缀**：`/api/v1/notifications`
+**路由前缀**：`/api/v1/notifications`（system 侧系统通知；`/api/v1/messages/**` 归属 office 站内信，见 §6.11）
 
 | HTTP 方法 | 路径 | Handler 方法 | 权限要求 | 说明 |
 |-----------|------|--------------|----------|------|
 | GET | `/stream` | `stream` | 需登录 | SSE 实时通知推送 |
+| GET | `/inbox` | `inbox` | 需登录 | 分页查询当前用户通知收件箱 |
+| GET | `/unread-count` | `unreadCount` | 需登录 | 查询当前用户未读通知数 |
+| POST | `/{id}/read` | `markRead` | 需登录 | 标记单条通知已读（幂等） |
+| POST | `/read-all` | `markAllRead` | 需登录 | 全部标记已读 |
 
 ### 6.10 统一搜索（UnifiedSearchHandler）
 

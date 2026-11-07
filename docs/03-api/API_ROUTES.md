@@ -326,6 +326,10 @@
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
 | GET | `/api/v1/notifications/stream` | `NotificationRouter` | `NotificationSseHandler.stream` | 订阅通知 SSE 流 |
+| GET | `/api/v1/notifications/inbox` | `SystemMessageRouter` | `SystemMessageHandler.inbox` | 分页查询系统通知收件箱 |
+| GET | `/api/v1/notifications/unread-count` | `SystemMessageRouter` | `SystemMessageHandler.unreadCount` | 查询系统通知未读数 |
+| POST | `/api/v1/notifications/{id}/read` | `SystemMessageRouter` | `SystemMessageHandler.markRead` | 标记单条系统通知已读 |
+| POST | `/api/v1/notifications/read-all` | `SystemMessageRouter` | `SystemMessageHandler.markAllRead` | 系统通知全部标记已读 |
 | GET | `/` | `PublicApiRouter` | `HealthHandler.root` | 根路径探活 |
 | GET | `/api/v1/health` | `PublicApiRouter` | `HealthHandler.health` | 查询应用健康状态 |
 | GET | `/api/v1/info` | `PublicApiRouter` | `HealthHandler.info` | 查询应用信息 |

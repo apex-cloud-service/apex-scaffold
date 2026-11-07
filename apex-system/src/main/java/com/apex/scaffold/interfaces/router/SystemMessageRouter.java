@@ -13,10 +13,12 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 /**
- * 站内信路由配置。
+ * 站内信（系统通知）读侧路由配置。
  *
- * <p>注册站内信读侧闭环接口：收件箱分页查询、未读数统计、单条已读与全部已读。
- * 所有端点均要求 Bearer 认证，业务层以当前登录用户为过滤条件。</p>
+ * <p>注册系统通知读侧闭环接口：收件箱分页查询、未读数统计、单条已读与全部已读。
+ * 所有端点均要求 Bearer 认证，业务层以当前登录用户为过滤条件。端点登记在
+ * {@code /api/v1/notifications} 命名空间下：网关将 {@code /api/v1/messages/**}
+ * 整体路由到 office 服务，沿用该前缀将无法经网关到达本组端点。</p>
  *
  * @author Apex Team
  * @since 2.2.0
@@ -29,10 +31,10 @@ public class SystemMessageRouter {
      * 站内信读写路由。
      *
      * <ul>
-     *   <li>GET  /api/v1/messages/inbox - 分页查询收件箱</li>
-     *   <li>GET  /api/v1/messages/unread-count - 查询未读数</li>
-     *   <li>POST /api/v1/messages/{id}/read - 标记单条已读</li>
-     *   <li>POST /api/v1/messages/read-all - 全部标记已读</li>
+     *   <li>GET  /api/v1/notifications/inbox - 分页查询收件箱</li>
+     *   <li>GET  /api/v1/notifications/unread-count - 查询未读数</li>
+     *   <li>POST /api/v1/notifications/{id}/read - 标记单条已读</li>
+     *   <li>POST /api/v1/notifications/read-all - 全部标记已读</li>
      * </ul>
      *
      * @param handler 站内信处理器
@@ -40,7 +42,7 @@ public class SystemMessageRouter {
      */
     @RouterOperations({
         @RouterOperation(
-                path = "/api/v1/messages/inbox",
+                path = "/api/v1/notifications/inbox",
                 method = RequestMethod.GET,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "inbox",
@@ -52,7 +54,7 @@ public class SystemMessageRouter {
                                 tags = {"站内信"},
                                 security = @SecurityRequirement(name = "BearerAuth"))),
         @RouterOperation(
-                path = "/api/v1/messages/unread-count",
+                path = "/api/v1/notifications/unread-count",
                 method = RequestMethod.GET,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "unreadCount",
@@ -64,7 +66,7 @@ public class SystemMessageRouter {
                                 tags = {"站内信"},
                                 security = @SecurityRequirement(name = "BearerAuth"))),
         @RouterOperation(
-                path = "/api/v1/messages/{id}/read",
+                path = "/api/v1/notifications/{id}/read",
                 method = RequestMethod.POST,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "markRead",
@@ -76,7 +78,7 @@ public class SystemMessageRouter {
                                 tags = {"站内信"},
                                 security = @SecurityRequirement(name = "BearerAuth"))),
         @RouterOperation(
-                path = "/api/v1/messages/read-all",
+                path = "/api/v1/notifications/read-all",
                 method = RequestMethod.POST,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "markAllRead",
@@ -91,10 +93,10 @@ public class SystemMessageRouter {
     @Bean
     public RouterFunction<ServerResponse> systemMessageRoutes(SystemMessageHandler handler) {
         return RouterFunctions.route()
-                .GET("/api/v1/messages/inbox", handler::inbox)
-                .GET("/api/v1/messages/unread-count", handler::unreadCount)
-                .POST("/api/v1/messages/{id}/read", handler::markRead)
-                .POST("/api/v1/messages/read-all", handler::markAllRead)
+                .GET("/api/v1/notifications/inbox", handler::inbox)
+                .GET("/api/v1/notifications/unread-count", handler::unreadCount)
+                .POST("/api/v1/notifications/{id}/read", handler::markRead)
+                .POST("/api/v1/notifications/read-all", handler::markAllRead)
                 .build();
     }
 }

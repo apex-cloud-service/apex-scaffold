@@ -3,6 +3,7 @@ package com.apex.scaffold.application.listener;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.domain.event.UserRegisteredEvent;
+import com.apex.scaffold.domain.gateway.RealtimeNotificationPort;
 import com.apex.scaffold.domain.model.entity.SystemMessageEntity;
 import com.apex.scaffold.domain.model.entity.UserProfileEntity;
 import com.apex.scaffold.domain.repository.SystemMessageRepository;
@@ -22,6 +23,8 @@ import reactor.core.publisher.Mono;
  * Repository 操作组合为 Mono 链、在专用阻塞池 event() 上受控提交；并在执行线程
  * 内安装/恢复事件 DTO 内携带的 {@code tenantId}（而不是依赖发布侧 ThreadLocal，
  * 因为 publishAsync 会切线程，原 ThreadLocal 已失效），最后仅 fire-once subscribe。
+ * 欢迎消息落库成功后经 {@link RealtimeNotificationPort}（MQ 广播适配）触发各实例
+ * 实时 SSE 扇出；推送失败不影响已完成的落库结果。</p>
  *
  * @author Apex Team
  * @version 3.0.0
@@ -35,19 +38,25 @@ public class UserRegisteredEventListener {
 
     private final UserProfileRepository userProfileRepository;
 
+    /** 站内通知实时推送端口（可选）：实现未装配时缺失，仅影响实时推送。 */
+    private final RealtimeNotificationPort realtimeNotificationPort;
+
     /**
      * 构造器注入依赖
      *
      * <p>所有依赖均使用 {@link Optional} 接收，确保任何依赖未注册时服务仍可正常启动。</p>
      *
-     * @param systemMessageRepository 系统消息仓储（可选）
-     * @param userProfileRepository   用户档案仓储（可选）
+     * @param systemMessageRepository  系统消息仓储（可选）
+     * @param userProfileRepository    用户档案仓储（可选）
+     * @param realtimeNotificationPort 站内通知实时推送端口（可选）
      */
     public UserRegisteredEventListener(
             Optional<SystemMessageRepository> systemMessageRepository,
-            Optional<UserProfileRepository> userProfileRepository) {
+            Optional<UserProfileRepository> userProfileRepository,
+            Optional<RealtimeNotificationPort> realtimeNotificationPort) {
         this.systemMessageRepository = systemMessageRepository.orElse(null);
         this.userProfileRepository = userProfileRepository.orElse(null);
+        this.realtimeNotificationPort = realtimeNotificationPort.orElse(null);
     }
 
     /**
@@ -126,6 +135,35 @@ public class UserRegisteredEventListener {
         return systemMessageRepository
                 .save(welcomeMsg)
                 .doOnSuccess(v -> log.info("注册欢迎消息发送成功: userId={}", event.getUserId()))
+                .flatMap(saved ->
+                        publishRealtimeNotification(event.getTenantId(), event.getUserId(), welcomeMsg.getContent()))
+                .then();
+    }
+
+    /**
+     * 消息落库成功后经 MQ 广播触发各实例 SSE 扇出。
+     *
+     * <p>发布为阻塞调用，提交到专用阻塞池执行；失败边界由端口实现收敛
+     * （推送失败仅记录日志，不向上游传播），不影响已完成的落库结果，
+     * 也不中断监听器管道。租户取自事件 DTO，缺失时跳过推送
+     * （实时通知不支持无租户广播）。</p>
+     *
+     * @param tenantId 事件携带的租户 ID
+     * @param userId   接收用户 ID
+     * @param content  消息内容
+     * @return 发布完成的空 Mono
+     */
+    private Mono<Void> publishRealtimeNotification(String tenantId, Long userId, String content) {
+        if (realtimeNotificationPort == null
+                || tenantId == null
+                || tenantId.isBlank()
+                || userId == null
+                || content == null
+                || content.isBlank()) {
+            return Mono.empty();
+        }
+        return Mono.fromRunnable(() -> realtimeNotificationPort.publish(tenantId, String.valueOf(userId), content))
+                .subscribeOn(BlockingIoSchedulers.event())
                 .then();
     }
 

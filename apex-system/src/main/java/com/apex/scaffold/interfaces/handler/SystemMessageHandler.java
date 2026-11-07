@@ -22,17 +22,18 @@ import reactor.core.publisher.Mono;
 /**
  * 站内信读写处理器（函数式端点）。
  *
- * <p>提供站内信的读侧闭环接口：分页查询收件箱、统计未读数、单条标记已读与
+ * <p>提供站内信（系统通知）的读侧闭环接口：分页查询收件箱、统计未读数、单条标记已读与
  * 全部标记已读。所有接口均以认证上下文中的当前登录用户为过滤条件，避免越权
- * 访问他人消息。消息的写入与实时推送由
- * {@link com.apex.scaffold.infrastructure.notification.NotificationService} 负责。</p>
+ * 访问他人消息。消息落库由 {@link SystemMessageRepository} 完成；写侧事件监听器在
+ * 落库成功后经 {@link com.apex.scaffold.infrastructure.notification.NotificationPublisher}
+ * （MQ 广播）触发各实例实时 SSE 扇出。</p>
  *
  * <h2>职责范围</h2>
  * <ul>
- *   <li>GET  /api/v1/messages/inbox - 分页查询当前用户站内信</li>
- *   <li>GET  /api/v1/messages/unread-count - 查询当前用户未读消息数</li>
- *   <li>POST /api/v1/messages/{id}/read - 标记单条消息已读（幂等）</li>
- *   <li>POST /api/v1/messages/read-all - 标记当前用户全部消息已读</li>
+ *   <li>GET  /api/v1/notifications/inbox - 分页查询当前用户站内信</li>
+ *   <li>GET  /api/v1/notifications/unread-count - 查询当前用户未读消息数</li>
+ *   <li>POST /api/v1/notifications/{id}/read - 标记单条消息已读（幂等）</li>
+ *   <li>POST /api/v1/notifications/read-all - 标记当前用户全部消息已读</li>
  * </ul>
  *
  * @author Apex Team

@@ -1391,7 +1391,7 @@ public class RouterOpenApiConfig {
     /** 站内信模块在线接口文档。 */
     @RouterOperations({
         @RouterOperation(
-                path = "/api/v1/messages/inbox",
+                path = "/api/v1/notifications/inbox",
                 method = RequestMethod.GET,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "inbox",
@@ -1401,7 +1401,7 @@ public class RouterOpenApiConfig {
                                 summary = "分页查询站内信收件箱",
                                 security = @SecurityRequirement(name = "BearerAuth"))),
         @RouterOperation(
-                path = "/api/v1/messages/unread-count",
+                path = "/api/v1/notifications/unread-count",
                 method = RequestMethod.GET,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "unreadCount",
@@ -1411,7 +1411,7 @@ public class RouterOpenApiConfig {
                                 summary = "查询未读站内信数量",
                                 security = @SecurityRequirement(name = "BearerAuth"))),
         @RouterOperation(
-                path = "/api/v1/messages/{id}/read",
+                path = "/api/v1/notifications/{id}/read",
                 method = RequestMethod.POST,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "markRead",
@@ -1421,7 +1421,7 @@ public class RouterOpenApiConfig {
                                 summary = "标记站内信已读",
                                 security = @SecurityRequirement(name = "BearerAuth"))),
         @RouterOperation(
-                path = "/api/v1/messages/read-all",
+                path = "/api/v1/notifications/read-all",
                 method = RequestMethod.POST,
                 beanClass = SystemMessageHandler.class,
                 beanMethod = "markAllRead",

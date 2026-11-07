@@ -93,7 +93,7 @@ class SystemMessageHandlerTest {
             PageResponse<SystemMessageEntity> page = PageResponse.of(List.of(msg), 1L, 1, 10);
             when(systemMessageRepository.pageByUser(TEST_USER_ID, 1, 10, false)).thenReturn(Mono.just(page));
 
-            ServerRequest request = authenticatedRequest(HttpMethod.GET, "/api/v1/messages/inbox");
+            ServerRequest request = authenticatedRequest(HttpMethod.GET, "/api/v1/notifications/inbox");
 
             StepVerifier.create(handler.inbox(request))
                     .assertNext(response ->
@@ -112,7 +112,7 @@ class SystemMessageHandlerTest {
 
             ServerRequest request = MockServerRequest.builder()
                     .method(HttpMethod.GET)
-                    .uri(URI.create("/api/v1/messages/inbox"))
+                    .uri(URI.create("/api/v1/notifications/inbox"))
                     .queryParam("page", "2")
                     .queryParam("size", "5")
                     .queryParam("unreadOnly", "true")
@@ -137,7 +137,7 @@ class SystemMessageHandlerTest {
         void shouldReturnUnreadCountForCurrentUser() {
             when(systemMessageRepository.countUnread(TEST_USER_ID)).thenReturn(Mono.just(3L));
 
-            ServerRequest request = authenticatedRequest(HttpMethod.GET, "/api/v1/messages/unread-count");
+            ServerRequest request = authenticatedRequest(HttpMethod.GET, "/api/v1/notifications/unread-count");
 
             StepVerifier.create(handler.unreadCount(request))
                     .assertNext(response ->
@@ -159,7 +159,7 @@ class SystemMessageHandlerTest {
 
             ServerRequest request = MockServerRequest.builder()
                     .method(HttpMethod.POST)
-                    .uri(URI.create("/api/v1/messages/99/read"))
+                    .uri(URI.create("/api/v1/notifications/99/read"))
                     .pathVariable("id", "99")
                     .principal((Principal) () -> TEST_OPEN_ID)
                     .build();
@@ -179,7 +179,7 @@ class SystemMessageHandlerTest {
 
             ServerRequest request = MockServerRequest.builder()
                     .method(HttpMethod.POST)
-                    .uri(URI.create("/api/v1/messages/99/read"))
+                    .uri(URI.create("/api/v1/notifications/99/read"))
                     .pathVariable("id", "99")
                     .principal((Principal) () -> TEST_OPEN_ID)
                     .build();
@@ -195,7 +195,7 @@ class SystemMessageHandlerTest {
         void shouldRejectInvalidId() {
             ServerRequest request = MockServerRequest.builder()
                     .method(HttpMethod.POST)
-                    .uri(URI.create("/api/v1/messages/0/read"))
+                    .uri(URI.create("/api/v1/notifications/0/read"))
                     .pathVariable("id", "0")
                     .principal((Principal) () -> TEST_OPEN_ID)
                     .build();
@@ -217,7 +217,7 @@ class SystemMessageHandlerTest {
         void shouldMarkAllReadForCurrentUser() {
             when(systemMessageRepository.markAllRead(TEST_USER_ID)).thenReturn(Mono.just(5L));
 
-            ServerRequest request = authenticatedRequest(HttpMethod.POST, "/api/v1/messages/read-all");
+            ServerRequest request = authenticatedRequest(HttpMethod.POST, "/api/v1/notifications/read-all");
 
             StepVerifier.create(handler.markAllRead(request))
                     .assertNext(response ->
@@ -233,7 +233,7 @@ class SystemMessageHandlerTest {
     void shouldRejectUnauthenticatedRequest() {
         ServerRequest request = MockServerRequest.builder()
                 .method(HttpMethod.GET)
-                .uri(URI.create("/api/v1/messages/unread-count"))
+                .uri(URI.create("/api/v1/notifications/unread-count"))
                 .build();
 
         StepVerifier.create(handler.unreadCount(request))
