@@ -7,6 +7,7 @@ import com.apex.scaffold.application.dto.admin.TenantPageQuery;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.contract.dto.internal.TenantStatusSnapshotDTO;
 import com.apex.scaffold.contract.event.TenantChangedEvent;
 import com.apex.scaffold.domain.model.entity.TenantEntity;
 import com.apex.scaffold.domain.model.exception.TenantLifecycleException;
@@ -14,7 +15,6 @@ import com.apex.scaffold.domain.model.exception.TenantQuotaExceededException;
 import com.apex.scaffold.domain.model.valueobject.TenantQuota;
 import com.apex.scaffold.domain.repository.TenantRepository;
 import com.apex.scaffold.domain.service.DomainEventPublisher;
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -109,36 +109,30 @@ public class TenantApplicationService {
         return requireById(tenantId).map(tenantAssembler::toDTO);
     }
 
-    /** 租户认证期状态快照（统一认证收口 A6 内部端点契约）。 */
-    @Schema(name = "TenantStatusSnapshot", description = "租户认证期状态快照（内部端点契约）")
-    public record TenantStatusSnapshot(
-            @Schema(description = "租户是否存在（未知租户 false，便于消费方缓存负结果）") boolean exists,
-            @Schema(description = "租户状态机取值（如 ACTIVE/DISABLED）", example = "ACTIVE") String status,
-            @Schema(description = "是否已过期") boolean expired,
-            @Schema(description = "用户数配额上限；未配置为 null", example = "100") Integer maxUsers,
-            @Schema(description = "存储配额上限（MB）；未配置为 null", example = "10240") Integer maxStorageMb) {}
-
     /**
      * 查询租户认证期状态（统一认证收口 A6）。
      *
      * <p>供认证中心登录前置校验消费：未知租户以 {@code exists=false} 数据化返回
-     * （便于消费方缓存负结果），状态机与过期判定与领域模型口径一致。
+     * （便于消费方缓存负结果），状态机与过期判定与领域模型口径一致。返回类型为
+     * {@code apex-api-contract} 契约 DTO，与消费方共用同一类型防漂移（2026-11-07 模块评审 F3）。
      *
      * @param tenantCode 租户编码
      * @return 状态快照；租户不存在时 {@code exists=false}
      */
-    public Mono<TenantStatusSnapshot> getTenantStatusByCode(String tenantCode) {
+    public Mono<TenantStatusSnapshotDTO> getTenantStatusByCode(String tenantCode) {
         if (tenantCode == null || tenantCode.isBlank()) {
-            return Mono.just(new TenantStatusSnapshot(false, null, false, null, null));
+            return Mono.just(TenantStatusSnapshotDTO.builder().build());
         }
         return getByCode(tenantCode)
-                .map(dto -> new TenantStatusSnapshot(
-                        true,
-                        dto.getStatus(),
-                        dto.getExpireTime() != null && dto.getExpireTime().isBefore(java.time.LocalDateTime.now()),
-                        dto.getMaxUsers(),
-                        dto.getMaxStorageMb()))
-                .defaultIfEmpty(new TenantStatusSnapshot(false, null, false, null, null));
+                .map(dto -> TenantStatusSnapshotDTO.builder()
+                        .exists(true)
+                        .status(dto.getStatus())
+                        .expired(dto.getExpireTime() != null
+                                && dto.getExpireTime().isBefore(java.time.LocalDateTime.now()))
+                        .maxUsers(dto.getMaxUsers())
+                        .maxStorageMb(dto.getMaxStorageMb())
+                        .build())
+                .defaultIfEmpty(TenantStatusSnapshotDTO.builder().build());
     }
 
     /**

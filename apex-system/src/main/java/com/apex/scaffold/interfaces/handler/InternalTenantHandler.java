@@ -4,6 +4,7 @@ import com.apex.scaffold.application.service.TenantApplicationService;
 import com.apex.scaffold.application.service.TenantPackageService;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.contract.dto.internal.TenantStatusSnapshotDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -43,7 +44,7 @@ public class InternalTenantHandler {
      * 查询租户认证期状态。
      *
      * @param request 当前请求（路径参数 {@code code}）
-     * @return 状态快照（{@code Result<TenantApplicationService.TenantStatusSnapshot>}）
+     * @return 状态快照（{@code Result<TenantStatusSnapshotDTO>}，契约类型见 apex-api-contract）
      */
     @Operation(
             operationId = "internalTenantStatus",
@@ -63,8 +64,7 @@ public class InternalTenantHandler {
                 content =
                         @Content(
                                 mediaType = "application/json",
-                                schema =
-                                        @Schema(implementation = TenantApplicationService.TenantStatusSnapshot.class))),
+                                schema = @Schema(implementation = TenantStatusSnapshotDTO.class))),
         @ApiResponse(responseCode = "400", description = "code 缺失或超长"),
         @ApiResponse(responseCode = "500", description = "租户状态查询失败")
     })

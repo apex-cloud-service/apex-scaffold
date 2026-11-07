@@ -2,8 +2,11 @@ package com.apex.scaffold.authservice.config;
 
 import com.apex.scaffold.auth.domain.service.TenantStatusPort;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.common.util.JsonUtil;
+import com.apex.scaffold.contract.dto.internal.TenantStatusSnapshotDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -134,17 +137,21 @@ public class RemoteTenantStatusAdapter implements TenantStatusPort {
                 .map(this::parse);
     }
 
-    /** 解析 {@code Result} 封装的状态快照。 */
+    /**
+     * 解析 {@code Result} 封装的状态快照。
+     *
+     * <p>data 节点为 {@code apex-api-contract} 的 {@link TenantStatusSnapshotDTO} 契约类型，
+     * 与 system 提供方共用同一类型，避免手写 JSON 解析随提供方字段演进而漂移
+     * （2026-11-07 模块评审 F3）。
+     */
     Snapshot parse(String body) {
-        Map<?, ?> root = JsonUtil.fromJson(body, Map.class);
-        Object data = root == null ? null : root.get("data");
-        if (!(data instanceof Map<?, ?> feed)) {
+        Result<TenantStatusSnapshotDTO> root =
+                JsonUtil.fromJson(body, new TypeReference<Result<TenantStatusSnapshotDTO>>() {});
+        if (root == null || root.getData() == null) {
             throw new IllegalStateException("租户状态响应缺少 data 节点");
         }
-        boolean exists = Boolean.TRUE.equals(feed.get("exists"));
-        String status = feed.get("status") == null ? null : String.valueOf(feed.get("status"));
-        boolean expired = Boolean.TRUE.equals(feed.get("expired"));
-        return new Snapshot(exists, status, expired);
+        TenantStatusSnapshotDTO feed = root.getData();
+        return new Snapshot(feed.isExists(), feed.getStatus(), feed.isExpired());
     }
 
     /**
