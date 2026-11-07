@@ -11,6 +11,7 @@
 | 工作流 | `apex-workflow` | `WorkflowDefinition`、`ProcessInstance`、`Task` | 流程定义（DAG）、实例推进、任务审批 |
 | 文件 | `apex-file` | `DocumentEntity`、`FileRecord`、`FileShare` | 上传/分片/下载、分享、存储后端适配 |
 | 办公协同 | `apex-office` | `Message`、`MessageTemplate`、`MeetingRoom`、`OfficeOrg` | 站内信与投递、办公平台同步、会议室 |
+| 对外集成与设备 | `apex-integration` | 连接器配置、设备注册/影子/命令模型（connector 与 device 两个子域） | 出站连接器调用、租户凭据、入站 Webhook、IoT 设备接入（MQTT 由外部 EMQX 承载） |
 | 网关（薄适配层） | `apex-gateway` | —（无业务聚合） | 路由、验签、限流、灰度、访问日志 |
 
 ## 2. 上下文关系（合作模式）
@@ -22,27 +23,32 @@ graph LR
     GW --> WF[工作流]
     GW --> FILE[文件]
     GW --> OFFICE[办公协同]
+    GW --> INT[对外集成与设备]
 
     SYS -->|防腐层 UnifiedAuthorizationGateway<br/>/internal/v1/**| AUTH
     OFFICE -->|防腐层 SystemOrgUserQueryAdapter<br/>内部组织/用户查询| SYS
     FILE -->|防腐层 TenantStatusPort<br/>租户状态| SYS
     AUTH -->|防腐层 TenantStatusPort<br/>登录前置租户校验| SYS
     WF -->|发布领域事件（Outbox + MQ）| CONTRACT[api-contract 事件契约]
-    CONTRACT -->|订阅| SYS
+    SYS -->|发布主数据事件<br/>UserChanged / TenantChanged| CONTRACT
+    AUTH -->|订阅 TenantChanged| CONTRACT
+    SYS -->|Overview 聚合 /internal/v1/*/stats| STATS[各域统计端点<br/>file / office / workflow / integration]
 
     SHARED[共享内核<br/>apex-common / apex-domain] -.->|被全部上下文依赖| SYS
     SHARED -.-> AUTH
     SHARED -.-> WF
     SHARED -.-> FILE
     SHARED -.-> OFFICE
+    SHARED -.-> INT
     SHARED -.-> GW
 ```
 
 | 关系 | 模式 | 约束 |
 | --- | --- | --- |
 | 网关 → 业务上下文 | 客户-供应商（网关为调用方） | 网关不实现业务逻辑，仅路由与横切；`GatewayArchTest` 强制 |
-| 系统 ← 认证/文件/办公 | **防腐层（ACL）** | 跨上下文只能经 `domain/gateway` 端口 + `/internal/v1/**` 内部契约；不得直接读取对方库表 |
-| 工作流 → 系统 | **事件驱动（Outbox + MQ）** | 只经 `apex-api-contract` 事件契约，异步解耦，禁止同步回调 |
+| 系统 ← 认证/文件/办公 | **防腐层（ACL）** | 跨上下文只能经 `domain/gateway` 端口 + `/internal/v1/**` 内部契约（端点清单见 `docs/03-api/internal-api-contracts.md`）；不得直接读取对方库表。integration 不经 ACL 消费 system（其权限校验走 auth `/auth/v1` 公开契约，统计数据由 system 经 `/internal/v1/iot/devices/stats` 拉取） |
+| 工作流 → 其他上下文 | **事件驱动（Outbox + MQ）** | 发布方经 `apex-api-contract` 事件契约类型化产出；2026-11-07 核实仓内暂无消费方接入，后续消费必须经同一契约，禁止同步回调 |
+| 系统 → 认证 | **主数据事件（User/TenantChanged）** | 经 `apex-api-contract` 契约发布；消费方（auth 租户事件监听器）解析入站载荷并幂等失效本地缓存 |
 | `apex-common` / `apex-domain` | **共享内核** | 只容纳跨域复用契约（上下文、结果、异常、基础实体、通用端口）；不得出现具体业务实体 |
 | 所有上下文 | 独立数据库 + 独立 Flyway 链 | 不跨库事务；一致性经既有事件/补偿模式 |
 
@@ -70,6 +76,6 @@ graph LR
 
 ## 5. 演进方向
 
-- C7：业务库升级为可独立装配的能力组件（自动装配入口 + 组件契约元数据）。
-- C8：事件通道抽象（同进程 local / 跨服务 remote 自适应），支撑 C9 组合部署拓扑。
-- C4：apex-system interfaces 层迁至运行模块（D07），使五服务形态统一。
+- C7（已交付）：六个业务库均具备组件入口（`autoconfigure` + `AutoConfiguration.imports` + `apex.component.<域>.enabled` 总开关）。协议层归属两种形态并存：auth/file/office/workflow 在运行模块（Phase 6 历史形态）；integration 为自含协议层组件试点（接口层在库内、`apex.component.integration.interfaces-enabled` 开关守护），使 boot-all 薄 jar 能提供 integration 域 HTTP；system 接口层维持业务库现状（D07 裁决，见下）。
+- C8/C9（已交付）：事件通道抽象（`apex.events.channel` local/remote 自适应）与组合部署拓扑（`apex-boot-all` 按域子上下文装配）已上线。
+- C4/D07（已裁决）：apex-system interfaces 层迁移经 2026-11-01 裁决维持现状不实施（记录见 `docs/08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md` v3.2、`docs/08-project-management/plans/platform-closure-remediation-plan.md`）；包根命名空间差异如需变更须单独立项。

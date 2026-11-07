@@ -161,7 +161,7 @@
     <!-- ========== 微服务化改造模块（详见 docs/08-project-management/plans/microservice-migration-plan.md） ========== -->
     <!-- 微服务依赖版本 BOM：统一锁定各服务模块与第三方依赖 -->
     <module>apex-services-bom</module>
-    <!-- 跨服务内部 API 契约：Feign 接口 + 共享 DTO -->
+    <!-- 跨服务内部 API 契约：内部接口 DTO 与领域事件（服务间调用统一 WebClient，不使用 Feign） -->
     <module>apex-api-contract</module>
     <!-- API 网关：统一入口/路由/JWT 验签/限流/追踪 -->
     <module>apex-gateway</module>
@@ -784,7 +784,7 @@
             <optional>true</optional>
           </dependency>
 
-          <!-- ===== apex-interfaces 侧高级依赖（basic 不打包） ===== -->
+          <!-- ===== 业务库侧高级依赖（basic 不打包，Sentinel/Prometheus 相关） ===== -->
           <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>

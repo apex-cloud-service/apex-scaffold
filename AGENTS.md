@@ -121,13 +121,13 @@ apex-system/src/main/java/com/apex/scaffold/
 ### Router 与 Handler
 
 - 新增业务 HTTP 接口采用 WebFlux 函数式 Router + Handler，不新增 `@Controller`、`@RestController` 或注解式请求映射。
-- system Router/Handler 位于 system 的 `interfaces/router`、`interfaces/handler` 包；其他服务使用各自 service 模块的接口层。
+- 协议层（Router/Handler）归属按域区分：auth/file/office/workflow 位于各自 service 运行模块；system 位于业务库 `interfaces/router`、`interfaces/handler` 包（D07 裁决维持现状）；integration 为 C7 自含组件试点，协议层位于业务库 `connector/interfaces`、`device/interfaces`，经 `apex.component.integration.interfaces-enabled` 开关守护，integration-service 只承载安全与装配。新增服务默认采用运行模块形态；需要"引依赖即含 HTTP 能力"的自含组件时参照 integration。
 - Router 注册路径与方法，Handler 验证请求并调用应用服务，不在 Handler 中堆积持久化或核心业务规则。
 - 沿用目标模块现有验证工具和 Jakarta Validation。`@NotBlank` 只校验非空白，不会自动修剪或修改输入值。
 - Router 的 `@RouterOperation` / `@RouterOperations`、DTO 的 `@Schema` 等 SpringDoc 元数据与实际路径、方法、参数和响应一致。
 - 管理权限与 `@RequirePermission`、数据权限规则、Flyway 权限种子保持一致。写操作沿用 `@OperationLog`；幂等、防重放、限流等按业务语义配置。
 - 路径以实际 Router 与网关配置为准，不能只按 `/api/v1/` 等前缀推断接口归属。
-- office 站内信的 HTTP 消息路由与 WebSocket 握手路由分别使用 `ROUTE_OFFICE_MESSAGE_URI`、`ROUTE_OFFICE_WS_URI`；两者必须指向同一 office 实例。票据和连接注册表是单实例内存状态，不提供跨实例实时广播，断线须通过收件箱与未读数 HTTP 补偿。
+- office 站内信的 HTTP 消息路由与 WebSocket 握手路由分别使用 `ROUTE_OFFICE_MESSAGE_URI`、`ROUTE_OFFICE_WS_URI`；两者缺省与 office 主路由同为 `lb://apex-office-service`，关闭 Nacos 的直连部署须显式注入且指向同一 office 实例。票据和连接注册表是单实例内存状态，不提供跨实例实时广播，断线须通过收件箱与未读数 HTTP 补偿。
 
 ### 响应、异常与国际化
 
@@ -214,7 +214,7 @@ Mono.fromCallable(() -> repository.findById(id))
 - 配置变更核对对应服务的 `application*.yml`、`bootstrap.yml`、`.env.example` 与部署注入；必要时同步 [配置文档](docs/05-operations/configuration.md)。
 - Java 不自动加载 `.env`；部署 app.sh 只在 `APEX_ENV_FILE` 指定有效文件时 source；Compose `.env` 插值不等于全部变量注入容器。
 - 关闭 Nacos 时核对 config/discovery/register 开关；网关 `lb://` 路由同时改为明确 HTTP 地址。
-- system 默认业务端口 8082、管理端口 8083；workflow 同机开发可用 8093 避开冲突；集成服务默认业务端口 8094、管理端口 8097。example 与 gateway 默认均为 8080。
+- system 默认业务端口 8082、管理端口 8083；workflow 默认业务端口 8093（2026-11-07 由 8083 调整，消除与 system 管理端口冲突）；集成服务默认业务端口 8094、管理端口 8097。example 与 gateway 默认均为 8080。
 - Compose 部署核对外部 `apex-observability` 网络、前端镜像、数据库/Redis 凭据、生产 CORS 和 auth JDBC/R2DBC TLS 配置，不把模板复制描述为可直接上线。
 - 已用于持久数据的加密密钥需要稳定保存，轮换配合迁移，不能每次启动随机重建。
 - 新增 Bash 脚本复用 [公共函数库](scripts/lib/common.sh)，使用其根目录、日志与安全查找函数，不重复手写排除规则。修改旧脚本只处理当前任务所需内容。
