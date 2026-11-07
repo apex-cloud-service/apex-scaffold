@@ -60,13 +60,13 @@
 | 网关 | `apex-gateway` | 8080 | 复用 8080 | 统一入口，路由见 [application.yml](../../../apex-gateway/src/main/resources/application.yml) |
 | 认证服务 | `apex-auth-service` | 8081 | 未单独配置 | 服务 `/auth/v1/**`、`/oauth2/**`、`/.well-known/**` |
 | 系统服务 | `apex-system-service` | 8082 | 8083 | 系统管理、监控与其余接口兜底 |
-| 工作流服务 | `apex-workflow-service` | 8083 | 未单独配置 | 与 system 管理端口同号，同机部署需改端口 |
+| 工作流服务 | `apex-workflow-service` | 8093 | 未单独配置 | 工作流引擎与审批（2026-11-07 起，原 8083 与 system 管理端口冲突已消除） |
 | 办公服务 | `apex-office-service` | 8084 | 未单独配置 | 含站内信 HTTP 与 WebSocket |
 | 文件服务 | `apex-file-service` | 8085 | 未单独配置 | 含对象存储与文件分享 |
 | 任务代理 | `apex-job-service` | 8095 | — | 可选，固定 system 地址 |
 | 脱敏服务 | `apex-masking-service` | 8096 | — | 可选，无持久化 |
 
-> 工作流服务默认 8083 与 system 服务管理端口 8083 冲突；Compose 将工作流宿主端口映射为 `WORKFLOW_PORT=8093` 规避。直接 `java -jar` 部署时须显式调整其一。
+> 工作流服务业务端口为 8093（2026-11-07 调整前为 8083，与 system 管理端口同号，靠 Compose 宿主映射规避）。
 
 ---
 

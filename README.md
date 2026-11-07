@@ -89,7 +89,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | `apex-gateway` | `GatewayApplication` | 8080 | 可选访问日志库 `apex_gateway` |
 | `apex-auth-service` | `AuthServiceApplication` | 8081 | `apex_auth`；dev 配置使用 `apex_auth_dev` |
 | `apex-system-service` | `SystemServiceApplication` | 8082 | `apex_system` |
-| `apex-workflow-service` | `WorkflowServiceApplication` | 8083 | `apex_workflow` |
+| `apex-workflow-service` | `WorkflowServiceApplication` | 8093 | `apex_workflow` |
 | `apex-office-service` | `OfficeServiceApplication` | 8084 | `apex_office` |
 | `apex-file-service` | `FileServiceApplication` | 8085 | `apex_file` |
 | `apex-integration-service` | `IntegrationServiceApplication` | 8094 | `apex_integration` |

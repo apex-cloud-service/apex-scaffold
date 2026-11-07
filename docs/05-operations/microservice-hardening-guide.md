@@ -17,7 +17,7 @@
 | API 网关 | `apex-gateway` | 8080 | 2 |
 | 认证服务 | `apex-auth-service` | 8081 | 2 |
 | 系统服务 | `apex-system-service` | 8082（管理 8083） | 2 |
-| 工作流服务 | `apex-workflow-service` | 8083（同机开发可用 8093） | 1 |
+| 工作流服务 | `apex-workflow-service` | 8093 | 1 |
 | 办公服务 | `apex-office-service` | 8084 | 1 |
 | 文件服务 | `apex-file-service` | 8085 | 1 |
 | 集成服务 | `apex-integration-service` | 8094（管理 8097） | 1 |
@@ -94,7 +94,7 @@ pkill -9 -f apex-auth-service || true
 ```bash
 # 以 workflow 为例
 pkill -9 -f apex-workflow-service || true
-curl -sf http://127.0.0.1:8083/actuator/health || echo "期望：不可达"
+curl -sf http://127.0.0.1:8093/actuator/health || echo "期望：不可达"
 # 验证其它域（file/office/auth）健康、网关其余路由正常
 for p in 8080 8081 8084 8085; do curl -sf "http://127.0.0.1:${p}/actuator/health" >/dev/null && echo "OK ${p}" || echo "FAIL ${p}"; done
 ```

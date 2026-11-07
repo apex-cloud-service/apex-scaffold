@@ -30,7 +30,7 @@ service_port() {
     gateway)  echo 8080 ;;
     auth)     echo 8081 ;;
     system)   echo 8082 ;;
-    workflow) echo 8083 ;;
+    workflow) echo 8093 ;;
     office)   echo 8084 ;;
     file)     echo 8085 ;;
     *)        echo "" ;;

@@ -4,7 +4,7 @@
 
 > **Enterprise License 特性** - 仅 Enterprise 版本可用
 >
-> **微服务化**：自 1.3.1 起工作流能力已独立为微服务 `apex-workflow-service`（端口 `8083`，独立库 `apex_workflow`）。
+> **微服务化**：自 1.3.1 起工作流能力已独立为微服务 `apex-workflow-service`（端口 `8093`，独立库 `apex_workflow`）。
 > 对外接口契约保持不变，统一经网关（端口 `8080`）路由：`/admin-api/v1/workflows/**`、`/api/v1/workflows/**`、`/api/workflow/**`。
 > 独立服务构建：`mvnd -pl apex-workflow-service -am package`。
 
@@ -34,7 +34,7 @@ Apex Scaffold 内置轻量级工作流引擎，支持基于 DAG（有向无环�
 
 ## 2. 快速开始
 
-> 以下示例统一经网关（默认 `http://localhost:8080`）访问；工作流服务直连端口为 `8083`（仅内网/调试用）。
+> 以下示例统一经网关（默认 `http://localhost:8080`）访问；工作流服务直连端口为 `8093`（仅内网/调试用）。
 
 ### 2.1 发起流程实例
 

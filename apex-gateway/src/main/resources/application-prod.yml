@@ -50,12 +50,12 @@ spring:
         # 多实例部署须提供粘性路由及跨实例通知；仅 HTTP 补偿不能修复跨实例票据握手失败。
         # 🔒 生产必须通过环境变量显式指定真实 office 实例地址，勿沿用回环默认值。
         - id: office-message-websocket
-          uri: ${ROUTE_OFFICE_WS_URI:ws://127.0.0.1:8084}
+          uri: ${ROUTE_OFFICE_WS_URI:lb://apex-office-service}
           predicates:
             - Path=/api/v1/messages/ws
             - Header=Upgrade, (?i)websocket
         - id: office-message-http
-          uri: ${ROUTE_OFFICE_MESSAGE_URI:http://127.0.0.1:8084}
+          uri: ${ROUTE_OFFICE_MESSAGE_URI:lb://apex-office-service}
           predicates:
             - Path=/api/v1/messages,/api/v1/messages/**
           filters:

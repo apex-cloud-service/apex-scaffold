@@ -889,8 +889,9 @@ k8s_precheck() {
 # 适配: compose 双引擎（发布主机端口）与整仓检查通用；java -jar 模式请用
 #       jar_health 单模块探测。
 # 端口: 优先取注册表 hostPort（Compose 宿主侧映射），缺省回退 managementPort，
-#       再回退 port。workflow-service 容器内 8083 在 Compose 中映射为 8093
-#       （规避与 system 管理端口 8083 的冲突），故必须用 hostPort 探测。
+#       再回退 port。2026-11-07 起 workflow 业务端口为 8093（与 system 管理端口
+#       8083 不再冲突），注册表暂无 hostPort 登记，探测走 port；
+#       如某服务宿主映射与容器端口不同，在注册表登记 hostPort 即可。
 #       optional 模块（job/masking）不在 service-jar 集合内，不做默认探测
 #       （其 readiness 路径特殊，见 app.sh）。
 # 退出: 任一服务未就绪 → 退出码 1（CI 可直接作为部署后门禁）。
@@ -956,7 +957,7 @@ cmd_status() {
         printf '  %-40s %-12s 端口 %-6s 不产出可执行 JAR\n' "${id}" "${deliverable}" "${port}"
         ;;
       *)
-        # 端口展示：容器内端口，Compose 宿主映射不同时并列显示（如 8083→8093）
+        # 端口展示：容器内端口，Compose 宿主映射不同时并列显示（注册表 hostPort）
         if [[ -n "${host_port}" && "${host_port}" != "-" ]]; then
           port="${port}(宿主 ${host_port})"
         fi

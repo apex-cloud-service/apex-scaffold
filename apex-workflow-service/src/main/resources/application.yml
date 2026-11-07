@@ -55,8 +55,9 @@ workflow:
       reader-tokens: {}
 
 server:
-  # 工作流服务端口（迁移方案 §3.1：端口 8083）
-  port: 8083
+  # 工作流服务端口（2026-11-07 模块评审 R6：由 8083 调整为 8093，消除与
+  # system 管理端口 8083 的同机冲突；boot-all 域端口与 Compose 映射沿用同一值）
+  port: 8093
 
 spring:
   application:

@@ -93,9 +93,9 @@
 ## 5. 关键命令速查
 
 ```bash
-# 服务健康（管理端口 8081~8085）
+# 服务健康（健康端口 8081/8082/8084/8085/8093）
 curl -s http://127.0.0.1:8081/actuator/health   # auth
-curl -s http://127.0.0.1:8083/actuator/health   # workflow
+curl -s http://127.0.0.1:8093/actuator/health   # workflow
 curl -s http://127.0.0.1:8085/actuator/health   # file
 
 # 混沌演练（场景化，退出码 0=通过）

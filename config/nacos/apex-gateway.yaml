@@ -61,12 +61,12 @@ spring:
         #    必须在此显式声明并排在 office-domain 之前，否则生产 WS 升级会被 office-domain 抢走。
         # 🔒 生产必须通过环境变量显式指定真实 office 实例地址，勿沿用回环默认值。
         - id: office-message-websocket
-          uri: ${ROUTE_OFFICE_WS_URI:ws://127.0.0.1:8084}
+          uri: ${ROUTE_OFFICE_WS_URI:lb://apex-office-service}
           predicates:
             - Path=/api/v1/messages/ws
             - Header=Upgrade, (?i)websocket
         - id: office-message-http
-          uri: ${ROUTE_OFFICE_MESSAGE_URI:http://127.0.0.1:8084}
+          uri: ${ROUTE_OFFICE_MESSAGE_URI:lb://apex-office-service}
           predicates:
             - Path=/api/v1/messages,/api/v1/messages/**
           filters:

@@ -73,7 +73,7 @@ flowchart TB
     subgraph services["业务服务层（WebFlux 函数式路由 + DDD 四层）"]
         AUTH["apex-auth-service :8081<br>认证中心 / 统一授权 / JWKS"]
         SYSTEM["apex-system-service :8082<br>系统管理（兜底路由）<br>管理端口 :8083 物理隔离"]
-        WF["apex-workflow-service :8083<br>DAG 工作流引擎"]
+        WF["apex-workflow-service :8093<br>DAG 工作流引擎"]
         OFFICE["apex-office-service :8084<br>办公协同 + 站内信 WebSocket"]
         FILE["apex-file-service :8085<br>文件上传 / 分片 / 下载"]
         INTEGRATION["apex-integration-service :8094<br>连接器 / MQTT 设备接入<br>管理端口 :8097"]
@@ -517,7 +517,7 @@ flowchart LR
 日志聚合：Logback → Loki (Grafana Alloy 采集)
 ```
 
-> 注：`apex-system-service` 管理端口 8083 与业务端口 8082 物理隔离（管理端口默认仅绑定 127.0.0.1）。workflow 容器内端口 8083，同机开发时宿主映射为 8093 避免与 system 管理端口冲突。
+> 注：`apex-system-service` 管理端口 8083 与业务端口 8082 物理隔离（管理端口默认仅绑定 127.0.0.1）。workflow 业务端口 8093（2026-11-07 由 8083 调整，与 system 管理端口 8083 不再冲突）。
 
 ### 3.2 组件职责与端口
 
@@ -526,7 +526,7 @@ flowchart LR
 | **apex-gateway** | API 网关，JWT 验签与路由分发 | 8080                | Podman / K8s       |
 | **apex-auth-service** | 认证中心，登录/刷新/登出/统一授权 | 8081                | Podman / K8s       |
 | **apex-system-service** | 系统管理（用户/角色/菜单/字典/任务） | 8082 业务 / 8083 管理（仅 127.0.0.1） | Podman / K8s |
-| **apex-workflow-service** | DAG 工作流引擎 | 8083（同机映射 8093）   | Podman / K8s       |
+| **apex-workflow-service** | DAG 工作流引擎 | 8093   | Podman / K8s       |
 | **apex-office-service** | 办公协同 + 站内信 WebSocket | 8084                | Podman / K8s       |
 | **apex-file-service** | 文件上传/分片/下载 | 8085                | Podman / K8s       |
 | **apex-job-service** | 任务管理接口代理（9 个接口） | 8095（仅 127.0.0.1）  | Podman / K8s       |

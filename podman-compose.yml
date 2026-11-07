@@ -88,7 +88,7 @@ x-app-common-environment: &app-common-environment
   # 默认按服务名寻址；单进程或非 Nacos 拓扑应按实际地址覆盖。
   APEX_SYSTEM_BASE_URL: ${APEX_SYSTEM_BASE_URL:-http://apex-system-service:8082}
   APEX_OVERVIEW_SOURCES_FILE: ${APEX_OVERVIEW_SOURCES_FILE:-http://apex-file-service:8085}
-  APEX_OVERVIEW_SOURCES_WORKFLOW: ${APEX_OVERVIEW_SOURCES_WORKFLOW:-http://apex-workflow-service:8083}
+  APEX_OVERVIEW_SOURCES_WORKFLOW: ${APEX_OVERVIEW_SOURCES_WORKFLOW:-http://apex-workflow-service:8093}
   APEX_OVERVIEW_SOURCES_OFFICE: ${APEX_OVERVIEW_SOURCES_OFFICE:-http://apex-office-service:8084}
   APEX_OVERVIEW_SOURCES_INTEGRATION: ${APEX_OVERVIEW_SOURCES_INTEGRATION:-http://apex-integration-service:8094}
   # ---------- RocketMQ（公共配置提供本地默认地址；业务能力默认关闭） ----------
@@ -319,14 +319,14 @@ services:
       args:
         BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
         SERVICE_MODULE: apex-workflow-service
-        SERVICE_PORT: "8083"
-        MANAGEMENT_PORT: "8083"
-        HEALTHCHECK_PORT: "8083"
+        SERVICE_PORT: "8093"
+        MANAGEMENT_PORT: "8093"
+        HEALTHCHECK_PORT: "8093"
     image: apex-workflow-service:${TAG:-latest}
     volumes:
       - ./logs/apex-workflow-service:/app/logs
     ports:
-      - "${WORKFLOW_PORT:-8093}:8083"
+      - "${WORKFLOW_PORT:-8093}:8093"
     environment:
       <<: *app-common-environment
       DB_NAME: apex_workflow
@@ -346,7 +346,7 @@ services:
       nacos:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8083/actuator/health/readiness"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8093/actuator/health/readiness"]
       interval: 5s
       timeout: 3s
       retries: 12

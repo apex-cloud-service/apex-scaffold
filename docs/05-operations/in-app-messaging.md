@@ -8,7 +8,7 @@ office-service 必须配置 `OFFICE_JWT_PUBLIC_KEY_BASE64`（认证服务 RS256 
 
 `OFFICE_MESSAGE_ALLOWED_ORIGINS` 填写允许的完整浏览器 Origin，以逗号分隔，例如 `https://app.example.com`。无 Origin、非白名单 Origin、缺少 WebSocket Upgrade 均拒绝。白名单不支持通配符。
 
-网关 `ROUTE_OFFICE_MESSAGE_URI` 默认为 `http://127.0.0.1:8084`，`ROUTE_OFFICE_WS_URI` 默认为 `ws://127.0.0.1:8084`。容器部署须将两者都改为网关可达且相同的 office 实例地址；不能只配置通用的 `ROUTE_OFFICE_URI`。外部生产入口使用 HTTPS/WSS，并让反向代理保留 Upgrade、Connection 和 Origin；代理空闲超时应大于 60 秒。ticket、消息发送 HTTP 请求及 WebSocket 必须到同一 office 实例。
+网关 `ROUTE_OFFICE_MESSAGE_URI` / `ROUTE_OFFICE_WS_URI` 缺省与 office 主路由同为 `lb://apex-office-service`（2026-11-07 起）；关闭 Nacos 的直连部署须显式注入两者，并指向网关可达且相同的 office 实例地址，不能只配置通用的 `ROUTE_OFFICE_URI`。外部生产入口使用 HTTPS/WSS，并让反向代理保留 Upgrade、Connection 和 Origin；代理空闲超时应大于 60 秒。ticket、消息发送 HTTP 请求及 WebSocket 必须到同一 office 实例。
 
 票据出现在握手查询串中；反向代理、APM 和访问日志必须隐藏查询串中的 `ticket`，生产不得开启记录完整请求 URI 的 Web 调试日志。不要将完整访问 JWT 或 ticket 写入日志。
 

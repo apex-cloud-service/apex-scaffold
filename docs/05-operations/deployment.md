@@ -88,7 +88,7 @@ bash scripts/utils/token-v42-recover.sh \
 │  DB apex_auth           │   │  DB apex_system                   │
 ├─────────────────────────┤   ├──────────────────────────────────┤
 │ apex-workflow-service   │   │ apex-office-service:8084          │
-│  :8093(宿主)→8083       │   │  DB apex_office                   │
+│  :8093       │   │  DB apex_office                   │
 │  DB apex_workflow       │   ├──────────────────────────────────┤
 ├─────────────────────────┤   │ apex-file-service:8085            │
 │ apex-integration-service│   │  DB apex_file                     │
@@ -433,7 +433,7 @@ curl http://localhost:8080/api/v1/health
 | apex-gateway | 本地构建 | `${APP_PORT:-8080}` | —（无库，Redis 限流） | 统一入口，无 DB |
 | apex-auth-service | 本地构建 | `${AUTH_PORT:-8081}` | apex_auth | 认证/Token/会话 |
 | apex-system-service | 本地构建 | `${SYSTEM_PORT:-8082}` / 管理 `${SYSTEM_MANAGEMENT_PORT:-8083}` | apex_system | 系统域 + 管理 8083 |
-| apex-workflow-service | 本地构建 | `${WORKFLOW_PORT:-8093}`→8083 | apex_workflow | 工作流/审批 |
+| apex-workflow-service | 本地构建 | `${WORKFLOW_PORT:-8093}` | apex_workflow | 工作流/审批 |
 | apex-office-service | 本地构建 | `${OFFICE_PORT:-8084}` | apex_office | 组织/办公 |
 | apex-file-service | 本地构建 | `${FILE_PORT:-8085}` | apex_file | 文件/文档 |
 | apex-integration-service | 本地构建 | `${INTEGRATION_PORT:-8094}` / 管理 `${INTEGRATION_MANAGEMENT_PORT:-8097}` | apex_integration | 集成中心连接器/凭据 + 物联网设备/规则；MQTT 桥接默认关闭 |
@@ -645,7 +645,7 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 
 ```
 apex-gateway:8080  apex-auth-service:8081  apex-system-service:8083(管理)
-apex-workflow-service:8083  apex-office-service:8084  apex-file-service:8085
+apex-workflow-service:8093  apex-office-service:8084  apex-file-service:8085
 ```
 
 验证：

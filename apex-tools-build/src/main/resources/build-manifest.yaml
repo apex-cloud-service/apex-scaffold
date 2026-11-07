@@ -30,8 +30,9 @@
 #   managementPort 默认管理端口（缺省与业务端口相同；当前仅 system-service=8083、
 #                  integration-service=8097 与业务端口不同）。
 #   hostPort       仅 Compose 场景：宿主机端口映射的宿主侧端口（缺省等于 managementPort）。
-#                  当前仅 workflow-service 登记（容器内 8083 与 system 管理端口 8083 冲突，
-#                  Compose 映射为 8093 规避）；deploy health 在 compose 运行时用它探测。
+#                  2026-11-07 起 workflow 业务端口调整为 8093，与 system 管理端口 8083
+#                  不再冲突，无模块需要登记 hostPort 特例；deploy health 在 compose 运行时
+#                  用宿主侧端口探测。
 #   mainClass      仅登记 POM 显式声明 <mainClass> 的模块（当前仅 apex-system-service、
 #                  apex-example）；其余服务由 spring-boot repackage 构建期自动探测
 #                  @SpringBootApplication，有意不在此登记，避免形成第二份可漂移副本。
@@ -114,8 +115,8 @@ modules:
     category: 共享契约
     deliverable: none
   # ── 运行模块：七个 service-jar 恰好等于 release.sh SERVICES 数组（网关 + 六个业务服务）。
-  #    端口为默认业务端口；system-service 管理端口 8083 与业务端口分离（同机开发注意与
-  #    workflow 业务端口 8083 的既有冲突，Compose 以 8093 规避）；integration-service
+  #    端口为默认业务端口；system-service 管理端口 8083 与业务端口分离；workflow 业务
+  #    端口 8093（2026-11-07 起，原 8083 与 system 管理端口冲突已消除）；integration-service
   #    管理端口 8097。apex-system-service 显式声明 mainClass（第二处显式声明）。
   - artifactId: apex-gateway
     category: 运行模块
@@ -124,8 +125,7 @@ modules:
   - artifactId: apex-workflow-service
     category: 运行模块
     deliverable: service-jar
-    port: 8083
-    hostPort: 8093
+    port: 8093
   - artifactId: apex-file
     category: 业务库
     deliverable: none

@@ -91,14 +91,17 @@ class GatewayApplicationTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(routes.indexOf(websocket)).isLessThan(routes.indexOf(http));
-        assertThat(websocket.getUri().getScheme()).isIn("ws", "wss");
+        // 兜底允许 lb://（注册成员缺省）与 ws/wss（直连部署显式注入）：SCG WebsocketRoutingFilter
+        // 在请求携带 Upgrade: websocket 头时会把 http/https 目标转换为 ws 代理（4.3.0 已核实），
+        // 升级握手不会被丢弃；ws/wss 语义仅用于无注册中心的直连地址。
+        assertThat(websocket.getUri().getScheme()).isIn("lb", "ws", "wss");
         assertThat(websocket.getPredicates()).anySatisfy(predicate -> {
             assertThat(predicate.getName()).isEqualTo("Path");
             assertThat(predicate.getArgs()).containsValue("/api/v1/messages/ws");
         });
         assertThat(websocket.getFilters())
                 .noneSatisfy(filter -> assertThat(filter.getName()).isEqualTo("CircuitBreaker"));
-        assertThat(http.getUri().getScheme()).isIn("http", "https");
+        assertThat(http.getUri().getScheme()).isIn("lb", "http", "https");
         assertThat(http.getPredicates()).anySatisfy(predicate -> {
             assertThat(predicate.getName()).isEqualTo("Path");
             assertThat(predicate.getArgs()).containsValues("/api/v1/messages", "/api/v1/messages/**");

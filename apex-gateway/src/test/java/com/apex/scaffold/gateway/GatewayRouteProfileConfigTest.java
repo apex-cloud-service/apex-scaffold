@@ -26,8 +26,11 @@ import org.springframework.core.io.Resource;
  * 因此仅在 {@code application.yml} 中声明站内信路由，在启用 prod profile 或 Nacos 配置时会被整表覆盖而丢失。
  *
  * <p>丢失后的表现是隐蔽的：{@code /api/v1/messages/ws} 会落到 {@code office-domain} 的
- * {@code lb://}（http 语义）路由上，Spring Cloud Gateway 的 WebSocket 过滤器只处理 {@code ws}/{@code wss}
- * 语义的 URI，升级握手因此被丢弃，HTTP 消息接口却仍然正常，问题只在长连接侧暴露。
+ * 通用办公路由上，该路由挂 HTTP 熔断回退且与消息 HTTP 路由的熔断口径不同，长连接行为
+ * 与站内信契约脱钩，问题只在长连接侧暴露。（注：SCG {@code WebsocketRoutingFilter} 在
+ * 请求携带 {@code Upgrade: websocket} 头时会把 http/https 目标转换为 ws 代理，{@code lb://}
+ * 目标不会丢弃升级握手，故 WS 路由允许 {@code lb://}（注册成员缺省）或 {@code ws}/{@code wss}
+ * （直连部署注入）两种语义。）
  *
  * <p>本测试对每个配置源单独绑定路由列表（不跨文件合并，以忠实反映各文件自身声明的内容），
  * 校验域路由契约：站内信 WS/HTTP 路由存在且排在 {@code office-domain} 之前；认证域覆盖认证中心
@@ -169,14 +172,14 @@ class GatewayRouteProfileConfigTest {
                 .isLessThan(routes.indexOf(office));
 
         assertThat(websocket.getUri().getScheme())
-                .withFailMessage("%s：WS 路由须为 ws/wss 语义，否则升级握手会被丢弃", source)
-                .isIn("ws", "wss");
+                .withFailMessage("%s：WS 路由须为 lb://（注册成员缺省）或 ws/wss（直连部署）语义", source)
+                .isIn("lb", "ws", "wss");
         assertThat(pathPredicateArgs(websocket)).contains(WEBSOCKET_PATH);
         assertThat(websocket.getFilters())
                 .withFailMessage("%s：WS 路由不得挂 HTTP 熔断回退", source)
                 .noneSatisfy(filter -> assertThat(filter.getName()).isEqualTo("CircuitBreaker"));
 
-        assertThat(http.getUri().getScheme()).isIn("http", "https");
+        assertThat(http.getUri().getScheme()).isIn("lb", "http", "https");
         assertThat(pathPredicateArgs(http)).contains("/api/v1/messages", "/api/v1/messages/**");
         assertThat(http.getFilters()).anySatisfy(filter -> {
             assertThat(filter.getName()).isEqualTo("CircuitBreaker");

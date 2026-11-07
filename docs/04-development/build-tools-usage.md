@@ -390,7 +390,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 | apex-gateway | 8080 | 8080 |
 | apex-auth-service | 8081 | 8081 |
 | apex-system-service | 8082 | **8083** |
-| apex-workflow-service | 8083 | 8083 |
+| apex-workflow-service | 8093 | 8093 |
 | apex-office-service | 8084 | 8084 |
 | apex-file-service | 8085 | 8085 |
 | apex-integration-service | 8094 | **8097** |

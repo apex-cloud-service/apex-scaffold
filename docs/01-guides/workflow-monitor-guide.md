@@ -1,6 +1,6 @@
 # 工作流监控与统计功能使用指南
 
-> 微服务化说明：本节功能由独立服务 **`apex-workflow-service`** 提供（默认端口 `8083`，数据库 `apex_workflow`），
+> 微服务化说明：本节功能由独立服务 **`apex-workflow-service`** 提供（默认端口 `8093`，数据库 `apex_workflow`），
 > 通过网关（默认端口 `8080`）以 `/admin-api/v1/workflows/**` 路由对外暴露；
 > 独立构建命令：`mvnd -pl apex-workflow-service -am package`。
 

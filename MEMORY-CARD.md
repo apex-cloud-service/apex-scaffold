@@ -28,7 +28,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | `apex-gateway` | 8080 | `apex_gateway`（访问日志，可选） | — |
 | `apex-auth-service` | 8081 | `apex_auth`（dev `apex_auth_dev`） | V64 |
 | `apex-system-service` | 8082（管理 8083） | `apex_system` | V89 |
-| `apex-workflow-service` | 8083（同机联调 8093） | `apex_workflow` | V6 |
+| `apex-workflow-service` | 8093 | `apex_workflow` | V6 |
 | `apex-office-service` | 8084 | `apex_office` | V8 |
 | `apex-file-service` | 8085 | `apex_file` | V7 |
 | `apex-integration-service` | 8094（管理 8097） | `apex_integration` | V3 |
@@ -38,7 +38,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 
 - 迁移**按服务归位**在业务库 / 运行模块的 `src/main/resources/db/migration/{mysql,postgresql}`。注意物理位置有历史遗留：system 迁移在 **`apex-system`**（不在 `-service`）、auth 迁移在 **`apex-auth-service`**（不在 `apex-auth`）、integration 迁移在 **`apex-integration`**（库模块，不在 `-service`）；新增时跟随现有位置，不要另起一套。
 - 规模：MySQL 134 + PostgreSQL 134 = **268 个已跟踪迁移**。
-- system 管理端口缺省 8083，**会与 workflow 冲突**，同机必改。
+- system 管理端口缺省 8083；workflow 业务端口 2026-11-07 起为 8093，两者不再冲突，同机直跑无须改端口。
 - 组合档 `apex-boot-all` 只装配不实现，无自有 `application.yml`；多实例部署必须显式选 MQ，否则 `apex.events.channel=auto` 退化为进程内派发。
 
 ## 4. 硬约束（违反即返工）
