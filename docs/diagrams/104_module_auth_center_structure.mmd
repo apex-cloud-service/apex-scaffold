@@ -1,45 +1,47 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
-  subgraph IF["接口层 interfaces"]
-    I1["AuthenticationHandler · UnifiedAuthorizationHandler"]
-    I2["OauthToken / OauthEndpoint / OauthMetadata"]
-    I3["Mfa / Permission / Role / Session / IpAccessControl / AuditLog Handler"]
-  end
-
-  subgraph APP["应用层 application"]
-    A1["service / service.impl · 认证/令牌/会话用例(事务边界)"]
-    A2["assembler · dto · aspect · scheduler"]
-  end
-
   subgraph DOM["领域层 domain"]
-    D1["model.entity · UserEntity/TokenEntity/JwtKeyEntity/Session/Mfa/Totp"]
+    D1["model.entity · UserEntity/TokenEntity/JwtKeyEntity/Session/Totp/MfaConfig/AuditLog"]
     D2["model.vo · AuthenticationRequest/Result · TokenPair"]
     D3["permission · ResourcePermission"]
-    D4["service · AuthenticationProtocol/MfaService/JwtKeyRotation/BruteForce/DeviceTrust"]
+    D4["service · AuthenticationProtocol/TokenService/MfaService/JwtKeyRotation/BruteForce/DeviceTrust"]
     D5["repository · 仓储接口"]
   end
 
-  subgraph INF["基础设施层 infrastructure"]
-    N1["persistence · mapper/repository (auth_* 表 V44-V52)"]
-    N2["crypto / encryption / kms / security"]
-    N3["filter / audit / monitoring / scheduler"]
+  subgraph APP["应用层 application"]
+    A1["service（含 impl）· 认证/OAuth2/统一授权用例（事务边界）"]
+    A2["assembler · dto · aspect"]
   end
 
+  subgraph INF["基础设施层 infrastructure"]
+    N1["persistence · mapper/repository（auth_* 表，V44–V64 迁移随 apex-auth-service 发布）"]
+    N2["encryption / kms / security"]
+    N3["filter / event / monitoring / scheduler / service / support"]
+  end
+
+  subgraph TOP["顶层支撑"]
+    T1["config · OAuth2Properties / AuthTrustedProxyProperties"]
+    T2["autoconfigure · AuthComponentAutoConfiguration"]
+    T3["openplatform · OpenAppScopes"]
+  end
+
+  HTTP["HTTP 出口（位于 apex-auth-service）\nauthservice.interfaces · router/handler/dto/util\n认证 + OAuth2 + 统一授权 + MFA/策略端点"]
+
   COMMON["apex-common"]
-  INFRA["apex-infrastructure"]
-  APPM["apex-application"]
+  SHAREDOM["apex-domain"]
+  CONTRACT["apex-api-contract"]
+  INTG["apex-infrastructure-integration"]
 
   COMMON --> DOM
-  INFRA --> INF
-  APPM --> APP
-  I1 --> A1
-  I2 --> A1
-  I3 --> A1
+  SHAREDOM --> DOM
+  CONTRACT --> APP
+  INTG --> INF
   A1 --> D4
   D4 --> D5
   D5 -. "被实现" .-> N1
-  N2 --> D4
+  N2 -. "实现加密/安全端口" .-> D4
   A2 --> D2
+  HTTP --> A1
 
-  NOTE["独立 DDD 四层的统一认证域：统一授权 + OAuth2 + MFA + 生物识别 + 令牌生命周期，自有 auth_* 表"]
+  NOTE["包名 com.apex.scaffold.auth；本库无 interfaces 层，HTTP 入口由 apex-auth-service 承载（AuthServiceApplication 运行装配），可聚合部署或独立运行"]
   DOM -.-> NOTE

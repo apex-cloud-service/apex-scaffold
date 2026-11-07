@@ -1,112 +1,216 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1150" width="1400" height="1150">
   <defs>
     <style>
-      .title{font:700 32px sans-serif;fill:#0f172a;text-anchor:middle}
+      .title{font:700 30px sans-serif;fill:#0f172a;text-anchor:middle}
       .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
-      .col-title{font:600 12px sans-serif;fill:#64748b;text-anchor:middle}
+      .band-label{font:600 12px sans-serif;fill:#475569}
+      .band-note{font:400 10px sans-serif;fill:#64748b}
       .box-title{font:600 13px sans-serif;fill:#0f172a;text-anchor:middle}
       .box-desc{font:400 10px sans-serif;fill:#475569;text-anchor:middle}
-      .note{font:500 11px sans-serif;fill:#64748b}
+      .rail-label{font:500 11px sans-serif;fill:#64748b;text-anchor:middle}
       .legend{font:500 11px sans-serif;fill:#475569}
+      .tools-label{font:600 12px sans-serif;fill:#64748b}
     </style>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
     </marker>
+    <marker id="arrowDark" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
   </defs>
 
-  <rect width="1400" height="900" fill="#fff"/>
-  <text x="700" y="40" class="title">模块依赖关系图（11 个 Maven 模块）</text>
-  <text x="700" y="64" class="subtitle">按依赖深度从左到右分层 · 箭头指向被依赖方 · 数据源：各模块 pom.xml · v1.3.1</text>
+  <rect width="1400" height="1150" fill="#fff"/>
+  <text x="700" y="40" class="title">模块依赖关系图（35 个 Maven 模块）</text>
+  <text x="700" y="64" class="subtitle">数据源：各模块 pom.xml（生产 scope 直接依赖）· 箭头由依赖方指向被依赖方 · 粗箭头为成组聚合，细线为单条依赖 · v1.3.1</text>
 
-  <!-- column titles -->
-  <text x="130" y="100" class="col-title">L0 基础</text>
-  <text x="350" y="100" class="col-title">L1</text>
-  <text x="570" y="100" class="col-title">L2</text>
-  <text x="790" y="100" class="col-title">L3 应用</text>
-  <text x="1010" y="100" class="col-title">L4 组合</text>
-  <text x="1230" y="100" class="col-title">L5 交付</text>
+  <text x="700" y="102" class="band-label" text-anchor="middle">L0 共享基础</text>
 
-  <!-- edges (drawn first, under boxes) -->
-  <g stroke="#94a3b8" stroke-width="1.4" fill="none" opacity="0.75">
-    <line x1="220" y1="422" x2="258" y2="422" marker-end="url(#arrow)"/>
-    <line x1="220" y1="422" x2="258" y2="512" marker-end="url(#arrow)"/>
-    <line x1="220" y1="422" x2="478" y2="472" marker-end="url(#arrow)"/>
-    <line x1="220" y1="422" x2="478" y2="572" marker-end="url(#arrow)"/>
-    <line x1="220" y1="422" x2="698" y2="472" marker-end="url(#arrow)"/>
-    <line x1="220" y1="422" x2="918" y2="512" marker-end="url(#arrow)"/>
-    <line x1="220" y1="422" x2="1138" y2="472" marker-end="url(#arrow)"/>
-    <line x1="440" y1="422" x2="478" y2="372" marker-end="url(#arrow)"/>
-    <line x1="440" y1="512" x2="478" y2="472" marker-end="url(#arrow)"/>
-    <line x1="440" y1="512" x2="478" y2="572" marker-end="url(#arrow)"/>
-    <line x1="440" y1="512" x2="698" y2="472" marker-end="url(#arrow)"/>
-    <line x1="440" y1="512" x2="918" y2="422" marker-end="url(#arrow)"/>
-    <line x1="440" y1="512" x2="1138" y2="472" marker-end="url(#arrow)"/>
-    <line x1="660" y1="472" x2="698" y2="472" marker-end="url(#arrow)"/>
-    <line x1="660" y1="472" x2="918" y2="422" marker-end="url(#arrow)"/>
-    <line x1="660" y1="472" x2="918" y2="512" marker-end="url(#arrow)"/>
-    <line x1="660" y1="472" x2="1138" y2="472" marker-end="url(#arrow)"/>
-    <line x1="660" y1="572" x2="918" y2="422" marker-end="url(#arrow)"/>
-    <line x1="880" y1="472" x2="918" y2="422" marker-end="url(#arrow)"/>
-    <line x1="880" y1="472" x2="918" y2="512" marker-end="url(#arrow)"/>
-    <line x1="880" y1="472" x2="1138" y2="472" marker-end="url(#arrow)"/>
-    <line x1="1100" y1="422" x2="1138" y2="472" marker-end="url(#arrow)"/>
+  <!-- ==================== bands (containers, drawn first) ==================== -->
+  <rect x="260" y="200" width="1130" height="80" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="275" y="218" class="band-label">L1 共享领域 / 契约</text>
+  <rect x="260" y="312" width="1130" height="198" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="275" y="330" class="band-label">L2 共享设施 / starter / 授权工具</text>
+  <rect x="260" y="560" width="1130" height="90" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="275" y="578" class="band-label">L3 业务库</text>
+  <rect x="260" y="690" width="1130" height="140" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="275" y="706" class="band-label">L4 运行模块</text>
+  <text x="1390" y="706" class="band-note" text-anchor="end">六个业务 service：业务库 + common·domain + job/seata starter（auth/system/workflow/office 另依赖 api-contract）</text>
+  <rect x="260" y="870" width="1130" height="70" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="275" y="888" class="band-label">L5 组合部署 / 示例</text>
+
+  <!-- ==================== edges: thin single deps (dependent -> dependency) ==================== -->
+  <g stroke="#94a3b8" stroke-width="1.2" fill="none" opacity="0.7">
+    <!-- L1 -> L0 -->
+    <line x1="460" y1="232" x2="560" y2="169" marker-end="url(#arrow)"/>
+    <line x1="860" y1="232" x2="760" y2="169" marker-end="url(#arrow)"/>
+    <!-- L2 intra: messaging -> persistence, integration -> remote -->
+    <path d="M 1048 346 L 1048 336 L 400 336 L 400 346" marker-end="url(#arrow)"/>
+    <path d="M 1264 346 L 1264 328 L 832 328 L 832 346" marker-end="url(#arrow)"/>
+    <line x1="660" y1="452" x2="650" y2="452" marker-end="url(#arrow)"/>
+    <!-- band3 -> common / domain (all six business libs) -->
+    <path d="M 260 600 L 100 600 L 100 150 L 517 150" marker-end="url(#arrow)"/>
+    <path d="M 280 610 L 130 610 L 130 252 L 297 252" marker-end="url(#arrow)"/>
+    <!-- band4 -> common / domain (all run modules) -->
+    <path d="M 260 740 L 160 740 L 160 138 L 517 138" marker-end="url(#arrow)"/>
+    <path d="M 280 750 L 170 750 L 170 240 L 297 240" marker-end="url(#arrow)"/>
+    <!-- service -> its business lib -->
+    <line x1="359" y1="706" x2="359" y2="640" marker-end="url(#arrow)"/>
+    <line x1="545" y1="706" x2="545" y2="640" marker-end="url(#arrow)"/>
+    <line x1="731" y1="706" x2="731" y2="640" marker-end="url(#arrow)"/>
+    <line x1="917" y1="706" x2="917" y2="640" marker-end="url(#arrow)"/>
+    <line x1="1103" y1="706" x2="1103" y2="640" marker-end="url(#arrow)"/>
+    <line x1="1289" y1="706" x2="1289" y2="640" marker-end="url(#arrow)"/>
+    <!-- boot-all -> six business libs -->
+    <path d="M 300 910 L 185 910 L 185 650" marker-end="url(#arrow)"/>
   </g>
 
-  <!-- L0 -->
-  <rect x="40" y="390" width="180" height="64" rx="8" fill="#4f46e5" opacity="0.1" stroke="#4f46e5" stroke-width="2"/>
-  <text x="130" y="416" class="box-title">apex-common</text>
-  <text x="130" y="436" class="box-desc">通用能力/上下文/限流</text>
-  <rect x="40" y="480" width="180" height="64" rx="8" fill="#4f46e5" opacity="0.1" stroke="#4f46e5" stroke-width="2"/>
-  <text x="130" y="506" class="box-title">apex-generator</text>
-  <text x="130" y="526" class="box-desc">代码生成 CLI</text>
+  <!-- ==================== edges: aggregated group arrows ==================== -->
+  <g stroke="#475569" stroke-width="2.4" fill="none" opacity="0.85">
+    <line x1="825" y1="312" x2="825" y2="284" marker-end="url(#arrowDark)"/>
+  </g>
+  <text x="840" y="303" class="band-note">5×设施 JAR → common + domain ｜ license/storage/job/seata starter → common</text>
 
-  <!-- L1 -->
-  <rect x="260" y="390" width="180" height="64" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="350" y="416" class="box-title">license-starter</text>
-  <text x="350" y="436" class="box-desc">授权门控 AutoConfig</text>
-  <rect x="260" y="480" width="180" height="64" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="350" y="506" class="box-title">apex-domain</text>
-  <text x="350" y="526" class="box-desc">领域模型/仓储接口</text>
+  <!-- corridor labels -->
+  <text transform="rotate(-90 88 420)" x="88" y="420" class="rail-label">六个业务库均直接依赖 common · domain</text>
+  <text transform="rotate(-90 146 480)" x="146" y="480" class="rail-label">运行模块亦直接依赖 common · domain</text>
+  <text transform="rotate(-90 199 780)" x="199" y="780" class="rail-label">boot-all → common · domain · api-contract · 六个业务库</text>
 
-  <!-- L2 -->
-  <rect x="480" y="340" width="180" height="64" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="570" y="366" class="box-title">license-tools</text>
-  <text x="570" y="386" class="box-desc">LicenseGenerator</text>
-  <rect x="480" y="440" width="180" height="64" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
-  <text x="570" y="466" class="box-title">apex-infrastructure</text>
-  <text x="570" y="486" class="box-desc">持久化/缓存/MQ/存储</text>
-  <rect x="480" y="540" width="180" height="64" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="570" y="566" class="box-title">apex-workflow</text>
-  <text x="570" y="586" class="box-desc">工作流引擎</text>
+  <!-- ==================== L0 ==================== -->
+  <rect x="520" y="110" width="360" height="56" rx="8" fill="#4f46e5" opacity="0.1" stroke="#4f46e5" stroke-width="2"/>
+  <text x="700" y="134" class="box-title">apex-common</text>
+  <text x="700" y="154" class="box-desc">通用能力 / 上下文 / 调度器 / 响应契约（无内部依赖）</text>
 
-  <!-- L3 -->
-  <rect x="700" y="440" width="180" height="64" rx="8" fill="#0891b2" opacity="0.14" stroke="#0891b2" stroke-width="2.5"/>
-  <text x="790" y="466" class="box-title">apex-system</text>
-  <text x="790" y="486" class="box-desc">应用服务编排</text>
+  <!-- ==================== L1 ==================== -->
+  <rect x="300" y="232" width="320" height="40" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="460" y="249" class="box-title">apex-domain</text>
+  <text x="460" y="264" class="box-desc">基础实体 · 通用事件 · 端口/Gateway 契约 · 依赖 common</text>
+  <rect x="700" y="232" width="320" height="40" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="860" y="249" class="box-title">apex-api-contract</text>
+  <text x="860" y="264" class="box-desc">跨服务内部 API 与 DTO · 依赖 common</text>
 
-  <!-- L4 -->
-  <rect x="920" y="390" width="180" height="64" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2.5"/>
-  <text x="1010" y="416" class="box-title">apex-system</text>
-  <text x="1010" y="436" class="box-desc">Handler/Router · Application</text>
-  <rect x="920" y="480" width="180" height="64" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2.5"/>
-  <text x="1010" y="506" class="box-title">apex-auth</text>
-  <text x="1010" y="526" class="box-desc">独立认证中心</text>
+  <!-- ==================== L2 row1: 能力 JAR ==================== -->
+  <rect x="300" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
+  <text x="400" y="363" class="box-title">infrastructure-persistence</text>
+  <text x="400" y="381" class="box-desc">持久化辅助 · common · domain</text>
+  <rect x="516" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
+  <text x="616" y="363" class="box-title">infrastructure-cache</text>
+  <text x="616" y="381" class="box-desc">同步缓存/分布式锁 · common · domain</text>
+  <rect x="732" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
+  <text x="832" y="363" class="box-title">infrastructure-remote</text>
+  <text x="832" y="381" class="box-desc">同步远程调用 · common · domain</text>
+  <rect x="948" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
+  <text x="1048" y="363" class="box-title">infrastructure-messaging</text>
+  <text x="1048" y="381" class="box-desc">消息/Outbox · common · domain · persistence</text>
+  <rect x="1164" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
+  <text x="1264" y="363" class="box-title">infrastructure-integration</text>
+  <text x="1264" y="381" class="box-desc">第三方集成 · common · domain · remote</text>
 
-  <!-- L5 -->
-  <rect x="1140" y="440" width="180" height="64" rx="8" fill="#475569" opacity="0.1" stroke="#475569" stroke-width="2.5"/>
-  <text x="1230" y="466" class="box-title">apex-example</text>
-  <text x="1230" y="486" class="box-desc">示例应用</text>
+  <!-- ==================== L2 row2: 兼容坐标 / starter / 工具 ==================== -->
+  <rect x="300" y="430" width="170" height="44" rx="8" fill="#d97706" opacity="0.14" stroke="#d97706" stroke-width="2.5"/>
+  <text x="385" y="447" class="box-title">apex-infrastructure</text>
+  <text x="385" y="465" class="box-desc">聚合五个能力 JAR（兼容坐标）</text>
+  <rect x="480" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="565" y="447" class="box-title">license-starter</text>
+  <text x="565" y="465" class="box-desc">授权门控 AutoConfig · common</text>
+  <rect x="660" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="745" y="447" class="box-title">license-tools</text>
+  <text x="745" y="465" class="box-desc">LicenseGenerator · license-starter</text>
+  <rect x="840" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="925" y="447" class="box-title">storage-starter</text>
+  <text x="925" y="465" class="box-desc">五后端对象存储 · common</text>
+  <rect x="1020" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="1105" y="447" class="box-title">job-starter</text>
+  <text x="1105" y="465" class="box-desc">XXL 执行器（默认禁用） · common</text>
+  <rect x="1200" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="1285" y="447" class="box-title">seata-starter</text>
+  <text x="1285" y="465" class="box-desc">AT/TCC/SAGA/XA · common</text>
 
-  <!-- legend -->
-  <rect x="40" y="650" width="1320" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="60" y="680" class="legend" font-weight="600">依赖要点</text>
-  <text x="60" y="706" class="legend">• apex-common 为全局基础，被 9 个模块依赖；apex-generator 独立（仅模板引擎，不依赖内部模块）。</text>
-  <text x="60" y="730" class="legend">• 依赖方向严格单向：common → domain → infrastructure → application → interfaces，无循环依赖。</text>
-  <text x="60" y="754" class="legend">• apex-workflow 直接依赖 domain/common（不依赖 application），由 apex-system 组合装配。</text>
-  <text x="60" y="778" class="legend">• apex-auth 复用 common/infrastructure/application，运行于独立 Spring ApplicationContext（AuthCenterApplication）。</text>
-  <text x="60" y="802" class="legend">• apex-system 为可运行入口（Application），聚合 application/infrastructure/domain/workflow/license-starter。</text>
-  <text x="60" y="826" class="legend">• apex-example 依赖 apex-system，作为脚手架示例独立启动（ExampleApplication）。</text>
+  <!-- ==================== L3 业务库 ==================== -->
+  <rect x="270" y="580" width="178" height="60" rx="8" fill="#0891b2" opacity="0.14" stroke="#0891b2" stroke-width="2.5"/>
+  <text x="359" y="598" class="box-title">apex-system</text>
+  <text x="359" y="614" class="box-desc">四层实现 + 专属 domain/infra</text>
+  <text x="359" y="630" class="box-desc">common·domain·契约·5×设施·license</text>
+  <rect x="456" y="580" width="178" height="60" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
+  <text x="545" y="598" class="box-title">apex-auth</text>
+  <text x="545" y="614" class="box-desc">认证领域与集成</text>
+  <text x="545" y="630" class="box-desc">common·domain·契约·infra-integration</text>
+  <rect x="642" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="731" y="598" class="box-title">apex-workflow</text>
+  <text x="731" y="614" class="box-desc">工作流引擎 · JdbcTemplate</text>
+  <text x="731" y="630" class="box-desc">common · domain</text>
+  <rect x="828" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="917" y="598" class="box-title">apex-file</text>
+  <text x="917" y="614" class="box-desc">文件领域 · 对象存储</text>
+  <text x="917" y="630" class="box-desc">common · domain · storage-starter</text>
+  <rect x="1014" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="1103" y="598" class="box-title">apex-office</text>
+  <text x="1103" y="614" class="box-desc">办公平台 · 站内信/WS</text>
+  <text x="1103" y="630" class="box-desc">common · domain</text>
+  <rect x="1200" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
+  <text x="1289" y="598" class="box-title">apex-integration</text>
+  <text x="1289" y="614" class="box-desc">connector · device 子域</text>
+  <text x="1289" y="630" class="box-desc">common·domain·persistence·remote</text>
 
-  <text x="700" y="878" class="note" text-anchor="middle">颜色：品牌 #4f46e5（基础）· 应用 #0891b2 · 领域 #059669 · 基础设施 #d97706 · 组合/交付 #6366f1/#475569</text>
+  <!-- ==================== L4 row1: 业务 service ==================== -->
+  <rect x="270" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="359" y="724" class="box-title">apex-system-service</text>
+  <text x="359" y="739" class="box-desc">运行 system 库 · Flyway 迁移</text>
+  <text x="359" y="751" class="box-desc">job/seata starter</text>
+  <rect x="456" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="545" y="724" class="box-title">apex-auth-service</text>
+  <text x="545" y="739" class="box-desc">运行 auth 库 · MFA/OAuth2</text>
+  <text x="545" y="751" class="box-desc">system 仅 test</text>
+  <rect x="642" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="731" y="724" class="box-title">apex-workflow-service</text>
+  <text x="731" y="739" class="box-desc">运行 workflow 库</text>
+  <text x="731" y="751" class="box-desc">job/seata starter</text>
+  <rect x="828" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="917" y="724" class="box-title">apex-file-service</text>
+  <text x="917" y="739" class="box-desc">运行 file 库</text>
+  <text x="917" y="751" class="box-desc">无 api-contract</text>
+  <rect x="1014" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="1103" y="724" class="box-title">apex-office-service</text>
+  <text x="1103" y="739" class="box-desc">运行 office 库 · 站内信</text>
+  <text x="1103" y="751" class="box-desc">gateway 仅 test</text>
+  <rect x="1200" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="1289" y="724" class="box-title">apex-integration-service</text>
+  <text x="1289" y="739" class="box-desc">运行 integration 库 · WebClient</text>
+  <text x="1289" y="751" class="box-desc">job/seata starter</text>
+
+  <!-- ==================== L4 row2: 网关与辅助服务 ==================== -->
+  <rect x="270" y="782" width="178" height="38" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="359" y="800" class="box-title">apex-gateway</text>
+  <text x="359" y="814" class="box-desc">WebFlux 网关 · common</text>
+  <rect x="456" y="782" width="178" height="38" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="545" y="800" class="box-title">apex-job-service</text>
+  <text x="545" y="814" class="box-desc">system 任务代理 · infra-remote</text>
+  <rect x="642" y="782" width="178" height="38" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
+  <text x="731" y="800" class="box-title">apex-masking-service</text>
+  <text x="731" y="814" class="box-desc">脱敏接口（启动配置） · common</text>
+
+  <!-- ==================== L5 ==================== -->
+  <rect x="300" y="890" width="340" height="40" rx="8" fill="#475569" opacity="0.1" stroke="#475569" stroke-width="2.5"/>
+  <text x="470" y="907" class="box-title">apex-boot-all</text>
+  <text x="470" y="924" class="box-desc">basic/示例档单进程装配 · common·domain·契约·六个业务库</text>
+  <rect x="700" y="890" width="300" height="40" rx="8" fill="#475569" opacity="0.1" stroke="#475569" stroke-width="2.5"/>
+  <text x="850" y="907" class="box-title">apex-example</text>
+  <text x="850" y="924" class="box-desc">common·domain·cache·integration·system（workflow test）</text>
+
+  <!-- ==================== 独立工具 ==================== -->
+  <text x="300" y="962" class="tools-label">独立工具（无内部生产依赖）</text>
+  <rect x="300" y="970" width="200" height="36" rx="8" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
+  <text x="400" y="992" class="box-title">apex-generator</text>
+  <rect x="520" y="970" width="220" height="36" rx="8" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
+  <text x="630" y="992" class="box-title">apex-tools-deployment</text>
+  <rect x="760" y="970" width="220" height="36" rx="8" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
+  <text x="870" y="992" class="box-title">apex-tools-build</text>
+
+  <!-- ==================== legend ==================== -->
+  <rect x="40" y="1020" width="1320" height="112" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="60" y="1044" class="legend" font-weight="600">依赖要点（依据各模块 pom.xml 与 AGENTS.md 模块边界核验）</text>
+  <text x="60" y="1066" class="legend">• 35 个 reactor 模块：共享基础/领域/契约 4（含服务父 POM apex-services-bom，仅 dependencyManagement，图中未单列）· 设施与 starter 11 · 业务库 6 · 运行模块 9 · 组合/示例 2 · 独立工具 3。</text>
+  <text x="60" y="1086" class="legend">• 框内文字列出该模块全部直接内部生产依赖；test 与 optional 依赖不计入箭头。</text>
+  <text x="60" y="1106" class="legend">• apex-common 被 27 个模块直接依赖，apex-domain 被 19 个；无循环依赖：共享层不依赖业务库，业务库不依赖运行模块。</text>
+  <text x="60" y="1126" class="legend">• 仅为 test scope 的依赖：auth-service→apex-system、office-service→apex-gateway、example→workflow；MQTT 客户端为 optional。apex-infrastructure 仅兼容旧坐标，聚合五个能力 JAR。</text>
 </svg>

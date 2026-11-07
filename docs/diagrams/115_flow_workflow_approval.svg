@@ -5,9 +5,9 @@
       <rdf:Description>
         <dc:title>Apex Scaffold 工作流审批业务流程图</dc:title>
         <dc:creator>Apex Team</dc:creator>
-        <dc:date>2026-10-05</dc:date>
-        <dc:version>1.3.1</dc:version>
-        <dc:description>工作流引擎端到端业务流：定义→实例→待办→审批/驳回/回退/转办/委派→挂起→超时处置</dc:description>
+        <dc:date>2026-11-06</dc:date>
+        <dc:version>1.4.0</dc:version>
+        <dc:description>工作流引擎端到端业务流：定义→实例（自动建首任务）→待办→审批/驳回/回退/转办/委派→挂起→独立超时处置（单链 DAG 约束）</dc:description>
       </rdf:Description>
     </rdf:RDF>
   </metadata>
@@ -38,7 +38,7 @@
 
   <rect width="1500" height="1060" fill="#ffffff"/>
   <text x="750" y="42" class="title">Apex Scaffold 工作流审批业务流程图</text>
-  <text x="750" y="66" class="subtitle">WorkflowService 命令编排 · 定义 → 实例 → 待办 → 审批动作 → 状态沉淀 · v1.3.1</text>
+  <text x="750" y="66" class="subtitle">WorkflowService 命令编排 · 定义 → 实例（自动建首任务）→ 待办 → 审批动作 → 状态沉淀 · v1.4.0</text>
 
   <!-- Lane headers -->
   <rect x="40" y="92" width="1420" height="30" rx="6" fill="#f1f5f9"/>
@@ -53,9 +53,9 @@
   <!-- ===== Column 1: 定义与发起 ===== -->
   <!-- node: create definition -->
   <rect x="70" y="140" width="400" height="66" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
-  <text x="270" y="166" class="node-title">创建工作流定义（DAG 模板）</text>
-  <text x="270" y="184" class="node-sub">workflow_code · version · node_config_json（nodes/edges）</text>
-  <text x="270" y="199" class="node-actor">WorkflowService.createWorkflowDefinition</text>
+  <text x="270" y="166" class="node-title">创建/发布工作流定义（单链 DAG）</text>
+  <text x="270" y="184" class="node-sub">workflow_code · version · dag_json（nodes/edges）</text>
+  <text x="270" y="199" class="node-actor">/api/v2/workflow-definitions · DRAFT→PUBLISHED→enable</text>
 
   <line x1="270" y1="206" x2="270" y2="234" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -63,27 +63,27 @@
   <rect x="70" y="236" width="400" height="80" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
   <text x="270" y="262" class="node-title">发起流程实例</text>
   <text x="270" y="280" class="node-sub">POST /api/v1/workflows/{workflowCode}/instances</text>
-  <text x="270" y="296" class="node-sub">findByCode → 创建 ProcessInstance(status=RUNNING)</text>
+  <text x="270" y="296" class="node-sub">findByCode 取已发布+启用最高版本 → 创建实例</text>
   <text x="270" y="311" class="node-actor">WorkflowService.startProcessInstance</text>
 
   <line x1="270" y1="316" x2="270" y2="344" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
   <!-- node: instance RUNNING -->
   <rect x="70" y="346" width="400" height="60" rx="7" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8"/>
-  <text x="270" y="372" class="node-title">流程实例 RUNNING</text>
-  <text x="270" y="390" class="node-sub">business_key · initiator_id · context_json · suspended=false</text>
+  <text x="270" y="372" class="node-title">流程实例 RUNNING · 自动创建首任务</text>
+  <text x="270" y="390" class="node-sub">business_key · initiator_id · form_data · current_node_key</text>
 
   <!-- note: no DAG auto-advance -->
-  <rect x="70" y="424" width="400" height="70" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5,3"/>
-  <text x="270" y="446" class="node-title" fill="#b91c1c">⚠ 当前实现：不自动建首节点任务</text>
-  <text x="270" y="464" class="node-sub">startProcessInstance 不解析 DAG / 不生成 Task</text>
-  <text x="270" y="480" class="node-sub">completeTask 不推进 currentNodeKey / 不置 COMPLETED</text>
+  <rect x="70" y="424" width="400" height="70" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.4" stroke-dasharray="5,3"/>
+  <text x="270" y="446" class="node-title" fill="#b91c1c">⚠ 实现约束：单链 DAG，非通用引擎</text>
+  <text x="270" y="464" class="node-sub">START→…→END 单链 · 非结束节点唯一后继</text>
+  <text x="270" y="480" class="node-sub">单办理人 SINGLE · approverType 仅指定用户/发起人</text>
 
   <!-- ===== Column 2: 任务与待办 ===== -->
   <rect x="530" y="140" width="340" height="72" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
   <text x="700" y="164" class="node-title">任务创建 / 分配（Task）</text>
-  <text x="700" y="182" class="node-sub">process_instance_id · node_key · assignee_id</text>
-  <text x="700" y="198" class="node-sub">status=PENDING · due_date · timeout_at</text>
+  <text x="700" y="182" class="node-sub">process_instance_id · node_code · assignee_id</text>
+  <text x="700" y="198" class="node-sub">status=PENDING · due_time · timeout_at/strategy</text>
 
   <rect x="530" y="236" width="340" height="80" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.6"/>
   <text x="700" y="260" class="node-title">查询我的待办</text>
@@ -95,7 +95,7 @@
 
   <rect x="530" y="346" width="340" height="66" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
   <text x="700" y="370" class="node-title">审批人处理任务</text>
-  <text x="700" y="388" class="node-sub">OR/AND 会签策略 · approverType/approverValue 解析</text>
+  <text x="700" y="388" class="node-sub">单办理人 SINGLE · approverType 指定用户/发起人</text>
   <text x="700" y="403" class="node-sub">taskId 作为命令入口键</text>
 
   <line x1="700" y1="212" x2="700" y2="236" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
@@ -105,16 +105,16 @@
   <rect x="930" y="140" width="290" height="272" rx="7" fill="#fdf2f8" stroke="#ec4899" stroke-width="1.8"/>
   <text x="1075" y="164" class="node-title">审批动作（WorkflowService）</text>
   <line x1="945" y1="176" x2="1205" y2="176" stroke="#fbcfe8" stroke-width="1"/>
-  <text x="945" y="200" class="node-sub" text-anchor="start">completeTask  → 任务 COMPLETED</text>
-  <text x="945" y="222" class="node-sub" text-anchor="start">rejectTask    → 实例 RUNNING→REJECTED</text>
-  <text x="945" y="244" class="node-sub" text-anchor="start">rollbackToNode→ 任务 ROLLED_BACK</text>
-  <text x="945" y="266" class="node-sub" text-anchor="start">transferTask  → 办理人变更</text>
+  <text x="945" y="200" class="node-sub" text-anchor="start">completeTask  → COMPLETED→建下一任务/实例完成</text>
+  <text x="945" y="222" class="node-sub" text-anchor="start">rejectTask    → 任务/实例 REJECTED（无 REST 入口）</text>
+  <text x="945" y="244" class="node-sub" text-anchor="start">rollbackToNode→ ROLLED_BACK · 新建目标节点任务</text>
+  <text x="945" y="266" class="node-sub" text-anchor="start">transferTask  → 办理人永久变更（transferredFrom）</text>
   <text x="945" y="288" class="node-sub" text-anchor="start">delegateTask  → 新建 DELEGATED 任务</text>
   <text x="945" y="310" class="node-sub" text-anchor="start">suspendInstance→ 实例 SUSPENDED</text>
   <text x="945" y="332" class="node-sub" text-anchor="start">resumeInstance → 实例恢复 RUNNING</text>
   <text x="945" y="360" class="node-actor">@OperationLog 审计 · 多租户隔离</text>
-  <text x="945" y="382" class="node-sub" text-anchor="start">REST：/api/workflow/tasks/{taskId}/…</text>
-  <text x="945" y="400" class="node-sub" text-anchor="start">/api/workflow/instances/{id}/…</text>
+  <text x="945" y="382" class="node-sub" text-anchor="start">REST：/api/v1/workflows/tasks/{taskId}/complete</text>
+  <text x="945" y="400" class="node-sub" text-anchor="start">/api/workflow/tasks|instances/{id}/…（转办/委派等）</text>
 
   <line x1="870" y1="260" x2="930" y2="240" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -125,8 +125,8 @@
   <text x="1365" y="198" class="node-sub">RUNNING</text>
   <text x="1365" y="218" class="node-sub">SUSPENDED</text>
   <text x="1365" y="238" class="node-sub">REJECTED</text>
-  <text x="1365" y="258" class="node-sub">COMPLETED / TERMINATED</text>
-  <text x="1365" y="278" class="node-sub" fill="#b91c1c">（后二者仅声明未实现）</text>
+  <text x="1365" y="258" class="node-sub">COMPLETED</text>
+  <text x="1365" y="278" class="node-sub" fill="#b91c1c">（TERMINATED 未核实置值路径）</text>
 
   <line x1="1220" y1="220" x2="1270" y2="215" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -137,8 +137,8 @@
   <text x="1365" y="384" class="node-sub">COMPLETED</text>
   <text x="1365" y="404" class="node-sub">REJECTED</text>
   <text x="1365" y="424" class="node-sub">ROLLED_BACK</text>
-  <text x="1365" y="444" class="node-sub">DELEGATED · CANCELLED</text>
-  <text x="1365" y="466" class="node-sub" fill="#b91c1c">（CANCELLED 未实现）</text>
+  <text x="1365" y="444" class="node-sub">DELEGATED</text>
+  <text x="1365" y="466" class="node-sub" fill="#b91c1c">（CANCELLED 未核实置值路径）</text>
 
   <line x1="1220" y1="400" x2="1270" y2="398" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -148,25 +148,25 @@
 
   <rect x="60" y="560" width="240" height="90" rx="7" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
   <text x="180" y="584" class="node-title">① 扫描超时任务</text>
-  <text x="180" y="604" class="node-sub">findPendingTasks()</text>
-  <text x="180" y="620" class="node-sub">status=PENDING AND timeout_at</text>
-  <text x="180" y="636" class="node-sub">timeoutAt &lt; now 才处理</text>
+  <text x="180" y="604" class="node-sub">findPendingTasks() 跨租户扫描</text>
+  <text x="180" y="620" class="node-sub">timeoutAt &lt;= now · 串行处置</text>
+  <text x="180" y="636" class="node-sub">按任务持久租户恢复上下文</text>
 
   <line x1="300" y1="605" x2="360" y2="605" stroke="#d97706" stroke-width="1.6" marker-end="url(#a)"/>
 
   <rect x="360" y="560" width="300" height="90" rx="7" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
   <text x="510" y="584" class="node-title">② 按 timeoutStrategy 分派</text>
-  <text x="510" y="604" class="node-sub">ESCALATE   → transferTask(→管理员)</text>
-  <text x="510" y="620" class="node-sub">AUTO_COMPLETE → completeTask</text>
-  <text x="510" y="636" class="node-sub">NOTIFY     → 仅通知（日志）</text>
+  <text x="510" y="604" class="node-sub">ESCALATE → 转办固定用户 1L</text>
+  <text x="510" y="620" class="node-sub">AUTO_COMPLETE → 仅完成任务（不推进）</text>
+  <text x="510" y="636" class="node-sub">NOTIFY → 发布校验禁止 · 仅日志</text>
 
   <line x1="660" y1="605" x2="720" y2="605" stroke="#d97706" stroke-width="1.6" marker-end="url(#a)"/>
 
   <rect x="720" y="560" width="300" height="90" rx="7" fill="#ffffff" stroke="#d97706" stroke-width="1.6"/>
   <text x="870" y="584" class="node-title">③ 处置结果</text>
-  <text x="870" y="604" class="node-sub">任务 COMPLETED / 转办 / 通知</text>
-  <text x="870" y="620" class="node-sub">timeout_handled 字段设计意图标记</text>
-  <text x="870" y="636" class="node-sub" fill="#b91c1c">（当前未写回，靠状态变更去重）</text>
+  <text x="870" y="604" class="node-sub">handleTimeoutTask(expected) CAS</text>
+  <text x="870" y="620" class="node-sub">匹配 ID+租户+PENDING+版本</text>
+  <text x="870" y="636" class="node-sub">+ 快照 assignee/timeoutAt/strategy</text>
 
   <line x1="1020" y1="605" x2="1080" y2="605" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ag)"/>
 
@@ -177,11 +177,11 @@
   <text x="1260" y="636" class="node-sub">getTrend(days) 按日发起/完成趋势</text>
 
   <!-- Footer notes -->
-  <text x="60" y="712" class="note" style="font-weight:600">关键业务规则与风险提示：</text>
-  <text x="60" y="734" class="note">1. 状态以字符串表达：实例 RUNNING/COMPLETED/REJECTED/SUSPENDED/TERMINATED；任务 PENDING/COMPLETED/REJECTED/ROLLED_BACK/DELEGATED/CANCELLED（其中 CANCELLED、TERMINATED、实例 COMPLETED 仅在 Javadoc 声明，无代码路径置值）。</text>
-  <text x="60" y="756" class="note">2. rejectTask 曾以 taskId 误当 processInstanceId 查询实例，且 ApprovalRecord 模型/仓储具备但服务未写入（comment 仅日志）；挂起后 completeTask 未校验实例 SUSPENDED，挂起阻断审批未真正生效。</text>
-  <text x="60" y="778" class="note">3. 转办 transferTask=所有权永久转移（transferredFrom 记录原办理人）；委派 delegateTask=临时转移，新建 DELEGATED 任务而原任务保持 PENDING。回退 rollbackToNode 会新建目标节点 PENDING 任务。</text>
-  <text x="60" y="800" class="note">4. 当前引擎为“状态标记 + 单表 CRUD”轻量骨架，非完整 DAG 驱动；DAG 自动流转（节点→审批人解析→自动建单）为待补能力。</text>
+  <text x="60" y="712" class="note" style="font-weight:600">关键业务规则与提示：</text>
+  <text x="60" y="734" class="note">1. 状态：实例 RUNNING/COMPLETED/REJECTED/SUSPENDED 均有代码路径，TERMINATED 仅 Javadoc 声明；任务 PENDING/COMPLETED/REJECTED/ROLLED_BACK/DELEGATED 有路径，CANCELLED 未核实到置值路径。</text>
+  <text x="60" y="756" class="note">2. completeTask 在同一 JDBC 事务内完成任务、校验实例 RUNNING、解析 DAG 推进 currentNodeKey 或置实例 COMPLETED；非 RUNNING 时整体回滚。rejectTask 按 processInstanceId 查实例，但未暴露普通 REST 入口；ApprovalRecord 写入未核实。</text>
+  <text x="60" y="778" class="note">3. transferTask=所有权永久转移（transferredFrom 记录原办理人）；delegateTask=新建 DELEGATED、原任务保持 PENDING；rollbackToNode 新建目标节点 PENDING 任务，未校验前置关系、未更新实例 currentNodeKey。</text>
+  <text x="60" y="800" class="note">4. 引擎支持定义解析与自动流转，但仅限单链 DAG、非结束节点唯一后继、单办理人（SINGLE）；超时 ESCALATE 转办固定用户 1L，AUTO_COMPLETE 不推进节点，NOTIFY 定义不可发布。</text>
 
   <!-- Legend -->
   <line x1="60" y1="830" x2="110" y2="830" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#a)"/>
@@ -189,7 +189,7 @@
   <line x1="220" y1="830" x2="270" y2="830" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="4,3" marker-end="url(#ag)"/>
   <text x="280" y="834" class="legend">关联/查询</text>
   <line x1="400" y1="830" x2="450" y2="830" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5,3"/>
-  <text x="460" y="834" class="legend">实现缺口/风险</text>
+  <text x="460" y="834" class="legend">实现约束/提示</text>
   <rect x="600" y="820" width="14" height="14" rx="3" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.4"/>
   <text x="622" y="834" class="legend">定义/发起</text>
   <rect x="720" y="820" width="14" height="14" rx="3" fill="#ecfdf5" stroke="#059669" stroke-width="1.4"/>
@@ -199,5 +199,5 @@
   <rect x="920" y="820" width="14" height="14" rx="3" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
   <text x="942" y="834" class="legend">处置/状态</text>
 
-  <text x="750" y="880" class="note" text-anchor="middle">数据源：apex-workflow（application/service/WorkflowService · scheduler/WorkflowTimeoutHandler · query/WorkflowQueryService &amp; WorkflowStatisticsService）、apex-system（router/WorkflowRouter · handler/WorkflowHandler）</text>
+  <text x="750" y="880" class="note" text-anchor="middle">数据源：apex-workflow（application/service/WorkflowService · scheduler/WorkflowTimeoutHandler · query/WorkflowQueryService &amp; WorkflowStatisticsService）、apex-workflow-service（router/WorkflowRouter · handler/WorkflowHandler）</text>
 </svg>

@@ -1,58 +1,164 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+%% 模块依赖关系图（35 个 Maven 模块）· 数据源：各模块 pom.xml（生产 scope 直接依赖）· v1.3.1
+%% 与 95_module_dependency_graph.svg 同源维护：先改本文件，再同步 SVG。
 flowchart LR
-    subgraph C["apex-common L0"]
-        C1["通用能力 / 上下文 / 限流算法"]
-        GEN["apex-generator (独立)"]
+    subgraph L0["L0 共享基础"]
+        COMMON["apex-common<br/>通用能力/上下文/调度器（无内部依赖）"]
     end
 
-    subgraph L1["L1"]
-        LS["license-starter<br/>授权门控 AutoConfig"]
-        D["apex-domain<br/>领域模型 / 仓储接口"]
+    subgraph L1["L1 共享领域 / 契约"]
+        DOMAIN["apex-domain<br/>基础实体/事件/端口契约 · common"]
+        CONTRACT["apex-api-contract<br/>跨服务内部 API 与 DTO · common"]
     end
 
-    subgraph L2["L2"]
-        LT["license-tools<br/>LicenseGenerator"]
-        I["apex-infrastructure<br/>持久化/缓存/MQ/存储"]
-        W["apex-workflow<br/>工作流引擎"]
+    subgraph L2["L2 共享设施 / starter / 授权工具"]
+        PERSIST["apex-infrastructure-persistence<br/>common · domain"]
+        CACHE["apex-infrastructure-cache<br/>common · domain"]
+        REMOTE["apex-infrastructure-remote<br/>common · domain"]
+        MSG["apex-infrastructure-messaging<br/>common · domain · persistence"]
+        INTEG["apex-infrastructure-integration<br/>common · domain · remote"]
+        COMPAT["apex-infrastructure<br/>聚合五个能力 JAR（仅兼容旧坐标）"]
+        LIC_S["apex-license-spring-boot-starter<br/>common"]
+        LIC_T["apex-license-tools<br/>license-starter"]
+        STO_S["apex-storage-spring-boot-starter<br/>common"]
+        JOB_S["apex-job-spring-boot-starter<br/>common"]
+        SEA_S["apex-seata-spring-boot-starter<br/>common"]
     end
 
-    subgraph L3["L3"]
-        APP["apex-application<br/>应用服务编排"]
+    subgraph L3["L3 业务库"]
+        SYSTEM["apex-system<br/>common · domain · api-contract · 5×设施JAR · license-starter"]
+        AUTH["apex-auth<br/>common · domain · api-contract · infra-integration"]
+        WORKFLOW["apex-workflow<br/>common · domain"]
+        FILE["apex-file<br/>common · domain · storage-starter"]
+        OFFICE["apex-office<br/>common · domain"]
+        INTEGRATION["apex-integration<br/>common · domain · persistence · remote"]
     end
 
-    subgraph L4["L4"]
-        IF["apex-interfaces<br/>Handler/Router · Application"]
-        AUTH["apex-auth-center<br/>独立认证中心"]
+    subgraph L4["L4 运行模块（业务 service = 业务库 + common·domain + job/seata starter）"]
+        SYS_SVC["apex-system-service<br/>system（另依赖 api-contract）"]
+        AUTH_SVC["apex-auth-service<br/>auth（另依赖 api-contract·cache·messaging·integration；system 仅 test）"]
+        WF_SVC["apex-workflow-service<br/>workflow（另依赖 api-contract）"]
+        FILE_SVC["apex-file-service<br/>file（无 api-contract）"]
+        OFF_SVC["apex-office-service<br/>office（另依赖 api-contract；gateway 仅 test）"]
+        INT_SVC["apex-integration-service<br/>integration"]
+        GW["apex-gateway<br/>common"]
+        JOB_SVC["apex-job-service<br/>infrastructure-remote"]
+        MASK["apex-masking-service<br/>common"]
     end
 
-    subgraph L5["L5"]
-        EX["apex-example<br/>示例应用"]
+    subgraph L5["L5 组合部署 / 示例"]
+        BOOT["apex-boot-all<br/>common · domain · api-contract · 六个业务库"]
+        EXAMPLE["apex-example<br/>common · domain · cache · integration · system（workflow 仅 test）"]
     end
 
-    C1 --> LS
-    C1 --> D
-    LS --> LT
-    C1 --> I
-    D --> I
-    C1 --> W
-    D --> W
-    C1 --> APP
-    D --> APP
-    I --> APP
-    W --> APP
-    I --> IF
-    APP --> IF
-    D --> IF
-    W --> IF
-    LS --> IF
-    C1 --> AUTH
-    I --> AUTH
-    APP --> AUTH
-    C1 --> EX
-    D --> EX
-    APP --> EX
-    I --> EX
-    IF --> EX
+    TOOLS["独立工具（无内部生产依赖）：<br/>apex-generator · apex-tools-deployment · apex-tools-build"]
 
-    NOTE["依赖方向严格单向：common → domain → infrastructure → application → interfaces，无循环依赖；apex-generator 独立不依赖内部模块"]
-    I -.-> NOTE
+    DOMAIN --> COMMON
+    CONTRACT --> COMMON
+
+    PERSIST --> DOMAIN
+    PERSIST --> COMMON
+    CACHE --> DOMAIN
+    CACHE --> COMMON
+    REMOTE --> DOMAIN
+    REMOTE --> COMMON
+    MSG --> DOMAIN
+    MSG --> COMMON
+    MSG --> PERSIST
+    INTEG --> DOMAIN
+    INTEG --> COMMON
+    INTEG --> REMOTE
+    COMPAT -.-> PERSIST
+    COMPAT -.-> CACHE
+    COMPAT -.-> REMOTE
+    COMPAT -.-> MSG
+    COMPAT -.-> INTEG
+    LIC_T --> LIC_S
+    LIC_S --> COMMON
+    STO_S --> COMMON
+    JOB_S --> COMMON
+    SEA_S --> COMMON
+
+    SYSTEM --> COMMON
+    SYSTEM --> DOMAIN
+    SYSTEM --> CONTRACT
+    SYSTEM --> PERSIST
+    SYSTEM --> CACHE
+    SYSTEM --> REMOTE
+    SYSTEM --> MSG
+    SYSTEM --> INTEG
+    SYSTEM --> LIC_S
+    AUTH --> COMMON
+    AUTH --> DOMAIN
+    AUTH --> CONTRACT
+    AUTH --> INTEG
+    WORKFLOW --> COMMON
+    WORKFLOW --> DOMAIN
+    FILE --> COMMON
+    FILE --> DOMAIN
+    FILE --> STO_S
+    OFFICE --> COMMON
+    OFFICE --> DOMAIN
+    INTEGRATION --> COMMON
+    INTEGRATION --> DOMAIN
+    INTEGRATION --> PERSIST
+    INTEGRATION --> REMOTE
+
+    SYS_SVC --> SYSTEM
+    SYS_SVC --> COMMON
+    SYS_SVC --> DOMAIN
+    SYS_SVC --> CONTRACT
+    SYS_SVC --> JOB_S
+    SYS_SVC --> SEA_S
+    AUTH_SVC --> AUTH
+    AUTH_SVC --> COMMON
+    AUTH_SVC --> DOMAIN
+    AUTH_SVC --> CONTRACT
+    AUTH_SVC --> CACHE
+    AUTH_SVC --> MSG
+    AUTH_SVC --> INTEG
+    AUTH_SVC --> JOB_S
+    AUTH_SVC --> SEA_S
+    WF_SVC --> WORKFLOW
+    WF_SVC --> COMMON
+    WF_SVC --> DOMAIN
+    WF_SVC --> CONTRACT
+    WF_SVC --> JOB_S
+    WF_SVC --> SEA_S
+    FILE_SVC --> FILE
+    FILE_SVC --> COMMON
+    FILE_SVC --> DOMAIN
+    FILE_SVC --> JOB_S
+    FILE_SVC --> SEA_S
+    OFF_SVC --> OFFICE
+    OFF_SVC --> COMMON
+    OFF_SVC --> DOMAIN
+    OFF_SVC --> CONTRACT
+    OFF_SVC --> JOB_S
+    OFF_SVC --> SEA_S
+    INT_SVC --> INTEGRATION
+    INT_SVC --> COMMON
+    INT_SVC --> DOMAIN
+    INT_SVC --> JOB_S
+    INT_SVC --> SEA_S
+    GW --> COMMON
+    JOB_SVC --> REMOTE
+    MASK --> COMMON
+
+    BOOT --> COMMON
+    BOOT --> DOMAIN
+    BOOT --> CONTRACT
+    BOOT --> SYSTEM
+    BOOT --> AUTH
+    BOOT --> WORKFLOW
+    BOOT --> FILE
+    BOOT --> OFFICE
+    BOOT --> INTEGRATION
+    EXAMPLE --> COMMON
+    EXAMPLE --> DOMAIN
+    EXAMPLE --> CACHE
+    EXAMPLE --> INTEG
+    EXAMPLE --> SYSTEM
+
+    NOTE["test scope 未计入：auth-service→system、office-service→gateway、example→workflow；MQTT 客户端 optional；无循环依赖"]
+    TOOLS -.-> NOTE

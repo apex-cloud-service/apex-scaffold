@@ -22,51 +22,50 @@
   <rect x="40" y="92" width="430" height="740" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
   <rect x="40" y="92" width="430" height="40" rx="10" fill="#0891b2"/>
   <text x="60" y="118" class="grp">包结构（com.apex.scaffold.application.*）</text>
-  <text x="60" y="148" class="code">├─ service / service.impl</text>
-  <text x="60" y="170" class="code">│  ├─ service.auth / service.login</text>
-  <text x="60" y="192" class="code">├─ office / office.approval / office.message</text>
-  <text x="60" y="214" class="code">│  └─ office.approval.command / office.command</text>
-  <text x="60" y="236" class="code">├─ dto / dto.request / dto.admin</text>
-  <text x="60" y="258" class="code">│  └─ dto.data / dto.log / dto.search</text>
-  <text x="60" y="280" class="code">├─ assembler / factory</text>
-  <text x="60" y="302" class="code">├─ guard / security / support / support.sso</text>
-  <text x="60" y="324" class="code">├─ event / listener</text>
-  <text x="60" y="346" class="code">├─ job / scheduler</text>
-  <text x="60" y="368" class="code">├─ workflow / config / util</text>
+  <text x="60" y="148" class="code">├─ service（扁平用例 + service.impl）</text>
+  <text x="60" y="170" class="code">│  ├─ service.auth（认证票据/注册渠道）</text>
+  <text x="60" y="192" class="code">│  └─ service.login（登录策略族）</text>
+  <text x="60" y="214" class="code">├─ dto / dto.admin / dto.internal / dto.log</text>
+  <text x="60" y="236" class="code">│  └─ dto.search / dto.usage</text>
+  <text x="60" y="258" class="code">├─ assembler / factory</text>
+  <text x="60" y="280" class="code">├─ security / support / support.sso</text>
+  <text x="60" y="302" class="code">├─ event / listener</text>
+  <text x="60" y="324" class="code">├─ job / scheduler</text>
+  <text x="60" y="346" class="code">├─ capability / openplatform / config</text>
+  <text x="60" y="374" class="note">注：office / workflow 子域已迁至独立 apex-office、apex-workflow 库</text>
 
   <text x="60" y="416" class="legend" font-weight="600">职责定位</text>
   <text x="60" y="442" class="box-desc">• 编排领域对象完成用例（事务边界在此）</text>
-  <text x="60" y="464" class="box-desc">• 提供应用服务接口供接口层调用</text>
-  <text x="60" y="486" class="box-desc">• DTO 转换 / 装配（assembler）</text>
-  <text x="60" y="508" class="box-desc">• 权限守卫 guard、登录/认证编排</text>
+  <text x="60" y="464" class="box-desc">• 提供应用服务供 interfaces 包调用</text>
+  <text x="60" y="486" class="box-desc">• DTO 转换 / 装配（assembler / factory）</text>
+  <text x="60" y="508" class="box-desc">• 登录策略与认证票据编排（service.auth / service.login）</text>
   <text x="60" y="530" class="box-desc">• 无 Web 细节，不直接暴露 HTTP</text>
 
   <text x="60" y="578" class="legend" font-weight="600">依赖</text>
-  <text x="60" y="604" class="box-desc">→ 依赖 apex-domain + apex-common + apex-infrastructure</text>
-  <text x="60" y="626" class="box-desc">← 被 apex-system / apex-auth 依赖</text>
-  <text x="60" y="648" class="box-desc">    （依赖深度 L3）</text>
+  <text x="60" y="604" class="box-desc">→ 同库 domain 包 + 共享 apex-domain / apex-common</text>
+  <text x="60" y="626" class="box-desc">→ 模块级随 apex-system 依赖 api-contract、五个 infrastructure 能力 JAR、license-starter</text>
+  <text x="60" y="648" class="box-desc">← 调用方：apex-system interfaces 包 / apex-system-service 装配扫描</text>
 
   <!-- right: use cases -->
   <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="520" y="120" class="box-title" font-size="14">用例编排（service）</text>
   <rect x="520" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
   <text x="533" y="158" class="box-title">核心业务</text>
-  <text x="533" y="178" class="code">service / service.impl</text>
-  <text x="533" y="196" class="box-desc">用户/角色/菜单/租户用例</text>
-  <text x="533" y="214" class="box-desc">工作流审批编排</text>
+  <text x="533" y="178" class="code">service（扁平）+ service.impl</text>
+  <text x="533" y="196" class="box-desc">用户/角色/菜单/租户/字典用例</text>
+  <text x="533" y="214" class="box-desc">配置/日志/代码生成/SSO 用例</text>
   <text x="533" y="232" class="code">事务边界（@Transactional）</text>
   <text x="533" y="258" class="box-title">认证编排</text>
   <text x="533" y="278" class="code">service.auth / service.login</text>
-  <text x="533" y="296" class="box-desc">登录/授权/SSO 用例</text>
+  <text x="533" y="296" class="box-desc">登录策略：密码/短信/微信</text>
   <rect x="800" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
-  <text x="813" y="158" class="box-title">办公协同</text>
-  <text x="813" y="178" class="code">office / office.approval</text>
-  <text x="813" y="196" class="code">office.approval.command</text>
-  <text x="813" y="214" class="code">office.command / office.message</text>
-  <text x="813" y="232" class="box-desc">命令对象 + 用例服务</text>
-  <text x="813" y="258" class="box-title">支撑</text>
-  <text x="813" y="278" class="code">support / support.sso</text>
-  <text x="813" y="296" class="box-desc">SSO 会话与票据编排</text>
+  <text x="813" y="158" class="box-title">开放平台</text>
+  <text x="813" y="178" class="code">openplatform</text>
+  <text x="813" y="196" class="box-desc">OpenAppAdminService 等</text>
+  <text x="813" y="214" class="box-desc">开放应用管理与 Scope 注册</text>
+  <text x="813" y="240" class="box-title">能力度量</text>
+  <text x="813" y="260" class="code">capability（CapabilityCatalog）</text>
+  <text x="813" y="280" class="box-desc">能力目录与用量上报</text>
   <rect x="1080" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
   <text x="1093" y="158" class="box-title">调度 / 事件</text>
   <text x="1093" y="178" class="code">job / scheduler</text>
@@ -74,16 +73,16 @@
   <text x="1093" y="214" class="box-desc">定时任务与事件处理</text>
   <text x="1093" y="232" class="box-desc">触发领域用例</text>
   <text x="1093" y="258" class="box-title">安全 / 守卫</text>
-  <text x="1093" y="278" class="code">guard / security</text>
-  <text x="1093" y="296" class="box-desc">权限与数据范围守卫</text>
+  <text x="1093" y="278" class="code">security · TenantGuard</text>
+  <text x="1093" y="296" class="box-desc">租户与数据范围守卫</text>
 
   <rect x="500" y="362" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="520" y="390" class="box-title" font-size="14">数据传输与装配</text>
   <rect x="520" y="406" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
   <text x="533" y="428" class="box-title">DTO</text>
-  <text x="533" y="448" class="code">dto / dto.request</text>
-  <text x="533" y="468" class="code">dto.admin / dto.data</text>
-  <text x="533" y="488" class="code">dto.log / dto.search</text>
+  <text x="533" y="448" class="code">dto（扁平请求/响应）</text>
+  <text x="533" y="468" class="code">dto.admin / dto.internal</text>
+  <text x="533" y="488" class="code">dto.log / dto.search / dto.usage</text>
   <text x="533" y="514" class="box-title">应用层入参/出参</text>
   <text x="533" y="534" class="box-desc">与 interfaces 层 DTO 解耦</text>
   <text x="533" y="552" class="box-desc">按域拆分子包</text>
@@ -96,23 +95,23 @@
   <text x="813" y="534" class="code">factory</text>
   <text x="813" y="552" class="box-desc">复杂对象构造封装</text>
   <rect x="1080" y="406" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
-  <text x="1093" y="428" class="box-title">工作流编排</text>
-  <text x="1093" y="448" class="code">workflow</text>
-  <text x="1093" y="468" class="box-desc">应用层工作流用例</text>
-  <text x="1093" y="488" class="box-desc">与 apex-workflow 协作</text>
-  <text x="1093" y="514" class="box-title">配置/工具</text>
-  <text x="1093" y="534" class="code">config / util</text>
+  <text x="1093" y="428" class="box-title">支撑</text>
+  <text x="1093" y="448" class="code">support / support.sso</text>
+  <text x="1093" y="468" class="box-desc">SSO 票据 / 连接池 / 元数据</text>
+  <text x="1093" y="488" class="box-desc">代码模板引擎 / 类型映射</text>
+  <text x="1093" y="514" class="box-title">配置</text>
+  <text x="1093" y="534" class="code">config</text>
   <text x="1093" y="552" class="box-desc">应用层装配配置</text>
 
   <rect x="500" y="632" width="860" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="520" y="660" class="box-title" font-size="14">设计约束</text>
   <text x="520" y="690" class="box-desc">1. 事务边界置于应用服务，领域层保持无事务语义。</text>
-  <text x="520" y="718" class="box-desc">2. 不引入 WebFlux/Web 类型，保持对传输协议无感知。</text>
+  <text x="520" y="718" class="box-desc">2. 沿用 Reactor 响应式（Mono/Flux）与 WebClient 外呼，不承载 HTTP 路由与协议适配。</text>
   <text x="520" y="746" class="box-desc">3. 用例服务只编排、不实现领域规则，规则下沉至 domain。</text>
   <text x="1040" y="660" class="box-title" font-size="14">典型引用方</text>
-  <text x="1040" y="690" class="box-desc">apex-system（REST/Router 调用）</text>
-  <text x="1040" y="718" class="box-desc">apex-auth（复用认证用例）</text>
-  <text x="1040" y="746" class="note">依赖深度 L3，位于 domain/infra 之上、interfaces 之下</text>
+  <text x="1040" y="690" class="box-desc">apex-system interfaces 包（Router/Handler 调用）</text>
+  <text x="1040" y="718" class="box-desc">apex-system-service（运行装配扫描）</text>
+  <text x="1040" y="746" class="note">office/workflow 用例已拆至独立 apex-office / apex-workflow 库</text>
 
-  <text x="700" y="872" class="note" text-anchor="middle">apex-system 承载用例编排与事务边界，是领域能力对外的应用门面</text>
+  <text x="700" y="872" class="note" text-anchor="middle">apex-system 的 application 包承载 system 域用例编排与事务边界，是领域能力对外的应用门面；随 apex-system 库发布</text>
 </svg>

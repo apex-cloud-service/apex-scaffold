@@ -18,8 +18,8 @@
     <marker id="triangle" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path d="M 0 1 L 11 6 L 0 11 z" fill="#ffffff" stroke="#4338ca"/></marker>
   </defs>
   <rect width="1400" height="900" fill="#fff"/>
-  <text x="700" y="38" class="title">UML 类图：apex-domain 核心聚合基类与会话实体</text>
-  <text x="700" y="60" class="subtitle">com.apex.scaffold.domain.model · DDD 领域基类 · 逻辑删除 / 乐观锁 / 时间戳 · v1.3.1</text>
+  <text x="700" y="38" class="title">UML 类图：核心领域基类与持久化基类（含示例聚合根）</text>
+  <text x="700" y="60" class="subtitle">apex-domain BaseEntity · apex-common BasePO · 逻辑删除 / 乐观锁 / 时间戳 · v1.4.0</text>
 
   <!-- Domain layer package boundary -->
   <rect x="20" y="84" width="800" height="700" rx="10" fill="#4338ca" opacity="0.05" stroke="#4338ca" stroke-width="1.5" stroke-dasharray="6 4"/>
@@ -76,7 +76,7 @@
   <text x="464" y="454" class="field">- createdAt: LocalDateTime</text>
   <text x="464" y="470" class="field">- updatedAt: LocalDateTime</text>
   <line x1="450" y1="480" x2="790" y2="480" stroke="#c7d2fe"/>
-  <text x="464" y="498" class="field">@Data · 参考示例骨架</text>
+  <text x="464" y="498" class="field">@Data · 示例骨架（实际聚合根在各业务库 domain 包）</text>
 
   <!-- note box in domain -->
   <rect x="450" y="536" width="340" height="220" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>

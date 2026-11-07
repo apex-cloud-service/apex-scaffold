@@ -34,6 +34,8 @@ k8s
 !apex-office-service/target/
 !apex-file-service/target/
 !apex-integration-service/target/
+!apex-job-service/target/
+!apex-masking-service/target/
 !apex-gateway/target/apex-gateway-*.jar
 !apex-system-service/target/apex-system-service-*.jar
 !apex-auth-service/target/apex-auth-service-*.jar
@@ -41,3 +43,5 @@ k8s
 !apex-office-service/target/apex-office-service-*.jar
 !apex-file-service/target/apex-file-service-*.jar
 !apex-integration-service/target/apex-integration-service-*.jar
+!apex-job-service/target/apex-job-service-*.jar
+!apex-masking-service/target/apex-masking-service-*.jar

@@ -1,41 +1,41 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
   subgraph IF["接口层 interfaces (apex-system)"]
-    I1["router · Handler 路由注册（WebFlux 函数式）"]
-    I2["handler · 用户/角色/菜单/部门/字典/配置/任务 Handler + office 子域 Handler"]
-    I3["aspect · RequirePermissionAspect · OperationLogAspect · DataScopeAspect"]
-    I4["security · 安全配置与过滤器"]
+    I1["router · 30+ Router（WebFlux 函数式）"]
+    I2["handler · 扁平 Handler：用户/角色/菜单/部门/字典/配置/任务/OAuth2/SSO/开放应用/内部接口等"]
+    I3["aspect · RequirePermission · OperationLog · DataScope · IdempotentApi · Tenant 等切面"]
+    I4["security · JwtAuthenticationFilter / TokenVerifier / OAuth2ResourceServerFilter"]
     I5["governance · lifecycle · platform(compose/kubernetes/standalone)"]
-    I6["monitor · dashboard · metrics"]
-    I7["config · exception · filter"]
+    I6["monitor · dashboard · health · metrics"]
+    I7["config · exception · filter · dto(internal/monitor)"]
   end
 
   subgraph APP["应用层 application"]
-    A1["service / service.impl / service.auth / service.login · 用例编排（事务边界）"]
-    A2["office · approval / message / command · 办公协同子域用例"]
+    A1["service / impl · auth · login · 用例编排（事务边界）"]
+    A2["dto · admin / internal / log / search / usage"]
     A3["assembler · MapStruct DTO↔Entity 转换"]
-    A4["dto · admin / data / log / request / search"]
-    A5["factory · guard · scheduler · listener · event"]
-    A6["security · support · support.sso · util · job · config"]
+    A4["factory · event · job · listener · scheduler"]
+    A5["security（TenantGuard）· support / support.sso"]
+    A6["capability · openplatform · config"]
   end
 
   subgraph DOM["领域层 domain"]
-    D1["model.entity · 45 实体（User/Role/Permission/Dept/Menu/Tenant/Dict/Config/Job/Log...）"]
+    D1["model.entity · 47 实体（User/Role/Permission/Dept/Menu/Tenant/Dict/Config/Job/Log...）"]
     D2["model.valueobject · TenantQuota · PhoneNumber · LoginRecord · WeChatOpenId"]
-    D3["model.generator · GenConfig / GenTemplate / GenDatasource / GenHistory"]
+    D3["model.generator · GenConfig / GenTemplate / GenDatasource / GenTask / GenHistory 等"]
     D4["model.moderation · 内容审核结果模型"]
-    D5["model.sso / model.record / model.exception / model.system"]
-    D6["enums · DataScopeType / EducationLevel / ActivityStatus"]
-    D7["gateway · UnifiedAuthorizationGateway 端口"]
-    D8["repository · 仓储接口"]
-    D9["service · 领域服务 · search · log · event · moderation"]
+    D5["model.sso / record / exception / system / admin / monitor"]
+    D6["enums · LoginType / RegisterChannel / SocialChannel / UserStage / EducationLevel / ActivityStatus"]
+    D7["gateway · UnifiedAuthorizationGateway · 缓存/文本与图像审核/开放应用/角色删除/租户开通端口"]
+    D8["repository · 仓储接口（含 ApiCallLogRepository）"]
+    D9["service · 领域端口与服务（AccountDeletionPort / ConsentCommandPort 等）"]
   end
 
   subgraph INF["基础设施层 infrastructure"]
-    N1["persistence · mapper / po / converter / repository"]
+    N1["persistence · mapper / po / converter / repository（含 ApiCallLog 持久化）"]
     N2["cache · Redis 缓存服务"]
     N3["mq · config / listener · RocketMQ 消费"]
-    N4["log · ApiCallLogSink 持久化"]
+    N4["log · LokiAdapter（Loki 日志推送）"]
     N5["remote · 远程调用适配"]
     N6["search · Meilisearch 全文检索"]
     N7["scheduler · 定时任务执行器"]
@@ -58,10 +58,8 @@ flowchart TB
   A1 --> D9
   D9 --> D8
   D8 -. "被实现" .-> N1
-  A2 --> D9
   A3 --> D1
-  N2 --> D9
-  N3 --> A5
+  N3 --> A4
 
-  NOTE["apex-system: 系统管理核心域（45 实体，项目最大域）\n承接原 interfaces/application 源码，Java 包名不变\noffice 子域: 消息/审批/日历/文档 Handler + Application\n含 governance（优雅停机/降级/自动伸缩）、monitor、security\nsys_* MySQL/PostgreSQL 版本链独立，V42+ 结构恢复"]
+  NOTE["apex-system: 系统管理核心域（47 实体，项目最大域）\n承接原 interfaces/application 源码，Java 包名不变，HTTP 出口在库内 interfaces\n由 apex-system-service 装配运行（扫描 interfaces/application/domain/infrastructure 等）\n含 governance（lifecycle/platform）、monitor、security 等横切能力\nsys_* MySQL/PostgreSQL 版本链独立，V42+ 结构恢复"]
   DOM -.-> NOTE

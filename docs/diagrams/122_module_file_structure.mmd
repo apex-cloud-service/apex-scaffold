@@ -9,24 +9,24 @@ flowchart TB
 
   subgraph APP["应用层 application"]
     A1["service / service.impl · FileService · ChunkUploadService · FileShareService · DocumentService · ChartService"]
-    A2["assembler · FilePoConverter · DocumentAssembler · ChartAssembler"]
+    A2["assembler · DocumentAssembler · ChartAssembler"]
     A3["dto: chunk/ · data/ · share/ · FileUploadResult · PageRequest · PageResponse"]
     A4["util · FileTypeValidator"]
   end
 
   subgraph DOM["领域层 domain"]
     D1["model.entity · FileEntity / FileChunkEntity / FileShareEntity / DocumentEntity / ChartEntity"]
-    D2["enums · StorageType (MINIO/VOLCENGINE/LOCAL/OSS/QINIU)"]
+    D2["enums · StorageType (MINIO/VOLCENGINE/LOCAL/ALIYUN_OSS/QINIU)"]
     D3["repository · FileRepository / FileChunkRepository / FileShareRepository / DocumentRepository / ChartRepository"]
-    D4["service · StorageService / StorageServiceProvider / TenantStatusPort"]
+    D4["service · StorageService / StorageServiceProvider / StorageQuotaPort / TenantStatusPort"]
   end
 
   subgraph INF["基础设施层 infrastructure"]
-    N1["persistence · mapper / po / converter / repository"]
+    N1["persistence · mapper / po / converter（FilePoConverter）/ repository"]
     N2["storage.config · DefaultStorageConfiguration / MinioConfig / VolcEngineConfig"]
-    N3["storage.service · AbstractStorageService / Local/Minio/VolcEngine/OSS/Qiniu 实现"]
-    N4["ObjectStorageServiceAdapter · ConfiguredTenantStatusAdapter"]
-    N5["tenant · 租户隔离适配"]
+    N3["storage.service · AbstractStorageService / Local/Minio/VolcEngine 实现（OSS/Qiniu 由 storage-starter 提供）"]
+    N4["ObjectStorageServiceAdapter（storage.service）"]
+    N5["tenant · ConfiguredTenantStatusAdapter（实现 TenantStatusPort）"]
   end
 
   COMMON["apex-common<br>Result / BlockingIoSchedulers / TenantContext"]
@@ -46,5 +46,5 @@ flowchart TB
   N2 --> N3
   N3 -. "实现" .-> D4
 
-  NOTE["apex-file: 文件上传/分片/秒传/断点续传 + 文件分享(tokenHash) + 文档/图表管理\n存储五后端策略模式，阻塞 I/O 隔离到 storage()/remote() 池\nfile_record V1-V6 迁移链独立"]
+  NOTE["apex-file: 文件上传/分片/秒传/断点续传 + 文件分享(tokenHash) + 文档/图表管理\n存储五后端策略模式，阻塞 I/O 隔离到 storage()/jdbc() 池\nfile-service 迁移链 V1–V7 独立（MySQL/PostgreSQL 配对）"]
   DOM -.-> NOTE

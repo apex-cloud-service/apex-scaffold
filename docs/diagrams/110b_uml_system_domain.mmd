@@ -28,7 +28,7 @@ classDiagram
         + activate() / disable()
         + freeze() / unfreeze()
         + deactivate() / archive()
-        + assertQuotaAvailable(current, increment)
+        + assertUserQuota(current, increment) / assertStorageQuota(bytes, incrementBytes)
     }
     note for TenantEntity "status: ACTIVE/DISABLED/FROZEN/DEACTIVATED/ARCHIVED\n归档为终态，非正常状态拒绝创建业务数据\ntenantCode 全局唯一 = TenantContext tenantId"
 
@@ -56,7 +56,7 @@ classDiagram
         - Integer status
         - LocalDateTime lastLoginAt
         - String unionId
-        + updateToken(accessToken, refreshToken)
+        + updateToken(accessToken, refreshToken, expireTime)
         + recordLogin(ip, clientType)
     }
     note for UserEntity "聚合边界: UserEntity/UserProfile/UserRole/UserConsent\nstatus: 0=禁用 1=正常\nopenId 微信身份, unionId 跨应用\nusername 全局唯一(uk_username)"
@@ -105,7 +105,7 @@ classDiagram
         - String action
         - Integer status
     }
-    note for PermissionEntity "code 格式: {资源}:{操作} 如 user:read\nresourceType: API/MENU/BUTTON/DATA"
+    note for PermissionEntity "code 格式: {资源}:{操作} 如 user:read\nresourceType: MENU/BUTTON/API"
 
     class DeptEntity {
         «entity · 部门»
@@ -172,7 +172,7 @@ classDiagram
         + isBuiltin() boolean
         + isEnabled() boolean
     }
-    note for ConfigEntity "configType: 0=自定义 1=系统内置\n支持热更新"
+    note for ConfigEntity "configType: 0=系统内置(BUILTIN) 1=自定义(USER)\n内置禁止删除，支持热更新"
 
     class JobEntity {
         «aggregate root · 定时任务»

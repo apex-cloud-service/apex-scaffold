@@ -5,9 +5,9 @@
       <rdf:Description>
         <dc:title>Apex Scaffold 统一登录（SSO / 多通道认证）业务流程图</dc:title>
         <dc:creator>Apex Team</dc:creator>
-        <dc:date>2026-10-05</dc:date>
-        <dc:version>1.3.1</dc:version>
-        <dc:description>多通道登录：密码/短信/OAuth2(PKCE)/Keycloak/社交 → 令牌签发 → 安全加固链路 → 业务 API 校验</dc:description>
+        <dc:date>2026-11-06</dc:date>
+        <dc:version>1.4.0</dc:version>
+        <dc:description>多通道登录（实现相互独立）：auth 密码/OAuth2 · system 短信/本地 OAuth2 · Keycloak OIDC → 各通道令牌 → 安全边界 → 业务 API 校验</dc:description>
       </rdf:Description>
     </rdf:RDF>
   </metadata>
@@ -35,7 +35,7 @@
   <rect width="1500" height="1100" fill="#ffffff"/>
 
   <text x="750" y="42" class="title">Apex Scaffold 统一登录（SSO / 多通道认证）业务流程图</text>
-  <text x="750" y="66" class="subtitle">密码 / 短信 / OAuth2(PKCE) / Keycloak OIDC / 社交 五通道 → 统一令牌签发 → 安全加固 → 业务 API 校验 · v1.3.1</text>
+  <text x="750" y="66" class="subtitle">密码(auth) / 短信(system) / OAuth2(auth) / system 本地 OAuth2 / Keycloak OIDC（条件）→ 按通道独立令牌 → 安全边界 → 业务校验 · v1.4.0</text>
 
   <!-- ============ Phase 1: 多通道认证入口 ============ -->
   <rect x="40" y="92" width="700" height="330" rx="8" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.6"/>
@@ -48,16 +48,16 @@
   <text x="220" y="190" class="node-sub">AuthenticationRouter → AuthenticationHandler</text>
   <text x="220" y="206" class="node-sub">AuthenticationApplicationService 校验凭据</text>
   <text x="220" y="222" class="node-sub">401 无效 / 403 禁用/锁定/租户不匹配</text>
-  <text x="220" y="240" class="node-sub" fill="#2563eb">→ TokenService 签发 access+refresh</text>
+  <text x="220" y="240" class="node-sub" fill="#2563eb">→ auth TokenService：RS256 · 令牌入库 · 2h/7d</text>
 
   <!-- 短信登录 -->
   <rect x="400" y="132" width="320" height="118" rx="7" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
   <text x="560" y="154" class="node-title">短信验证码登录</text>
-  <text x="560" y="172" class="node-route">POST /api/auth/sms/code → /api/auth/login</text>
+  <text x="560" y="172" class="node-route">PublicApiRouter：/api/v1/auth/**</text>
   <text x="560" y="190" class="node-sub">AuthService(@SentinelResource authLogin) 限流</text>
-  <text x="560" y="206" class="node-sub">LoginStrategyProvider → SmsLoginStrategy</text>
+  <text x="560" y="206" class="node-sub">LoginStrategyProvider → 手机号登录策略</text>
   <text x="560" y="222" class="node-sub">验证码 5min · 一次性 · 失败3次→图形验证码</text>
-  <text x="560" y="240" class="node-sub" fill="#2563eb">新用户→REGISTER_REQUIRED / 已存在→发令牌</text>
+  <text x="560" y="240" class="node-sub" fill="#2563eb">→ system 共享 TokenService · 新 sid 多会话</text>
 
   <!-- OAuth2 授权码 -->
   <rect x="60" y="262" width="320" height="140" rx="7" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
@@ -66,8 +66,8 @@
   <text x="220" y="320" class="node-sub">OauthEndpointHandler → OAuth2Service</text>
   <text x="220" y="336" class="node-sub">签发授权码（5 分钟 · PKCE S256）</text>
   <text x="220" y="352" class="node-sub">重定向 code → redirect_uri</text>
-  <text x="220" y="368" class="node-sub">POST /oauth2/token 换发 access+refresh</text>
-  <text x="220" y="386" class="node-route">grant: authorization_code / password / client_credentials / refresh_token</text>
+  <text x="220" y="368" class="node-sub">POST /oauth2/token 换发令牌（1h/30d）</text>
+  <text x="220" y="386" class="node-sub" fill="#2563eb">auth 实现：RS256 · 授权记录入库</text>
 
   <!-- Keycloak OIDC -->
   <rect x="400" y="262" width="320" height="140" rx="7" fill="#ffffff" stroke="#4f46e5" stroke-width="1.8"/>
@@ -76,47 +76,47 @@
   <text x="560" y="320" class="node-sub">@ConditionalOnProperty(keycloak.enabled=true)</text>
   <text x="560" y="336" class="node-sub">回调 OidcAuthenticationSuccessHandler</text>
   <text x="560" y="352" class="node-sub">findByKeycloakSub → 存在/新建(keycloak_sub)</text>
-  <text x="560" y="368" class="node-sub">生成本地 access+refresh</text>
-  <text x="560" y="386" class="node-sub">302 → frontendCallbackUrl?accessToken=…</text>
+  <text x="560" y="368" class="node-sub">经共享 TokenService 签发本地令牌</text>
+  <text x="560" y="386" class="node-sub" fill="#b91c1c">成功处理器未生成 sid / 未登记 Redis 槽（未核实）</text>
 
   <!-- ============ Phase 2: 令牌签发中心 ============ -->
   <rect x="780" y="92" width="680" height="330" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.6"/>
-  <text x="800" y="116" class="phase">② 统一令牌签发与生命周期（TokenService）</text>
+  <text x="800" y="116" class="phase">② 令牌签发与生命周期（各通道独立实现）</text>
 
   <rect x="800" y="132" width="300" height="170" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
-  <text x="950" y="154" class="node-title">JWT 密钥管理（V26 jwt_keys）</text>
-  <text x="950" y="172" class="node-sub">256 位 HS256 · AES-256 加密存储</text>
-  <text x="950" y="188" class="node-sub">v20260925_001 版本号 · 寿命 90 天</text>
-  <text x="950" y="204" class="node-sub">状态机 PENDING→ACTIVE→ROTATING</text>
-  <text x="950" y="220" class="node-sub">→DEPRECATED→REVOKED</text>
-  <text x="950" y="238" class="node-sub">JwtKeyRotationService + Scheduler</text>
-  <text x="950" y="256" class="node-sub">getUsableKeySecrets=ACTIVE+ROTATING</text>
-  <text x="950" y="276" class="node-sub">应急吊销自动触发轮换</text>
+  <text x="950" y="154" class="node-title">auth TokenServiceImpl（apex-auth）</text>
+  <text x="950" y="172" class="node-sub">RS256 非对称签名 · 无共享 sid</text>
+  <text x="950" y="188" class="node-sub">access 2h / refresh 7d（固定）</text>
+  <text x="950" y="204" class="node-sub">加密值 / 哈希 / jti 入库（数据库撤销）</text>
+  <text x="950" y="220" class="node-sub">刷新：撤销旧 refresh → 签发新令牌对</text>
+  <text x="950" y="238" class="node-sub">注销：撤销该用户该租户全部令牌</text>
+  <text x="950" y="256" class="node-sub">并终止会话 · 类注释“不轮换”已过时</text>
+  <text x="950" y="276" class="node-sub">登录成功按 accessTokenId 登记会话</text>
 
   <rect x="1120" y="132" width="320" height="170" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
-  <text x="1280" y="154" class="node-title">令牌轮换与重放检测（V42）</text>
-  <text x="1280" y="172" class="node-sub">access 2h / refresh 7d · type=access|refresh</text>
-  <text x="1280" y="188" class="node-sub">token_family / previous_jti / rotation_count</text>
-  <text x="1280" y="204" class="node-sub">RefreshTokenRotationService + Redis</text>
-  <text x="1280" y="222" class="node-sub">token:used: / token:family:revoked:</text>
-  <text x="1280" y="240" class="node-sub">刷新一次性·重放即整族吊销</text>
-  <text x="1280" y="258" class="node-sub">token_rotation_history / token_security_event</text>
-  <text x="1280" y="276" class="node-sub">分布式锁 + 设备指纹一致性 + isSubjectRevoked</text>
+  <text x="1280" y="154" class="node-title">system 共享 TokenService（HS256）</text>
+  <text x="1280" y="172" class="node-sub">apex-infrastructure-cache · 默认 2h/7d 可配置</text>
+  <text x="1280" y="188" class="node-sub">Redis access/refresh 槽：subject:sid</text>
+  <text x="1280" y="204" class="node-sub">会话索引 · 一用户多会话并存</text>
+  <text x="1280" y="222" class="node-sub">手机号登录每次生成新 sid</text>
+  <text x="1280" y="240" class="node-sub">刷新保留 sid · 锁内消费旧 refresh</text>
+  <text x="1280" y="258" class="node-sub">注销默认当前会话 · 支持全端注销</text>
+  <text x="1280" y="276" class="node-sub">（与 auth 同名类不同实现）</text>
 
   <!-- 刷新与撤销 -->
   <rect x="800" y="314" width="640" height="90" rx="7" fill="#ffffff" stroke="#3b82f6" stroke-width="1.6"/>
-  <text x="1120" y="336" class="node-title">访问令牌刷新 / 注销撤销</text>
-  <text x="1120" y="354" class="node-route">POST /auth/v1/refresh（一次性轮换） · POST /auth/v1/logout/{userId}</text>
-  <text x="1120" y="372" class="node-sub">撤销用户全部令牌 → blacklist → JwtAuthenticationFilter.isBlacklisted 拦截</text>
-  <text x="1120" y="390" class="node-sub">滑动续期：剩余 &lt; 阈值(1800s) → 响应头 X-New-Access-Token 下发新令牌</text>
+  <text x="1120" y="336" class="node-title">OAuth2 两套实现与 OIDC 衔接</text>
+  <text x="1120" y="354" class="node-route">auth：POST /auth/v1/refresh · /auth/v1/logout/{userId}（撤销该用户该租户全部令牌）</text>
+  <text x="1120" y="372" class="node-sub">system 本地 OAuth2：Redis 授权缓存 · 2h/7d · 仅服务 /oauth2/api/** 资源校验</text>
+  <text x="1120" y="390" class="node-sub">OIDC 回调经共享 TokenService 签发；后续刷新/撤销链路未核实，不画为全通道必经</text>
 
   <!-- ============ Phase 3: 安全加固链路 ============ -->
   <rect x="40" y="440" width="1420" height="300" rx="8" fill="#f0fdf4" stroke="#059669" stroke-width="1.6"/>
-  <text x="60" y="464" class="phase" fill="#059669">③ 安全加固链路（登录前后二次校验）</text>
+  <text x="60" y="464" class="phase" fill="#059669">③ 安全边界（按平面挂载，非全通道串行链）</text>
 
   <!-- IP 控制 -->
   <rect x="60" y="480" width="300" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
-  <text x="210" y="502" class="node-title">IP 访问控制（V53）</text>
+  <text x="210" y="502" class="node-title">IP 访问控制（auth 入站 WebFilter）</text>
   <text x="210" y="520" class="node-route">IpAccessControlFilter @Order(-100)</text>
   <text x="210" y="538" class="node-sub">黑名单优先 → 拒绝 403</text>
   <text x="210" y="554" class="node-sub">白名单未命中 → 拒绝；否则放行</text>
@@ -125,12 +125,12 @@
 
   <!-- MFA -->
   <rect x="380" y="480" width="320" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
-  <text x="540" y="502" class="node-title">MFA 多因素认证（V27 mfa_config）</text>
-  <text x="540" y="520" class="node-route">/api/v1/mfa/verify · /api/mfa/totp/*</text>
-  <text x="540" y="538" class="node-sub">TOTP(RFC6238 30s) / SMS / EMAIL / BACKUP</text>
-  <text x="540" y="554" class="node-sub">secret &amp; backup_codes 加密存储</text>
-  <text x="540" y="570" class="node-sub">OTP 5min · 邮箱 Lua 原子校验</text>
-  <text x="540" y="588" class="node-sub">状态 PENDING/ACTIVE/DISABLED/LOCKED</text>
+  <text x="540" y="502" class="node-title">MFA（auth · TOTP 按需触发）</text>
+  <text x="540" y="520" class="node-route">/auth/v1/mfa/verify（挑战 5 分钟）</text>
+  <text x="540" y="538" class="node-sub">仅已启用 TOTP 的用户登录后触发</text>
+  <text x="540" y="554" class="node-sub">验证通过才完成登录签发</text>
+  <text x="540" y="570" class="node-sub" fill="#b91c1c">SMS/EMAIL/BACKUP 通道未逐项核实</text>
+  <text x="540" y="588" class="node-sub">（旧图 V27 mfa_config 描述保留待查）</text>
 
   <!-- 生物识别 -->
   <rect x="720" y="480" width="320" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
@@ -139,7 +139,7 @@
   <text x="880" y="538" class="node-sub">FINGERPRINT / FACE_ID / IRIS / VOICE / WEBAUTHN</text>
   <text x="880" y="554" class="node-sub">挑战存 Redis · TTL 60s · 32B 随机数</text>
   <text x="880" y="570" class="node-sub">SHA256withRSA 签名验证 · public_key</text>
-  <text x="880" y="588" class="node-sub">uk(user_id, device_id, type)</text>
+  <text x="880" y="588" class="node-sub" fill="#b91c1c">未证明接入上述主登录链</text>
 
   <!-- 设备信任 -->
   <rect x="1060" y="480" width="380" height="120" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.8"/>
@@ -148,7 +148,7 @@
   <text x="1250" y="536" class="node-sub">新设备 PENDING · riskScore=50</text>
   <text x="1250" y="552" class="node-sub">认证 10 次升级 · 信任期 30 天</text>
   <text x="1250" y="568" class="node-sub">异常检测：位置变更/长期未用→降级锁定</text>
-  <text x="1250" y="584" class="node-sub">isDeviceTrusted 判定 ≥ MEDIUM</text>
+  <text x="1250" y="588" class="node-sub" fill="#b91c1c">未证明接入上述主登录链</text>
 
   <!-- 防爆破 -->
   <rect x="60" y="614" width="1380" height="108" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
@@ -174,8 +174,8 @@
 
   <rect x="740" y="800" width="700" height="160" rx="7" fill="#ffffff" stroke="#ec4899" stroke-width="1.8"/>
   <text x="1090" y="822" class="node-title">OAuth2ResourceServerFilter（addFilterAfter）</text>
-  <text x="760" y="842" class="node-sub" text-anchor="start">1. 仅处理 /oauth2/api/** 前缀路径</text>
-  <text x="760" y="860" class="node-sub" text-anchor="start">2. authorizationService.validateToken 校验</text>
+  <text x="760" y="842" class="node-sub" text-anchor="start">1. 仅处理 /oauth2/api/** 前缀路径（system 本地 OAuth2 授权服务）</text>
+  <text x="760" y="860" class="node-sub" text-anchor="start">2. authorizationService.validateToken 校验（Redis 授权缓存）</text>
   <text x="760" y="878" class="node-sub" text-anchor="start">3. scope → SCOPE_* 权限（大写 · :→_）</text>
   <text x="760" y="896" class="node-sub" text-anchor="start">4. 主体 = userId / clientId</text>
   <text x="760" y="914" class="node-sub" text-anchor="start">5. 写入 exchange 属性 oauth2.clientId / oauth2.userId</text>
@@ -183,7 +183,7 @@
   <text x="760" y="950" class="node-sub" text-anchor="start">apex-m2m-service(客户端凭据) · apex-mobile-app(强制 PKCE)</text>
 
   <!-- Footer -->
-  <text x="60" y="1010" class="note">数据源：apex-auth（AuthenticationRouter/Handler · TokenService · JwtKeyRotationService · RefreshTokenRotationService · MfaRouter/MfaServiceImpl/TotpService · BiometricAuthServiceImpl · DeviceTrustServiceImpl · IpAccessControlServiceImpl/Filter · OauthEndpoint/OauthToken/OauthMetadataRouter）；apex-system（SecurityConfig · JwtAuthenticationFilter · OAuth2ResourceServerFilter · OidcAuthenticationSuccessHandler · KeycloakUserSyncService · SocialLoginHandler）；apex-system（AuthService · LoginStrategyProvider · SmsLoginStrategy · AbstractPhoneLoginStrategy）</text>
+  <text x="60" y="1010" class="note">通道实现相互独立，不可合并为一条“统一 TokenService”链：auth 密码=RS256/数据库 · system 短信=HS256/Redis sid · auth OAuth2=RS256/1h/30d · system 本地 OAuth2=Redis/2h/7d；生物识别与设备信任未证明接入主登录链。</text>
   <text x="60" y="1040" class="note">迁移：V25 OAuth2 四表 · V26 jwt_keys · V27 mfa_config · V37/V51 keycloak_sub · V42 token 加密/轮换 · V48 安全增强 · V50 权限码 · V52/V58 撤销追踪 · V53 IP · V55 生物识别 · V56 设备信任</text>
 
   <!-- Legend -->

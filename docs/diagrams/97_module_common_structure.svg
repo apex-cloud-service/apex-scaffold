@@ -14,7 +14,7 @@
   </defs>
   <rect width="1400" height="900" fill="#fff"/>
   <text x="700" y="40" class="title">模块结构：apex-common</text>
-  <text x="700" y="64" class="subtitle">com.apex.scaffold.common · 通用基础能力 · 无启动入口 · 被 9 个模块依赖 · v1.3.1</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.common · 通用基础能力 · 无启动入口 · 被 27 个模块直接依赖 · v1.3.1</text>
 
   <rect x="40" y="92" width="430" height="740" rx="10" fill="#4f46e5" opacity="0.06" stroke="#4f46e5" stroke-width="2"/>
   <rect x="40" y="92" width="430" height="40" rx="10" fill="#4f46e5"/>
@@ -24,24 +24,24 @@
   <text x="60" y="210" class="code">├─ util / util.ratelimit / util.ratelimit.algorithm</text>
   <text x="60" y="234" class="code">├─ util.id / id</text>
   <text x="60" y="258" class="code">├─ config / security / annotation</text>
-  <text x="60" y="282" class="code">├─ scheduler / state / spi</text>
-  <text x="60" y="306" class="code">├─ audit / event</text>
+  <text x="60" y="282" class="code">├─ scheduler / state / event</text>
+  <text x="60" y="306" class="code">├─ audit / masking / openapi</text>
   <text x="60" y="330" class="code">├─ persistence / persistence.util / persistence.po</text>
-  <text x="60" y="354" class="code">├─ governance</text>
-  <text x="60" y="378" class="code">├─ license</text>
+  <text x="60" y="354" class="code">├─ governance / capability / internal</text>
+  <text x="60" y="378" class="code">├─ autoconfigure（InternalAuth/Jwks/OpenApiGuard/OperationAudit）</text>
   <text x="60" y="402" class="code">└─ ...</text>
 
   <text x="60" y="450" class="legend" font-weight="600">职责定位</text>
   <text x="60" y="476" class="box-desc">• 跨模块复用的通用能力，零业务耦合</text>
   <text x="60" y="498" class="box-desc">• 统一响应体 / 错误码 / 分页 DTO</text>
-  <text x="60" y="520" class="box-desc">• 上下文（租户/用户/TraceId）传递</text>
+  <text x="60" y="520" class="box-desc">• 上下文（租户/数据权限/数据源）传递</text>
   <text x="60" y="542" class="box-desc">• 限流算法族（令牌桶/漏桶/滑动窗口）</text>
-  <text x="60" y="564" class="box-desc">• SPI 扩展点 / 领域事件基类 / Outbox 抽象</text>
-  <text x="60" y="586" class="box-desc">• 无 Spring Web 依赖，可被任意层引用</text>
+  <text x="60" y="564" class="box-desc">• 领域事件基类 / 状态机 / 阻塞 I/O 调度器</text>
+  <text x="60" y="586" class="box-desc">• 引入 spring-boot-starter-webflux（compile），可被任意层引用</text>
 
   <text x="60" y="634" class="legend" font-weight="600">依赖</text>
   <text x="60" y="660" class="box-desc">→ 仅依赖 Spring 基础 / 工具库（无内部模块）</text>
-  <text x="60" y="682" class="box-desc">← 被除 generator 外所有模块依赖（依赖深度 L0）</text>
+  <text x="60" y="682" class="box-desc">← 被 27 个模块直接依赖；license-tools/兼容 infrastructure/job-service 仅传递依赖</text>
 
   <!-- right: key capability boxes -->
   <rect x="500" y="92" width="860" height="170" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
@@ -50,14 +50,14 @@
   <text x="533" y="158" class="box-title">统一模型</text>
   <text x="533" y="176" class="box-desc">dto / result / enums</text>
   <text x="533" y="194" class="box-desc">exception / error</text>
-  <text x="533" y="212" class="code">R&lt;T&gt; · PageResult · ErrorCode</text>
-  <text x="533" y="230" class="code">BizException</text>
+  <text x="533" y="212" class="code">Result&lt;T&gt; · ResultCode</text>
+  <text x="533" y="230" class="code">BusinessException · PageResponse</text>
   <rect x="725" y="136" width="195" height="106" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
   <text x="738" y="158" class="box-title">上下文 / 安全</text>
   <text x="738" y="176" class="box-desc">context / security</text>
   <text x="738" y="194" class="box-desc">annotation</text>
-  <text x="738" y="212" class="code">TenantContext · UserContext</text>
-  <text x="738" y="230" class="code">@DataScope · @Idempotent</text>
+  <text x="738" y="212" class="code">TenantContext · DataScopeContext</text>
+  <text x="738" y="230" class="code">@DataScope · @IdempotentApi · @OperationLog</text>
   <rect x="930" y="136" width="195" height="106" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
   <text x="943" y="158" class="box-title">限流算法</text>
   <text x="943" y="176" class="box-desc">util.ratelimit.algorithm</text>
@@ -65,11 +65,11 @@
   <text x="943" y="212" class="code">TokenBucket · LeakyBucket</text>
   <text x="943" y="230" class="code">SlidingWindow · Snowflake</text>
   <rect x="1135" y="136" width="205" height="106" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
-  <text x="1148" y="158" class="box-title">事件 / SPI / 治理</text>
-  <text x="1148" y="176" class="box-desc">event / spi / governance</text>
-  <text x="1148" y="194" class="box-desc">state / scheduler</text>
-  <text x="1148" y="212" class="code">DomainEvent · ExtensionPoint</text>
-  <text x="1148" y="230" class="code">StateMachine · RetryPolicy</text>
+  <text x="1148" y="158" class="box-title">事件 / 状态机 / 治理</text>
+  <text x="1148" y="176" class="box-desc">event / state / governance</text>
+  <text x="1148" y="194" class="box-desc">scheduler / capability</text>
+  <text x="1148" y="212" class="code">DomainEvent 基类 · EventChannel</text>
+  <text x="1148" y="230" class="code">StateTransitionMachine · BlockingIoSchedulers</text>
 
   <rect x="500" y="282" width="860" height="200" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="520" y="310" class="box-title" font-size="14">通用支撑组件</text>
@@ -82,28 +82,28 @@
   <text x="533" y="448" class="box-desc">字段自动填充（审计字段）</text>
   <rect x="800" y="326" width="270" height="140" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
   <text x="813" y="348" class="box-title">audit</text>
-  <text x="813" y="368" class="box-desc">审计日志抽象</text>
-  <text x="813" y="388" class="code">OperationLog · AuditEvent</text>
-  <text x="813" y="408" class="code">异步批量落库契约</text>
-  <text x="813" y="428" class="box-desc">配合 interfaces 层 OperationLogAspect</text>
+  <text x="813" y="368" class="box-desc">审计日志抽象与切面</text>
+  <text x="813" y="388" class="code">SecurityAuditService · AuditLogService</text>
+  <text x="813" y="408" class="code">ReactiveOperationLogAspect</text>
+  <text x="813" y="428" class="box-desc">配合 @OperationLog 操作日志</text>
   <rect x="1080" y="326" width="260" height="140" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
-  <text x="1093" y="348" class="box-title">license（模型）</text>
-  <text x="1093" y="368" class="box-desc">License 数据模型 / 校验契约</text>
-  <text x="1093" y="388" class="code">LicenseInfo · LicenseStatus</text>
-  <text x="1093" y="408" class="box-desc">与 license-starter 配合</text>
-  <text x="1093" y="428" class="box-desc">（本模块仅定义，不含自动配置）</text>
+  <text x="1093" y="348" class="box-title">masking / openapi</text>
+  <text x="1093" y="368" class="box-desc">脱敏序列化与 OpenAPI 门卫</text>
+  <text x="1093" y="388" class="code">DataMaskSerializer · JsonFieldMasker</text>
+  <text x="1093" y="408" class="code">OpenApiCapabilityGuardFilter</text>
+  <text x="1093" y="428" class="box-desc">配合 @DataMask / capability 门控</text>
 
   <rect x="500" y="502" width="860" height="330" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="520" y="530" class="box-title" font-size="14">设计约束</text>
   <text x="520" y="560" class="box-desc">1. 无业务语义：不得出现 User/Role/Workflow 等领域概念，保证可被所有层安全引用。</text>
-  <text x="520" y="588" class="box-desc">2. 无 Web 层依赖：不引入 spring-boot-starter-web/webflux，避免污染反应式栈。</text>
+  <text x="520" y="588" class="box-desc">2. 仅引入 WebFlux 响应式栈（compile scope），不引入 Servlet web-starter。</text>
   <text x="520" y="616" class="box-desc">3. 限流算法为纯函数式实现，可被本地限流与 Sentinel 自适应策略共同复用。</text>
   <text x="520" y="644" class="box-desc">4. 上下文使用 ThreadLocal + Reactor Context 双通道，兼容 WebFlux 异步链路。</text>
-  <text x="520" y="672" class="box-desc">5. 事件/SPI 作为领域与基础设施的解耦契约，不含具体实现。</text>
+  <text x="520" y="672" class="box-desc">5. 事件契约作为领域与基础设施的解耦边界，不含具体实现。</text>
   <text x="520" y="712" class="box-title" font-size="14">典型引用方</text>
-  <text x="520" y="742" class="box-desc">apex-domain · apex-infrastructure · apex-system · apex-workflow · apex-system</text>
-  <text x="520" y="768" class="box-desc">apex-auth · apex-example · apex-license-spring-boot-starter</text>
-  <text x="520" y="806" class="note">唯一不依赖 apex-common 的内部模块：apex-generator（独立模板引擎）</text>
+  <text x="520" y="742" class="box-desc">apex-domain · 五个 infrastructure 能力 JAR · 六个业务库（system/auth/workflow/file/office/integration）</text>
+  <text x="520" y="768" class="box-desc">apex-api-contract · 各 service 运行模块 · license/storage/job/seata starter</text>
+  <text x="520" y="806" class="note">无直接依赖的内部模块：license-tools · 兼容 infrastructure · job-service · generator · tools-deployment · tools-build</text>
 
   <text x="700" y="872" class="note" text-anchor="middle">apex-common 是全局依赖根（L0），承载通用能力/上下文/限流算法/持久化与事件契约</text>
 </svg>

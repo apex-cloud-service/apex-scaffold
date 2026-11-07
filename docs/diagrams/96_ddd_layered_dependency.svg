@@ -22,13 +22,13 @@
 
   <rect width="1400" height="900" fill="#fff"/>
   <text x="700" y="40" class="title">DDD 四层分层依赖（依赖倒置）</text>
-  <text x="700" y="64" class="subtitle">上层依赖下层 · 领域层通过仓储接口（Port）反向定义，基础设施层实现 · v1.3.1</text>
+  <text x="700" y="64" class="subtitle">上层依赖下层 · 领域层通过仓储接口（Port）反向定义，基础设施层实现 · v1.4.0（interfaces/application 并入业务库，infrastructure 拆五能力 JAR）</text>
 
   <!-- Interfaces -->
   <rect x="200" y="92" width="1000" height="96" rx="10" fill="#6366f1" opacity="0.09" stroke="#6366f1" stroke-width="2"/>
   <text x="230" y="128" class="layer-title" fill="#6366f1">用户接口层</text>
   <text x="230" y="148" class="layer-sub" fill="#6366f1" opacity="1">Interfaces</text>
-  <text x="230" y="166" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-system</text>
+  <text x="230" y="166" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-system/interfaces · 各 service 模块接口层</text>
   <rect x="470" y="108" width="220" height="64" rx="6" fill="#fff" stroke="#c7d2fe" stroke-width="1.5"/>
   <text x="483" y="130" class="box-title">Handler / Router</text>
   <text x="483" y="148" class="box-desc">REST 路由 · DTO 转换 · 参数校验</text>
@@ -48,7 +48,7 @@
   <rect x="200" y="212" width="1000" height="96" rx="10" fill="#0891b2" opacity="0.08" stroke="#0891b2" stroke-width="2"/>
   <text x="230" y="248" class="layer-title" fill="#0891b2">应用层</text>
   <text x="230" y="268" class="layer-sub" fill="#0891b2" opacity="1">Application</text>
-  <text x="230" y="286" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-system</text>
+  <text x="230" y="286" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-system/application · 各业务库应用包</text>
   <rect x="470" y="228" width="220" height="64" rx="6" fill="#fff" stroke="#a5f3fc" stroke-width="1.5"/>
   <text x="483" y="250" class="box-title">应用服务 Service</text>
   <text x="483" y="268" class="box-desc">用例编排 · 事务边界</text>
@@ -68,7 +68,7 @@
   <rect x="200" y="332" width="1000" height="106" rx="10" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2.5"/>
   <text x="230" y="368" class="layer-title" fill="#059669">领域层（核心）</text>
   <text x="230" y="388" class="layer-sub" fill="#059669" opacity="1">Domain</text>
-  <text x="230" y="406" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-domain · workflow</text>
+  <text x="230" y="406" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-domain（共享契约）+ 各业务库 domain 包</text>
   <rect x="470" y="348" width="220" height="76" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
   <text x="483" y="370" class="box-title">聚合根 / 实体</text>
   <text x="483" y="388" class="box-desc">User · Role · Permission</text>
@@ -89,7 +89,7 @@
   <rect x="200" y="462" width="1000" height="96" rx="10" fill="#d97706" opacity="0.08" stroke="#d97706" stroke-width="2"/>
   <text x="230" y="498" class="layer-title" fill="#d97706">基础设施层</text>
   <text x="230" y="518" class="layer-sub" fill="#d97706" opacity="1">Infrastructure</text>
-  <text x="230" y="536" class="layer-sub" fill="#64748b" opacity="1" font-size="9">apex-infrastructure</text>
+  <text x="230" y="536" class="layer-sub" fill="#64748b" opacity="1" font-size="9">infrastructure-{persistence,cache,messaging,remote,integration} + 业务库专属包</text>
   <rect x="470" y="478" width="220" height="64" rx="6" fill="#fff" stroke="#fde68a" stroke-width="1.5"/>
   <text x="483" y="500" class="box-title">仓储实现</text>
   <text x="483" y="518" class="box-desc">MyBatis-Plus Mapper / PO</text>
@@ -110,10 +110,10 @@
   <!-- legend -->
   <rect x="200" y="590" width="1000" height="150" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="220" y="618" class="legend" font-weight="600">依赖规则</text>
-  <text x="220" y="644" class="legend">• 单向依赖：Interfaces → Application → Domain ← Infrastructure（依赖倒置）。</text>
-  <text x="220" y="668" class="legend">• 领域层零框架依赖：聚合根/实体/领域服务不引用 Spring、MyBatis 等基础设施。</text>
+  <text x="220" y="644" class="legend">• 单向依赖：Interfaces → Application → Domain ← Infrastructure（依赖倒置）；interfaces/application 代码位于各业务库包内（原 apex-interfaces/apex-application 模块已退出 reactor）。</text>
+  <text x="220" y="668" class="legend">• 领域层零框架依赖：共享 apex-domain 仅容纳跨域端口/Gateway 契约，业务实体与业务仓储接口在各业务库 domain 包。</text>
   <text x="220" y="692" class="legend">• 仓储接口定义于领域层，实现位于基础设施层，运行时由 Spring 注入（红色虚线为反向实现关系）。</text>
-  <text x="220" y="716" class="legend">• 跨层对象流转：DTO（接口层）→ Command/Query（应用层）→ 聚合（领域层）→ PO（基础设施层）。</text>
+  <text x="220" y="716" class="legend">• 基础设施按能力拆分为 persistence/cache/messaging/remote/integration 五个 JAR（apex-infrastructure 仅保留旧坐标兼容，无实现源码）。</text>
 
   <text x="700" y="782" class="note" text-anchor="middle">严格遵守依赖倒置原则（DIP）：高层策略不依赖低层细节，二者均依赖抽象（仓储接口 / 端口）</text>
   <text x="700" y="806" class="note" text-anchor="middle">颜色：接口/组合 #6366f1 · 应用 #0891b2 · 领域 #059669 · 基础设施 #d97706</text>

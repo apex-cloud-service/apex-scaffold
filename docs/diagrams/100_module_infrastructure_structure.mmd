@@ -1,38 +1,50 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fffbeb','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
-  subgraph Persist["持久化与数据"]
-    P1["persistence mapper/po/repository/converter"]
-    P2["datapermission 数据权限 SQL 注入"]
-    P3["cache 多级缓存 config/aspect/prewarm/metrics"]
-    P4["outbox 本地消息表 entity/mapper/dispatcher"]
-    P5["event 领域事件落库"]
+  subgraph Persist["persistence · 持久化"]
+    P1["persistence.aspect / config"]
+    P2["persistence.datapermission 数据权限 SQL 注入"]
+    P3["persistence.repository / util · metrics"]
   end
 
-  subgraph Runtime["运行时能力"]
-    R1["mq config/listener/dlq/monitor (RocketMQ)"]
-    R2["ratelimit local/distributed/adaptive"]
-    R3["resilience / circuitbreaker / chaos"]
-    R4["security / encryption / oauth2 / wechat"]
-    R5["remote / storage / excel / mail / notification"]
+  subgraph Cache["cache · 缓存与限流"]
+    C1["cache.annotation / aspect / config / filter"]
+    C2["cache.key / loader / wrapper / task / metrics / prewarm"]
+    C3["ratelimit local / distributed / adaptive"]
   end
 
-  subgraph Office["办公协同适配"]
-    O1["office.client dingtalk/feishu/wecom"]
-    O2["office.persistence / repository / spi / security"]
+  subgraph Msg["messaging · 消息与事件"]
+    M1["mq.config / listener / handler / aspect / alert / monitor"]
+    M2["outbox entity / mapper / service / dispatcher"]
+    M3["event / notification"]
   end
 
-  subgraph Cross["跨切"]
-    X1["scheduler / logging / metrics / audit / search / moderation"]
+  subgraph Remote["remote · 远程调用与容错"]
+    R1["remote.config / filter / logging / service"]
+    R2["circuitbreaker · chaos · logging"]
   end
 
-  DOMAIN["apex-domain 端口与仓储接口"]
-  APP["apex-application / apex-interfaces"]
+  subgraph Intg["integration · 第三方集成"]
+    I1["chuanglan 短信 / wechat 微信"]
+    I2["encryption / excel / mail / security / audit"]
+  end
 
-  DOMAIN -. "被实现" .-> Persist
-  DOMAIN -. "被实现" .-> Office
-  Persist --> APP
-  Runtime --> APP
-  Office --> APP
+  COMPAT["apex-infrastructure（旧坐标兼容）"]
+  DOMAIN["apex-domain / apex-common（L0/L1）"]
+  REMOTEJAR["apex-infrastructure-remote"]
 
-  NOTE["唯一允许触碰 DB/MQ/Redis/外部 SDK 的层，承载依赖倒置落地"]
+  DOMAIN -. "被实现（依赖倒置）" .-> Persist
+  DOMAIN -. "被实现" .-> Cache
+  DOMAIN -. "被实现" .-> Msg
+  DOMAIN -. "被实现" .-> Remote
+  DOMAIN -. "被实现" .-> Intg
+  Intg -. "integration JAR 依赖 remote JAR" .-> REMOTEJAR
+
+  USE1["使用方（直接依赖）：system（全部五 JAR）；auth-service（cache/messaging/integration）；auth（integration）；integration 业务库（persistence/remote）；example（cache/integration）；messaging（persistence）；infra-integration（remote）；job-service（remote）"]
+  COMPAT -. "聚合五个能力 JAR（零实现源码）" .-> Persist
+  COMPAT -.-> Cache
+  COMPAT -.-> Msg
+  COMPAT -.-> Remote
+  COMPAT -.-> Intg
+
+  NOTE["按能力拆分为五个共享设施 JAR；业务专属基础设施留在各业务库（如 system 的 Mapper/PO、auth 的 encryption）"]
   Persist -.-> NOTE

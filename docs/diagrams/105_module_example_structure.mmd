@@ -1,13 +1,13 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
   subgraph Entry["可执行入口"]
-    E1["ExampleApplication @SpringBootApplication"]
+    E1["ExampleApplication @SpringBootApplication（com.apex.example）"]
   end
 
   subgraph Demo["示例能力"]
     D1["ExampleUserHandler / Service / Mapper · 用户 CRUD"]
     D2["ExampleCapabilityHandler / Service · 能力演示"]
-    D3["ExampleRouterConfig · 路由集成"]
+    D3["ExampleRouterConfig · 自有 RouterFunction 路由"]
     D4["UserCachePrewarmStrategy · 缓存预热"]
     D5["dto · CreateUserRequest/UserResponse/ExportDTO"]
   end
@@ -18,20 +18,19 @@ flowchart TB
 
   COMMON["apex-common"]
   DOM["apex-domain"]
-  APP["apex-application"]
-  INFRA["apex-infrastructure"]
-  IF["apex-interfaces"]
+  SYS["apex-system"]
+  ICACHE["apex-infrastructure-cache"]
+  IINTG["apex-infrastructure-integration"]
 
-  E1 --> IF
-  E1 --> APP
-  E1 --> INFRA
-  E1 --> DOM
-  COMMON --> APP
+  COMMON --> E1
+  DOM --> E1
+  SYS --> E1
+  ICACHE --> E1
+  IINTG --> E1
   D1 --> D5
   D3 --> D1
   D3 --> D2
   D4 --> M1
-  APP --> D1
 
-  NOTE["可执行示例应用：全量组合核心模块，演示路由/缓存/导入导出等实战能力与最佳实践"]
+  NOTE["可执行示例应用：组合共享基础/领域/设施与 apex-system；apex-workflow 仅 test scope 依赖"]
   E1 --> NOTE

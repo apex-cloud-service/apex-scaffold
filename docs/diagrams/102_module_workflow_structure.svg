@@ -19,57 +19,55 @@
   </defs>
   <rect width="1400" height="880" fill="#fff"/>
   <text x="700" y="40" class="title">模块结构：apex-workflow</text>
-  <text x="700" y="64" class="subtitle">com.apex.scaffold.workflow · 自包含 DDD 四层 · 工作流引擎（状态机/审批流）· v1.3.1</text>
+  <text x="700" y="64" class="subtitle">com.apex.scaffold.workflow · 自包含 DDD 分层 · 工作流引擎（流程 DAG/审批流）· v1.3.1</text>
 
   <rect x="40" y="92" width="430" height="720" rx="10" fill="#059669" opacity="0.06" stroke="#059669" stroke-width="2"/>
   <rect x="40" y="92" width="430" height="40" rx="10" fill="#059669"/>
   <text x="60" y="118" class="grp">包结构（com.apex.scaffold.workflow.*）</text>
-  <text x="60" y="150" class="code">├─ interfaces</text>
-  <text x="60" y="172" class="code">│  ├─ router</text>
-  <text x="60" y="194" class="code">│  ├─ handler</text>
+  <text x="60" y="150" class="code">├─ application</text>
+  <text x="60" y="172" class="code">│  ├─ service / query / validation</text>
+  <text x="60" y="194" class="code">│  ├─ scheduler</text>
   <text x="60" y="216" class="code">│  └─ dto</text>
-  <text x="60" y="238" class="code">├─ application</text>
-  <text x="60" y="260" class="code">│  ├─ service / query</text>
-  <text x="60" y="282" class="code">│  ├─ scheduler</text>
-  <text x="60" y="304" class="code">│  └─ dto</text>
-  <text x="60" y="326" class="code">├─ domain</text>
-  <text x="60" y="348" class="code">│  ├─ model</text>
-  <text x="60" y="370" class="code">│  └─ repository</text>
-  <text x="60" y="392" class="code">└─ infrastructure</text>
-  <text x="60" y="414" class="code">   └─ persistence</text>
-  <text x="60" y="436" class="code">      ├─ po / mapper / converter</text>
-  <text x="60" y="458" class="code">      └─ repository</text>
+  <text x="60" y="238" class="code">├─ domain</text>
+  <text x="60" y="260" class="code">│  ├─ model（DAG 流程/审批模型）</text>
+  <text x="60" y="282" class="code">│  └─ repository（仓储契约）</text>
+  <text x="60" y="304" class="code">├─ infrastructure</text>
+  <text x="60" y="326" class="code">│  └─ persistence</text>
+  <text x="60" y="348" class="code">│     ├─ po / mapper / converter</text>
+  <text x="60" y="370" class="code">│     └─ repository</text>
+  <text x="60" y="392" class="code">└─ autoconfigure（组件自动装配）</text>
+  <text x="60" y="414" class="note">本库无 interfaces 层：HTTP 出口在 apex-workflow-service</text>
 
   <text x="60" y="506" class="legend" font-weight="600">职责定位</text>
-  <text x="60" y="532" class="box-desc">• 独立演进的工作流引擎，内含完整四层</text>
-  <text x="60" y="554" class="box-desc">• 状态机定义 / 审批任务流转 / 会签</text>
-  <text x="60" y="576" class="box-desc">• 对外暴露 Router 端点供网关聚合</text>
+  <text x="60" y="532" class="box-desc">• 独立演进的工作流引擎（库内三层 + HTTP 出口外置）</text>
+  <text x="60" y="554" class="box-desc">• 流程 DAG 定义（节点/连线 JSON）/ 审批任务流转 / 会签</text>
+  <text x="60" y="576" class="box-desc">• HTTP 出口由 apex-workflow-service 承载</text>
 
   <text x="60" y="624" class="legend" font-weight="600">依赖</text>
-  <text x="60" y="650" class="box-desc">→ 依赖 apex-domain + apex-common</text>
-  <text x="60" y="672" class="box-desc">← 被 apex-system 依赖（依赖深度 L2）</text>
-  <text x="60" y="694" class="box-desc">    （自身依赖仅到 L1，保持低耦合）</text>
+  <text x="60" y="650" class="box-desc">→ 仅依赖 apex-domain + apex-common</text>
+  <text x="60" y="672" class="box-desc">← 被 apex-workflow-service / apex-boot-all 装配</text>
+  <text x="60" y="694" class="box-desc">← apex-example 仅 test scope 依赖</text>
 
   <!-- right: 4 layers -->
   <rect x="500" y="92" width="860" height="150" rx="10" fill="#0891b2" opacity="0.08" stroke="#0891b2" stroke-width="1.5"/>
-  <text x="520" y="118" class="layer-title" fill="#0891b2">接口层 · interfaces</text>
-  <text x="520" y="138" class="layer-sub" fill="#0891b2">router · handler · dto · 工作流端点</text>
+  <text x="520" y="118" class="layer-title" fill="#0891b2">HTTP 出口 · 位于 apex-workflow-service（本库无 interfaces 层）</text>
+  <text x="520" y="138" class="layer-sub" fill="#0891b2">workflow-service interfaces · router / handler / dto · 运行装配 WorkflowServiceApplication</text>
   <rect x="520" y="150" width="250" height="76" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
-  <text x="533" y="172" class="box-title">router</text>
+  <text x="533" y="172" class="box-title">工作流端点</text>
   <text x="533" y="192" class="code">WebFlux RouterFunction</text>
-  <text x="533" y="212" class="box-desc">工作流 REST 路由</text>
+  <text x="533" y="212" class="box-desc">流程/任务 REST 路由</text>
   <rect x="790" y="150" width="280" height="76" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
-  <text x="803" y="172" class="box-title">handler + dto</text>
-  <text x="803" y="192" class="code">HandlerFunction</text>
-  <text x="803" y="212" class="box-desc">请求解析与响应组装</text>
+  <text x="803" y="172" class="box-title">超时任务接管</text>
+  <text x="803" y="192" class="code">XXL 执行器可选接管超时扫描</text>
+  <text x="803" y="212" class="box-desc">中心 cron 人工同步</text>
 
   <rect x="500" y="254" width="860" height="150" rx="10" fill="#0891b2" opacity="0.08" stroke="#0891b2" stroke-width="1.5"/>
   <text x="520" y="280" class="layer-title" fill="#0891b2">应用层 · application</text>
-  <text x="520" y="300" class="layer-sub" fill="#0891b2">service · query · scheduler · dto</text>
+  <text x="520" y="300" class="layer-sub" fill="#0891b2">service · query · validation · scheduler · dto</text>
   <rect x="520" y="312" width="250" height="76" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
   <text x="533" y="334" class="box-title">service / query</text>
   <text x="533" y="354" class="code">流转用例 · 查询用例</text>
-  <text x="533" y="374" class="box-desc">事务边界</text>
+  <text x="533" y="374" class="box-desc">事务边界 · validation 校验</text>
   <rect x="790" y="312" width="280" height="76" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
   <text x="803" y="334" class="box-title">scheduler</text>
   <text x="803" y="354" class="code">超时/催办定时任务</text>
@@ -77,10 +75,10 @@
 
   <rect x="500" y="416" width="860" height="150" rx="10" fill="#059669" opacity="0.08" stroke="#059669" stroke-width="1.5"/>
   <text x="520" y="442" class="layer-title" fill="#059669">领域层 · domain</text>
-  <text x="520" y="462" class="layer-sub" fill="#059669">model · repository（状态机/审批模型）</text>
+  <text x="520" y="462" class="layer-sub" fill="#059669">model · repository（DAG 流程/审批模型）</text>
   <rect x="520" y="474" width="250" height="76" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
   <text x="533" y="496" class="box-title">model</text>
-  <text x="533" y="516" class="code">状态机定义 · 节点 · 转移</text>
+  <text x="533" y="516" class="code">流程 DAG 定义（节点/连线 JSON）· 审批记录</text>
   <text x="533" y="536" class="box-desc">审批任务/实例聚合</text>
   <rect x="790" y="474" width="280" height="76" rx="6" fill="#fff" stroke="#a7f3d0" stroke-width="1.5"/>
   <text x="803" y="496" class="box-title">repository</text>
@@ -103,7 +101,7 @@
   <line x1="700" y1="404" x2="700" y2="416" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
   <line x1="700" y1="566" x2="700" y2="578" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
 
-  <text x="700" y="762" class="note" text-anchor="middle">apex-workflow 是少数“自包含 DDD 四层”的业务模块：接口 → 应用 → 领域 → 基础设施 内聚成独立引擎</text>
-  <text x="700" y="790" class="note" text-anchor="middle">与登录/审批主流程协作，通过 apex-system 聚合对外暴露；状态机与审批任务为其核心领域模型</text>
+  <text x="700" y="762" class="note" text-anchor="middle">apex-workflow 是自包含 DDD 分层的业务模块：应用 → 领域 → 基础设施内聚成独立引擎，HTTP 出口在 apex-workflow-service</text>
+  <text x="700" y="790" class="note" text-anchor="middle">运行装配由 apex-workflow-service / apex-boot-all 完成；apex-example 仅 test scope 依赖本库</text>
   <text x="700" y="836" class="note" text-anchor="middle">外部依赖仅 apex-domain + apex-common，保证引擎可独立测试与演进</text>
 </svg>

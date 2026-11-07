@@ -178,12 +178,12 @@ bun x @mermaid-js/mermaid-cli -i docs/diagrams/107_uml_auth_center_domain.mmd \
 | 编号 | 文件（`.mmd` / `.svg`） | 标题 | 覆盖域 | 说明 |
 | -- | ------ | ---- | ------ | ---- |
 | 111 | `111_er_core_tables` | 核心表 ER 图 | system | sys_user/sys_role/sys_permission/sys_menu/sys_dept/sys_tenant + 关联表 |
-| 112 | `112_er_auth_center_tables` | auth 表 ER 图 | auth | OAuth2/JWT/MFA/Biometric/DeviceTrust/SecurityAudit 等 18 表 |
-| 113 | `113_er_workflow_tables` | workflow 表 ER 图 | workflow | WF_WORKFLOW_DEFINITION/PROCESS_INSTANCE/TASK/APPROVAL_RECORD 等 6 表 |
-| 114 | `114_er_office_tables` | office 表 ER 图 | office | OFFICE_PLATFORM_APP/MESSAGE/APPROVAL/CALENDAR/DOCUMENT 等 17 表 |
-| 121 | `121_er_file_tables` | **file 域表 ER 图（新增）** | file | file_record/file_chunk/file_share/file_document/file_chart，V1–V6 迁移链 |
+| 112 | `112_er_auth_center_tables` | auth 表 ER 图 | auth | system 库 OAuth2/JWT/登录安全表 + auth 库 auth_* 核心表（RBAC/会话/Token/TOTP/恢复/审计） |
+| 113 | `113_er_workflow_tables` | workflow 表 ER 图 | workflow | WF_WORKFLOW_DEFINITION/PROCESS_INSTANCE/TASK/APPROVAL_RECORD/WF_SCHEDULER_LEASE 共 5 表 |
+| 114 | `114_er_office_tables` | office 表 ER 图 | office | OFFICE_PLATFORM_APP/MESSAGE/APPROVAL/CALENDAR/DOCUMENT/NOTIFY/MEETING_ROOM 等 18 表 |
+| 121 | `121_er_file_tables` | **file 域表 ER 图（新增）** | file | file_record/file_chunk/file_share/file_document/file_chart，V1–V7 迁移链 |
 
-> 表数量为按 Flyway 迁移脚本 `CREATE TABLE` 语句实测去重统计：system 97、auth 18、workflow 6、file 6、office 17，全仓唯一表名 117 张。
+> 表数量为按 Flyway 迁移脚本（mysql）`CREATE TABLE` 语句实测去重统计（不含 undo_log/sys_domain_event_outbox 基础设施表）：system 101、auth 19、workflow 5、file 5、office 18，全仓唯一表名 135 张。
 
 #### 模块结构图（97–106, 122–123）
 

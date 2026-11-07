@@ -5,9 +5,9 @@
       <rdf:Description>
         <dc:title>Apex Scaffold 多租户隔离业务流程图</dc:title>
         <dc:creator>Apex Team</dc:creator>
-        <dc:date>2026-10-05</dc:date>
-        <dc:version>1.3.1</dc:version>
-        <dc:description>共享库+共享Schema+行级 tenant_id 隔离：上下文装配→SQL 自动改写→租户生命周期→配额约束</dc:description>
+        <dc:date>2026-11-06</dc:date>
+        <dc:version>1.4.0</dc:version>
+        <dc:description>共享库+共享Schema+行级 tenant_id 隔离：上下文装配→SQL 自动改写→workflow/auth JdbcTemplate fail-closed 例外→租户生命周期→配额约束</dc:description>
       </rdf:Description>
     </rdf:RDF>
   </metadata>
@@ -38,7 +38,7 @@
 
   <rect width="1500" height="1040" fill="#ffffff"/>
   <text x="750" y="42" class="title">Apex Scaffold 多租户隔离业务流程图</text>
-  <text x="750" y="66" class="subtitle">共享库 + 共享 Schema + 行级 tenant_id · 上下文装配 → SQL 改写 → 生命周期 → 配额 · v1.3.1</text>
+  <text x="750" y="66" class="subtitle">共享库 + 共享 Schema + 行级 tenant_id · 上下文装配 → SQL 改写 → JdbcTemplate fail-closed 例外 → 生命周期 → 配额 · v1.4.0</text>
 
   <!-- Lane headers -->
   <rect x="40" y="92" width="1420" height="30" rx="6" fill="#f1f5f9"/>
@@ -53,14 +53,14 @@
   <!-- ===== Column 1: 租户上下文装配 ===== -->
   <rect x="70" y="140" width="400" height="64" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
   <text x="270" y="164" class="node-title">HTTP 请求进入</text>
-  <text x="270" y="182" class="node-sub">X-Tenant-Id 头 / JWT Claim 携带租户标识</text>
+  <text x="270" y="182" class="node-sub">JWT 认证主体携带 tenantId · X-Tenant-Id 仅校验用</text>
   <text x="270" y="197" class="node-actor">网关 → 安全过滤器链</text>
 
   <line x1="270" y1="204" x2="270" y2="230" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
   <rect x="70" y="232" width="400" height="74" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
   <text x="270" y="256" class="node-title">JwtAuthenticationFilter 解析</text>
-  <text x="270" y="274" class="node-sub">校验 JWT → 从 sys_user.tenant_id 取可信租户</text>
+  <text x="270" y="274" class="node-sub">认证主体携带可信租户 · 校验 X-Tenant-Id 一致性</text>
   <text x="270" y="290" class="node-sub">（不以客户端头为唯一信任来源）</text>
   <text x="270" y="303" class="node-actor">apex-system/security</text>
 
@@ -74,9 +74,9 @@
   <line x1="270" y1="404" x2="270" y2="430" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
   <rect x="70" y="432" width="400" height="72" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
-  <text x="270" y="456" class="node-title">Reactor 全局 Hook 传播</text>
-  <text x="270" y="474" class="node-sub">Schedulers.onScheduleHook + Hooks.onEachOperator</text>
-  <text x="270" y="490" class="node-sub">TenantContextSubscriber 跨线程恢复上下文</text>
+  <text x="270" y="456" class="node-title">跨线程传播（Reactor Context）</text>
+  <text x="270" y="474" class="node-sub">TenantContext.withTenant(tenant).contextWrite(...)</text>
+  <text x="270" y="490" class="node-sub">订阅时安装租户 · 执行后恢复，防跨线程泄漏</text>
 
   <line x1="270" y1="504" x2="270" y2="530" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -89,7 +89,7 @@
   <rect x="530" y="140" width="340" height="70" rx="7" fill="#ecfdf5" stroke="#059669" stroke-width="1.8"/>
   <text x="700" y="164" class="node-title">MyBatis-Plus 拦截器</text>
   <text x="700" y="182" class="node-sub">TenantLineInnerInterceptor</text>
-  <text x="700" y="198" class="node-actor">MybatisPlusConfig 注册</text>
+  <text x="700" y="198" class="node-actor">MybatisPlusConfig · apex.tenant.enabled（默认开启·basic 除外）</text>
 
   <line x1="700" y1="210" x2="700" y2="236" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -103,7 +103,7 @@
 
   <rect x="530" y="342" width="340" height="70" rx="7" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
   <text x="700" y="366" class="node-title">ignoreTable? 白名单判定</text>
-  <text x="700" y="384" class="node-sub">15 张平台级表排除租户隔离</text>
+  <text x="700" y="384" class="node-sub">白名单平台级表排除租户隔离</text>
   <text x="700" y="400" class="node-sub">sys_menu / sys_permission / sys_role / sys_role_permission</text>
 
   <line x1="700" y1="412" x2="700" y2="438" stroke="#059669" stroke-width="1.6" marker-end="url(#a)"/>
@@ -120,10 +120,10 @@
   <text x="700" y="566" class="node-title">执行 → MySQL</text>
   <text x="700" y="584" class="node-sub">索引 idx_tenant_id 保障隔离查询性能</text>
 
-  <!-- warn: no TenantWebFilter -->
+  <!-- note: JdbcTemplate fail-closed 例外 -->
   <rect x="530" y="620" width="340" height="60" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="5,3"/>
-  <text x="700" y="642" class="node-title" fill="#b91c1c">⚠ 文档中的 TenantWebFilter 未实现</text>
-  <text x="700" y="660" class="node-sub">实际入口为 JwtAuthenticationFilter + TenantAspect</text>
+  <text x="700" y="642" class="node-title" fill="#b91c1c">⚠ 例外口径：workflow / auth JdbcTemplate</text>
+  <text x="700" y="660" class="node-sub">WorkflowTenantAccess / JdbcTenantScope fail-closed</text>
 
   <line x1="470" y1="565" x2="530" y2="560" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -174,7 +174,7 @@
 
   <!-- ===== 白名单详情 section (bottom) ===== -->
   <rect x="40" y="720" width="1420" height="128" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
-  <text x="60" y="744" class="phase" fill="#334155" style="font-size:14px">DefaultTenantLineHandler.IGNORE_TABLES —— 15 张不参与租户行级隔离的平台级表</text>
+  <text x="60" y="744" class="phase" fill="#334155" style="font-size:14px">DefaultTenantLineHandler.IGNORE_TABLES —— 不参与租户行级隔离的平台级表（白名单）</text>
 
   <rect x="60" y="760" width="440" height="72" rx="7" fill="#ffffff" stroke="#94a3b8" stroke-width="1.4"/>
   <text x="80" y="784" class="node-sub" text-anchor="start">sys_menu · sys_permission · sys_role · sys_role_permission</text>
@@ -194,9 +194,9 @@
   <!-- Footer notes -->
   <text x="60" y="878" class="note" style="font-weight:600">关键业务规则与风险提示：</text>
   <text x="60" y="900" class="note">1. 隔离模型为「共享库 + 共享 Schema + 行级 tenant_id」，由 TenantLineInnerInterceptor 在 SQL 层自动注入 WHERE tenant_id = ?，业务代码无需手写租户条件。</text>
-  <text x="60" y="920" class="note">2. 上下文传播依赖 Reactor 全局 Hook（onScheduleHook / onEachOperator）+ TenantContextSubscriber；异步/跨线程场景必须经 TenantContext.withTenant 或 Hook 恢复，否则 getTenantId() 抛 IllegalStateException。</text>
+  <text x="60" y="920" class="note">2. 上下文传播依赖 TenantContext.withTenant(...).contextWrite(...) 显式桥接（订阅时安装租户、执行后恢复）；异步/跨线程场景未桥接时 getTenantId() 抛 IllegalStateException（fail-closed）。</text>
   <text x="60" y="940" class="note">3. 租户状态 ACTIVE/DISABLED/FROZEN/DEACTIVATED/ARCHIVED 决定可用性；FROZEN 常用于配额超限或欠费，DEACTIVATED/ARCHIVED 为退出路径，恢复仅允许回到 ACTIVE。</text>
-  <text x="60" y="960" class="note">4. 风险：TenantWebFilter/TenantContextReactorHolder 仅存在于文档，实际以 JwtAuthenticationFilter 从 sys_user.tenant_id 取可信租户；跨租户泄漏防护依赖 finally clear() 与 Hook 正确性。</text>
+  <text x="60" y="960" class="note">4. 例外口径：workflow / auth 为 JdbcTemplate 持久化，走 WorkflowTenantAccess / JdbcTenantScope 显式可信租户条件（fail-closed）；缓存键经 TenantCacheKeys 携带租户；持久化层禁止 @InterceptorIgnore 绕过（TenantIsolationArchTest）。</text>
 
   <!-- Legend -->
   <line x1="60" y1="990" x2="110" y2="990" stroke="#4f46e5" stroke-width="1.8" marker-end="url(#a)"/>
@@ -214,5 +214,5 @@
   <rect x="950" y="980" width="14" height="14" rx="3" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
   <text x="972" y="994" class="legend">配额约束</text>
 
-  <text x="750" y="1024" class="note" text-anchor="middle">数据源：apex-common（context/TenantContext · annotation/TenantAware）、apex-infrastructure（persistence/datapermission/DefaultTenantLineHandler · config/MybatisPlusConfig · po/TenantPO）、apex-system（aspect/TenantAspect · security/JwtAuthenticationFilter）、apex-system（service/TenantApplicationService）、apex-domain（repository/TenantRepository · model/entity/TenantEntity · valueobject/TenantQuota）、迁移 mysql/V17</text>
+  <text x="750" y="1024" class="note" text-anchor="middle">数据源：apex-common（context/TenantContext · annotation/TenantAware）、apex-infrastructure-persistence（config/MybatisPlusConfig · datapermission/DefaultTenantLineHandler）、apex-infrastructure-cache（key/TenantCacheKeys）、apex-system（aspect/TenantAspect · service/TenantApplicationService）、apex-workflow（WorkflowTenantAccess）、apex-auth（JdbcTenantScope）、迁移 mysql/V17</text>
 </svg>

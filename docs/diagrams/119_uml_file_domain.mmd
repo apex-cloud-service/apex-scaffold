@@ -57,7 +57,7 @@ classDiagram
         + isExpired(now) boolean
         + isRedeemable(now) boolean
     }
-    note for FileShareEntity "status: ACTIVE/REVOKED\ntokenHash=SHA-256(token), 明文仅返回一次\n2026-10-28 新增, 时间限只读分享"
+    note for FileShareEntity "status: ACTIVE/REVOKED\ntokenHash=SHA-256(token), 明文仅返回一次\nV6 迁移引入（2026-10-29）, 时间限只读分享"
 
     class DocumentEntity {
         «aggregate root · 文档»
@@ -79,7 +79,7 @@ classDiagram
         + incrementViewCount() / incrementDownloadCount()
         + isDraft() / isNormal() / isArchived() boolean
     }
-    note for DocumentEntity "status: DRAFT/NORMAL/ARCHIVED\ntags 标签列表\ncontracts/reports/proposals/manuals"
+    note for DocumentEntity "status: DRAFT/NORMAL/ARCHIVED\ntags 标签列表\ndocType: contract/report/proposal/manual/other"
 
     class ChartEntity {
         «aggregate root · 图表»

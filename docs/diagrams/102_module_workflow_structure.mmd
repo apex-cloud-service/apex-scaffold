@@ -1,41 +1,42 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
-  subgraph IF["接口层 interfaces"]
-    I1["router · WebFlux RouterFunction"]
-    I2["handler · HandlerFunction"]
-    I3["dto · 请求/响应模型"]
-  end
+  HTTP["HTTP 出口（位于 apex-workflow-service）\ninterfaces · router/handler/dto · WorkflowServiceApplication"]
 
   subgraph APP["应用层 application"]
-    A1["service / query · 流转与查询用例(事务边界)"]
-    A2["scheduler · 超时/催办定时任务"]
-    A3["dto · 应用 DTO"]
+    A1["service / query · 流转与查询用例（事务边界）"]
+    A2["validation · 校验"]
+    A3["scheduler · 超时/催办定时任务"]
+    A4["dto · 应用 DTO"]
   end
 
   subgraph DOM["领域层 domain"]
-    D1["model · 状态机定义/节点/转移/审批任务"]
-    D2["repository · 仓储接口(领域契约)"]
+    D1["model · WorkflowDefinition（流程 DAG：节点/连线 JSON）· ProcessInstance · Task · ApprovalRecord"]
+    D2["repository · 仓储接口（领域契约）"]
   end
 
   subgraph INF["基础设施层 infrastructure"]
-    N1["persistence.po / mapper (MyBatis-Plus)"]
+    N1["persistence.po / mapper（MyBatis-Plus）"]
     N2["converter · PO ↔ 领域模型"]
     N3["repository · 实现 domain.repository"]
   end
 
+  AUTO["autoconfigure · 组件自动装配"]
+
   COMMON["apex-common"]
   DOMAIN["apex-domain"]
-  IFACE["apex-interfaces 聚合对外"]
+  SVC["apex-workflow-service / apex-boot-all（运行装配）"]
 
-  COMMON --> DOM
-  DOMAIN --> DOM
-  I1 --> I2 --> A1
+  COMMON --> APP
+  DOMAIN --> APP
+  HTTP --> A1
   A1 --> D1
   A1 --> D2
+  A3 --> A1
   A2 --> A1
   D2 -. "被实现" .-> N3
   N1 --> N2 --> N3
-  I1 --> IFACE
+  AUTO -.-> APP
+  SVC -. "扫描装配" .-> HTTP
 
-  NOTE["自包含 DDD 四层的工作流引擎：状态机与审批任务为核心领域模型，可通过 apex-interfaces 聚合暴露"]
+  NOTE["包名 com.apex.scaffold.workflow；本库无 interfaces 层，HTTP 出口在 apex-workflow-service；apex-example 仅 test scope 依赖；流程定义为 DAG（节点/连线 JSON），持久化用 MyBatis-Plus + WorkflowTenantAccess 显式租户条件（fail-closed），超时扫描经 JdbcScanLease（JdbcTemplate）"]
   DOM -.-> NOTE

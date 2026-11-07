@@ -17,13 +17,16 @@ flowchart TB
     T1[LicenseGenerator 签发工具]
   end
 
-  subgraph Model["apex-common.license 模型"]
+  subgraph Model["License 模型（starter 内，common 无 license 包）"]
     M1[LicenseInfo]
     M2[LicenseVersion]
   end
 
   T1 -- "私钥签名" --> LIC[(license.key 许可证文件)]
   LIC -- "公钥验签" --> A2
+
+  REF[["apex-system：授权门控接入（唯一业务引用方）"]]
+  A1 -.-> REF
   T1 --> M1
   A4 --> M1
   T1 --> M2

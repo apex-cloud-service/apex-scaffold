@@ -149,7 +149,6 @@ classDiagram
     Result~T~ ..> ResultCode : «use»
     Result~T~ ..> ErrorCode : «use»
     BaseException ..> ResultCode : «use»
-    BusinessException --|> BaseException
 
     %% ---- 持久化基类 ----
     BaseEntity ..> BasePO : «transient 转换»

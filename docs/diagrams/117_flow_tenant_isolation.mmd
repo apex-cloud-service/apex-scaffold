@@ -1,31 +1,32 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
-  init: {
-    'theme': 'base',
-    'themeVariables': {
-      'primaryColor': '#eef2ff',
-      'primaryTextColor': '#0f172a',
-      'primaryBorderColor': '#4f46e5',
-      'lineColor': '#475569',
-      'fontFamily': 'system-ui, sans-serif'
-    }
-  }
-}%%
 flowchart TD
-    subgraph P1["① 租户上下文装配"]
-        A1["HTTP 请求进入<br/>X-Tenant-Id 头 / JWT Claim"] --> A2["JwtAuthenticationFilter<br/>解析 JWT，从 sys_user.tenant_id<br/>取可信租户"]
-        A2 --> A3["TenantContext.setTenantId()<br/>ThreadLocal + Reactor Context"]
-        A3 --> A4["Reactor 全局 Hook<br/>onScheduleHook / onEachOperator<br/>跨线程传播租户"]
-        A4 --> A5["TenantAspect<br/>@TenantAware 方法级装配"]
+    subgraph P1["① 租户上下文装配（受信任认证上下文，客户端不可任意覆盖）"]
+        A1["HTTP 请求<br/>JWT 认证主体携带 tenantId<br/>X-Tenant-Id 仅作一致性校验"] --> A2["TenantAspect<br/>@TenantAware 方法级装配<br/>校验 X-Tenant-Id 与认证租户一致"]
+        A2 --> A3["TenantContext<br/>ThreadLocal + Reactor Context 双通道"]
+        A3 --> A4["跨线程传播<br/>TenantContext.withTenant(tenant).contextWrite(...)"]
     end
 
-    subgraph P2["② 行级 SQL 隔离"]
-        A5 --> B1["MyBatis-Plus<br/>TenantLineInnerInterceptor"]
-        B1 --> B2["DefaultTenantLineHandler.getTenantId()<br/>取 TenantContext.currentTenantId()"]
+    subgraph P2["② 行级 SQL 隔离（MyBatis-Plus）"]
+        A4 --> B1["MybatisPlusConfig<br/>apex.tenant.enabled 开关<br/>（默认开启 · basic 档除外）"]
+        B1 --> B2["TenantLineInnerInterceptor<br/>DefaultTenantLineHandler"]
         B2 --> B3{"ignoreTable?<br/>IGNORE_TABLES 白名单"}
-        B3 -- "是（15 张平台级表）" --> B4["不加租户条件<br/>sys_menu/sys_role/sys_tenant/<br/>sys_config/flyway_schema_history/..."]
+        B3 -- "是（平台级表）" --> B4["不加租户条件<br/>sys_menu/sys_role/sys_tenant/..."]
         B3 -- "否" --> B5["改写 SQL<br/>自动追加 WHERE tenant_id = ?"]
-        B5 --> B6["执行 → MySQL<br/>索引 idx_tenant_id"]
-        B2 -. "上下文未装配" .-> BX["抛 IllegalStateException<br/>拒绝执行租户 SQL"]
+        B2 -. "上下文缺失" .-> BX["抛 IllegalStateException<br/>fail-closed 拒绝执行"]
+    end
+
+    subgraph P2X["②′ 手写 SQL 与跨租户例外（fail-closed 口径）"]
+        E1["workflow：WorkflowTenantAccess<br/>JdbcTemplate 持久化 · 显式可信租户条件"]
+        E2["auth：JdbcTenantScope<br/>同口径 fail-closed"]
+        E3["受控跨租户：后台任务按持久租户恢复作用域<br/>（如 workflow 超时扫描）"]
+        E1 --> E3
+        E2 --> E3
+    end
+
+    subgraph P1X["①′ 缓存与消息携带租户"]
+        F1["TenantCacheKeys.of / forTenant<br/>键携带租户维度 · 缺失 fail-closed"]
+        F2["消息与后台任务携带租户作用域"]
+        F1 --> F2
     end
 
     subgraph P3["③ 租户生命周期（TenantApplicationService）"]
@@ -47,17 +48,22 @@ flowchart TD
         D4 -- "否" --> D6["放行"]
     end
 
-    B6 --> C1
-    A5 --> D1
+    A4 --> F1
+    A4 --> E1
+    A4 --> E2
+    B5 --> C1
+    A2 --> D1
 
     classDef ctx fill:#eef2ff,stroke:#4f46e5,stroke-width:1.8px,color:#0f172a;
     classDef sql fill:#ecfdf5,stroke:#059669,stroke-width:1.8px,color:#0f172a;
+    classDef alt fill:#f0fdf4,stroke:#059669,stroke-width:1.4px,color:#0f172a;
     classDef life fill:#eff6ff,stroke:#3b82f6,stroke-width:1.8px,color:#0f172a;
     classDef quota fill:#fffbeb,stroke:#d97706,stroke-width:1.8px,color:#0f172a;
     classDef warn fill:#fef2f2,stroke:#dc2626,stroke-width:1.4px,color:#b91c1c,stroke-dasharray:5 3;
 
-    class A1,A2,A3,A4,A5 ctx;
-    class B1,B2,B3,B4,B5,B6 sql;
+    class A1,A2,A3,A4 ctx;
+    class B1,B2,B3,B4,B5 sql;
+    class E1,E2,E3,F1,F2 alt;
     class C1,C2,C3,C4,C5,C6 life;
     class D1,D2,D3,D4,D5,D6 quota;
     class BX warn;

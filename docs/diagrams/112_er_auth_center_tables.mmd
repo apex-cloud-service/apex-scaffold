@@ -1,4 +1,5 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+%% OAuth2/JWT/登录安全表位于 system 库（V25/V26/V42/V47/V48/V53/V58）；auth_* 表位于 auth 库（V44–V64） %%
 erDiagram
     OAUTH2_REGISTERED_CLIENT ||--o{ OAUTH2_AUTHORIZATION : "registered_client_id"
     OAUTH2_REGISTERED_CLIENT ||--o{ OAUTH2_AUTHORIZATION_CONSENT : "registered_client_id"
@@ -12,6 +13,164 @@ erDiagram
     SYS_USER ||--o{ LOGIN_HISTORY : "user_id"
     SYS_USER ||--o{ SECURITY_AUDIT_LOG : "user_id"
     SYS_USER ||--o{ TOKEN_ROTATION_HISTORY : "user_id"
+
+    AUTH_USER ||--o{ AUTH_TOKEN : "user_id"
+    AUTH_USER ||--o{ AUTH_SESSION : "user_id"
+    AUTH_USER ||--o{ AUTH_TOTP : "user_id"
+    AUTH_USER ||--o{ AUTH_MFA_CONFIG : "user_id"
+    AUTH_USER ||--o{ AUTH_PASSWORD_RECOVERY : "user_id"
+    AUTH_USER ||--o{ AUTH_USER_ROLE : "user_id"
+    AUTH_USER ||--o{ AUTH_AUDIT_LOG : "user_id"
+    AUTH_USER ||--o{ AUTH_OAUTH2_CONSENT : "principal"
+    AUTH_ROLE ||--o{ AUTH_USER_ROLE : "role_id"
+    AUTH_ROLE ||--o{ AUTH_ROLE_PERMISSION : "role_id"
+    AUTH_PERMISSION ||--o{ AUTH_ROLE_PERMISSION : "permission_id"
+
+    AUTH_USER {
+        bigint id PK "主键"
+        varchar username UK "uk_username 登录名"
+        varchar email "邮箱"
+        varchar phone "手机号"
+        varchar password_hash "BCrypt 密码哈希"
+        varchar open_id "微信 open_id"
+        bigint tenant_id "租户"
+        int status "状态"
+        int failed_login_attempts "连续失败次数"
+        timestamp locked_until "锁定截止时间"
+        timestamp last_login_at "最近登录时间"
+    }
+
+    AUTH_ROLE {
+        bigint id PK "主键"
+        varchar code UK "uk_tenant_code 租户内唯一"
+        varchar name "角色名"
+        varchar description "描述"
+        int data_scope "数据权限范围"
+        tinyint enabled "是否启用"
+        bigint tenant_id "租户"
+    }
+
+    AUTH_PERMISSION {
+        bigint id PK "主键"
+        varchar code UK "权限编码"
+        varchar name "权限名"
+        varchar resource "资源"
+        varchar action "动作"
+        tinyint enabled "是否启用"
+    }
+
+    AUTH_USER_ROLE {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        bigint role_id FK "角色"
+        bigint tenant_id "租户"
+    }
+
+    AUTH_ROLE_PERMISSION {
+        bigint id PK "主键"
+        bigint role_id FK "角色"
+        bigint permission_id FK "权限"
+        bigint tenant_id "租户"
+    }
+
+    AUTH_SESSION {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        varchar session_id UK "会话标识"
+        varchar device_id "设备标识"
+        varchar client_ip "客户端 IP"
+        varchar user_agent "UA"
+        timestamp last_active_at "最近活跃时间"
+        timestamp expires_at "过期时间"
+    }
+
+    AUTH_TOKEN {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        varchar token_type "ACCESS/REFRESH"
+        varchar token_hash "SHA-256 哈希"
+        varchar jti "JWT 唯一标识"
+        varchar token_family "轮换家族"
+        varchar previous_jti "上一 JTI"
+        int rotation_count "轮换次数"
+        tinyint revoked "是否撤销"
+        timestamp revoked_at "撤销时间"
+        timestamp expires_at "过期时间"
+        varchar device_id "设备标识"
+    }
+
+    AUTH_TOTP {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        varchar encrypted_secret "AES 加密密钥"
+        tinyint verified "已验证"
+        tinyint enabled "已启用"
+        text backup_codes "备用码"
+        text used_backup_codes "已用备用码"
+        timestamp last_verified_at "最近验证时间"
+    }
+
+    AUTH_MFA_CONFIG {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        varchar mfa_type "TOTP/BIOMETRIC/EMAIL"
+        tinyint enabled "是否启用"
+        tinyint required "是否强制"
+        int priority "优先级"
+        text metadata "扩展配置"
+    }
+
+    AUTH_PASSWORD_RECOVERY {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        varchar username "登录名"
+        varchar channel "EMAIL/SMS"
+        varchar contact_hash "联系方式哈希"
+        varchar status "PENDING/USED/EXPIRED"
+        int attempt_count "尝试次数"
+        timestamp expires_at "过期时间"
+    }
+
+    AUTH_OAUTH2_CONSENT {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        varchar principal "主体"
+        varchar client_id "客户端"
+        text scope "授权范围"
+        timestamp consented_at "授权时间"
+    }
+
+    AUTH_CONFIG {
+        bigint id PK "主键"
+        varchar config_type "配置类型"
+        varchar config_key UK "配置键"
+        varchar config_value "配置值"
+        varchar description "描述"
+        tinyint enabled "是否启用"
+        tinyint is_default "是否默认"
+    }
+
+    AUTH_AUDIT_LOG {
+        bigint id PK "主键"
+        bigint user_id FK "用户"
+        varchar event_type "事件类型"
+        varchar event_status "结果状态"
+        varchar protocol_type "协议类型"
+        varchar client_ip "客户端 IP"
+        varchar device_id "设备标识"
+        varchar request_path "请求路径"
+        varchar error_message "错误信息"
+        text metadata "扩展元数据"
+    }
+
+    AUTH_PROTOCOL_CONFIG {
+        bigint id PK "主键"
+        varchar protocol_type "协议类型"
+        varchar protocol_name "协议名"
+        text config_json "协议配置 JSON"
+        tinyint enabled "是否启用"
+        int priority "优先级"
+    }
 
     OAUTH2_REGISTERED_CLIENT {
         varchar id PK "客户端主键"

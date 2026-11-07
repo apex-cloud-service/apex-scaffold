@@ -19,7 +19,7 @@
   </defs>
   <rect width="1400" height="940" fill="#fff"/>
   <text x="700" y="38" class="title">UML 类图：apex-auth 领域模型</text>
-  <text x="700" y="60" class="subtitle">com.apex.scaffold.auth.domain.model · 认证/授权领域实体 · 聚合与领域服务 · v1.3.1</text>
+  <text x="700" y="60" class="subtitle">com.apex.scaffold.auth.domain.model · 认证/授权领域实体 · 聚合与领域服务 · v1.4.0</text>
 
   <!-- package boundary -->
   <rect x="40" y="84" width="1320" height="790" rx="10" fill="#4f46e5" opacity="0.04" stroke="#4f46e5" stroke-width="1.5" stroke-dasharray="6 4"/>
@@ -188,6 +188,7 @@
   <text x="1012" y="720" class="field">JwtKeyRotationService / JwtKeyMaterialService</text>
   <text x="1012" y="736" class="field">BruteForceProtection / IpAccessControl</text>
   <text x="1012" y="752" class="field">DeviceTrust / Biometric / PasswordPolicy</text>
+  <text x="1012" y="766" class="field">TenantStatusPort（租户状态端口）</text>
 
   <!-- relationship connectors -->
   <!-- Role 持有 Permission (聚合): Role -> Permission -->

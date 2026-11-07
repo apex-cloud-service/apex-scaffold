@@ -1,10 +1,14 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
   subgraph Svc["用例编排 service"]
-    S1["service / service.impl 核心业务用例(事务边界)"]
-    S2["service.auth / service.login 认证编排"]
-    S3["office / office.approval 办公协同用例"]
-    S4["support / support.sso SSO 会话"]
+    S1["service（扁平）+ service.impl · 用户/角色/菜单/租户/字典/配置/日志/代码生成/SSO 用例（事务边界）"]
+    S2["service.auth · 认证票据/注册渠道"]
+    S3["service.login · 登录策略族（密码/短信/微信）"]
+  end
+
+  subgraph Platform["开放平台与能力"]
+    P1["openplatform · OpenAppAdminService/OpenAppMigrationService/OpenPlatformScopeRegistry"]
+    P2["capability · CapabilityCatalog 能力目录"]
   end
 
   subgraph JobSched["调度/事件"]
@@ -13,25 +17,31 @@ flowchart TB
   end
 
   subgraph Dto["数据传输/装配"]
-    D1["dto / dto.request / dto.admin / dto.data"]
+    D1["dto + dto.admin/dto.internal/dto.log/dto.search/dto.usage"]
     D2["assembler / factory 装配与构造"]
-    D3["workflow 工作流编排"]
   end
 
-  subgraph Guard["安全守卫"]
-    G1["guard / security 权限与数据范围"]
+  subgraph Guard["安全/支撑"]
+    G1["security · TenantGuard 租户与数据范围守卫"]
+    G2["support / support.sso · SSO 票据/连接池/元数据/模板引擎"]
+    G3["config 应用层装配配置"]
   end
 
-  DOMAIN["apex-domain"]
-  INFRA["apex-infrastructure"]
-  IF["apex-interfaces"]
+  APPDOM["apex-system domain 包"]
+  SHAREDOM["apex-domain"]
+  COMMON["apex-common"]
+  IF["apex-system interfaces 包（调用方）"]
+  SVC["apex-system-service（装配扫描）"]
 
-  DOMAIN --> Svc
-  INFRA --> Svc
+  APPDOM --> Svc
+  SHAREDOM --> Svc
+  COMMON --> Svc
   Svc --> Dto
   Svc --> JobSched
+  Svc --> Platform
   Svc --> Guard
-  Dto --> IF
+  IF --> Svc
+  SVC -. "扫描装配" .-> IF
 
-  NOTE["承载用例编排与事务边界，是领域能力对外的应用门面，无 Web 细节"]
+  NOTE["包名 com.apex.scaffold.application，位于 apex-system 库内；office/workflow 子域已迁至独立 apex-office、apex-workflow 库"]
   Svc -.-> NOTE

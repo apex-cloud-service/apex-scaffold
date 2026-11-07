@@ -302,6 +302,7 @@ classDiagram
         PasswordPolicyService
         ResourcePermissionService
         SecurityMonitoringService
+        TenantStatusPort
         UnifiedAuditService
         BiometricAuthService
         ClientSecretRotationService
@@ -311,7 +312,7 @@ classDiagram
         RecoveryCredentialStore
         TokenTtlStrategy
     }
-    note for AuthDomainServices "领域层服务，仅表达业务规则\n不依赖持久化与框架实现（DDD 约束）\n共 ~20 个域服务"
+    note for AuthDomainServices "领域层服务，仅表达业务规则\n不依赖持久化与框架实现（DDD 约束）\n共 21 个域服务"
 
     UserEntity "1" --> "*" TokenEntity : 拥有
     UserEntity "1" --> "*" SessionEntity : 建立会话

@@ -20,6 +20,8 @@
 | 2026-11-03 | all-projects | 平台运营收口：分档限流、能力二次校验、前端九页与 MFA、冷链大屏与调拨展示（附按仓详版存档） | [2026-11-03-all-projects-daily-report.md](./2026-11-03-all-projects-daily-report.md) |
 | 2026-11-04 | all-projects | 组件化装配与内部认证收口 | [2026-11-04-all-projects-daily-report.md](./2026-11-04-all-projects-daily-report.md) |
 | 2026-11-05 | all-projects | 缺陷回补与冷链移库规则 | [2026-11-05-all-projects-daily-report.md](./2026-11-05-all-projects-daily-report.md) |
+| 2026-11-06 | all-projects | 构建编排与冷链回归修复 | [2026-11-06-all-projects-daily-report.md](./2026-11-06-all-projects-daily-report.md) |
+| 2026-11-07 | all-projects | 跨端契约与分层收口 | [2026-11-07-all-projects-daily-report.md](./2026-11-07-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 

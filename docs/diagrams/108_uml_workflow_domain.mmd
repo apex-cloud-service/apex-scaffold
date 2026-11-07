@@ -63,7 +63,7 @@ classDiagram
         - LocalDateTime createTime / updateTime
         - Integer deleted
     }
-    note for Task "status: PENDING/COMPLETED/REJECTED/CANCELLED/TRANSFERRED\ntimeoutStrategy: AUTO_APPROVE/AUTO_REJECT/REMIND\nversion 乐观锁条件更新"
+    note for Task "status: PENDING/COMPLETED/REJECTED/CANCELLED/TRANSFERRED\ntimeoutStrategy: ESCALATE/AUTO_COMPLETE/NOTIFY\nversion 乐观锁条件更新"
 
     class ApprovalRecord {
         «entity · 审批留痕 @Data»

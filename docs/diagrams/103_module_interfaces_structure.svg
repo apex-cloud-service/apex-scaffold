@@ -22,31 +22,31 @@
   <rect x="40" y="92" width="430" height="740" rx="10" fill="#0891b2" opacity="0.06" stroke="#0891b2" stroke-width="2"/>
   <rect x="40" y="92" width="430" height="40" rx="10" fill="#0891b2"/>
   <text x="60" y="118" class="grp">包结构（com.apex.scaffold.interfaces.*）</text>
-  <text x="60" y="148" class="code">├─ router / router.office</text>
-  <text x="60" y="170" class="code">├─ handler / handler.office</text>
-  <text x="60" y="192" class="code">│  └─ handler.office.*（approval/calendar…）</text>
+  <text x="60" y="148" class="code">├─ router（函数式路由注册）</text>
+  <text x="60" y="170" class="code">├─ handler（请求处理与校验）</text>
+  <text x="60" y="192" class="code">│  └─ office 子域路由已迁至 apex-office</text>
   <text x="60" y="214" class="code">├─ aspect（横切切面）</text>
-  <text x="60" y="236" class="code">├─ assembler / assembler.office</text>
-  <text x="60" y="258" class="code">├─ dto / dto.office / dto.workflow / dto.monitor</text>
-  <text x="60" y="280" class="code">├─ filter（Web 过滤器）</text>
-  <text x="60" y="302" class="code">├─ exception（全局异常处理）</text>
-  <text x="60" y="324" class="code">├─ security / service / util / config</text>
-  <text x="60" y="346" class="code">├─ governance</text>
-  <text x="60" y="368" class="code">│  ├─ governance.lifecycle</text>
-  <text x="60" y="390" class="code">│  ├─ governance.config</text>
-  <text x="60" y="412" class="code">│  └─ governance.platform（compose/k8s/standalone）</text>
-  <text x="60" y="434" class="code">├─ metrics / monitor / monitor.dashboard</text>
+  <text x="60" y="236" class="code">├─ dto / dto.internal / dto.monitor</text>
+  <text x="60" y="258" class="code">├─ filter（Web 过滤器）</text>
+  <text x="60" y="280" class="code">├─ exception（全局异常处理）</text>
+  <text x="60" y="302" class="code">├─ security / service / util / config</text>
+  <text x="60" y="324" class="code">├─ governance</text>
+  <text x="60" y="346" class="code">│  ├─ governance.lifecycle</text>
+  <text x="60" y="368" class="code">│  ├─ governance.config</text>
+  <text x="60" y="390" class="code">│  └─ governance.platform（compose/k8s/standalone）</text>
+  <text x="60" y="412" class="code">├─ metrics</text>
+  <text x="60" y="434" class="code">└─ monitor / monitor.dashboard / monitor.health</text>
 
   <text x="60" y="482" class="legend" font-weight="600">职责定位</text>
   <text x="60" y="508" class="box-desc">• HTTP 入口：RouterFunction + Handler 组合</text>
   <text x="60" y="530" class="box-desc">• 全局异常、过滤器、AOP 切面集中处</text>
   <text x="60" y="552" class="box-desc">• 治理入口：生命周期/健康/平台适配</text>
-  <text x="60" y="574" class="box-desc">• 聚合各模块路由，为应用提供唯一 HTTP 面</text>
+  <text x="60" y="574" class="box-desc">• 聚合本库路由，为 system 服务提供唯一 HTTP 面</text>
 
   <text x="60" y="622" class="legend" font-weight="600">依赖</text>
-  <text x="60" y="648" class="box-desc">→ 依赖 application + infrastructure + domain</text>
-  <text x="60" y="670" class="box-desc">   + workflow + license-starter（依赖汇合点）</text>
-  <text x="60" y="692" class="box-desc">← 作为可执行入口被 apex-example 依赖</text>
+  <text x="60" y="648" class="box-desc">→ 依赖同库 application · infrastructure · domain 包</text>
+  <text x="60" y="670" class="box-desc">   模块级另依赖 license-starter（授权门控）</text>
+  <text x="60" y="692" class="box-desc">← apex-example 依赖 apex-system 库作为示例</text>
 
   <!-- right -->
   <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
@@ -55,10 +55,10 @@
   <text x="533" y="158" class="box-title">router / handler</text>
   <text x="533" y="178" class="code">RouterFunction 路由注册</text>
   <text x="533" y="196" class="code">HandlerFunction 处理</text>
-  <text x="533" y="214" class="box-desc">office 子域独立路由</text>
-  <text x="533" y="240" class="box-title">dto / assembler</text>
-  <text x="533" y="260" class="code">dto.office / dto.workflow</text>
-  <text x="533" y="278" class="box-desc">assembler 转换为应用 DTO</text>
+  <text x="533" y="214" class="box-desc">RouterFunction 函数式端点</text>
+  <text x="533" y="240" class="box-title">dto</text>
+  <text x="533" y="260" class="code">dto.internal / dto.monitor</text>
+  <text x="533" y="278" class="box-desc">接口层 DTO 与内部契约</text>
   <rect x="800" y="136" width="270" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
   <text x="813" y="158" class="box-title">filter / aspect / exception</text>
   <text x="813" y="178" class="code">WebFilter 过滤链</text>
@@ -92,7 +92,7 @@
   <text x="713" y="448" class="box-desc">路由匹配</text>
   <text x="713" y="468" class="code">谓词/路径</text>
   <text x="713" y="488" class="box-desc">转发至 Handler</text>
-  <text x="713" y="508" class="box-desc">office 路由聚合</text>
+  <text x="713" y="508" class="box-desc">聚合 system 全部业务路由</text>
   <rect x="880" y="406" width="170" height="190" rx="6" fill="#fff" stroke="#99f6e4" stroke-width="1.5"/>
   <text x="893" y="428" class="box-title">3. handler</text>
   <text x="893" y="448" class="box-desc">解析请求 DTO</text>
@@ -115,9 +115,9 @@
   <text x="520" y="718" class="box-desc">2. 反应式全链路：Handler 返回 Mono/Flux，禁止阻塞调用。</text>
   <text x="520" y="746" class="box-desc">3. 治理能力（生命周期/探针/平台）集中于此，便于多形态部署。</text>
   <text x="1040" y="660" class="box-title" font-size="14">依赖汇合点</text>
-  <text x="1040" y="690" class="box-desc">application · infrastructure · domain · workflow</text>
-  <text x="1040" y="718" class="box-desc">· license-starter —— 唯一依赖全部核心模块处</text>
-  <text x="1040" y="746" class="note">因此也是唯一可执行入口的承载模块</text>
+  <text x="1040" y="690" class="box-desc">application · infrastructure · domain · license-starter</text>
+  <text x="1040" y="718" class="box-desc">workflow 已拆分至独立 apex-workflow 库</text>
+  <text x="1040" y="746" class="note">运行入口为 apex-system-service；本库不再承载可执行 main</text>
 
-  <text x="700" y="872" class="note" text-anchor="middle">apex-system 是各层的依赖汇合点与唯一 HTTP 出口，同时承载治理与可观测入口</text>
+  <text x="700" y="872" class="note" text-anchor="middle">apex-system 承载 system 域各层实现与唯一 system HTTP 出口，同时承载治理与可观测入口；运行装配由 apex-system-service 完成</text>
 </svg>

@@ -1,59 +1,53 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
-  init: {
-    'theme': 'base',
-    'themeVariables': {
-      'primaryColor': '#eef2ff',
-      'primaryTextColor': '#0f172a',
-      'primaryBorderColor': '#4f46e5',
-      'lineColor': '#475569',
-      'fontFamily': 'system-ui, sans-serif'
-    }
-  }
-}%%
 flowchart TD
-    subgraph P1["① 业务事务内写入发件箱"]
-        A1["业务操作（同事务）"] --> A2["DomainEventPublisherImpl.publish()<br/>先落箱 append(event)"]
-        A2 --> A3["MessageOutboxServiceImpl.append<br/>INSERT sys_message_outbox"]
-        A3 --> A4["status = PENDING<br/>attempts = 0 · max_attempts = 5<br/>retry_delay_seconds = 10 · next_attempt_at = now"]
-        A4 --> A5["MqProducerService.sendSyncWithOutbox<br/>先落箱 → 同步发送"]
-        A5 --> A6{"同步发送成功?"}
-        A6 -- "是" --> A7["标记 DELIVERED<br/>delivered_at = now"]
-        A6 -- "否" --> A8["保留 PENDING 并抛出<br/>交由调度器重试"]
+    subgraph T1["① MQ 业务消息 Outbox（sys_message_outbox · apex-infrastructure-messaging）"]
+        A1["业务同步事务内追加<br/>MessageOutboxServiceImpl.append<br/>（不自动创建/继承事务，需调用方同事务）"] --> A2["status=PENDING · attempts=0<br/>max_attempts=5 · next_attempt_at=now<br/>含 tenant_id · 参与行级隔离"]
+        A2 --> A3["MqProducerService.sendSyncWithOutbox<br/>先落箱 → 同步发 RocketMQ"]
+        A3 --> A4{"同步发送成功?"}
+        A4 -- "是" --> A5["标记 DELIVERED<br/>delivered_at = now"]
+        A4 -- "否" --> A6["保留 PENDING<br/>交由调度器重试"]
     end
 
-    subgraph P2["② 调度器扫描投递"]
-        B1["@Scheduled fixedDelay=5000ms<br/>MessageOutboxDispatcher.dispatch()"] --> B2["releaseExpiredLocks()<br/>释放超时锁（lock_timeout=300s）"]
-        B2 --> B3["fetchPendingMessages(100)<br/>status = PENDING"]
-        B3 --> B4["lockMessage(messageId, instanceId)<br/>CAS 抢锁 locked_by"]
-        B4 --> B5{"抢锁成功?"}
-        B5 -- "否（他实例占用）" --> B6["跳过，等待下次扫描"]
-        B5 -- "是" --> B7["status = PROCESSING<br/>mqProducerService.sendSync(topic, tag, payload)"]
+    subgraph T2["② 共享领域事件 Outbox（sys_domain_event_outbox · DomainEventOutboxStore）"]
+        C1["DomainEventOutboxStore.appendSync(Connection)<br/>绑定调用方事务连接 · 事件 ID 幂等"] --> C2["DomainEventOutboxDispatcher<br/>@Scheduled poll-delay-ms:1000<br/>apex.events.outbox.enabled 控制"]
+        C2 --> C3["claim：PENDING → PROCESSING<br/>单实例同一时刻单批在途"]
     end
 
-    subgraph P3["③ 重试与死信"]
-        B7 --> C1{"投递结果"}
-        C1 -- "成功" --> C2["markAsDelivered<br/>status = DELIVERED"]
-        C1 -- "失败且未耗尽" --> C3["markAsFailed<br/>attempts+1 · status = PENDING<br/>next_attempt_at = now + retry_delay × 2^(attempts-1)"]
-        C1 -- "失败且 attempts >= max_attempts" --> C4["markAsFailed<br/>status = DEAD（死信）"]
-        C3 --> B1
-        C4 --> C5["死信处置<br/>告警 / 人工介入"]
+    subgraph T3["③ workflow 专用事件落箱（WorkflowEventOutbox）"]
+        W1["JdbcWorkflowTaskTransaction.appendSync<br/>TransactionTemplate 同步事务内<br/>业务写与事件追加同事务"] --> W2["JdbcWorkflowEventOutbox<br/>直写 sys_domain_event_outbox<br/>事件 ID 唯一约束防重复落箱"]
+        W2 --> W3["WorkflowEventOutboxDispatcher<br/>按 apex.events.channel 本地/远程发布"]
     end
 
-    subgraph P4["④ 保留与清理"]
-        C2 --> D1["purgeRetained（保留策略）"]
-        C4 --> D1
-        D1 --> D2["DELIVERED 保留 168h<br/>DEAD 保留 7 天"]
-        D2 --> D3["分批物理删除<br/>retention-batch-size = 5000"]
+    subgraph T4["④ 重试与死信（消息/事件 Outbox 同型）"]
+        R1["markFailed：attempts+1<br/>指数退避 next_attempt_at"] --> R2{"attempts >= max_attempts?"}
+        R2 -- "否" --> R3["恢复 PENDING · 清锁<br/>等待下次扫描"]
+        R2 -- "是" --> R4["DEAD 死信<br/>告警 / 人工介入"]
+        R3 --> CL["purgeRetained 清理<br/>DELIVERED/DEAD 按保留期分批删除"]
     end
+
+    subgraph T5["⑤ 约束与开关"]
+        S1["SeataOutboxGuard：存在全局事务 XID 时拒绝写入<br/>拦截 TransactionalOutboxExecutor / append*"]
+        S2["apex.events.outbox.enabled<br/>auth 生产默认 true · basic/H2 关闭"]
+        S1 --> S2
+    end
+
+    A5 --> R1
+    A6 --> R1
+    C3 --> R1
+    W3 --> R1
 
     classDef biz fill:#eef2ff,stroke:#4f46e5,stroke-width:1.8px,color:#0f172a;
-    classDef disp fill:#ecfdf5,stroke:#059669,stroke-width:1.8px,color:#0f172a;
+    classDef evt fill:#eff6ff,stroke:#3b82f6,stroke-width:1.8px,color:#0f172a;
+    classDef wf fill:#fdf2f8,stroke:#ec4899,stroke-width:1.8px,color:#0f172a;
     classDef retry fill:#fffbeb,stroke:#d97706,stroke-width:1.8px,color:#0f172a;
     classDef dead fill:#fef2f2,stroke:#dc2626,stroke-width:1.4px,color:#b91c1c;
-    classDef clean fill:#eff6ff,stroke:#3b82f6,stroke-width:1.8px,color:#0f172a;
+    classDef clean fill:#ecfdf5,stroke:#059669,stroke-width:1.8px,color:#0f172a;
+    classDef guard fill:#f8fafc,stroke:#64748b,stroke-width:1.4px,color:#0f172a;
 
-    class A1,A2,A3,A4,A5,A6,A7,A8 biz;
-    class B1,B2,B3,B4,B5,B6,B7 disp;
-    class C1,C2,C3 retry;
-    class C4,C5 dead;
-    class D1,D2,D3 clean;
+    class A1,A2,A3,A4,A5,A6 biz;
+    class C1,C2,C3 evt;
+    class W1,W2,W3 wf;
+    class R1,R2,R3 retry;
+    class R4 dead;
+    class CL clean;
+    class S1,S2 guard;

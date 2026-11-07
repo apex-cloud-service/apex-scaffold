@@ -749,7 +749,7 @@ flowchart LR
 
 **状态**：方案已批准；当前代码具备渐进授权接入，部署与集成验收待执行。
 
-**决策**：主应用与 `AuthCenterApplication` 保持独立 Spring ApplicationContext，主应用扫描排除 authcenter 包。共享基础类型，不直接调用中心内部仓储或 Mapper。主应用身份认证继续使用原有 JWT 链，授权数据通过领域端口 `UnifiedAuthorizationGateway` 与 HTTPS 适配器接入中心。
+**决策**：主应用与认证中心入口 `AuthServiceApplication` 保持独立 Spring ApplicationContext，主应用以显式 `scanBasePackages` 白名单扫描，不包含 auth 包。共享基础类型，不直接调用中心内部仓储或 Mapper。主应用身份认证继续使用原有 JWT 链，授权数据通过领域端口 `UnifiedAuthorizationGateway` 与 HTTPS 适配器接入中心。
 
 **实现边界**：`apex.features.auth-center-permission` 默认关闭。开启后以可信主租户/用户解析服务端唯一映射，使用专用读取账号 ACCESS Token 查询 `/auth/v1/authorization/users/{userId}`；中心租户来自 Token，中心检查读取账号和目标账号的状态。客户端验证响应身份并转换回主应用身份；映射 SELF、ALL、DEPT、DEPT_AND_CHILD 数据范围，CUSTOM、空值和未知范围拒绝。
 

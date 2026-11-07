@@ -29,7 +29,7 @@
   <text x="60" y="242" class="code">├─ MachineFingerprintCollector</text>
   <text x="60" y="264" class="code">├─ LicenseInfo · LicenseVersion</text>
   <text x="60" y="286" class="code">├─ LicenseFeatureGate · FeatureGateAspect</text>
-  <text x="60" y="308" class="code">├─ ConditionalOnLicenseFeature</text>
+  <text x="60" y="308" class="code">├─ ConditionalOnLicenseFeature · LicenseFeatureCondition</text>
   <text x="60" y="330" class="code">├─ LicenseRevalidationScheduler</text>
   <text x="60" y="352" class="code">├─ OsFamily · RsaUtil · LicenseException</text>
 
@@ -114,7 +114,8 @@
   <text x="520" y="636" class="box-desc">3. 机器指纹采用多因子组合（MAC+CPU+OS），降低误绑定与绕开概率。</text>
   <text x="520" y="664" class="box-desc">4. 特性开关通过 Aspect + Condition 注入，无侵入业务代码。</text>
   <text x="520" y="704" class="box-title" font-size="14">典型引用方</text>
-  <text x="520" y="734" class="box-desc">apex-system（授权入口校验）· apex-common.license（模型）</text>
+  <text x="520" y="734" class="box-desc">apex-system（授权门控接入，唯一业务引用方）</text>
+  <text x="520" y="752" class="box-desc">LicenseInfo / LicenseVersion 模型由 starter 自带（common 无 license 包）</text>
   <text x="520" y="772" class="note">license-starter 提供自动配置，license-tools 仅含 LicenseGenerator 单一签发入口</text>
 
   <text x="700" y="838" class="note" text-anchor="middle">授权能力闭环：签发（tools）→ 分发 → 启动验签（starter）→ 运行期复检</text>

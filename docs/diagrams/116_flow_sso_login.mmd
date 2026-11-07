@@ -1,52 +1,49 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TD
-    subgraph P1["① 多通道认证入口"]
-        A1["用户名密码登录<br/>POST /auth/v1/login"]
-        A2["短信验证码登录<br/>POST /api/auth/sms/code → /api/auth/login"]
-        A3["OAuth2 授权码 PKCE S256<br/>GET /oauth2/authorize → POST /oauth2/token"]
-        A4["Keycloak OIDC<br/>GET /auth/oidc/login → 回调"]
+    subgraph P1["① 多通道认证入口（按实现分离）"]
+        A1["auth 密码登录<br/>POST /auth/v1/login<br/>AuthenticationApplicationService"]
+        A2["system 短信登录<br/>PublicApiRouter /api/v1/auth/**<br/>LoginStrategyProvider → 手机号登录策略"]
+        A3["auth OAuth2 授权码 PKCE S256<br/>GET /oauth2/authorize → POST /oauth2/token"]
+        A4["Keycloak OIDC（keycloak.enabled 条件开启）<br/>GET /auth/oidc/login → 回调"]
     end
 
-    subgraph P2["② 统一令牌签发与生命周期"]
-        B1["JWT 密钥管理 V26 jwt_keys<br/>PENDING→ACTIVE→ROTATING→DEPRECATED→REVOKED"]
-        B2["TokenService 签发 access(2h)+refresh(7d)"]
-        B3["令牌轮换与重放检测 V42<br/>token_family · previous_jti · Redis 一次性刷新"]
-        B4["刷新/注销撤销<br/>POST /auth/v1/refresh · /auth/v1/logout/{userId}"]
+    subgraph P2["② 令牌签发（各通道独立实现，不共用一条链）"]
+        B1["auth TokenServiceImpl：RS256 · 令牌入库<br/>access 2h / refresh 7d（固定）· JWT 无 sid<br/>刷新：撤销旧 refresh 后签发新令牌对"]
+        B2["system 共享 TokenService（HS256）<br/>默认 2h/7d 可配置 · Redis subject:sid 槽<br/>多会话 sid · 刷新锁内消费旧 refresh"]
+        B3["auth OAuth2：RS256 · 授权记录入库<br/>access 1h / refresh 30d"]
+        B4["system 本地 OAuth2 授权服务<br/>Redis 授权缓存 · 2h/7d · 独立实现"]
     end
 
-    subgraph P3["③ 安全加固链路"]
-        C1["IP 访问控制 V53<br/>黑名单优先 · CIDR/通配符"]
-        C2["MFA 多因素 V27<br/>TOTP/SMS/EMAIL/BACKUP"]
-        C3["生物识别 V55<br/>WebAuthn · 挑战 TTL 60s"]
-        C4["设备信任 V56<br/>UNTRUSTED→FULL · riskScore"]
-        C5["防爆破与账号锁定<br/>login:fail:ip / username · locked_until"]
+    subgraph P3["③ 安全边界（按平面挂载，非全通道串行链）"]
+        C1["IP 访问控制 WebFilter（auth 入站）"]
+        C2["TOTP MFA（auth）<br/>仅已启用用户触发 · 挑战 5 分钟<br/>/auth/v1/mfa/verify"]
+        C3["生物识别 / 设备信任<br/>未证明接入上述主登录链"]
+        C4["防爆破与账号锁定（Redis 计数）"]
     end
 
-    subgraph P4["④ 业务 API 过滤器"]
-        D1["JwtAuthenticationFilter<br/>黑名单→验签→type=access→撤销检查→滑动续期→权限→TenantContext"]
-        D2["OAuth2ResourceServerFilter<br/>/oauth2/api/** → SCOPE_* 权限"]
+    subgraph P4["④ 业务 API 校验"]
+        D1["system JwtAuthenticationFilter<br/>黑名单→验签→type=access→撤销检查→滑动续期→权限→TenantContext"]
+        D2["OAuth2ResourceServerFilter<br/>仅 /oauth2/api/** → system 本地 OAuth2 · SCOPE_*"]
     end
 
-    A1 --> B2
+    A1 --> B1
     A2 --> B2
-    A3 --> B2
+    A3 --> B3
     A4 --> B2
-    B1 --> B2
-    B2 --> B3
-    B3 --> B4
-    B4 --> C1
+    B1 --> C1
     C1 --> C2
-    C2 --> C3
-    C3 --> C4
-    C4 --> C5
-    C5 --> D1
-    D1 --> D2
+    A2 --> C4
+    C4 --> B2
+    B2 --> D1
+    B4 --> D2
 
     classDef entry fill:#eef2ff,stroke:#4f46e5,color:#0f172a;
     classDef token fill:#eff6ff,stroke:#3b82f6,color:#0f172a;
     classDef sec fill:#f0fdf4,stroke:#059669,color:#0f172a;
     classDef biz fill:#fdf2f8,stroke:#ec4899,color:#0f172a;
+    classDef warn fill:#fffbeb,stroke:#d97706,color:#0f172a;
     class A1,A2,A3,A4 entry;
     class B1,B2,B3,B4 token;
-    class C1,C2,C3,C4,C5 sec;
+    class C1,C2,C4 sec;
+    class C3 warn;
     class D1,D2 biz;

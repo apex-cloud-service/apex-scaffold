@@ -5,9 +5,9 @@
       <rdf:Description>
         <dc:title>Apex Scaffold 消息发件箱（Outbox）业务流程图</dc:title>
         <dc:creator>Apex Team</dc:creator>
-        <dc:date>2026-10-05</dc:date>
-        <dc:version>1.3.1</dc:version>
-        <dc:description>Outbox 模式端到端：业务事务落箱 → 调度扫描 → 分布式锁投递 → 指数退避重试 → 死信 → 保留清理</dc:description>
+        <dc:date>2026-11-06</dc:date>
+        <dc:version>1.4.0</dc:version>
+        <dc:description>三类 Outbox：MQ 业务消息 sys_message_outbox · 共享领域事件 sys_domain_event_outbox（appendSync 绑定事务）· workflow 专用事件落箱；调度→退避重试→死信→清理；Seata 全局事务拒绝写入</dc:description>
       </rdf:Description>
     </rdf:RDF>
   </metadata>
@@ -38,11 +38,11 @@
 
   <rect width="1500" height="1040" fill="#ffffff"/>
   <text x="750" y="42" class="title">Apex Scaffold 消息发件箱（Outbox）业务流程图</text>
-  <text x="750" y="66" class="subtitle">本地消息表保证业务与消息最终一致 · 落箱 → 调度 → 锁投递 → 退避重试 → 死信 → 清理 · v1.3.1</text>
+  <text x="750" y="66" class="subtitle">三类 Outbox（MQ 消息 / 共享领域事件 / workflow 事件）· 落箱 → 调度 → 锁投递 → 退避重试 → 死信 → 清理 · v1.4.0</text>
 
   <!-- Lane headers -->
   <rect x="40" y="92" width="1420" height="30" rx="6" fill="#f1f5f9"/>
-  <text x="270" y="112" class="lane">① 业务事务内落箱</text>
+  <text x="270" y="112" class="lane">① 业务事务内落箱（三套）</text>
   <text x="700" y="112" class="lane">② 调度扫描与投递</text>
   <text x="1080" y="112" class="lane">③ 重试与死信</text>
   <text x="1330" y="112" class="lane">④ 保留与清理</text>
@@ -58,10 +58,10 @@
   <line x1="270" y1="200" x2="270" y2="226" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
   <rect x="70" y="228" width="400" height="74" rx="7" fill="#eef2ff" stroke="#4f46e5" stroke-width="1.8"/>
-  <text x="270" y="252" class="node-title">发件箱写入服务</text>
-  <text x="270" y="270" class="node-sub">MessageOutboxServiceImpl.append（业务消息）</text>
-  <text x="270" y="286" class="node-sub">DomainEventOutboxStore.append（领域事件）</text>
-  <text x="270" y="301" class="node-actor">INSERT sys_message_outbox</text>
+  <text x="270" y="252" class="node-title">发件箱写入服务（各自实现）</text>
+  <text x="270" y="270" class="node-sub">MessageOutboxServiceImpl.append（业务消息 · 需调用方同事务）</text>
+  <text x="270" y="286" class="node-sub">DomainEventOutboxStore.appendSync（领域事件 · 绑定调用方 Connection）</text>
+  <text x="270" y="301" class="node-actor">INSERT sys_message_outbox / sys_domain_event_outbox</text>
 
   <line x1="270" y1="302" x2="270" y2="328" stroke="#4f46e5" stroke-width="1.6" marker-end="url(#a)"/>
 
@@ -173,12 +173,12 @@
 
   <!-- ===== 状态机与重试公式 section ===== -->
   <rect x="40" y="740" width="1420" height="130" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
-  <text x="60" y="764" class="phase" fill="#334155" style="font-size:14px">消息状态机与重试公式（sys_message_outbox.status · 与 sys_domain_event_outbox 状态一致）</text>
+  <text x="60" y="764" class="phase" fill="#334155" style="font-size:14px">状态机与重试公式（三套发件箱状态同型：MQ 消息 / 共享领域事件 / workflow 事件）</text>
 
   <rect x="60" y="780" width="440" height="74" rx="7" fill="#ffffff" stroke="#059669" stroke-width="1.4"/>
   <text x="80" y="804" class="node-sub" text-anchor="start">PENDING ──lockMessage/CAS──▶ PROCESSING</text>
   <text x="80" y="824" class="node-sub" text-anchor="start">PROCESSING ──成功──▶ DELIVERED ──保留期──▶ 删除</text>
-  <text x="80" y="844" class="node-sub" text-anchor="start">PROCESSING ──未耗尽──▶ PENDING（清锁）</text>
+  <text x="80" y="844" class="node-sub" text-anchor="start">workflow：JdbcWorkflowEventOutbox 同事务直写 · 事件 ID 幂等</text>
 
   <rect x="520" y="780" width="420" height="74" rx="7" fill="#fef2f2" stroke="#dc2626" stroke-width="1.4"/>
   <text x="540" y="804" class="node-sub" text-anchor="start">PROCESSING ──耗尽──▶ DEAD ──保留期──▶ 删除</text>
@@ -192,9 +192,9 @@
 
   <!-- Footer notes -->
   <text x="60" y="898" class="note" style="font-weight:600">关键业务规则与风险提示：</text>
-  <text x="60" y="920" class="note">1. 仓库内并存两套发件箱：业务消息 sys_message_outbox（→RocketMQ，MessageOutboxServiceImpl/MessageOutboxDispatcher，max_attempts=5，轮询 5s）与领域事件 sys_domain_event_outbox（→Spring 本地事件，DomainEventOutboxStore/DomainEventOutboxDispatcher，max_attempts=8，轮询 1s）。</text>
+  <text x="60" y="920" class="note">1. 仓库内并存三套发件箱：MQ 业务消息 sys_message_outbox（→RocketMQ，MessageOutboxDispatcher 轮询 5s，max=5）；共享领域事件 sys_domain_event_outbox（DomainEventOutboxStore/Dispatcher，轮询 1s，max=8，受 apex.events.outbox.enabled 控制）；workflow 专用 WorkflowEventOutbox（JdbcWorkflowTaskTransaction.appendSync 同事务落箱 → WorkflowEventOutboxDispatcher 按 apex.events.channel 本地/远程发布）。</text>
   <text x="60" y="940" class="note">2. 多实例并发投递靠 locked_by 乐观锁 + CAS UPDATE 保证互斥；锁超时（业务 300s / 领域事件 120s）后可被其他实例重新领取，领域事件侧领取时会同步恢复 status=PENDING。</text>
-  <text x="60" y="960" class="note">3. 事务语义：业务消息 append 为单表 INSERT，当前无「业务+消息同事务」调用点；领域事件 appendSync(Connection) 为同事务写入预留 API 但暂无调用方，故原子性依赖「先落箱+重试」的最终一致。</text>
+  <text x="60" y="960" class="note">3. 事务语义：MessageOutboxServiceImpl.append 不创建/继承事务，需调用方在同一同步事务插入；DomainEventOutboxStore.appendSync(Connection) 已被 workflow 实际使用——业务写与事件追加同事务，apex.events.outbox.enabled=false 时跳过落箱；SeataOutboxGuard 在存在全局事务 XID 时拒绝 TransactionalOutboxExecutor / append* 写入。</text>
   <text x="60" y="980" class="note">4. 风险：releaseExpiredLocks 仅清锁未改回 PENDING，业务消息超时记录可能滞留 PROCESSING 无法再被扫描；batchSize 硬编码 100 未读配置；V45 MySQL 脚本存在编码损坏迹象需核实。</text>
 
   <!-- Legend -->
@@ -213,5 +213,5 @@
   <rect x="900" y="1000" width="14" height="14" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.4"/>
   <text x="922" y="1014" class="legend">保留清理</text>
 
-  <text x="750" y="1034" class="note" text-anchor="middle">数据源：apex-infrastructure（outbox/service/impl/MessageOutboxServiceImpl · outbox/dispatcher/MessageOutboxDispatcher · outbox/mapper/MessageOutboxMapper · event/DomainEventOutboxStore · event/DomainEventOutboxDispatcher · event/DomainEventPublisherImpl · mq/service/MqProducerService · mq/config/RocketMqProducerConfig）、迁移 mysql/V45（sys_message_outbox）与 V1（sys_domain_event_outbox）</text>
+  <text x="750" y="1034" class="note" text-anchor="middle">数据源：apex-infrastructure-messaging（outbox/service/impl/MessageOutboxServiceImpl · outbox/dispatcher/MessageOutboxDispatcher · outbox/mapper/MessageOutboxMapper · event/DomainEventOutboxStore · event/DomainEventOutboxDispatcher · event/DomainEventPublisherImpl · mq/service/MqProducerService · mq/config/RocketMqProducerConfig）、apex-workflow（infrastructure/persistence/repository/JdbcWorkflowTaskTransaction · JdbcWorkflowEventOutbox）、apex-workflow-service（infrastructure/event/WorkflowEventOutboxDispatcher）、apex-seata-spring-boot-starter（SeataOutboxGuard）、apex-auth-service（config/AuthCenterEventConfig）、迁移 mysql/V45（sys_message_outbox）与 V1（sys_domain_event_outbox）</text>
 </svg>

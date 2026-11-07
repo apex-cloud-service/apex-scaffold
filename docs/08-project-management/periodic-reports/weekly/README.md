@@ -8,11 +8,12 @@
 
 ## 索引
 
-| 周期 | 范围 | 文档 |
-| --- | --- | --- |
-| 2026 年第 43 周（10-19 ~ 10-25） | Apex-Scaffold 本仓库 | [2026-W43-apex-scaffold-weekly-report.md](./2026-W43-apex-scaffold-weekly-report.md) |
-| 2026 年第 43 周（10-19 ~ 10-25） | 冷链管理系统 V2.0 / 园区管理系统 / 供应链对接 | [2026-W43-cold-chain-park-supply-weekly-report.md](./2026-W43-cold-chain-park-supply-weekly-report.md)（另有 [.doc](./2026-W43-cold-chain-park-supply-weekly-report.doc) / [.docx](./2026-W43-cold-chain-park-supply-weekly-report.docx) 交付版） |
-| 2026 年第 44 周（10-26 ~ 11-01） | Apex-Scaffold 后端 + apex-admin-web 前端 | [2026-W44-apex-scaffold-weekly-report.md](./2026-W44-apex-scaffold-weekly-report.md)（另有 [.docx](./2026-W44-apex-scaffold-weekly-report.docx) 交付版，内容为上一版，未含本次验证范围与测试计数的修正） |
+| 周期 | 范围 | 主题 | 文档 |
+| --- | --- | --- | --- |
+| 2026 年第 43 周（10-19 ~ 10-25） | Apex-Scaffold 本仓库 | —（历史存档，未登记主题） | [2026-W43-apex-scaffold-weekly-report.md](./2026-W43-apex-scaffold-weekly-report.md) |
+| 2026 年第 43 周（10-19 ~ 10-25） | 冷链管理系统 V2.0 / 园区管理系统 / 供应链对接 | —（历史存档，未登记主题） | [2026-W43-cold-chain-park-supply-weekly-report.md](./2026-W43-cold-chain-park-supply-weekly-report.md)（另有 [.doc](./2026-W43-cold-chain-park-supply-weekly-report.doc) / [.docx](./2026-W43-cold-chain-park-supply-weekly-report.docx) 交付版） |
+| 2026 年第 44 周（10-26 ~ 11-01） | Apex-Scaffold 后端 + apex-admin-web 前端 | 架构定型（31 模块）与能力补齐 | [2026-W44-apex-scaffold-weekly-report.md](./2026-W44-apex-scaffold-weekly-report.md)（另有 [.docx](./2026-W44-apex-scaffold-weekly-report.docx) 交付版，内容为上一版，未含本次验证范围与测试计数的修正） |
+| 2026 年第 45 周（11-02 ~ 11-07） | all-projects（apex-scaffold 后端 + apex-admin-web 前端 + cold-chain 冷链） | 平台运营闭环、构建发布模块收口与仓园四阶段合并 | [2026-W45-all-projects-weekly-report.md](./2026-W45-all-projects-weekly-report.md) |
 
 ## 生成与补写约定
 

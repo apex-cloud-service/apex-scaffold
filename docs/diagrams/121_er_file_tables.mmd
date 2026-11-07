@@ -2,7 +2,6 @@
 erDiagram
     FILE_RECORD ||--o{ FILE_CHUNK : "file_id 分片"
     FILE_RECORD ||--o{ FILE_SHARE : "file_id 分享"
-    FILE_DOCUMENT ||--o{ FILE_DOCUMENT : "独立聚合"
 
     FILE_RECORD {
         bigint id PK "主键 雪花"
@@ -43,9 +42,11 @@ erDiagram
         varchar storage_status "STORED/ORPHANED"
         bigint user_id "上传用户"
         datetime create_time "创建时间"
+        datetime update_time "更新时间"
         int version "乐观锁"
         tinyint deleted "逻辑删除"
     }
+%% V7：file_chunk 增加活跃分片唯一约束（file_id + chunk_index + deleted） %%
 
     FILE_SHARE {
         bigint id PK "主键 雪花"

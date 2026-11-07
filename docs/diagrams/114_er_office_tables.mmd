@@ -6,6 +6,8 @@ erDiagram
     OFF_DEPARTMENT ||--o{ OFF_EMPLOYEE : "dept_id"
     OFF_MESSAGE_TEMPLATE ||--o{ OFF_MESSAGE : "template_id"
     OFF_MESSAGE ||--o{ OFF_MESSAGE_RECIPIENT : "message_id"
+    OFF_MESSAGE ||--o{ OFF_MESSAGE_DELIVERY : "message_id"
+    OFF_NOTIFY_TEMPLATE ||--o{ OFF_NOTIFY_REQUEST : "template_code"
 
     OFFICE_PLATFORM_APP {
         bigint id PK "主键"
@@ -118,6 +120,53 @@ erDiagram
         varchar recipient_type "收件类型"
         tinyint read_status "已读状态"
         datetime read_time "已读时间"
+    }
+
+    OFF_MESSAGE_DELIVERY {
+        bigint id PK "主键"
+        bigint message_id FK "消息"
+        varchar recipient_id "收件人"
+        varchar channel "投递渠道"
+        varchar delivery_status "投递状态"
+        varchar platform_message_id "平台消息ID"
+        varchar failure_reason "失败原因"
+        datetime delivered_at "投递时间"
+        bigint tenant_id "租户"
+    }
+
+    OFF_NOTIFY_TEMPLATE {
+        bigint id PK "主键"
+        varchar template_code UK "模板编码"
+        varchar channel "通知渠道"
+        varchar title "标题模板"
+        text body "内容模板"
+        text params_schema "参数定义"
+        varchar status "状态"
+        bigint tenant_id "租户"
+    }
+
+    OFF_NOTIFY_REQUEST {
+        bigint id PK "主键"
+        varchar channel "通知渠道"
+        varchar template_code "模板编码"
+        varchar recipient "接收方"
+        text params "模板参数"
+        varchar status "状态"
+        varchar error_message "错误信息"
+        varchar outbox_event_id "Outbox 事件"
+        bigint tenant_id "租户"
+    }
+
+    OFFICE_MEETING_ROOM {
+        bigint id PK "主键"
+        varchar room_code UK "会议室编码"
+        varchar room_name "会议室名称"
+        int capacity "容量"
+        varchar location "位置"
+        varchar floor "楼层"
+        varchar equipment "设备"
+        varchar status "状态"
+        bigint tenant_id "租户"
     }
 
     OFFICE_MESSAGE {

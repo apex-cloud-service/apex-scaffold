@@ -1,40 +1,35 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TD
-    A["创建工作流定义（DAG 模板）<br/>workflow_code · version · node_config_json"] --> B["发起流程实例<br/>POST /api/v1/workflows/{code}/instances"]
-    B --> C["ProcessInstance.status = RUNNING<br/>business_key · initiator_id · suspended=false"]
-    C -.-> D["当前实现不解析 DAG / 不自动建首节点任务"]
-
-    C --> E["任务创建 / 分配（Task）<br/>PENDING · assignee_id · due_date · timeout_at"]
+    A["创建/发布工作流定义（单链 DAG）<br/>POST /api/v2/workflow-definitions · dag_json（nodes/edges）<br/>DRAFT → validate → PUBLISHED → enable/disable"] --> B["发起流程实例<br/>POST /api/v1/workflows/{workflowCode}/instances<br/>findByCode 取已发布且启用的最高版本"]
+    B --> C{"解析 DAG：START 的后继"}
+    C -->|"为空或 END"| C1["发起即完成<br/>实例 COMPLETED · startTime=endTime"]
+    C -->|"首审批节点"| D["实例 RUNNING · currentNodeKey=首节点<br/>同事务自动创建首个 PENDING 任务"]
+    D --> E["任务（wf_task）<br/>PENDING · node_code · assignee_id<br/>due_time · timeout_at · timeout_strategy"]
     E --> F["查询我的待办<br/>GET /api/v1/workflows/tasks/pending"]
-    F --> G["审批人处理任务<br/>OR/AND 会签 · approverType/approverValue"]
+    F --> G["审批人处理任务<br/>单办理人 approvalStrategy=SINGLE<br/>approverType 仅 SPECIFIED_USER / INITIATOR"]
     G --> H{"审批动作<br/>WorkflowService"}
 
-    H -->|completeTask| I["Task → COMPLETED"]
-    H -->|rejectTask| J["ProcessInstance → REJECTED"]
-    H -->|rollbackToNode| K["Task → ROLLED_BACK<br/>新建目标节点 PENDING"]
-    H -->|transferTask| L["办理人变更（所有权永久转移）<br/>transferredFrom 记录原办理人"]
+    H -->|completeTask| I["任务 CAS 置 COMPLETED<br/>解析 DAG：有后继→建下一 PENDING 任务<br/>并推进 currentNodeKey；到 END→实例 COMPLETED<br/>（同一 JDBC 事务，失败整体回滚）"]
+    H -->|rejectTask| J["任务与实例 → REJECTED<br/>仅应用命令，普通 REST 未暴露"]
+    H -->|rollbackToNode| K["任务 → ROLLED_BACK<br/>新建目标节点 PENDING<br/>（未校验前置、未更新 currentNodeKey）"]
+    H -->|transferTask| L["办理人永久变更<br/>transferredFrom 记录原办理人"]
     H -->|delegateTask| M["新建 DELEGATED 任务<br/>原任务保持 PENDING（临时转移）"]
     H -->|suspendInstance| N["ProcessInstance → SUSPENDED"]
     H -->|resumeInstance| O["ProcessInstance → RUNNING"]
 
-    P["WorkflowTimeoutHandler<br/>@Scheduled fixedDelay=300000ms"] --> Q["扫描超时任务<br/>status=PENDING AND timeout_at &lt; now"]
-    Q --> R{"timeoutStrategy"}
-    R -->|ESCALATE| S["transferTask → 管理员"]
-    R -->|AUTO_COMPLETE| T["completeTask 自动审批"]
-    R -->|NOTIFY| U["仅通知（日志）"]
-
-    S --> V["监控与统计<br/>WorkflowStatisticsService.getStatistics / getTrend"]
-    T --> V
-    U --> V
+    P["WorkflowTimeoutHandler<br/>@Scheduled fixedDelay=300000ms<br/>XXL 接管时跳过本地调度"] --> Q["跨租户扫描超时任务<br/>timeoutAt &lt;= now · 串行处置<br/>按任务持久租户恢复上下文 · ScanLease 300s"]
+    Q --> R{"timeoutAction<br/>handleTimeoutTask(expected) CAS"}
+    R -->|ESCALATE| S["转办固定用户 1L<br/>（非动态管理员解析）"]
+    R -->|AUTO_COMPLETE| T["仅完成任务置 COMPLETED<br/>不执行节点推进"]
+    R -->|NOTIFY| U["定义发布校验不允许该策略<br/>扫描分支仅日志"]
 
     classDef def fill:#eef2ff,stroke:#4f46e5,color:#0f172a;
     classDef task fill:#ecfdf5,stroke:#059669,color:#0f172a;
     classDef cmd fill:#fdf2f8,stroke:#ec4899,color:#0f172a;
     classDef st fill:#eff6ff,stroke:#3b82f6,color:#0f172a;
-    classDef warn fill:#fef2f2,stroke:#dc2626,color:#b91c1c;
+    classDef warn fill:#fffbeb,stroke:#d97706,color:#0f172a;
     classDef to fill:#fffbeb,stroke:#d97706,color:#0f172a;
-    class A,B,C def;
+    class A,B,C,C1,D def;
     class E,F,G task;
     class H,I,J,K,L,M,N,O cmd;
-    class D warn;
-    class P,Q,R,S,T,U,V to;
+    class P,Q,R,S,T,U to;

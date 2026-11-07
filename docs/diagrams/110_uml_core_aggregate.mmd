@@ -58,6 +58,8 @@ classDiagram
         + getCode() Integer
     }
 
+    note for User "示例骨架，非共享 domain 实际类\n实际聚合根位于各业务库 domain 包\n（如 system：UserEntity / RoleEntity / TenantEntity）"
+
     User --|> BaseEntity : extends
     BaseEntity ..> LogicalDeletion : «use»
     BasePO ..> BaseEntity : «map» 转换器映射

@@ -193,7 +193,7 @@ classDiagram
         + getAccessToken() Mono~String~
         + refreshAccessToken() Mono~String~
     }
-    note for AbstractOfficeClient "各平台子类覆盖业务方法\n阻塞 I/O 隔离到 remote() 池\nfeishu/dingtalk/wecom 三个实现"
+    note for AbstractOfficeClient "各平台子类覆盖业务方法\n统一使用 WebClient 原生异步\n不引入阻塞调度池\nfeishu/dingtalk/wecom 三个实现"
 
     OfficeMessage *-- MessageContent : content 组合
     OfficeMessage *-- MessageTarget : target 组合

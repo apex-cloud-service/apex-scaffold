@@ -1,35 +1,40 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
-  subgraph Model["model.* 领域模型"]
-    M1["账号/权限 admin / system"]
-    M2["办公协同 office (approval/calendar/document/message)"]
-    M3["工作流 workflow"]
-    M4["代码生成元模型 generator"]
-    M5["治理/检索 moderation / search / log"]
-    M6["支撑 record / sso / entity / exception"]
-    M7["值对象 valueobject · 枚举 enums"]
+  subgraph Model["model.entity 基础实体"]
+    M1["BaseEntity 业务实体公共基类"]
   end
 
-  subgraph Contract["契约 / 端口"]
-    C1["仓储接口 repository / workflow.repository"]
-    C2["出站端口 port / office.port / gateway"]
-    C3["领域事件 event"]
+  subgraph Event["event 通用领域事件契约"]
+    E1["DomainEventBus · DomainEventHandler"]
+    E2["TokenRevokedEvent"]
   end
 
-  subgraph Svc["领域服务 service / workflow"]
-    S1[业务编排规则·无状态]
+  subgraph GW["gateway 外部平台 Gateway 契约"]
+    G1["ChuanglanGateway 创蓝短信"]
+    G2["WeChatGateway 微信平台"]
+    G3["CircuitBreakerPort · Remote* 异常契约"]
   end
 
-  COMMON["apex-common (L0)"]
-  INFRA["apex-infrastructure 实现仓储/端口"]
+  subgraph Svc["service 跨域服务端口"]
+    S1["DomainEventPublisher · CacheConsistencyPort"]
+    S2["BusinessMetricsPort · CacheService"]
+    S3["TokenService · TokenBlacklistService"]
+    S4["SmsCodeService · SmsCodePurposeService"]
+  end
+
+  COMMON["apex-common（L0）"]
+  INF["apex-infrastructure-integration / remote / persistence（实现 Gateway 与端口）"]
+  BIZ["六个业务库（system/auth/workflow/file/office/integration）"]
 
   COMMON --> Model
-  COMMON --> Contract
-  Model --> Svc
-  Contract -. "依赖倒置：由基础设施实现" .-> INFRA
-  S1 --> C1
-  S1 --> C2
-  S1 --> C3
+  COMMON --> Event
+  COMMON --> GW
+  COMMON --> Svc
+  GW -. "依赖倒置：由基础设施实现" .-> INF
+  Svc -. "依赖倒置" .-> INF
+  BIZ --> Model
+  BIZ --> Event
+  BIZ --> Svc
 
-  NOTE["apex-domain 承载业务规则与反向外依赖，是 DDD 中心内核"]
-  Contract -.-> NOTE
+  NOTE["apex-domain 只容纳可跨域复用的契约（依赖深度 L1，被 19 个模块直接依赖）；system 专属实体在 apex-system，workflow/office 领域模型在各自业务库"]
+  GW -.-> NOTE
