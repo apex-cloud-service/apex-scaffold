@@ -1,7 +1,7 @@
 # 记忆卡 · apex-scaffold（后端基座）
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
-> **基线**：2026-11-07 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 35 个 reactor 模块
+> **基线**：2026-11-08 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 35 个 reactor 模块
 > **权威优先级**：源码 > `AGENTS.md` > `docs/` > `.workbuddy/knowledge/` > 本卡。本卡是**导航与结论**，不是规范原文。
 
 ## 1. 一句话
@@ -66,22 +66,22 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 统一授权「默认开启」判断错误 | 组件库缺省 true，但 `apex-system-service/application.yml` 覆盖为 `${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}` → 排查按「运行模块 yml → 环境变量 → 组件默认」 |
 | 集成服务启动即失败 | 连接器/设备子域依赖外部 EMQX；本地无 broker 时需显式关闭 MQTT 并核 `hivemq-mqtt-client` 为 optional |
 
-## 6. 当前状态（2026-11-07）
+## 6. 当前状态（2026-11-08）
 
-- **规模**：主源码 **2127** 个 Java 文件、测试类 **720** 个；启动入口 **10** 个（9 个部署单元 + `apex-boot-all` 组合档）。
+- **规模**：主源码 **2128** 个 Java 文件、测试类 **721** 个；启动入口 **10** 个（9 个部署单元 + `apex-boot-all` 组合档）。
 - **主线《评审收口调整方案》**（`docs/08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md`）：
   - 批次 **A（A1–A7 统一认证）已完成并提交**（10-31）。
   - 批次 **B（B1–B9 多租户）已完成并提交**（10-31～11-01，B9 为 M2 收官）。
   - 批次 **C 除 C4 外完成**（C0–C3、C7–C9；11-02 补齐 C8/C9 验证）。
   - 批次 **D 完成 D1/D2/D4/D5/D6**（D5 共享数据服务层 11-02 提交）；**D3 为文档沉淀**，`/open-api` 路由已补。
   - 批次 **E1–E4 已完成并提交**（11-02）：`apex-integration`（connector/device 双子域）+ `apex-integration-service` 8094，含 EMQX ACL 与真实环境验证。
-- **工作树**：68 项未提交（2026-11-07 实测，正随文档改写变动），集中在文档与架构图改写、许可证/发布配置、部署脚本；**不得把在途改动当作已交付**。
+- **工作树**：仅 **2** 项业务在途（2026-11-08 实测：当日日报新增 1 + 日报 `README.md` 修改 1，不含本次同步改写的卡片/知识库）；先前 68 项在途改动（文档与架构图改写、许可证/发布配置、部署脚本）已于 11-07～11-08 提交，**不得把在途改动当作已交付**。
 - **结构债**：`apex-system` 仍四层合一（interfaces/application/domain/infrastructure 同包），868 个主源码文件，C4/D07 未执行。
 
 ## 7. 下一步
 
 1. 执行 **C4**：`apex-system` 的 interfaces 层迁至 `apex-system-service`（方案 D07），收口 M3。
-2. 提交当前 68 项在途改动前先跑 `mvnd -T4 -B clean verify`，并核对网关过滤器与事件桥的租户/MDC 传播。
+2. 后续提交前先跑 `mvnd -T4 -B clean verify`；改动网关过滤器或事件桥时仍需复核租户/MDC 传播（11-07～11-08 的 68 项在途改动已提交）。
 3. P0 迁移验证仍未准出（`verified_union` 未达 586/586），Java 21 正式切换口径未收口 —— 属口径问题，汇报须显式声明。
 4. 方案 E 之后的 P1 项（集成域规则引擎、设备影子 desired 写接口）按需排期。
 

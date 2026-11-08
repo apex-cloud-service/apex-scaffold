@@ -22,6 +22,7 @@
 | 2026-11-05 | all-projects | 缺陷回补与冷链移库规则 | [2026-11-05-all-projects-daily-report.md](./2026-11-05-all-projects-daily-report.md) |
 | 2026-11-06 | all-projects | 构建编排与冷链回归修复 | [2026-11-06-all-projects-daily-report.md](./2026-11-06-all-projects-daily-report.md) |
 | 2026-11-07 | all-projects | 跨端契约与分层收口 | [2026-11-07-all-projects-daily-report.md](./2026-11-07-all-projects-daily-report.md) |
+| 2026-11-08 | all-projects | 通知 SSE 打通与评审收口 | [2026-11-08-all-projects-daily-report.md](./2026-11-08-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 
