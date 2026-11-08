@@ -106,7 +106,11 @@ public class NotificationSseHandler extends BaseHandler {
                             .mergeWith(Flux.interval(Duration.ofSeconds(30))
                                     .map(i -> org.springframework.http.codec.ServerSentEvent.<String>builder()
                                             .comment("heartbeat")
-                                            .build()));
+                                            .build()))
+                            // 建连即发注释行：促使响应头立即下刷（长连接首事件可能远晚于建连）
+                            .startWith(org.springframework.http.codec.ServerSentEvent.<String>builder()
+                                    .comment("connected")
+                                    .build());
                     return ServerResponse.ok()
                             .contentType(MediaType.TEXT_EVENT_STREAM)
                             .body(events, org.springframework.http.codec.ServerSentEvent.class);

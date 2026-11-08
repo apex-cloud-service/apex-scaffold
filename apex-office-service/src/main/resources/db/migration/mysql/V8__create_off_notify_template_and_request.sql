@@ -7,7 +7,7 @@
 --   模板依赖调用方内联传入，投递结果无处可查。
 --
 -- 【表清单】
---   off_notify_template   通知模板（${key} 占位符正文 + 参数契约 + 启停状态）
+--   off_notify_template   通知模板（$${key} 占位符正文 + 参数契约 + 启停状态）
 --   off_notify_request    投递请求留痕（按次记录通道、目标、参数、投递结果与错误）
 --
 -- 【约束】
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS `off_notify_template` (
     `template_code` VARCHAR(64)  NOT NULL COMMENT '模板编码（租户内唯一）',
     `channel`       VARCHAR(16)  NOT NULL COMMENT '默认投递通道（INBOX/FEISHU/DINGTALK/WECOM/SMS/EMAIL）',
     `title`         VARCHAR(255)          DEFAULT NULL COMMENT '通知主题（可空）',
-    `body`          TEXT                  COMMENT '正文模板（含 ${key} 占位符，缺失参数保留占位符）',
+    `body`          TEXT                  COMMENT '正文模板（含 $${key} 占位符，缺失参数保留占位符）',
     `params_schema` VARCHAR(1024)         DEFAULT NULL COMMENT '参数契约（JSON 字符串，供管理端提示）',
     `status`        VARCHAR(16)  NOT NULL DEFAULT 'ENABLED' COMMENT '状态（ENABLED/DISABLED）',
     `create_time`   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

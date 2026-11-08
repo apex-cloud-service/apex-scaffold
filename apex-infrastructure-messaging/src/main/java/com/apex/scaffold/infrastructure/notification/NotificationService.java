@@ -24,7 +24,7 @@ import reactor.core.publisher.Sinks;
 public class NotificationService {
 
     private final Sinks.Many<NotificationMessage> sink =
-            Sinks.many().multicast().onBackpressureBuffer(100);
+            Sinks.many().multicast().onBackpressureBuffer(100, false);
 
     private final MeterRegistry meterRegistry;
     private final AtomicInteger activeConnections = new AtomicInteger();

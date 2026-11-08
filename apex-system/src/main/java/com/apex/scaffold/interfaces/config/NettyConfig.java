@@ -1,6 +1,9 @@
 package com.apex.scaffold.interfaces.config;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
+import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
@@ -140,7 +143,27 @@ public class NettyConfig {
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
                         .doOnConnection(conn -> {
                             conn.addHandlerLast(new IdleStateHandler(actualIdleTimeoutSeconds, 0, 0, TimeUnit.SECONDS));
-                            conn.addHandlerLast(new ReadTimeoutHandler(actualReadTimeoutSeconds, TimeUnit.SECONDS));
+                            // 读超时仅用于 Slowloris 防护（慢请求头/慢请求体）。SSE 等长驻响应
+                            // 在请求读入后长时间不再有入站数据，固定读超时会在首个响应事件前
+                            // 关闭长连接 —— 故请求读取完成（入站最后一块请求体）时即解除读超时，
+                            // 此后由业务层响应超时与写超时兜底。
+                            ReadTimeoutHandler readTimeoutHandler =
+                                    new ReadTimeoutHandler(actualReadTimeoutSeconds, TimeUnit.SECONDS);
+                            conn.addHandlerLast(readTimeoutHandler);
+                            conn.addHandlerLast(new ChannelInboundHandlerAdapter() {
+                                @Override
+                                public void channelRead(ChannelHandlerContext ctx, Object msg)
+                                        throws Exception {
+                                    if (msg instanceof LastHttpContent) {
+                                        try {
+                                            ctx.pipeline().remove(readTimeoutHandler);
+                                        } catch (java.util.NoSuchElementException ignored) {
+                                            // 已移除：仅解除一次
+                                        }
+                                    }
+                                    ctx.fireChannelRead(msg);
+                                }
+                            });
                             conn.addHandlerLast(new WriteTimeoutHandler(actualWriteTimeoutSeconds, TimeUnit.SECONDS));
                         });
             });

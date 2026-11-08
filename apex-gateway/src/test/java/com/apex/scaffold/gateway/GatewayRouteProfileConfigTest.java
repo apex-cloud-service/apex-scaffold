@@ -189,12 +189,14 @@ class GatewayRouteProfileConfigTest {
         });
 
         // 办公域通配路由必须同时覆盖 v1 与 v2（组织同步向导）前缀，防止整表重定义时 v2 路径丢失；
-        // 同时覆盖 /api/office/**（站内信 HTTP 消息接口）与管理端消息模板前缀。
+        // 同时覆盖 /api/office/**（站内信 HTTP 消息接口）与管理端消息模板前缀；
+        // 模板详情子路径（/{templateCode}、/{templateId} 的 PUT/DELETE）须以 /** 兜住，
+        // 否则落入 system 兜底后 404。
         assertThat(pathPredicateArgs(office))
                 .withFailMessage("%s：office-domain 须覆盖 v1/v2 办公前缀", source)
                 .contains("/api/v1/office/**", "/api/v2/office/**")
                 .withFailMessage("%s：office-domain 须覆盖 /api/office/** 与管理端消息模板前缀", source)
-                .contains("/api/office/**", "/admin-api/v1/message-templates");
+                .contains("/api/office/**", "/admin-api/v1/message-templates", "/admin-api/v1/message-templates/**");
 
         // 认证域路由：auth-service 承载认证协议、密码找回与认证中心管理面（MFA/IP 访问控制/
         // 认证配置/审计日志）；/admin-api/v1/auth|sso/** 由 system 承载，若误加入本路由
@@ -234,6 +236,21 @@ class GatewayRouteProfileConfigTest {
                 .contains("/api/v2/operations/**")
                 .withFailMessage("%s：system-domain 须覆盖 /api/v2/platform/** 前缀", source)
                 .contains("/api/v2/platform/**");
+
+        // 通知 SSE 长连接必须有独立路由且不挂 HTTP 熔断：长驻响应会被慢调用判定
+        // （2s）计入 system-domain 慢调用比例并逐步熔断整域；且必须先于 system-domain
+        // 声明（Path 精确路径覆盖 /api/v1/notifications/stream）。
+        RouteDefinition notificationStream = findRoute(routes, "notification-stream", source);
+        assertThat(pathPredicateArgs(notificationStream))
+                .withFailMessage("%s：notification-stream 须精确覆盖 SSE 端点", source)
+                .contains("/api/v1/notifications/stream");
+        assertThat(notificationStream.getFilters())
+                .withFailMessage("%s：notification-stream 不得挂 HTTP 熔断（长连接会被慢调用判定熔断）", source)
+                .noneMatch(filter -> "CircuitBreaker".equals(filter.getName()));
+        Object responseTimeout = notificationStream.getMetadata().get("response-timeout");
+        assertThat(responseTimeout)
+                .withFailMessage("%s：notification-stream 须以 route metadata 覆盖全局 30s 响应超时", source)
+                .isNotNull();
 
         // 独立轻量服务路由（job/masking）在整表重定义的配置源中必须显式声明并挂熔断回退。
         for (String routeId : List.of(JOB_ROUTE_ID, MASKING_ROUTE_ID)) {

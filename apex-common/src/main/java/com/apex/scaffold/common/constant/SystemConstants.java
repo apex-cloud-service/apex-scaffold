@@ -146,7 +146,6 @@ public final class SystemConstants {
      *       因此也必须匿名可达。{@code /auth/v1/mfa/verify} 之外的 MFA 管理路径不在此列</li>
      *   <li>{@code /auth/v2/password-recovery/**} — 自助密码找回的申请、校验与确认，匿名入口</li>
      *   <li>{@code /.well-known/**} — OIDC 元数据与 JWKS 公钥，供客户端与网关验签发现</li>
-     *   <li>/api/v1/onboarding/policies — 登录前可查阅的协议与隐私政策</li>
      *   <li>/api/v1/health — 应用业务健康检查</li>
      *   <li>/health — 基础健康检查端点</li>
      *   <li>/ — 根路径探活（负载均衡/反向代理默认探活路径；无路由时返回 404 而非 401）</li>
@@ -189,7 +188,6 @@ public final class SystemConstants {
             "/oauth2/introspect",
             "/api/v1/auth/captcha",
             "/api/v1/auth/captcha/**",
-            "/api/v1/onboarding/policies",
             "/api/v1/health",
             "/health",
             "/actuator",

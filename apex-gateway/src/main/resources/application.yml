@@ -156,7 +156,7 @@ spring:
         - id: office-domain
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
-            - Path=/api/v1/office/**,/api/v2/office/**,/api/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates
+            - Path=/api/v1/office/**,/api/v2/office/**,/api/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates,/admin-api/v1/message-templates/**
           filters:
             - name: CircuitBreaker
               args:
@@ -273,6 +273,15 @@ spring:
         # 💡 /api/v2/** 逐前缀显式列出（不用通配，避免误放行未来新增的 v2 端点）：
         #    operations（运维健康）、platform（平台租户）、tenant-packages（租户套餐）、
         #    capabilities / capability-usage（能力目录与计量）、overview（数据总览）。
+        # 通知 SSE 长连接：长驻响应不得挂 HTTP 熔断（与 office-message-websocket 同理），
+        # 否则慢调用判定（2s）会把长连接计为慢调用、逐步熔断 system-domain 整域。
+        - id: notification-stream
+          uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
+          predicates:
+            - Path=/api/v1/notifications/stream
+          metadata:
+            # SSE 长连接绕过全局 30s 响应超时；上限与站内信 WS 寿命对齐（1h，到期由服务端关闭）
+            response-timeout: 3600000
         - id: system-domain
           uri: ${ROUTE_SYSTEM_URI:lb://apex-system-service}
           predicates:
