@@ -45,37 +45,37 @@
 
     <h2>测试链接</h2>
     
-    <h3>相对路径测试 (./)</h3>
-    <a href="./_archive/integration/oauth2/integration-guide.md" target="_blank" class="test-link">
-        1. OAuth2 集成指南 (./_archive/integration/oauth2/integration-guide.md)
+    <h3>父目录相对路径测试 (../)</h3>
+    <a href="../_archive/integration/oauth2/integration-guide.md" target="_blank" class="test-link">
+        1. OAuth2 集成指南 (../_archive/integration/oauth2/integration-guide.md)
     </a>
     
-    <a href="./architecture/01-logical-architecture-detail.md" target="_blank" class="test-link">
-        2. DDD 四层架构详解 (./architecture/01-logical-architecture-detail.md)
+    <a href="../architecture/01-logical-architecture-detail.md" target="_blank" class="test-link">
+        2. DDD 四层架构详解 (../architecture/01-logical-architecture-detail.md)
     </a>
     
-    <a href="./00-getting-started/quickstart.md" target="_blank" class="test-link">
-        3. 快速开始 (./00-getting-started/quickstart.md)
+    <a href="../00-getting-started/quickstart.md" target="_blank" class="test-link">
+        3. 快速开始 (../00-getting-started/quickstart.md)
     </a>
 
-    <h3>不带前缀测试</h3>
-    <a href="_archive/integration/oauth2/integration-guide.md" target="_blank" class="test-link">
-        4. OAuth2 集成指南 (_archive/integration/oauth2/integration-guide.md)
+    <h3>文档链接复测 (../)</h3>
+    <a href="../_archive/integration/oauth2/integration-guide.md" target="_blank" class="test-link">
+        4. OAuth2 集成指南 (../_archive/integration/oauth2/integration-guide.md)
     </a>
     
-    <a href="architecture/01-logical-architecture-detail.md" target="_blank" class="test-link">
-        5. DDD 四层架构详解 (architecture/01-logical-architecture-detail.md)
+    <a href="../architecture/01-logical-architecture-detail.md" target="_blank" class="test-link">
+        5. DDD 四层架构详解 (../architecture/01-logical-architecture-detail.md)
     </a>
     
-    <a href="00-getting-started/quickstart.md" target="_blank" class="test-link">
-        6. 快速开始 (00-getting-started/quickstart.md)
+    <a href="../00-getting-started/quickstart.md" target="_blank" class="test-link">
+        6. 快速开始 (../00-getting-started/quickstart.md)
     </a>
 
     <div class="info" style="margin-top: 30px;">
         <strong>测试结果</strong>:
         <ul>
-            <li>如果链接 1-3 能打开,说明 <code>./</code> 前缀的路径正确</li>
-            <li>如果链接 4-6 能打开,说明不带前缀的路径正确</li>
+            <li>如果链接 1-3 能打开,说明从当前页面经 <code>../</code> 访问文档的路径正确</li>
+            <li>链接 4-6 使用相同路径,可用于重复验证文档访问</li>
             <li>如果都不能打开,可能是浏览器限制或需要通过 HTTP 服务器访问</li>
         </ul>
         

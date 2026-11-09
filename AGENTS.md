@@ -271,7 +271,7 @@ git diff --check
 - 不主动创建 README、报告或其他文档；需要维护现有文档时引用真实路径，不写未经验证的性能、数量、默认账号和完成状态。
 - 当前架构与命令不要引用已退役模块。API、配置和模块边界变化同步更新相关文档；图表以实际实现为准。
 - 管理后台是独立项目，后端不生成或修改不存在的前端目录。菜单组件字段和 API 契约仍需与前端保持一致。
-- `scripts/ci/check-doc-links.sh` 离线扫描全仓 Markdown（含根 README/AGENTS 和模块文档），校验本地路径存在、大小写精确匹配、目标未被 `.gitignore` 排除，以及 Markdown 标题/HTML 锚点；排除构建产物、工具配置与依赖目录，不验证外部 URL 或非 Markdown 文件内部位置。文档引用未入库的日志、证据或本地配置时用行内代码写文件名，不要写成链接。
+- `scripts/ci/check-doc-links.sh` 离线扫描全仓 Markdown 与 HTML（含根 README/AGENTS 和模块文档），校验本地路径存在、大小写精确匹配、目标未被 `.gitignore` 排除，以及 Markdown 标题/HTML 显式锚点；排除构建产物、工具配置与依赖目录，不验证外部 URL、JavaScript 动态生成的导航或其他文件格式的内部位置。文档引用未入库的日志、证据或本地配置时用行内代码写文件名，不要写成链接。
 - 未获用户明确要求，不创建 Git commit 或推送。提交前检查实际 diff 与暂存范围，不混入其他主题。
 - 不提交 `.env`、真实配置、密钥、证书、私钥或构建产物。需要提交时使用 Conventional Commits，按变更目的选择 type/scope。
 - 基础版与标准版/企业版的许可范围分别见 [LICENSE](LICENSE)、[LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)，不要将整个仓库描述为统一 MIT 或 Apache 授权。

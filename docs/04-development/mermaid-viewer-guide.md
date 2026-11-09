@@ -255,7 +255,7 @@ classDiagram
 
 项目查看器使用自定义主题，主色调为 `#667eea`（紫色），与项目品牌色一致。
 
-如需修改主题，可编辑 [mermaid-viewer.html](../mermaid-viewer.html) 中的配置：
+如需修改主题，可编辑 [mermaid-viewer.html](./mermaid-viewer.html) 中的配置：
 
 ```javascript
 mermaid.initialize({
@@ -275,7 +275,7 @@ mermaid.initialize({
 
 如需在查看器中添加新的包含 Mermaid 的文档：
 
-1. 打开 [mermaid-viewer.html](../mermaid-viewer.html)
+1. 打开 [mermaid-viewer.html](./mermaid-viewer.html)
 
 2. 找到 `<select id="fileSelect">` 元素
 
@@ -294,7 +294,7 @@ mermaid.initialize({
 **原因**：您使用的查看器不支持 Mermaid 渲染。
 
 **解决方案**：
-- 使用项目内置的 [Mermaid 查看器](../mermaid-viewer.html)
+- 使用项目内置的 [Mermaid 查看器](./mermaid-viewer.html)
 - 安装支持 Mermaid 的 IDE 插件
 - 使用在线 Mermaid Live Editor
 
