@@ -51,7 +51,6 @@ public class AuthConfigServiceImpl implements AuthConfigService {
         config.setUpdatedAt(LocalDateTime.now());
         config.setVersion(1);
 
-        // 检查配置键是否已存在
         return authConfigRepository
                 .existsByTypeAndKey(config.getConfigType(), config.getConfigKey(), config.getTenantId())
                 .flatMap(exists -> {

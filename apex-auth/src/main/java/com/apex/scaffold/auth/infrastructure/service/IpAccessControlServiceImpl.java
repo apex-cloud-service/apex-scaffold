@@ -55,11 +55,8 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
         }
 
         return Mono.zip(
-                        // 检查黑名单
                         checkBlacklist(ipAddress, tenantId),
-                        // 检查白名单
                         checkWhitelist(ipAddress, tenantId),
-                        // 判断是否存在白名单规则
                         hasWhitelistRules(tenantId))
                 .map(tuple -> {
                     boolean inBlacklist = tuple.getT1();

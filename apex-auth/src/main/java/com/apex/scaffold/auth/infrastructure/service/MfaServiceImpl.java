@@ -95,7 +95,6 @@ public class MfaServiceImpl implements MfaService {
         return encryptionService
                 .encrypt(secret)
                 .flatMap(encryptedSecret -> {
-                    // 创建MFA配置
                     MfaConfig config = MfaConfig.builder()
                             .userId(userId)
                             .tenantId(tenantId)

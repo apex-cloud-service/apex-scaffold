@@ -185,11 +185,9 @@ public class ResourcePermissionAspect {
      * 构建权限上下文
      */
     private PermissionContext buildPermissionContext(Authentication authentication, ProceedingJoinPoint joinPoint) {
-        // 检查是否为超级管理员
         boolean isSuperAdmin = authentication.getAuthorities().stream()
                 .anyMatch(auth -> "ROLE_SUPER_ADMIN".equals(auth.getAuthority()));
 
-        // 获取客户端IP
         String clientIp = extractClientIp(joinPoint);
 
         // 获取设备ID（从请求头）

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  * 构造器注入 {@link DomainEventPublisher}，宿主必须提供实现。当前装配轻量级
  * {@link IntegrationLocalEventPublisher}（进程内派发、不落库）。</p>
  *
- * <h2>为什么不装配事务 Outbox 三件套</h2>
+ * <h2>设计说明</h2>
  * <p>{@code apex_integration} 库的 V1/V2 迁移不含 {@code sys_domain_event_outbox} 表，
  * 且历史迁移不可改写；Outbox 存储在无表环境写事件会直接失败。
  * 待集成域后续版本补齐 Outbox 表后，可参照 auth-service {@code AuthCenterEventConfig}

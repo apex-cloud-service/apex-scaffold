@@ -72,7 +72,6 @@ public class RedisDataCleanupRunner implements ApplicationRunner {
         }
 
         try {
-            // 检查是否已执行过清理
             if (redissonClient.getBucket(CLEANUP_MARKER_KEY).get() != null) {
                 log.info("Redis 数据清理已执行过（标记 Key: {}），跳过重复清理", CLEANUP_MARKER_KEY);
                 return;
@@ -120,7 +119,6 @@ public class RedisDataCleanupRunner implements ApplicationRunner {
             }
         }
 
-        // 处理最后一批
         if (!batch.isEmpty()) {
             deleted += rKeys.delete(batch.toArray(new String[0]));
         }

@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  * 聚合为统一概览负载；任一数据源超时、不可达或返回业务错误时，该源降级为
  * {@code DEGRADED}（结果缺失 + 错误摘要），不影响其他数据源（部分可用）。
  *
- * <h2>口径说明</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>数据源地址走 {@code apex.overview.sources.*} 配置，默认指向本机各服务端口</li>
  *   <li>聚合结果按租户做短 TTL 缓存（默认 30s），降低对下游统计端点的放大</li>

@@ -102,7 +102,6 @@ public class LocalCacheService {
             return Mono.empty();
         }
         try {
-            // 检查是否已过期
             Long expireTime = ttlTracker.get(key);
             if (expireTime != null && System.currentTimeMillis() > expireTime) {
                 // 惰性删除过期条目

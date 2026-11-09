@@ -306,7 +306,6 @@ public class RefreshTokenRotationService {
                                         .rotationCount(oldToken.getRotationCount() + 1)
                                         .build();
 
-                                // 保存新Token
                                 return tokenRepository
                                         .save(newAccessEntity)
                                         .then(tokenRepository.save(newRefreshEntity))

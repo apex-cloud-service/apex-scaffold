@@ -81,7 +81,6 @@ public class BruteForcePrevention {
                     int usernameAttempts = tuple.getT1();
                     int ipAttempts = tuple.getT2();
 
-                    // 检查是否超过阈值
                     if (usernameAttempts >= MAX_ATTEMPTS) {
                         return lockUsername(username)
                                 .doOnSuccess(v -> log.warn(

@@ -161,18 +161,15 @@ public class TotpEntity {
             return false;
         }
 
-        // 检查备份码是否有效
         List<String> codes = List.of(this.backupCodes.split(","));
         if (!codes.contains(backupCode)) {
             return false;
         }
 
-        // 检查是否已使用
         if (this.usedBackupCodes != null && this.usedBackupCodes.contains(backupCode)) {
             return false;
         }
 
-        // 标记为已使用
         if (this.usedBackupCodes == null) {
             this.usedBackupCodes = backupCode;
         } else {

@@ -40,7 +40,6 @@ public class DeviceTrustServiceImpl implements DeviceTrustService {
             String ip,
             String location,
             String metadata) {
-        // 检查设备是否已注册
         return deviceTrustRepository
                 .findByUserIdAndDeviceIdAndTenantId(userId, deviceId, tenantId)
                 .flatMap(existing -> {

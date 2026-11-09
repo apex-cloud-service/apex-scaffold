@@ -48,7 +48,6 @@ public class ResourceIndexEventListener {
         try {
             switch (event.getAction()) {
                 case CREATE, UPDATE -> {
-                    // 创建或更新索引
                     indexSyncPort
                             .indexResource(event.getResourceType(), event.getResourceId())
                             .doOnSuccess(success -> {
@@ -75,7 +74,6 @@ public class ResourceIndexEventListener {
                             .subscribe();
                 }
                 case DELETE -> {
-                    // 删除索引
                     indexSyncPort
                             .removeIndex(event.getResourceType(), event.getResourceId())
                             .doOnSuccess(success -> {

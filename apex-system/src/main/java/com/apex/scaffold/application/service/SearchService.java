@@ -42,7 +42,6 @@ public class SearchService {
     public Mono<PageResponse<SearchResultDTO>> search(
             String keyword, Set<String> resourceTypes, int pageNum, int pageSize) {
 
-        // 获取当前租户ID
         String tenantIdStr = TenantContext.currentTenantId().orElse(null);
         Long tenantId = tenantIdStr != null ? Long.parseLong(tenantIdStr) : null;
 

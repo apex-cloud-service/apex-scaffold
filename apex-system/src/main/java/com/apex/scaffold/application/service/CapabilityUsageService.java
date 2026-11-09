@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * 能力编码经 {@link CapabilityUsageProperties#getMappings() 映射} 解析为
  * 请求 URI 前缀清单，聚合结果做内存分页（租户维度行数有限）。
  *
- * <h2>口径与约束</h2>
+ * <h2>设计说明</h2>
  * <ul>
  *   <li>能力编码必须已配置映射，未知编码返回 {@code PARAM_ERROR}</li>
  *   <li>时间区间缺省为近 7 天（含当天），跨度不超过 {@code max-range-days}（默认 92 天）</li>

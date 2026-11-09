@@ -616,7 +616,6 @@ public class AuthService {
                 .flatMap(claims -> {
                     String openId = (String) claims.get("sub");
 
-                    // 校验设备指纹一致性
                     String tokenDeviceId = (String) claims.get("deviceId");
                     if (tokenDeviceId != null && !tokenDeviceId.isBlank() && !tokenDeviceId.equals(deviceId)) {
                         log.warn(

@@ -153,7 +153,6 @@ public class WorkflowQueryService {
         return queryForTenant(tenantId -> {
             WorkflowInstanceDetailDTO detail = new WorkflowInstanceDetailDTO();
 
-            // 查询流程实例
             ProcessInstancePO processInstance =
                     processInstanceMapper.selectOne(new LambdaQueryWrapper<ProcessInstancePO>()
                             .eq(ProcessInstancePO::getId, instanceId)
@@ -162,7 +161,6 @@ public class WorkflowQueryService {
                 return null;
             }
 
-            // 查询流程定义
             WorkflowDefinitionPO workflowDefinition =
                     workflowDefinitionMapper.selectOne(new LambdaQueryWrapper<WorkflowDefinitionPO>()
                             .eq(WorkflowDefinitionPO::getId, processInstance.getWorkflowDefinitionId())
@@ -174,7 +172,6 @@ public class WorkflowQueryService {
                 detail.setDefinition(convertToDefinitionDTO(workflowDefinition));
             }
 
-            // 查询任务列表
             List<TaskPO> taskList = taskMapper.selectList(new LambdaQueryWrapper<TaskPO>()
                     .eq(TaskPO::getProcessInstanceId, instanceId)
                     .eq(TaskPO::getTenantId, tenantId)

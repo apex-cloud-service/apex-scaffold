@@ -20,8 +20,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *   <li>{@code com.apex.scaffold.common} - 共享基础组件</li>
  * </ul>
  *
- * <h2>设计说明（与 office/file 等服务的差异）</h2>
- * <p>{@code apex-integration} 组件库已发布 {@code AutoConfiguration.imports} 组件入口
+ * <h2>设计说明</h2>
+ * <p>与 office/file 等服务的差异：{@code apex-integration} 组件库已发布
+ * {@code AutoConfiguration.imports} 组件入口
  * （connector / IoT device / MQTT 三个自动装配），本启动类<b>刻意不</b>把
  * {@code com.apex.scaffold.integration} 放入 {@code scanBasePackages}：
  * <ul>

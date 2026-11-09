@@ -41,7 +41,12 @@ public class TenantPackageHandler {
 
     private final TenantPackageService tenantPackageService;
 
-    /** 套餐查询（列表/详情）。 */
+    /**
+     * 查询套餐列表。
+     *
+     * @param request 当前请求
+     * @return {@link Result} 封装的全部套餐（含菜单/权限/能力裁剪集合）
+     */
     @Operation(
             operationId = "listTenantPackages",
             summary = "查询套餐列表",
@@ -65,7 +70,12 @@ public class TenantPackageHandler {
                 .onErrorResume(this::asError);
     }
 
-    /** 套餐详情。 */
+    /**
+     * 查询套餐详情。
+     *
+     * @param request 当前请求，套餐编码取自路径变量 {@code packageCode}
+     * @return {@link Result} 封装的套餐详情；编码不存在时经异常边界返回 404
+     */
     @Operation(operationId = "getTenantPackage", summary = "查询套餐详情", description = "按套餐编码查询单个套餐；未知编码返回 404")
     @Parameter(
             name = "packageCode",
@@ -92,7 +102,12 @@ public class TenantPackageHandler {
                 .onErrorResume(this::asError);
     }
 
-    /** 创建套餐。 */
+    /**
+     * 创建套餐。
+     *
+     * @param request 当前请求，请求体为 {@link TenantPackageRequest}
+     * @return {@link Result} 封装的已创建套餐；编码冲突或参数非法返回 400
+     */
     @Operation(
             operationId = "createTenantPackage",
             summary = "创建套餐",
@@ -124,7 +139,12 @@ public class TenantPackageHandler {
                 .onErrorResume(this::asError);
     }
 
-    /** 更新套餐。 */
+    /**
+     * 更新套餐。
+     *
+     * @param request 当前请求，请求体为 {@link TenantPackageRequest}
+     * @return {@link Result} 封装的已更新套餐；编码不存在或参数非法返回 400
+     */
     @Operation(
             operationId = "updateTenantPackage",
             summary = "更新套餐",

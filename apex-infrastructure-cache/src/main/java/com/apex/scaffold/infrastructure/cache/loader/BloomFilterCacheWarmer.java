@@ -125,15 +125,13 @@ public class BloomFilterCacheWarmer implements ApplicationRunner {
             log.info("开始预热媒体域 BloomFilter...");
             long start = System.currentTimeMillis();
 
-            // 查询所有有效媒体 ID
             String sql = "SELECT id FROM t_media WHERE deleted = 0";
             List<Long> mediaIds = jdbcTemplate.query(sql, (rs, rowNum) -> rs.getLong("id"));
 
-            // 创建或重建过滤器
             int expectedSize = (int) (mediaIds.size() * 1.3);
+            // 1.3 为容量预留系数，0.01 为期望误判率
             bloomFilterService.createOrRebuild("media", expectedSize, 0.01);
 
-            // 批量添加到过滤器
             bloomFilterService.putAll(
                     "media", mediaIds.stream().map(String::valueOf).toList());
 

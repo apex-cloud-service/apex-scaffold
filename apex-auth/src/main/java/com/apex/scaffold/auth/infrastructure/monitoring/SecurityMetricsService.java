@@ -124,7 +124,6 @@ public class SecurityMetricsService {
                 .register(meterRegistry)
                 .increment();
 
-        // 更新活跃会话数
         activeSessionsByUser
                 .computeIfAbsent(userId, k -> meterRegistry.gauge("auth.active.sessions.by.user", new AtomicInteger(0)))
                 .incrementAndGet();

@@ -177,7 +177,6 @@ public class ClientSecretRotationService {
         String currentKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_SECRET_CURRENT;
         String pendingKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_SECRET_PENDING;
 
-        // 检查当前密钥
         return redisTemplate
                 .opsForValue()
                 .get(currentKey)
@@ -186,7 +185,7 @@ public class ClientSecretRotationService {
                         return Mono.just(true);
                     }
 
-                    // 检查宽限期内的旧密钥
+                    // 旧密钥在宽限期内仍可用，轮换不立即失效
                     return redisTemplate
                             .opsForValue()
                             .get(pendingKey)
@@ -287,7 +286,6 @@ public class ClientSecretRotationService {
 
                     Instant now = Instant.now();
 
-                    // 检查是否需要提前通知
                     if (now.isAfter(notificationTime) && now.isBefore(scheduled)) {
                         log.info(
                                 "即将轮换客户端密钥，发送通知: clientId={}, daysUntilRotation={}",
@@ -297,7 +295,6 @@ public class ClientSecretRotationService {
                         return notifyClientSecretRotation(clientId, ChronoUnit.DAYS.between(now, scheduled));
                     }
 
-                    // 检查是否需要轮换
                     if (now.isAfter(scheduled)) {
                         log.info("检测到客户端密钥需要轮换: clientId={}", clientId);
                         return rotateClientSecret(clientId, true).then();

@@ -163,7 +163,6 @@ public class SecurityMonitoringService {
                                 .then();
                     }
 
-                    // 检查是否超过阈值
                     if (count >= TOKEN_VALIDATE_FAIL_THRESHOLD) {
                         log.error("Token验证失败率异常: count={}/min", count);
 
@@ -200,7 +199,6 @@ public class SecurityMonitoringService {
                         .then();
             }
 
-            // 检查锁定数量是否异常
             if (count >= USER_LOCKED_THRESHOLD) {
                 log.error("用户锁定数量异常: count={}/min", count);
 
@@ -263,7 +261,6 @@ public class SecurityMonitoringService {
                 return redisTemplate.expire(key, METRIC_WINDOW).then();
             }
 
-            // 检查IP活动是否异常
             if (count >= IP_ACTIVITY_THRESHOLD) {
                 log.warn("IP活动异常: ip={}, count={}/min", clientIp, count);
 

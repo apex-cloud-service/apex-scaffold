@@ -512,7 +512,6 @@ public class ChuanglanGatewayImpl implements ChuanglanGateway {
         Object phoneObj = data.get("phone");
         String phone = phoneObj != null ? String.valueOf(phoneObj) : null;
 
-        // 检查phone字段
         if (phone == null || phone.isBlank()) {
             log.warn("闪验响应解析失败: phone字段为空");
             PhoneNumberResult result = new PhoneNumberResult(null, false);

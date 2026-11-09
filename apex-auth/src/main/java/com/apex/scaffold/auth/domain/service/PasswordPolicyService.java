@@ -189,7 +189,6 @@ public class PasswordPolicyService {
         // 确保分数在0-100范围内
         score = Math.max(0, Math.min(100, score));
 
-        // 判断是否通过验证
         boolean passed = errors.isEmpty() && score >= (isAdmin ? 80 : 60);
 
         return Mono.just(new PasswordValidationResult(passed, score, errors));

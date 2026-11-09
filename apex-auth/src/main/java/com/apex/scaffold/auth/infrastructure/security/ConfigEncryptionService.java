@@ -95,7 +95,6 @@ public class ConfigEncryptionService {
             SecureRandom random = new SecureRandom();
             random.nextBytes(iv);
 
-            // 初始化Cipher
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, parameterSpec);
@@ -135,7 +134,6 @@ public class ConfigEncryptionService {
             byte[] ciphertextBytes = new byte[byteBuffer.remaining()];
             byteBuffer.get(ciphertextBytes);
 
-            // 初始化Cipher
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             GCMParameterSpec parameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, parameterSpec);

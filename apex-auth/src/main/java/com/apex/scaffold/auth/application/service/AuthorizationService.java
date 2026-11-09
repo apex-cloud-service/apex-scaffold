@@ -53,7 +53,6 @@ public class AuthorizationService {
                     if (role.isSuperRole()) {
                         return Mono.just(true);
                     }
-                    // 检查角色的权限
                     return permissionService
                             .getPermissionsByIds(role.getPermissionIds())
                             .filter(PermissionEntity::isValid)
@@ -86,7 +85,6 @@ public class AuthorizationService {
                     if (role.isSuperRole()) {
                         return Mono.just(true);
                     }
-                    // 检查角色的权限
                     return permissionService
                             .getPermissionsByIds(role.getPermissionIds())
                             .filter(PermissionEntity::isValid)

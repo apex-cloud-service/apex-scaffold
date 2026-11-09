@@ -144,7 +144,6 @@ public class SentinelRuleFileWatcher {
                     continue;
                 }
 
-                // 处理事件
                 for (WatchEvent<?> event : key.pollEvents()) {
                     WatchEvent.Kind<?> kind = event.kind();
 
@@ -153,7 +152,6 @@ public class SentinelRuleFileWatcher {
                         continue;
                     }
 
-                    // 获取文件名
                     @SuppressWarnings("unchecked")
                     WatchEvent<Path> ev = (WatchEvent<Path>) event;
                     Path changedFile = ev.context();

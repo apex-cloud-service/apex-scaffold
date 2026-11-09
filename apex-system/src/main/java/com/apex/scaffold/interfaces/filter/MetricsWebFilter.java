@@ -96,15 +96,12 @@ public class MetricsWebFilter implements WebFilter {
         // 归一化路径（将路径参数替换为占位符）
         String normalizedPath = normalizePath(path);
 
-        // 记录请求开始时间
         long startTime = System.nanoTime();
 
         return chain.filter(exchange).doFinally(signalType -> {
-            // 计算响应耗时
             long duration = System.nanoTime() - startTime;
             long durationMs = TimeUnit.NANOSECONDS.toMillis(duration);
 
-            // 获取响应状态码
             ServerHttpResponse response = exchange.getResponse();
             int statusCode = response.getStatusCode() != null
                     ? response.getStatusCode().value()
