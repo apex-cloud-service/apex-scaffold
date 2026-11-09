@@ -82,7 +82,8 @@ while IFS= read -r file; do
             while (i >= 1) {
                 if (raw_blank[i]) return 0
                 s = code[i]
-                if (s ~ /^[[:space:]]*\/\//) { i--; continue }
+                # 纯行注释剥离后 code[i] 为空串，必须按原始行判定，否则把注释当代码截断窗口。
+                if (raw[i] ~ /^[[:space:]]*\/\//) { i--; continue }
                 if (pd_enter[i] > 0) { i--; continue }
                 if (raw[i] ~ /^[[:space:]]*\/\*\*/) return 1
                 if (raw[i] ~ /^[[:space:]]*\*\/[[:space:]]*$/) {
