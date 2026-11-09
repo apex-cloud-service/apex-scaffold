@@ -131,7 +131,7 @@ Latest and previous downloadable archive versions can found on the [releases pag
   </tr>
   <tr>
     <td><img src="icons/svg/deamon.svg" width="50px;" alt=""/></td>
-    <td><a href="docs/deamon.md">Deamon</a></td>
+    <td><a href="icons/svg/deamon.svg">Deamon</a></td>
   </tr>
   <tr>
     <td><img src="icons/svg/container-close-look.svg" width="50px;" alt=""/></td>

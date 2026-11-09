@@ -247,7 +247,7 @@
     <div class="container">
         <div class="header">
             <h1>📚 Apex Scaffold 文档搜索</h1>
-            <p>快速查找 80+ 个技术文档</p>
+            <p>快速查找项目技术文档</p>
         </div>
 
         <div class="search-box">
@@ -291,7 +291,7 @@
             // 集成文档
             {
                 title: "OAuth2 集成指南",
-                path: "./_archive/integration/oauth2/integration-guide.md",
+                path: "../_archive/integration/oauth2/integration-guide.md",
                 description: "OAuth2 集成操作指南和最佳实践,包含完整的集成流程、配置说明和常见问题解决方案",
                 category: "integration",
                 tags: ["OAuth2", "认证", "第三方集成", "SSO"],
@@ -299,7 +299,7 @@
             },
             {
                 title: "Keycloak 集成方案",
-                path: "./integration/oauth2/keycloak-integration.md",
+                path: "../_archive/integration/oauth2/keycloak-integration.md",
                 description: "Keycloak 认证方式集成方案,详细说明如何配置和集成 Keycloak 认证服务器",
                 category: "integration",
                 tags: ["Keycloak", "OAuth2", "认证", "SSO"],
@@ -307,7 +307,7 @@
             },
             {
                 title: "SSO 实施计划",
-                path: "./integration/oauth2/sso-implementation-plan.md",
+                path: "../_archive/integration/oauth2/sso-implementation-plan.md",
                 description: "SSO OAuth2 集成的完整实施计划,包含时间表、任务分解和验收标准",
                 category: "integration",
                 tags: ["SSO", "OAuth2", "实施计划"],
@@ -315,7 +315,7 @@
             },
             {
                 title: "OAuth2 实施报告",
-                path: "./integration/oauth2/implementation-report.md",
+                path: "../_archive/integration/oauth2/implementation-report.md",
                 description: "OAuth2 完整实施报告和结果总结,包含已知问题和解决方案",
                 category: "integration",
                 tags: ["OAuth2", "实施报告", "问题汇总"],
@@ -323,7 +323,7 @@
             },
             {
                 title: "PKCE 验证计划",
-                path: "./integration/oauth2/pkce/verification-plan.md",
+                path: "../_archive/integration/oauth2/pkce/verification-plan.md",
                 description: "PKCE 功能验证计划,包含验证场景、测试用例和验收标准",
                 category: "integration",
                 tags: ["PKCE", "验证", "测试"],
@@ -331,7 +331,7 @@
             },
             {
                 title: "PKCE 集成测试报告",
-                path: "./integration/oauth2/pkce/integration-test-report.md",
+                path: "../_archive/integration/oauth2/pkce/integration-test-report.md",
                 description: "PKCE 集成测试执行报告,包含测试结果、覆盖率和问题记录",
                 category: "integration",
                 tags: ["PKCE", "集成测试", "测试报告"],
@@ -339,7 +339,7 @@
             },
             {
                 title: "PKCE 性能测试报告",
-                path: "./integration/oauth2/pkce/performance-test-report.md",
+                path: "../_archive/integration/oauth2/pkce/performance-test-report.md",
                 description: "PKCE 性能测试报告和性能指标,包含压测结果和性能优化建议",
                 category: "integration",
                 tags: ["PKCE", "性能测试", "压测"],
@@ -349,41 +349,25 @@
             // 前端文档
             {
                 title: "前端组件使用指南",
-                path: "./frontend/component-guide.md",
-                description: "前端组件开发指南,包含组件规范、使用示例和最佳实践",
+                path: "../architecture/frontend-technology-stack.md#4-ui组件库与样式",
+                description: "前端技术栈中的 UI 组件与样式指南,包含 Element Plus、Sass 和 ECharts 使用示例",
                 category: "frontend",
                 tags: ["前端", "组件", "Vue3"],
                 icon: "🎨"
             },
             {
                 title: "按钮权限控制指南",
-                path: "./frontend/button-permission-guide.md",
+                path: "../_archive/reports/archive/task-implementations/frontend-button-permission-script.md",
                 description: "前端按钮权限控制补充指南,详细说明如何实现按钮级权限控制",
                 category: "frontend",
                 tags: ["前端", "权限", "按钮"],
                 icon: "🔘"
             },
-            {
-                title: "前端页面审计报告",
-                path: "./frontend/page-audit-report.md",
-                description: "前端页面审计结果,包含页面质量评估和改进建议",
-                category: "frontend",
-                tags: ["前端", "审计", "质量"],
-                icon: "📋"
-            },
-            {
-                title: "数据库配置适配方案",
-                path: "./frontend/database-config-adapter.md",
-                description: "前端配置数据库多适配方案,支持多种数据库配置方式",
-                category: "frontend",
-                tags: ["前端", "数据库", "配置"],
-                icon: "🗄️"
-            },
 
             // 运维文档
             {
                 title: "Grafana 监控配置总结",
-                path: "./operations/grafana-status-summary.md",
+                path: "../_archive/operations/grafana-status-summary.md",
                 description: "Grafana 监控平台现状与配置总结,包含66个监控面板配置",
                 category: "operations",
                 tags: ["监控", "Grafana", "运维"],
@@ -391,7 +375,7 @@
             },
             {
                 title: "MySQL 启动指南",
-                path: "./operations/mysql-startup-guide.md",
+                path: "../_archive/operations/mysql-startup-guide.md",
                 description: "MySQL 启动与 SQL 执行指南,包含数据库初始化和常用操作",
                 category: "operations",
                 tags: ["MySQL", "数据库", "运维"],
@@ -399,7 +383,7 @@
             },
             {
                 title: "SQL 脚本执行指南",
-                path: "./operations/sql-execution-guide.md",
+                path: "../_archive/operations/sql-execution-guide.md",
                 description: "数据库 SQL 脚本执行指南,包含 Flyway 迁移和脚本管理",
                 category: "operations",
                 tags: ["SQL", "数据库", "Flyway"],
@@ -407,7 +391,7 @@
             },
             {
                 title: "监控大盘配置",
-                path: "./_archive/operations/monitoring-dashboard-configuration.md",
+                path: "../_archive/operations/monitoring-dashboard-configuration.md",
                 description: "Prometheus/Grafana 监控配置详解,包含指标采集和告警配置",
                 category: "operations",
                 tags: ["监控", "Prometheus", "Grafana"],
@@ -417,7 +401,7 @@
             // 架构文档
             {
                 title: "服务治理实现计划",
-                path: "./architecture/service-governance-implementation.md",
+                path: "../architecture/service-governance-implementation.md",
                 description: "服务治理代码实现计划,包含技术方案和实施步骤",
                 category: "architecture",
                 tags: ["架构", "服务治理", "微服务"],
@@ -425,7 +409,7 @@
             },
             {
                 title: "服务治理落地方案",
-                path: "./architecture/service-governance-solution.md",
+                path: "../architecture/service-governance-solution.md",
                 description: "服务治理能力落地方案,包含治理策略和实施路径",
                 category: "architecture",
                 tags: ["架构", "服务治理", "方案"],
@@ -433,7 +417,7 @@
             },
             {
                 title: "系统架构设计文档",
-                path: "./architecture/system-architecture.md",
+                path: "../architecture/system-architecture.md",
                 description: "DDD分层架构、技术栈、架构决策记录(ADR)",
                 category: "architecture",
                 tags: ["架构", "DDD", "设计"],
@@ -443,7 +427,7 @@
             // 商业化文档
             {
                 title: "商业化执行计划",
-                path: "./commercial/sales-execution-plan.md",
+                path: "../07-commercial/sales-execution-plan.md",
                 description: "商业化售卖落地执行计划,包含市场策略和执行路径",
                 category: "commercial",
                 tags: ["商业化", "执行计划", "售卖"],
@@ -451,7 +435,7 @@
             },
             {
                 title: "脚手架重构方案",
-                path: "./commercial/scaffold-refactoring-plan.md",
+                path: "../07-commercial/scaffold-refactoring-plan.md",
                 description: "商业化脚手架重构方案,包含重构目标和实施计划",
                 category: "commercial",
                 tags: ["商业化", "重构", "方案"],
@@ -459,7 +443,7 @@
             },
             {
                 title: "代码清理清单",
-                path: "./commercial/code-cleanup-checklist.md",
+                path: "../07-commercial/code-cleanup-checklist.md",
                 description: "业务代码删除清单,用于商业化产品准备",
                 category: "commercial",
                 tags: ["商业化", "代码清理", "清单"],
@@ -469,7 +453,7 @@
             // 开发标准
             {
                 title: "统一开发规范",
-                path: "./04-development/development-standards.md",
+                path: "./development-standards.md",
                 description: "后端开发规范、注释与 JavaDoc、Lombok、构建规范（mvnd）",
                 category: "standards",
                 tags: ["开发规范", "后端", "Java", "注释", "Lombok", "构建", "mvnd"],
@@ -479,7 +463,7 @@
             // 报告文档
             {
                 title: "前端完成总结",
-                path: "./reports/frontend-completion-summary.md",
+                path: "../_archive/reports/frontend-completion-summary.md",
                 description: "前端项目任务完成总结报告",
                 category: "reports",
                 tags: ["报告", "前端", "总结"],
@@ -487,7 +471,7 @@
             },
             {
                 title: "后端完成总结",
-                path: "./reports/backend-completion-summary.md",
+                path: "../_archive/reports/backend-completion-summary.md",
                 description: "后端项目任务完成总结报告",
                 category: "reports",
                 tags: ["报告", "后端", "总结"],
@@ -495,7 +479,7 @@
             },
             {
                 title: "文档整合完成报告",
-                path: "./reports/trae-documents-integration-completion-report.md",
+                path: "../_archive/reports/trae-documents-integration-completion-report.md",
                 description: ".trae/documents 整合到 docs 目录完成报告",
                 category: "reports",
                 tags: ["报告", "文档整合", "总结"],
@@ -505,7 +489,7 @@
             // 索引文档
             {
                 title: "架构文档总索引",
-                path: "./02-architecture/architecture-index.md",
+                path: "../02-architecture/architecture-index.md",
                 description: "29张架构图 + 11个场景化查找 + 关键词索引",
                 category: "index",
                 tags: ["索引", "架构", "导航"],
@@ -513,7 +497,7 @@
             },
             {
                 title: "集成文档索引",
-                path: "./integration/README.md",
+                path: "../_archive/integration/README.md",
                 description: "OAuth2/PKCE 认证集成完整指南和文档索引",
                 category: "index",
                 tags: ["索引", "集成", "导航"],
@@ -521,7 +505,7 @@
             },
             {
                 title: "文档整合摘要",
-                path: "./INTEGRATION_SUMMARY.md",
+                path: "../_archive/INTEGRATION_SUMMARY.md",
                 description: "51个整合文档索引 + 按场景/关键词查找",
                 category: "index",
                 tags: ["索引", "摘要", "导航"],
@@ -531,7 +515,7 @@
             // 快速开始
             {
                 title: "快速开始",
-                path: "./00-getting-started/quickstart.md",
+                path: "../00-getting-started/quickstart.md",
                 description: "5分钟快速启动项目,包含环境准备和运行步骤",
                 category: "guide",
                 tags: ["快速开始", "入门", "教程"],
@@ -539,7 +523,7 @@
             },
             {
                 title: "最佳实践",
-                path: "./BEST_PRACTICES.md",
+                path: "../01-guides/best-practices.md",
                 description: "开发和运维最佳实践,包含常见场景和解决方案",
                 category: "guide",
                 tags: ["最佳实践", "指南", "经验"],
@@ -549,7 +533,7 @@
             // 后端开发文档
             {
                 title: "DDD 四层架构详解",
-                path: "./architecture/01-logical-architecture-detail.md",
+                path: "../architecture/01-logical-architecture-detail.md",
                 description: "DDD 领域驱动设计四层架构详细说明,包含分层职责和依赖规则",
                 category: "backend",
                 tags: ["后端", "DDD", "架构", "分层"],
@@ -557,7 +541,7 @@
             },
             {
                 title: "响应式编程指南",
-                path: "./architecture/reactive-programming-guide.md",
+                path: "../architecture/reactive-programming-guide.md",
                 description: "Spring WebFlux 响应式编程实战指南,包含 Reactor 使用和最佳实践",
                 category: "backend",
                 tags: ["后端", "响应式", "WebFlux", "Reactor"],
@@ -565,7 +549,7 @@
             },
             {
                 title: "多租户隔离方案",
-                path: "./architecture/advanced-features/multi-tenant-isolation.md",
+                path: "../architecture/multi-tenant-isolation-architecture.md",
                 description: "多租户架构设计和数据隔离实现方案",
                 category: "backend",
                 tags: ["后端", "多租户", "数据隔离", "架构"],
@@ -573,8 +557,8 @@
             },
             {
                 title: "分布式事务处理",
-                path: "./architecture/distributed-transaction.md",
-                description: "分布式事务处理方案,包含 Saga 模式和 TCC 模式",
+                path: "../05-operations/seata-integration.md",
+                description: "Seata 分布式事务接入与运行限制,涵盖 AT、TCC、SAGA 和 XA 模式",
                 category: "backend",
                 tags: ["后端", "分布式事务", "Saga", "微服务"],
                 icon: "🔄"
@@ -583,7 +567,7 @@
             // 安全相关文档
             {
                 title: "安全防护体系",
-                path: "./architecture/advanced-features/security-protection-system.md",
+                path: "../architecture/advanced-features/security-protection-system.md",
                 description: "企业级安全防护体系,包含认证授权、数据加密、防护策略",
                 category: "security",
                 tags: ["安全", "认证", "授权", "加密"],
@@ -591,24 +575,24 @@
             },
             {
                 title: "JWT 认证实现",
-                path: "./architecture/jwt-authentication.md",
-                description: "JWT Token 认证机制实现,包含 Token 生成、验证和刷新",
+                path: "../architecture/backend-technology-stack.md#131-jwt-认证",
+                description: "后端技术栈中的 JWT 认证配置示例,说明 Spring Security 认证链路",
                 category: "security",
                 tags: ["安全", "JWT", "认证", "Token"],
                 icon: "🎫"
             },
             {
                 title: "RBAC 权限模型",
-                path: "./architecture/rbac-permission-model.md",
-                description: "基于角色的访问控制(RBAC)权限模型设计和实现",
+                path: "../architecture/backend-technology-stack.md#132-rbac-权限模型",
+                description: "后端技术栈中的 RBAC 权限模型,说明用户、角色与权限的关系",
                 category: "security",
                 tags: ["安全", "RBAC", "权限", "访问控制"],
                 icon: "👥"
             },
             {
                 title: "数据加密方案",
-                path: "./architecture/data-encryption.md",
-                description: "敏感数据加密方案,包含传输加密和存储加密",
+                path: "../01-guides/security-features-configuration.md",
+                description: "Token 与 SSO 敏感配置加密存储指南,包含密钥配置、轮换和故障排查",
                 category: "security",
                 tags: ["安全", "加密", "数据保护"],
                 icon: "🔒"
@@ -617,7 +601,7 @@
             // 测试相关文档
             {
                 title: "单元测试指南",
-                path: "./technical/unit-testing-guide.md",
+                path: "../01-guides/best-practices.md#1-单元测试",
                 description: "JUnit5 + Mockito 单元测试最佳实践",
                 category: "testing",
                 tags: ["测试", "单元测试", "JUnit", "Mockito"],
@@ -625,15 +609,15 @@
             },
             {
                 title: "集成测试实践",
-                path: "./technical/integration-testing.md",
-                description: "Spring Boot 集成测试实践,包含 TestContainers 使用",
+                path: "../01-guides/best-practices.md#2-集成测试",
+                description: "Spring Boot 集成测试最佳实践,包含 WebTestClient 接口验证示例",
                 category: "testing",
                 tags: ["测试", "集成测试", "TestContainers"],
                 icon: "🔬"
             },
             {
                 title: "API 测试指南",
-                path: "./technical/api-testing-guide.md",
+                path: "../06-testing/api-test-plan.md",
                 description: "RESTful API 测试指南,包含 Postman 和自动化测试",
                 category: "testing",
                 tags: ["测试", "API测试", "Postman", "自动化"],
@@ -641,15 +625,15 @@
             },
             {
                 title: "性能测试方案",
-                path: "./technical/performance-testing.md",
-                description: "性能测试方案和压测实践,包含 JMeter 使用指南",
+                path: "../05-operations/performance-monitoring-guide.md",
+                description: "性能监控与基准测试指南,包含 JMH 示例、wrk/ab 压测和性能验证清单",
                 category: "testing",
-                tags: ["测试", "性能测试", "压测", "JMeter"],
+                tags: ["测试", "性能测试", "压测", "JMH", "wrk"],
                 icon: "📊"
             },
             {
                 title: "测试完整性计划",
-                path: "./technical/test-completeness-plan.md",
+                path: "../_archive/technical/test-completeness-plan.md",
                 description: "测试完整性与报告计划,确保测试覆盖率和质量",
                 category: "testing",
                 tags: ["测试", "测试计划", "覆盖率"],
@@ -659,7 +643,7 @@
             // 数据库相关文档
             {
                 title: "数据库设计文档",
-                path: "./architecture/database-design.md",
+                path: "../architecture/database-design.md",
                 description: "数据库设计规范和 E-R 关系图",
                 category: "backend",
                 tags: ["数据库", "设计", "E-R图", "后端"],
@@ -667,7 +651,7 @@
             },
             {
                 title: "Flyway 数据库迁移",
-                path: "./operations/flyway-migration-guide.md",
+                path: "../architecture/database-design.md#61-flyway迁移脚本",
                 description: "Flyway 数据库版本管理和迁移实践",
                 category: "operations",
                 tags: ["数据库", "Flyway", "迁移", "运维"],
@@ -675,7 +659,7 @@
             },
             {
                 title: "数据库性能优化",
-                path: "./operations/database-optimization.md",
+                path: "../architecture/database-design.md#71-查询优化建议",
                 description: "MySQL 性能优化实践,包含索引优化和查询优化",
                 category: "operations",
                 tags: ["数据库", "性能优化", "MySQL", "索引"],
@@ -685,7 +669,7 @@
             // 部署运维文档
             {
                 title: "Podman 部署指南",
-                path: "./05-operations/deployment.md",
+                path: "../05-operations/deployment.md",
                 description: "Podman 容器化部署指南,包含 Containerfile 和 podman-compose",
                 category: "operations",
                 tags: ["运维", "Podman", "容器化", "部署"],
@@ -693,23 +677,23 @@
             },
             {
                 title: "Kubernetes 部署",
-                path: "./operations/kubernetes-deployment.md",
-                description: "Kubernetes 集群部署方案,包含 K8s 配置和服务编排",
+                path: "../_archive/operations/deployment.md#三kubernetes-部署",
+                description: "归档 Kubernetes 部署方案,包含命名空间、Secret、Deployment、Ingress 与 HPA 示例",
                 category: "operations",
                 tags: ["运维", "Kubernetes", "K8s", "微服务"],
                 icon: "☸️"
             },
             {
                 title: "CI/CD 流水线",
-                path: "./operations/cicd-pipeline.md",
-                description: "持续集成和持续部署流水线配置",
+                path: "../05-operations/ci-cd-y2038-integration.md",
+                description: "CI/CD 流水线中的 Y2038 数据库与架构检查,包含 GitHub Actions 任务依赖和执行流程",
                 category: "operations",
                 tags: ["运维", "CI/CD", "自动化", "DevOps"],
                 icon: "🔧"
             },
             {
                 title: "日志管理方案",
-                path: "./operations/logging-management.md",
+                path: "../05-operations/elk-log-query.md",
                 description: "ELK 日志管理方案,包含日志采集、存储和分析",
                 category: "operations",
                 tags: ["运维", "日志", "ELK", "监控"],
@@ -719,7 +703,7 @@
             // 缓存相关文档
             {
                 title: "Redis 缓存方案",
-                path: "./architecture/redis-caching.md",
+                path: "../architecture/advanced-features/multi-level-cache-complete-guide.md",
                 description: "Redis 多级缓存架构和缓存策略",
                 category: "backend",
                 tags: ["后端", "Redis", "缓存", "性能"],
@@ -727,7 +711,7 @@
             },
             {
                 title: "分布式缓存实践",
-                path: "./architecture/distributed-cache.md",
+                path: "../cache/CACHE_OPTIMIZATION_SOLUTION.md",
                 description: "分布式缓存实现,包含缓存一致性和缓存穿透防护",
                 category: "backend",
                 tags: ["后端", "分布式缓存", "Redis", "一致性"],
@@ -737,7 +721,7 @@
             // 消息队列文档
             {
                 title: "RocketMQ 使用指南",
-                path: "./architecture/rocketmq-guide.md",
+                path: "../01-guides/messaging/rocketmq-auto-handler-guide.md",
                 description: "RocketMQ 消息队列使用指南,包含生产者和消费者配置",
                 category: "backend",
                 tags: ["后端", "消息队列", "RocketMQ", "异步"],
@@ -745,7 +729,7 @@
             },
             {
                 title: "消息可靠性方案",
-                path: "./architecture/message-reliability.md",
+                path: "../architecture/mq-architecture.md#63-消费失败处理",
                 description: "消息队列可靠性保障方案,包含重试机制和死信队列",
                 category: "backend",
                 tags: ["后端", "消息队列", "可靠性", "重试"],
@@ -755,7 +739,7 @@
             // API 文档
             {
                 title: "API 设计规范",
-                path: "./standards/api-design-standards.md",
+                path: "./development-standards.md#7-api-设计规范",
                 description: "RESTful API 设计规范,包含命名规范和版本管理",
                 category: "standards",
                 tags: ["规范", "API", "RESTful", "设计"],
@@ -763,8 +747,8 @@
             },
             {
                 title: "OpenAPI 文档规范",
-                path: "./api/openapi-specification.md",
-                description: "OpenAPI 3.0 文档规范和 Swagger 注解使用",
+                path: "../03-api/springdoc-annotation-templates.md",
+                description: "SpringDoc OpenAPI 注解模板,包含函数式路由、参数、响应和文件接口示例",
                 category: "standards",
                 tags: ["规范", "OpenAPI", "Swagger", "API"],
                 icon: "📄"
@@ -773,7 +757,7 @@
             // 前端扩展文档
             {
                 title: "Vue3 开发指南",
-                path: "./frontend/vue3-development-guide.md",
+                path: "../architecture/frontend-technology-stack.md#31-vue-35---渐进式框架",
                 description: "Vue3 + TypeScript 开发指南,包含组合式 API 使用",
                 category: "frontend",
                 tags: ["前端", "Vue3", "TypeScript", "组合式API"],
@@ -781,7 +765,7 @@
             },
             {
                 title: "状态管理方案",
-                path: "./frontend/state-management.md",
+                path: "../architecture/frontend-technology-stack.md#33-pinia-2---状态管理",
                 description: "Pinia 状态管理方案,包含状态设计和模块化",
                 category: "frontend",
                 tags: ["前端", "状态管理", "Pinia", "Vue3"],
@@ -789,7 +773,7 @@
             },
             {
                 title: "路由配置指南",
-                path: "./frontend/routing-configuration.md",
+                path: "../architecture/frontend-technology-stack.md#32-vue-router-4---路由管理",
                 description: "Vue Router 路由配置和动态路由实现",
                 category: "frontend",
                 tags: ["前端", "路由", "Vue Router", "导航"],
@@ -799,7 +783,7 @@
             // 监控告警扩展
             {
                 title: "Prometheus 配置",
-                path: "./operations/prometheus-configuration.md",
+                path: "../05-operations/performance-monitoring-guide.md#prometheus-配置",
                 description: "Prometheus 监控配置,包含指标采集和告警规则",
                 category: "operations",
                 tags: ["运维", "Prometheus", "监控", "告警"],
@@ -807,8 +791,8 @@
             },
             {
                 title: "告警规则配置",
-                path: "./operations/alerting-rules.md",
-                description: "监控告警规则配置,包含告警通知和升级策略",
+                path: "../cache/CACHE_MONITORING_ALERTS.md#告警规则配置",
+                description: "缓存监控告警规则配置,包含命中率、穿透、击穿、雪崩及告警通知",
                 category: "operations",
                 tags: ["运维", "告警", "监控", "通知"],
                 icon: "🚨"
@@ -817,18 +801,18 @@
             // 工作流相关
             {
                 title: "工作流引擎使用",
-                path: "./architecture/workflow-engine.md",
-                description: "BPMN 2.0 工作流引擎使用指南",
+                path: "../08-project-management/features/workflow-engine-guide.md",
+                description: "轻量工作流引擎使用指南,包含流程定义、审批、驳回和监控",
                 category: "backend",
-                tags: ["后端", "工作流", "BPMN", "审批"],
+                tags: ["后端", "工作流", "审批", "监控"],
                 icon: "🔀"
             },
 
             // 文件管理
             {
                 title: "文件上传方案",
-                path: "./architecture/file-upload.md",
-                description: "分片上传和断点续传实现方案",
+                path: "../03-api/api-routes.md#3-文件管理",
+                description: "文件管理接口契约,包含上传、分片上传、合并、进度查询及会话权限",
                 category: "backend",
                 tags: ["后端", "文件上传", "分片上传", "MinIO"],
                 icon: "📤"

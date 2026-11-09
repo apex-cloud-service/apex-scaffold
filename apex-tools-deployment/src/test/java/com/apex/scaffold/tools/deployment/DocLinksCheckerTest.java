@@ -183,5 +183,172 @@ class DocLinksCheckerTest {
         assertTrue(result.output.contains("   总链接数: 1"), result.output);
     }
 
+    @Test
+    void unmatchedEmptyCodeCellsAndEscapedBackticksDoNotHideLinks() throws Exception {
+        write(
+                "docs/table.md",
+                "| Empty | Link |\n| --- | --- |\n| `` | [first](missing-one.md) |\n"
+                        + "| `` | [second](missing-two.md) |\n\n"
+                        + "\\`[third](missing-three.md)\\`\n");
+        Result result = scan("docs/table.md");
+        assertEquals(1, result.code(), result.output);
+        assertTrue(result.output.contains("   总链接数: 3"), result.output);
+        assertTrue(result.output.contains("table.md:3: missing-one.md"), result.output);
+        assertTrue(result.output.contains("table.md:4: missing-two.md"), result.output);
+        assertTrue(result.output.contains("table.md:6: missing-three.md"), result.output);
+    }
+
+    @Test
+    void astLinksImagesAndReferencesKeepUsageLineNumbers() throws Exception {
+        write(
+                "docs/refs.md",
+                "[multi\nline](missing.md)\n\n![image][img]\n[short]\n[collapsed][]\n\n"
+                        + "[img]: missing.png\n[short]: missing-short.md\n[collapsed]: missing-collapsed.md\n"
+                        + "[unused]: unused.md\n");
+        Result result = scan("docs/refs.md");
+        assertEquals(1, result.code(), result.output);
+        assertTrue(result.output.contains("   总链接数: 4"), result.output);
+        assertTrue(result.output.contains("refs.md:1: missing.md"), result.output);
+        assertTrue(result.output.contains("refs.md:4: missing.png"), result.output);
+        assertTrue(result.output.contains("refs.md:5: missing-short.md"), result.output);
+        assertTrue(result.output.contains("refs.md:6: missing-collapsed.md"), result.output);
+    }
+
+    @Test
+    void markdownHtmlLinksAndImagesSupportQuotingAndEntities() throws Exception {
+        write("docs/target.md", "# Title\n");
+        write("docs/a&b.png", "image");
+        write(
+                "docs/html.md",
+                "<a HREF='target.md#title'>ok</a> <img src=a&amp;b.png>\n"
+                        + "<a\n href=\"missing.md\">missing</a>\n"
+                        + "<img src='missing.png'>\n");
+        Result result = scan("docs/html.md");
+        assertEquals(1, result.code(), result.output);
+        assertTrue(result.output.contains("   总链接数: 4"), result.output);
+        assertTrue(result.output.contains("   断裂链接: 2"), result.output);
+        assertTrue(result.output.contains("html.md:3: missing.md"), result.output);
+        assertTrue(result.output.contains("html.md:4: missing.png"), result.output);
+    }
+
+    @Test
+    void htmlSourcesCheckLiteralLinksAndActualIdsWithoutParsingJavascript() throws Exception {
+        write("docs/other.HTM", "<h2 id='MixedCase'>Title</h2><a name=legacy></a>\n");
+        write(
+                "docs/page.html",
+                "<a href='other.HTM#MixedCase'>ok</a>\n"
+                        + "<a href=other.HTM#legacy>legacy</a>\n"
+                        + "<a href='other.HTM#title'>not a heading slug</a>\n"
+                        + "<img src='missing.png'>\n"
+                        + "<!-- <a href='comment.md' id='comment'> -->\n"
+                        + "<script>const template = `<a href='dynamic.md' id='dynamic'>`;</script>\n"
+                        + "<style>.x::after {content: '<img src=style.png>'}</style>\n"
+                        + "<pre><code><a href='example.md' id='example'></a></code></pre>\n"
+                        + "<code><img src=inline-example.png></code>\n");
+        write(
+                "docs/index.md",
+                "[comment](page.html#comment) [dynamic](page.html#dynamic) [example](page.html#example)\n");
+        Result result = scan("docs/page.html", "docs/other.HTM", "docs/index.md");
+        assertEquals(1, result.code(), result.output);
+        assertTrue(result.output.contains("   Markdown 文件数: 1"), result.output);
+        assertTrue(result.output.contains("   HTML 文件数: 2"), result.output);
+        assertTrue(result.output.contains("   总链接数: 7"), result.output);
+        assertTrue(result.output.contains("   断裂链接: 5"), result.output);
+        assertTrue(result.output.contains("page.html:3: other.HTM#title"), result.output);
+    }
+
+    @Test
+    void htmlInsideMarkdownCodeCommentsAndRawTextIsIgnored() throws Exception {
+        write(
+                "docs/code.md",
+                "```html\n<a href='fenced.md' id='fenced'>\n```\n\n"
+                        + "    <img src=indented.png>\n\n"
+                        + "`<a href='inline.md' id='inline'>`\n\n"
+                        + "<!-- <img src=comment.png> -->\n\n"
+                        + "<script>const example = '<img src=script.png>'; </script>\n\n"
+                        + "<style>.x {content: '<a href=style.md>'}</style>\n\n"
+                        + "<code>[example](example.md)<a href=example-html.md></code>\n\n"
+                        + "<a href='code.md#real'>real</a> <a id=real></a>\n");
+        Result result = scan("docs/code.md");
+        assertEquals(0, result.code(), result.output);
+        assertTrue(result.output.contains("   总链接数: 1"), result.output);
+    }
+
+    @Test
+    void headingsUseRendererAstTextAndDuplicateIds() throws Exception {
+        String markdown = "> # Nested *Title*\n\n"
+                + "- ## ![Alt](https://example.com/a.png) [Label][ref] `Code` &amp; <em>Text</em>\n\n"
+                + "[ref]: https://example.com\n\n"
+                + "Multi\nline\n----\n\n# Nested Title\n\n# Nested Title-1\n\n# Nested Title\n";
+        write("docs/headings.md", markdown);
+        write(
+                "docs/index.md",
+                "[nested](headings.md#nested-title) [rich](headings.md#alt-label-code--text) "
+                        + "[setext](headings.md#multi-line) [duplicate](headings.md#nested-title-1) "
+                        + "[collision](headings.md#nested-title-1-1) [last](headings.md#nested-title-2)\n");
+        Result result = scan("docs/index.md");
+        assertEquals(0, result.code(), result.output);
+        String rendered = MarkdownPageRenderer.render(markdown, "headings");
+        for (String id : new String[] {
+            "nested-title", "alt-label-code--text", "multi-line", "nested-title-1", "nested-title-1-1", "nested-title-2"
+        }) {
+            assertTrue(rendered.contains("id=\"" + id + "\""), rendered);
+        }
+    }
+
+    @Test
+    void directoryFragmentsRequireReadmeButBareDirectoriesRemainValid() throws Exception {
+        Files.createDirectories(root.resolve("pkg"));
+        write("docs/d.md", "[directory](../pkg/) [fragment](../pkg/#missing)\n");
+        Result result = scan("docs/d.md");
+        assertEquals(1, result.code(), result.output);
+        assertTrue(result.output.contains("   总链接数: 2"), result.output);
+        assertTrue(result.output.contains("   断裂链接: 1"), result.output);
+        assertTrue(result.output.contains("坏链接（锚点文档不存在）"), result.output);
+    }
+
+    @Test
+    void decodedAstDestinationsAndLiteralHtmlAttributesAreNotDecodedTwice() throws Exception {
+        write("docs/a&amp;b.md", "<a id='x&amp;amp;y'></a>\n");
+        write("docs/a&b.md", "# Plain\n");
+        write("docs/a+b.md", "# Plus\n");
+        write(
+                "docs/encoding.md",
+                "[nested entity](a&amp;amp;b.md#x&amp;amp;y) [entity](a&amp;b.md#plain) "
+                        + "[plus](a+b.md?raw=1#plus)\n\n"
+                        + "<a href='a&amp;amp;b.md#x&amp;amp;y'>literal HTML</a>\n");
+        Result result = scan("docs/encoding.md");
+        assertEquals(0, result.code(), result.output);
+        assertTrue(result.output.contains("   总链接数: 4"), result.output);
+    }
+
+    @Test
+    void htmlCommentsQuotedGreaterThanAndMalformedTagsDoNotLeakLinks() throws Exception {
+        write("docs/target.html", "<a id=unquoted></a><div ID='single'></div><span id=\"double\"></span>\n");
+        write(
+                "docs/page.htm",
+                "<!-- > <a href=comment.md> -->\n"
+                        + "<a title='quoted > delimiter' HREF=target.html#unquoted>ok</a>\n"
+                        + "<a href='target.html#single' href='duplicate-must-not-win.md'>ok</a>\n"
+                        + "<img src=\"target.html#double\">\n"
+                        + "<a href='https://example.com'>external</a><img src='//example.com/a.png'>\n"
+                        + "<a href='unterminated.md'\n");
+        Result result = scan("docs/page.htm");
+        assertEquals(0, result.code(), result.output);
+        assertTrue(result.output.contains("   总链接数: 3"), result.output);
+    }
+
+    @Test
+    void directoryReadmeRespectsGitignore() throws Exception {
+        write("pkg/README.md", "# Hidden\n");
+        write(".gitignore", "pkg/README.md\n");
+        assumeGitAvailable(new ProcessBuilder("git", "init", "-q", root.toString()).start());
+        write("docs/d.md", "[directory](../pkg/) [hidden fragment](../pkg/#hidden)\n");
+        Result result = scan("docs/d.md");
+        assertEquals(1, result.code(), result.output);
+        assertTrue(result.output.contains("   断裂链接: 1"), result.output);
+        assertTrue(result.output.contains("坏链接（目标被 .gitignore 排除）"), result.output);
+    }
+
     private record Result(int code, String output) {}
 }

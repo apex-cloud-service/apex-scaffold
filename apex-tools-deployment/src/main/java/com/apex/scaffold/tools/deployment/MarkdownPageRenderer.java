@@ -12,6 +12,7 @@ import org.commonmark.node.HtmlInline;
 import org.commonmark.node.Node;
 import org.commonmark.node.SoftLineBreak;
 import org.commonmark.node.Text;
+import org.commonmark.parser.IncludeSourceSpans;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 
@@ -33,7 +34,10 @@ final class MarkdownPageRenderer {
             org.commonmark.ext.gfm.strikethrough.StrikethroughExtension.create(),
             org.commonmark.ext.task.list.items.TaskListItemsExtension.create());
 
-    private static final Parser PARSER = Parser.builder().extensions(EXTENSIONS).build();
+    private static final Parser PARSER = Parser.builder()
+            .extensions(EXTENSIONS)
+            .includeSourceSpans(IncludeSourceSpans.BLOCKS_AND_INLINES)
+            .build();
 
     private static final HtmlRenderer RENDERER =
             HtmlRenderer.builder().extensions(EXTENSIONS).build();
@@ -63,7 +67,7 @@ final class MarkdownPageRenderer {
      * @return 完整 HTML 文档
      */
     static String render(String markdown, String title) {
-        Node document = PARSER.parse(markdown);
+        Node document = parse(markdown);
         List<String> headingIds = headingIds(document);
         String body = injectHeadingIds(RENDERER.render(document), headingIds);
         return "<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"utf-8\">\n"
@@ -72,8 +76,13 @@ final class MarkdownPageRenderer {
                 + "</head>\n<body>\n<article>\n" + body + "</article>\n</body>\n</html>\n";
     }
 
+    /** 渲染与链接校验共用相同的 CommonMark/GFM 语法及源码位置。 */
+    static Node parse(String markdown) {
+        return PARSER.parse(markdown);
+    }
+
     /** 按文档顺序收集全部标题的 slug，重复标题按「第二个起追加 {@code -1}」去重。 */
-    private static List<String> headingIds(Node root) {
+    static List<String> headingIds(Node root) {
         List<String> ids = new ArrayList<>();
         Set<String> used = new HashSet<>();
         collectHeadings(root, ids, used);

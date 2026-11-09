@@ -317,23 +317,23 @@
                 <select id="fileSelect">
                     <option value="">-- 请选择包含 Mermaid 图表的文档 --</option>
                     <optgroup label="架构文档">
-                        <option value="architecture/reactive-programming-guide.md">WebFlux 响应式编程指南</option>
-                        <option value="architecture/multi-tenant-isolation-architecture.md">多租户数据隔离架构</option>
-                        <option value="architecture/service-governance-solution.md">服务治理落地方案</option>
-                        <option value="architecture/core-tech-diagrams-index.md">核心技术图表索引</option>
+                        <option value="../architecture/reactive-programming-guide.md">WebFlux 响应式编程指南</option>
+                        <option value="../architecture/multi-tenant-isolation-architecture.md">多租户数据隔离架构</option>
+                        <option value="../architecture/service-governance-solution.md">服务治理落地方案</option>
+                        <option value="../architecture/core-tech-diagrams-index.md">核心技术图表索引</option>
                     </optgroup>
                     <optgroup label="高级特性">
-                        <option value="architecture/advanced-features/multi-level-cache-complete-guide.md">多级缓存完整指南</option>
-                        <option value="architecture/advanced-features/circuit-breaker-rate-limit-guide.md">熔断器与限流指南</option>
+                        <option value="../architecture/advanced-features/multi-level-cache-complete-guide.md">多级缓存完整指南</option>
+                        <option value="../architecture/advanced-features/circuit-breaker-rate-limit-guide.md">熔断器与限流指南</option>
                     </optgroup>
                     <optgroup label="功能文档">
-                        <option value="features/workflow-engine-guide.md">工作流引擎使用指南</option>
-                        <option value="MESSAGE_MIDDLEWARE.md">消息中间件使用说明</option>
-                        <option value="DATA_SCOPE_USAGE.md">数据权限使用指南</option>
+                        <option value="../08-project-management/features/workflow-engine-guide.md">工作流引擎使用指南</option>
+                        <option value="../01-guides/message-middleware.md">消息中间件使用说明</option>
+                        <option value="../01-guides/data-scope-usage.md">数据权限使用指南</option>
                     </optgroup>
                     <optgroup label="使用指南">
-                        <option value="MERMAID_VIEWER_GUIDE.md">Mermaid 图表查看指南</option>
-                        <option value="diagrams/sequence/README.md">时序图源文件说明</option>
+                        <option value="./mermaid-viewer-guide.md">Mermaid 图表查看指南</option>
+                        <option value="../diagrams/sequence/README.md">时序图源文件说明</option>
                     </optgroup>
                 </select>
             </div>
@@ -396,6 +396,7 @@
 
         let currentMode = 'all';
         let currentContent = '';
+        let currentDocumentUrl = null;
         let diagramCount = 0;
 
         const fileSelect = document.getElementById('fileSelect');
@@ -447,13 +448,17 @@
             statsBar.style.display = 'none';
 
             try {
-                const response = await fetch(filePath);
+                const documentUrl = new URL(filePath, window.location.href);
+                const sourceUrl = new URL(documentUrl);
+                sourceUrl.searchParams.set('raw', '1');
+                const response = await fetch(sourceUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
                 const content = await response.text();
                 currentContent = content;
+                currentDocumentUrl = documentUrl;
 
                 // 统计信息
                 const fileName = filePath.split('/').pop();
@@ -480,6 +485,17 @@
                     </div>
                 `;
             }
+        }
+
+        // Markdown 相对链接与图片必须以所选文档为基准,而不是查看器页面。
+        function resolveDocumentResources() {
+            if (!currentDocumentUrl) return;
+            contentDiv.querySelectorAll('.markdown-content a[href], .markdown-content img[src]').forEach(element => {
+                const attribute = element.tagName === 'A' ? 'href' : 'src';
+                const value = element.getAttribute(attribute);
+                if (!value || /^[a-z][a-z\d+.-]*:/i.test(value) || value.startsWith('//')) return;
+                element.setAttribute(attribute, new URL(value, currentDocumentUrl).href);
+            });
         }
 
         // 渲染内容
@@ -526,11 +542,13 @@
                 // 仅文本模式（移除 Mermaid 代码块）
                 const textContent = content.replace(/```mermaid[\s\S]*?```/g, '[Mermaid 图表已隐藏]');
                 contentDiv.innerHTML = `<div class="markdown-content">${marked.parse(textContent)}</div>`;
+                resolveDocumentResources();
 
             } else {
                 // 完整文档模式
                 const htmlContent = await renderMarkdownWithMermaid(content);
                 contentDiv.innerHTML = `<div class="markdown-content">${htmlContent}</div>`;
+                resolveDocumentResources();
                 
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
@@ -577,13 +595,13 @@
             // 先替换 Mermaid 代码块为占位符
             const placeholders = [];
             content = content.replace(/```mermaid\n([\s\S]*?)```/g, (match, code) => {
-                const placeholder = `__MERMAID_PLACEHOLDER_${diagramId}__`;
+                const placeholder = `APEXMERMAIDPLACEHOLDER${diagramId}TOKEN`;
                 placeholders.push({
                     id: diagramId,
                     code: code.trim()
                 });
                 diagramId++;
-                return placeholder;
+                return `\n\n${placeholder}\n\n`;
             });
 
             // 转换 Markdown
@@ -591,8 +609,9 @@
 
             // 替换占位符为 Mermaid div
             placeholders.forEach(({ id, code }) => {
-                const mermaidDiv = `<div class="diagram-container"><div class="mermaid">${code}</div></div>`;
-                html = html.replace(`__MERMAID_PLACEHOLDER_${id}__`, mermaidDiv);
+                const escapedCode = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const mermaidDiv = `<div class="diagram-container"><div class="mermaid">${escapedCode}</div></div>`;
+                html = html.replace(`<p>APEXMERMAIDPLACEHOLDER${id}TOKEN</p>`, () => mermaidDiv);
             });
 
             return html;

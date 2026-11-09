@@ -15,13 +15,17 @@
 
 ---
 
-## 方法 2: HTML img 标签（绝对路径）
+## 方法 2: HTML img 标签（相对路径 SVG 替代）
 
 ### 缩略图
-<img src="file:///Users/work/apex-scaffold/docs/diagrams/thumb/01_logical_architecture_thumb.png" alt="缩略图" width="600">
+原缩略图 PNG 已不存在，使用现有 SVG 验证 HTML 图片显示（不代表原 PNG 尺寸或清晰度）：
+
+<img src="../../../diagrams/01_logical_architecture.svg" alt="逻辑架构 SVG 替代图" width="600">
 
 ### 高清图
-<img src="file:///Users/work/apex-scaffold/docs/diagrams/01_logical_architecture.png" alt="高清图" width="600">
+原高清图 PNG 已不存在，以下同样使用现有 SVG：
+
+<img src="../../../diagrams/01_logical_architecture.svg" alt="逻辑架构 SVG 替代图" width="600">
 
 ---
 
@@ -56,7 +60,7 @@ full（目标不存在，无已核实替代文件；原路径：`docs/diagrams/0
 请在您的编辑器中查看上面哪种方法的图片能正常显示：
 
 - [ ] 方法 1（相对路径 `./`）
-- [ ] 方法 2（HTML + file:// 绝对路径）
+- [ ] 方法 2（HTML + 相对路径 SVG 替代图）
 - [ ] 方法 3（相对路径无 `./`）
 - [ ] 方法 4（仅链接）
 
