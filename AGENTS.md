@@ -75,11 +75,11 @@ mvnd -T4 -B clean verify
 | `apex-masking-service`、两个增强 starter | common |
 | `apex-gateway` | common |
 | `apex-boot-all` | common、domain、api-contract、system、auth、workflow、file、office、integration |
-| `apex-example` | common、domain、infrastructure-cache、infrastructure-integration、system（workflow 仅 test scope） |
+| `apex-example` | common、domain、infrastructure-cache、infrastructure-integration、system |
 | `apex-tools-deployment` | 无内部依赖；仅 Jackson、SnakeYAML、CommonMark（本地文档 Markdown 渲染）与 JUnit |
 | `apex-tools-build` | 无内部依赖；仅测试 scope 使用 SnakeYAML（解析注册表）与 JUnit |
 
-表内省略统一的 `apex-` 前缀。auth-service 对 system、example 对 workflow 的依赖仅为 test scope，不得据此引入生产耦合。新增依赖前检查目标 POM，不要机械套用“所有业务库依赖 infrastructure”的链条。
+表内省略统一的 `apex-` 前缀。auth-service 对 system 的依赖仅为 test scope，不得据此引入生产耦合。新增依赖前检查目标 POM，不要机械套用“所有业务库依赖 infrastructure”的链条。
 
 ### 服务增强边界
 

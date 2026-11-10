@@ -1,10 +1,11 @@
 package com.apex.scaffold.authservice.config;
 
 import com.apex.scaffold.auth.application.service.RoleService;
-import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
 import com.apex.scaffold.auth.config.AuthTrustedProxyProperties;
+import com.apex.scaffold.auth.domain.repository.AuthorizationQueryPort;
 import com.apex.scaffold.auth.domain.service.IpAccessControlService;
 import com.apex.scaffold.auth.domain.service.ResourcePermissionService;
+import com.apex.scaffold.auth.domain.service.ResourcePermissionStore;
 import com.apex.scaffold.auth.domain.service.TokenService;
 import com.apex.scaffold.auth.infrastructure.filter.IpAccessControlFilter;
 import com.apex.scaffold.common.audit.AuditLogService;
@@ -49,14 +50,14 @@ public class AuthCenterConfig {
     /**
      * 资源权限领域服务Bean
      *
-     * @param redisTemplate Redis模板
-     * @param authorizationQueryService 统一授权查询服务
+     * @param permissionStore 资源授权存取端口
+     * @param authorizationQueryPort 授权快照查询端口
      * @return ResourcePermissionService实例
      */
     @Bean
     public ResourcePermissionService domainResourcePermissionService(
-            ReactiveStringRedisTemplate redisTemplate, UnifiedAuthorizationQueryService authorizationQueryService) {
-        return new ResourcePermissionService(redisTemplate, authorizationQueryService);
+            ResourcePermissionStore permissionStore, AuthorizationQueryPort authorizationQueryPort) {
+        return new ResourcePermissionService(permissionStore, authorizationQueryPort);
     }
 
     static List<org.springframework.security.core.authority.SimpleGrantedAuthority> toAuthorities(

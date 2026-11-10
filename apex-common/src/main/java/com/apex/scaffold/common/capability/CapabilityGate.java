@@ -34,7 +34,8 @@ public final class CapabilityGate {
             return true;
         }
         Set<String> codes = features.features();
-        // 空 features 沿用既有口径：未启用特性配额的租户视为全量订阅。
-        return codes.isEmpty() || codes.contains(capabilityCode);
+        // 空 features 表示未订阅任何能力；全量订阅必须由 unbounded=true 显式表达，
+        // 不能再用空集合兜底为全量（避免配置缺失被静默放大为全开）。
+        return codes.contains(capabilityCode);
     }
 }

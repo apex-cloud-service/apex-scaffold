@@ -22,8 +22,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "apex.open-api.guard")
 public class OpenApiGuardProperties {
 
-    /** 是否启用服务侧二次校验；默认关闭，暴露开放能力的业务服务显式开启 */
-    private boolean enabled = false;
+    /**
+     * 是否启用服务侧二次校验；默认开启，与网关能力门禁默认口径一致。
+     *
+     * <p>确需关闭的实例必须显式配置 {@code apex.open-api.guard.enabled=false}
+     * 并在配置注释中写明原因与补偿措施；关闭后开放流量仅由网关单侧校验。
+     */
+    private boolean enabled = true;
 
     /** system 服务内部端点基地址（集群内直连，不经网关） */
     private String baseUrl = "http://127.0.0.1:8082";

@@ -1,12 +1,15 @@
 package com.apex.scaffold.auth.domain.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
-import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
+import com.apex.scaffold.auth.domain.repository.AuthorizationQueryPort;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,9 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.ReactiveHashOperations;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveValueOperations;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -26,429 +26,224 @@ import reactor.test.StepVerifier;
 @DisplayName("资源权限服务测试")
 class ResourcePermissionServiceTest {
 
-    @Mock
-    private ReactiveRedisTemplate<String, String> redisTemplate;
+    private static final String USER_ID = "123";
+    private static final Long NUMERIC_USER_ID = 123L;
+    private static final String RESOURCE_TYPE = "document";
+    private static final String RESOURCE_ID = "doc-456";
+    private static final String OWNER_ID = "789";
+    private static final String TENANT_ID = "tenant-1";
 
     @Mock
-    private ReactiveValueOperations<String, String> valueOperations;
+    private ResourcePermissionStore permissionStore;
 
     @Mock
-    private ReactiveHashOperations<String, Object, Object> hashOperations;
+    private AuthorizationQueryPort authorizationQueryPort;
 
     private ResourcePermissionService service;
 
-    private static final String TEST_USER_ID = "user-123";
-    private static final String TEST_RESOURCE_TYPE = "document";
-    private static final String TEST_RESOURCE_ID = "doc-456";
-    private static final String OWNER_ID = "owner-789";
-
     @BeforeEach
     void setUp() {
-        service = new ResourcePermissionService(redisTemplate);
+        service = new ResourcePermissionService(permissionStore, authorizationQueryPort);
     }
 
     @Test
-    @DisplayName("检查权限 - 超级管理员直接通过")
-    void testHasPermission_SuperAdmin() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(true, Set.of(), "192.168.1.1", "device-1", "tenant-1");
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "READ", context))
+    @DisplayName("超级管理员必须具有租户作用域才允许通过")
+    void superAdminRequiresTenantScope() {
+        StepVerifier.create(
+                        service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(true, TENANT_ID)))
                 .expectNext(true)
                 .verifyComplete();
-
-        verifyNoInteractions(redisTemplate);
-    }
-
-    @Test
-    @DisplayName("具备RBAC管理权限时不要求Redis资源ACL")
-    void testHasPermission_RbacManagementPermissionDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
-
-        when(authorizationQueryService.query("tenant-1", 100L))
-                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
-                        "tenant-1", 100L, List.of("session:terminate"), List.of())));
-
-        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
-
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
-
-        StepVerifier.create(service.hasPermission("100", "session", "session-1", "MANAGE", context))
-                .expectNext(true)
-                .verifyComplete();
-
-        verifyNoInteractions(redisTemplate);
-    }
-
-    @Test
-    @DisplayName("RBAC授予mfa:unlock时不要求Redis资源ACL")
-    void testHasPermission_RbacMfaUnlockDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
-
-        when(authorizationQueryService.query("tenant-1", 200L))
-                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
-                        "tenant-1", 200L, List.of("mfa:unlock"), List.of())));
-
-        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
-
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
-
-        StepVerifier.create(service.hasPermission("200", "mfa", "user-123", "MANAGE", context))
-                .expectNext(true)
-                .verifyComplete();
-
-        verifyNoInteractions(redisTemplate);
-    }
-
-    @Test
-    @DisplayName("RBAC授予auth:audit:cleanup时不要求Redis资源ACL")
-    void testHasPermission_RbacAuditCleanupDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
-
-        when(authorizationQueryService.query("tenant-1", 300L))
-                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
-                        "tenant-1", 300L, List.of("auth:audit:cleanup"), List.of())));
-
-        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
-
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
-
-        StepVerifier.create(service.hasPermission("300", "audit-logs", "tenant-1", "MANAGE", context))
-                .expectNext(true)
-                .verifyComplete();
-
-        verifyNoInteractions(redisTemplate);
-    }
-
-    @Test
-    @DisplayName("RBAC授予role:assign时不要求Redis资源ACL")
-    void testHasPermission_RbacRoleAssignDoesNotRequireResourceAcl() {
-        UnifiedAuthorizationQueryService authorizationQueryService = mock(UnifiedAuthorizationQueryService.class);
-
-        when(authorizationQueryService.query("tenant-1", 400L))
-                .thenReturn(Mono.just(new UnifiedAuthorizationQueryService.Authorization(
-                        "tenant-1", 400L, List.of("role:assign"), List.of())));
-
-        service = new ResourcePermissionService(redisTemplate, authorizationQueryService);
-
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1", "tenant-1");
-
-        StepVerifier.create(service.hasPermission("400", "role", "role-1", "MANAGE", context))
-                .expectNext(true)
-                .verifyComplete();
-
-        verifyNoInteractions(redisTemplate);
-    }
-
-    @Test
-    @DisplayName("检查权限 - 资源所有者直接通过")
-    void testHasPermission_ResourceOwner() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(TEST_USER_ID));
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "WRITE", context))
-                .expectNext(true)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("检查权限 - 显式授权通过")
-    void testHasPermission_ExplicitGrant() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-        when(hashOperations.get(
-                        "permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, TEST_USER_ID))
-                .thenReturn(Mono.just("READ,WRITE"));
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "READ", context))
-                .expectNext(true)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("检查权限 - 临时权限通过")
-    void testHasPermission_TemporaryGrant() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-        when(hashOperations.get(
-                        "permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, TEST_USER_ID))
-                .thenReturn(Mono.empty());
-        when(valueOperations.get("permission:temp:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID + ":" + TEST_USER_ID))
-                .thenReturn(Mono.just("READ"));
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "READ", context))
-                .expectNext(true)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("检查权限 - 敏感资源外网IP拒绝")
-    void testHasPermission_SensitiveDataExternalIpDenied() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "8.8.8.8", "device-1");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(valueOperations.get("permission:resource:owner:sensitive-data:" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-        when(hashOperations.get("permission:resource:share:sensitive-data:" + TEST_RESOURCE_ID, TEST_USER_ID))
-                .thenReturn(Mono.just("READ"));
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, "sensitive-data", TEST_RESOURCE_ID, "READ", context))
+        StepVerifier.create(service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(true, null)))
                 .expectNext(false)
                 .verifyComplete();
+        verifyNoInteractions(permissionStore, authorizationQueryPort);
     }
 
     @Test
-    @DisplayName("检查权限 - 无权限拒绝")
-    void testHasPermission_Denied() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-        when(hashOperations.get(
-                        "permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, TEST_USER_ID))
-                .thenReturn(Mono.empty());
-        when(valueOperations.get("permission:temp:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID + ":" + TEST_USER_ID))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "WRITE", context))
+    @DisplayName("缺少租户作用域时默认拒绝且不查询端口")
+    void missingTenantFailsClosed() {
+        StepVerifier.create(service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(false, "")))
                 .expectNext(false)
                 .verifyComplete();
+        verifyNoInteractions(permissionStore, authorizationQueryPort);
     }
 
     @Test
-    @DisplayName("检查是否为资源所有者 - 是")
-    void testIsResourceOwner_True() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(TEST_USER_ID));
-
-        StepVerifier.create(service.isResourceOwner(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID))
-                .expectNext(true)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("检查是否为资源所有者 - 否")
-    void testIsResourceOwner_False() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-
-        StepVerifier.create(service.isResourceOwner(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID))
+    @DisplayName("非数字用户标识默认拒绝且不查询授权快照")
+    void invalidUserIdFailsClosed() {
+        StepVerifier.create(service.hasPermission(
+                        "user-123", RESOURCE_TYPE, RESOURCE_ID, "READ", context(false, TENANT_ID)))
                 .expectNext(false)
                 .verifyComplete();
+        verifyNoInteractions(permissionStore, authorizationQueryPort);
     }
 
     @Test
-    @DisplayName("检查是否为资源所有者 - 资源不存在")
-    void testIsResourceOwner_NotExists() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.empty());
-
-        StepVerifier.create(service.isResourceOwner(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID))
-                .expectNext(false)
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("设置资源所有者")
-    void testSetResourceOwner() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.set("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, OWNER_ID))
-                .thenReturn(Mono.just(true));
-
-        StepVerifier.create(service.setResourceOwner(TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, OWNER_ID))
-                .verifyComplete();
-
-        verify(valueOperations)
-                .set("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, OWNER_ID);
-    }
-
-    @Test
-    @DisplayName("授予资源权限")
-    void testGrantPermission() {
-        Set<String> permissions = Set.of("READ", "WRITE");
-        String targetUserId = "user-999";
-
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(hashOperations.put(
-                        eq("permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID),
-                        eq(targetUserId),
-                        anyString()))
-                .thenReturn(Mono.just(true));
-
-        StepVerifier.create(service.grantPermission(TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, targetUserId, permissions))
-                .verifyComplete();
-
-        verify(hashOperations)
-                .put(
-                        eq("permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID),
-                        eq(targetUserId),
-                        argThat(permStr -> {
-                            String str = (String) permStr;
-                            return str.contains("READ") && str.contains("WRITE");
-                        }));
-    }
-
-    @Test
-    @DisplayName("撤销资源权限")
-    void testRevokePermission() {
-        String targetUserId = "user-999";
-
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(hashOperations.remove(
-                        "permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, targetUserId))
-                .thenReturn(Mono.just(1L));
-
-        StepVerifier.create(service.revokePermission(TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, targetUserId))
-                .verifyComplete();
-
-        verify(hashOperations)
-                .remove("permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, targetUserId);
-    }
-
-    @Test
-    @DisplayName("获取资源的所有授权用户")
-    void testGetResourcePermissions() {
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(hashOperations.entries("permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Flux.just(
-                        Map.entry("user-1", "READ"), Map.entry("user-2", "READ,WRITE"), Map.entry("user-3", "MANAGE")));
-
-        StepVerifier.create(service.getResourcePermissions(TEST_RESOURCE_TYPE, TEST_RESOURCE_ID))
-                .assertNext(grant -> {
-                    assertEquals("user-1", grant.getUserId());
-                    assertTrue(grant.getPermissions().contains("READ"));
-                    assertEquals(1, grant.getPermissions().size());
-                })
-                .assertNext(grant -> {
-                    assertEquals("user-2", grant.getUserId());
-                    assertTrue(grant.getPermissions().contains("READ"));
-                    assertTrue(grant.getPermissions().contains("WRITE"));
-                    assertEquals(2, grant.getPermissions().size());
-                })
-                .assertNext(grant -> {
-                    assertEquals("user-3", grant.getUserId());
-                    assertTrue(grant.getPermissions().contains("MANAGE"));
-                    assertEquals(1, grant.getPermissions().size());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    @DisplayName("授予临时权限")
-    void testGrantTemporaryPermission() {
-        Set<String> permissions = Set.of("READ");
-        String targetUserId = "user-temp";
-        long durationSeconds = 3600;
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(valueOperations.set(
-                        eq("permission:temp:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID + ":" + targetUserId),
-                        anyString(),
-                        eq(Duration.ofSeconds(durationSeconds))))
-                .thenReturn(Mono.just(true));
-
-        StepVerifier.create(service.grantTemporaryPermission(
-                        TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, targetUserId, permissions, durationSeconds))
-                .verifyComplete();
-
-        verify(valueOperations)
-                .set(
-                        eq("permission:temp:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID + ":" + targetUserId),
-                        eq("READ"),
-                        eq(Duration.ofSeconds(durationSeconds)));
-    }
-
-    @Test
-    @DisplayName("权限层级 - MANAGE包含所有权限")
-    void testPermissionHierarchy_ManageIncludesAll() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-        when(hashOperations.get(
-                        "permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, TEST_USER_ID))
-                .thenReturn(Mono.just("MANAGE"));
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "READ", context))
-                .expectNext(true)
-                .verifyComplete();
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "WRITE", context))
-                .expectNext(true)
-                .verifyComplete();
+    @DisplayName("授权快照错误不降级为放行")
+    void authorizationQueryErrorIsNotSwallowed() {
+        when(authorizationQueryPort.queryPermissions(TENANT_ID, NUMERIC_USER_ID))
+                .thenReturn(Mono.error(new IllegalStateException("authorization unavailable")));
 
         StepVerifier.create(
-                        service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "DELETE", context))
-                .expectNext(true)
-                .verifyComplete();
+                        service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(false, TENANT_ID)))
+                .expectError(IllegalStateException.class)
+                .verify();
+        verifyNoInteractions(permissionStore);
     }
 
     @Test
-    @DisplayName("权限层级 - WRITE包含READ")
-    void testPermissionHierarchy_WriteIncludesRead() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1");
+    @DisplayName("资源所有者在同租户下直接通过")
+    void ownerIsAllowedWithinTenant() {
+        allowResourcePermission("document:read");
+        when(permissionStore.findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID)).thenReturn(Mono.just(USER_ID));
 
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-        when(hashOperations.get(
-                        "permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, TEST_USER_ID))
-                .thenReturn(Mono.just("WRITE"));
-
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "READ", context))
+        StepVerifier.create(
+                        service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(false, TENANT_ID)))
                 .expectNext(true)
                 .verifyComplete();
+        verify(permissionStore).findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID);
     }
 
     @Test
-    @DisplayName("权限层级 - READ不包含WRITE")
-    void testPermissionHierarchy_ReadDoesNotIncludeWrite() {
-        ResourcePermissionService.PermissionContext context =
-                new ResourcePermissionService.PermissionContext(false, Set.of(), "192.168.1.1", "device-1");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
-        when(valueOperations.get("permission:resource:owner:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID))
-                .thenReturn(Mono.just(OWNER_ID));
-        when(hashOperations.get(
-                        "permission:resource:share:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID, TEST_USER_ID))
-                .thenReturn(Mono.just("READ"));
-        when(valueOperations.get("permission:temp:" + TEST_RESOURCE_TYPE + ":" + TEST_RESOURCE_ID + ":" + TEST_USER_ID))
+    @DisplayName("资源所有者查询使用租户作用域，跨租户数据不放行")
+    void ownerIsDeniedWhenTenantDoesNotMatch() {
+        allowResourcePermission("document:read");
+        when(permissionStore.findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID)).thenReturn(Mono.empty());
+        when(permissionStore.findExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .thenReturn(Mono.empty());
+        when(permissionStore.findTemporaryPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
                 .thenReturn(Mono.empty());
 
-        StepVerifier.create(service.hasPermission(TEST_USER_ID, TEST_RESOURCE_TYPE, TEST_RESOURCE_ID, "WRITE", context))
+        StepVerifier.create(
+                        service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(false, TENANT_ID)))
                 .expectNext(false)
                 .verifyComplete();
+        verify(permissionStore).findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID);
+    }
+
+    @Test
+    @DisplayName("显式授权按权限层级通过")
+    void explicitGrantHonorsPermissionHierarchy() {
+        allowResourcePermission("document:read");
+        when(permissionStore.findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID)).thenReturn(Mono.just(OWNER_ID));
+        when(permissionStore.findExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .thenReturn(Mono.just("WRITE"));
+
+        StepVerifier.create(
+                        service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(false, TENANT_ID)))
+                .expectNext(true)
+                .verifyComplete();
+        verify(permissionStore).findExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID);
+    }
+
+    @Test
+    @DisplayName("临时授权按租户作用域和权限层级通过")
+    void temporaryGrantUsesTenantScope() {
+        allowResourcePermission("document:read");
+        when(permissionStore.findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID)).thenReturn(Mono.just(OWNER_ID));
+        when(permissionStore.findExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .thenReturn(Mono.empty());
+        when(permissionStore.findTemporaryPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .thenReturn(Mono.just("READ"));
+
+        StepVerifier.create(
+                        service.hasPermission(USER_ID, RESOURCE_TYPE, RESOURCE_ID, "READ", context(false, TENANT_ID)))
+                .expectNext(true)
+                .verifyComplete();
+        verify(permissionStore).findTemporaryPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID);
+    }
+
+    @Test
+    @DisplayName("敏感资源外网访问拒绝")
+    void sensitiveResourceRejectsExternalIp() {
+        allowResourcePermission("sensitive-data:read");
+        when(permissionStore.findOwner("sensitive-data", RESOURCE_ID, TENANT_ID))
+                .thenReturn(Mono.just(USER_ID));
+
+        StepVerifier.create(service.hasPermission(
+                        USER_ID, "sensitive-data", RESOURCE_ID, "READ", context(false, TENANT_ID, "8.8.8.8")))
+                .expectNext(false)
+                .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("RBAC 管理权限直接通过且不读取资源 ACL")
+    void rbacManagementPermissionDoesNotReadResourceStore() {
+        when(authorizationQueryPort.queryPermissions(TENANT_ID, NUMERIC_USER_ID))
+                .thenReturn(Mono.just(Set.of("session:terminate")));
+
+        StepVerifier.create(service.hasPermission(USER_ID, "session", "session-1", "MANAGE", context(false, TENANT_ID)))
+                .expectNext(true)
+                .verifyComplete();
+        verifyNoInteractions(permissionStore);
+    }
+
+    @Test
+    @DisplayName("审计日志必须匹配租户资源标识")
+    void auditLogsRequireMatchingTenantResource() {
+        StepVerifier.create(
+                        service.hasPermission(USER_ID, "audit-logs", "tenant-2", "MANAGE", context(false, TENANT_ID)))
+                .expectNext(false)
+                .verifyComplete();
+        verifyNoInteractions(permissionStore, authorizationQueryPort);
+    }
+
+    @Test
+    @DisplayName("资源授权写入和读取透传租户作用域")
+    void resourceStoreOperationsKeepTenantScope() {
+        when(permissionStore.saveOwner(RESOURCE_TYPE, RESOURCE_ID, OWNER_ID, TENANT_ID))
+                .thenReturn(Mono.empty());
+        when(permissionStore.saveExplicitPermission(
+                        eq(RESOURCE_TYPE),
+                        eq(RESOURCE_ID),
+                        eq(USER_ID),
+                        argThat(value -> Set.of("READ", "WRITE").equals(Set.of(value.split(",")))),
+                        eq(TENANT_ID)))
+                .thenReturn(Mono.empty());
+        when(permissionStore.deleteExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .thenReturn(Mono.empty());
+        when(permissionStore.findExplicitPermissions(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID))
+                .thenReturn(Flux.just(Map.entry(USER_ID, "READ,WRITE")));
+        when(permissionStore.saveTemporaryPermission(
+                        RESOURCE_TYPE, RESOURCE_ID, USER_ID, "READ", Duration.ofSeconds(60), TENANT_ID))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(service.setResourceOwner(RESOURCE_TYPE, RESOURCE_ID, OWNER_ID, TENANT_ID))
+                .verifyComplete();
+        StepVerifier.create(service.grantPermission(
+                        RESOURCE_TYPE, RESOURCE_ID, USER_ID, Set.of("READ", "WRITE"), TENANT_ID))
+                .verifyComplete();
+        StepVerifier.create(service.revokePermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .verifyComplete();
+        StepVerifier.create(service.getResourcePermissions(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID))
+                .assertNext(grant -> {
+                    assertEquals(USER_ID, grant.getUserId());
+                    assertTrue(grant.getPermissions().containsAll(Set.of("READ", "WRITE")));
+                })
+                .verifyComplete();
+        StepVerifier.create(service.grantTemporaryPermission(
+                        RESOURCE_TYPE, RESOURCE_ID, USER_ID, Set.of("READ"), 60, TENANT_ID))
+                .verifyComplete();
+
+        verify(permissionStore).saveOwner(RESOURCE_TYPE, RESOURCE_ID, OWNER_ID, TENANT_ID);
+        verify(permissionStore).saveExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, "READ,WRITE", TENANT_ID);
+        verify(permissionStore).deleteExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID);
+        verify(permissionStore).findExplicitPermissions(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID);
+        verify(permissionStore)
+                .saveTemporaryPermission(
+                        RESOURCE_TYPE, RESOURCE_ID, USER_ID, "READ", Duration.ofSeconds(60), TENANT_ID);
+    }
+
+    private void allowResourcePermission(String permission) {
+        when(authorizationQueryPort.queryPermissions(TENANT_ID, NUMERIC_USER_ID))
+                .thenReturn(Mono.just(Set.of(permission)));
+    }
+
+    private ResourcePermissionService.PermissionContext context(boolean superAdmin, String tenantId) {
+        return context(superAdmin, tenantId, "192.168.1.1");
+    }
+
+    private ResourcePermissionService.PermissionContext context(boolean superAdmin, String tenantId, String clientIp) {
+        return new ResourcePermissionService.PermissionContext(superAdmin, Set.of(), clientIp, "device-1", tenantId);
     }
 }

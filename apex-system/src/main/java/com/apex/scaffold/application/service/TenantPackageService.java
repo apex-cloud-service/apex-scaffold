@@ -93,7 +93,8 @@ public class TenantPackageService {
      * 查询租户能力订阅快照（D4，内部端点 {@code GET /internal/v1/tenants/{code}/capabilities} 消费）。
      *
      * <p>未知租户以 {@code exists=false} 数据化返回（fail-closed，消费方按未订阅处理并缓存负结果）；
-     * 判定口径与 {@link PackageScope#allowsCapability(String)} 一致（unbounded 或空 features = 全量订阅）。
+     * 判定口径与 {@link PackageScope#allowsCapability(String)} 一致（{@code unbounded=true} 表示订阅全部能力；
+     * {@code unbounded=false} 且 features 为空表示未订阅任何能力）。
      *
      * @param tenantCode 租户编码
      * @return 能力订阅快照
@@ -112,14 +113,14 @@ public class TenantPackageService {
      * @param tenantCode 租户编码
      * @param exists 租户是否存在（未知租户 fail-closed）
      * @param unbounded 是否不限量租户（平台租户/未绑定套餐）
-     * @param features 已订阅特性编码（空集合 = 全量订阅语义，与套餐语义一致）
+     * @param features 已订阅特性编码（空集合表示未订阅任何能力；全量须 {@code unbounded=true} 表达）
      */
     @Schema(name = "CapabilitySnapshot", description = "租户能力订阅快照（内部端点契约）")
     public record CapabilitySnapshot(
             @Schema(description = "租户编码", example = "T001") String tenantCode,
             @Schema(description = "租户是否存在（未知租户 fail-closed 返回 false）") boolean exists,
             @Schema(description = "是否不限量租户（平台租户/未绑定套餐）") boolean unbounded,
-            @Schema(description = "已订阅特性编码（空集合 = 全量订阅语义）") java.util.Set<String> features) {}
+            @Schema(description = "已订阅特性编码（空集合表示未订阅任何能力；全量须 unbounded=true 表达）") java.util.Set<String> features) {}
 
     /**
      * 按编码查询套餐。
@@ -192,13 +193,14 @@ public class TenantPackageService {
         }
 
         /**
-         * 能力是否已订阅（空 features = 全量订阅，与套餐语义一致）。
+         * 能力是否已订阅（口径与 {@code CapabilityGate} 一致：{@code unbounded=true} 订阅全部能力；
+         * {@code unbounded=false} 且 features 为空表示未订阅任何能力，不做隐式放大）。
          *
          * @param capabilityCode 能力编码
          * @return 是否订阅
          */
         public boolean allowsCapability(String capabilityCode) {
-            return unbounded || features == null || features.isEmpty() || features.contains(capabilityCode);
+            return unbounded || (features != null && features.contains(capabilityCode));
         }
 
         /**

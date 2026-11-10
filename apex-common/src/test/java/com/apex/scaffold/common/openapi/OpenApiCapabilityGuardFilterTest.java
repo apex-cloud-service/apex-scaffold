@@ -60,8 +60,8 @@ class OpenApiCapabilityGuardFilterTest {
                                 "features",
                                 stubSubscribed
                                         ? java.util.List.of("file-storage")
-                                        // 空 features 语义为全量订阅（CapabilityGate 口径），未订阅须给其他能力
-                                        : java.util.List.of("workflow")))));
+                                        // 空 features 表示未订阅任何能力（全量须 unbounded=true）
+                                        : java.util.List.of()))));
             }
         };
         filter = new OpenApiCapabilityGuardFilter(properties, verifier);
@@ -163,5 +163,24 @@ class OpenApiCapabilityGuardFilterTest {
         filter.filter(exchangeWith("file-storage", "tenant-a"), passthrough()).block();
         filter.filter(exchangeWith("file-storage", "tenant-a"), passthrough()).block();
         assertThat(fetchCount.get()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("守卫开关默认值为开启，默认配置下未订阅仍应 403")
+    void shouldGuardByDefault() {
+        assertThat(properties.isEnabled()).isTrue();
+        stubSubscribed = Boolean.FALSE;
+        MockServerWebExchange exchange = exchangeWith("file-storage", "tenant-a");
+        filter.filter(exchange, passthrough()).block();
+        assertThat(exchange.getResponse().getStatusCode().value()).isEqualTo(403);
+    }
+
+    @Test
+    @DisplayName("非开放路径且无标记头不触发能力查询")
+    void shouldNotQueryCapabilityOutsideOpenPath() {
+        MockServerWebExchange exchange = exchangeWith(null, "tenant-a");
+        filter.filter(exchange, passthrough()).block();
+        assertThat(exchange.getResponse().getStatusCode()).isNull();
+        assertThat(fetchCount.get()).isZero();
     }
 }

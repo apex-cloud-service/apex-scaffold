@@ -1,10 +1,13 @@
 package com.apex.scaffold.auth.application.service;
 
 import com.apex.scaffold.auth.domain.model.entity.PermissionEntity;
+import com.apex.scaffold.auth.domain.repository.AuthorizationQueryPort;
 import com.apex.scaffold.auth.domain.repository.PermissionRepository;
 import com.apex.scaffold.auth.domain.repository.RoleRepository;
 import com.apex.scaffold.auth.domain.repository.UserRepository;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -17,10 +20,15 @@ import reactor.core.publisher.Mono;
  */
 @Service
 @RequiredArgsConstructor
-public class UnifiedAuthorizationQueryService {
+public class UnifiedAuthorizationQueryService implements AuthorizationQueryPort {
     private final UserRepository users;
     private final RoleRepository roles;
     private final PermissionRepository permissions;
+
+    @Override
+    public Mono<Set<String>> queryPermissions(String tenant, Long userId) {
+        return query(tenant, userId).map(authorization -> new LinkedHashSet<>(authorization.permissions()));
+    }
 
     /**
      * 校验读取者身份有效后，查询目标用户的授权快照

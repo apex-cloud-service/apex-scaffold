@@ -9,8 +9,8 @@ import java.util.Set;
  *
  * <ul>
  *   <li>{@code unbounded=true}：不限量租户（如平台租户），视为全量订阅；</li>
- *   <li>{@code features} 为空集合：与历史 {@code TenantPackageService.allowsCapability}
- *       口径一致，视为全量订阅（未启用特性配额的租户默认开通全部能力）；</li>
+ *   <li>{@code features} 为空集合：未订阅任何能力（不再等同全量；全量必须由
+ *       {@code unbounded=true} 显式表达）；</li>
  *   <li>否则按特性编码精确包含判定。</li>
  * </ul>
  *

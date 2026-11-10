@@ -46,7 +46,7 @@ sequenceDiagram
 - 网关开放路由组：`/open-api/**`（**不接受用户个人令牌**，仅接受开放应用令牌），由 `OpenApiScopeGatewayFilter`（order 25）执行令牌来源、scope 与能力三道断言；通过后注入可信头 `X-Client-Scopes`、`X-Client-Id` 与 `X-Open-Api-Capability`（能力标记，服务侧二次校验的触发依据），外部伪造值由 `JwtSignatureFilter` 剥离
 - 令牌类型：`client_credentials`（服务间调用）或授权码 + PKCE（代用户访问）
 - 限流：`/open-api/**` 固定按应用维度 `client:{clientId}` 判定（order 30），阈值按应用注册档位 `rateLimitTier` 经 system 内部端点 `GET /internal/v1/open-apps/{clientId}/rate-limit-tier` 查询（TTL 缓存，fail-open 回退 `default` 档），档位 → 阈值映射配置于网关 `apex.gateway.rate-limit.open-api-tiers`；无法识别 client_id 时回退既有租户 → 用户 → IP 维度
-- 服务侧二次校验（D4）：业务服务对携带 `X-Open-Api-Capability` 的请求经共享 `CapabilityGate` 复核租户订阅（`apex.open-api.guard.enabled=true` 启用，TTL 缓存，fail-closed），与网关门禁同源判定
+- 服务侧二次校验（D4）：业务服务对携带 `X-Open-Api-Capability` 的请求经共享 `CapabilityGate` 复核租户订阅（`apex.open-api.guard.enabled` 缺省 `true`，即默认开启，与网关门禁默认口径一致；TTL 缓存，fail-closed），与网关门禁同源判定。确需关闭的实例显式配置 `apex.open-api.guard.enabled=false` 并在配置注释中写明原因与补偿措施
 - 审计：开放访问写入网关访问日志（含 `client_id` 维度，迁移 V87）
 - 错误：统一 `Result<T>` 包装；scope 不足返回 403，令牌无效/过期返回 401
 

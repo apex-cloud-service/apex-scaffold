@@ -19,12 +19,13 @@ import com.apex.scaffold.auth.application.dto.RoleDTO;
 import com.apex.scaffold.auth.application.service.AuditLogService;
 import com.apex.scaffold.auth.application.service.RoleService;
 import com.apex.scaffold.auth.application.service.SessionService;
-import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
 import com.apex.scaffold.auth.domain.model.MfaConfig;
 import com.apex.scaffold.auth.domain.model.entity.RoleEntity;
+import com.apex.scaffold.auth.domain.repository.AuthorizationQueryPort;
 import com.apex.scaffold.auth.domain.service.IpAccessControlService;
 import com.apex.scaffold.auth.domain.service.MfaService;
 import com.apex.scaffold.auth.domain.service.ResourcePermissionService;
+import com.apex.scaffold.auth.domain.service.ResourcePermissionStore;
 import com.apex.scaffold.auth.domain.service.TokenService;
 import com.apex.scaffold.authservice.interfaces.handler.AuditLogHandler;
 import com.apex.scaffold.authservice.interfaces.handler.MfaManagementHandler;
@@ -65,7 +66,8 @@ class ResourcePermissionWiringTest {
                 .withBean(IpAccessControlService.class, () -> mock(IpAccessControlService.class))
                 .withBean(TokenService.class, () -> mock(TokenService.class))
                 .withBean(RoleService.class, () -> mock(RoleService.class))
-                .withBean(UnifiedAuthorizationQueryService.class, () -> mock(UnifiedAuthorizationQueryService.class))
+                .withBean(ResourcePermissionStore.class, () -> mock(ResourcePermissionStore.class))
+                .withBean(AuthorizationQueryPort.class, () -> mock(AuthorizationQueryPort.class))
                 .withBean(ServerHttpSecurity.class, ServerHttpSecurity::http)
                 .withBean(ReactiveStringRedisTemplate.class, () -> mock(ReactiveStringRedisTemplate.class))
                 .run(context -> {

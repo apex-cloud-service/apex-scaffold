@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
  * {@link CapabilityGate} 判定矩阵单测（D4 共用口径）.
  *
  * <p>覆盖判定矩阵的六类输入：null 输入 fail-closed、不限量租户、空特性集合
- * （沿用 {@code TenantPackageService.allowsCapability} 的全量订阅语义）、
+ * （表示未订阅任何能力，全量须 {@code unbounded=true} 显式表达）、
  * 精确包含、特性缺失与空白能力编码。
  *
  * @author Apex Team
@@ -44,13 +44,13 @@ class CapabilityGateTest {
     }
 
     @Test
-    @DisplayName("空特性集合沿用既有全量订阅口径")
-    void shouldTreatEmptyFeaturesAsFullSubscription() {
+    @DisplayName("空特性集合表示未订阅任何能力")
+    void shouldRejectEmptyFeatures() {
         assertThat(CapabilityGate.subscribed(TenantFeatures.of(Set.of()), "file-storage"))
-                .isTrue();
+                .isFalse();
         // null 特性集合由 TenantFeatures 兼容构造收敛为空集合，语义一致
         assertThat(CapabilityGate.subscribed(new TenantFeatures(false, null), "file-storage"))
-                .isTrue();
+                .isFalse();
     }
 
     @Test

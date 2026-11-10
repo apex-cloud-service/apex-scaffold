@@ -13,9 +13,9 @@ import org.springframework.context.annotation.Bean;
 /**
  * 装配服务侧开放接口能力二次校验组件（方案 D4 共用判定）。
  *
- * <p>{@code apex.open-api.guard.enabled=true} 时装配：租户能力校验客户端 +
- * 守卫过滤器。默认关闭——仅暴露开放能力的业务服务（file/workflow/system/office）
- * 在各自配置中显式开启；关闭时零 Bean，普通服务不受影响。
+ * <p>默认装配：租户能力校验客户端 + 守卫过滤器。守卫仅对 {@code pathPrefix}
+ * 命中的开放路径或携带可信标记头的请求做二次校验，普通流量直接透传、不产生远程调用。
+ * 确需关闭的实例显式配置 {@code apex.open-api.guard.enabled=false}，此时零 Bean。
  *
  * @author Apex Team
  * @version 1.3.2
@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
-@ConditionalOnProperty(prefix = "apex.open-api.guard", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "apex.open-api.guard", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(OpenApiGuardProperties.class)
 public class OpenApiGuardAutoConfiguration {
 

@@ -26,8 +26,9 @@ import reactor.core.publisher.Mono;
  *   <li>{@code GET /api/v2/capabilities/subscribed}——当前租户已订阅能力</li>
  * </ul>
  *
- * <p>订阅判定复用套餐 {@code features}（B3）：{@code features} 为空表示全量订阅
- * （与套餐"空集合=全量"语义一致），否则按编码精确匹配。
+ * <p>订阅判定复用套餐 {@code features}（B3）：{@code unbounded=true} 表示订阅全部能力；
+ * {@code unbounded=false} 时按编码精确匹配，{@code features} 为空表示未订阅任何能力
+ * （不以空集合兜底为全量，避免配置缺失被静默放大为全开）。
  *
  * @author Apex Team
  * @version 1.3.1
@@ -74,7 +75,7 @@ public class CapabilityHandler {
     @Operation(
             operationId = "listSubscribedCapabilities",
             summary = "查询当前租户已订阅能力",
-            description = "按当前可信租户上下文过滤能力目录：复用套餐 features 判定，features 为空表示全量订阅")
+            description = "按当前可信租户上下文过滤能力目录：复用套餐 features 判定，" + "unbounded=true 表示全量订阅，features 为空表示未订阅任何能力")
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

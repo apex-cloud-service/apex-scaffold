@@ -287,4 +287,41 @@ class BuildManifestSyncTest {
         });
         assertEquals(expected, services, "release.sh SERVICES 数组与注册表 service-jar 集合不一致");
     }
+
+    @Test
+    void exampleProductionDependenciesMatchAgentsTable() throws Exception {
+        Document pom = parseXml(projectRoot().resolve("apex-example/pom.xml"));
+        Element project = pom.getDocumentElement();
+        Element dependencies =
+                (Element) project.getElementsByTagName("dependencies").item(0);
+        Set<String> pomDependencies = new LinkedHashSet<>();
+        NodeList dependencyNodes = dependencies.getElementsByTagName("dependency");
+        for (int i = 0; i < dependencyNodes.getLength(); i++) {
+            Element dependency = (Element) dependencyNodes.item(i);
+            String groupId = childText(dependency, "groupId");
+            String scope = childText(dependency, "scope");
+            if ("com.apex.scaffold".equals(groupId) && !"test".equals(scope)) {
+                pomDependencies.add(childText(dependency, "artifactId").replaceFirst("^apex-", ""));
+            }
+        }
+
+        String agents = Files.readString(projectRoot().resolve("AGENTS.md"));
+        Matcher row = Pattern.compile("(?m)^\\| `apex-example` \\| ([^|]+) \\|").matcher(agents);
+        assertTrue(row.find(), "AGENTS.md 未找到 apex-example 依赖表行");
+        Set<String> documentedDependencies = new LinkedHashSet<>();
+        Matcher module = Pattern.compile(
+                        "\\b(?:common|domain|infrastructure-[a-z-]+|system|auth|workflow|file|office|integration|api-contract|storage-spring-boot-starter)\\b")
+                .matcher(row.group(1));
+        while (module.find()) {
+            documentedDependencies.add(module.group());
+        }
+        assertEquals(pomDependencies, documentedDependencies, "apex-example 直接生产依赖与 AGENTS.md 不一致");
+    }
+
+    private static String childText(Element parent, String name) {
+        NodeList children = parent.getElementsByTagName(name);
+        return children.getLength() == 0
+                ? ""
+                : children.item(0).getTextContent().trim();
+    }
 }

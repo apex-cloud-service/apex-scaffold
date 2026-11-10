@@ -57,17 +57,25 @@ class CapabilityCatalogDocContractTest {
             assertThat(row[1]).as("能力 %s 名称", capability.code()).isEqualTo(capability.name());
             assertThat(row[2]).as("能力 %s 归属中心", capability.code()).isEqualTo(capability.center());
             assertThat(row[3]).as("能力 %s 提供组件", capability.code()).isEqualTo(capability.component());
-            assertThat(parseScopes(row[4]))
+            assertThat(row[4]).as("能力 %s 负责人", capability.code()).isEqualTo(capability.owner());
+            assertThat(row[5]).as("能力 %s 版本", capability.code()).isEqualTo(capability.version());
+            assertThat(parseValues(row[6]))
+                    .as("能力 %s 消费方", capability.code())
+                    .containsExactlyInAnyOrderElementsOf(capability.consumers());
+            assertThat(row[7]).as("能力 %s SLO", capability.code()).isEqualTo(capability.slo());
+            assertThat(row[8]).as("能力 %s 生命周期", capability.code()).isEqualTo(capability.lifecycle());
+            assertThat(parseScopes(row[9]))
                     .as("能力 %s 开放 scope", capability.code())
                     .containsExactlyInAnyOrderElementsOf(capability.openScopes());
-            assertThat(row[5]).as("能力 %s 计量维度说明不可为空", capability.code()).isNotBlank();
+            assertThat(row[10]).as("能力 %s 计量维度说明不可为空", capability.code()).isNotBlank();
+            assertThat(row[11]).as("能力 %s 说明", capability.code()).isEqualTo(capability.description());
         }
     }
 
     /**
      * 解析文档 §1 能力清单表格行。
      *
-     * @return 每行为 {@code [编码, 名称, 中心, 组件, scope列, 计量列, 说明]} 的行列表
+     * @return 每行为能力目录表格列的行列表
      * @throws IOException 文档读取失败
      */
     private List<String[]> parseCapabilityRows() throws IOException {
@@ -83,12 +91,27 @@ class CapabilityCatalogDocContractTest {
                     .map(String::trim)
                     .filter(cell -> !cell.isEmpty())
                     .toArray(String[]::new);
-            if (cells.length < 6 || HEADER_FIRST_CELL.equals(cells[0]) || cells[0].startsWith("---")) {
+            if (cells.length < 12 || HEADER_FIRST_CELL.equals(cells[0]) || cells[0].startsWith("---")) {
                 continue;
             }
             rows.add(cells);
         }
         return rows;
+    }
+
+    /**
+     * 解析逗号分隔列：{@code 无} 表示空集。
+     *
+     * @param raw 列原文
+     * @return 列值集合
+     */
+    private Set<String> parseValues(String raw) {
+        if (raw == null || raw.isBlank() || "无".equals(raw.trim())) {
+            return Set.of();
+        }
+        return Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
     }
 
     /**

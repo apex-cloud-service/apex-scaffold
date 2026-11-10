@@ -1,10 +1,9 @@
 package com.apex.scaffold.auth.domain.service;
 
-import com.apex.scaffold.auth.application.service.UnifiedAuthorizationQueryService;
+import com.apex.scaffold.auth.domain.repository.AuthorizationQueryPort;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,30 +35,12 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class ResourcePermissionService {
 
-    private static final String ROLE_DEPT_MANAGER = "DEPT_MANAGER";
     private static final String RESOURCE_TYPE_SENSITIVE_DATA = "sensitive-data";
     private static final String PERMISSION_MANAGE = "MANAGE";
     private static final String RESOURCE_TYPE_AUDIT_LOGS = "audit-logs";
 
-    /**
-     * Redis键前缀
-     */
-    private static final String REDIS_RESOURCE_OWNER = "permission:resource:owner:";
-
-    private static final String REDIS_RESOURCE_SHARE = "permission:resource:share:";
-    private static final String REDIS_TEMP_PERMISSION = "permission:temp:";
-
-    private final ReactiveRedisTemplate<String, String> redisTemplate;
-    private final UnifiedAuthorizationQueryService authorizationQueryService;
-
-    private String resourceKey(String prefix, String resourceType, String resourceId, String tenantId) {
-        boolean tenantAware = authorizationQueryService != null;
-        return prefix
-                + (tenantAware && tenantId != null && !tenantId.isBlank() ? tenantId + ":" : "")
-                + resourceType
-                + ":"
-                + resourceId;
-    }
+    private final ResourcePermissionStore permissionStore;
+    private final AuthorizationQueryPort authorizationQueryPort;
 
     private Mono<Boolean> checkRbacPermission(
             String userId, String resourceType, String requiredPermission, PermissionContext context) {
@@ -67,9 +48,6 @@ public class ResourcePermissionService {
             return context.getTenantId() == null || context.getTenantId().isBlank()
                     ? Mono.just(false)
                     : Mono.just(true);
-        }
-        if (authorizationQueryService == null) {
-            return Mono.just(true);
         }
         if (context.getTenantId() == null || context.getTenantId().isBlank()) {
             return Mono.just(false);
@@ -81,9 +59,9 @@ public class ResourcePermissionService {
             return Mono.just(false);
         }
         String permissionCode = permissionCode(resourceType, requiredPermission);
-        return authorizationQueryService
-                .query(context.getTenantId(), numericUserId)
-                .map(authorization -> authorization.permissions().contains(permissionCode));
+        return authorizationQueryPort
+                .queryPermissions(context.getTenantId(), numericUserId)
+                .map(permissions -> permissions.contains(permissionCode));
     }
 
     private String permissionCode(String resourceType, String requiredPermission) {
@@ -105,25 +83,15 @@ public class ResourcePermissionService {
     }
 
     /**
-     * 构造仅使用Redis授权数据的服务（无统一授权查询）。
+     * 构造资源权限服务。
      *
-     * @param redisTemplate Redis模板
-     */
-    public ResourcePermissionService(ReactiveRedisTemplate<String, String> redisTemplate) {
-        this(redisTemplate, null);
-    }
-
-    /**
-     * 构造资源权限服务
-     *
-     * @param redisTemplate Redis模板
-     * @param authorizationQueryService 统一授权查询服务，可为null
+     * @param permissionStore 资源授权存取端口，承载所有者、显式授权与临时授权
+     * @param authorizationQueryPort 授权快照查询端口，用于 RBAC 权限判定
      */
     public ResourcePermissionService(
-            ReactiveRedisTemplate<String, String> redisTemplate,
-            UnifiedAuthorizationQueryService authorizationQueryService) {
-        this.redisTemplate = redisTemplate;
-        this.authorizationQueryService = authorizationQueryService;
+            ResourcePermissionStore permissionStore, AuthorizationQueryPort authorizationQueryPort) {
+        this.permissionStore = permissionStore;
+        this.authorizationQueryPort = authorizationQueryPort;
     }
 
     /**
@@ -209,11 +177,8 @@ public class ResourcePermissionService {
     }
 
     private Mono<Boolean> isResourceOwner(String userId, String resourceType, String resourceId, String tenantId) {
-        String key = resourceKey(REDIS_RESOURCE_OWNER, resourceType, resourceId, tenantId);
-
-        return redisTemplate
-                .opsForValue()
-                .get(key)
+        return permissionStore
+                .findOwner(resourceType, resourceId, tenantId)
                 .map(ownerId -> ownerId.equals(userId))
                 .defaultIfEmpty(false);
     }
@@ -234,8 +199,7 @@ public class ResourcePermissionService {
      * @param tenantId 租户标识，{@code null} 表示不带租户隔离维度
      */
     public Mono<Void> setResourceOwner(String resourceType, String resourceId, String ownerId, String tenantId) {
-        String key = resourceKey(REDIS_RESOURCE_OWNER, resourceType, resourceId, tenantId);
-        return redisTemplate.opsForValue().set(key, ownerId).then();
+        return permissionStore.saveOwner(resourceType, resourceId, ownerId, tenantId);
     }
 
     /**
@@ -243,15 +207,9 @@ public class ResourcePermissionService {
      */
     private Mono<Boolean> checkExplicitPermission(
             String userId, String resourceType, String resourceId, String requiredPermission, String tenantId) {
-        String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
-
-        return redisTemplate
-                .opsForHash()
-                .get(key, userId)
-                .map(permissionStr -> {
-                    Set<String> permissions = parsePermissions((String) permissionStr);
-                    return hasRequiredPermission(permissions, requiredPermission);
-                })
+        return permissionStore
+                .findExplicitPermission(resourceType, resourceId, userId, tenantId)
+                .map(permissionValue -> hasRequiredPermission(parsePermissions(permissionValue), requiredPermission))
                 .defaultIfEmpty(false);
     }
 
@@ -279,9 +237,6 @@ public class ResourcePermissionService {
      */
     public Mono<Void> grantPermission(
             String resourceType, String resourceId, String targetUserId, Set<String> permissions, String tenantId) {
-        String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
-        String permissionStr = String.join(",", permissions);
-
         log.info(
                 "授予资源权限: type={}, resourceId={}, targetUserId={}, permissions={}",
                 resourceType,
@@ -289,7 +244,12 @@ public class ResourcePermissionService {
                 targetUserId,
                 permissions);
 
-        return redisTemplate.opsForHash().put(key, targetUserId, permissionStr).then();
+        return permissionStore.saveExplicitPermission(
+                resourceType,
+                resourceId,
+                targetUserId,
+                permissions.stream().sorted().collect(Collectors.joining(",")),
+                tenantId);
     }
 
     /**
@@ -308,11 +268,9 @@ public class ResourcePermissionService {
      * @param tenantId 租户ID，null表示默认作用域
      */
     public Mono<Void> revokePermission(String resourceType, String resourceId, String targetUserId, String tenantId) {
-        String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
-
         log.info("撤销资源权限: type={}, resourceId={}, targetUserId={}", resourceType, resourceId, targetUserId);
 
-        return redisTemplate.opsForHash().remove(key, targetUserId).then();
+        return permissionStore.deleteExplicitPermission(resourceType, resourceId, targetUserId, tenantId);
     }
 
     /**
@@ -332,15 +290,10 @@ public class ResourcePermissionService {
      */
     public Flux<ResourcePermissionGrant> getResourcePermissions(
             String resourceType, String resourceId, String tenantId) {
-        String key = resourceKey(REDIS_RESOURCE_SHARE, resourceType, resourceId, tenantId);
-
-        return redisTemplate.opsForHash().entries(key).map(entry -> {
-            String userId = (String) entry.getKey();
-            String permissionStr = (String) entry.getValue();
-            Set<String> permissions = parsePermissions(permissionStr);
-
-            return new ResourcePermissionGrant(userId, resourceType, resourceId, permissions);
-        });
+        return permissionStore
+                .findExplicitPermissions(resourceType, resourceId, tenantId)
+                .map(entry -> new ResourcePermissionGrant(
+                        entry.getKey(), resourceType, resourceId, parsePermissions(entry.getValue())));
     }
 
     /**
@@ -378,9 +331,6 @@ public class ResourcePermissionService {
             Set<String> permissions,
             long durationSeconds,
             String tenantId) {
-        String key = resourceKey(REDIS_TEMP_PERMISSION, resourceType, resourceId, tenantId) + ":" + targetUserId;
-        String permissionStr = String.join(",", permissions);
-
         log.info(
                 "授予临时权限: type={}, resourceId={}, targetUserId={}, permissions={}, duration={}s",
                 resourceType,
@@ -389,10 +339,13 @@ public class ResourcePermissionService {
                 permissions,
                 durationSeconds);
 
-        return redisTemplate
-                .opsForValue()
-                .set(key, permissionStr, java.time.Duration.ofSeconds(durationSeconds))
-                .then();
+        return permissionStore.saveTemporaryPermission(
+                resourceType,
+                resourceId,
+                targetUserId,
+                String.join(",", permissions),
+                java.time.Duration.ofSeconds(durationSeconds),
+                tenantId);
     }
 
     /**
@@ -400,15 +353,9 @@ public class ResourcePermissionService {
      */
     private Mono<Boolean> checkTemporaryPermission(
             String userId, String resourceType, String resourceId, String requiredPermission, String tenantId) {
-        String key = resourceKey(REDIS_TEMP_PERMISSION, resourceType, resourceId, tenantId) + ":" + userId;
-
-        return redisTemplate
-                .opsForValue()
-                .get(key)
-                .map(permissionStr -> {
-                    Set<String> permissions = parsePermissions(permissionStr);
-                    return hasRequiredPermission(permissions, requiredPermission);
-                })
+        return permissionStore
+                .findTemporaryPermission(resourceType, resourceId, userId, tenantId)
+                .map(permissionValue -> hasRequiredPermission(parsePermissions(permissionValue), requiredPermission))
                 .defaultIfEmpty(false);
     }
 
@@ -428,10 +375,6 @@ public class ResourcePermissionService {
         // 组织层级权限检查尚未实现：需要先接入组织单元归属查询与角色授权快照，
         // 在此之前一律拒绝，避免越权放行。接入顺序：查询用户组织角色 → 查询资源所属
         // 组织单元 → 判定角色在该单元是否具备所需权限。
-
-        if (context.getOrganizationRoles().contains(ROLE_DEPT_MANAGER)) {
-            return Mono.just(false);
-        }
 
         return Mono.just(false);
     }

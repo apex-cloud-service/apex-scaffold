@@ -34,10 +34,12 @@ class ContextBoundaryArchTest {
 
     /** 各业务上下文 → 其 main 源码目录（相对仓库根；测试工作目录为模块目录）。 */
     private static final String[][] CONTEXTS = {
+        {"system", "apex-system/src/main/java/com/apex/scaffold"},
         {"auth", "apex-auth/src/main/java/com/apex/scaffold/auth"},
         {"workflow", "apex-workflow/src/main/java/com/apex/scaffold/workflow"},
         {"file", "apex-file/src/main/java/com/apex/scaffold/file"},
-        {"office", "apex-office/src/main/java/com/apex/scaffold/office"}
+        {"office", "apex-office/src/main/java/com/apex/scaffold/office"},
+        {"integration", "apex-integration/src/main/java/com/apex/scaffold/integration"}
     };
 
     /**
@@ -53,9 +55,7 @@ class ContextBoundaryArchTest {
         for (String[] context : CONTEXTS) {
             String ownName = context[0];
             Path sourceRoot = repoRoot.resolve(context[1]);
-            if (!Files.isDirectory(sourceRoot)) {
-                continue;
-            }
+            assertThat(sourceRoot).as("业务上下文 %s 的源码目录必须存在", ownName).isDirectory();
             for (String[] other : CONTEXTS) {
                 if (other[0].equals(ownName)) {
                     continue;

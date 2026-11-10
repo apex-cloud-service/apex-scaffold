@@ -63,7 +63,8 @@ public class InternalTenantRouter {
                                 operationId = "internalTenantCapabilities",
                                 summary = "查询租户能力订阅快照（内部）",
                                 description = "集群内服务直连接口，不经网关。返回租户存在性与能力订阅集合"
-                                        + "（unbounded/空 features = 全量订阅），供网关开放接口能力门禁消费（D4）；"
+                                        + "（unbounded=true 表示全量订阅；features 为空表示未订阅任何能力），"
+                                        + "供网关开放接口能力门禁消费（D4）；"
                                         + "未知租户以 exists=false 数据化返回。",
                                 tags = {"内部契约"},
                                 responses = {

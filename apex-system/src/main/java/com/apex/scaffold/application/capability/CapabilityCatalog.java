@@ -29,6 +29,11 @@ public final class CapabilityCatalog {
      * @param name          能力名称
      * @param center        归属能力中心
      * @param component     提供该能力的组件（Maven 模块名）
+     * @param owner         能力负责人
+     * @param version       能力目录版本
+     * @param consumers     已登记消费方
+     * @param slo           服务等级目标
+     * @param lifecycle     生命周期状态
      * @param openScopes    对外可申请的开放 scope（无则不对外开放）
      * @param description   能力说明
      */
@@ -38,6 +43,11 @@ public final class CapabilityCatalog {
             @Schema(description = "能力名称", example = "文件存储") String name,
             @Schema(description = "归属能力中心", example = "文件中心") String center,
             @Schema(description = "提供该能力的组件（Maven 模块名）", example = "apex-file-service") String component,
+            @Schema(description = "能力负责人") String owner,
+            @Schema(description = "能力目录版本") String version,
+            @Schema(description = "已登记消费方") Set<String> consumers,
+            @Schema(description = "服务等级目标") String slo,
+            @Schema(description = "生命周期状态") String lifecycle,
             @Schema(description = "对外可申请的开放 scope（空集合 = 不对外开放）") Set<String> openScopes,
             @Schema(description = "能力说明") String description) {}
 
@@ -55,12 +65,27 @@ public final class CapabilityCatalog {
                         "统一认证与授权",
                         "认证授权中心",
                         "apex-auth",
+                        "认证授权负责人",
+                        "1.0.0",
+                        Set.of("apex-gateway", "apex-auth-service"),
+                        "99.9% 可用性",
+                        "active",
                         Set.of("open:user:read"),
                         "登录、令牌签发/轮换/撤销、OAuth2 授权、consent、MFA"));
         register(
                 catalog,
                 new Capability(
-                        "user-org", "用户与组织", "用户组织中心", "apex-system", Set.of("open:user:read"), "用户、部门、岗位、角色与菜单权限"));
+                        "user-org",
+                        "用户与组织",
+                        "用户组织中心",
+                        "apex-system",
+                        "用户组织负责人",
+                        "1.0.0",
+                        Set.of("apex-system-service"),
+                        "99.9% 可用性",
+                        "active",
+                        Set.of("open:user:read"),
+                        "用户、部门、岗位、角色与菜单权限"));
         register(
                 catalog,
                 new Capability(
@@ -68,6 +93,11 @@ public final class CapabilityCatalog {
                         "工作流",
                         "工作流中心",
                         "apex-workflow",
+                        "工作流负责人",
+                        "1.0.0",
+                        Set.of("apex-workflow-service"),
+                        "99.9% 可用性",
+                        "active",
                         Set.of("open:workflow:read", "open:workflow:write"),
                         "DAG 流程定义、实例推进、任务审批"));
         register(
@@ -77,6 +107,11 @@ public final class CapabilityCatalog {
                         "文件与对象存储",
                         "文件中心",
                         "apex-file",
+                        "文件中心负责人",
+                        "1.0.0",
+                        Set.of("apex-file-service"),
+                        "99.9% 可用性",
+                        "active",
                         Set.of("open:file:read", "open:file:write"),
                         "上传/分片/下载、分享、五后端存储"));
         register(
@@ -86,12 +121,27 @@ public final class CapabilityCatalog {
                         "统一消息与协同",
                         "消息中心",
                         "apex-office",
+                        "消息中心负责人",
+                        "1.0.0",
+                        Set.of("apex-office-service"),
+                        "99.9% 可用性",
+                        "active",
                         Set.of("open:message:send"),
                         "站内信、办公平台 IM、通知模板与投递"));
         register(
                 catalog,
                 new Capability(
-                        "tenant-governance", "租户治理", "租户治理中心", "apex-system", Set.of(), "租户目录/生命周期/套餐/配额/租户级配置"));
+                        "tenant-governance",
+                        "租户治理",
+                        "租户治理中心",
+                        "apex-system",
+                        "租户治理负责人",
+                        "1.0.0",
+                        Set.of("apex-system-service"),
+                        "99.9% 可用性",
+                        "active",
+                        Set.of(),
+                        "租户目录/生命周期/套餐/配额/租户级配置"));
         register(
                 catalog,
                 new Capability(
@@ -99,6 +149,11 @@ public final class CapabilityCatalog {
                         "系统集成连接器",
                         "集成中心",
                         "apex-integration",
+                        "集成中心负责人",
+                        "1.0.0",
+                        Set.of("apex-integration-service"),
+                        "99.9% 可用性",
+                        "planned",
                         Set.of(),
                         "外部系统连接器、凭据、出站重试、入站 webhook（M5 交付）"));
         register(
@@ -108,6 +163,11 @@ public final class CapabilityCatalog {
                         "物联网设备接入",
                         "集成中心",
                         "apex-integration",
+                        "集成中心负责人",
+                        "1.0.0",
+                        Set.of("apex-integration-service"),
+                        "99.9% 可用性",
+                        "planned",
                         Set.of(),
                         "设备注册/认证、遥测上行、命令下行、规则引擎（M5 交付）"));
         // LinkedHashMap 保序包装：all()/目录页的展示顺序 = 登记顺序（Map.copyOf 不保序）
@@ -153,16 +213,16 @@ public final class CapabilityCatalog {
     }
 
     /**
-     * 判断某能力是否被订阅。
+     * 判断某能力是否被订阅（仅按集合判定）。
      *
-     * @param features      租户套餐声明的能力集合（可空；空 = 全量订阅，与套餐语义一致）
+     * <p>空集合表示未订阅任何能力；全量订阅必须显式表达，不能由空集合兜底，
+     * 避免套餐配置缺失被静默放大为全开。
+     *
+     * @param features      租户套餐声明的能力集合（可空；空 = 未订阅任何能力）
      * @param capabilityCode 能力编码
      * @return 是否已订阅
      */
     public static boolean subscribed(java.util.Collection<String> features, String capabilityCode) {
-        if (features == null || features.isEmpty()) {
-            return true;
-        }
-        return features.contains(capabilityCode);
+        return features != null && features.contains(capabilityCode);
     }
 }

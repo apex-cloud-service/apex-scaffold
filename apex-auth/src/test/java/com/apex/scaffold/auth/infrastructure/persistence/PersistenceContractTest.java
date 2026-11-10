@@ -17,7 +17,9 @@ import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfo;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
+import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -37,6 +39,10 @@ import reactor.test.StepVerifier;
 
 class PersistenceContractTest {
     private static final String PREFIX = "com.apex.scaffold.auth.";
+    /** 分层守卫只针对生产代码：测试类天然会引用实现细节与被测框架。 */
+    private static final JavaClasses PRODUCTION_CLASSES = new ClassFileImporter()
+            .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+            .importPackages(PREFIX);
 
     @AfterEach
     void clearTenant() {
@@ -142,8 +148,35 @@ class PersistenceContractTest {
                 .resideInAPackage(PREFIX + "domain..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAnyPackage(PREFIX + "infrastructure..", "com.baomidou..", "org.apache.ibatis..")
-                .check(new ClassFileImporter().importPackages(PREFIX));
+                .resideInAnyPackage(
+                        PREFIX + "infrastructure..", PREFIX + "application..", "com.baomidou..", "org.apache.ibatis..")
+                .check(PRODUCTION_CLASSES);
+        // 领域层不得直接持有 Spring Data Redis。
+        // 受控例外：下列历史服务在 G2 之前已直接依赖 ReactiveRedisTemplate，
+        // 其缓存端口下沉不在本轮范围内；新增领域类不得再引入该依赖。
+        ArchRuleDefinition.noClasses()
+                .that()
+                .resideInAPackage(PREFIX + "domain..")
+                .and()
+                .haveSimpleNameNotStartingWith("BruteForceProtectionService")
+                .and()
+                .haveSimpleNameNotStartingWith("ClientSecretRotationService")
+                .and()
+                .haveSimpleNameNotStartingWith("SecurityMonitoringService")
+                .and()
+                .haveSimpleNameNotStartingWith("PasswordPolicyService")
+                .and()
+                .haveSimpleNameNotStartingWith("JwtKeyRotationService")
+                .and()
+                .haveSimpleNameNotStartingWith("SSOSessionCleanupService")
+                .and()
+                .haveSimpleNameNotStartingWith("UnifiedAuditService")
+                .and()
+                .haveSimpleNameNotStartingWith("SsoConfigEncryptionService")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("org.springframework.data.redis..")
+                .check(PRODUCTION_CLASSES);
     }
 
     /**
@@ -157,7 +190,7 @@ class PersistenceContractTest {
                 .should()
                 .dependOnClassesThat()
                 .resideInAnyPackage(PREFIX + "infrastructure..", PREFIX + "interfaces..")
-                .check(new ClassFileImporter().importPackages(PREFIX));
+                .check(PRODUCTION_CLASSES);
     }
 
     /**

@@ -1,15 +1,10 @@
 package com.apex.scaffold.common.openapi;
 
-import com.apex.scaffold.common.capability.CapabilityGate;
-import com.apex.scaffold.common.capability.TenantFeatures;
-import com.apex.scaffold.common.util.JsonUtil;
+import com.apex.scaffold.common.capability.TenantCapabilitySnapshot;
+import com.apex.scaffold.common.capability.TenantCapabilitySnapshotCache;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -37,7 +32,7 @@ public class TenantCapabilityVerifier {
     private final WebClient webClient;
 
     /** 租户编码 → 能力快照（TTL 内复用，避免内部端点被开放流量放大） */
-    private final ConcurrentHashMap<String, Snapshot> cache = new ConcurrentHashMap<>();
+    private final TenantCapabilitySnapshotCache cache = new TenantCapabilitySnapshotCache();
 
     /**
      * 构造能力校验客户端。
@@ -76,17 +71,34 @@ public class TenantCapabilityVerifier {
         if (tenantCode == null || tenantCode.isBlank()) {
             return Mono.just(Boolean.FALSE);
         }
-        Snapshot snapshot = cache.get(tenantCode);
-        if (snapshot != null && snapshot.fresh()) {
+        TenantCapabilitySnapshot snapshot = cache.getFresh(tenantCode);
+        if (snapshot != null) {
             return Mono.just(snapshot.subscribed(capabilityCode));
         }
         return fetch(tenantCode)
                 .timeout(Duration.ofMillis(Math.max(200, properties.getTimeoutMillis())))
                 .map(body -> {
-                    Snapshot parsed = Snapshot.parse(body, properties.getCacheTtlMillis());
+                    TenantCapabilitySnapshot parsed =
+                            TenantCapabilitySnapshot.parse(body, properties.getCacheTtlMillis());
                     cache.put(tenantCode, parsed);
+                    warnIfAmbiguous(tenantCode, parsed);
                     return parsed.subscribed(capabilityCode);
                 });
+    }
+
+    /**
+     * 提示能力快照语义可能缺失：存在租户、非不限量，但未配置任何特性。
+     *
+     * <p>收紧后空特性集合表示“未订阅任何能力”，若来源于租户套餐配置缺失，
+     * 该租户的全部开放能力都会被拒绝。此处仅告警便于发现数据缺陷，不改变拒绝语义。
+     *
+     * @param tenantCode 租户编码
+     * @param snapshot 解析后的能力快照
+     */
+    private void warnIfAmbiguous(String tenantCode, TenantCapabilitySnapshot snapshot) {
+        if (snapshot.exists() && !snapshot.unbounded() && snapshot.features().isEmpty()) {
+            log.warn("租户 {} 能力快照存在但特性集合为空（unbounded=false），将拒绝其全部开放能力；若无配额限制请将 unbounded 置为 true", tenantCode);
+        }
     }
 
     /**
@@ -104,50 +116,5 @@ public class TenantCapabilityVerifier {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(String.class);
-    }
-
-    /**
-     * 租户能力快照：解析 {@code Result} 封装的 {@code exists/unbounded/features}。
-     *
-     * @param exists 租户是否存在
-     * @param unbounded 是否不限量租户
-     * @param features 已订阅特性编码
-     * @param expireAt 缓存过期时间（epoch 毫秒）
-     */
-    record Snapshot(boolean exists, boolean unbounded, Set<String> features, long expireAt) {
-
-        static Snapshot parse(String body, long ttlMillis) {
-            Map<?, ?> root;
-            try {
-                root = JsonUtil.fromJson(body, Map.class);
-            } catch (RuntimeException e) {
-                throw new IllegalStateException("租户能力响应解析失败: " + e.getMessage(), e);
-            }
-            if (!((root == null ? null : root.get("data")) instanceof Map<?, ?> feed)) {
-                throw new IllegalStateException("租户能力响应缺少 data 节点");
-            }
-            boolean exists = Boolean.TRUE.equals(feed.get("exists"));
-            boolean unbounded = Boolean.TRUE.equals(feed.get("unbounded"));
-            Set<String> features = new LinkedHashSet<>();
-            if (feed.get("features") instanceof Iterable<?> iterable) {
-                for (Object item : iterable) {
-                    if (item != null && !item.toString().isBlank()) {
-                        features.add(item.toString());
-                    }
-                }
-            }
-            return new Snapshot(exists, unbounded, features, System.currentTimeMillis() + Math.max(1000, ttlMillis));
-        }
-
-        boolean fresh() {
-            return System.currentTimeMillis() < expireAt;
-        }
-
-        boolean subscribed(String capabilityCode) {
-            if (!exists) {
-                return false;
-            }
-            return CapabilityGate.subscribed(new TenantFeatures(unbounded, features), capabilityCode);
-        }
     }
 }
