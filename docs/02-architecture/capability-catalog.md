@@ -21,8 +21,8 @@
 | file-storage | 文件与对象存储 | 文件中心 | apex-file | 文件中心负责人 | 1.0.0 | apex-file-service | 99.9% 可用性 | active | open:file:read, open:file:write | 调用次数, 存储用量 | 上传/分片/下载、分享、五后端存储 |
 | office-message | 统一消息与协同 | 消息中心 | apex-office | 消息中心负责人 | 1.0.0 | apex-office-service | 99.9% 可用性 | active | open:message:send | 调用次数, 消息量 | 站内信、办公平台 IM、通知模板与投递 |
 | tenant-governance | 租户治理 | 租户治理中心 | apex-system | 租户治理负责人 | 1.0.0 | apex-system-service | 99.9% 可用性 | active | 无 | 调用次数 | 租户目录/生命周期/套餐/配额/租户级配置 |
-| integration-connector | 系统集成连接器 | 集成中心 | apex-integration | 集成中心负责人 | 1.0.0 | apex-integration-service | 99.9% 可用性 | planned | 无 | 调用次数 | 外部系统连接器、凭据、出站重试、入站 webhook（M5 交付） |
-| iot-device | 物联网设备接入 | 集成中心 | apex-integration | 集成中心负责人 | 1.0.0 | apex-integration-service | 99.9% 可用性 | planned | 无 | 调用次数, 设备数 | 设备注册/认证、遥测上行、命令下行、规则引擎（M5 交付） |
+| integration-connector | 系统集成连接器 | 集成中心 | apex-integration | 集成中心负责人 | 1.0.0 | apex-integration-service | 99.9% 可用性 | active | 无 | 调用次数 | 外部系统连接器、凭据、出站重试、入站 webhook |
+| iot-device | 物联网设备接入 | 集成中心 | apex-integration | 集成中心负责人 | 1.0.0 | apex-integration-service | 99.9% 可用性 | active | 无 | 调用次数, 设备数 | 设备注册/认证、遥测上行、命令下行、规则引擎 |
 
 ## 2. 计量维度口径
 

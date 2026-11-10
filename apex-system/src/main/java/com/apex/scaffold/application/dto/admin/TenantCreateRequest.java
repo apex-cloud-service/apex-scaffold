@@ -41,8 +41,9 @@ public class TenantCreateRequest {
     @Size(max = 64, message = "{tenant.admin_too_long}")
     private String adminUserId;
 
-    @Schema(description = "套餐标识")
+    @Schema(description = "套餐标识（开通引导时必填）")
     @Size(max = 64, message = "{tenant.package_too_long}")
+    /** 套餐标识；普通单行创建可为空，提供管理员账号的开通引导分支必填。 */
     private String packageCode;
 
     @Schema(description = "最大用户数（NULL表示不限制）")

@@ -165,6 +165,9 @@ public class TenantApplicationService {
             // 未提供时保持既有单行创建行为（adminUserId 引用既有账号）。
             if (request.getAdminUsername() != null
                     && !request.getAdminUsername().isBlank()) {
+                if (request.getPackageCode() == null || request.getPackageCode().isBlank()) {
+                    return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "租户套餐不能为空"));
+                }
                 if (request.getAdminPassword() == null
                         || request.getAdminPassword().isBlank()) {
                     return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "管理员初始密码不能为空"));

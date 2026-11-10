@@ -2,10 +2,15 @@ package com.apex.scaffold.gateway;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.apex.scaffold.common.openapi.OpenApiGuardProperties;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.bind.Bindable;
@@ -19,7 +24,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 /**
- * 网关站内信路由配置契约测试.
+ * 网关路由与开放能力配置契约测试。
  *
  * <p>背景：网关的 {@code spring.cloud.gateway.routes} 是 YAML 列表，列表不逐元素合并。
  * {@code application-prod.yml} 与 {@code config/nacos/apex-gateway.yaml} 各自重定义了整张路由表，
@@ -36,12 +41,14 @@ import org.springframework.core.io.Resource;
  * 校验域路由契约：站内信 WS/HTTP 路由存在且排在 {@code office-domain} 之前；认证域覆盖认证中心
  * 契约路径且不承接由 system 承载的 {@code /admin-api/v1/auth|sso/**}；办公域覆盖 {@code /api/office/**}；
  * 文件域覆盖管理端图表前缀；系统域兜底显式覆盖 {@code /api/v2/operations/**} 与 {@code /api/v2/platform/**}；
- * job/masking 独立路由在整表重定义的配置源中显式声明。测试不启动 Spring 上下文、不依赖 Nacos 或下游服务。
+ * job/masking 独立路由在整表重定义的配置源中显式声明。开放接口部分同时校验
+ * {@code /open-api/**} 的 Path 谓词、scope、能力标记及服务侧开放 Router 的覆盖关系。
+ * 测试不启动 Spring 上下文、不依赖 Nacos 或下游服务。
  *
  * @author Apex Team
  * @since 1.3.1
  */
-@DisplayName("网关站内信路由配置契约测试")
+@DisplayName("网关路由与开放能力配置契约测试")
 class GatewayRouteProfileConfigTest {
 
     /** 基础配置文件，dev 与默认场景生效。 */
@@ -130,6 +137,64 @@ class GatewayRouteProfileConfigTest {
             "open-api-office",
             new OpenApiContract(
                     List.of("/open-api/messages/**"), "office-message", List.of(), List.of("open:message:send")));
+
+    /** 从服务侧开放 Router 源代码提取路径字面量。 */
+    private static final Pattern OPEN_API_LITERAL = Pattern.compile("\"(/open-api/[^\"\\s]+)\"");
+
+    /** 承载开放端点的服务侧 Router 源文件，路径相对仓库根。 */
+    private static final List<Path> OPEN_ROUTER_FILES = List.of(
+            Path.of(
+                    "apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/OpenFileRouter.java"),
+            Path.of(
+                    "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/OpenWorkflowRouter.java"),
+            Path.of(
+                    "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/OpenMessageRouter.java"),
+            Path.of("apex-system/src/main/java/com/apex/scaffold/interfaces/router/OpenUserRouter.java"));
+
+    /**
+     * 验证服务侧实际开放路由均被网关 Path 与共享能力映射覆盖。
+     *
+     * <p>测试从四个服务侧 Router 源码提取 {@code /open-api/...} 路径，再使用最长前缀规则
+     * 从 {@link OpenApiGuardProperties#getPathCapabilities()} 推导应有能力编码，并要求
+     * 网关配置中存在唯一的开放路由同时覆盖该路径、且其
+     * {@code metadata.open-api.capability} 与共享映射一致。测试不启动 Spring、不调用
+     * Nacos 或下游服务，只验证静态契约。
+     *
+     * @throws IOException 任一服务侧 Router 源文件读取失败时抛出
+     */
+    @Test
+    @DisplayName("服务侧开放路由均被网关 Path、scope 与共享能力映射覆盖")
+    void serviceOpenRoutesAreCoveredByGatewayContracts() throws IOException {
+        List<String> actualRoutes = actualOpenApiRoutes();
+        assertThat(actualRoutes).as("服务侧开放 Router 应至少提取到一条实际端点").isNotEmpty();
+
+        List<RouteDefinition> gatewayRoutes = routesFrom(new ClassPathResource(BASE_CONFIG)).stream()
+                .filter(route -> OPEN_API_ROUTE_IDS.contains(route.getId()))
+                .toList();
+        Map<String, String> pathCapabilities = new OpenApiGuardProperties().getPathCapabilities();
+        assertThat(pathCapabilities)
+                .as("共享能力映射必须覆盖网关四条开放路由的实际能力编码")
+                .containsEntry("/open-api/file/", "file-storage")
+                .containsEntry("/open-api/workflow/", "workflow")
+                .containsEntry("/open-api/users", "user-org")
+                .containsEntry("/open-api/messages", "office-message");
+
+        for (String actualRoute : actualRoutes) {
+            List<RouteDefinition> matches = gatewayRoutes.stream()
+                    .filter(route ->
+                            pathPredicateArgs(route).stream().anyMatch(gatewayPath -> covers(gatewayPath, actualRoute)))
+                    .toList();
+            assertThat(matches).as("服务侧开放路由 %s 必须被且仅被一条网关开放路由覆盖", actualRoute).hasSize(1);
+
+            String expectedCapability = resolveCapability(pathCapabilities, actualRoute);
+            assertThat(expectedCapability)
+                    .as("共享能力映射未覆盖服务侧开放路由 %s", actualRoute)
+                    .isNotNull();
+            assertThat(metadataCapability(matches.get(0)))
+                    .as("网关 %s 的 capability 必须与服务侧共享映射一致", actualRoute)
+                    .isEqualTo(expectedCapability);
+        }
+    }
 
     @Test
     @DisplayName("application.yml 应声明站内信路由且 WS 优先于办公域通配路由")
@@ -326,6 +391,98 @@ class GatewayRouteProfileConfigTest {
                     .withFailMessage("%s：%s 的 write-scopes 契约不一致 actual=%s", source, routeId, metadata)
                     .containsExactlyInAnyOrderElementsOf(contract.writeScopes());
         }
+    }
+
+    /**
+     * 静态提取服务侧实际开放路由路径。
+     *
+     * <p>Surefire 以网关模块目录为工作目录，因此优先从上级目录解析仓库相对路径；
+     * 若测试从仓库根运行，则直接使用仓库相对路径。两种布局都不读取运行时状态。
+     *
+     * @return 去重后的服务侧开放路径
+     * @throws IOException 任一 Router 源文件读取失败时抛出
+     */
+    private static List<String> actualOpenApiRoutes() throws IOException {
+        List<String> routes = new ArrayList<>();
+        for (Path routerFile : OPEN_ROUTER_FILES) {
+            Path resolved = repositoryPath(routerFile.toString());
+            Matcher matcher = OPEN_API_LITERAL.matcher(Files.readString(resolved));
+            while (matcher.find()) {
+                routes.add(matcher.group(1));
+            }
+        }
+        return routes.stream().distinct().toList();
+    }
+
+    /**
+     * 解析仓库相对路径，兼容模块目录与仓库根两种测试工作目录。
+     *
+     * @param repositoryRelativePath 仓库相对路径
+     * @return 实际存在的文件路径
+     */
+    private static Path repositoryPath(String repositoryRelativePath) {
+        Path moduleRelative = Path.of("..", repositoryRelativePath);
+        if (Files.exists(moduleRelative)) {
+            return moduleRelative.toAbsolutePath().normalize();
+        }
+        Path rootRelative = Path.of(repositoryRelativePath);
+        assertThat(rootRelative).as("未找到测试证据文件：%s", repositoryRelativePath).exists();
+        return rootRelative.toAbsolutePath().normalize();
+    }
+
+    /**
+     * 判断网关 Path 谓词是否覆盖服务侧具体路径。
+     *
+     * <p>{@code /prefix/**} 同时覆盖 {@code /prefix} 与 {@code /prefix/...}，
+     * 与 Spring PathPattern 对尾随通配符的匹配语义一致；非通配路径按精确匹配处理。
+     *
+     * @param gatewayPath 网关 Path 谓词值
+     * @param actualPath 服务侧实际路由路径
+     * @return true 表示网关路径可覆盖实际路由
+     */
+    private static boolean covers(String gatewayPath, String actualPath) {
+        if (gatewayPath.endsWith("/**")) {
+            String prefix = gatewayPath.substring(0, gatewayPath.length() - 3);
+            return actualPath.equals(prefix) || actualPath.startsWith(prefix + "/");
+        }
+        return gatewayPath.equals(actualPath);
+    }
+
+    /**
+     * 按最长前缀解析路径对应的能力编码。
+     *
+     * <p>实现口径与 {@code OpenApiCapabilityGuardFilter#resolveRouteCapability} 一致：
+     * 遍历共享映射并选择匹配路径中最长的前缀，避免短前缀抢占更具体的能力归属。
+     *
+     * @param pathCapabilities 路径前缀到能力编码的映射
+     * @param path 实际请求路径
+     * @return 能力编码；无匹配时返回 {@code null}
+     */
+    private static String resolveCapability(Map<String, String> pathCapabilities, String path) {
+        String matchedPrefix = null;
+        String capability = null;
+        for (Map.Entry<String, String> entry : pathCapabilities.entrySet()) {
+            if (path.startsWith(entry.getKey())
+                    && (matchedPrefix == null || entry.getKey().length() > matchedPrefix.length())) {
+                matchedPrefix = entry.getKey();
+                capability = entry.getValue();
+            }
+        }
+        return capability;
+    }
+
+    /**
+     * 读取路由元数据中的能力编码。
+     *
+     * @param route 网关路由定义
+     * @return {@code metadata.open-api.capability}；缺失时返回 {@code null}
+     */
+    private static String metadataCapability(RouteDefinition route) {
+        Object raw = route.getMetadata().get(OPEN_API_METADATA_KEY);
+        if (raw instanceof Map<?, ?> metadata) {
+            return String.valueOf(metadata.get("capability"));
+        }
+        return null;
     }
 
     /**

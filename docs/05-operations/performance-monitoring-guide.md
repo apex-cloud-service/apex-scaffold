@@ -10,12 +10,12 @@
 
 ### 已完成的性能优化 (2026-09-20)
 
-#### 1. 数据库索引优化
-- **脚本位置**: 
+#### 1. 数据库索引优化（历史实施记录）
+- **脚本位置**:
   - MySQL: `apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql`
   - PostgreSQL: `apex-system/src/main/resources/db/migration/postgresql/V43__performance_optimization_indexes.sql`
-- **优化内容**: 添加了40+个复合索引,覆盖10个核心表
-- **预期效果**: 查询性能提升30%+,慢查询比例下降
+- **优化内容**: 历史记录为添加复合索引，覆盖核心业务表
+- **效果口径**: 本节及第四节的百分比是历史参考目标，**不是 2026-11-10 当前实测结果**；应以真实压测和慢查询数据重新验收
 
 **核心索引**:
 - 消息表: `idx_recipient_status_sendtime`, `idx_sender_sendtime`
@@ -25,9 +25,10 @@
 - 日历事件: `idx_time_range_status`, `idx_organizer_time`, `idx_room_time`
 
 #### 2. 缓存策略优化
-- **配置位置**: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfiguration.java`
-- **架构**: L1 (Caffeine本地缓存) + L2 (Redis分布式缓存)
-- **预期效果**: 缓存命中率提升到80%+
+- **配置位置**: `apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfig.java`
+- **架构**: L1 (Caffeine 本地缓存) + L2 (Redis 分布式缓存)
+- **效果口径**: 历史目标为提升缓存命中率；当前命中率需以
+  `apex_cache_gets_total{result="hit|miss"}` 实测，不能引用未复现的历史数字
 
 **缓存配置**:
 | 缓存名称 | TTL | 适用场景 |
@@ -40,13 +41,14 @@
 | table-metadata | 10分钟 | 数据库表元数据 |
 | saml-certificates | 24小时 | SAML证书 |
 
-#### 3. 代码生成性能优化
-- **优化位置**: `apex-application/src/main/java/com/apex/scaffold/application/service/CodeGenerationService.java`
-- **优化内容**:
-  - 表元数据缓存 (`@Cacheable`, 10分钟TTL)
+#### 3. 代码生成性能优化（历史记录）
+- **历史位置**: 原 `apex-application` 模块，现已退出 reactor；当前代码生成能力位于
+  `apex-generator`，不要按旧模块路径检索
+- **优化内容**（历史）:
+  - 表元数据缓存 (`@Cacheable`, 10 分钟 TTL)
   - 模板编译缓存 (`ConcurrentHashMap`)
-  - Reactor级别缓存 (`.cache(Duration.ofMinutes(10))`)
-- **预期效果**: 代码生成速度提升50%+
+  - Reactor 级别缓存 (`.cache(Duration.ofMinutes(10))`)
+- **效果口径**: 历史目标，当前未复测
 
 **缓存管理API**:
 ```java
@@ -57,13 +59,14 @@ codeGenerationService.clearTemplateCache();
 int size = codeGenerationService.getTemplateCacheSize();
 ```
 
-#### 4. SSO认证流程优化
-- **优化位置**: `apex-application/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java`
-- **优化内容**:
-  - X.509证书解析缓存 (PublicKey + X509Certificate)
+#### 4. SSO 认证流程优化（历史记录）
+- **历史位置**: 原 `apex-application` 模块，现已退出 reactor；当前认证实现位于
+  `apex-auth` 与 `apex-auth-service`
+- **优化内容**（历史）:
+  - X.509 证书解析缓存 (PublicKey + X509Certificate)
   - 双重缓存: ConcurrentHashMap + Spring Cache (`@Cacheable`)
-  - 避免重复解析证书,减少CPU开销
-- **预期效果**: SAML认证性能提升40%+
+  - 避免重复解析证书，减少 CPU 开销
+- **效果口径**: 历史目标，当前未复测
 
 **缓存管理API**:
 ```java
@@ -82,7 +85,8 @@ Map<String, Integer> stats = samlProtocolAdapter.getCacheStatistics();
 
 #### Prometheus 配置
 
-**1. 添加依赖** (在 `apex-interfaces/pom.xml`):
+**1. 确认依赖**（网关 `apex-gateway/pom.xml` 及各服务运行模块已包含
+`spring-boot-starter-actuator` 与 `micrometer-registry-prometheus`）：
 ```xml
 <dependency>
     <groupId>io.micrometer</groupId>
@@ -105,25 +109,33 @@ management:
       application: apex-scaffold
 ```
 
-**3. Prometheus配置** (`prometheus.yml`):
+**3. Prometheus 配置**：实际配置位于
+`config/monitoring/prometheus/prometheus.yml`，按服务拆分为独立 job（如
+`apex-gateway`、`apex-auth-service`、`apex-system-service` 等），所有应用指标带
+`application="apex-scaffold"` 与 `module="..."` 标签。示例：
 ```yaml
 scrape_configs:
-  - job_name: 'apex-scaffold'
+  - job_name: 'apex-gateway'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['localhost:8080']
+      - targets: ['host.containers.internal:8080']
+        labels:
+          application: 'apex-scaffold'
+          module: 'gateway'
 ```
 
 #### Grafana Dashboard
 
 **推荐监控指标**:
-- JVM内存使用: `jvm_memory_used_bytes`
-- GC暂停时间: `jvm_gc_pause_seconds`
-- HTTP请求QPS: `http_server_requests_seconds_count`
-- HTTP请求延迟: `http_server_requests_seconds_sum`
-- 数据库连接池: `hikaricp_connections_active`
-- 缓存命中率: `cache_gets_total`, `cache_hits_total`
-- 线程池队列: `executor_queue_remaining`
+- JVM 内存使用: `jvm_memory_used_bytes`
+- GC 暂停时间: `jvm_gc_pause_seconds_max`（最大暂停）及
+  `jvm_gc_pause_seconds_sum` / `jvm_gc_pause_seconds_count`（平均值与频率）
+- HTTP 请求量: `apex_api_request_count_total`
+- HTTP 请求延迟: `apex_api_response_time_seconds_bucket`
+- 慢 SQL: `apex_sql_slow_count_total` / `apex_sql_slow_max_ms`
+- 数据库连接池: `hikaricp_connections_active`（prod 视配置可能为 `druid_*`）
+- 缓存命中率: `apex_cache_gets_total{result="hit|miss"}`
+- 线程池队列: `executor_queue_remaining`（如对应执行器已注册）
 
 **Grafana Dashboard模板**:
 - Spring Boot 2.x / Webflux: Dashboard ID `12900`
@@ -144,9 +156,9 @@ tar -zxvf apache-skywalking-java-agent-9.0.0.tgz
 
 # 启动应用时添加Agent
 java -javaagent:/path/to/skywalking-agent.jar \
-     -Dskywalking.agent.service_name=apex-scaffold \
+     -Dskywalking.agent.service_name=apex-gateway \
      -Dskywalking.collector.backend_service=localhost:11800 \
-     -jar apex-interfaces.jar
+     -jar apex-gateway/target/apex-gateway.jar
 ```
 
 ---
@@ -155,7 +167,8 @@ java -javaagent:/path/to/skywalking-agent.jar \
 
 ### 3.1 添加JMH依赖
 
-在 `apex-application/pom.xml` 添加:
+在被测模块（例如 `apex-common` 或具体业务库）的 `pom.xml` 添加测试作用域依赖；
+不要引用已退出 reactor 的 `apex-application`：
 ```xml
 <dependency>
     <groupId>org.openjdk.jmh</groupId>
@@ -206,7 +219,7 @@ public class CacheBenchmark {
 
 **运行基准测试**:
 ```bash
-mvnd test -pl apex-application -Dtest=CacheBenchmark
+mvnd -pl <被测模块> -Dtest=CacheBenchmark test
 ```
 
 ---
@@ -250,19 +263,10 @@ SELECT * FROM mysql.slow_log ORDER BY query_time DESC LIMIT 10;
 
 ### 4.2 缓存性能验证
 
-**1. 查看Caffeine统计**:
-```java
-@RestController
-@RequestMapping("/admin/cache")
-public class CacheAdminController {
-    
-    @GetMapping("/stats")
-    public Map<String, Object> getCacheStats() {
-        // 返回Caffeine统计信息
-        // hitRate, missRate, evictionCount
-    }
-}
-```
+**1. 查看缓存统计**：项目当前没有对外暴露 `CacheAdminController`，不要按该示例
+新增管理端接口。应通过 Actuator/Micrometer 指标
+`apex_cache_gets_total{result="hit|miss"}` 计算命中率，或在受控的诊断环境中使用
+Caffeine/Redis 自身指标。
 
 **2. Redis缓存键监控**:
 ```bash
@@ -305,7 +309,10 @@ ab -n 10000 -c 100 http://localhost:8080/api/messages
 ```
 
 **3. 关键指标对比**:
-| 指标 | 优化前 | 优化后 | 提升 |
+> 下表为 2026-09-20 历史参考值/示例，**不是 2026-11-10 当前实测结果**。当前验收须重新
+> 执行压测并记录真实 P95、错误率与缓存命中率，不能直接引用历史数字。
+
+| 指标 | 历史参考优化前 | 历史参考优化后 | 历史参考提升 |
 |------|-------|-------|------|
 | 收件箱查询 (P95) | 200ms | 80ms | 60% |
 | 部门树查询 (P95) | 150ms | 50ms | 67% |
@@ -327,10 +334,8 @@ java -server \
   -XX:MaxGCPauseMillis=200 \
   -XX:+HeapDumpOnOutOfMemoryError \
   -XX:HeapDumpPath=/var/logs/heap_dump.hprof \
-  -XX:+PrintGCDetails \
-  -XX:+PrintGCDateStamps \
-  -Xloggc:/var/logs/gc.log \
-  -jar apex-interfaces.jar
+  -Xlog:gc*:file=/var/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m \
+  -jar apex-gateway/target/apex-gateway.jar
 ```
 
 ### 5.2 连接池调优
@@ -427,4 +432,5 @@ spring:
 
 ## 更新日志
 
-- 2026-09-20: 初始版本,完成数据库索引优化、缓存策略优化、代码生成优化、SSO认证优化
+- 2026-09-20: 初始版本，记录数据库索引、缓存策略、代码生成与 SSO 认证优化
+- 2026-11-10: 修正退役模块路径、GC/JVM 参数、真实指标名与历史性能数据口径

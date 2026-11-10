@@ -8,7 +8,9 @@
 #   Prometheus http://localhost:9090
 #   Zipkin     http://localhost:9411
 # 说明: Apex 应用自身通过 podman-compose.yml 或独立方式启动，
-#       管理端口 8081 暴露 /actuator/prometheus 供 Prometheus 抓取；
+#       各服务在各自管理端口暴露 /actuator/prometheus 供 Prometheus 抓取；
+#       gateway 8080、auth 8081、system 8083、workflow 8093、office 8084、
+#       file 8085、integration 8097（system/integration 管理端口与业务端口分离）；
 #       链路采样数据由应用主动上报 trace.zipkin-url（默认 http://localhost:9411）。
 # ================================================================
 
@@ -60,6 +62,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./grafana/apex-dashboard.json:/var/lib/grafana/dashboards/apex-dashboard.json:ro
+      - ./grafana/apex-dashboard-enhanced.json:/var/lib/grafana/dashboards/apex-dashboard-enhanced.json:ro
       # 自动置备数据源与大盘（容器启动时执行）
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - apex-grafana-data:/var/lib/grafana
@@ -69,7 +72,7 @@ services:
       - apex-observability
 
   # ---- Blackbox Exporter：健康探针（探测应用 /actuator/health） ----
-  # 供 ApexHealthCheckDown 告警使用；经 Podman 的 host.containers.internal 访问宿主机应用。
+  # 提供 /actuator/health 的 HTTP 探测能力；经 Podman 的 host.containers.internal 访问宿主机应用。当前规则集未直接使用 probe_success 告警。
   blackbox-exporter:
     image: docker.io/prom/blackbox-exporter:v0.25.0
     container_name: apex-blackbox-exporter

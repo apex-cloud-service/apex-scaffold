@@ -19,13 +19,13 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class OpenWorkflowRouter {
 
-    @Bean
     /**
      * 注册开放工作流路由。
      *
      * @param handler 开放工作流处理器
      * @return 路由函数
      */
+    @Bean
     public RouterFunction<ServerResponse> openWorkflowRoutes(OpenWorkflowHandler handler) {
         return RouterFunctions.route()
                 .GET("/open-api/workflow/definitions", handler::definitions)

@@ -39,6 +39,7 @@
 - [物理架构](./architecture/02-physical-architecture-detail.md) - 部署架构
 - [技术架构](./02-architecture/architecture-overview.md) - 技术栈全景
 - [数据库设计](./architecture/database-design.md) - 数据模型设计
+- [能力目录](./02-architecture/capability-catalog.md) - 八项中台能力、治理字段、计量维度与开放 scope
 - [多级缓存](./05-operations/advanced-features.md) - 缓存架构
 
 ### [03. API 文档](./03-api/README.md)
@@ -85,6 +86,7 @@ API 接口文档、规范和版本管理。
 - [集成测试指南](./06-testing/integration-test-guide.md) - 集成测试
 - [API 测试报告](./06-testing/api-test-report.md) - 接口测试
 - [API 测试计划](./06-testing/api-test-plan.md) - 测试计划
+- [中台整改测试报告](./06-testing/middle-platform/20261110-completion/report.md) - G1–G8 代码/契约关闭与真实验证边界
 
 ### [07. 商业化文档](./07-commercial/README.md)
 
@@ -106,6 +108,8 @@ API 接口文档、规范和版本管理。
 - [微服务化迁移方案](./08-project-management/plans/microservice-migration-plan.md) - 单体到五服务架构迁移
 - [文档与脚本目录结构规范](./08-project-management/DOCS_STRUCTURE_STANDARD.md) - docs/ 与 scripts/ 组织规范
 - [设计模式 / Starter / SPI 优化方案](./08-project-management/plans/design-pattern-starter-spi-optimization-plan.md) - 评审结论与待实施调整方案
+- [中台架构评审报告](./08-project-management/reports/middle-platform-architecture-review.md) - 八维度评审与整改关闭说明
+- [中台架构整改方案](./08-project-management/plans/middle-platform-remediation-plan.md) - G1–G8 整改方案与实施结果
 - [工作区治理](./08-project-management/workspace-governance/README.md) - 工作区管理规范与本地治理交付物
 
 ---

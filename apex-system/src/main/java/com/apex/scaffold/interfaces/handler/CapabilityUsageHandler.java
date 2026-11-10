@@ -87,7 +87,7 @@ public class CapabilityUsageHandler {
                 name = "pageSize",
                 in = ParameterIn.QUERY,
                 required = false,
-                description = "每页条数（服务端上限 200）",
+                description = "每页条数（服务端上限 100）",
                 schema = @Schema(type = "integer"))
     })
     @ApiResponses({

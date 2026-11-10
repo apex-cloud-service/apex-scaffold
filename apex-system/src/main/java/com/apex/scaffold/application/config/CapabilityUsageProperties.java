@@ -28,12 +28,18 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "apex.capability-usage")
 public class CapabilityUsageProperties {
 
-    /** 能力编码 → 计量 URI 前缀清单；默认与网关 /open-api/** 四条路由的能力编码对齐。 */
+    /**
+     * 能力编码 → 计量 URI 前缀清单。
+     *
+     * <p>默认值与网关四条开放路由及服务侧实际开放端点对齐；列表同时包含精确路径与
+     * 其子路径前缀，确保 {@code /open-api/users}、{@code /open-api/messages} 这类
+     * 无尾斜杠端点也能被调用次数统计命中。
+     */
     private Map<String, List<String>> mappings = new LinkedHashMap<>(Map.of(
             "file-storage", List.of("/open-api/file/"),
             "workflow", List.of("/open-api/workflow/"),
-            "user-org", List.of("/open-api/users/", "/open-api/user/"),
-            "office-message", List.of("/open-api/messages/")));
+            "user-org", List.of("/open-api/users", "/open-api/users/", "/open-api/user", "/open-api/user/"),
+            "office-message", List.of("/open-api/messages", "/open-api/messages/")));
 
     /**
      * 能力编码 → 存量指标来源（D4 四维度计量）。

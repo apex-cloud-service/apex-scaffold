@@ -17,9 +17,11 @@ import com.apex.scaffold.infrastructure.persistence.po.PermissionPO;
 import com.apex.scaffold.infrastructure.persistence.po.RolePO;
 import com.apex.scaffold.infrastructure.persistence.po.RolePermissionPO;
 import com.apex.scaffold.infrastructure.persistence.po.TenantPO;
+import com.apex.scaffold.infrastructure.persistence.po.TenantPackagePO;
 import com.apex.scaffold.infrastructure.persistence.po.UserPO;
 import com.apex.scaffold.infrastructure.persistence.po.UserRolePO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +39,9 @@ import reactor.core.publisher.Mono;
  * 任一步失败整体回滚，不残留半开通状态。租户上下文以新租户编码恢复，
  * 使拦截器为各 INSERT 补齐新租户的 {@code tenant_id}。
  *
- * <p>角色授权范围：套餐 {@code permissionCodes} 非空时按套餐授权；无套餐或全量套餐
- * 时授予全部平台权限码（与 platform-full 语义一致）。
+ * <p>角色授权范围只来自有效套餐声明的 {@code permissionCodes}。套餐缺失、未知、停用、
+ * 逻辑删除或权限配置损坏时，开通在任何 INSERT 前整体失败，禁止回退为全量授权；
+ * 内置 {@code platform-full} 套餐同样按其显式权限码授权。
  *
  * @author Apex Team
  * @version 1.3.1
@@ -90,6 +93,10 @@ public class TenantProvisioningTransaction implements com.apex.scaffold.domain.g
     private Long provisionInternal(ProvisioningRequest request) {
         String tenantCode = request.tenantCode();
 
+        // 0. 在任何写入前完成套餐校验；失败时事务不产生任何半开通数据。
+        String packageCode = requireAvailablePackageCode(request.packageCode());
+        List<PermissionPO> grantedPermissions = resolveGrantedPermissions(packageCode);
+
         // 1. 默认部门
         DeptPO dept = new DeptPO();
         dept.setTenantId(tenantCode);
@@ -118,8 +125,8 @@ public class TenantProvisioningTransaction implements com.apex.scaffold.domain.g
         role.setStatus(1);
         roleMapper.insert(role);
 
-        // 4. 按套餐权限码建立角色授权（无套餐/全量套餐 → 全部平台权限码）
-        for (PermissionPO permission : resolveGrantedPermissions(request.packageCode())) {
+        // 4. 按有效套餐声明的权限码建立角色授权
+        for (PermissionPO permission : grantedPermissions) {
             RolePermissionPO rp = new RolePermissionPO();
             rp.setRoleId(role.getId());
             rp.setPermissionId(permission.getId());
@@ -138,7 +145,7 @@ public class TenantProvisioningTransaction implements com.apex.scaffold.domain.g
         tenant.setTenantCode(tenantCode);
         tenant.setTenantName(request.tenantName());
         tenant.setAdminUserId(String.valueOf(admin.getId()));
-        tenant.setPackageCode(request.packageCode());
+        tenant.setPackageCode(packageCode);
         tenant.setMaxUsers(request.maxUsers());
         tenant.setMaxStorageMb(request.maxStorageMb());
         tenant.setRemark(request.remark());
@@ -153,42 +160,87 @@ public class TenantProvisioningTransaction implements com.apex.scaffold.domain.g
     }
 
     /**
-     * 解析应授予的权限记录：套餐 permissionCodes 非空时按套餐过滤；
-     * 无套餐/套餐未声明权限码（全量语义）→ 全部平台权限码。
+     * 校验并返回可用于开通的套餐编码。
+     *
+     * <p>开通引导必须绑定一个存在、启用且未逻辑删除的套餐。任一条件不满足即抛出
+     * {@link BusinessException}，由外层事务回滚，禁止把缺失配置解释为平台全量权限。</p>
+     *
+     * @param packageCode 请求中的套餐编码
+     * @return 去除首尾空白后的套餐编码
+     * @throws BusinessException 套餐编码为空、套餐不存在、已停用或已逻辑删除时抛出
      */
-    private List<PermissionPO> resolveGrantedPermissions(String packageCode) {
-        QueryWrapper<PermissionPO> query = new QueryWrapper<PermissionPO>().eq("deleted", 0);
-        Set<String> grantedCodes = grantedCodesFromPackage(packageCode);
-        if (grantedCodes != null && !grantedCodes.isEmpty()) {
-            query.in("code", grantedCodes);
+    private String requireAvailablePackageCode(String packageCode) {
+        if (packageCode == null || packageCode.isBlank()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐不能为空");
         }
-        return permissionMapper.selectList(query);
+        String normalizedCode = packageCode.trim();
+        TenantPackagePO pkg = tenantPackageMapper.selectOne(new QueryWrapper<TenantPackagePO>()
+                .eq("package_code", normalizedCode)
+                .eq("deleted", 0)
+                .eq("status", 1));
+        if (pkg == null
+                || pkg.getDeleted() == null
+                || pkg.getDeleted() != 0
+                || pkg.getStatus() == null
+                || pkg.getStatus() != 1) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐不存在或不可用");
+        }
+        return normalizedCode;
     }
 
     /**
-     * 读取套餐声明的权限码集合；无套餐或解析为空时返回 null（全量语义）。
+     * 解析应授予的权限记录。
+     *
+     * <p>套餐权限码必须是非空 JSON 字符串数组，数组元素不得为 {@code null} 或空白。
+     * 解析成功后按权限码查询未删除的权限记录；不提供全量回退路径。</p>
+     *
+     * @param packageCode 已校验可用的套餐编码
+     * @return 与套餐权限码匹配的权限记录，可能为空但绝不为全量回退结果
+     * @throws BusinessException 权限码 JSON 损坏或数组为空时抛出
      */
-    private Set<String> grantedCodesFromPackage(String packageCode) {
-        if (packageCode == null || packageCode.isBlank()) {
-            return null;
+    private List<PermissionPO> resolveGrantedPermissions(String packageCode) {
+        TenantPackagePO pkg = tenantPackageMapper.selectOne(new QueryWrapper<TenantPackagePO>()
+                .eq("package_code", packageCode)
+                .eq("deleted", 0)
+                .eq("status", 1));
+        if (pkg == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐不存在或不可用");
         }
-        var po = tenantPackageMapper.selectOne(
-                new QueryWrapper<com.apex.scaffold.infrastructure.persistence.po.TenantPackagePO>()
-                        .eq("package_code", packageCode)
-                        .eq("deleted", 0));
-        if (po == null
-                || po.getPermissionCodes() == null
-                || po.getPermissionCodes().isBlank()) {
-            return null;
+        Set<String> grantedCodes = parsePermissionCodes(pkg.getPermissionCodes());
+        return permissionMapper.selectList(
+                new QueryWrapper<PermissionPO>().eq("deleted", 0).in("code", grantedCodes));
+    }
+
+    /**
+     * 严格解析套餐权限码数组。
+     *
+     * @param json 权限码 JSON 文本
+     * @return 去重后的非空白权限码集合
+     * @throws BusinessException JSON 格式错误、类型错误、数组为空或元素无效时抛出
+     */
+    private Set<String> parsePermissionCodes(String json) {
+        if (json == null || json.isBlank()) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐权限配置损坏");
         }
         try {
-            var codes = JsonUtil.fromJson(
-                    po.getPermissionCodes(),
-                    new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {});
-            return codes == null || codes.isEmpty() ? null : new java.util.HashSet<>(codes);
-        } catch (RuntimeException e) {
-            log.warn("套餐权限码解析失败，按全量授权兜底: package={}, reason={}", packageCode, e.getMessage());
-            return null;
+            List<String> values = JsonUtil.getObjectMapper()
+                    .readValue(
+                            json,
+                            JsonUtil.getObjectMapper()
+                                    .getTypeFactory()
+                                    .constructCollectionType(List.class, String.class));
+            if (values == null
+                    || values.isEmpty()
+                    || values.stream().anyMatch(code -> code == null || code.isBlank())) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐权限配置损坏");
+            }
+            Set<String> codes = new LinkedHashSet<>();
+            values.forEach(code -> codes.add(code.trim()));
+            return codes;
+        } catch (BusinessException error) {
+            throw error;
+        } catch (RuntimeException | com.fasterxml.jackson.core.JsonProcessingException error) {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐权限配置损坏", error);
         }
     }
 }

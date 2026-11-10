@@ -16,11 +16,18 @@ import org.junit.jupiter.api.Test;
  * <p>迁移版本必须从 V1 连续递增，当前基线包含租户字段迁移。</p>
  *
  * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
  */
 class FlywayMigrationVersionTest {
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("V([0-9_]+)__.+\\.sql");
 
+    /**
+     * 验证 MySQL 与 PostgreSQL 迁移版本集合一致，且版本号从 V1 连续递增到当前基线。
+     *
+     * @throws Exception 读取迁移目录失败时抛出
+     */
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {
         List<BigDecimal> mysqlVersions = migrationVersions("mysql");
@@ -38,6 +45,15 @@ class FlywayMigrationVersionTest {
                         .toList());
     }
 
+    /**
+     * 读取指定数据库目录中的 Flyway 迁移版本。
+     *
+     * <p>Surefire 的工作目录可能是模块目录，也可能是仓库根；两种布局均被支持。
+     *
+     * @param database 数据库目录名（{@code mysql} 或 {@code postgresql}）
+     * @return 按版本升序排列的迁移版本
+     * @throws Exception 读取迁移目录失败时抛出
+     */
     private List<BigDecimal> migrationVersions(String database) throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
         Path migrationDirectory = projectRoot.resolve("apex-system/src/main/resources/db/migration/" + database);
@@ -54,6 +70,11 @@ class FlywayMigrationVersionTest {
         }
     }
 
+    /**
+     * 验证角色数据权限迁移显式创建角色-部门关系表及租户、审计字段。
+     *
+     * @throws Exception 读取迁移文件失败时抛出
+     */
     @Test
     void shouldDefineExplicitRoleDataScopeTables() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
@@ -78,6 +99,11 @@ class FlywayMigrationVersionTest {
                 .contains("idx_sys_role_dept_tenant_id", "idx_sys_role_dept_role_id", "idx_sys_role_dept_dept_id");
     }
 
+    /**
+     * 验证部门迁移以组合租户键和外键强制部门与租户的一致性。
+     *
+     * @throws Exception 读取迁移文件失败时抛出
+     */
     @Test
     void shouldEnforceDepartmentTenantIntegrity() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
@@ -102,6 +128,11 @@ class FlywayMigrationVersionTest {
                         "REFERENCES `sys_dept` (`tenant_id`, `id`)");
     }
 
+    /**
+     * 验证租户隔离迁移覆盖既有关键业务表，且不调用错误的旧表名。
+     *
+     * @throws Exception 读取迁移文件失败时抛出
+     */
     @Test
     void shouldCompleteTenantTableCoverage() throws Exception {
         Path projectRoot = Path.of(System.getProperty("user.dir"));
@@ -125,6 +156,100 @@ class FlywayMigrationVersionTest {
                 .doesNotContain(
                         "CALL add_tenant_id_if_not_exists('operation_log'",
                         "CALL add_tenant_id_if_not_exists('system_message'");
+    }
+
+    /**
+     * 验证 V90 仅回填内置 platform-full 套餐的空能力集合。
+     *
+     * <p>该检查是纯静态契约：不连接数据库、不依赖 Docker。它锁定两个数据库脚本
+     * 都必须包含八项能力编码，并且回填条件只针对 {@code deleted = 0} 且 features
+     * 为空数组或 NULL 的记录，避免迁移覆盖运营人员已经配置的非空能力集合。
+     *
+     * @throws Exception 读取迁移文件失败时抛出
+     */
+    @Test
+    void shouldBackfillPlatformFullCapabilitiesWithoutOverwritingConfiguredFeatures() throws Exception {
+        Path projectRoot = Path.of(System.getProperty("user.dir"));
+        Path mysql = resolveMigration(projectRoot, "mysql", "V90__backfill_platform_full_capability_features.sql");
+        Path postgresql =
+                resolveMigration(projectRoot, "postgresql", "V90__backfill_platform_full_capability_features.sql");
+        String mysqlSql = Files.readString(mysql);
+        String postgresqlSql = Files.readString(postgresql);
+
+        List<String> capabilities = List.of(
+                "identity-auth",
+                "user-org",
+                "workflow",
+                "file-storage",
+                "office-message",
+                "tenant-governance",
+                "integration-connector",
+                "iot-device");
+        assertThat(mysqlSql).as("MySQL V90 必须回填全部八项能力").contains(capabilities);
+        assertThat(postgresqlSql).as("PostgreSQL V90 必须回填全部八项能力").contains(capabilities);
+        assertThat(mysqlSql)
+                .as("MySQL V90 必须只回填 platform-full 的未删除记录")
+                .contains(
+                        "package_code` = 'platform-full'",
+                        "`deleted` = 0",
+                        "JSON_LENGTH(`features`) = 0",
+                        "`features` IS NULL");
+        assertThat(postgresqlSql)
+                .as("PostgreSQL V90 必须只回填 platform-full 的未删除记录")
+                .contains(
+                        "package_code = 'platform-full'", "deleted = 0", "features = '[]'::jsonb", "features IS NULL");
+        assertThat(mysqlSql)
+                .as("MySQL V90 必须通过带条件的 UPDATE 回填，不得无条件覆盖 features")
+                .contains("UPDATE `sys_tenant_package`")
+                .contains("SET `features` = CAST(JSON_ARRAY(")
+                .contains("WHERE `package_code` = 'platform-full'");
+        assertThat(mysqlSql.indexOf("SET `features` = CAST(JSON_ARRAY("))
+                .as("MySQL V90 的 SET 必须位于 WHERE 之前")
+                .isGreaterThanOrEqualTo(0)
+                .isLessThan(mysqlSql.indexOf("WHERE `package_code` = 'platform-full'"));
+        assertThat(postgresqlSql)
+                .as("PostgreSQL V90 必须通过带条件的 UPDATE 回填，不得无条件覆盖 features")
+                .contains("UPDATE sys_tenant_package")
+                .contains("SET features =")
+                .contains("WHERE package_code = 'platform-full'");
+        assertThat(postgresqlSql.indexOf("SET features ="))
+                .as("PostgreSQL V90 的 SET 必须位于 WHERE 之前")
+                .isGreaterThanOrEqualTo(0)
+                .isLessThan(postgresqlSql.indexOf("WHERE package_code = 'platform-full'"));
+    }
+
+    /**
+     * 验证 V78 的 platform-full 初始能力集合仍为空数组，V90 才是显式回填点。
+     *
+     * @throws Exception 读取迁移文件失败时抛出
+     */
+    @Test
+    void shouldKeepV78EmptyFeatureInitialization() throws Exception {
+        Path projectRoot = Path.of(System.getProperty("user.dir"));
+        String mysqlSql = Files.readString(resolveMigration(projectRoot, "mysql", "V78__create_tenant_package.sql"));
+        String postgresqlSql =
+                Files.readString(resolveMigration(projectRoot, "postgresql", "V78__create_tenant_package.sql"));
+
+        assertThat(mysqlSql).contains("JSON_ARRAY()");
+        assertThat(postgresqlSql).contains("'[]'::jsonb");
+    }
+
+    /**
+     * 在两种可能的测试工作目录布局下解析迁移文件。
+     *
+     * @param projectRoot 当前测试工作目录
+     * @param database 数据库目录名
+     * @param filename 迁移文件名
+     * @return 存在的迁移文件
+     */
+    private Path resolveMigration(Path projectRoot, String database, String filename) {
+        Path fromRoot = projectRoot.resolve("apex-system/src/main/resources/db/migration/" + database + "/" + filename);
+        if (Files.exists(fromRoot)) {
+            return fromRoot;
+        }
+        Path fromModule = projectRoot.resolve("src/main/resources/db/migration/" + database + "/" + filename);
+        assertThat(fromModule).as("未找到迁移文件 %s/%s", database, filename).exists();
+        return fromModule;
     }
 
     /**

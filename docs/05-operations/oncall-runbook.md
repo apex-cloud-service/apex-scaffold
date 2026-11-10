@@ -3,7 +3,7 @@
 > **性质**：Phase 7 加固配套运维文档（执行计划 §7.3「告警调优 + runbook、值班手册」）。
 > **关联**：告警规则 `config/monitoring/prometheus/alert-rules.yml`；总览见
 > `docs/05-operations/microservice-hardening-guide.md`。
-> **适用**：网关 + 5 业务微服务（auth / system / workflow / office / file）生产运维。
+> **适用**：网关 + 六个业务微服务（auth / system / workflow / office / file / integration）生产运维。
 
 ---
 
@@ -52,7 +52,7 @@
 
 ### 3.2 `SlowRequestsExcessive`（慢请求 >3s 过多，warning）
 
-- **定位**：`jdbc_query_duration_seconds_bucket` 慢 SQL；`reactor_netty_connection_provider_active_connections` 排队。
+- **定位**：`apex_sql_slow_count_total` / `apex_sql_slow_max_ms` 慢 SQL；`reactor_netty_connection_provider_active_connections` 排队。
 - **处置**：定位慢接口 → 查 SQL 执行计划 / 加索引；连接池排队 → 扩容副本或调 pool-size。
 
 ### 3.3 `DBConnectionPoolUsageHigh`（连接池水位 >80%，warning）
@@ -60,19 +60,26 @@
 - **定位**：`hikaricp_connections_active / hikaricp_connections_max`（prod 为 `druid_*`）。
 - **处置**：查是否存在连接泄漏（`hikaricp_connections_timeout_total` 增长）；临时扩容池；必要时滚动重启。
 
-### 3.4 Redis 不可达（`redisson_healthy == 0`）
+### 3.4 Redis 不可达（人工检查，`redisson_healthy == 0`）
+
+> 当前 `alert-rules.yml` **没有** Redis 告警规则，`redisson_healthy` 只作为大盘与
+> Prometheus 查询指标；必须由值班巡检或外部探针人工发现。
 
 - **定位**：Redis 节点连通性 / 主从切换。
 - **处置**：恢复 Redis；期间读多写少服务依赖本地缓存降级（stale-while-revalidate），不阻断核心链路。
 
-### 3.5 `SentinelFlowControlFrequent`（限流频繁，info）
+### 3.5 `SentinelBlockQpsHigh` / `SentinelResourceRtHigh`（Sentinel 治理，warning）
 
-- **定位**：`sentinel_blocked_qps` 对应 `resource`。
-- **处置**：确认是流量突增还是规则过严 → Nacos 调整 `config/nacos/sentinel/{service}-flow-rules.json`（支持热更新）。
+- **定位**：`sentinel_metrics{type="blockQps"}` 对应 `resource` 的限流拒绝量；
+  `sentinel_metrics{type="rt"}` 观察资源响应时间。
+- **边界**：Prometheus 的 `apex-sentinel` job 当前只抓取 system-service 的 9092 端口，
+  该组规则只对 system 资源生效，不代表其他服务已接入 Sentinel exporter。
+- **处置**：确认是流量突增还是规则过严 → Nacos 调整
+  `config/nacos/sentinel/{service}-flow-rules.json`（支持热更新）。
 
 ### 3.6 `GCPauseTimeCritical` / `MetaspaceUsageCritical`（JVM，critical）
 
-- **定位**：`jvm_gc_pause_seconds{quantile="0.99"}` / Metaspace 使用率。
+- **定位**：`max_over_time(jvm_gc_pause_seconds_max[5m])` / Metaspace 使用率。
 - **处置**：按 `microservice-hardening-guide.md` §2.1 扩容 JVM 堆/Metaspace；必要时水平扩容。
 
 ### 3.7 Outbox 堆积 / MQ 消费追赶
@@ -93,10 +100,11 @@
 ## 5. 关键命令速查
 
 ```bash
-# 服务健康（健康端口 8081/8082/8084/8085/8093）
-curl -s http://127.0.0.1:8081/actuator/health   # auth
-curl -s http://127.0.0.1:8093/actuator/health   # workflow
-curl -s http://127.0.0.1:8085/actuator/health   # file
+# 服务健康（gateway 8080、auth 8081、system 管理 8083、workflow 8093、
+# office 8084、file 8085、integration 管理 8097）
+for port in 8080 8081 8083 8093 8084 8085 8097; do
+  curl -fsS "http://127.0.0.1:${port}/actuator/health" >/dev/null     && echo "OK ${port}" || echo "FAIL ${port}"
+done
 
 # 混沌演练（场景化，退出码 0=通过）
 ./scripts/test/chaos-fault-injection.sh --scenario auth-down --yes
@@ -117,5 +125,5 @@ mvnd -pl <service> -am verify
 
 - [ ] 当前未闭环告警及进展
 - [ ] 进行中的变更/灰度比例
-- [ ] 已知风险与规避手段
+- [ ] 已知风险与规避手段（含 Redis/可用性无内置告警、Alertmanager 占位 webhook 未验证）
 - [ ] 待跟进复盘项

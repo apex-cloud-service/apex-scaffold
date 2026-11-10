@@ -45,7 +45,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 
 ## 模块结构
 
-根 POM 当前聚合 34 个模块。
+根 POM 当前聚合 35 个模块。
 
 | 分类 | 模块 | 职责 |
 | --- | --- | --- |
@@ -237,7 +237,7 @@ mvnd -T4 -B clean verify
 mvnd -T4 -B -pl apex-system-service -am test
 ```
 
-本次基础设施拆分与 office 站内信的固定环境验证入口为 [`scripts/test/verify-infrastructure-websocket.sh`](scripts/test/verify-infrastructure-websocket.sh)，支持 `--infrastructure`、`--websocket` 和 `--full`；脚本只调用 mvnd，不降低现有 verify 门禁。office 站内信的协议、Origin 白名单、HTTP/WS 成对路由和单实例内存状态见[站内信说明](docs/05-operations/in-app-messaging.md)。
+本次基础设施拆分与 office 站内信的固定环境验证入口为 [`scripts/test/verify-infrastructure-websocket.sh`](scripts/test/verify-infrastructure-websocket.sh)，支持 `--infrastructure`、`--websocket` 和 `--full`；中台主干（网关、六个业务库与运行模块）的验证入口为 [`scripts/test/verify-middle-platform.sh`](scripts/test/verify-middle-platform.sh)，默认执行定向 `test`，使用 `--full` 执行完整反应堆 `clean verify`。两个脚本都只调用 mvnd，不降低现有 verify 门禁。office 站内信的协议、Origin 白名单、HTTP/WS 成对路由和单实例内存状态见[站内信说明](docs/05-operations/in-app-messaging.md)。
 
 `test` 不会执行完整 Failsafe/verify 门禁。开发规范、事务与调度器约束见 [AGENTS.md](AGENTS.md)。业务 JSON 响应使用 `Result<T>`，成功业务码为 `0`，与 HTTP 状态码 200 区分。
 
@@ -256,6 +256,8 @@ mvnd -T4 -B -pl apex-system-service -am test
 | [部署指南](docs/05-operations/deployment.md) | 部署流程 |
 | [集成测试指南](docs/06-testing/integration-test-guide.md) | 集成测试环境与操作 |
 | [系统架构](docs/architecture/system-architecture.md) | 架构说明 |
+| [能力目录](docs/02-architecture/capability-catalog.md) | 八项中台能力、治理字段、计量维度与开放 scope 登记 |
+| [中台架构评审报告](docs/08-project-management/reports/middle-platform-architecture-review.md) | 八维度评审结论、已证实差距与整改关闭状态 |
 | [业务流程](docs/architecture/business-flows.md) | 业务流程说明 |
 | [项目交付文档集](docs/08-project-management/delivery/README.md) | 交付范围、交付物、需求追踪、质量、风险、变更、验收与交接 |
 | [微服务验收清单](docs/08-project-management/checklists/microservice-acceptance-checklist.md) | 迁移与验收记录 |

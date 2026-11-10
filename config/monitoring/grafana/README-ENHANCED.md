@@ -2,7 +2,7 @@
 
 ## 📊 面板概述
 
-本增强监控面板（`apex-dashboard-enhanced.json`）是对基础监控面板的补充，专注于 **WebFlux 网关**和 **JVM 深度监控**，提供更专业和详细的监控信息。
+本增强监控面板（`apex-dashboard-enhanced.json`）是对基础监控面板的补充，专注于 **WebFlux 网关**和 **JVM 深度监控**。当前文件包含 14 项元素、2 个 row 和 12 个数据面板。
 
 ## 🎯 监控分组
 
@@ -76,17 +76,18 @@
   - Metaspace 持续增长 → 类加载过多或泄漏
   - Code Cache 满 → JIT 编译受限
 
-#### 2.3 GC 暂停时间分位数
-- **指标**：`jvm_gc_pause_seconds{quantile="0.5|0.95|0.99"}`
-- **用途**：监控 GC 暂停时间的分布
+#### 2.3 GC 暂停时间（Max / Avg / 5m Max）
+- **指标**：
+  - `jvm_gc_pause_seconds_max`（自上次观测以来的最大暂停时间）
+  - `rate(jvm_gc_pause_seconds_sum[5m]) / rate(jvm_gc_pause_seconds_count[5m])`（5 分钟平均暂停时间）
+  - `max_over_time(jvm_gc_pause_seconds_max[5m])`（5 分钟窗口最大暂停时间）
+- **用途**：监控各 GC 类型的最大暂停时间与平均暂停时间
 - **阈值**：
-  - 🟢 P99 < 100ms：优秀
-  - 🟡 P99 100-500ms：可接受
-  - 🔴 P99 > 500ms：影响用户体验
-- **说明**：
-  - P50：50% 的 GC 暂停时间
-  - P95：95% 的 GC 暂停时间（常用 SLA 指标）
-  - P99：99% 的 GC 暂停时间（发现长尾问题）
+  - 🟢 最大暂停 < 100ms：优秀
+  - 🟡 最大暂停 100-500ms：可接受
+  - 🔴 最大暂停 > 500ms：影响用户体验
+- **说明**：Micrometer 的 `jvm_gc_pause_seconds_max` 是 Gauge，不提供 Prometheus 分位数标签；
+  不能使用 `jvm_gc_pause_seconds{quantile="..."}`。
 
 #### 2.4 GC 频率（按类型）
 - **指标**：`rate(jvm_gc_pause_seconds_count[5m]) * 60`
@@ -136,12 +137,12 @@ Grafana 已配置自动从 `/var/lib/grafana/dashboards` 目录加载面板，�
 podman-compose -f config/monitoring/podman-compose.yml restart grafana
 
 # 等待 10 秒后访问
-open http://localhost:3000/d/apex-enhanced
+open http://localhost:3200/d/apex-enhanced
 ```
 
 ### 方式二：手动导入
 
-1. 登录 Grafana（http://localhost:3000，默认 admin/admin）
+1. 登录 Grafana（http://localhost:3200，默认 admin/admin）
 2. 点击左侧 **+** → **Import**
 3. 上传 `apex-dashboard-enhanced.json` 文件
 4. 选择数据源 **Prometheus**
@@ -156,7 +157,7 @@ open http://localhost:3000/d/apex-enhanced
 在正常负载下运行 1 小时，记录以下基线值：
 
 - **WebFlux**：活跃连接数、EventLoop 待处理任务
-- **JVM**：Heap 使用率、GC 频率、GC 暂停时间 P95
+- **JVM**：Heap 使用率、GC 频率、GC 平均/最大暂停时间
 
 ### 2. 告警阈值配置
 
@@ -168,7 +169,7 @@ groups:
     rules:
       # WebFlux EventLoop 积压告警
       - alert: ReactorEventLoopBacklog
-        expr: reactor_netty_eventloop_pending_tasks > 5000
+        expr: reactor_netty_eventloop_pending_tasks{application="apex-scaffold"} > 5000
         for: 2m
         labels:
           severity: warning
@@ -178,17 +179,17 @@ groups:
 
       # JVM GC 暂停时间告警
       - alert: JvmGcPauseTooLong
-        expr: jvm_gc_pause_seconds{quantile="0.99"} > 0.5
+        expr: max_over_time(jvm_gc_pause_seconds_max{application="apex-scaffold"}[5m]) > 0.5
         for: 5m
         labels:
           severity: warning
         annotations:
           summary: "GC 暂停时间过长"
-          description: "{{ $labels.instance }} GC P99 暂停 {{ $value }}s，影响用户体验"
+          description: "{{ $labels.instance }} 5 分钟内最大 GC 暂停 {{ $value }}s，影响用户体验"
 
       # JVM Heap 使用率告警
       - alert: JvmHeapUsageHigh
-        expr: sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.85
+        expr: sum(jvm_memory_used_bytes{application="apex-scaffold",area="heap"}) / sum(jvm_memory_max_bytes{application="apex-scaffold",area="heap"}) > 0.85
         for: 5m
         labels:
           severity: warning
@@ -203,7 +204,7 @@ groups:
 
 1. 查看 **WebFlux 活跃连接数** → 是否连接数暴增
 2. 查看 **Reactor 待处理任务** → 是否 EventLoop 积压
-3. 查看 **GC 暂停时间分位数** → 是否 GC 频繁导致
+3. 查看 **GC 暂停时间（Max / Avg / 5m Max）** → 是否 GC 频繁导致
 
 #### 场景二：内存持续增长
 
@@ -242,7 +243,7 @@ groups:
 - ✅ JVM 深度监控（7 个面板）
   - JVM Heap 内存详情（按区域）
   - JVM NonHeap 内存详情
-  - GC 暂停时间分位数
+  - GC 暂停时间（Max / Avg / 5m Max）
   - GC 频率（按类型）
   - JVM 线程状态
   - JVM 类加载
@@ -257,4 +258,4 @@ groups:
 ---
 
 **维护者**：Apex Team  
-**最后更新**：2026-09-07
+**最后更新**：2026-11-10

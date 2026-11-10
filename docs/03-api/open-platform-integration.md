@@ -64,7 +64,8 @@ sequenceDiagram
 ## 7. 边界与明确不做项
 
 - 按 `clientId` 分档的 `rateLimitTier` 限流：**已实现**（应用维度限流 + 档位阈值映射 + system 内部档位查询端点）；档位数值映射（`open-api-tiers`）按部署配置
-- 下游承接路径：网关 `/open-api/**` 路由组当前以原路径转发，业务服务的开放承接路由（含开放应用令牌的服务侧认证语义）仍在演进中，开放链路的端到端调用未验证（见能力目录文档与批次报告的未验证项）
+- 下游承接路径：网关 `/open-api/**` 路由组以原路径转发；file、workflow、system 用户查询与 office 站内信四个开放 Router 已实现，并有网关路由/profile 静态契约测试与 `CapabilityUsagePropertiesTest` 覆盖路径映射。
+- 上述静态契约不等同于真实端到端验收：尚需在部署环境验证开放应用令牌、网关转发、服务侧二次能力校验、限流与审计的组合行为（见[中台整改测试报告](../06-testing/middle-platform/20261110-completion/report.md)未验证项）。
 - 自定义 HMAC 请求签名：明确不做（Bearer 令牌已满足 v1）
 - 开放平台计费：不做
 

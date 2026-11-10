@@ -92,7 +92,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "up{job=\"apex-scaffold\"}",
+          "expr": "up{application=\"apex-scaffold\"}",
           "legendFormat": "实例 {{ instance }}",
           "refId": "A"
         }
@@ -1051,7 +1051,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(sentinel_block_qps_total[5m]))",
+          "expr": "sum by (resource) (sentinel_metrics{type=\"blockQps\"})",
           "legendFormat": "拦截 QPS",
           "refId": "A"
         },
@@ -1060,7 +1060,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(sentinel_pass_qps_total[5m]))",
+          "expr": "sum by (resource) (sentinel_metrics{type=\"passQps\"})",
           "legendFormat": "放行 QPS",
           "refId": "B"
         }

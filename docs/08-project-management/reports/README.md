@@ -21,6 +21,13 @@
 | [storage-refactoring-delivery-report.md](./storage-refactoring-delivery-report.md) | 对象存储重构交付 |
 | [storage-refactoring-tests/](./storage-refactoring-tests/) | 对象存储重构测试记录 |
 
+### 中台与平台治理
+
+| 文档 | 主题 |
+| --- | --- |
+| [middle-platform-architecture-review.md](./middle-platform-architecture-review.md) | 中台八维度评审、G1–G8 整改关闭说明与未验证边界 |
+| [中台整改测试报告](../../06-testing/middle-platform/20261110-completion/report.md) | 本轮实际测试命令、结果口径与生产环境未验证项 |
+
 ### 专项审计与收口
 
 | 文档 | 主题 |
@@ -32,4 +39,4 @@
 ---
 
 **维护者**: Apex Team
-**最后更新**: 2026-10-31
+**最后更新**: 2026-11-10

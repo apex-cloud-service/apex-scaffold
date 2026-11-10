@@ -12,6 +12,15 @@ import org.springframework.mock.env.MockEnvironment;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+/**
+ * 统一授权服务测试。
+ *
+ * <p>验证可信租户上下文、中心授权失败不降级、角色作用域映射、缓存负结果与
+ * 租户套餐范围对权限查询链路的共同约束。</p>
+ *
+ * @author Apex Team
+ * @since 1.3.1
+ */
 class UnifiedAuthorizationServiceTest {
     @Test
     void trustedTenantIsRequired() {
@@ -28,12 +37,13 @@ class UnifiedAuthorizationServiceTest {
         UnifiedAuthorizationGateway gateway = mock(UnifiedAuthorizationGateway.class);
         PermissionRepository local = mock(PermissionRepository.class);
         when(gateway.query("main", 7L)).thenReturn(Mono.error(new IllegalStateException("Unavailable")));
+        TenantPackageService packageService = mock(TenantPackageService.class);
+        when(packageService.resolveScope("main")).thenReturn(Mono.just(TenantPackageService.PackageScope.full()));
         var unified = new UnifiedAuthorizationService(
                 gateway, new MockEnvironment().withProperty("apex.features.auth-center-permission", "true"), null);
-        StepVerifier.create(
-                        new PermissionService(unified, local, mock(TenantGuard.class), mock(TenantPackageService.class))
-                                .getPermissionsByUserId(7L)
-                                .contextWrite(TenantContext.withTenant("main")))
+        StepVerifier.create(new PermissionService(unified, local, mock(TenantGuard.class), packageService)
+                        .getPermissionsByUserId(7L)
+                        .contextWrite(TenantContext.withTenant("main")))
                 .expectError(IllegalStateException.class)
                 .verify();
         verifyNoInteractions(local);

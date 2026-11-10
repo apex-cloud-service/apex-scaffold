@@ -4,7 +4,7 @@
 # Grafana Dashboard 自动导入脚本
 #
 # 用途：
-#   将优化版缓存监控 Dashboard 自动导入到现有 Grafana 监控平台
+#   将 Apex Scaffold 主监控 Dashboard 自动导入到现有 Grafana 监控平台
 #
 # 功能：
 #   - 自动检查 Grafana 连接状态
@@ -15,18 +15,18 @@
 #
 # 使用方法：
 #   1. 使用 API Key 认证（推荐）：
-#      export GRAFANA_URL="http://localhost:3000"
+#      export GRAFANA_URL="http://localhost:3200"
 #      export GRAFANA_API_KEY="your-api-key"
 #      ./import-dashboard.sh
 #
 #   2. 使用用户名密码认证：
-#      export GRAFANA_URL="http://localhost:3000"
+#      export GRAFANA_URL="http://localhost:3200"
 #      export GRAFANA_USER="admin"
 #      export GRAFANA_PASSWORD="admin"
 #      ./import-dashboard.sh
 #
 # 环境变量：
-#   GRAFANA_URL      - Grafana 服务地址（默认：http://localhost:3000）
+#   GRAFANA_URL      - Grafana 服务地址（默认：http://localhost:3200）
 #   GRAFANA_API_KEY  - Grafana API Key（可选，优先使用）
 #   GRAFANA_USER     - Grafana 用户名（默认：admin）
 #   GRAFANA_PASSWORD - Grafana 密码（默认：admin）
@@ -44,7 +44,7 @@
 # 版本：1.0.0
 ################################################################################
 
-set -e
+set -euo pipefail
 
 # 颜色定义
 RED='\033[0;31m'
@@ -53,11 +53,11 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 配置参数（请根据实际情况修改）
-GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
+GRAFANA_URL="${GRAFANA_URL:-http://localhost:3200}"
 GRAFANA_API_KEY="${GRAFANA_API_KEY:-}"
 GRAFANA_USER="${GRAFANA_USER:-admin}"
 GRAFANA_PASSWORD="${GRAFANA_PASSWORD:-admin}"
-DASHBOARD_FILE="$(dirname "$0")/../docs/cache/grafana-cache-dashboard-optimized.json"
+DASHBOARD_FILE="$(cd -- "$(dirname -- "$0")/../../../.." && pwd -P)/config/monitoring/grafana/apex-dashboard.json"
 
 echo -e "${GREEN}=== Grafana Dashboard 导入工具 ===${NC}\n"
 
@@ -96,16 +96,8 @@ fi
 echo "读取 Dashboard 配置..."
 DASHBOARD_JSON=$(cat "$DASHBOARD_FILE")
 
-# 包装成 Grafana API 所需的格式
-IMPORT_JSON=$(cat <<EOF
-{
-  "dashboard": $(echo "$DASHBOARD_JSON" | jq '.dashboard'),
-  "overwrite": true,
-  "inputs": [],
-  "folderId": 0
-}
-EOF
-)
+# 文件置备的大盘 JSON 本身就是 dashboard 对象，不再解包 .dashboard。
+IMPORT_JSON="$(jq -cn --argjson dashboard "$DASHBOARD_JSON"   '{dashboard: $dashboard, overwrite: true, inputs: [], folderId: 0}')"
 
 # 导入 Dashboard
 echo "正在导入 Dashboard..."
@@ -128,7 +120,7 @@ if [ "$HTTP_CODE" = "200" ]; then
         echo -e "Dashboard 地址: ${GREEN}$FULL_URL${NC}"
         echo -e "\n可以通过以下方式访问："
         echo -e "  浏览器: $FULL_URL"
-        echo -e "  或在 Grafana 左侧菜单: Dashboards → Apex Scaffold 缓存监控 v2"
+        echo -e "  或在 Grafana 左侧菜单: Dashboards → Apex Scaffold 监控大盘"
     fi
     
     # 提取 Dashboard ID

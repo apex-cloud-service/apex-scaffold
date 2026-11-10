@@ -13,8 +13,9 @@ import lombok.Setter;
  * 租户套餐实体（平台级定义，统一认证收口 / 方案批次 B3）。
  *
  * <p>非默认租户按套餐裁剪可见菜单与有效权限码；{@code default} 平台租户不裁剪。
- * {@code menuIds}/{@code permissionCodes}/{@code features} 为空集合时表示全量（不裁剪），
- * 与种子 {@code platform-full} 的"数据驱动全量"语义一致。
+ * 菜单与权限码的空集合沿用既有数据驱动口径，表示对应维度不裁剪；能力订阅则不同，
+ * {@code features} 为空集合表示未订阅任何能力。套餐不存在、停用或 JSON 配置损坏时，
+ * 授权链路必须 fail-closed（拒绝全部），禁止把配置缺失静默放大为全量授权。
  *
  * @author Apex Team
  * @version 1.3.1
@@ -27,7 +28,12 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TenantPackageEntity {
 
-    /** 平台全量套餐编码（种子内置，不裁剪） */
+    /**
+     * 平台全量套餐编码（种子内置）。
+     *
+     * <p>菜单与权限码由 V78 在迁移时按存量数据聚合为全量；能力编码由 V90 回填为
+     * 当前已登记能力，后续新增能力仍需通过套餐配置显式授予。
+     */
     public static final String PLATFORM_FULL_CODE = "platform-full";
 
     /** 平台默认租户编码（不裁剪） */
@@ -39,14 +45,27 @@ public class TenantPackageEntity {
 
     private String packageName;
 
-    /** 可用菜单 ID 集合；空集合 = 全量 */
+    /** 可用菜单 ID 集合；空集合 = 全量（仅对有效且配置可解析的套餐生效） */
     private Set<Long> menuIds;
 
-    /** 可用权限码集合；空集合 = 全量 */
+    /** 可用权限码集合；空集合 = 全量（仅对有效且配置可解析的套餐生效） */
     private Set<String> permissionCodes;
 
-    /** 能力订阅集合（能力运营 D4 预留） */
+    /**
+     * 已订阅能力编码集合。
+     *
+     * <p>空集合表示未订阅任何能力，不表示全量；全量订阅由套餐范围中的
+     * {@code unbounded=true} 表达。编码取值须与能力目录登记一致。
+     */
     private Set<String> features;
+
+    /**
+     * 配置是否损坏。
+     *
+     * <p>持久化 JSON 中任一数组无法解析时由仓储置为 {@code true}；授权链路据此拒绝
+     * 该套餐的全部菜单、权限码与能力，避免空集合被误解释为全量。</p>
+     */
+    private boolean configurationInvalid;
 
     /** 状态（0-停用，1-正常） */
     private Integer status;

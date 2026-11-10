@@ -23,7 +23,7 @@ public interface TenantProvisioningGateway {
      * @param tenantName    租户名称
      * @param adminUsername 管理员登录名
      * @param adminPassword 管理员初始密码（明文，实现侧 BCrypt 存储）
-     * @param packageCode   套餐编码（可空 = 全量授权）
+     * @param packageCode   套餐编码；开通引导必填，缺失、未知、停用或配置损坏时整体失败
      * @param maxUsers      用户配额（可空）
      * @param maxStorageMb  存储配额 MB（可空）
      * @param remark        备注

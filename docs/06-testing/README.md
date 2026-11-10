@@ -12,6 +12,10 @@
 - [P0 路由清单](jdk21-unified-auth/20261016-p0/routes.json)：250 条已解析路由与 148 条未解析候选，非运行期注册或 OpenAPI 覆盖证明。
 - [P0 迁移表清单](jdk21-unified-auth/20261016-p0/tables.json)：170 个脚本的 767 条静态表事件，不是真实 schema 或 SQL 语义等价。
 
+## 中台架构整改验证
+
+- [中台架构整改完成测试报告](middle-platform/20261110-completion/report.md)：记录 G1–G8 代码/静态契约关闭、定向 `mvnd` 测试、完整 `clean verify`、双库迁移测试结果及真实环境未验证项。该报告不构成完整中台生产验收结论。
+
 ## 基础设施与站内信验证
 
 新增入口 `bash scripts/test/verify-infrastructure-websocket.sh --infrastructure`（五能力和直接消费者及依赖）、`--websocket`（office/gateway 及依赖）、`--full`（完整 reactor）。脚本在 zsh 子 shell 中加载固定构建环境，再执行 mvnd `clean verify`，不跳过 Surefire、Failsafe 或现有质量门禁；针对性验证不能代替完整 reactor 验证。脚本本次仅创建和静态检查，尚未执行。最终结果由主代理在[交付报告](../08-project-management/reports/infrastructure-websocket-delivery-report.md)填入真实记录。

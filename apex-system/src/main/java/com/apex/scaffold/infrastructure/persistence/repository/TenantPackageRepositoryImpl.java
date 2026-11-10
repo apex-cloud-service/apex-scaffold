@@ -84,18 +84,31 @@ public class TenantPackageRepositoryImpl implements TenantPackageRepository {
         return po;
     }
 
-    /** PO → 实体（JSON 数组文本反序列化；解析失败按空集合兜底并告警）。 */
+    /**
+     * PO → 实体。
+     *
+     * <p>菜单、权限码与能力数组分别解析；任一字段损坏时设置
+     * {@code configurationInvalid=true}，由应用层统一转成拒绝范围。损坏字段不会被
+     * 当作空集合，因为空集合在菜单/权限维度具有“全量”语义。</p>
+     *
+     * @param po 套餐持久化对象；可为 {@code null}
+     * @return 套餐实体；入参为 {@code null} 时返回 {@code null}
+     */
     private TenantPackageEntity converter(TenantPackagePO po) {
         if (po == null) {
             return null;
         }
+        ParseResult<Long> menuIds = parseArray(po.getMenuIds(), "menu_ids", Long.class);
+        ParseResult<String> permissionCodes = parseArray(po.getPermissionCodes(), "permission_codes", String.class);
+        ParseResult<String> features = parseArray(po.getFeatures(), "features", String.class);
         return TenantPackageEntity.builder()
                 .id(po.getId())
                 .packageCode(po.getPackageCode())
                 .packageName(po.getPackageName())
-                .menuIds(new HashSet<>(parseLongs(po.getMenuIds())))
-                .permissionCodes(new HashSet<>(parseStrings(po.getPermissionCodes())))
-                .features(new HashSet<>(parseStrings(po.getFeatures())))
+                .menuIds(new HashSet<>(menuIds.values()))
+                .permissionCodes(new HashSet<>(permissionCodes.values()))
+                .features(new HashSet<>(features.values()))
+                .configurationInvalid(!menuIds.valid() || !permissionCodes.valid() || !features.valid())
                 .status(po.getStatus())
                 .remark(po.getRemark())
                 .createTime(po.getCreateTime())
@@ -105,21 +118,48 @@ public class TenantPackageRepositoryImpl implements TenantPackageRepository {
                 .build();
     }
 
-    private List<Long> parseLongs(String json) {
+    /**
+     * 解析 JSON 字符串数组，并明确返回解析有效性。
+     *
+     * <p>{@code null} 或空白 JSON 保持历史数据语义：菜单/权限维度为空集合，
+     * 能力维度为空集合即未订阅。非空但格式错误、类型不匹配或元素为 {@code null}
+     * 时视为配置损坏，返回空集合且 {@code valid=false}；调用方必须结合有效性判定，
+     * 不得单独使用返回集合做授权决策。</p>
+     *
+     * @param json 待解析 JSON 文本，可为 {@code null} 或空白
+     * @param fieldName 字段名，用于告警定位
+     * @param elementType 数组元素类型
+     * @param <T> 数组元素类型
+     * @return 解析结果；损坏时 {@code valid=false}
+     */
+    private <T> ParseResult<T> parseArray(String json, String fieldName, Class<T> elementType) {
+        if (json == null || json.isBlank()) {
+            return new ParseResult<>(List.of(), true);
+        }
         try {
-            return JsonUtil.fromJson(json, new com.fasterxml.jackson.core.type.TypeReference<List<Long>>() {});
-        } catch (RuntimeException e) {
-            log.warn("套餐 menu_ids 解析失败，按全量兜底: reason={}", e.getMessage());
-            return List.of();
+            java.util.List<T> values = JsonUtil.getObjectMapper()
+                    .readValue(
+                            json,
+                            JsonUtil.getObjectMapper()
+                                    .getTypeFactory()
+                                    .constructCollectionType(List.class, elementType));
+            if (values == null || values.stream().anyMatch(java.util.Objects::isNull)) {
+                log.warn("套餐 {} 解析失败：数组为空值或包含 null 元素，按配置损坏处理", fieldName);
+                return new ParseResult<>(List.of(), false);
+            }
+            return new ParseResult<>(values, true);
+        } catch (RuntimeException | com.fasterxml.jackson.core.JsonProcessingException error) {
+            log.warn("套餐 {} 解析失败，按配置损坏拒绝授权: reason={}", fieldName, error.getMessage());
+            return new ParseResult<>(List.of(), false);
         }
     }
 
-    private List<String> parseStrings(String json) {
-        try {
-            return JsonUtil.fromJson(json, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {});
-        } catch (RuntimeException e) {
-            log.warn("套餐 permission_codes/features 解析失败，按全量兜底: reason={}", e.getMessage());
-            return List.of();
-        }
-    }
+    /**
+     * JSON 数组解析结果。
+     *
+     * @param values 解析出的值；失效时为空集合
+     * @param valid 配置是否可安全用于授权判定
+     * @param <T> 元素类型
+     */
+    private record ParseResult<T>(List<T> values, boolean valid) {}
 }

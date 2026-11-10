@@ -54,8 +54,17 @@ public final class CapabilityCatalog {
     /** 能力目录（插入顺序稳定，便于文档与前端展示）。 */
     private static final Map<String, Capability> CATALOG = buildCatalog();
 
+    /** 工具类不允许实例化。 */
     private CapabilityCatalog() {}
 
+    /**
+     * 构建不可变能力目录。
+     *
+     * <p>使用 {@link LinkedHashMap} 保留登记顺序，最后包装为不可修改视图，避免调用方
+     * 在运行期篡改目录内容或改变目录页、前端下拉框与计量报表的展示顺序。
+     *
+     * @return 按登记顺序保存的能力目录
+     */
     private static Map<String, Capability> buildCatalog() {
         Map<String, Capability> catalog = new LinkedHashMap<>();
         register(
@@ -153,9 +162,9 @@ public final class CapabilityCatalog {
                         "1.0.0",
                         Set.of("apex-integration-service"),
                         "99.9% 可用性",
-                        "planned",
+                        "active",
                         Set.of(),
-                        "外部系统连接器、凭据、出站重试、入站 webhook（M5 交付）"));
+                        "外部系统连接器、凭据、出站重试、入站 webhook"));
         register(
                 catalog,
                 new Capability(
@@ -167,13 +176,20 @@ public final class CapabilityCatalog {
                         "1.0.0",
                         Set.of("apex-integration-service"),
                         "99.9% 可用性",
-                        "planned",
+                        "active",
                         Set.of(),
-                        "设备注册/认证、遥测上行、命令下行、规则引擎（M5 交付）"));
+                        "设备注册/认证、遥测上行、命令下行、规则引擎"));
         // LinkedHashMap 保序包装：all()/目录页的展示顺序 = 登记顺序（Map.copyOf 不保序）
         return Collections.unmodifiableMap(catalog);
     }
 
+    /**
+     * 登记一项能力并拒绝重复编码。
+     *
+     * @param catalog    待写入的能力目录
+     * @param capability 能力定义
+     * @throws IllegalStateException 当目录中已存在相同能力编码时抛出
+     */
     private static void register(Map<String, Capability> catalog, Capability capability) {
         if (catalog.putIfAbsent(capability.code(), capability) != null) {
             throw new IllegalStateException("重复能力编码: " + capability.code());

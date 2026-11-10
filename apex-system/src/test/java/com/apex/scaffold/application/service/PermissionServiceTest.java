@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.domain.model.entity.PermissionEntity;
 import com.apex.scaffold.domain.repository.PermissionRepository;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,11 +46,10 @@ class PermissionServiceTest {
     private PermissionEntity permission;
 
     /**
-     * 设置{@code up}。
+     * 初始化权限夹具与默认全量套餐桩。
      */
     @BeforeEach
     void setUp() {
-        // B3 套餐裁剪：缺省桩为全量范围（平台租户口径），既有用例语义保持
         org.mockito.Mockito.lenient()
                 .when(tenantPackageService.resolveScope(org.mockito.ArgumentMatchers.anyString()))
                 .thenReturn(Mono.just(TenantPackageService.PackageScope.full()));
@@ -68,6 +69,7 @@ class PermissionServiceTest {
 
         permissionService
                 .getPermissionsByUserId(1L)
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .assertNext(permissions -> assertThat(permissions).hasSize(1))
                 .verifyComplete();
@@ -80,8 +82,68 @@ class PermissionServiceTest {
 
         permissionService
                 .getPermissionsByUserId(1L)
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .assertNext(permissions -> assertThat(permissions).isEmpty())
+                .verifyComplete();
+    }
+
+    /**
+     * 验证无租户上下文时不读取角色权限，直接返回空列表。
+     */
+    @Test
+    @DisplayName("getPermissionsByUserId - 无租户上下文返回空列表且不查仓储")
+    void getPermissionsByUserId_NoTenantContextFailsClosed() {
+        permissionService
+                .getPermissionsByUserId(1L)
+                .as(StepVerifier::create)
+                .assertNext(permissions -> assertThat(permissions).isEmpty())
+                .verifyComplete();
+
+        verify(permissionRepository, never()).findByUserId(anyLong());
+        verify(tenantPackageService, never()).resolveScope(anyString());
+    }
+
+    /**
+     * 验证拒绝范围不读取角色权限并返回空列表。
+     */
+    @Test
+    @DisplayName("getPermissionsByUserId - 拒绝范围返回空列表且不查仓储")
+    void getPermissionsByUserId_DeniedScopeFailsClosed() {
+        when(tenantPackageService.resolveScope("tenant-a"))
+                .thenReturn(Mono.just(TenantPackageService.PackageScope.deniedScope()));
+
+        permissionService
+                .getPermissionsByUserId(1L)
+                .contextWrite(TenantContext.withTenant("tenant-a"))
+                .as(StepVerifier::create)
+                .assertNext(permissions -> assertThat(permissions).isEmpty())
+                .verifyComplete();
+
+        verify(permissionRepository, never()).findByUserId(anyLong());
+    }
+
+    /**
+     * 验证受限套餐只保留权限码交集。
+     */
+    @Test
+    @DisplayName("getPermissionsByUserId - 受限套餐返回权限码交集")
+    void getPermissionsByUserId_ScopedByPackage() {
+        PermissionEntity write = new PermissionEntity();
+        write.setId(2L);
+        write.setCode("USER_WRITE");
+        when(tenantPackageService.resolveScope("tenant-a"))
+                .thenReturn(Mono.just(new TenantPackageService.PackageScope(
+                        false, false, Set.of(), Set.of("USER_MANAGE"), Set.of())));
+        when(permissionRepository.findByUserId(1L)).thenReturn(Mono.just(List.of(permission, write)));
+
+        permissionService
+                .getPermissionsByUserId(1L)
+                .contextWrite(TenantContext.withTenant("tenant-a"))
+                .as(StepVerifier::create)
+                .assertNext(permissions -> assertThat(permissions)
+                        .extracting(PermissionEntity::getCode)
+                        .containsExactly("USER_MANAGE"))
                 .verifyComplete();
     }
 
@@ -95,6 +157,7 @@ class PermissionServiceTest {
 
         permissionService
                 .hasPermission(1L, "USER_MANAGE")
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .expectNext(true)
                 .verifyComplete();
@@ -110,6 +173,7 @@ class PermissionServiceTest {
 
         permissionService
                 .hasPermission(1L, "ADMIN_MANAGE")
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .expectNext(false)
                 .verifyComplete();
@@ -125,6 +189,7 @@ class PermissionServiceTest {
 
         permissionService
                 .hasPermission(1L, "USER_MANAGE")
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .expectNext(false)
                 .verifyComplete();
@@ -140,6 +205,7 @@ class PermissionServiceTest {
 
         permissionService
                 .hasAnyPermission(1L, List.of("USER_MANAGE", "ADMIN_MANAGE"))
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .expectNext(true)
                 .verifyComplete();
@@ -155,6 +221,7 @@ class PermissionServiceTest {
 
         permissionService
                 .hasAnyPermission(1L, List.of("ADMIN_MANAGE", "SYSTEM_MANAGE"))
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .expectNext(false)
                 .verifyComplete();
@@ -174,6 +241,7 @@ class PermissionServiceTest {
 
         permissionService
                 .hasAllPermissions(1L, List.of("USER_MANAGE", "ADMIN_MANAGE"))
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .expectNext(true)
                 .verifyComplete();
@@ -189,6 +257,7 @@ class PermissionServiceTest {
 
         permissionService
                 .hasAllPermissions(1L, List.of("USER_MANAGE", "ADMIN_MANAGE"))
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .expectNext(false)
                 .verifyComplete();

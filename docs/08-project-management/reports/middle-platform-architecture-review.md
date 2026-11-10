@@ -162,3 +162,37 @@
 - 已执行：源码、POM、配置类、架构测试、既有评审报告的静态核对。
 - 未执行：Java 构建、单元/集成测试、服务启动、真实联调、文档链接检查、`git diff --check`。
 - 因此本报告中所有"符合"仅指静态证据成立，不代表运行期行为已验证。
+
+## 9. 2026-11-10 整改关闭说明
+
+本节是评审之后的实施记录，不替代上文的原始评审事实。关闭口径为**代码与静态契约已核对**，不等同于真实生产环境验收通过。
+
+### 9.1 G1–G8 关闭情况
+
+| 编号 | 原差距 | 当前处置 | 关闭证据 |
+| --- | --- | --- | --- |
+| G1 | 服务侧能力二次校验默认关闭 | `OpenApiGuardProperties.enabled` 默认值改为 `true`；四个开放 Router 所在服务无隐式关闭配置 | `OpenApiCapabilityGuardFilterTest`、服务配置核对 |
+| G2 | auth domain→application 反向依赖 | domain 通过 `AuthorizationQueryPort` 获取授权查询，Redis 能力收敛到 `ResourcePermissionStore` 及 infrastructure 实现 | auth 领域/应用分层测试、`PersistenceContractTest` |
+| G3 | application 层演示残留及缓存租户缺口 | 删除重复 application 服务，权限缓存键纳入租户作用域 | auth 专项测试、领域服务测试 |
+| G4 | 能力目录治理字段缺失 | 八项能力均登记 owner、版本、消费方、SLO、生命周期；文档与代码由契约测试对齐 | `CapabilityCatalogTest`、`CapabilityCatalogDocContractTest` |
+| G5 | 两端能力客户端重复实现 | 快照模型、解析与 TTL 缓存收敛到 `TenantCapabilitySnapshot` / `TenantCapabilitySnapshotCache`，网关与服务侧复用 | `TenantCapabilityConsistencyTest` |
+| G6 | 空 `features` 被解释为全量订阅 | 仅 `unbounded=true` 表示全量；`unbounded=false` 且空集合按未订阅处理并记录告警 | `CapabilityGateTest`、两侧一致性测试、`TenantPackageService` 契约 |
+| G7 | 架构守卫范围不足 | 扩展上下文边界与持久化契约守卫，修正边界测试命名/说明，明确其不是启动冒烟测试 | `PersistenceContractTest`、`ContextBoundaryArchTest`、服务边界测试 |
+| G8 | 示例依赖与文档漂移 | 修正依赖表并由构建注册表测试核对 POM、根模块、打包入口与文档 | `BuildManifestSyncTest` |
+
+### 9.2 本轮实施验证
+
+- 已执行中台主干模块定向 `mvnd -T4 -B ... -am test` 和静态检查；定向测试为 21 个 Reactor 模块、4,094 个测试、0 失败、0 错误、10 跳过。
+- 已执行完整 `mvnd -T4 -B clean verify` 并通过：35 个聚合模块 `BUILD SUCCESS`，Surefire 5,860 个、Failsafe 391 个，合计 6,251 个测试、0 失败、0 错误、33 跳过，耗时 17 分 55 秒，完成时间 `2026-11-10T21:34:53+08:00`；跳过项及原因以[中台整改测试报告](../../06-testing/middle-platform/20261110-completion/report.md)第 6 节为准。
+- 新增 `scripts/test/verify-middle-platform.sh` 作为固定环境验证入口，默认执行定向 `test`，`--full` 执行完整 `clean verify`；脚本强制 JDK/mvnd 版本且不跳过测试。
+- 新增 MySQL/PostgreSQL V90 迁移，仅回填 `platform-full` 空能力集合，不覆盖运营人员已配置的非空 `features`。
+
+### 9.3 仍未验证及残余风险
+
+1. 真实 Nacos、MySQL、Redis、RocketMQ/EMQX、Seata TC 环境联调与故障恢复未执行。
+2. 告警实际触达、监控看板、备份恢复演练未执行。
+3. 真实第三方消费方、能力 owner/SLO/生命周期运营台账未取得生产证据。
+4. 组织层级权限是否应实现仍需业务确认。
+5. `TenantPackageService.resolveScope()` 已改为 fail-closed：只有平台默认租户显式获得全量范围；非平台租户在套餐未绑定、套餐不存在、套餐停用、JSON 配置损坏或租户不存在时均拒绝全部授权。上线前仍应以真实租户快照做离线比对，不能据此宣称生产数据已完成迁移核对。
+
+因此，本报告中此前的 F1–F12 之外的真实运行期证据不足项仍然有效；G1–G8 的关闭不应被扩大解释为“完整中台生产验收通过”。

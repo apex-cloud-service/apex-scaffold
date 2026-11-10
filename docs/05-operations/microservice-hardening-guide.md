@@ -30,7 +30,7 @@
 - **7.2 容量规划**：每服务 JVM 1G 起步、网关/auth 2 副本、HPA。
 - **7.3 告警调优 + runbook/值班手册/SDK 升级指南**。
 - **7.4 Grafana 四类 dashboard + 告警规则上线、Zipkin traceId 贯通验证**。
-- **7.5 K8s 清单 + podman-compose**（gateway + 5 服务 + mysql/redis/rocketmq/nacos/minio）。
+- **7.5 K8s 清单 + podman-compose**（gateway + 六个业务服务 + mysql/redis/rocketmq/nacos/minio）。
 
 ---
 
@@ -76,7 +76,7 @@ JAVA_OPTS="-Xms512m -Xmx1g -Xss512k -XX:MaxDirectMemorySize=256m \
 pkill -9 -f apex-auth-service || true
 
 # 2) 观察（PromQL，可在 Grafana Explore 执行）：
-#    up{app="apex-auth-service"} == 0                      → 实例已摘除
+#    up{application="apex-scaffold",module="auth-service"} == 0  → 实例已摘除
 #    ubi_summary / 网关 5xx 曲线                        → 依赖方是否有兜底
 #    probe_success{job=~"blackbox.*auth.*"} == 0          → Blackbox 探测失败
 
@@ -95,8 +95,8 @@ pkill -9 -f apex-auth-service || true
 # 以 workflow 为例
 pkill -9 -f apex-workflow-service || true
 curl -sf http://127.0.0.1:8093/actuator/health || echo "期望：不可达"
-# 验证其它域（file/office/auth）健康、网关其余路由正常
-for p in 8080 8081 8084 8085; do curl -sf "http://127.0.0.1:${p}/actuator/health" >/dev/null && echo "OK ${p}" || echo "FAIL ${p}"; done
+# 验证其它域（file/office/auth/system/integration）健康、网关其余路由正常
+for p in 8080 8081 8083 8084 8085 8097; do curl -sf "http://127.0.0.1:${p}/actuator/health" >/dev/null && echo "OK ${p}" || echo "FAIL ${p}"; done
 ```
 
 ### 3.3 故障注入清单
@@ -105,7 +105,7 @@ for p in 8080 8081 8084 8085; do curl -sf "http://127.0.0.1:${p}/actuator/health
 |---|---|---|
 | 依赖服务不可达 | 停服务 / 拒绝连接 | Resilience4j 熔断、超时降级 |
 | 数据库连接耗尽 | 注入慢查询 / 缩池 | 连接池水位告警、限流 |
-| Redis 不可达 | 停止 Redis 节点 | `redisson_healthy` 告警、本地降级 |
+| Redis 不可达 | 停止 Redis 节点 | 人工巡检 `redisson_healthy`、本地缓存降级（无内置告警） |
 | RocketMQ 堆积 | 停消费者 / 灌量 | DLQ / 消费追赶告警、Outbox 兜底 |
 | 单副本被杀 | `kill -9` | K8s ReplicaSet 自动拉起、`pod-disruption-budget.yaml` 保障 |
 
@@ -134,7 +134,7 @@ for p in 8080 8081 8084 8085; do curl -sf "http://127.0.0.1:${p}/actuator/health
 BENCH_SCENARIO=login BENCH_LOGIN_ENABLED=true \
   BENCH_USERNAME=<account> BENCH_PASSWORD=<pwd> ./scripts/bench/bench.sh http://127.0.0.1:8080 60s 8 400
 
-# 2) 全链路（gateway 入口 → 5 服务）：
+# 2) 全链路（gateway 入口 → 六个业务服务）：
 ./scripts/performance/run-load-test.sh http://127.0.0.1:8080
 
 # 3) JMeter 完整场景（登录/工作流发起/审批/文件上传/办公消息）：
@@ -158,13 +158,18 @@ jmeter -n -t scripts/performance/jmeter/api-load-test.jmx \
 
 规则文件 `config/monitoring/prometheus/alert-rules.yml`（现有组）：
 
-- `jvm_deep_monitoring`：Metaspace / CodeCache / GC P99 暂停。
-- `sentinel_governance`：系统保护触发 / 限流频繁（`sentinel_blocked_qps`）。
+- `jvm_deep_monitoring`：Metaspace / CodeCache / `jvm_gc_pause_seconds_max` 最大暂停。
+- `sentinel_governance`：`SentinelBlockQpsHigh` / `SentinelResourceRtHigh`
+  （`sentinel_metrics{type="blockQps"}`、`sentinel_metrics{type="rt"}`）。
 - `gateway_performance`：慢请求(>3s)、连接池水位（`reactor_netty_connection_provider_*`）。
 - `circuit_breaker`：熔断器 Open、失败率警戒线。
-- `database_monitoring`：连接池水位、慢查询（`jdbc_query_duration_seconds`）。
+- `database_monitoring`：连接池水位、慢 SQL（`apex_sql_slow_count_total` /
+  `apex_sql_slow_max_ms`）。
 
-> 微服务化后按服务补充分组：`auth_availability`（登录失败率）、`outbox_backlog`（Outbox 堆积）、
+> 当前规则集为 5 组 13 条，**不包含 Redis 与独立服务可用性规则**；`probe_success`
+> 由 Blackbox 采集但未用于内置告警，Redis 与可用性需人工巡检或外部探针。
+> 下列按服务分组仍属**规划**，未在当前 `alert-rules.yml` 中实现：
+> `auth_availability`（登录失败率）、`outbox_backlog`（Outbox 堆积）、
 > `mq_consumer_lag`（消费追赶）、`per_service_availability`（每服务 `probe_success`）。
 > 阈值调整遵循「先 info→warning→critical」灰度，禁止直接改动生产阈值。
 
@@ -172,21 +177,23 @@ jmeter -n -t scripts/performance/jmeter/api-load-test.jmx \
 
 | 严重级 | 通道 | 升级时限 |
 |---|---|---|
-| critical | 即时电话/短信（值班） | 15 分钟内响应 |
-| warning | 钉钉/企业微信/邮件 | 1 小时内响应 |
-| info | 数据入库周一复盘 | — |
+| critical | 计划接即时电话/短信（值班） | 15 分钟内响应 |
+| warning | 计划接钉钉/企业微信/邮件 | 1 小时内响应 |
+| info | 计划入库、工作时段复盘 | — |
 
-通道配置：`config/monitoring/alertmanager/README.md`（钉钉/企业微信/邮件接入示例）。
+Alertmanager 已由 Compose 启用并加载 `config/monitoring/prometheus/alertmanager.yml`，
+但 4 个 receiver 当前均为占位 webhook，**真实通知触达尚未验证**；生产必须替换为可达渠道
+并完成端到端触达测试。接入说明见 `config/monitoring/alertmanager/README.md`。
 
 ### 5.3 Runbook（高优先级告警处置手册）
 
 | 告警 | 可能根因与处置 |
 |---|---|
 | `CircuitBreakerOpen` | 依赖服务故障→查下游健康/连接池；确认后人工或在 Nacos 调整熔断参数；验证恢复后关闭 |
-| `SlowRequestsExcessive` | 慢 SQL→查 `jdbc_query_duration_seconds` 与 DBA 慢日志；线程池排队→查 `reactor_netty_connection_provider_*` |
+| `SlowRequestsExcessive` | 慢 SQL→查 `apex_sql_slow_count_total` / `apex_sql_slow_max_ms` 与 DBA 慢日志；线程池排队→查 `reactor_netty_connection_provider_*` |
 | `DBConnectionPoolUsageHigh` | 连接泄漏/缩池→临时调 pool-size，Processor 查 `hikaricp_connections_idle` |
-| `Redis` 探针失败 | `redisson_healthy==0`→查 Redis 节点；读多数化服务应走本地缓存降级 |
-| `SentinelFlowControlFrequent` | 流量突增或规则过严→Nacos 调整 `{service}-flow-rules.json`（热更新） |
+| Redis 不可达（人工检查，无内置告警） | `redisson_healthy==0`→查 Redis 节点；读多写少服务应走本地缓存降级 |
+| `SentinelBlockQpsHigh` / `SentinelResourceRtHigh` | 流量突增或规则过严→Nacos 调整 `{service}-flow-rules.json`（热更新）；当前 exporter 仅覆盖 system-service |
 | `GCPauseTimeCritical` | 堆/堆外过小→按 §2.1 扩容 JVM，必要时水平扩容 |
 | `MetaspaceUsageCritical` | 类加载过多→检查反射/动态代理，扩容 Metaspace |
 

@@ -3,12 +3,14 @@ package com.apex.scaffold.application.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.application.assembler.MenuAssembler;
 import com.apex.scaffold.application.dto.admin.MenuDTO;
 import com.apex.scaffold.application.dto.admin.MenuRequest;
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.domain.model.entity.MenuEntity;
 import com.apex.scaffold.domain.repository.MenuRepository;
@@ -110,6 +112,7 @@ class MenuServiceTest {
 
         menuService
                 .getMenuTree()
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .assertNext(roots -> {
                     assertThat(roots).hasSize(1);
@@ -131,9 +134,70 @@ class MenuServiceTest {
 
         menuService
                 .getMenuTree()
+                .contextWrite(TenantContext.withTenant("default"))
                 .as(StepVerifier::create)
                 .assertNext(roots -> assertThat(roots).hasSize(1))
                 .verifyComplete();
+    }
+
+    /**
+     * 验证没有租户上下文时 fail-closed，不读取菜单仓储。
+     */
+    @Test
+    @DisplayName("getMenuTree - 无租户上下文返回空列表且不查仓储")
+    void getMenuTree_NoTenantContextFailsClosed() {
+        menuService
+                .getMenuTree()
+                .as(StepVerifier::create)
+                .assertNext(roots -> assertThat(roots).isEmpty())
+                .verifyComplete();
+
+        verify(menuRepository, never()).findAll();
+        verify(tenantPackageService, never()).resolveScope(any(String.class));
+    }
+
+    /**
+     * 验证受限套餐按 menu_ids 裁剪并补全父链。
+     */
+    @Test
+    @DisplayName("getMenuTree - 受限套餐按 menu_ids 返回父链完整菜单")
+    void getMenuTree_ScopedByPackage() {
+        when(tenantPackageService.resolveScope("tenant-a"))
+                .thenReturn(Mono.just(new TenantPackageService.PackageScope(
+                        false, false, java.util.Set.of(2L), java.util.Set.of("system:user:list"), java.util.Set.of())));
+        when(menuRepository.findAll()).thenReturn(Mono.just(List.of(directory, childMenu)));
+
+        menuService
+                .getMenuTree()
+                .contextWrite(TenantContext.withTenant("tenant-a"))
+                .as(StepVerifier::create)
+                .assertNext(roots -> {
+                    assertThat(roots).hasSize(1);
+                    assertThat(roots.get(0).getId()).isEqualTo(1L);
+                    assertThat(roots.get(0).getChildren())
+                            .extracting(MenuDTO::getId)
+                            .containsExactly(2L);
+                })
+                .verifyComplete();
+    }
+
+    /**
+     * 验证拒绝范围返回空列表且不读取菜单仓储。
+     */
+    @Test
+    @DisplayName("getMenuTree - 拒绝范围返回空列表且不查仓储")
+    void getMenuTree_DeniedScopeFailsClosed() {
+        when(tenantPackageService.resolveScope("tenant-a"))
+                .thenReturn(Mono.just(TenantPackageService.PackageScope.deniedScope()));
+
+        menuService
+                .getMenuTree()
+                .contextWrite(TenantContext.withTenant("tenant-a"))
+                .as(StepVerifier::create)
+                .assertNext(roots -> assertThat(roots).isEmpty())
+                .verifyComplete();
+
+        verify(menuRepository, never()).findAll();
     }
 
     /**

@@ -17,10 +17,11 @@
 #      - 测试数据源连接状态
 #   3. 应用指标检查
 #      - 检查 Prometheus 端点是否可访问
-#      - 验证缓存相关指标是否暴露
+#      - 验证通用 apex_api_* 指标是否暴露
+#      - 缓存指标仅作为可选诊断项
 #   4. Prometheus 采集配置检查
-#      - 检查 Prometheus 抓取目标配置
-#      - 验证指标是否已被 Prometheus 采集
+#      - 按 application="apex-scaffold" 标签检查抓取目标
+#      - 验证通用请求指标是否已被 Prometheus 采集
 #   5. 结果汇总和建议
 #      - 提供通过/未通过的检查项统计
 #      - 给出具体的修复建议
@@ -30,13 +31,13 @@
 #   ./check-environment.sh
 #
 #   # 自定义服务地址
-#   export GRAFANA_URL="http://localhost:3000"
+#   export GRAFANA_URL="http://localhost:3200"
 #   export PROMETHEUS_URL="http://localhost:9090"
 #   export APP_URL="http://localhost:8080"
 #   ./check-environment.sh
 #
 # 环境变量：
-#   GRAFANA_URL      - Grafana 服务地址（默认：http://localhost:3000）
+#   GRAFANA_URL      - Grafana 服务地址（默认：http://localhost:3200）
 #   PROMETHEUS_URL   - Prometheus 服务地址（默认：http://localhost:9090）
 #   APP_URL          - 应用服务地址（默认：http://localhost:8080）
 #   GRAFANA_USER     - Grafana 用户名（默认：admin）
@@ -45,7 +46,7 @@
 # 依赖：
 #   - curl: HTTP 请求工具
 #   - grep: 文本搜索工具
-#   - jq: JSON 解析工具（可选，用于美化输出）
+#   - jq: JSON 解析工具（可选；缺少时退化为文本匹配）
 #
 # 退出码：
 #   0 - 所有检查通过
@@ -61,7 +62,11 @@
 # 版本：1.0.0
 ################################################################################
 
-set -e
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=../../../lib/common.sh
+source "${SCRIPT_DIR}/../../../lib/common.sh"
 
 # 颜色定义
 RED='\033[0;31m'
@@ -71,11 +76,16 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # 配置参数
-GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
+GRAFANA_URL="${GRAFANA_URL:-http://localhost:3200}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://localhost:9090}"
 APP_URL="${APP_URL:-http://localhost:8080}"
 GRAFANA_USER="${GRAFANA_USER:-admin}"
 GRAFANA_PASSWORD="${GRAFANA_PASSWORD:-admin}"
+
+HAVE_JQ=0
+if command -v jq >/dev/null 2>&1; then
+    HAVE_JQ=1
+fi
 
 echo -e "${BLUE}=== Grafana & Prometheus 环境检查 ===${NC}\n"
 
@@ -143,7 +153,7 @@ if check_service "应用 (Apex Scaffold)" "$APP_URL" "/actuator/health"; then
     APP_OK=1
 else
     echo -e "  ${YELLOW}提示: 请检查应用是否正在运行${NC}"
-    echo -e "  启动命令: ${BLUE}mvnd -pl apex-system-service spring-boot:run${NC}"
+    echo -e "  启动命令: ${BLUE}mvnd -pl apex-gateway spring-boot:run${NC}"
 fi
 
 echo ""
@@ -166,12 +176,18 @@ if [ $GRAFANA_OK -eq 1 ]; then
             # 显示数据源详情
             echo ""
             echo "已配置的 Prometheus 数据源:"
-            echo "$DATASOURCES" | jq -r '.[] | select(.type=="prometheus") | "  - \(.name) (\(.url))"' 2>/dev/null || \
-            echo "$DATASOURCES" | grep -A 5 '"type":"prometheus"' | grep '"name"' | cut -d'"' -f4 | sed 's/^/  - /'
+            if [[ $HAVE_JQ -eq 1 ]]; then
+                echo "$DATASOURCES" | jq -r '.[] | select(.type=="prometheus") | "  - \(.name) (\(.url))"' 2>/dev/null || true
+            else
+                echo "$DATASOURCES" | grep -A 5 '"type":"prometheus"' | grep '"name"' | cut -d'"' -f4 | sed 's/^/  - /' || true
+            fi
             
             # 测试数据源连接
             echo ""
-            DS_ID=$(echo "$DATASOURCES" | jq -r '.[] | select(.type=="prometheus") | .uid' 2>/dev/null | head -1)
+            DS_ID=""
+            if [[ $HAVE_JQ -eq 1 ]]; then
+                DS_ID=$(echo "$DATASOURCES" | jq -r '.[] | select(.type=="prometheus") | .uid' 2>/dev/null | head -1)
+            fi
             if [ -n "$DS_ID" ]; then
                 echo -n "测试数据源连接... "
                 TEST_RESULT=$(curl -s -H "$AUTH_HEADER" "$GRAFANA_URL/api/datasources/uid/$DS_ID/health" 2>/dev/null)
@@ -179,7 +195,7 @@ if [ $GRAFANA_OK -eq 1 ]; then
                     echo -e "${GREEN}✓ 连接正常${NC}"
                 else
                     echo -e "${RED}✗ 连接失败${NC}"
-                    echo "  错误: $(echo "$TEST_RESULT" | jq -r '.message // "Unknown error"' 2>/dev/null)"
+                    echo "  错误: $(if [[ $HAVE_JQ -eq 1 ]]; then echo "$TEST_RESULT" | jq -r '.message // "Unknown error"' 2>/dev/null; else echo "Unknown error"; fi)"
                 fi
             fi
         else
@@ -210,32 +226,42 @@ if [ $APP_OK -eq 1 ]; then
     if curl -s -f "$APP_URL/actuator/prometheus" > /dev/null 2>&1; then
         echo -e "${GREEN}✓ 端点正常${NC}"
         
-        # 检查缓存相关指标
+        # 检查通用请求指标；缓存指标仅在首次使用后出现，不能作为基础监控的硬门槛。
         echo ""
-        echo "检查缓存指标:"
-        METRICS=$(curl -s "$APP_URL/actuator/prometheus" 2>/dev/null | grep "^apex_cache" | head -20)
+        echo "检查通用请求指标:"
+        METRICS=$(curl -s "$APP_URL/actuator/prometheus" 2>/dev/null | grep -E '^apex_api_(request_count_total|response_time_seconds)' | head -20 || true)
         
         if [ -n "$METRICS" ]; then
-            echo -e "${GREEN}✓ 找到缓存指标${NC}"
+            echo -e "${GREEN}✓ 找到 apex_api_* 请求指标${NC}"
             METRICS_OK=1
             
             # 统计指标数量
-            METRIC_COUNT=$(echo "$METRICS" | wc -l)
+            METRIC_COUNT=$(printf '%s\n' "$METRICS" | wc -l | tr -d ' ')
             echo "  指标数量: $METRIC_COUNT"
             
             # 显示部分指标示例
             echo ""
             echo "  指标示例:"
-            echo "$METRICS" | head -5 | sed 's/^/    /'
+            printf '%s\n' "$METRICS" | head -5 | sed 's/^/    /'
             if [ "$METRIC_COUNT" -gt 5 ]; then
                 echo "    ..."
             fi
+
+            echo ""
+            echo "可选缓存指标检查（首次缓存访问前可能不存在）:"
+            CACHE_METRICS=$(curl -s "$APP_URL/actuator/prometheus" 2>/dev/null | grep '^apex_cache_requests_total' | head -5 || true)
+            if [ -n "$CACHE_METRICS" ]; then
+                printf '%s\n' "$CACHE_METRICS" | sed 's/^/    /'
+            else
+                echo "    - 当前未暴露 apex_cache_requests_total（不视为失败）"
+            fi
         else
-            echo -e "${RED}✗ 未找到缓存指标${NC}"
+            echo -e "${RED}✗ 未找到 apex_api_* 请求指标${NC}"
             echo ""
             echo -e "${YELLOW}可能原因:${NC}"
-            echo "  1. 缓存功能尚未使用（指标在首次使用后才会暴露）"
-            echo "  2. Micrometer 配置问题"
+            echo "  1. 尚未产生请求流量（请求类指标在首次请求后暴露）"
+            echo "  2. MetricsWebFilter 或 Micrometer 配置问题"
+            echo "  3. 访问的不是网关实例（默认应为 8080）"
             echo ""
             echo -e "${YELLOW}请检查 application.yml:${NC}"
             echo "  management:"
@@ -269,44 +295,58 @@ if [ $PROMETHEUS_OK -eq 1 ]; then
     TARGETS=$(curl -s "$PROMETHEUS_URL/api/v1/targets" 2>/dev/null)
     
     if [ -n "$TARGETS" ]; then
-        # 查找 apex-scaffold 相关 target
-        APEX_TARGET=$(echo "$TARGETS" | grep -i "apex-scaffold" || echo "")
+        # 查找以 application="apex-scaffold" 标注的 target；job 名按服务区分。
+        if [[ $HAVE_JQ -eq 1 ]]; then
+            APEX_TARGET=$(echo "$TARGETS" | jq -r '.data.activeTargets[]? | select(.labels.application == "apex-scaffold") | .labels.job' 2>/dev/null || true)
+        else
+            APEX_TARGET=$(echo "$TARGETS" | grep -o '"application":"apex-scaffold"' | head -1 || true)
+        fi
         
         if [ -n "$APEX_TARGET" ]; then
-            echo -e "${GREEN}✓ 找到 apex-scaffold 抓取目标${NC}"
+            echo -e "${GREEN}✓ 找到 application=\"apex-scaffold\" 抓取目标${NC}"
             
             # 检查 target 状态
-            TARGET_UP=$(echo "$TARGETS" | jq -r '.data.activeTargets[] | select(.labels.job | contains("apex")) | "\(.health) - \(.labels.job) (\(.labels.instance))"' 2>/dev/null)
+            if [[ $HAVE_JQ -eq 1 ]]; then
+                TARGET_UP=$(echo "$TARGETS" | jq -r '.data.activeTargets[]? | select(.labels.application == "apex-scaffold") | "\(.health) - job=\(.labels.job) module=\(.labels.module // "-") instance=\(.labels.instance)"' 2>/dev/null || true)
+            else
+                TARGET_UP=""
+            fi
             
             if [ -n "$TARGET_UP" ]; then
                 echo ""
                 echo "  目标状态:"
-                echo "$TARGET_UP" | sed 's/^/    /'
+                printf '%s\n' "$TARGET_UP" | sed 's/^/    /'
             fi
         else
-            echo -e "${YELLOW}⚠ 未找到 apex-scaffold 抓取目标${NC}"
+            echo -e "${YELLOW}⚠ 未找到 application=\"apex-scaffold\" 抓取目标${NC}"
             echo ""
-            echo -e "${YELLOW}请在 prometheus.yml 中添加:${NC}"
+            echo -e "${YELLOW}请在 prometheus.yml 中为每个服务配置独立 job，并补充标签，例如:${NC}"
             echo "  scrape_configs:"
-            echo "    - job_name: 'apex-scaffold'"
+            echo "    - job_name: 'apex-gateway'"
             echo "      metrics_path: '/actuator/prometheus'"
             echo "      static_configs:"
-            echo "        - targets: ['localhost:8080']"
+            echo "        - targets: ['host.containers.internal:8080']"
+            echo "          labels: {application: apex-scaffold, module: gateway}"
+            echo "    - job_name: 'apex-system-service'"
+            echo "      metrics_path: '/actuator/prometheus'"
+            echo "      static_configs:"
+            echo "        - targets: ['host.containers.internal:8083']"
+            echo "          labels: {application: apex-scaffold, module: system-service}"
             echo ""
             echo "  然后重启 Prometheus"
         fi
         
-        # 检查是否有缓存指标
+        # 检查通用请求指标是否已经被 Prometheus 采集。
         if [ $METRICS_OK -eq 1 ]; then
             echo ""
-            echo -n "检查 Prometheus 中的缓存指标... "
-            QUERY_RESULT=$(curl -s "$PROMETHEUS_URL/api/v1/query?query=apex_cache_requests_total" 2>/dev/null)
+            echo -n "检查 Prometheus 中的 apex_api_* 指标... "
+            QUERY_RESULT=$(curl -s --get --data-urlencode 'query=count(apex_api_request_count_total{application="apex-scaffold"})' "$PROMETHEUS_URL/api/v1/query" 2>/dev/null || true)
             
-            if echo "$QUERY_RESULT" | grep -q '"resultType":"vector"'; then
+            if printf '%s' "$QUERY_RESULT" | grep -q '"result":\[[^]]'; then
                 echo -e "${GREEN}✓ 指标已采集${NC}"
             else
                 echo -e "${YELLOW}⚠ 指标尚未采集${NC}"
-                echo "  提示: 可能需要等待下一个抓取周期（默认 15秒）"
+                echo "  提示: 可能需要等待下一个抓取周期（默认 15 秒）或先产生请求流量"
             fi
         fi
     else
@@ -332,7 +372,7 @@ echo "  [$([ $GRAFANA_OK -eq 1 ] && echo -e "${GREEN}✓${NC}" || echo -e "${RED
 echo "  [$([ $PROMETHEUS_OK -eq 1 ] && echo -e "${GREEN}✓${NC}" || echo -e "${RED}✗${NC}")] Prometheus 连接"
 echo "  [$([ $APP_OK -eq 1 ] && echo -e "${GREEN}✓${NC}" || echo -e "${RED}✗${NC}")] 应用连接"
 echo "  [$([ $DATASOURCE_OK -eq 1 ] && echo -e "${GREEN}✓${NC}" || echo -e "${RED}✗${NC}")] Prometheus 数据源"
-echo "  [$([ $METRICS_OK -eq 1 ] && echo -e "${GREEN}✓${NC}" || echo -e "${RED}✗${NC}")] 缓存指标采集"
+echo "  [$([ $METRICS_OK -eq 1 ] && echo -e "${GREEN}✓${NC}" || echo -e "${RED}✗${NC}")] 通用请求指标采集"
 
 echo ""
 
@@ -341,12 +381,12 @@ if [ $PASSED_CHECKS -eq $TOTAL_CHECKS ]; then
     echo -e "${GREEN}=== ✓ 所有检查通过，可以导入 Dashboard ===${NC}"
     echo ""
     echo "执行导入命令:"
-    echo -e "  ${BLUE}./scripts/grafana/import-dashboard.sh${NC}"
+    echo -e "  ${BLUE}./scripts/ops/monitoring/grafana/import-dashboard.sh${NC}"
 elif [ $PASSED_CHECKS -ge 3 ]; then
     echo -e "${YELLOW}=== ⚠ 部分检查未通过，建议修复后再导入 Dashboard ===${NC}"
     echo ""
     echo "查看详细说明:"
-    echo -e "  ${BLUE}cat docs/cache/GRAFANA_IMPORT_GUIDE.md${NC}"
+    echo -e "  ${BLUE}cat config/monitoring/grafana/README.md${NC}"
 else
     echo -e "${RED}=== ✗ 多项检查失败，请先解决连接问题 ===${NC}"
     echo ""

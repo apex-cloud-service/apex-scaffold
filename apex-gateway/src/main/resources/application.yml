@@ -348,6 +348,10 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+    enable:
+      # 网关使用 Reactor Netty 承载 WebFlux 请求；显式启用其指标，
+      # 供 /actuator/prometheus 暴露 EventLoop、连接池与 ByteBuf 指标。
+      reactor.netty: true
     # 网关熔断/限流/灰度/访问日志落库失败计数（apex.gateway.*）由
     # ResilienceConfig、TokenBucketRateLimitFilter、GrayRouteFilter、AccessLogService 注册，
     # 经 /actuator/prometheus 暴露，供 Prometheus 抓取与告警。

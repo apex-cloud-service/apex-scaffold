@@ -1,7 +1,7 @@
 # 记忆卡 · apex-scaffold（后端基座）
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
-> **基线**：2026-11-08 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 35 个 reactor 模块
+> **基线**：2026-11-10 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 35 个 reactor 模块
 > **权威优先级**：源码 > `AGENTS.md` > `docs/` > `.workbuddy/knowledge/` > 本卡。本卡是**导航与结论**，不是规范原文。
 
 ## 1. 一句话
@@ -66,16 +66,17 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 统一授权「默认开启」判断错误 | 组件库缺省 true，但 `apex-system-service/application.yml` 覆盖为 `${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}` → 排查按「运行模块 yml → 环境变量 → 组件默认」 |
 | 集成服务启动即失败 | 连接器/设备子域依赖外部 EMQX；本地无 broker 时需显式关闭 MQTT 并核 `hivemq-mqtt-client` 为 optional |
 
-## 6. 当前状态（2026-11-08）
+## 6. 当前状态（2026-11-10）
 
-- **规模**：主源码 **2128** 个 Java 文件、测试类 **721** 个；启动入口 **10** 个（9 个部署单元 + `apex-boot-all` 组合档）。
+- **规模**：主源码 **2132** 个 Java 文件、测试类 **721** 个；启动入口 **10** 个（9 个部署单元 + `apex-boot-all` 组合档）。
 - **主线《评审收口调整方案》**（`docs/08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md`）：
   - 批次 **A（A1–A7 统一认证）已完成并提交**（10-31）。
   - 批次 **B（B1–B9 多租户）已完成并提交**（10-31～11-01，B9 为 M2 收官）。
   - 批次 **C 除 C4 外完成**（C0–C3、C7–C9；11-02 补齐 C8/C9 验证）。
   - 批次 **D 完成 D1/D2/D4/D5/D6**（D5 共享数据服务层 11-02 提交）；**D3 为文档沉淀**，`/open-api` 路由已补。
   - 批次 **E1–E4 已完成并提交**（11-02）：`apex-integration`（connector/device 双子域）+ `apex-integration-service` 8094，含 EMQX ACL 与真实环境验证。
-- **工作树**：仅 **2** 项业务在途（2026-11-08 实测：当日日报新增 1 + 日报 `README.md` 修改 1，不含本次同步改写的卡片/知识库）；先前 68 项在途改动（文档与架构图改写、许可证/发布配置、部署脚本）已于 11-07～11-08 提交，**不得把在途改动当作已交付**。
+- **中台架构整改 G1–G8**（`docs/08-project-management/plans/middle-platform-remediation-plan.md`）：11-10 提交 `3b61027b` 实施完成——服务侧能力二次校验默认开启、auth 域分层倒置清理、治理字段与守卫覆盖补齐；`clean verify` 6,251 测试通过，真实 Nacos/MySQL/RocketMQ/EMQX/Seata TC 与第三方消费方验收仍未验证。
+- **工作树**：**77** 项在途（2026-11-10 同步时 `git status --short` 实测：64 修改 + 13 未跟踪，集中在 `apex-system`、`docs`、`scripts`、`config/monitoring`，属中台架构整改 G1–G8 后续与验证收尾）；先前 68 项在途改动（文档与架构图改写、许可证/发布配置、部署脚本）已于 11-07～11-08 提交，**不得把在途改动当作已交付**。
 - **结构债**：`apex-system` 仍四层合一（interfaces/application/domain/infrastructure 同包），868 个主源码文件，C4/D07 未执行。
 
 ## 7. 下一步

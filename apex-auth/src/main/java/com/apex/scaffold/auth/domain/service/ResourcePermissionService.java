@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
  * <ul>
  *   <li>支持资源所有权验证（创建者/所有者）</li>
  *   <li>支持资源共享权限（只读/编辑/管理）</li>
- *   <li>支持组织层级权限（部门/团队/项目）</li>
+ *   <li>组织层级权限当前未实现，检查组织权限时默认拒绝</li>
  *   <li>支持数据脱敏权限（查看敏感字段）</li>
  *   <li>支持时间窗口权限（临时授权）</li>
  *   <li>支持条件权限（IP限制/设备限制）</li>
@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  *   <li>超级管理员：直接通过</li>
  *   <li>资源所有者：完全权限</li>
  *   <li>显式授权：检查具体权限</li>
- *   <li>组织权限：基于层级关系</li>
+ *   <li>组织权限：当前默认拒绝，待接入可靠的组织权限端口</li>
  *   <li>默认拒绝</li>
  * </ol>
  *
@@ -360,11 +360,21 @@ public class ResourcePermissionService {
     }
 
     /**
-     * 检查组织层级权限
+     * 检查组织层级权限。
      *
-     * 示例场景：
-     * - 部门经理可以访问部门内所有文档
-     * - 项目管理员可以管理项目内所有资源
+     * <p>当前实现默认拒绝。{@link PermissionContext#getOrganizationRoles()} 只是调用方
+     * 传入的声明，不能单独作为授权依据；未来必须接入可靠的 {@code OrganizationPermissionPort}，
+     * 校验租户、用户组织归属、资源所属组织单元与角色在该单元内的权限快照后，才可返回放行。</p>
+     *
+     * <p>典型目标场景为部门经理访问部门内文档、项目管理员管理项目资源；在这些能力实现前，
+     * 任何组织角色声明均不得绕过资源所有者、显式授权或临时授权检查。</p>
+     *
+     * @param userId 用户 ID
+     * @param resourceType 资源类型
+     * @param resourceId 资源 ID
+     * @param requiredPermission 所需权限
+     * @param context 权限上下文
+     * @return 恒为 {@code false}，表示组织层级授权尚未实现
      */
     private Mono<Boolean> checkOrganizationPermission(
             String userId,
@@ -372,10 +382,6 @@ public class ResourcePermissionService {
             String resourceId,
             String requiredPermission,
             PermissionContext context) {
-        // 组织层级权限检查尚未实现：需要先接入组织单元归属查询与角色授权快照，
-        // 在此之前一律拒绝，避免越权放行。接入顺序：查询用户组织角色 → 查询资源所属
-        // 组织单元 → 判定角色在该单元是否具备所需权限。
-
         return Mono.just(false);
     }
 

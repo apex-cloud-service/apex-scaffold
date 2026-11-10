@@ -10,8 +10,8 @@ NC='\033[0m'
 echo -e "${GREEN}=== 快速环境检查 ===${NC}\n"
 
 # 1. 检查 Grafana
-echo -n "Grafana (http://localhost:3000): "
-if curl -s -f http://localhost:3000/api/health > /dev/null 2>&1; then
+echo -n "Grafana (http://localhost:3200): "
+if curl -s -f http://localhost:3200/api/health > /dev/null 2>&1; then
     echo -e "${GREEN}✓ 运行中${NC}"
 else
     echo -e "${RED}✗ 未连接${NC}"
@@ -32,14 +32,14 @@ echo ""
 echo "Prometheus 抓取目标:"
 TARGETS=$(curl -s http://localhost:9090/api/v1/targets 2>/dev/null)
 if [ -n "$TARGETS" ]; then
-    echo "$TARGETS" | jq -r '.data.activeTargets[] | select(.labels.job | contains("apex")) | "  [\(.health == "up" and "✓" or "✗")] \(.labels.job) - \(.scrapeUrl)"' 2>/dev/null || \
+    echo "$TARGETS" | jq -r '.data.activeTargets[] | select(.labels.application == "apex-scaffold") | "  [\(.health == "up" and "✓" or "✗")] \(.labels.application)/\(.labels.module // .labels.job // "unknown") - \(.scrapeUrl)"' 2>/dev/null || \
     echo "  （请在 Prometheus UI 中查看）"
 fi
 
 # 4. 检查是否有缓存指标
 echo ""
 echo -n "缓存指标采集: "
-QUERY_RESULT=$(curl -s "http://localhost:9090/api/v1/query?query=up{job=~\".*apex.*\"}" 2>/dev/null)
+QUERY_RESULT=$(curl -s "http://localhost:9090/api/v1/query?query=up{application=\"apex-scaffold\"}" 2>/dev/null)
 if echo "$QUERY_RESULT" | grep -q '"resultType":"vector"'; then
     echo -e "${GREEN}✓ 有数据${NC}"
 else
@@ -50,10 +50,10 @@ echo ""
 echo -e "${GREEN}=== 下一步 ===${NC}"
 echo ""
 echo "1. 如果尚未配置 Grafana Prometheus 数据源:"
-echo "   - 访问 http://localhost:3000"
+echo "   - 访问 http://localhost:3200"
 echo "   - Configuration → Data Sources → Add data source"
 echo "   - 选择 Prometheus，URL 填写: http://localhost:9090"
 echo ""
 echo "2. 配置完成后，导入 Dashboard:"
-echo "   ./scripts/grafana/import-dashboard.sh"
+echo "   ./scripts/ops/monitoring/grafana/import-dashboard.sh"
 echo ""

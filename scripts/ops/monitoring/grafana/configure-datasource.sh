@@ -23,20 +23,20 @@
 #
 # 使用方法：
 #   # 使用 API Key 认证（推荐）
-#   export GRAFANA_URL="http://localhost:3000"
+#   export GRAFANA_URL="http://localhost:3200"
 #   export GRAFANA_API_KEY="your-api-key"
 #   export PROMETHEUS_URL="http://localhost:9090"
 #   ./configure-datasource.sh
 #
 #   # 使用用户名密码认证
-#   export GRAFANA_URL="http://localhost:3000"
+#   export GRAFANA_URL="http://localhost:3200"
 #   export GRAFANA_USER="admin"
 #   export GRAFANA_PASSWORD="admin"
 #   export PROMETHEUS_URL="http://localhost:9090"
 #   ./configure-datasource.sh
 #
 # 环境变量：
-#   GRAFANA_URL      - Grafana 服务地址（默认：http://localhost:3000）
+#   GRAFANA_URL      - Grafana 服务地址（默认：http://localhost:3200）
 #   PROMETHEUS_URL   - Prometheus 服务地址（默认：http://localhost:9090）
 #   GRAFANA_API_KEY  - Grafana API Key（可选，优先使用）
 #   GRAFANA_USER     - Grafana 用户名（默认：admin）
@@ -76,7 +76,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
+GRAFANA_URL="${GRAFANA_URL:-http://localhost:3200}"
 PROMETHEUS_URL="${PROMETHEUS_URL:-http://localhost:9090}"
 GRAFANA_USER="${GRAFANA_USER:-admin}"
 GRAFANA_PASSWORD="${GRAFANA_PASSWORD:-admin}"

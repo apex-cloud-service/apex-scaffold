@@ -39,33 +39,46 @@ public class PermissionService {
 
     private final TenantPackageService tenantPackageService;
 
-    /** 当前请求租户编码（无上下文退化平台租户，不裁剪）。 */
+    /**
+     * 从 Reactor Context 读取当前租户编码。
+     *
+     * <p>不存在租户上下文时返回空 {@link Mono}，调用方必须按无权限处理；
+     * 不得回退为平台默认租户。</p>
+     *
+     * @return 当前租户编码；无上下文时为空
+     */
     private Mono<String> currentTenantCode() {
-        return Mono.deferContextual(context -> Mono.justOrEmpty(context.getOrDefault(
-                                com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY, null))
-                        .map(Object::toString))
-                .defaultIfEmpty(com.apex.scaffold.domain.model.entity.TenantPackageEntity.PLATFORM_TENANT_CODE);
+        return Mono.deferContextual(context -> Mono.justOrEmpty(
+                        context.getOrEmpty(com.apex.scaffold.common.context.TenantContext.REACTOR_CONTEXT_KEY)))
+                .map(Object::toString);
     }
 
     /**
      * 根据用户 ID 获取权限列表
      *
-     * <p>通过用户 ID 查询用户拥有的所有角色，再通过角色查询对应的权限，实现基于角色的权限访问控制
+     * <p>先解析可信租户上下文与套餐范围，再读取用户角色权限并取交集。
+     * 无租户上下文、套餐缺失/停用/损坏或拒绝范围均返回空列表；只有显式全量范围
+     * 才直接返回原始权限。有效权限 = 角色权限 ∩ 套餐 {@code permission_codes}。</p>
      *
      * @param userId 用户唯一标识
-     * @return 权限列表
+     * @return 权限列表；无租户上下文或套餐拒绝授权时为空列表
      */
     public Mono<List<PermissionEntity>> getPermissionsByUserId(Long userId) {
-        return rawPermissionsByUserId(userId)
-                // B3 套餐裁剪：非平台租户的有效权限 = 角色权限 ∩ 套餐 permission_codes
-                .flatMap(permissions -> currentTenantCode().flatMap(tenantCode -> tenantPackageService
+        return currentTenantCode()
+                .flatMap(tenantCode -> tenantPackageService
                         .resolveScope(tenantCode)
-                        .map(scope -> scope.unbounded()
-                                ? permissions
-                                : permissions.stream()
-                                        .filter(p -> scope.allowsPermission(p.getCode()))
-                                        .collect(java.util.stream.Collectors.toList()))))
-                .defaultIfEmpty(java.util.List.of());
+                        .flatMap(scope -> {
+                            if (scope.denied()) {
+                                return Mono.<List<PermissionEntity>>just(List.of());
+                            }
+                            return rawPermissionsByUserId(userId)
+                                    .map(permissions -> scope.unbounded()
+                                            ? permissions
+                                            : permissions.stream()
+                                                    .filter(permission -> scope.allowsPermission(permission.getCode()))
+                                                    .collect(java.util.stream.Collectors.toList()));
+                        }))
+                .defaultIfEmpty(List.of());
     }
 
     /** 原始权限解析（统一授权 / 本地仓储，B3 前的既有链路）。 */

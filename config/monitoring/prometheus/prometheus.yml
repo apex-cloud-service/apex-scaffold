@@ -69,9 +69,10 @@ scrape_configs:
     scrape_interval: 15s
     static_configs:
       - targets:
-          - "host.containers.internal:8720"
+          - "host.containers.internal:9092"
         labels:
           application: apex-scaffold
+          module: system-service
           component: sentinel
 
   # Blackbox Exporter 探测宿主机应用健康端点（网关与六个业务服务）。

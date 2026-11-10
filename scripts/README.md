@@ -15,6 +15,7 @@ scripts/
 ├── test/             # 测试相关
 ├── deploy/           # 部署相关
 ├── ops/              # 运维相关
+├── backup/           # 数据库备份、恢复与演练
 ├── data/             # 数据相关
 ├── ci/               # CI/CD
 ├── utils/            # 通用工具
@@ -65,7 +66,7 @@ cd scripts/dev/codegen
 **示例**:
 ```bash
 # 扫描并添加缺失的 JavaDoc
-./scripts/dev/format/batch-add-javadoc.sh apex-application
+./scripts/dev/format/batch-add-javadoc.sh apex-system
 
 # 为 DTO/PO/VO 添加 Lombok 注解
 ./scripts/dev/format/batch-add-lombok.sh apex-infrastructure
@@ -97,8 +98,8 @@ cd scripts/dev/codegen
 # 扫描整个项目的 JavaDoc 问题
 ./scripts/dev/check/scan-javadoc-issues.sh
 
-# 检查 apex-interfaces 模块的 SpringDoc 注解
-./scripts/dev/check/check-springdoc-annotations.sh apex-interfaces
+# 检查 apex-system 模块的 SpringDoc 注解
+./scripts/dev/check/check-springdoc-annotations.sh apex-system
 
 # 检查 8080 端口是否被占用
 ./scripts/dev/check/check-port-conflicts.sh 8080
@@ -118,6 +119,8 @@ cd scripts/dev/codegen
 | `generate-test-report.sh` | 生成测试报告 | CI/CD 中生成格式化的测试报告 |
 | `test-sentinel-hot-reload.sh` | Sentinel 热更新测试 | 验证 Sentinel 规则文件监听 |
 | `chaos-fault-injection.sh` | 混沌故障注入 | 验证服务容错与降级行为 |
+| `verify-middle-platform.sh` | 中台静态契约验证 | 校验模块边界、能力门禁、迁移与文档契约 |
+| `verify-monitoring-config.sh` | 监控配置静态验证 | 校验 Prometheus、Grafana、告警规则和 Compose 配置 |
 
 **示例**:
 ```bash
@@ -212,23 +215,32 @@ sudo systemctl start apex-scaffold
 
 ### backup/ - 备份恢复
 
-**用途**: 数据库备份和恢复。
+**用途**: MySQL/PostgreSQL 数据库备份、恢复和隔离演练。
 
 | 脚本 | 功能 | 使用场景 |
-|-----|------|---------|
-| `db-backup.sh` | 数据库备份 | 定时备份生产数据库 |
-| `db-restore.sh` | 数据库恢复 | 从备份文件恢复数据库 |
+| --- | --- | --- |
+| `db-backup.sh` | MySQL 全量备份 | 定时备份生产数据库，支持 gzip、轮转和对象存储上传 |
+| `db-restore.sh` | MySQL 恢复 | 从 `.sql`/`.sql.gz` 恢复，默认先备份当前库 |
+| `pg-backup.sh` | PostgreSQL 全量备份 | 使用 `pg_dump -Fc` 生成 `.dump` 文件 |
+| `pg-restore.sh` | PostgreSQL 恢复 | 从 `.dump` 恢复，默认先备份当前库 |
+| `backup-restore-drill.sh` | 隔离恢复演练 | 创建 `_drill` 库恢复并校验关键表与 Flyway 版本 |
 
 **示例**:
 ```bash
-# 备份数据库
-./scripts/ops/backup/db-backup.sh
+# MySQL 备份与恢复
+export DB_MASTER_PASSWORD='***'
+./scripts/backup/db-backup.sh --yes
+./scripts/backup/db-restore.sh --file /data/backups/apex_system_20261110_020000.sql.gz --yes
 
-# 从备份恢复
-./scripts/ops/backup/db-restore.sh backup-2026-09-20.sql
+# PostgreSQL 备份
+export PGPASSWORD='***'
+./scripts/backup/pg-backup.sh --yes
+
+# 隔离恢复演练
+./scripts/backup/backup-restore-drill.sh   --engine mysql   --file /data/backups/apex_system_20261110_020000.sql.gz   --yes
 ```
 
-**配置**: 在脚本中配置数据库连接信息和备份路径
+**配置**: 连接参数、密码文件和演练约束见 [backup/README.md](backup/README.md)。
 
 ---
 
@@ -239,7 +251,7 @@ sudo systemctl start apex-scaffold
 | 脚本 | 功能 | 使用场景 |
 |-----|------|---------|
 | `start-monitoring.sh` | 启动监控服务 | 启动 Prometheus + Grafana 监控栈 |
-| `verify-reactor-metrics.sh` | 验证 Reactor Netty 指标 | 应用启动后验证响应式指标暴露（默认 localhost:8081） |
+| `verify-reactor-metrics.sh` | 验证 Reactor Netty 指标 | 应用启动后验证响应式指标暴露（默认 localhost:8080） |
 
 **Grafana 配置脚本**:
 
@@ -262,7 +274,7 @@ sudo systemctl start apex-scaffold
 ./scripts/ops/monitoring/grafana/configure-datasource.sh
 
 # 导入 JVM 监控仪表板
-./scripts/ops/monitoring/grafana/import-dashboard.sh jvm-dashboard.json
+./scripts/ops/monitoring/grafana/import-dashboard.sh config/monitoring/grafana/apex-dashboard.json
 ```
 
 ---
@@ -278,7 +290,7 @@ sudo systemctl start apex-scaffold
 **示例**:
 ```bash
 # 诊断 JVM 问题
-./scripts/ops/diagnostics/jvm-diagnostics.sh <PID>
+./scripts/diagnostics/jvm-diagnostics.sh <PID>
 ```
 
 **输出**: 线程 dump、堆 dump、GC 日志分析
@@ -570,7 +582,7 @@ find scripts -name "*.sh" -type f -exec chmod +x {} \;
 ./scripts/dev/check/check-springdoc-annotations.sh
 
 # 3. 格式化代码（如需要）
-./scripts/dev/format/batch-add-javadoc.sh apex-application
+./scripts/dev/format/batch-add-javadoc.sh apex-system
 ./scripts/dev/format/batch-add-lombok.sh apex-infrastructure
 
 # 4. 运行测试
@@ -604,13 +616,13 @@ tail -f logs/apex-scaffold.log
 
 ```bash
 # 1. 备份数据库
-./scripts/ops/backup/db-backup.sh
+./scripts/backup/db-backup.sh
 
 # 2. 启动监控
 ./scripts/ops/monitoring/start-monitoring.sh
 
 # 3. 诊断问题（如需要）
-./scripts/ops/diagnostics/jvm-diagnostics.sh <PID>
+./scripts/diagnostics/jvm-diagnostics.sh <PID>
 
 # 4. 导出 API 文档
 ./scripts/utils/export-api-docs.sh http://localhost:8080/v3/api-docs > openapi.json
@@ -632,13 +644,9 @@ tail -f logs/apex-scaffold.log
 | `JAVA_HOME` | Java 路径 | 由 SDKMAN 管理 |
 | `MAVEN_OPTS` | Maven 选项 | `-Xmx2g -XX:MaxMetaspaceSize=512m` |
 
-### 脚本配置文件
+### 脚本配置方式
 
-部分脚本支持独立配置文件：
-
-- `scripts/deploy/service/app.conf` - 应用服务配置
-- `scripts/ops/backup/backup.conf` - 备份配置
-- `scripts/ops/monitoring/monitoring.conf` - 监控配置
+脚本通过环境变量和命令行参数接收配置，不依赖仓库内的 `.conf` 文件。数据库备份与恢复的凭据、目录、轮转和演练约束见 [backup/README.md](backup/README.md)；监控配置位于 `config/monitoring/`，部署环境变量模板以 `.env.example` 为准。
 
 ---
 
@@ -786,7 +794,7 @@ sdk env  # 或手动设置 export JAVA_HOME=...
 
 - ✨ 重组目录结构，按功能分类
 - ✨ 新增 `dev/format/` 和 `dev/check/` 分类
-- ✨ 新增 `ops/monitoring/` 和 `ops/backup/` 分类
+- ✨ 新增 `ops/monitoring/` 分类
 - ✨ 新增容器部署和 `deploy/service/` 分类（当前容器入口为 `deploy/podman/`）
 - ✨ 新增 `utils/` 通用工具分类
 - 🗑️ 删除 6 个临时脚本（PMD、JavaDoc 清理等）

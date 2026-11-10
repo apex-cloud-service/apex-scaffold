@@ -33,27 +33,40 @@ public class TenantPackageService {
     private final TenantRepository tenantRepository;
 
     /**
-     * 当前租户的套餐裁剪范围。
+     * 解析指定租户与套餐的裁剪范围。
      *
-     * @param tenantCode        当前租户编码
-     * @param packageCode       租户绑定的套餐编码（可空 = 无裁剪）
-     * @return 裁剪范围（unbounded=true 表示不裁剪）
+     * <p>只有平台默认租户可隐式获得全量范围。非平台租户缺少套餐、套餐不存在、套餐已停用
+     * 或套餐 JSON 配置损坏时一律返回 {@link PackageScope#deniedScope()}，不得把配置缺失
+     * 放大为全量授权。这是菜单、权限码与能力订阅共用的 fail-closed 边界。</p>
+     *
+     * @param tenantCode 当前租户编码
+     * @param packageCode 租户绑定的套餐编码；非平台租户不得为空白
+     * @return 裁剪范围；无法可靠解析时返回拒绝范围
      */
     public Mono<PackageScope> resolveScope(String tenantCode, String packageCode) {
-        // 平台默认租户不裁剪
         if (TenantPackageEntity.PLATFORM_TENANT_CODE.equals(tenantCode)) {
             return Mono.just(PackageScope.full());
         }
         if (packageCode == null || packageCode.isBlank()) {
-            // 未绑定套餐的租户：无裁剪依据，保持全量（B4 开通引导强制绑定后收紧）
-            return Mono.just(PackageScope.full());
+            log.warn("租户未绑定套餐，拒绝其全部菜单、权限与能力: tenant={}", tenantCode);
+            return Mono.just(PackageScope.deniedScope());
         }
         return tenantPackageRepository
                 .findByCode(packageCode)
-                .map(pkg -> pkg.isActive() ? PackageScope.of(pkg) : PackageScope.full())
-                .defaultIfEmpty(PackageScope.full())
+                .map(pkg -> {
+                    if (!pkg.isActive()) {
+                        log.warn("租户套餐已停用，拒绝其全部菜单、权限与能力: tenant={}, package={}", tenantCode, packageCode);
+                        return PackageScope.deniedScope();
+                    }
+                    if (pkg.isConfigurationInvalid()) {
+                        log.warn("租户套餐配置损坏，拒绝其全部菜单、权限与能力: tenant={}, package={}", tenantCode, packageCode);
+                        return PackageScope.deniedScope();
+                    }
+                    return PackageScope.of(pkg);
+                })
+                .defaultIfEmpty(PackageScope.deniedScope())
                 .doOnNext(scope -> {
-                    if (!scope.unbounded()) {
+                    if (!scope.unbounded() && !scope.denied()) {
                         log.debug(
                                 "租户套餐范围生效: tenant={}, package={}, menus={}, permissions={}",
                                 tenantCode,
@@ -67,8 +80,10 @@ public class TenantPackageService {
     /**
      * 解析当前租户的套餐范围（先查租户绑定再取套餐）。
      *
+     * <p>租户不存在时返回拒绝范围，避免未知租户获得平台默认租户权限。</p>
+     *
      * @param tenantCode 当前租户编码
-     * @return 裁剪范围
+     * @return 裁剪范围；租户不存在时返回拒绝范围
      */
     public Mono<PackageScope> resolveScope(String tenantCode) {
         if (TenantPackageEntity.PLATFORM_TENANT_CODE.equals(tenantCode)) {
@@ -77,7 +92,7 @@ public class TenantPackageService {
         return tenantRepository
                 .findByCode(tenantCode)
                 .flatMap(tenant -> resolveScope(tenantCode, tenant.getPackageCode()))
-                .defaultIfEmpty(PackageScope.full());
+                .defaultIfEmpty(PackageScope.deniedScope());
     }
 
     /**
@@ -119,7 +134,7 @@ public class TenantPackageService {
     public record CapabilitySnapshot(
             @Schema(description = "租户编码", example = "T001") String tenantCode,
             @Schema(description = "租户是否存在（未知租户 fail-closed 返回 false）") boolean exists,
-            @Schema(description = "是否不限量租户（平台租户/未绑定套餐）") boolean unbounded,
+            @Schema(description = "是否不限量租户（仅平台租户可为 true）") boolean unbounded,
             @Schema(description = "已订阅特性编码（空集合表示未订阅任何能力；全量须 unbounded=true 表达）") java.util.Set<String> features) {}
 
     /**
@@ -168,24 +183,69 @@ public class TenantPackageService {
     /**
      * 套餐裁剪范围值对象。
      *
-     * @param unbounded       是否不裁剪（平台租户/未绑定/套餐停用）
-     * @param menuIds         可用菜单 ID 集合（含父链补全由调用方按需执行）
-     * @param permissionCodes 可用权限码集合
+     * <p>{@code unbounded} 与 {@code denied} 互斥：全量范围只用于显式平台租户或有效全量套餐；
+     * 拒绝范围用于套餐缺失、停用、未知或配置损坏，所有授权判定均返回 {@code false}。
+     *
+     * @param unbounded 是否不裁剪（仅显式全量范围）
+     * @param denied 是否拒绝全部菜单、权限码与能力
+     * @param menuIds 可用菜单 ID 集合（含父链补全由调用方按需执行）
+     * @param permissionCodes 可用权限码集合（空集合 = 权限码全量）
+     * @param features 已订阅能力编码集合（空集合 = 未订阅任何能力；全量须 {@code unbounded=true}）
      */
     public record PackageScope(
             boolean unbounded,
+            boolean denied,
             java.util.Set<Long> menuIds,
             java.util.Set<String> permissionCodes,
             java.util.Set<String> features) {
 
-        /** 全量范围（不裁剪、订阅全部能力）。 */
+        /**
+         * 构造不裁剪的全量范围。
+         *
+         * <p>{@code unbounded=true} 会同时放行菜单、权限码与全部能力；此时
+         * {@code features} 仍保持空集合，表示“无需逐项列举”，与普通套餐的空能力集合
+         * 在 {@link #allowsCapability(String)} 中的判定不同。
+         *
+         * @return 全量范围
+         */
         public static PackageScope full() {
-            return new PackageScope(true, java.util.Set.of(), java.util.Set.of(), java.util.Set.of());
+            return new PackageScope(true, false, java.util.Set.of(), java.util.Set.of(), java.util.Set.of());
         }
 
-        /** 依套餐实体构造范围。 */
+        /**
+         * 构造拒绝全部授权的范围。
+         *
+         * <p>用于套餐缺失、停用、未知、租户不存在或 JSON 配置损坏等无法可靠判定的场景。
+         * 调用方不得把该范围解释为“未配置即全量”。</p>
+         *
+         * @return 拒绝范围
+         */
+        public static PackageScope deniedScope() {
+            return new PackageScope(false, true, java.util.Set.of(), java.util.Set.of(), java.util.Set.of());
+        }
+
+        /**
+         * 根据有效套餐实体构造受限范围。
+         *
+         * <p>菜单与权限码的空集合继续表示对应维度全量；能力集合为空表示未订阅任何能力。
+         * 调用方必须先验证套餐存在、处于启用态且配置可解析，不得把未知或停用套餐传入本方法。</p>
+         *
+         * @param pkg 有效套餐实体
+         * @return 套餐裁剪范围
+         * @throws IllegalArgumentException 当 {@code pkg} 为 {@code null}、非启用态或配置损坏时抛出
+         */
         public static PackageScope of(TenantPackageEntity pkg) {
+            if (pkg == null) {
+                throw new IllegalArgumentException("套餐不能为空");
+            }
+            if (!pkg.isActive()) {
+                throw new IllegalArgumentException("套餐未启用，不能构造授权范围");
+            }
+            if (pkg.isConfigurationInvalid()) {
+                throw new IllegalArgumentException("套餐配置损坏，不能构造授权范围");
+            }
             return new PackageScope(
+                    false,
                     false,
                     pkg.getMenuIds(),
                     pkg.getPermissionCodes(),
@@ -194,32 +254,41 @@ public class TenantPackageService {
 
         /**
          * 能力是否已订阅（口径与 {@code CapabilityGate} 一致：{@code unbounded=true} 订阅全部能力；
-         * {@code unbounded=false} 且 features 为空表示未订阅任何能力，不做隐式放大）。
+         * 拒绝范围与空 features 均不授予任何能力）。
          *
          * @param capabilityCode 能力编码
          * @return 是否订阅
          */
         public boolean allowsCapability(String capabilityCode) {
+            if (denied) {
+                return false;
+            }
             return unbounded || (features != null && features.contains(capabilityCode));
         }
 
         /**
-         * 菜单是否在范围内（unbounded 或空集合语义 = 全量放行，与实体口径一致）。
+         * 菜单是否在范围内（拒绝范围始终拒绝；unbounded 或空集合语义 = 全量放行）。
          *
          * @param menuId 菜单 ID
          * @return true 表示可用
          */
         public boolean allowsMenu(Long menuId) {
+            if (denied) {
+                return false;
+            }
             return unbounded || menuIds == null || menuIds.isEmpty() || menuIds.contains(menuId);
         }
 
         /**
-         * 权限码是否在范围内（unbounded 或空集合语义 = 全量放行）。
+         * 权限码是否在范围内（拒绝范围始终拒绝；unbounded 或空集合语义 = 全量放行）。
          *
          * @param permissionCode 权限码
          * @return true 表示可用
          */
         public boolean allowsPermission(String permissionCode) {
+            if (denied) {
+                return false;
+            }
             return unbounded
                     || permissionCodes == null
                     || permissionCodes.isEmpty()

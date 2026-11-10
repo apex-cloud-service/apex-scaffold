@@ -104,7 +104,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_eventloop_threads{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_eventloop_threads{application=\"apex-scaffold\"}",
           "legendFormat": "EventLoop 线程数",
           "refId": "A"
         }
@@ -175,7 +175,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_eventloop_pending_tasks{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_eventloop_pending_tasks{application=\"apex-scaffold\"}",
           "legendFormat": "待处理任务 - {{name}}",
           "refId": "A"
         }
@@ -240,7 +240,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_connection_provider_active_connections{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_connection_provider_active_connections{application=\"apex-scaffold\"}",
           "legendFormat": "活跃连接",
           "refId": "A"
         }
@@ -294,7 +294,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_connection_provider_pending_connections{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_connection_provider_pending_connections{application=\"apex-scaffold\"}",
           "legendFormat": "等待连接数",
           "refId": "A"
         },
@@ -303,7 +303,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_connection_provider_idle_connections{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_connection_provider_idle_connections{application=\"apex-scaffold\"}",
           "legendFormat": "空闲连接数",
           "refId": "B"
         },
@@ -312,7 +312,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_connection_provider_total_connections{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_connection_provider_total_connections{application=\"apex-scaffold\"}",
           "legendFormat": "总连接数",
           "refId": "C"
         }
@@ -366,7 +366,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_bytebuf_allocator_used_direct_memory{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_bytebuf_allocator_used_direct_memory{application=\"apex-scaffold\"}",
           "legendFormat": "Direct 内存使用",
           "refId": "A"
         },
@@ -375,7 +375,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "reactor_netty_bytebuf_allocator_used_heap_memory{job=\"apex-scaffold\"}",
+          "expr": "reactor_netty_bytebuf_allocator_used_heap_memory{application=\"apex-scaffold\"}",
           "legendFormat": "Heap 内存使用",
           "refId": "B"
         }
@@ -442,7 +442,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_memory_used_bytes{job=\"apex-scaffold\",area=\"heap\"}",
+          "expr": "jvm_memory_used_bytes{application=\"apex-scaffold\",area=\"heap\"}",
           "legendFormat": "Heap Used - {{id}}",
           "refId": "A"
         },
@@ -451,7 +451,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_memory_max_bytes{job=\"apex-scaffold\",area=\"heap\"}",
+          "expr": "jvm_memory_max_bytes{application=\"apex-scaffold\",area=\"heap\"}",
           "legendFormat": "Heap Max - {{id}}",
           "refId": "B"
         }
@@ -505,7 +505,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_memory_used_bytes{job=\"apex-scaffold\",area=\"nonheap\"}",
+          "expr": "jvm_memory_used_bytes{application=\"apex-scaffold\",area=\"nonheap\"}",
           "legendFormat": "NonHeap Used - {{id}}",
           "refId": "A"
         },
@@ -514,7 +514,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_memory_committed_bytes{job=\"apex-scaffold\",area=\"nonheap\"}",
+          "expr": "jvm_memory_committed_bytes{application=\"apex-scaffold\",area=\"nonheap\"}",
           "legendFormat": "NonHeap Committed - {{id}}",
           "refId": "B"
         }
@@ -527,7 +527,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "GC 暂停时间分位数（P50/P95/P99）",
+      "description": "GC 最大暂停时间、平均暂停时间与 5 分钟最大暂停时间（毫秒）",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -585,8 +585,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_gc_pause_seconds{job=\"apex-scaffold\",quantile=\"0.5\"} * 1000",
-          "legendFormat": "P50 - {{action}} {{cause}}",
+          "expr": "jvm_gc_pause_seconds_max{application=\"apex-scaffold\"} * 1000",
+          "legendFormat": "Max - {{action}} {{cause}}",
           "refId": "A"
         },
         {
@@ -594,8 +594,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_gc_pause_seconds{job=\"apex-scaffold\",quantile=\"0.95\"} * 1000",
-          "legendFormat": "P95 - {{action}} {{cause}}",
+          "expr": "1000 * (rate(jvm_gc_pause_seconds_sum{application=\"apex-scaffold\"}[5m]) / rate(jvm_gc_pause_seconds_count{application=\"apex-scaffold\"}[5m]))",
+          "legendFormat": "Avg - {{action}} {{cause}}",
           "refId": "B"
         },
         {
@@ -603,12 +603,12 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_gc_pause_seconds{job=\"apex-scaffold\",quantile=\"0.99\"} * 1000",
-          "legendFormat": "P99 - {{action}} {{cause}}",
+          "expr": "max_over_time(jvm_gc_pause_seconds_max{application=\"apex-scaffold\"}[5m]) * 1000",
+          "legendFormat": "5m Max - {{action}} {{cause}}",
           "refId": "C"
         }
       ],
-      "title": "GC 暂停时间分位数",
+      "title": "GC 暂停时间（Max / Avg / 5m Max）",
       "type": "timeseries"
     },
     {
@@ -657,7 +657,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(jvm_gc_pause_seconds_count{job=\"apex-scaffold\"}[5m]) * 60",
+          "expr": "rate(jvm_gc_pause_seconds_count{application=\"apex-scaffold\"}[5m]) * 60",
           "legendFormat": "{{action}} {{cause}}",
           "refId": "A"
         }
@@ -711,7 +711,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_threads_states_threads{job=\"apex-scaffold\"}",
+          "expr": "jvm_threads_states_threads{application=\"apex-scaffold\"}",
           "legendFormat": "{{state}}",
           "refId": "A"
         }
@@ -765,7 +765,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_classes_loaded_classes{job=\"apex-scaffold\"}",
+          "expr": "jvm_classes_loaded_classes{application=\"apex-scaffold\"}",
           "legendFormat": "已加载类",
           "refId": "A"
         },
@@ -774,7 +774,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(jvm_classes_unloaded_classes_total{job=\"apex-scaffold\"}[5m]) * 300",
+          "expr": "rate(jvm_classes_unloaded_classes_total{application=\"apex-scaffold\"}[5m]) * 300",
           "legendFormat": "卸载类速率(5m)",
           "refId": "B"
         }
@@ -828,7 +828,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_buffer_memory_used_bytes{job=\"apex-scaffold\"}",
+          "expr": "jvm_buffer_memory_used_bytes{application=\"apex-scaffold\"}",
           "legendFormat": "{{id}} Used",
           "refId": "A"
         },
@@ -837,7 +837,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_buffer_total_capacity_bytes{job=\"apex-scaffold\"}",
+          "expr": "jvm_buffer_total_capacity_bytes{application=\"apex-scaffold\"}",
           "legendFormat": "{{id}} Capacity",
           "refId": "B"
         }

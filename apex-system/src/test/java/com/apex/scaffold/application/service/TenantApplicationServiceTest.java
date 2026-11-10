@@ -57,6 +57,9 @@ class TenantApplicationServiceTest {
     @Mock
     private DomainEventPublisher domainEventPublisher;
 
+    @Mock
+    private com.apex.scaffold.domain.gateway.TenantProvisioningGateway provisioningTransaction;
+
     @InjectMocks
     private TenantApplicationService tenantApplicationService;
 
@@ -110,6 +113,34 @@ class TenantApplicationServiceTest {
         verify(domainEventPublisher).publish(captor.capture());
         assertThat(captor.getValue().getTenantCode()).isEqualTo(TENANT_CODE);
         assertThat(captor.getValue().getAction()).isEqualTo(TenantChangedEvent.ACTION_CREATED);
+    }
+
+    /**
+     * 验证开通引导必须提供套餐，且校验发生在任何开通写入之前。
+     */
+    @Test
+    @DisplayName("createTenant - 开通引导缺少套餐返回 PARAM_ERROR 且不写库")
+    void createTenant_ProvisioningWithoutPackageFailsBeforeWrite() {
+        TenantCreateRequest request = new TenantCreateRequest();
+        request.setTenantCode(TENANT_CODE);
+        request.setTenantName("Acme Corp");
+        request.setAdminUsername("tenant-admin");
+        request.setAdminPassword("secret-123");
+        request.setPackageCode("  ");
+
+        when(tenantRepository.existsByCode(TENANT_CODE, null)).thenReturn(Mono.just(false));
+
+        tenantApplicationService
+                .createTenant(request)
+                .as(StepVerifier::create)
+                .expectErrorMatches(error -> error instanceof BusinessException business
+                        && ResultCode.PARAM_ERROR.getCode().equals(business.getCode())
+                        && "租户套餐不能为空".equals(business.getMsg()))
+                .verify();
+
+        verify(provisioningTransaction, never())
+                .provision(any(com.apex.scaffold.domain.gateway.TenantProvisioningGateway.ProvisioningRequest.class));
+        verify(tenantRepository, never()).insert(any(TenantEntity.class));
     }
 
     @Test

@@ -61,7 +61,7 @@ public class CapabilityRouter {
                         @Operation(
                                 operationId = "listSubscribedCapabilities",
                                 summary = "当前租户已订阅能力",
-                                description = "复用套餐 features 判定：为空表示全量订阅。",
+                                description = "复用套餐范围判定：unbounded=true 表示全量订阅，" + "features 为空表示未订阅任何能力。",
                                 responses = {@ApiResponse(responseCode = "200", description = "已订阅能力列表")}))
     })
     public RouterFunction<ServerResponse> capabilityRoutes(CapabilityHandler handler) {

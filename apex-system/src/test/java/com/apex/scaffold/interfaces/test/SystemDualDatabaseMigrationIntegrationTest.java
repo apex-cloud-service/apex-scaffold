@@ -9,9 +9,27 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-/** system 完整双库迁移链真实回归。 */
+/**
+ * system 完整双库迁移链真实回归。
+ *
+ * <p>测试使用 Testcontainers 分别启动 MySQL 9 与 PostgreSQL 15，按生产 classpath 中的
+ * Flyway 脚本从 V1 迁移至当前最新版本。除验证版本链与关键结构外，还验证 V78 种子和
+ * V90 能力回填后的数据语义，避免“脚本能执行”掩盖平台全量套餐未实际授予能力的问题。
+ *
+ * <p>本测试属于 Failsafe 的 {@code *IntegrationTest} 门禁，需要可用的 Docker/Testcontainers；
+ * 未执行或执行失败时不得以静态测试结果替代。
+ *
+ * @author Apex Team
+ * @since 1.3.1
+ */
 class SystemDualDatabaseMigrationIntegrationTest {
 
+    /**
+     * 在所选数据库上执行完整迁移链并校验结构与种子数据。
+     *
+     * @param vendor 数据库厂商，取值 {@code mysql} 或 {@code postgresql}
+     * @throws Exception 容器启动、迁移或断言失败时抛出
+     */
     @ParameterizedTest
     @ValueSource(strings = {"mysql", "postgresql"})
     void shouldMigrateEveryVersionAndValidate(String vendor) throws Exception {
@@ -30,6 +48,13 @@ class SystemDualDatabaseMigrationIntegrationTest {
         }
     }
 
+    /**
+     * 创建 Flyway 并按基线、续跑、重复迁移三个阶段验证完整链路。
+     *
+     * @param vendor 数据库厂商
+     * @param container 已启动的测试容器
+     * @throws Exception 迁移或断言失败时抛出
+     */
     private static void createAndMigrate(String vendor, JdbcDatabaseContainer<?> container) throws Exception {
         boolean mysql = vendor.equals("mysql");
         Flyway flyway = Flyway.configure()
@@ -135,6 +160,14 @@ class SystemDualDatabaseMigrationIntegrationTest {
         }
     }
 
+    /**
+     * 构造与容器端口映射兼容的测试 JDBC URL。
+     *
+     * @param vendor 数据库厂商
+     * @param port 数据库监听端口
+     * @param database 数据库名
+     * @return 带连接超时参数的 JDBC URL
+     */
     static String jdbcUrl(String vendor, String port, String database) {
         return "jdbc:" + vendor + "://127.0.0.1:" + port + "/" + database
                 + (vendor.equals("mysql")
@@ -142,6 +175,13 @@ class SystemDualDatabaseMigrationIntegrationTest {
                         : "?connectTimeout=5&loginTimeout=10&socketTimeout=10");
     }
 
+    /**
+     * 校验最终结构与关键种子数据均已对齐。
+     *
+     * @param flyway 已配置的 Flyway 实例
+     * @param mysql 是否为 MySQL
+     * @throws Exception 查询失败时抛出
+     */
     private static void assertAlignedSchema(Flyway flyway, boolean mysql) throws Exception {
         try (var connection = flyway.getConfiguration().getDataSource().getConnection();
                 var statement = connection.createStatement()) {
@@ -235,6 +275,12 @@ class SystemDualDatabaseMigrationIntegrationTest {
      *
      * <p>V76：默认租户编码 apex-default 已全库改名 default 且不残留；V77：sys_role
      * 含 tenant_id 列且唯一键已重建为 (tenant_id, code)，角色授权关系租户与角色对齐。
+     * B3/V78 + V90：platform-full 种子保留全量菜单与权限码，并通过 V90 显式回填
+     * 当前能力目录的八项能力，避免“空 features = 未订阅”收紧后内置全量套餐失效。
+     *
+     * @param statement 已连接的 JDBC Statement
+     * @param mysql 是否为 MySQL；PostgreSQL 使用 JSONB 函数断言数组长度
+     * @throws Exception 查询失败时抛出
      */
     private static void assertTenantUnificationAndRbacTenantization(java.sql.Statement statement, boolean mysql)
             throws Exception {
@@ -298,6 +344,31 @@ class SystemDualDatabaseMigrationIntegrationTest {
         try (var rows = statement.executeQuery(seedCoverageSql)) {
             rows.next();
             org.assertj.core.api.Assertions.assertThat(rows.getInt(1)).isZero();
+        }
+        String featureLengthSql = mysql
+                ? "SELECT JSON_LENGTH(features) FROM sys_tenant_package WHERE package_code = 'platform-full' AND deleted = 0"
+                : "SELECT jsonb_array_length(features) FROM sys_tenant_package WHERE package_code = 'platform-full' AND deleted = 0";
+        try (var rows = statement.executeQuery(featureLengthSql)) {
+            org.assertj.core.api.Assertions.assertThat(rows.next()).isTrue();
+            org.assertj.core.api.Assertions.assertThat(rows.getInt(1))
+                    .as("V90 应回填八项能力订阅")
+                    .isEqualTo(8);
+        }
+        try (var rows = statement.executeQuery(
+                "SELECT features FROM sys_tenant_package WHERE package_code = 'platform-full' AND deleted = 0")) {
+            org.assertj.core.api.Assertions.assertThat(rows.next()).isTrue();
+            String features = rows.getString(1);
+            org.assertj.core.api.Assertions.assertThat(features)
+                    .as("platform-full 能力订阅必须与能力目录一致")
+                    .contains(
+                            "identity-auth",
+                            "user-org",
+                            "workflow",
+                            "file-storage",
+                            "office-message",
+                            "tenant-governance",
+                            "integration-connector",
+                            "iot-device");
         }
         // B6：租户级配置表存在且随租户隔离（不进白名单）
         try (var rows = statement.executeQuery(

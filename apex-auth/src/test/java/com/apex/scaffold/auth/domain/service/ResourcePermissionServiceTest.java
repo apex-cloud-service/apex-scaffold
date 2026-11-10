@@ -22,6 +22,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+/**
+ * 资源权限服务单元测试。
+ *
+ * <p>覆盖租户作用域、超级管理员、所有者匹配、显式授权、临时授权与组织角色声明的
+ * fail-closed 判定；测试使用 Mockito 桩替代持久化与授权查询端口，不启动 Spring
+ * 上下文，也不连接 Redis 或数据库。
+ *
+ * @author Apex Team
+ * @version 1.3.2
+ * @since 1.3.2
+ */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("资源权限服务测试")
 class ResourcePermissionServiceTest {
@@ -102,6 +113,32 @@ class ResourcePermissionServiceTest {
                 .expectNext(true)
                 .verifyComplete();
         verify(permissionStore).findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID);
+    }
+
+    /**
+     * 验证仅携带组织角色声明不能绕过所有者、显式授权和临时授权检查。
+     */
+    @Test
+    @DisplayName("组织角色未接入可靠组织权限端口时默认拒绝")
+    void organizationRolesAloneDoNotGrantAccess() {
+        allowResourcePermission("document:read");
+        when(permissionStore.findOwner(RESOURCE_TYPE, RESOURCE_ID, TENANT_ID)).thenReturn(Mono.just(OWNER_ID));
+        when(permissionStore.findExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .thenReturn(Mono.empty());
+        when(permissionStore.findTemporaryPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(service.hasPermission(
+                        USER_ID,
+                        RESOURCE_TYPE,
+                        RESOURCE_ID,
+                        "READ",
+                        contextWithOrganizationRoles(Set.of("department-manager"))))
+                .expectNext(false)
+                .verifyComplete();
+
+        verify(permissionStore).findExplicitPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID);
+        verify(permissionStore).findTemporaryPermission(RESOURCE_TYPE, RESOURCE_ID, USER_ID, TENANT_ID);
     }
 
     @Test
@@ -241,6 +278,17 @@ class ResourcePermissionServiceTest {
 
     private ResourcePermissionService.PermissionContext context(boolean superAdmin, String tenantId) {
         return context(superAdmin, tenantId, "192.168.1.1");
+    }
+
+    /**
+     * 构造携带组织角色的租户内权限上下文。
+     *
+     * @param organizationRoles 组织角色声明
+     * @return 权限上下文
+     */
+    private ResourcePermissionService.PermissionContext contextWithOrganizationRoles(Set<String> organizationRoles) {
+        return new ResourcePermissionService.PermissionContext(
+                false, organizationRoles, "192.168.1.1", "device-1", TENANT_ID);
     }
 
     private ResourcePermissionService.PermissionContext context(boolean superAdmin, String tenantId, String clientIp) {
