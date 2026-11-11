@@ -18,25 +18,20 @@ Apex Scaffold 从 v1.2.0 开始集成 JMH (Java Microbenchmark Harness) 用于�
 - 银行卡号脱敏 (`maskBankCard`)
 - 综合脱敏 (`maskAll`)
 
-**运行方式**:
+**运行方式**（JMH 依赖为 test scope，当前 POM 未配置 jmh-maven-plugin/shade，
+`mvnd package` **不会**产出 `target/benchmarks.jar`；实际运行入口是该类的 `main()`）:
 ```bash
-# 编译项目
-mvnd clean package -pl apex-common -am -DskipTests
+# 编译测试类（-DskipTests 只跳过执行、不跳过编译）
+mvnd -pl apex-common -am test-compile
 
-# 运行所有脱敏基准测试
-java -jar apex-common/target/benchmarks.jar "DataMaskBenchmark"
-
-# 指定特定测试方法
-java -jar apex-common/target/benchmarks.jar "DataMaskBenchmark.testMaskPhone"
-
-# 自定义参数(3次预热,5次测量,4线程)
-java -jar apex-common/target/benchmarks.jar "DataMaskBenchmark" \
-  -wi 3 -i 5 -f 3 -t 4
+# 运行：在 IDE 中直接运行 DataMaskBenchmark#main，
+# 或自行临时添加 shade/jmh-maven-plugin 配置后再 `java -jar`；
+# main() 内已内置预热/测量轮数与线程参数
 ```
 
 ### 2. RedisBenchmark - Redis缓存操作性能测试
 
-**位置**: `apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/cache/benchmark/RedisBenchmark.java`
+**位置**: `apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/benchmark/RedisBenchmark.java`
 
 **测试内容**:
 - 字符串写入 (`testStringSet`)
@@ -57,13 +52,12 @@ brew install redis
 redis-server
 ```
 
-**运行方式**:
+**运行方式**（同上：`benchmarks.jar` 不由当前构建产出，经 `RedisBenchmark#main` 运行）:
 ```bash
-# 编译项目
-mvnd clean package -pl apex-infrastructure -am -DskipTests
+# 编译测试类
+mvnd -pl apex-infrastructure-cache -am test-compile
 
-# 运行所有Redis基准测试
-java -jar apex-infrastructure/target/benchmarks.jar "RedisBenchmark"
+# 运行：在 IDE 中直接运行 RedisBenchmark#main
 ```
 
 ## 如何添加新的基准测试
@@ -145,11 +139,7 @@ public class MyBenchmark {
 ### 步骤 4: 运行基准测试
 
 ```bash
-# 使用Maven插件运行
-mvnd jmh:benchmark -pl apex-common
-
-# 或直接运行生成的JAR
-java -jar apex-common/target/benchmarks.jar
+# 当前构建未产出 benchmarks.jar，运行入口为基准测试类的 main()（IDE 直接运行）
 ```
 
 ## JMH注解说明

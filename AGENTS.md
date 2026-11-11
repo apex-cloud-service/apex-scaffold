@@ -135,7 +135,7 @@ apex-system/src/main/java/com/apex/scaffold/
 - OAuth2、JWKS、文件流、健康检查等已有协议响应保持原契约，不强行改为业务包装。
 - 业务异常使用现有 `BusinessException` / `ResultCode`，技术异常交给已有 WebFlux 异常边界；认证与授权异常沿用安全处理器。不要吞掉错误或把失败转换成无依据的成功。
 - 新增面向用户的消息同步维护所属模块的 i18n 资源。system 资源位于 `apex-system/src/main/resources/i18n/`，不得使用旧 interfaces 模块路径。
-- DTO 字段和序列化方式保持接口兼容。分页存在多份 `PageResponse`：common 版本有 `hasNext`，system/file 版本没有；common 还有 `records` 访问器。修改前检查实际使用类型、序列化结果和契约测试，不假定全仓字段统一。
+- DTO 字段和序列化方式保持接口兼容。分页存在多份 `PageResponse`：system/file 版本已新增派生 `hasNext`，字段集与 common 一致；common 还额外提供 `records` 访问器（`list` 的序列化别名），system/file 不引入。修改前检查实际使用类型、序列化结果和契约测试，不假定全仓字段统一。
 - 日期/时间格式遵循目标 DTO 与序列化配置，不擅自切换字符串、毫秒时间戳或时区语义。
 
 ## 阻塞 I/O 与事务

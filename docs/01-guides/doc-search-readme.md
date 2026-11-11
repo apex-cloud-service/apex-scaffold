@@ -60,7 +60,7 @@ $JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \
 ```bash
 # 启动 Spring Boot 项目
 cd /Users/work/apex-scaffold
-mvnd spring-boot:run -pl apex-interfaces
+./scripts/utils/start-doc-search.sh
 
 # 访问 http://localhost:8080/docs/04-development/doc-search.html
 ```

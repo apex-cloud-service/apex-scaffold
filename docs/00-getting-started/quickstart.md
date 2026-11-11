@@ -42,7 +42,7 @@ podman-compose --version
 
 如果未安装,请参考:
 - [JDK 21下载](https://adoptium.net/temurin/releases/?version=21)（推荐 sdkman：`sdk install java 21.0.13.0+9-tem`）
-- [mvnd安装指南](https://github.com/apache/maven-mvnd)（推荐 sdkman：`sdk install mvnd`；传统 Maven 亦可）
+- [mvnd安装指南](https://github.com/apache/maven-mvnd)（必须 mvnd：`sdk install mvnd`；项目禁止回退系统 mvn）
 - [Podman 安装指南](https://podman.io/docs/installation)
 
 macOS 使用虚拟机运行容器，安装独立 `podman-compose` 后准备 machine：
@@ -289,7 +289,7 @@ apex-example/
 2. 🔧 **配置 IDE**: 导入项目，配置 Lombok、MapStruct 插件
 3. 📝 **生成代码**: 使用代码生成器快速创建 CRUD 模块
    ```bash
-   ./scripts/codegen/generate.sh -i examples/product.json
+   ./scripts/codegen/generate.sh -i scripts/codegen/examples/product.json
    ```
 4. 💡 **最佳实践**: [best-practices.md](../01-guides/best-practices.md)
 5. 📚 **开发手册**: [developer-handbook.md](../01-guides/developer-handbook.md)

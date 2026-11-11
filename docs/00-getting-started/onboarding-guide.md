@@ -184,8 +184,8 @@ podman-compose -f podman-compose.yml up -d
 podman-compose -f podman-compose.yml ps
 
 # 3. 访问服务
-open http://localhost:8080/doc.html      # Swagger文档
-open http://localhost:3000               # Grafana监控(admin/admin)
+open http://localhost:8082/doc.html      # Swagger文档（system-service）
+open http://localhost:3200               # Grafana监控(admin/admin，宿主映射 3200:3000)
 open http://localhost:9411               # Zipkin链路追踪
 
 # 4. 测试登录接口
@@ -210,7 +210,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 
 ### 任务3: 查看监控大盘 (10分钟)
 
-1. 访问 Grafana: http://localhost:3000 (admin/admin)
+1. 访问 Grafana: http://localhost:3200 (admin/admin)
 2. 查看 "Apex Scaffold - 应用概览" 面板
 3. 观察 QPS、响应时间P99、错误率、缓存命中率
 4. 制造一个慢请求,观察"慢请求Top10"面板

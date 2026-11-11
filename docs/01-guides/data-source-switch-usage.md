@@ -178,9 +178,9 @@ JDBC 线程执行且未显式装配（见注意事项第 4 条）；③ slave �
 
 - 上下文：`apex-common/.../common/context/DataSourceContext.java`
 
-- 切面：`apex-interfaces/.../interfaces/aspect/DataSourceSwitchAspect.java`
+- 切面：`apex-system/.../interfaces/aspect/DataSourceSwitchAspect.java`
 
-- 配置：`apex-interfaces/.../resources/application-dev.yml`（slave 演示块）、
+- 配置：`apex-system/.../resources/application-dev.yml`（slave 演示块）、
   `apex-example/.../resources/application.yml`
 
 - 演示：`apex-example/.../service/ExampleUserService.java#getUserFromSlave`

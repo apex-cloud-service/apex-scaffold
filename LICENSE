@@ -29,6 +29,6 @@ SOFTWARE.
 标准版（Standard Edition）与企业版（Enterprise Edition）为商业授权软件，
 受 [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md) 约束，**不适用** MIT 许可证。
 
-- 基础版功能清单见 [docs/COMMERCIAL_VERSIONS.md](docs/COMMERCIAL_VERSIONS.md)
+- 基础版功能清单见 [docs/07-commercial/COMMERCIAL_VERSIONS.md](docs/07-commercial/COMMERCIAL_VERSIONS.md)
 - 商业授权条款见 [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)
-- 商业版需购买 License 授权文件后方可使用（详见 [docs/LICENSE_MANAGEMENT.md](docs/LICENSE_MANAGEMENT.md)）
+- 商业版需购买 License 授权文件后方可使用（详见 [docs/07-commercial/license-management.md](docs/07-commercial/license-management.md)）

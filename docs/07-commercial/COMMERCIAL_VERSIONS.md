@@ -47,6 +47,11 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 | 读写分离 | ❌ | ❌ | ✅ |
 | 分布式锁 (Redisson) | ❌ | ❌ | ✅ |
 
+> **实现口径勘误（2026-11-11，以代码为准）**：`RedissonConfig` 当前按
+> `spring.profiles.active=dev` 条件装配（且需显式启用 `RedissonProperties`），
+> **未按商业档位门控**；上表 Redisson 行属商业策略规划，与当前代码实现不一致，
+> 购买决策请先与维护方确认实际门控实现。
+
 ### 📡 消息与集成
 
 | 功能 | Basic | Standard | Enterprise |
@@ -101,7 +106,7 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 | 功能 | Basic | Standard | Enterprise |
 |------|-------|----------|------------|
 | MySQL 支持 | ✅ | ✅ | ✅ |
-| Flyway 数据库迁移 | ❌ | ❌ | ✅ |
+| Flyway 数据库迁移（各档位默认启用；system basic 亦为 MySQL + Flyway） | ✅ | ✅ | ✅ |
 | 逻辑删除 | ✅ | ✅ | ✅ |
 | 分页查询 | ✅ | ✅ | ✅ |
 
@@ -127,7 +132,7 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 |------|-------|----------|------------|------|
 | `apex.features.jwt-auth` | true | true | true | JWT 认证（三档均启用） |
 | `apex.features.rbac` | **false** | true | true | RBAC 权限管理 + `@PreAuthorize` 方法级安全 |
-| `apex.features.cache` | **false** | true | true | Caffeine L1 + Redis L2 多级缓存（含 Redisson 分布式锁） |
+| `apex.features.cache` | **false** | true | true | Caffeine L1 + Redis L2 多级缓存（Redisson 装配口径见上文勘误，不随本开关门控） |
 | `apex.features.message-queue` | false | **false** | true | RocketMQ 集成（生产者/消费者/死信队列处理/幂等切面） |
 | `apex.features.monitoring` | **false** | true | true | Sentinel 限流熔断 + Prometheus + Grafana + 钉钉告警 |
 | `apex.features.tracing` | false | **false** | true | Zipkin Brave 全链路追踪上报 |
@@ -136,7 +141,7 @@ Apex Scaffold 提供三个商业化版本,满足不同规模企业的需求。
 
 1. **Maven Profile 编译裁剪**：
    - `basic` profile 在顶层 `dependencyManagement` 中把高级依赖声明为 `<optional>true</optional>`；
-   - 子模块（如 `apex-interfaces`）的 `basic` profile 对上游依赖添加 `<exclusions>`；
+   - 业务库（如 `apex-system`）的 `basic` profile 对上游依赖添加 `<exclusions>`；
    - `spring-boot-maven-plugin` 打包时可选依赖 / 被排除依赖不进入 `BOOT-INF/lib`。
 
 2. **Spring 条件装配（双条件门控）**：

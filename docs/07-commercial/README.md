@@ -107,8 +107,8 @@ API 接口规范和设计标准
 
 系统启动时自动验证授权文件：
 
-- 授权文件路径：`config/license.dat`
-- 验证失败时降级到 Basic 档位
+- 授权文件路径：默认 `classpath:license/license-basic.json`（`apex.license.file-path`，可经 `APEX_LICENSE_FILE` 覆盖）
+- 验证失败进入降级模式：基础功能放行，`@FeatureGate` 商业功能拒绝（并非"切换到 Basic 档位"）
 - 授权到期前 30 天提醒
 
 ---

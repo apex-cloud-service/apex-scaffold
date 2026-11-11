@@ -24,20 +24,18 @@
 
 | 类型 | 文件路径 | 改进内容 | 状态 |
 |------|---------|---------|------|
-| **PO 类** | `apex-infrastructure/.../po/UserPO.java` | 完整 JavaDoc + `@Builder` + 构造器 | ✅ 完成 |
-| **Mapper 接口** | `apex-infrastructure/.../mapper/UserMapper.java` | 详细方法注释 + SQL 语义说明 | ✅ 完成 |
-| **Converter 接口** | `apex-infrastructure/.../converter/UserPoConverter.java` | MapStruct 注释 + 使用示例 | ✅ 完成 |
-| **RepositoryImpl 类** | `apex-infrastructure/.../repository/UserRepositoryImpl.java` | 已有良好注释（参考） | ✅ 参考 |
-| **DTO 类** | `apex-application/.../dto/LoginRequest.java` | `@Builder` + 详细字段注释 | ✅ 完成 |
-| **Service 类** | `apex-application/.../service/AuthService.java` | 已有良好注释（参考） | ✅ 参考 |
+| **PO 类** | `apex-system/.../infrastructure/persistence/po/UserPO.java` | 完整 JavaDoc + `@Builder` + 构造器 | ✅ 完成 |
+| **Mapper 接口** | `apex-system/.../infrastructure/persistence/mapper/UserMapper.java` | 详细方法注释 + SQL 语义说明 | ✅ 完成 |
+| **Converter 接口** | `apex-system/.../infrastructure/persistence/converter/UserPoConverter.java` | MapStruct 注释 + 使用示例 | ✅ 完成 |
+| **RepositoryImpl 类** | `apex-system/.../infrastructure/persistence/repository/UserRepositoryImpl.java` | 已有良好注释（参考） | ✅ 参考 |
+| **DTO 类** | `apex-system/.../application/dto/LoginRequest.java`（auth 侧另有同名类） | `@Builder` + 详细字段注释 | ✅ 完成 |
+| **Service 类** | `apex-system/.../application/service/AuthService.java` | 已有良好注释（参考） | ✅ 参考 |
 
 ### 📚 配套文档
 
 | 文档 | 路径 | 说明 |
 |------|------|------|
-| **JavaDoc 编写指南** | `docs/JAVADOC_GUIDE.md` | 完整的 JavaDoc 规范和模板 |
-| **Lombok 使用指南** | `docs/LOMBOK_GUIDE.md` | Lombok 注解详解和最佳实践 |
-| **项目计划** | `.trae/plans/javadoc-lombok-build-plan.md` | 完整改造计划（8 个 Phase） |
+| **开发规范（含 JavaDoc/Lombok）** | `docs/04-development/development-standards.md` | 注释与 JavaDoc 规范见 §4，Lombok 见 §3.2；原 JAVADOC_GUIDE/LOMBOK_GUIDE 已并入本文档 |
 
 ---
 
@@ -488,17 +486,16 @@ public class LoginRequest {
 
 ### 📚 配套文档阅读顺序
 
-1. **先读计划**：`.trae/plans/javadoc-lombok-build-plan.md`（了解整体思路）
-2. **再读指南**：`docs/JAVADOC_GUIDE.md` 和 `docs/LOMBOK_GUIDE.md`（掌握规范）
+1. **先读规范**：`docs/04-development/development-standards.md`（注释与 JavaDoc 见 §4，Lombok 见 §3.2）
+2. **再读示例**：本文档（实际应用）
 3. **参考示例**：本文档（实际应用）
 4. **动手改造**：参考示例改造自己负责的模块
 
 ### 🔍 快速查找
 
-- **JavaDoc 模板**：查看 `docs/JAVADOC_GUIDE.md` 的「标准模板」章节
-- **Lombok 注解选择**：查看 `docs/LOMBOK_GUIDE.md` 的「不同场景的最佳实践」章节
-- **常见问题**：查看两个指南文档的「常见问题」章节
-- **IDE 配置**：查看 `docs/LOMBOK_GUIDE.md` 的「IDE 插件安装」章节
+- **JavaDoc 模板**：查看 `docs/04-development/development-standards.md` §4 的模板章节
+- **Lombok 注解选择**：查看同文档 §3.2「Lombok」
+- **IDE 配置**：查看同文档相应章节
 
 ---
 
@@ -507,8 +504,7 @@ public class LoginRequest {
 ### ✅ 已完成
 
 - ✅ 创建 6 个代表性示例文件
-- ✅ 编写完整的 JavaDoc 编写指南
-- ✅ 编写完整的 Lombok 使用指南
+- ✅ JavaDoc/Lombok 规范并入 `docs/04-development/development-standards.md`（原独立指南已下线）
 - ✅ 创建示例代码汇总文档
 - ✅ 更新 AGENT.md（JDK、mvnd、JavaDoc、Lombok 规范）
 - ✅ 创建 lombok.config 配置文件
@@ -516,10 +512,8 @@ public class LoginRequest {
 ### 📋 团队需要做的
 
 1. **阅读文档**：
-   - 计划文档：`.trae/plans/javadoc-lombok-build-plan.md`
-   - JavaDoc 指南：`docs/JAVADOC_GUIDE.md`
-   - Lombok 指南：`docs/LOMBOK_GUIDE.md`
-   - 示例汇总：`docs/EXAMPLES_SUMMARY.md`（本文档）
+   - 开发规范：`docs/04-development/development-standards.md`
+   - 示例汇总：`docs/00-getting-started/examples-summary.md`（本文档）
 
 2. **安装工具**：
    - 安装 SDKMAN（如未安装）

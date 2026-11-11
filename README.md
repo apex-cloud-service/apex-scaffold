@@ -61,7 +61,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | 对象存储 | `apex-storage-spring-boot-starter` | 仅内部依赖 common，提供五后端策略和自动装配 |
 | 授权 | `apex-license-spring-boot-starter`、`apex-license-tools` | 运行时许可证校验与离线授权工具 |
 | 示例与工具 | `apex-example`、`apex-generator` | 示例应用与代码生成器 |
-| 运维工具 | `apex-tools-deployment` | 离线部署密钥/配置校验、TOTP 敏感字段迁移包生成与回滚、MySQL V42 结构恢复；只由 `scripts/utils/` 下脚本与 `podman-compose.yml` 的 `security-key-check` 调用，不参与服务运行期装配 |
+| 运维工具 | `apex-tools-deployment` | 离线部署密钥/配置校验、TOTP 敏感字段迁移包生成与回滚、MySQL V42 结构恢复；只由 `scripts/utils/`、`scripts/ci/check-doc-links.sh` 脚本与 `podman-compose.yml` 的 `security-key-check` 调用，不参与服务运行期装配 |
 
 `apex-system` 已接收原接口层、应用层及 system 专属领域和基础设施代码，保留 `com.apex.scaffold.interfaces/application/domain/infrastructure` Java 包名。原 `apex-interfaces`、`apex-application` 和 `apex-auth-center` 不再作为当前运行入口。
 
@@ -97,7 +97,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | `apex-masking-service` | `MaskingServiceApplication` | 8096 | 无持久化 |
 | `apex-example` | `ExampleApplication` | 8080 | `apex_example` |
 
-system 的默认管理端口为 8083，与 workflow 的业务端口冲突。同一宿主机联调时可将 workflow 的 `server.port` 改为 8093；应用 Compose 已将其宿主机端口映射为 8093。集成服务管理端口为 8097（避开任务代理 8095 与脱敏服务 8096）。example 与 gateway 也不能同时占用默认 8080。
+system 的默认管理端口为 8083；workflow 自 2026-11-07 起默认业务端口为 8093，两者不再冲突，同机直跑无须调整端口。集成服务管理端口为 8097（避开任务代理 8095 与脱敏服务 8096）。example 与 gateway 也不能同时占用默认 8080。
 
 数据库由各服务分别管理。system 的迁移资源位于 `apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；integration 的迁移资源位于 `apex-integration/src/main/resources/db/migration/`；其他四个业务服务的迁移资源位于各自 service 模块。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
 
@@ -186,7 +186,7 @@ Maven profile 不等于 JAR 启动时的 Spring profile。auth、workflow、offi
 
 ### 不使用服务发现的本地网关路由
 
-在五个服务已经运行且端口按下列约定配置后，为网关导出：
+在下列下游服务已经运行且端口按约定配置后，为网关导出：
 
 ```bash
 export ROUTE_AUTH_URI=http://127.0.0.1:8081
@@ -200,7 +200,7 @@ export ROUTE_JOB_URI=http://127.0.0.1:8095
 export ROUTE_MASKING_URI=http://127.0.0.1:8096
 ```
 
-这些是网关下游地址；workflow 此处使用避开端口冲突的 8093。路由前缀以 [网关配置](apex-gateway/src/main/resources/application.yml) 和各业务 Router 为准，包含 `/auth/v1/`、`/api/v1/`、`/admin-api/v1/`、OAuth2 及 well-known 路径。
+这些是网关下游地址；workflow 使用其默认业务端口 8093。路由前缀以 [网关配置](apex-gateway/src/main/resources/application.yml) 和各业务 Router 为准，包含 `/auth/v1/`、`/api/v1/`、`/admin-api/v1/`、OAuth2 及 well-known 路径。
 
 ### Podman Compose
 

@@ -16,7 +16,8 @@
 
 ```bash
 cd /Users/work/apex-scaffold
-mvnd spring-boot:run -pl apex-interfaces
+source scripts/build/init-build-env.sh
+mvnd spring-boot:run -pl apex-system-service -am
 ```
 
 ### 1.2 启动前端服务

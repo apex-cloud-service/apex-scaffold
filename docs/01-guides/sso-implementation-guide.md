@@ -196,7 +196,7 @@ apex:
 
 ### 4.1 统一认证中心搭建
 
-确保 `apex-interfaces` 模块已配置好:
+确保相关配置已就位（现位于 `apex-system`）:
 
 1. JWT 认证过滤器(`JwtAuthenticationFilter`)
 2. Redis Session 存储
@@ -205,7 +205,7 @@ apex:
 
 ### 4.2 应用 A 接入 (apex-admin-web)
 
-**后端配置**(已在 apex-interfaces 中,无需额外配置):
+**后端配置**(已在 apex-system 中,无需额外配置):
 - `/api/v1/**` → JwtAuthenticationFilter
 - `/admin-api/v1/**` → 需要 ADMIN 角色
 

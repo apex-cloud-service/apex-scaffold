@@ -397,7 +397,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 | apex-job-service | 8095 | 8095 |
 | apex-masking-service | 8096 | 8096 |
 
-> ⚠️ **同机冲突**：workflow 业务端口 8083 与 system 管理端口 8083 冲突。同机部署时用 `SERVER_PORT`/`WORKFLOW_PORT` 调整（Compose 已用 8093 规避）。
+> workflow 业务端口已于 2026-11-07 调整为 8093，与 system 管理端口 8083 不再冲突，同机部署无须再调整端口。
 
 ### 7.2 运行时二：Podman Compose
 
@@ -440,7 +440,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 ./apex-tools-build/bin/apex.sh deploy podman-compose health
 ```
 
-`health` 依次探测 7 个发布服务的 `/actuator/health/readiness`，任一未就绪即退出码 1。**端口取注册表**：workflow 探测宿主 8093（容器内 8083 映射而来），system 探测 8083，integration 探测 8097。
+`health` 依次探测 7 个发布服务的 `/actuator/health/readiness`，任一未就绪即退出码 1。**端口取注册表**：workflow 探测 8093（容器内与宿主一致），system 探测 8083，integration 探测 8097。
 
 **第 5 步：停止**
 
@@ -604,7 +604,7 @@ K8s 路线把 ⑥⑦⑧ 替换为 `deploy k8s precheck → apply → health`。
 | `deliverable` | 是 | `none` / `service-jar` / `optional` / `tool-jar`，与打包插件双向绑定 |
 | `port` | 否 | 容器内/进程内默认业务端口 |
 | `managementPort` | 否 | 默认管理端口（缺省同 `port`） |
-| `hostPort` | 否 | **仅 Compose**：宿主侧映射端口（缺省同 `managementPort`）；当前仅 workflow 登记 8093 |
+| `hostPort` | 否 | **仅 Compose**：宿主侧映射端口（缺省同 `managementPort`）；当前无模块登记 hostPort 特例 |
 | `mainClass` | 否 | 仅登记 POM **显式声明**的启动类（当前仅 system-service、example） |
 
 ### 9.2 格式契约（重要）
@@ -625,7 +625,7 @@ modules:
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -T4 -B -pl apex-tools-build -am test     # 四方一致性（4 个测试）
+mvnd -T4 -B -pl apex-tools-build -am test     # 四方一致性（BuildManifestSyncTest 5 个测试）
 ./apex-tools-build/bin/apex.sh status          # 渲染验证
 ```
 

@@ -69,12 +69,12 @@ git log --oneline -5
 **检查命令**:
 ```bash
 # 验证 YAML 语法
-cat apex-interfaces/src/main/resources/application.yml | grep -A 50 "apex:"
-cat apex-interfaces/src/main/resources/application-prod.yml | grep -A 30 "apex:"
+cat apex-system/src/main/resources/application.yml | grep -A 50 "apex:"
+cat apex-system/src/main/resources/application-prod.yml | grep -A 30 "apex:"
 
 # 检查配置完整性
-grep "auto-handler:" apex-interfaces/src/main/resources/application.yml
-grep "notification:" apex-interfaces/src/main/resources/application-prod.yml
+grep "auto-handler:" apex-system/src/main/resources/application.yml
+grep "notification:" apex-system/src/main/resources/application-prod.yml
 ```
 
 ---
@@ -228,7 +228,7 @@ curl -X POST "${WECHAT_WEBHOOK_URL}" \
 ./mvnw clean package -Pprod
 
 # 生成 MD5
-md5sum apex-interfaces/target/apex-interfaces-3.1.0.jar > apex-interfaces-3.1.0.jar.md5
+md5sum apex-system-service/target/apex-system-service-*.jar > apex-system-service.jar.md5
 
 # 上传到服务器
 scp apex-interfaces/target/apex-interfaces-3.1.0.jar user@prod-server:/opt/apex/

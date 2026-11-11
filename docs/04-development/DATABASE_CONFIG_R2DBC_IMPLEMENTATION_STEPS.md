@@ -1,5 +1,7 @@
 # 数据库配置连接测试 R2DBC 迁移完整实施步骤
 
+> **历史快照**：本文为 2026-09 前后的实施步骤记录；文中 `apex-interfaces`/`apex_application`/`apex_data` 等单体时代模块与库名已退役（现按服务拆分，system 域为 `apex-system`/`apex_system`），命令仅作历史参考，不作为现状依据。
+
 ## 📋 概述
 
 本文档记录了从 HikariCP + JDBC 迁移到 R2DBC 的完整实施过程，包括每个步骤的详细操作、遇到的问题和解决方案。

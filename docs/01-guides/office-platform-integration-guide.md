@@ -187,7 +187,7 @@ apex-domain          领域层
 │       ├── CalendarPort.java
 │       └── DocumentPort.java
 
-apex-application     应用层
+apex-office 的 application 包（含 office 子包）    应用层
 ├── office/
 │   ├── OfficeApplicationService.java    OAuth 认证流程
 │   ├── OfficeAdminService.java          管理员绑定审批
@@ -204,7 +204,7 @@ apex-application     应用层
 │       ├── OfficeMessageApplicationService.java
 │       └── command/SendMessageCommand.java
 
-apex-infrastructure  基础设施层
+apex-office 的 infrastructure 包（含 office 子包）    基础设施层
 ├── office/
 │   ├── client/                          平台客户端
 │   │   ├── AbstractOfficeClient.java    统一 OAuth 实现

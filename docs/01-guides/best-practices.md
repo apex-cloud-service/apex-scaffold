@@ -404,15 +404,18 @@ listener 只有在业务副作用完成后才能返回成功。处理失败应�
 
 ### 1. 容器镜像优化
 
-```dockerfile
-# 多阶段构建减小镜像体积
-FROM maven:3.9-eclipse-temurin-17 AS builder
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvnd clean package -DskipTests
+实际镜像以根目录 [Containerfile](../../Containerfile) 为准（多阶段：
+`maven:3.9-eclipse-temurin-21` 构建、`eclipse-temurin:21-jre-alpine` 运行、
+容器内使用基础镜像自带 mvn——mvnd 仅宿主机使用）：
 
-FROM eclipse-temurin:17-jre-alpine
+```dockerfile
+# 多阶段构建减小镜像体积（示意，与 Containerfile 口径一致）
+FROM maven:3.9-eclipse-temurin-21 AS builder
+WORKDIR /app
+# ... 依赖与源码分层 COPY
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
@@ -422,9 +425,9 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ### 2. 健康检查
 
 ```yaml
-# 与项目 Containerfile 一致：探测管理端口 8081 的就绪探针（含 DB + Redis）
+# 与项目 Containerfile 一致：HEALTHCHECK_PORT 默认 8080
 healthcheck:
-  test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/actuator/health/readiness", "|", "grep", "-q", "UP"]
+  test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/actuator/health/readiness", "|", "grep", "-q", "UP"]
   interval: 30s
   timeout: 5s
   retries: 3

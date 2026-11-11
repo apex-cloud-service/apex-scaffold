@@ -418,7 +418,7 @@ podman-compose -f podman-compose.yml logs apex-gateway
 
 **解决方案**:
 
-使用项目根目录的 [Containerfile](../../Containerfile)：其中已配置多阶段构建、mvnd 构建环境和模块依赖缓存。通过 `SERVICE_MODULE` 和 `BUILD_PROFILE` 选择服务与构建档位。
+使用项目根目录的 [Containerfile](../../Containerfile)：其中已配置多阶段构建、mvn 构建环境（容器内使用基础镜像自带 mvn，mvnd 仅宿主机使用）和模块依赖缓存。通过 `SERVICE_MODULE` 和 `BUILD_PROFILE` 选择服务与构建档位。
 
 构建时使用缓存:
 ```bash

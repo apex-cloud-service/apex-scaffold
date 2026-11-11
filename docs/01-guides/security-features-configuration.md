@@ -47,8 +47,8 @@ export TOKEN_ENCRYPTION_KEY=$(openssl rand -base64 32)
 #### 数据库迁移
 ```sql
 -- 已自动创建迁移文件
--- /apex-interfaces/src/main/resources/db/migration/mysql/V26__add_token_encryption.sql
--- 执行 mvn flyway:migrate 即可应用
+-- /apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql
+-- 迁移由应用启动时 Flyway 执行（system 库 dev 配置默认关闭自动迁移，需显式启用）
 ```
 
 ### 使用说明

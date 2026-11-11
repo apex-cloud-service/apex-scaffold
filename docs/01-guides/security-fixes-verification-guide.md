@@ -36,7 +36,7 @@ export SPRING_DATASOURCE_PASSWORD=your_password
 
 ```bash
 # 清理并编译
-mvn clean compile -DskipTests
+mvnd clean compile -DskipTests
 
 # 预期结果：编译成功，无错误
 ```
@@ -45,7 +45,7 @@ mvn clean compile -DskipTests
 
 ```bash
 # 运行Flyway迁移
-mvn flyway:migrate
+# 迁移由应用启动时 Flyway 执行
 
 # 预期结果：成功应用以下迁移
 # - V26__add_token_encryption.sql
@@ -56,13 +56,13 @@ mvn flyway:migrate
 
 ```bash
 # 运行所有单元测试
-mvn test
+mvnd test
 
 # 仅运行认证相关测试
-mvn test -Dtest="*Auth*Test"
+mvnd test -Dtest="*Auth*Test"
 
 # 仅运行Token相关测试
-mvn test -Dtest="*Token*Test"
+mvnd test -Dtest="*Token*Test"
 ```
 
 ---
@@ -74,7 +74,7 @@ mvn test -Dtest="*Token*Test"
 #### 测试步骤
 ```bash
 # 1. 启动应用
-mvn spring-boot:run
+mvnd spring-boot:run
 
 # 2. 登录获取Token
 curl -X POST http://localhost:8080/auth/login \

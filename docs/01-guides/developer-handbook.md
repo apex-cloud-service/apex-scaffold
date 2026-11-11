@@ -130,9 +130,9 @@ podman-compose -f podman-compose.infra.yml up -d mysql redis
 mvnd -pl apex-system-service -am spring-boot:run -Pbasic
 
 # 3. 访问应用
-# API: http://localhost:8080
-# Actuator: http://localhost:8080/actuator
-# OpenAPI: http://localhost:8080/swagger-ui.html
+# API: http://localhost:8082（system-service；网关为 8080）
+# Actuator: http://localhost:8083/actuator（system 管理端口）
+# OpenAPI: http://localhost:8082/swagger-ui.html
 ```
 
 ---
@@ -473,7 +473,7 @@ public class UserRouter {
 # UserHandlerIntegrationTest.java
 
 # 5. 运行测试
-mvnd test -Dtest=UserHandlerIntegrationTest
+mvnd -pl apex-system -am test -Dtest=UserHandlerTest
 ```
 
 ### 5.2 数据库迁移
@@ -593,7 +593,7 @@ mvnd test -P basic
 mvnd verify -P standard
 
 # 测试覆盖率
-mvnd verify -P jacoco
+mvnd verify
 
 # 单个测试类
 mvnd test -Dtest=UserServiceTest
@@ -750,8 +750,8 @@ public class OrderService {
 | 脚本 | 用途 |
 |------|------|
 | `scripts/ci/check-doc-consistency.sh` | 文档一致性检查 ⭐ 新增 |
-| `scripts/build/build-all.sh` | 完整构建 |
-| `scripts/deploy/deploy-k8s.sh` | K8s 部署 |
+| `scripts/build/build.sh` | 完整构建 |
+| `./apex-tools-build/bin/apex.sh deploy k8s` | K8s 部署（fail-closed 编排） |
 | `scripts/codegen/generate.sh` | 代码生成 |
 | `scripts/test/test-workflow-api.sh` | 工作流 API 测试 |
 
