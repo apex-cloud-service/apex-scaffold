@@ -8,7 +8,7 @@
 # ============================================================================
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)" || exit
-source "${SCRIPT_DIR}/lib/common.sh" || exit
+source "${SCRIPT_DIR}/../lib/common.sh" || exit
 set -eo pipefail
 
 # 缺失文件属于检查未通过；实际读取错误必须中止并保留退出码。

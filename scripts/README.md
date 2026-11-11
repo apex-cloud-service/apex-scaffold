@@ -11,14 +11,20 @@
 
 ```
 scripts/
+├── build/            # 构建入口与环境初始化
+├── release/          # 发布打包
 ├── dev/              # 开发辅助工具
 ├── test/             # 测试相关
 ├── deploy/           # 部署相关
 ├── ops/              # 运维相关
 ├── backup/           # 数据库备份、恢复与演练
 ├── data/             # 数据相关
+├── datasource/       # 数据源初始化
+├── codegen/          # DDD 代码生成器
 ├── ci/               # CI/CD
 ├── utils/            # 通用工具
+├── lib/              # 脚本公共函数库
+├── diagnostics/      # JVM 与应用诊断
 ├── bench/            # 性能测试
 ├── init/             # 初始化
 ├── keycloak/         # Keycloak
@@ -46,7 +52,7 @@ scripts/
 
 **示例**:
 ```bash
-cd scripts/dev/codegen
+cd scripts/codegen
 ./generate.sh examples/product.json
 ```
 
@@ -84,7 +90,7 @@ cd scripts/dev/codegen
 |-----|------|---------|
 | `scan-javadoc-issues.sh` | 扫描 JavaDoc 问题 | 提交前检查注释完整性 |
 | `scan-lombok-issues.sh` | 扫描 Lombok 使用问题 | 检查是否有手写样板代码 |
-| `check-javadoc.sh`（`check_javadoc.sh`） | JavaDoc 质量检查 | 识别缺少 JavaDoc 的类和方法 |
+| `check_javadoc.sh` | JavaDoc 质量检查 | 识别缺少 JavaDoc 的类和方法 |
 | `check-handler-javadoc.sh` | Handler JavaDoc 检查 | 检查接口层注释完整性 |
 | `check-springdoc-annotations.sh` | 检查 SpringDoc 注解 | 确保 API 文档注解完整 |
 | `check-flyway-timestamp-usage.sh` | 检查时间戳用法 | 校验迁移脚本时间字段规范 |
@@ -101,8 +107,8 @@ cd scripts/dev/codegen
 # 检查 apex-system 模块的 SpringDoc 注解
 ./scripts/dev/check/check-springdoc-annotations.sh apex-system
 
-# 检查 8080 端口是否被占用
-./scripts/dev/check/check-port-conflicts.sh 8080
+# 检查 Compose 服务栈的端口映射占用（默认检查主 podman-compose.yml）
+./scripts/dev/check/check-port-conflicts.sh
 ```
 
 **输出**: 问题列表和修复建议
@@ -117,8 +123,17 @@ cd scripts/dev/codegen
 |-----|------|---------|
 | `jvm-diagnostics-test.sh` | JVM 诊断测试 | 排查内存泄漏、线程死锁等 JVM 问题 |
 | `generate-test-report.sh` | 生成测试报告 | CI/CD 中生成格式化的测试报告 |
+| `generate-comprehensive-test-report.sh` | 生成综合测试报告 | 汇总多模块测试结果 |
 | `test-sentinel-hot-reload.sh` | Sentinel 热更新测试 | 验证 Sentinel 规则文件监听 |
 | `chaos-fault-injection.sh` | 混沌故障注入 | 验证服务容错与降级行为 |
+| `integration-test.sh` | 集成测试编排 | 按环境编排集成测试执行 |
+| `run-dual-database-migration.sh` | 双库迁移演练 | 真实 MySQL/PostgreSQL 上回归 Flyway 迁移 |
+| `check-migration-integrity.sh` | 迁移完整性检查 | 校验六域迁移版本一致性与唯一性 |
+| `run-mqtt-integration.sh` | MQTT 集成测试 | 设备接入 MQTT 链路验证 |
+| `test-workflow-api.sh` | 工作流 API 测试 | 工作流接口冒烟验证 |
+| `test-check-javadoc-comments.sh` | 注释检查自测 | 验证 javadoc 检查脚本自身行为 |
+| `new-batch-report.sh` | 批次报告生成 | 生成整改批次报告骨架 |
+| `verify-infrastructure-websocket.sh` | WebSocket 验证 | 基础设施 WebSocket 链路验证 |
 | `verify-middle-platform.sh` | 中台静态契约验证 | 校验模块边界、能力门禁、迁移与文档契约 |
 | `verify-monitoring-config.sh` | 监控配置静态验证 | 校验 Prometheus、Grafana、告警规则和 Compose 配置 |
 
@@ -182,7 +197,7 @@ cd scripts/dev/codegen
 ./scripts/deploy/service/app.sh restart
 ```
 
-**配置**: 修改脚本中的 JAR_PATH、APP_NAME 等变量
+**配置**: 通过环境变量覆盖（`APEX_SERVICE_MODULE` 选择模块、`APEX_JAR` 指定 JAR、`SERVER_PORT`/`MANAGEMENT_PORT` 覆盖端口、`APEX_LOG_DIR` 日志目录）
 
 ---
 
@@ -305,7 +320,6 @@ export PGPASSWORD='***'
 |-----|-----|------|
 | `weekly-link-check.sh` | 每周 | 检查文档链接有效性 |
 | `monthly-cleanup.sh` | 每月 | 清理备份文件、临时文件、空目录 |
-| `quarterly-archive.sh` | 每季度 | 归档90天前的旧报告 |
 
 **示例**:
 ```bash
@@ -314,9 +328,6 @@ export PGPASSWORD='***'
 
 # 每月清理
 ./scripts/ops/maintenance/monthly-cleanup.sh
-
-# 季度归档
-./scripts/ops/maintenance/quarterly-archive.sh
 ```
 
 **配置 cron 定时任务**:
@@ -326,9 +337,6 @@ export PGPASSWORD='***'
 
 # 每月1号上午10点清理
 0 10 1 * * cd /Users/work/apex-scaffold && ./scripts/ops/maintenance/monthly-cleanup.sh
-
-# 每季度第一天上午11点归档
-0 11 1 1,4,7,10 * cd /Users/work/apex-scaffold && ./scripts/ops/maintenance/quarterly-archive.sh
 ```
 
 **详细文档**: 参见 [maintenance/README.md](ops/maintenance/README.md)
@@ -339,7 +347,7 @@ export PGPASSWORD='***'
 
 数据初始化、数据源配置和测试数据。
 
-### datasource/ - 数据源
+### datasource/（`scripts/datasource/`）- 数据源
 
 | 脚本 | 功能 | 使用场景 |
 |-----|------|---------|
@@ -574,7 +582,7 @@ find scripts -name "*.sh" -type f -exec chmod +x {} \;
 
 ```bash
 # 1. 生成新业务模块
-./scripts/dev/codegen/generate.sh examples/order.json
+./scripts/codegen/generate.sh scripts/codegen/examples/product.json
 
 # 2. 检查代码规范
 ./scripts/dev/check/scan-javadoc-issues.sh
@@ -638,11 +646,13 @@ tail -f logs/apex-scaffold.log
 
 | 变量 | 说明 | 默认值 |
 |-----|------|-------|
-| `PROJECT_ROOT` | 项目根目录 | `/Users/work/apex-scaffold` |
-| `APP_NAME` | 应用名称 | `apex-scaffold` |
-| `APP_PORT` | 应用端口 | `8080` |
-| `JAVA_HOME` | Java 路径 | 由 SDKMAN 管理 |
-| `MAVEN_OPTS` | Maven 选项 | `-Xmx2g -XX:MaxMetaspaceSize=512m` |
+| `PROJECT_ROOT` | 项目根目录 | 脚本自动探测仓库根 |
+| `JAVA_HOME` | Java 路径 | 由 SDKMAN 管理（init-build-env.sh 加载） |
+| `APEX_SERVICE_MODULE` | app.sh 部署模块 | `apex-system-service` |
+| `APEX_JAR` | 指定可执行 JAR | 按 `SERVICE_MODULE/target` 解析 |
+| `SERVER_PORT` / `MANAGEMENT_PORT` | 业务/管理端口 | 按模块内置默认值 |
+| `APEX_ENV_FILE` | app.sh 加载的环境文件 | 不加载 |
+| `DB_MASTER_*` / `PG*` | 备份恢复连接凭据 | 见 backup/README.md |
 
 ### 脚本配置方式
 

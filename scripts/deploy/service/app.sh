@@ -3,7 +3,8 @@
 # Apex Scaffold - 微服务 java -jar 部署守护脚本
 # ============================================================
 # 微服务模式下每个进程对应一个微服务模块（apex-gateway / apex-auth-service /
-# apex-system-service / apex-workflow-service / apex-office-service / apex-file-service），
+# apex-system-service / apex-workflow-service / apex-office-service / apex-file-service /
+# apex-integration-service / apex-job-service / apex-masking-service），
 # 由 APEX_SERVICE_MODULE 指定；旧单体 apex-interfaces 可执行 jar 已随单体退役移除。
 # 支持普通 java -jar 方式在各环境（dev/it/prod）后台运行、停止、
 # 重启、查看状态与日志，无需 Podman / systemd。
@@ -120,7 +121,7 @@ APP_OUT_LOG="${APP_OUT_LOG:-${PROJECT_ROOT}/logs/${SERVICE_MODULE}.out.log}"
 case "${SERVICE_MODULE}" in
   apex-auth-service) DEFAULT_SERVER_PORT=8081 ;;
   apex-system-service) DEFAULT_SERVER_PORT=8082 ;;
-  apex-workflow-service) DEFAULT_SERVER_PORT=8083 ;;
+  apex-workflow-service) DEFAULT_SERVER_PORT=8093 ;;
   apex-office-service) DEFAULT_SERVER_PORT=8084 ;;
   apex-file-service) DEFAULT_SERVER_PORT=8085 ;;
   apex-integration-service) DEFAULT_SERVER_PORT=8094 ;;
@@ -166,7 +167,7 @@ else
     "${PROJECT_ROOT}/${SERVICE_MODULE}/target/${SERVICE_MODULE}"-*.jar \
     "${PROJECT_ROOT}/${SERVICE_MODULE}"-*.jar; do
     [ -f "${candidate}" ] || continue
-    case "${candidate}" in *-sources.jar|*-javadoc.jar) continue ;; esac
+    case "${candidate}" in *-sources.jar|*-javadoc.jar|*-test-support.jar|*-tests.jar) continue ;; esac
     JAR="${candidate}"
     break
   done

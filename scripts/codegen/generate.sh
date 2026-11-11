@@ -5,10 +5,10 @@
 # 用法:
 #   ./scripts/codegen/generate.sh -i <definition.json> [-o <outputDir>] [-v <migrationVersion>] [-f <frontendDir>]
 #
-# 示例:
-#   ./scripts/codegen/generate.sh -i examples/product.json
-#   ./scripts/codegen/generate.sh -i examples/product.json -o ./generated -v 3
-#   ./scripts/codegen/generate.sh -i examples/product.json -f /path/to/apex-admin-web   # 同时生成 Vue3 页面
+# 示例（在仓库根目录执行）:
+#   ./scripts/codegen/generate.sh -i scripts/codegen/examples/product.json
+#   ./scripts/codegen/generate.sh -i scripts/codegen/examples/product.json -o ./generated -v 3
+#   ./scripts/codegen/generate.sh -i scripts/codegen/examples/product.json -f /path/to/apex-admin-web   # 同时生成 Vue3 页面
 #
 # 依赖: sdkman 默认 JDK 21 + mvnd（本项目统一构建环境）
 # ============================================================

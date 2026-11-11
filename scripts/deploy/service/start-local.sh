@@ -2,7 +2,8 @@
 
 # 启动脚本 - 使用 java -jar 方式在本地运行单个微服务
 # 微服务模式下每个进程对应一个微服务模块（apex-gateway / apex-auth-service /
-# apex-system-service / apex-workflow-service / apex-office-service / apex-file-service），
+# apex-system-service / apex-workflow-service / apex-office-service / apex-file-service /
+# apex-integration-service / apex-job-service / apex-masking-service），
 # 由 APEX_SERVICE_MODULE 指定（默认 apex-system-service）。旧单体 apex-interfaces 可执行 jar 已退役。
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -71,7 +72,7 @@ fi
 if [ -n "${APEX_JAR:-}" ]; then
   JAR="${APEX_JAR}"
 else
-  JAR="$(ls "${PROJECT_ROOT}"/"${SERVICE_MODULE}"/target/"${SERVICE_MODULE}"-*.jar 2>/dev/null | grep -v -- '-sources.jar' | head -n 1)"
+  JAR="$(ls "${PROJECT_ROOT}"/"${SERVICE_MODULE}"/target/"${SERVICE_MODULE}"-*.jar 2>/dev/null | grep -Ev -- '-sources\.jar|-javadoc\.jar|-test-support\.jar|-tests\.jar' | head -n 1)"
 fi
 if [ -z "${JAR:-}" ] || [ ! -f "${JAR}" ]; then
   echo "❌ 未找到可执行 JAR（模块 ${SERVICE_MODULE}）。请先构建: ./scripts/build/build.sh -Penterprise"

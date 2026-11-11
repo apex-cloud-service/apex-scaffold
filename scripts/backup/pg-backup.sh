@@ -11,8 +11,9 @@
 #
 # 用法:
 #   ./pg-backup.sh --yes
-#   ./pg-backup.sh --container apex-infra-postgres --keep 14 --yes
+#   ./pg-backup.sh --container <你的-postgres-容器名> --keep 14 --yes
 #   ./pg-backup.sh --db apex_system --upload --mc-alias minio --mc-bucket apex-backups --yes
+# 注: 仓库随包 Compose 未提供 PostgreSQL 容器，--container 需指向自行部署的实例。
 #
 # 环境变量:
 #   PGHOST / PGPORT / PGUSER / PGPASSWORD / PGDATABASE

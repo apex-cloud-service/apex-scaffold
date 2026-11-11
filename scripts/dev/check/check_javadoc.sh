@@ -333,7 +333,7 @@ find apex-system/src/main/java -name "*Handler.java"
 
 **P1 - 应用服务层** (Service):
 \`\`\`bash
-find apex-application/src/main/java -name "*Service.java"
+find apex-system/src/main/java -path "*application/service*" -name "*Service.java"
 \`\`\`
 
 **P2 - 领域层** (Domain Model, Repository):

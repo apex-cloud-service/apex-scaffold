@@ -13,7 +13,7 @@ echo ""
 # 检查后端 readiness，只有可接收流量时才认为服务已运行
 check_backend() {
     echo "检查后端服务 readiness..."
-    if curl -s "${APEX_READINESS_URL:-http://localhost:8081/actuator/health/readiness}" > /dev/null 2>&1; then
+    if curl -s "${APEX_READINESS_URL:-http://localhost:8083/actuator/health/readiness}" > /dev/null 2>&1; then
         echo "✅ 后端服务已运行"
         return 0
     else
@@ -125,11 +125,11 @@ main_menu() {
         5)
             echo ""
             echo "文档列表："
-            echo "- docs/frontend-code-update-guide.md (前端更新指南)"
-            echo "- docs/frontend-update-confirmation.md (前端更新确认)"
-            echo "- docs/integration-test-guide.md (联调测试指南)"
-            echo "- docs/webflux-handler-summary.md (后端实施总结)"
-            echo "- docs/final-completion-report.md (最终完成报告)"
+            echo "- docs/00-getting-started/quickstart.md (快速启动)"
+            echo "- docs/01-guides/developer-handbook.md (开发手册)"
+            echo "- docs/06-testing/integration-test-guide.md (联调测试指南)"
+            echo "- docs/05-operations/deployment.md (部署指南)"
+            echo "- docs/06-testing/README.md (测试指南总览)"
             echo ""
             main_menu
             ;;

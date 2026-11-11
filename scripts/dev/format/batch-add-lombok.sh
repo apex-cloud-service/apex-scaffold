@@ -125,7 +125,7 @@ import lombok.AllArgsConstructor;
 }
 
 echo "🔧 正在处理 DTO 类..."
-find apex-application/src/main/java -name "*DTO.java" -o -name "*Request.java" -o -name "*Response.java" | while read file; do
+find apex-system/src/main/java apex-auth/src/main/java apex-file/src/main/java apex-office/src/main/java apex-workflow/src/main/java apex-integration/src/main/java \( -name "*DTO.java" -o -name "*Request.java" -o -name "*Response.java" \) | while read file; do
     add_builder_to_dto "$file"
 done
 

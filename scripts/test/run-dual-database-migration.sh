@@ -5,8 +5,8 @@
 # 双库迁移演练（方案 §13 脚本交付物）。
 #
 # 在真实 MySQL / PostgreSQL 容器上执行两个域的全链 Flyway 迁移回归：
-#   - system：V1–V84（含 V76 租户编码统一、V77 RBAC 租户化、V78 套餐、
-#             V79 租户配置、V80 自助菜单、V81–V84 权限种子）
+#   - system：V1–V90（含 V76 租户编码统一、V77 RBAC 租户化、V78 套餐、
+#             V79 租户配置、V80 自助菜单、V81–V84 权限种子、V87–V90 能力门禁）
 #   - integration：V1–V3（连接器/凭据/审计、IoT 设备、Seata undo_log）
 #
 # 用法：
@@ -57,7 +57,7 @@ run_suite() {
 }
 
 if [[ "$TARGET" == "all" || "$TARGET" == "system" ]]; then
-    run_suite "system（V1-V84）" "apex-system" "SystemDualDatabaseMigrationIntegrationTest"
+    run_suite "system（V1-V90）" "apex-system" "SystemDualDatabaseMigrationIntegrationTest"
 fi
 
 if [[ "$TARGET" == "all" || "$TARGET" == "integration" ]]; then

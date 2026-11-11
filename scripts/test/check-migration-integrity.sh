@@ -51,6 +51,7 @@ MIGRATION_SERVICES=(
     "apex-workflow-service"
     "apex-file-service"
     "apex-office-service"
+    "apex-integration"
     "apex-system"
 )
 

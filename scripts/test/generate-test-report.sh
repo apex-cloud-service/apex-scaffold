@@ -106,7 +106,7 @@ echo "" >> "$SUMMARY_DIR/test-report.md"
 echo "| 模块 | 总数 | 通过 | 失败 | 错误 | 跳过 |" >> "$SUMMARY_DIR/test-report.md"
 echo "|------|------|------|------|------|------|" >> "$SUMMARY_DIR/test-report.md"
 
-for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-application apex-workflow apex-system apex-auth-service apex-example apex-generator; do
+for module in apex-common apex-license-spring-boot-starter apex-license-tools apex-domain apex-infrastructure apex-workflow apex-system apex-auth-service apex-example apex-generator; do
     m_total=0
     m_passed=0
     m_failed=0
