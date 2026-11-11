@@ -95,8 +95,8 @@
 | GET | `/info` | `getCurrentUserInfo` | 需登录 | 获取当前用户信息 |
 | POST | `/me/deletion-code` | `sendAccountDeletionCode` | 需登录 | 发送账号注销验证码 |
 | DELETE | `/me` | `deleteCurrentUser` | 需登录 | 注销当前账号 |
-| GET | `/{userId}` | `getUserById` | 无 | 根据 ID 获取用户信息 |
-| POST | `/list` | `listUsers` | 无 | 分页查询用户列表 |
+| GET | `/{userId}` | `getUserById` | 需登录 | 根据 ID 获取用户信息 |
+| POST | `/list` | `listUsers` | 需登录 | 分页查询用户列表 |
 
 ### 2.2 后台用户管理（AdminUserManagementHandler）
 
@@ -218,6 +218,7 @@
 | HTTP 方法 | 路径 | Handler 方法 | 权限要求 | 说明 |
 |-----------|------|--------------|----------|------|
 | GET | `` | `list` | `system:job:list` | 查询定时任务列表 |
+| GET | `/page` | `page` | `system:job:list` | 分页查询定时任务 |
 | GET | `/{id}` | `detail` | `system:job:query` | 查询任务详情 |
 | POST | `` | `create` | `system:job:add` | 创建定时任务 |
 | PUT | `/{id}` | `update` | `system:job:edit` | 更新定时任务 |
@@ -225,6 +226,8 @@
 | PUT | `/{id}/status` | `updateStatus` | `system:job:edit` | 启用/停用定时任务 |
 | POST | `/{id}/run` | `runOnce` | `system:job:run` | 立即执行一次任务 |
 | GET | `/{id}/logs` | `logs` | `system:job:query` | 查询任务执行日志 |
+
+> 部署归属：`/admin-api/v1/jobs/**` 由网关路由到 `apex-job-service`（8095），`JobProxy` 以纯代理转发回 system，契约路径与权限要求一致。
 
 ### 4.6 数据库配置（DatabaseConfigHandler）
 
@@ -420,13 +423,13 @@ office 站内信使用独立的 HTTP 消息路由和 WebSocket 握手路由，�
 
 | HTTP 方法 | 路径 | 说明 |
 |-----------|------|------|
-| POST | `/internal/v1/org/users/resolve` | 批量解析外部身份到系统用户快照 |
-| GET | `/internal/v1/org` | 组织与部门树查询 |
+| POST | `/internal/v1/org/users/resolve` | 批量解析外部身份到系统用户快照（`/internal/v1/org/**` 仅安全链前缀放行，无 GET 路由实现） |
 | GET | `/internal/v1/tenants/{code}/status` | 租户状态与能力快照 |
 | GET | `/internal/v1/tenants/{code}/capabilities` | 租户能力订阅快照（`exists/unbounded/features`） |
 | GET | `/internal/v1/overview` | 平台概览汇总 |
 | GET | `/internal/v1/open-apps/{clientId}/rate-limit-tier` | 开放应用限流档查询 |
-| POST/PUT/GET | `/internal/v1/open-apps`、`/internal/v1/open-apps/{clientId}` | 开放应用注册、更新与查询（由 system 反向调用 auth） |
+
+开放应用注册中心内部端点由 **auth-service** 提供（system 经 `AuthOpenAppRegistryRemoteAdapter` 反向调用，完整清单见 internal-api-contracts.md）：`POST/GET /internal/v1/open-apps`、`GET/PUT/DELETE /internal/v1/open-apps/{clientId}`、`PUT /internal/v1/open-apps/{clientId}/status`、`POST /internal/v1/open-apps/{clientId}/reset-secret`、`POST /internal/v1/open-apps/import`。
 
 ### 8.4 其他业务服务内部接口
 

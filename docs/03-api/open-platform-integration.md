@@ -25,7 +25,7 @@ sequenceDiagram
 
 - 应用复用认证中心 `OAUTH2_CLIENT` 注册表（`auth_config`，租户级），凭据签发/轮换沿用既有管理端点
 - 注册时声明：`appName`、`description`、`scopes`、`rateLimitTier`、`redirectUris`
-- 声明 scope 必须来自平台目录（`GET /api/v1/open-apps/scopes`），非法 scope 在详情接口的 `invalidScopes` 中回报
+- 声明 scope 必须来自平台目录（`GET /api/v1/open-apps/scopes`），非法 scope 在注册/更新时直接拒绝（HTTP 400 `PARAM_ERROR`，`msg` 中列出非法 scope）
 
 ## 3. scope 目录与权限映射
 

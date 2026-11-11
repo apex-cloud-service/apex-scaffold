@@ -4,15 +4,15 @@
 >
 > 路由以 `RouterFunction`、`RouterFunctions.route()`、`RouterFunctions.nest()` 和 `SpringdocRouteBuilder` 的可执行注册代码为准。`RouterOpenApiConfig` 中仅用于 SpringDoc 展示的占位路由不视为独立业务实现。
 >
-> 项目包含两个独立的 Spring Boot 运行边界：system 域（`apex-system-service`）和认证中心（`apex-auth-service`）。两者的路由、Handler、应用服务及数据源应分别理解和部署。
+> 项目按微服务拆分，路由分属多个 Spring Boot 运行边界：system（`apex-system-service`）、认证中心（`apex-auth-service`）、办公（`apex-office-service`）、文件（`apex-file-service`）、工作流（`apex-workflow-service`）、集成（`apex-integration-service`）、任务代理（`apex-job-service`）与脱敏（`apex-masking-service`）。各服务的路由、Handler、应用服务及数据源应分别理解和部署；下文分节按提供方 Router 登记，"system 域"指原 `/api/v1`、`/admin-api/v1` 前缀族的路由集合，不代表全部由 system-service 注册。
 
 ## 1. 路径与认证约定
 
 | 路径前缀 | 运行边界 | 典型用途 | 认证约定 |
 | --- | --- | --- | --- |
-| `/api/v1/**` | system 域 | 用户业务、办公集成、消息和工作流接口 | 默认需要认证；公开端点以安全配置和路由说明为准 |
-| `/admin-api/v1/**` | system 域 | 管理后台和运维接口 | 需要认证；启用 RBAC 时还需命中 `securityProperties.adminRoles` 中的任一角色，具体权限以 Handler 注解为准 |
-| `/api/office/**` | system 域 | 办公平台能力接口 | 默认需要认证 |
+| `/api/v1/**` | system / office / file / workflow 多服务 | 用户业务、办公集成、消息和工作流接口（网关按前缀分流到各服务，未命中前缀由 system-service 兜底） | 默认需要认证；公开端点以安全配置和路由说明为准 |
+| `/admin-api/v1/**` | system / office / file / workflow 多服务 | 管理后台和运维接口 | 需要认证；启用 RBAC 时还需命中 `securityProperties.adminRoles` 中的任一角色，具体权限以 Handler 注解为准 |
+| `/api/office/**` | office（`apex-office-service`） | 办公平台能力接口 | 默认需要认证 |
 | `/auth/sso/**` | system 域 | SSO 登录、回调和登出 | 全部需要认证；当前公开白名单未放行这些路径 |
 | `/oauth2/**`、`/.well-known/**` | 认证中心 | OAuth2 授权服务器标准端点 | 网关把该前缀路由到 `apex-auth-service`；仅 `token`、`revoke`、`introspect` 与 `/.well-known/**` 在 Web 安全层公开，其余已注册端点需要认证。system 库仍保留一份历史 `OAuth2RouterConfig`，但网关不路由到它，不能按该实现推断线上契约 |
 | `/api/v1/auth/**` | system 域 | 认证、授权及 Keycloak/OIDC 登录接口 | 默认需要认证；Keycloak 的三个登录/回调端点公开且仅在 `keycloak.enabled=true` 时装配 |
@@ -264,6 +264,14 @@
 | GET | `/admin-api/v1/generator/datasources/{id}/tables/{tableName}/columns` | `GeneratorAdminRouter` | `GenConfigHandler.getColumns` | 查询表字段 |
 | GET | `/admin-api/v1/generator/configs/{id}/history` | `GeneratorAdminRouter` | `GenConfigHandler.listHistory` | 查询生成历史 |
 | POST | `/admin-api/v1/generator/configs/{id}/generate` | `GeneratorAdminRouter` | `CodeGeneratorHandler.generate` | 执行代码生成 |
+| GET | `/admin-api/v1/generator/templates` | `GeneratorAdminRouter` | `generatorHandler.templates` | 查询生成模板 |
+| POST | `/admin-api/v1/generator/preflight` | `GeneratorAdminRouter` | `generatorHandler.preflight` | 生成前预检 |
+| POST | `/admin-api/v1/generator/preview` | `GeneratorAdminRouter` | `generatorHandler.preview` | 生成代码预览 |
+| GET | `/admin-api/v1/generator/artifacts/{id}/download` | `GeneratorAdminRouter` | `generatorHandler.download` | 按产物 ID 下载 |
+| POST | `/admin-api/v1/generator/tasks` | `GeneratorAdminRouter` | `generatorHandler.submit` | 提交异步生成任务 |
+| GET | `/admin-api/v1/generator/tasks/{id}` | `GeneratorAdminRouter` | `generatorHandler.taskProgress` | 查询任务进度 |
+| GET | `/admin-api/v1/generator/tasks/{id}/artifacts` | `GeneratorAdminRouter` | `generatorHandler.taskArtifacts` | 查询任务产物清单 |
+| POST | `/admin-api/v1/generator/tasks/{id}/cancel` | `GeneratorAdminRouter` | `generatorHandler.cancelTask` | 取消生成任务 |
 
 ### 2.10 OAuth2
 
@@ -390,6 +398,68 @@
 | DELETE | `/admin-api/v1/database/datasources/{id}` | `DatabaseConfigRouter` | `DatabaseConfigHandler.deleteDataSource` | 删除数据源 |
 | GET | `/admin-api/v1/database/datasources/{id}/metrics` | `DatabaseConfigRouter` | `DatabaseConfigHandler.getDataSourceMetrics` | 查询数据源指标 |
 
+### 2.16 能力、平台治理与开放应用管理（system，`/api/v2` 与 `/open-api`）
+
+> 运行边界：`apex-system-service`（Router 位于 `apex-system` 的 `interfaces/router`）。网关已为
+> `/api/v2/operations|platform|tenant-packages|capabilities|capability-usage|overview/**` 显式放行。
+
+| 方法 | 路径 | Router | Handler 方法 | 说明 |
+| --- | --- | --- | --- | --- |
+| GET | `/api/v2/capabilities` | `CapabilityRouter` | `CapabilityHandler.list` | 能力目录查询 |
+| GET | `/api/v2/capabilities/subscribed` | `CapabilityRouter` | `CapabilityHandler.subscribed` | 当前租户已订阅能力（网关能力快照同源） |
+| GET | `/api/v2/capability-usage` | `CapabilityUsageRouter` | `CapabilityUsageHandler.queryUsage` | 能力用量查询（`capability:usage:read` 门控） |
+| GET | `/api/v2/operations/health-report` | `OperationsRouter` | `OperationsHandler` | 运维健康报告 |
+| POST/GET | `/api/v2/operations/health-snapshots` | `OperationsRouter` | `OperationsHandler` | 健康快照创建与分页查询 |
+| GET | `/api/v2/operations/health-snapshots/export` | `OperationsRouter` | `OperationsHandler` | 快照导出查询 |
+| POST/GET | `/api/v2/operations/health-snapshots/export-tasks` | `OperationsRouter` | `OperationsHandler` | 导出任务创建与查询 |
+| GET | `/api/v2/operations/health-snapshots/export-tasks/{id}` | `OperationsRouter` | `OperationsHandler` | 导出任务详情 |
+| GET | `/api/v2/operations/health-snapshots/export-tasks/{id}/download` | `OperationsRouter` | `OperationsHandler` | 导出结果下载 |
+| GET | `/api/v2/operations/health-trend` | `OperationsRouter` | `OperationsHandler` | 健康趋势查询 |
+| GET | `/api/v2/operations/tenant-health-summary` | `OperationsRouter` | `OperationsHandler` | 租户健康汇总 |
+| GET/POST | `/api/v2/platform/tenants` | `PlatformTenantRouter` | `PlatformTenantHandler.page/create` | 平台租户分页与创建 |
+| GET | `/api/v2/platform/tenants/{id}` | `PlatformTenantRouter` | `PlatformTenantHandler.detail` | 平台租户详情 |
+| POST | `/api/v2/platform/tenants/{id}/actions` | `PlatformTenantRouter` | `PlatformTenantHandler.changeStatus` | 平台租户状态变更 |
+| PUT | `/api/v2/platform/tenants/{id}/quota` | `PlatformTenantRouter` | `PlatformTenantHandler.updateQuota` | 平台租户配额调整 |
+| GET/POST/PUT | `/api/v2/tenant-packages`（含 `/{packageCode}`） | `TenantPackageRouter` | `TenantPackageHandler` | 租户套餐查询/创建/更新 |
+| GET | `/api/v2/overview` | `PlatformOverviewRouter` | `PlatformOverviewHandler.overview` | 平台总览聚合 |
+| GET/POST | `/api/v1/open-apps` | `OpenAppAdminRouter` | `OpenAppAdminHandler` | 开放应用列表与注册 |
+| GET | `/api/v1/open-apps/scopes` | `OpenAppAdminRouter` | `OpenAppAdminHandler.scopes` | 开放 scope 目录 |
+| GET/PUT | `/api/v1/open-apps/{clientId}` | `OpenAppAdminRouter` | `OpenAppAdminHandler` | 开放应用详情与更新 |
+| POST | `/api/v1/open-apps/{clientId}/reset-secret` | `OpenAppAdminRouter` | `OpenAppAdminHandler.resetSecret` | 重置应用密钥 |
+| GET | `/admin-api/v1/open-apps/migration/export` | `OpenAppMigrationRouter` | `OpenAppMigrationHandler.export` | 开放应用迁移导出 |
+| POST | `/admin-api/v1/open-apps/migration/import` | `OpenAppMigrationRouter` | `OpenAppMigrationHandler.import` | 开放应用迁移导入 |
+| GET | `/open-api/users` | `OpenUserRouter` | `OpenUserHandler` | 开放 API 用户信息端点 |
+
+### 2.17 办公与文件服务补充端点（office / file 运行模块）
+
+> 运行边界：`apex-office-service`、`apex-file-service`（Router 位于各自 service 运行模块）。
+
+| 方法 | 路径 | Router | 说明 |
+| --- | --- | --- | --- |
+| POST/GET | `/api/v2/office/meeting-rooms` | `OfficeMeetingRoomRouter` | 会议室创建与列表 |
+| GET | `/api/v2/office/meeting-rooms/enabled`、`/available`、`/{roomId}` | `OfficeMeetingRoomRouter` | 会议室可用/详情查询 |
+| PUT/DELETE | `/api/v2/office/meeting-rooms/{roomId}` | `OfficeMeetingRoomRouter` | 会议室更新与删除 |
+| POST/DELETE | `/api/v2/office/meeting-rooms/{roomId}/bookings`（取消含 `/{eventId}`） | `OfficeMeetingRoomRouter` | 会议室预订与取消 |
+| POST | `/api/v2/office/sync/preflight`、`/preview`、`/tasks`、`/tasks/{taskId}/retry` | `OfficeSyncWizardRouter` | 办公平台组织同步向导（前缀 `/api/v2/office/sync`） |
+| GET | `/api/v2/office/sync/tasks`、`/tasks/{taskId}` | `OfficeSyncWizardRouter` | 同步任务查询 |
+| POST/GET | `/api/v2/office/notify/templates` | `OfficeNotifyRouter` | 通知模板创建与列表 |
+| GET | `/api/v2/office/notify/requests` | `OfficeNotifyRouter` | 通知记录查询 |
+| GET/PUT/DELETE | `/api/v2/office/notify/templates/{templateId}` | `OfficeNotifyRouter` | 通知模板详情/更新/删除 |
+| GET | `/api/v1/messages/inbox/cursor` | `MessageRouter` | 站内信游标分页收件箱 |
+| GET | `/api/v1/messages/{messageId}/deliveries` | `MessageRouter` | 站内信投递明细 |
+| GET | `/admin-api/v1/office/bindings/page` | `OfficeAdminRouter` | 办公绑定分页查询 |
+| POST | `/api/v1/file/chunk/init` | `ChunkRouter` | 初始化分片上传 |
+| POST | `/api/v1/file/chunk/upload` | `ChunkRouter` | 上传分片 |
+| POST | `/api/v1/file/chunk/merge` | `ChunkRouter` | 合并分片 |
+| GET | `/api/v1/file/chunk/status/{fileId}` | `ChunkRouter` | 查询分片状态 |
+| POST | `/api/v1/file/chunk/cleanup/{fileId}/retry` | `ChunkRouter` | 清理分片重试 |
+| GET | `/api/v1/file/preview` | `FileRouter` | 文件预览 |
+| POST | `/api/v1/file/orphan/{fileId}/retry` | `FileRouter` | 孤儿文件重试 |
+| GET | `/api/v1/files`、`/api/v1/files/generic` | `FileRouter` | 文件列表与通用查询 |
+| POST/GET | `/api/v2/files/{fileId}/shares` | `FileShareRouter` | 创建与查询文件分享 |
+| DELETE | `/api/v2/file-shares/{shareId}` | `FileShareRouter` | 撤销文件分享 |
+| POST | `/api/v2/file-shares/exchange`、`/api/v2/file-shares/download` | `FileShareRouter` | 公开兑换码换票与下载（`SystemConstants.PUBLIC_PATHS` 放行） |
+
 ## 3. 独立认证中心路由
 
 ### 3.1 登录、注销和令牌
@@ -499,6 +569,27 @@
 | DELETE | `/api/v1/auth/audit-logs/cleanup` | `AuditLogRouter` | `AuditLogHandler.cleanupExpiredLogs` | 清理过期审计日志 |
 | GET | `/api/v1/auth/audit-logs/{id}` | `AuditLogRouter` | `AuditLogHandler.getLog` | 查询审计日志详情 |
 
+### 3.7 密码找回（`PasswordRecoveryRouter`）
+
+| 方法 | 路径 | Handler 方法 | 认证说明 |
+| --- | --- | --- | --- |
+| POST | `/auth/v2/password-recovery/requests` | `PasswordRecoveryHandler.initiate` | 公开；发起找回请求 |
+| POST | `/auth/v2/password-recovery/verifications` | `PasswordRecoveryHandler.verify` | 公开；校验验证凭据 |
+| POST | `/auth/v2/password-recovery/confirmations` | `PasswordRecoveryHandler.confirm` | 公开；确认并重置密码 |
+
+### 3.8 auth 内部接口（`InternalAuthRouter`）
+
+| 方法 | 路径 | Handler 方法 | 说明 |
+| --- | --- | --- | --- |
+| POST | `/internal/v1/tokens/validate` | `validateToken` | 校验存量 Token 并返回用户语义快照 |
+| GET | `/internal/v1/tokens/revocations` | `tokenRevocations` | 撤销列表增量拉取（网关本地缓存） |
+| GET | `/internal/v1/users/{accountId}/permissions` | `getUserPermissions` | 查询用户权限码集合 |
+| POST/GET | `/internal/v1/open-apps` | `registry.create/list` | 开放应用注册与列表 |
+| GET/PUT/DELETE | `/internal/v1/open-apps/{clientId}` | `registry.get/update/delete` | 开放应用详情、更新与删除 |
+| PUT | `/internal/v1/open-apps/{clientId}/status` | `registry.status` | 开放应用状态变更 |
+| POST | `/internal/v1/open-apps/{clientId}/reset-secret` | `registry.rotateSecret` | 重置应用密钥 |
+| POST | `/internal/v1/open-apps/import` | `registry.importApp` | 开放应用批量导入 |
+
 ## 4. 非业务路由和文档说明
 
 ### 4.1 方法不允许处理
@@ -523,9 +614,9 @@
 
 ### 4.4 核对范围
 
-当前清单登记 336 条方法与路径注册：system 域（`apex-system-service` 兜底 `/api/v1/**`、`/admin-api/v1/**`）273 条，独立认证中心（`apex-auth-service`）63 条，来自本文列出的 36 个 Router 类。Keycloak 的 6 条条件装配路由包含在 system 域计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量。
+当前清单登记 409 条方法与路径注册：§2（`/api`、`/admin-api`、`/open-api` 前缀族，含 office/file/workflow 等运行模块注册）329 条，§3 独立认证中心（`apex-auth-service`）80 条，来自本文列出的各 Router 类。Keycloak 的 6 条条件装配路由包含在 §2 计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量。
 
-> 计数口径：仅为本文表格行数，用于快速核对文档自身完整性；新增或删除端点时应同步更新本表，路由完整性以各 Router 源码为准。
+> 计数口径：仅为本文表格行数（2026-11-11 按方法列重算，合并单元格如 `POST/GET` 计 1 条），用于快速核对文档自身完整性；新增或删除端点时应同步更新本表，路由完整性以各 Router 源码为准。
 
 ## 5. 主要源码索引
 

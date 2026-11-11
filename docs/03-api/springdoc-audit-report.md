@@ -1,5 +1,7 @@
 # SpringDoc注解完整性审计报告
 
+> **历史快照**：本文为 2026-09-08 的一次性审计记录；"24 个 Handler、139 个方法、100% 完整"等结论已不适用于当前源码，不能作为验证依据。最新缺口清单见同目录 [springdoc-annotation-audit.md](springdoc-annotation-audit.md)。
+
 ## 审计概述
 
 **审计时间**: 2026-09-08  

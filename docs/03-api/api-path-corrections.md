@@ -110,8 +110,8 @@ interface LoginRequest {
 **错误响应示例**:
 ```json
 {
-  "code": 1002,
-  "msg": "验证码错误",
+  "code": 4741,
+  "msg": "验证码错误或已过期",
   "traceId": "trace-def-456"
 }
 ```
@@ -120,12 +120,11 @@ interface LoginRequest {
 
 | code | msg | 说明 | 前端处理 |
 |------|-----|------|----------|
-| 1001 | 用户名或密码错误 | 凭证无效 | 提示用户重新输入 |
-| 1002 | 验证码错误 | 图形验证码错误 | 刷新验证码,重新输入 |
-| 1003 | 验证码已过期 | 验证码 TTL 超时 | 刷新验证码 |
-| 1009 | 登录失败次数过多 | 触发暴力破解防护 | 提示用户稍后再试或联系客服 |
-| 1011 | 短信验证码错误 | SMS 验证码无效 | 提示用户重新获取 |
-| 1012 | 短信验证码已过期 | SMS 验证码超时 | 提示用户重新获取 |
+| 401 | 未授权 | 用户名或密码错误（凭证无效走 UNAUTHORIZED） | 提示用户重新输入 |
+| 4742 | 请输入图形验证码后重试 | 触发风控后未携带验证码 | 展示验证码输入框 |
+| 4741 | 验证码错误或已过期 | 图形验证码校验失败 | 刷新验证码，重新输入 |
+| 1008 | 登录失败次数过多，请稍后再试 | 触发暴力破解防护（默认 20 次锁定） | 提示用户稍后再试或联系客服 |
+| 1021 | 验证码错误或已过期 | SMS 验证码无效或超时 | 提示用户重新获取 |
 
 #### 💡 前端集成示例
 
@@ -439,18 +438,19 @@ const beforeUpload = (file: File) => {
 }
 ```
 
-### 4.2 未确认端点 (⚠️ 请勿调用)
+### 4.2 不存在的端点 (⚠️ 请勿调用)
 
-以下端点**尚未在 `WorkflowRouter` 中确认**,前端请勿调用:
+以下路径**在 `WorkflowRouter` 中不存在**（`/api/workflow/**` 前缀从未注册）:
 
 | 路径 | 方法 | 说明 | 状态 |
 |------|------|------|------|
-| `/api/workflow/instances` | POST | 创建流程实例 | ⚠️ 未确认 |
-| `/api/workflow/tasks/pending` | GET | 查询待办任务 | ⚠️ 未确认 |
-| `/api/workflow/tasks/{taskId}/complete` | POST | 完成任务 | ⚠️ 未确认 |
-| `/api/workflow/instances/{instanceId}` | GET | 查询实例详情 | ⚠️ 未确认 |
+| `/api/workflow/instances` | POST | 创建流程实例 | ⚠️ 路径不存在 |
+| `/api/workflow/tasks/pending` | GET | 查询待办任务 | ⚠️ 路径不存在 |
+| `/api/workflow/tasks/{taskId}/complete` | POST | 完成任务 | ⚠️ 路径不存在 |
+| `/api/workflow/instances/{instanceId}` | GET | 查询实例详情 | ⚠️ 路径不存在 |
 
-**重要提示**: 如需使用以上功能,请与后端团队确认实现进度后再集成。
+**实际可用端点**: 对应能力已在 `WorkflowRouter` 实现，前缀为 `/api/v1/workflows/**`：
+`POST /api/v1/workflows/{workflowCode}/instances`、`GET /api/v1/workflows/tasks/pending`、`POST /api/v1/workflows/tasks/{taskId}/complete`；管理面为 `/admin-api/v1/workflows/instances`（列表/详情）。
 
 ---
 
@@ -482,14 +482,13 @@ const beforeUpload = (file: File) => {
 
 | 路径 | 方法 | 权限点 | 说明 |
 |------|------|--------|------|
-| `/admin-api/v1/users` | GET | `system:user:query` | 查询用户 |
-| `/admin-api/v1/users` | POST | `system:user:add` | 新增用户 |
-| `/admin-api/v1/users/{id}` | PUT | `system:user:edit` | 编辑用户 |
-| `/admin-api/v1/users/{id}` | DELETE | `system:user:remove` | 删除用户 |
-| `/admin-api/v1/roles` | GET | `system:role:query` | 查询角色 |
-| `/admin-api/v1/menus` | GET | `system:menu:query` | 查询菜单 |
-| `/admin-api/v1/workflows/instances` | GET | `workflow:instance:query` | 查询工作流实例 |
-| `/admin-api/v1/workflows/statistics` | GET | `workflow:statistics:query` | 工作流统计 |
+| `/admin-api/v1/users` | GET | `staff:manage` | 查询用户 |
+| `/admin-api/v1/users` | POST | `staff:manage` | 新增用户 |
+| `/admin-api/v1/users/{userId}` | PUT | `staff:manage` | 编辑用户（无 DELETE 端点，停用走状态接口） |
+| `/admin-api/v1/staff-roles` | GET | `staff:manage` | 查询角色（`/admin-api/v1/roles` 不存在） |
+| `/admin-api/v1/menus` | GET | `system:menu:list` | 查询菜单（详情 `system:menu:query`） |
+| `/admin-api/v1/workflows/instances` | GET | 需登录 | 查询工作流实例（WorkflowHandler 无权限注解） |
+| `/admin-api/v1/workflows/statistics` | GET | 需登录 | 工作流统计 |
 
 ---
 

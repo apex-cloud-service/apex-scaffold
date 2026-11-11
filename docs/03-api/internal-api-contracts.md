@@ -21,9 +21,9 @@
 | system | `GET /internal/v1/open-apps/{clientId}/rate-limit-tier` | 网关开放接口按应用分档限流（D2） | 提供方内部类型 |
 | system | `/internal/v1/interests/**` | 仓内未见跨服务消费方（system 用户画像兴趣路径，安全链特判） | system 自有路径 |
 | auth | `POST /internal/v1/tokens/validate` | 仓内未见调用方（预留内部契约；system 本地 JWT 验签，不经此端点） | `apex-api-contract` 的 `TokenValidationRequest` / `TokenValidationDTO` |
-| auth | `POST /internal/v1/tokens/revocations` | 仓内未见调用方（预留内部契约） | 提供方契约接口 |
+| auth | `GET /internal/v1/tokens/revocations`（`since` 必填） | 网关（`TokenRevocationFilter` 拉取撤销记录刷新本地撤销缓存，见网关 `revocation.url`） | 提供方契约接口 |
 | auth | `GET /internal/v1/users/{accountId}/permissions` | 仓内未见调用方（预留内部契约；system 统一授权实走 `/auth/v1/authorization/users/{id}` 公开契约，见 `AuthCenterPermissionClient`） | 提供方契约接口 |
-| auth | `POST /internal/v1/open-apps`、`/open-apps/import`、`/open-apps/{clientId}/status`、`/open-apps/{clientId}/reset-secret` | system（`AuthOpenAppRegistryRemoteAdapter` 开放应用注册中心管理） | `apex-api-contract` 的 `OpenAppRegistrationRequest/Response`、`OpenAppImportRequest`、`OpenAppStatusRequest` |
+| auth | `POST /internal/v1/open-apps`（创建）、`GET /internal/v1/open-apps`（列表）、`GET /internal/v1/open-apps/{clientId}`（详情）、`PUT /internal/v1/open-apps/{clientId}`（更新）、`PUT /internal/v1/open-apps/{clientId}/status`、`POST /internal/v1/open-apps/{clientId}/reset-secret`、`DELETE /internal/v1/open-apps/{clientId}`、`POST /internal/v1/open-apps/import` | system（`AuthOpenAppRegistryRemoteAdapter` 开放应用注册中心管理） | `apex-api-contract` 的 `OpenAppRegistrationRequest/Response`、`OpenAppImportRequest`、`OpenAppStatusRequest` |
 | office | `POST /internal/v1/notify` | 仓内未定位具体调用方（按提供方 javadoc：集群内服务统一消息门面按模板投递） | 提供方契约接口 |
 | office | `GET /internal/v1/office/messages/stats` | system（`/internal/v1/overview` 聚合） | 只读统计，字段名勿改 |
 | file | `GET /internal/v1/file/stats` | system（`/internal/v1/overview` 聚合） | 只读统计，字段名勿改（`FileInternalHandler`） |

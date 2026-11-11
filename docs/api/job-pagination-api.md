@@ -88,7 +88,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 | 字段名 | 类型 | 说明 |
 |--------|------|------|
-| code | Integer | 响应码（200表示成功） |
+| code | Integer | 响应码（0 表示成功） |
 | msg | String | 响应消息 |
 | data | PageResponse | 分页数据对象 |
 | traceId | String | 请求追踪ID |
@@ -100,7 +100,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | total | Long | 总记录数 |
 | pageNum | Integer | 当前页码 |
 | pageSize | Integer | 每页大小 |
-| records | List\<JobDTO\> | 任务记录列表 |
+| pages | Integer | 总页数 |
+| hasNext | Boolean | 是否还有下一页（派生字段） |
+| list | List\<JobDTO\> | 任务记录列表（`records` 为同一数组的序列化别名，均会输出） |
 
 ### 3.3 JobDTO结构
 
@@ -122,7 +124,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```json
 {
-  "code": 200,
+  "code": 0,
   "msg": "操作成功",
   "data": {
     "total": 100,
@@ -165,7 +167,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```json
 {
-  "code": 200,
+  "code": 0,
   "msg": "操作成功",
   "data": {
     "total": 0,
@@ -196,15 +198,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 | 错误码 | 错误消息 | 说明 | 解决方案 |
 |--------|---------|------|----------|
-| 1001 | 参数校验失败 | 参数不符合校验规则 | 检查参数是否符合约束条件 |
-| 1001 | 页码必须大于等于1 | pageNum小于1 | 将pageNum设置为≥1的整数 |
-| 1001 | 每页大小必须在1-100之间 | pageSize超出范围 | 将pageSize设置在1-100之间 |
-| 1001 | 页码必须是有效数字 | pageNum不是数字 | 确保pageNum参数为整数 |
-| 1001 | 每页大小必须是有效数字 | pageSize不是数字 | 确保pageSize参数为整数 |
-| 1001 | 状态值必须是0或1 | status参数无效 | status只能为0或1 |
-| 2003 | 未授权访问 | 未提供或Token无效 | 提供有效的Bearer Token |
-| 2004 | Token已过期 | JWT Token已过期 | 重新登录获取新Token |
-| 5000 | 系统内部错误 | 服务器异常 | 联系技术支持 |
+| 400 | 参数错误（`PARAM_ERROR`） | pageNum/pageSize/status 等参数不符合校验规则（页码≥1、每页 1-100、status 为 0/1） | 检查参数是否符合约束条件 |
+| 401 | 未授权（`UNAUTHORIZED`） | 未提供或 Token 无效 | 提供有效的 Bearer Token |
+| 40101 | 登录已过期，请重新登录（`TOKEN_EXPIRED`） | JWT Token 已过期 | 重新登录获取新 Token |
+| -1 | 系统错误（`ERROR`） | 服务器异常 | 联系技术支持 |
 
 ### 4.3 参数错误示例
 
@@ -221,7 +218,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```json
 {
-  "code": 2003,
+  "code": 03,
   "msg": "未授权访问",
   "data": null,
   "traceId": "1a2b3c4d5e6f7g8h"
@@ -333,7 +330,7 @@ params = {
 response = requests.get(url, headers=headers, params=params)
 data = response.json()
 
-if data['code'] == 200:
+if data['code'] == 0:
     page_data = data['data']
     print(f"总数: {page_data['total']}")
     for job in page_data['records']:

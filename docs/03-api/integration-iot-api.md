@@ -31,7 +31,7 @@
 | GET | `/integration/v1/credentials` | 凭据列表（**仅返回元数据，不返回密文**） |
 | POST | `/integration/v1/credentials` | 创建凭据（AES-256-GCM 加密存储） |
 | GET | `/integration/v1/credentials/{id}` | 凭据元数据 |
-| POST | `/integration/v1/credentials/{id}/rotate` | 轮换凭据（版本递增，旧版本失效） |
+| PUT | `/integration/v1/credentials/{id}/rotate` | 轮换凭据（版本递增，旧版本失效） |
 | DELETE | `/integration/v1/credentials/{id}` | 删除凭据 |
 
 **安全约束**：明文不落库、不返前端、不写日志；轮换后旧凭据立即失效。

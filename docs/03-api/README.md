@@ -108,7 +108,7 @@ http://localhost:8080/v3/api-docs
 
 ```json
 {
-  "code": 200,
+  "code": 0,
   "msg": "操作成功",
   "data": {},
   "traceId": "trace-id-value"

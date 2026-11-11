@@ -1,6 +1,7 @@
 # SSO 单点登录模块实施总结
 
 > **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
+> **勘误（2026-11-11）**：文中出现的 `system:sso:session:statistics`、`system:sso:audit:list`、`system:sso:audit:statistics` 三个权限码已改名，当前代码为 `system:sso:session:stat`、`system:sso:auditlog:list`、`system:sso:auditlog:stat`（见 `SsoSessionHandler` / `SsoAuditLogHandler`）。
 
 > **完成时间**: 2026-09-19  
 > **状态**: ✅ 完成  
