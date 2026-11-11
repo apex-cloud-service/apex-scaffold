@@ -420,6 +420,13 @@ management:
           server:
             # 请求延迟百分位：P50/P90/P95/P99
             requests: 0.5, 0.9, 0.95, 0.99
+      # apex.api.response.time（MetricsWebFilter）发布 3s SLO 桶，
+      # 供 alert-rules.yml SlowRequestsExcessive（le="3.0"）使用
+      slo:
+        apex:
+          api:
+            response:
+              time: 3s
   # ---------- 链路追踪（Micrometer Tracing + Zipkin） ----------
   tracing:
     # ✅ 启用链路追踪（企业版档位语义明确；basic/standard 可在档位配置关闭）

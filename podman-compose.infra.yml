@@ -193,8 +193,9 @@ services:
         -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard
         -jar /app.jar
     ports:
+      # 仅发布控制台 8858；8719 是 dashboard 内部 API 端口，
+      # 不发布到宿主，避免占用宿主直跑应用的 Sentinel 客户端传输端口（默认同为 8719）
       - "${SENTINEL_PORT:-8858}:8858"
-      - "8719:8719"
     restart: unless-stopped
     networks:
       - apex-infra

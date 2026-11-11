@@ -54,9 +54,6 @@ spec:
             - containerPort: 8080
               name: http
               protocol: TCP
-            - containerPort: 8081
-              name: management
-              protocol: TCP
           envFrom:
             - secretRef:
                 name: apex-secrets
@@ -78,7 +75,7 @@ spec:
           startupProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8081
+              port: 8080
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 30
@@ -92,7 +89,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8081
+              port: 8080
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 3
@@ -100,7 +97,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8081
+              port: 8080
             periodSeconds: 2
             timeoutSeconds: 3
             failureThreshold: 3

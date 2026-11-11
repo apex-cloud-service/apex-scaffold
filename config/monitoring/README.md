@@ -56,7 +56,7 @@ workflow（8093）、office（8084）、file（8085）与 integration 管理端�
 
 | 能力 | 组件 | 说明 |
 |------|------|------|
-| 指标采集 | Micrometer + `/actuator/prometheus`（各服务管理端口） | `apex_api_*` 自定义请求指标 + JVM 标准指标 + 连接池指标（dev 用 `hikaricp_*`，prod 用 `druid_*`） |
+| 指标采集 | Micrometer + `/actuator/prometheus`（各服务管理端口） | `apex_api_*` 自定义请求指标 + JVM 标准指标 + 连接池指标（业务服务统一 Hikari，`hikaricp_*`；仅 example 演示档用 Druid，`druid_*`） |
 | Redis 健康 | `RedissonMetricsBinder` | `redisson_healthy`（节点 PING 探针）+ `redisson_nodes_total` |
 | 治理指标 | Sentinel Prometheus exporter（9092，仅 `system-service`） | `sentinel_metrics{type="blockQps"}` / `type="rt"` 等 Gauge 快照；不参与其他服务抓取 |
 | 健康探针 | Blackbox Exporter（9115） | 探测 `/actuator/health`，支撑 `probe_success` 告警 |

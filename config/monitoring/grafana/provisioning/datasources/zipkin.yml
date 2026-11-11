@@ -7,19 +7,14 @@ datasources:
     url: http://zipkin:9411
     isDefault: false
     jsonData:
-      # 链路追踪到日志关联
-      tracesToLogsV2:
-        datasourceUid: 'loki'
-        spanStartTimeShift: '-1h'
-        spanEndTimeShift: '1h'
-        tags: ['trace_id']
-      
+      # 注意：未置备 Loki 数据源（uid=loki），故不启用 tracesToLogsV2；
+      # 引入 Loki provisioning 后可恢复 trace→日志关联。
       # 链路追踪到指标关联
       tracesToMetrics:
         datasourceUid: 'prometheus'
         spanStartTimeShift: '-1h'
         spanEndTimeShift: '1h'
-        tags: 
+        tags:
           - key: 'service.name'
             value: 'service'
       
