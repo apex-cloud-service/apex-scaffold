@@ -38,5 +38,5 @@ flowchart TB
   AUTO -.-> APP
   SVC -. "扫描装配" .-> HTTP
 
-  NOTE["包名 com.apex.scaffold.workflow；本库无 interfaces 层，HTTP 出口在 apex-workflow-service；apex-example 仅 test scope 依赖；流程定义为 DAG（节点/连线 JSON），持久化用 MyBatis-Plus + WorkflowTenantAccess 显式租户条件（fail-closed），超时扫描经 JdbcScanLease（JdbcTemplate）"]
+  NOTE["包名 com.apex.scaffold.workflow；本库无 interfaces 层，HTTP 出口在 apex-workflow-service；apex-example 无对本库的依赖；流程定义为 DAG（节点/连线 JSON），持久化用 MyBatis-Plus + WorkflowTenantAccess 显式租户条件（fail-closed），超时扫描经 JdbcScanLease（JdbcTemplate）"]
   DOM -.-> NOTE

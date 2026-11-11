@@ -12,7 +12,7 @@
 
 | 指标 | 数量 |
 |------|------|
-| **`.env.example` 变量条目** | 287 行有效赋值（含注释与分组，实际生效以部署注入为准） |
+| **`.env.example` 变量条目** | 511 行，其中 280 个有效赋值（其余为注释与分组说明，实际生效以部署注入为准） |
 | **覆盖说明** | 模板覆盖部署常用变量；未列入模板的键按服务 `application*.yml` 默认值运行 |
 
 ### 按功能模块分类统计
@@ -54,7 +54,7 @@
 | `APEX_GOVERNANCE_READINESS_WITHDRAW_TIMEOUT` | `5s` | readiness 摘流后的传播等待预算 | 全部 | ❌ |
 | `APEX_GOVERNANCE_FORCE_SHUTDOWN` | `true` | 总预算耗尽后是否强制停止剩余资源 | 全部 | ❌ |
 
-**在 .env.example 中**: ❌ 全部缺失
+**在 .env.example 中**: ✅ APEX_GOVERNANCE_* 10 项全部已覆盖
 
 ---
 
@@ -97,7 +97,7 @@
 | `APEX_REDIS_RETRY_INTERVAL` | `1500` | 重试间隔（毫秒） | 全部 | ❌ |
 | `APEX_REDIS_CLEANUP_ON_STARTUP` | `true` | 启动时清理旧格式数据 | dev | ❌ |
 
-**在 .env.example 中**: ✅ REDIS_PORT, REDIS_PASSWORD 已覆盖，其他缺失
+**在 .env.example 中**: ✅ REDIS_HOST/PORT/PASSWORD/DATABASE/POOL_MAX_ACTIVE/MAX_IDLE/MIN_IDLE/MAX_WAIT 全部已覆盖
 
 ---
 
@@ -126,7 +126,7 @@
 | `OUTBOX_RETENTION_DEAD_DAYS` | `30` | 死信事件保留时长（天） | 全部 | ❌ |
 | `OUTBOX_RETENTION_BATCH_SIZE` | `5000` | 每次清理批次大小（条） | 全部 | ❌ |
 
-**在 .env.example 中**: ✅ 部分已覆盖（ROCKETMQ_NAMESERVER, ROCKETMQ_NAMESRV_ADDR 等），Outbox 配置缺失
+**在 .env.example 中**: ✅ 已覆盖（OUTBOX_BATCH_SIZE/MAX_ATTEMPTS/PARALLELISM/LOCK_TIMEOUT_SECONDS/RETENTION_* 共 8 项）
 
 ---
 
@@ -172,7 +172,7 @@
 | `LOKI_URL` | `http://localhost:3100` | Loki 服务地址 | 全部 | ❌ |
 | `TRACE_SLOW_THRESHOLD_MS` | - | 慢请求判定阈值（毫秒） | 全部 | ❌ |
 
-**在 .env.example 中**: ❌ 全部缺失
+**在 .env.example 中**: ✅ 部分已覆盖——TRACING_ENABLED、TRACE_SAMPLING_RATE、ZIPKIN_BASE_URL、LOKI_ENABLED、GRAFANA_ENABLED 已列入；GRAFANA_URL、TRACE_SLOW_THRESHOLD_MS 未列入（按 yml 默认值运行）
 
 ---
 
@@ -191,7 +191,7 @@
 | `SENTINEL_NACOS_FLOW_DATA_ID` | `apex-sentinel-flow-rules` | 限流规则 DataId | enterprise | ❌ |
 | `SENTINEL_NACOS_DEGRADE_DATA_ID` | `apex-sentinel-degrade-rules` | 熔断规则 DataId | enterprise | ❌ |
 
-**在 .env.example 中**: ❌ 全部缺失
+**在 .env.example 中**: ✅ 全部已覆盖（10 项 SENTINEL_* 变量）
 
 ---
 
@@ -252,7 +252,7 @@
 | `MEILISEARCH_API_KEY` | - | Master API Key | 全部 | ❌ |
 | `MEILISEARCH_INDEX_PREFIX` | `apex_` | 索引名称前缀 | 全部 | ❌ |
 
-**在 .env.example 中**: ❌ 全部缺失
+**在 .env.example 中**: ✅ MEILISEARCH_ENABLED/URL/API_KEY/INDEX_PREFIX 已覆盖
 
 ---
 
@@ -346,7 +346,7 @@
 | `ENV_NAME` | - | 环境名称标识 | 全部 | ❌ |
 | `VAR` | - | 通用变量占位符 | 全部 | ❌ |
 
-**在 .env.example 中**: ✅ NACOS_* 部分已覆盖，其他缺失
+**在 .env.example 中**: ✅ 已覆盖——APEX_GENERATOR_OUTPUT_ROOT、ENV_NAME、NACOS_* 全部列入；STORAGE_*、FILE_MAX_SIZE_BYTES、FILE_JWT_SECRET 亦已覆盖（见存储与文件章节）
 
 ### 2.16 Nacos 配置中心 Data ID 清单（微服务化）
 

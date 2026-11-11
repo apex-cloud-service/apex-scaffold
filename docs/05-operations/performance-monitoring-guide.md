@@ -29,9 +29,11 @@
 - **架构**: L1 (Caffeine 本地缓存) + L2 (Redis 分布式缓存)
 - **效果口径**: 历史目标为提升缓存命中率；当前命中率需以
   `apex_cache_gets_total{result="hit|miss"}` 实测，不能引用未复现的历史数字
+- **TTL 口径**: 当前 `MultiLevelCacheConfig` 对本地缓存统一配置 `expireAfterWrite = 300s`；
+  下表按缓存名的差异化 TTL **未实现**，为历史规划记录，实际以该配置类为准
 
-**缓存配置**:
-| 缓存名称 | TTL | 适用场景 |
+**缓存规划（未实现的差异化 TTL，仅记录）**:
+| 缓存名称 | 规划 TTL | 适用场景 |
 |---------|-----|---------|
 | user-info | 1小时 | 用户基本信息 |
 | role-info | 1小时 | 角色权限信息 |
@@ -368,15 +370,11 @@ spring:
 
 ### 5.3 WebFlux调优
 
-**Reactor调度器配置**:
-```yaml
-spring:
-  reactor:
-    netty:
-      ioWorkerCount: 8  # CPU核心数
-      connectionProvider:
-        maxConnections: 500
-        maxIdleTime: 30s
+**Reactor Netty EventLoop 数量**（`spring.reactor.netty.*` 不是 Spring Boot 配置命名空间，项目经系统属性控制，见 apex-system `application.yml` 相关注释）：
+
+```bash
+# 以 JVM 系统属性方式启动
+java -Dreactor.netty.ioWorkerCount=8 -jar apex-system-service-*.jar
 ```
 
 ---

@@ -48,7 +48,7 @@ flowchart LR
 
     subgraph L5["L5 组合部署 / 示例"]
         BOOT["apex-boot-all<br/>common · domain · api-contract · 六个业务库"]
-        EXAMPLE["apex-example<br/>common · domain · cache · integration · system（workflow 仅 test）"]
+        EXAMPLE["apex-example<br/>common · domain · cache · integration · system"]
     end
 
     TOOLS["独立工具（无内部生产依赖）：<br/>apex-generator · apex-tools-deployment · apex-tools-build"]
@@ -160,5 +160,5 @@ flowchart LR
     EXAMPLE --> INTEG
     EXAMPLE --> SYSTEM
 
-    NOTE["test scope 未计入：auth-service→system、office-service→gateway、example→workflow；MQTT 客户端 optional；无循环依赖"]
+    NOTE["test scope 未计入：auth-service→system、office-service→gateway；MQTT 客户端 optional；无循环依赖"]
     TOOLS -.-> NOTE

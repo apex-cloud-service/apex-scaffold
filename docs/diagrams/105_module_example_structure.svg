@@ -39,7 +39,7 @@
   <text x="60" y="470" class="legend" font-weight="600">依赖</text>
   <text x="60" y="496" class="box-desc">→ apex-common · apex-domain · apex-system</text>
   <text x="60" y="518" class="box-desc">→ infrastructure-cache / integration（能力演示）</text>
-  <text x="60" y="540" class="box-desc">← apex-workflow 仅 test scope 依赖（独立演进验证）</text>
+  <text x="60" y="540" class="box-desc">← 无对 apex-workflow 的依赖</text>
 
   <!-- right -->
   <rect x="500" y="92" width="860" height="250" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>

@@ -9,8 +9,8 @@
 | 系统与租户治理 | `apex-system` | `UserEntity`、`RoleEntity`、`TenantEntity`、`TenantPackageEntity` | 用户/组织/角色/菜单、租户目录与生命周期、套餐与配额、平台配置 |
 | 认证授权 | `apex-auth` | `UserEntity`（认证侧）、`TokenEntity`、`SessionEntity`、`OAuth2Authorization` | 登录、令牌签发/轮换/撤销、OAuth2 四种授权、consent、MFA |
 | 工作流 | `apex-workflow` | `WorkflowDefinition`、`ProcessInstance`、`Task` | 流程定义（DAG）、实例推进、任务审批 |
-| 文件 | `apex-file` | `DocumentEntity`、`FileRecord`、`FileShare` | 上传/分片/下载、分享、存储后端适配 |
-| 办公协同 | `apex-office` | `Message`、`MessageTemplate`、`MeetingRoom`、`OfficeOrg` | 站内信与投递、办公平台同步、会议室 |
+| 文件 | `apex-file` | `DocumentEntity`、`FileEntity`、`FileChunkEntity`、`FileShareEntity` | 上传/分片/下载、分享、存储后端适配 |
+| 办公协同 | `apex-office` | `OfficeMessage`、`NotifyTemplate`、`MeetingRoomEntity`、`OfficeOrganizationMapping` | 站内信与投递、办公平台同步、会议室 |
 | 对外集成与设备 | `apex-integration` | 连接器配置、设备注册/影子/命令模型（connector 与 device 两个子域） | 出站连接器调用、租户凭据、入站 Webhook、IoT 设备接入（MQTT 由外部 EMQX 承载） |
 | 网关（薄适配层） | `apex-gateway` | —（无业务聚合） | 路由、验签、限流、灰度、访问日志 |
 
@@ -58,7 +58,7 @@ graph LR
 
 1. **分层**：domain 不依赖 interfaces/infrastructure；application 不依赖 interfaces/infrastructure（既有）。
 2. **跨上下文**：业务库之间不得相互 `import` 对方的 `domain/application/infrastructure` 包；跨上下文只能经 `apex-domain` 的 gateway 契约、`apex-api-contract` 的 DTO/事件，或 HTTP 防腐层（M3 新增）。
-3. **事件发布**：业务代码不得直接持有 MQ 客户端；领域事件必须经 `DomainEventPublisher` / `DomainEventChannel` 端口（M3 新增）。
+3. **事件发布**：业务代码不得直接持有 MQ 客户端；领域事件必须经 `DomainEventPublisher` / `DomainEventBus` 端口（M3 新增）。
 4. **租户隔离**：持久层禁用 `@InterceptorIgnore`（既有 `TenantIsolationArchTest`）。
 5. **时间字段**：指定命名的时间字段类型受 `TimeFieldArchTest` 约束（既有）。
 

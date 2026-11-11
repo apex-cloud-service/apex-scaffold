@@ -90,10 +90,10 @@ spring:
 
 ### 现状
 - `dynamic-datasource` 已集成，`application-prod.yml` 主库（master，Druid）配置完整。
-- 从库（slave）配置以注释形式提供（`DB_SLAVE_URL/USERNAME/PASSWORD` 环境变量）。
+- 从库（slave）数据源块已在 `application-prod.yml`（dev 同）**预置为未注释的活跃配置**，默认取空值 `${DB_SLAVE_URL:}` 等，由启动校验兜底提示。
 
 ### 启用步骤
-1. 取消 `application-prod.yml` 中 `slave` 数据源块注释，注入真实从库地址。
+1. 注入真实从库地址：`DB_SLAVE_URL` / `DB_SLAVE_USERNAME` / `DB_SLAVE_PASSWORD`（无需再取消注释）。
 2. 在只读方法上标注 `@DS("slave")`（如报表查询）：
 ```java
 @DS("slave")

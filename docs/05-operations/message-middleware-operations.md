@@ -82,23 +82,23 @@ rocketmq:
   producer:
     group: apex-producer-group
     send-message-timeout: 30000
-    retry-times-when-send-failed: 3
+    retry-times-when-send-failed: 2
 
+# 消息 Outbox 调度参数：仅 enabled/fixed-delay-ms 为配置键；
+# 批量大小硬编码 100（MessageOutboxDispatcher），重试上限/延迟来自
+# sys_message_outbox 表列 max_attempts（默认 5）与 retry_delay_seconds（默认 10，见 V45 迁移）。
 apex:
   outbox:
     dispatcher:
       enabled: true
       fixed-delay-ms: 5000
-      batch-size: 100
-    retry:
-      max-attempts: 5
-      delay-base-seconds: 10
 
 mq:
   consumer:
     idempotent-ttl-minutes: 30
     local-idempotent-max-size: 10000
-    idempotent-fallback-strategy: LOCAL
+    # 注意：当前仅本地缓存容量键存在；Redis 不可用时自动降级 LocalIdempotentCache 的
+    # 策略开关（idempotent-fallback-strategy）无实现，勿按降级行为设计依赖。
 ```
 
 ### 2.2 数据库初始化
@@ -107,12 +107,12 @@ mq:
 
 **MySQL**:
 ```sql
-source apex-system/src/main/resources/db/migration/mysql/V29__add_message_outbox.sql
+source apex-system/src/main/resources/db/migration/mysql/V45__add_message_outbox.sql
 ```
 
 **PostgreSQL**:
 ```sql
-\i apex-system/src/main/resources/db/migration/postgresql/V29__add_message_outbox.sql
+\i apex-system/src/main/resources/db/migration/postgresql/V45__add_message_outbox.sql
 ```
 
 验证表创建:
@@ -126,16 +126,20 @@ DESC sys_message_outbox;
 
 ### 3.1 核心指标
 
+指标名以实际注册为准（`OutboxMetricsReporter`、`MqConsumerMetrics`、`MqPublishMetricsAspect`）：
+
 | 指标名 | 类型 | 说明 | 告警阈值 |
 |--------|------|------|----------|
-| `apex.outbox.pending.count` | Gauge | 待投递消息数 | > 1000 |
-| `apex.outbox.processing.count` | Gauge | 投递中消息数 | > 500 |
-| `apex.outbox.delivered.rate` | Counter | 投递成功率 | < 95% |
-| `apex.outbox.dead.count` | Gauge | 死信消息数 | > 0 |
-| `apex.outbox.dispatch.latency` | Timer | 投递延迟(ms) | > 10000ms |
+| `apex.outbox.records{status="PENDING"}` | Gauge | 待投递消息数 | > 1000 |
+| `apex.outbox.records{status="PROCESSING"}` | Gauge | 投递中消息数 | > 500 |
+| `apex.outbox.records{status="DEAD"}` | Gauge | 死信消息数 | > 0 |
+| `apex.outbox.metrics.up` | Gauge | Outbox 指标采集存活标志 | = 0 |
 | `apex.mq.publish.count` | Counter | 消息发送计数 | - |
-| `apex.mq.consume.failed.count` | Counter | 消费失败计数 | > 50/5min |
-| `apex.mq.idempotent.duplicate.count` | Counter | 重复消息拦截数 | - |
+| `mq.consumer.consume.failed` | Counter | 消费失败计数 | > 50/5min |
+| `mq.consumer.consume.success` | Counter | 消费成功计数 | - |
+| `mq.consumer.duplicate.blocked` | Counter | 重复消息拦截数 | - |
+| `mq.consumer.dlq.messages` | Counter | 死信队列消息数 | > 0 |
+| `mq.consumer.lag` | Gauge | 消费积压 | 持续增长 |
 
 ### 3.2 监控查询
 
@@ -288,59 +292,37 @@ ORDER BY created_at DESC;
 
 ### 5.1 Outbox 调优
 
-**调度频率**:
+**调度频率**（`batch-size` 为 `MessageOutboxDispatcher` 内固定值 100，不可配置）:
 ```yaml
 apex:
   outbox:
     dispatcher:
       fixed-delay-ms: 3000
-      batch-size: 200
 ```
 - 降低 `fixed-delay-ms` 减少投递延迟
-- 提高 `batch-size` 增加吞吐量
 
-**重试策略**:
-```yaml
-apex:
-  outbox:
-    retry:
-      max-attempts: 10
-      delay-base-seconds: 5
-```
-- 提高 `max-attempts` 增加重试次数
-- 降低 `delay-base-seconds` 加快重试速度
+**重试策略**（消息 Outbox 无 `apex.outbox.retry.*` 配置键；重试上限与延迟由
+`sys_message_outbox` 表列 `max_attempts`（默认 5）、`retry_delay_seconds`（默认 10）按行控制。
+领域事件 Outbox 使用独立键 `apex.events.outbox.max-attempts`，默认 8）:
+- 提高单行 `max_attempts` 增加重试次数
+- 降低 `retry_delay_seconds` 加快重试速度
 
 ### 5.2 幂等性调优
 
-**Redis 降级策略**:
+**可用配置**（幂等记录走 Redis；`LocalIdempotentCache` 组件存在但当前无消费方接线，
+`idempotent-fallback-strategy` 键无实现，勿按 LOCAL/REJECT/ALLOW 三策略设计依赖）:
 ```yaml
 mq:
   consumer:
-    idempotent-fallback-strategy: LOCAL
     local-idempotent-max-size: 20000
     idempotent-ttl-minutes: 60
 ```
-- `LOCAL`: Redis不可用时使用本地内存
-- `REJECT`: Redis不可用时拒绝消费
-- `ALLOW`: Redis不可用时允许重复消费(不推荐)
 
 ### 5.3 消费者调优
 
-**并发度**:
-```yaml
-rocketmq:
-  consumer:
-    consume-thread-min: 20
-    consume-thread-max: 64
-```
-
-**批量消费**:
-```yaml
-rocketmq:
-  consumer:
-    pull-batch-size: 32
-    consume-message-batch-max-size: 16
-```
+当前 `rocketmq.consumer` 仅配置 `enabled` 开关；以下 RocketMQ 客户端参数项目未配置，
+如需调整请在部署层显式添加并自行验证（以 rocketmq-spring 默认值运行）：
+`consume-thread-min`、`consume-thread-max`、`pull-batch-size`、`consume-message-batch-max-size`。
 
 ---
 

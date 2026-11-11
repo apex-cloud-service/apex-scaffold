@@ -30,7 +30,7 @@
 - **7.2 容量规划**：每服务 JVM 1G 起步、网关/auth 2 副本、HPA。
 - **7.3 告警调优 + runbook/值班手册/SDK 升级指南**。
 - **7.4 Grafana 四类 dashboard + 告警规则上线、Zipkin traceId 贯通验证**。
-- **7.5 K8s 清单 + podman-compose**（gateway + 六个业务服务 + mysql/redis/rocketmq/nacos/minio）。
+- **7.5 K8s 清单 + podman-compose**（gateway + 六个业务服务 + mysql/redis/rocketmq/nacos；对象存储经 `STORAGE_*` 变量外接）。
 
 ---
 
@@ -40,16 +40,18 @@
 
 ### 2.1 JVM 参数模板
 
-各服务 `JAVA_OPTS` 统一采用（与 `k8s/deployment.yaml` / `Containerfile` 口径一致）：
+Compose/容器部署的 `JAVA_OPTS` 以 `Containerfile:197` 为准：
 
 ```bash
-JAVA_OPTS="-Xms512m -Xmx1g -Xss512k -XX:MaxDirectMemorySize=256m \
+JAVA_OPTS="-Xms512m -Xmx1024m \
   -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m \
   -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof \
   -XX:+ExitOnOutOfMemoryError \
   -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m \
   -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
 ```
+
+K8s 清单（`k8s/deployment.yaml`）为另一套更收紧的口径（堆 768m、`-Xss512k`、Direct 128m），两套不完全一致，以各部署载体实际定义为准。
 
 ### 2.2 副本与 HPA 基线
 
@@ -292,7 +294,7 @@ mvnd -pl <service> -am verify
 | 故障注入符合预期 | §3 混沌演练 | 见演练归档 |
 | 网关单点自动摘除 | §3.1 / §2.2（HPA、多副本） | 已具备清单 |
 | P95 ≤ 单体基线 ×1.3 | §4 压测 | 见压测归档 |
-| MQ/Outbox/DLQ 告警与消费追赶 | §5.1 告警规则 | 规则在 alert-rules.yml |
+| MQ/Outbox/DLQ 告警与消费追赶 | §5.1 告警规则 | 未实现（规划项，alert-rules.yml 尚无对应规则） |
 | traceId 全链路贯通（Zipkin） | §7.2 | 见验证记录 |
 | 四类 Grafana dashboard + 告警上线 | §7.1 / §5 | 已随 config/monitoring 提供 |
 | 灰度切流与一键回滚演练通过 | 执行计划 Phase 2.4 灰度 | 见测试报告 |

@@ -212,5 +212,5 @@
   <text x="60" y="1066" class="legend">• 35 个 reactor 模块：共享基础/领域/契约 4（含服务父 POM apex-services-bom，仅 dependencyManagement，图中未单列）· 设施与 starter 11 · 业务库 6 · 运行模块 9 · 组合/示例 2 · 独立工具 3。</text>
   <text x="60" y="1086" class="legend">• 框内文字列出该模块全部直接内部生产依赖；test 与 optional 依赖不计入箭头。</text>
   <text x="60" y="1106" class="legend">• apex-common 被 27 个模块直接依赖，apex-domain 被 19 个；无循环依赖：共享层不依赖业务库，业务库不依赖运行模块。</text>
-  <text x="60" y="1126" class="legend">• 仅为 test scope 的依赖：auth-service→apex-system、office-service→apex-gateway、example→workflow；MQTT 客户端为 optional。apex-infrastructure 仅兼容旧坐标，聚合五个能力 JAR。</text>
+  <text x="60" y="1126" class="legend">• 仅为 test scope 的依赖：auth-service→apex-system、office-service→apex-gateway；MQTT 客户端为 optional。apex-infrastructure 仅兼容旧坐标，聚合五个能力 JAR。</text>
 </svg>

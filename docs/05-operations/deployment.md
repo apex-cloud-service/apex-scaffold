@@ -514,7 +514,7 @@ podman run -d --name rmq-console --network apex-scaffold_apex-network \
 podman-compose -f config/monitoring/podman-compose.yml up -d
 
 # 访问
-# Grafana    http://localhost:3000   （admin / admin）
+# Grafana    http://localhost:3200   （admin / admin，宿主映射 3200:3000）
 # Prometheus http://localhost:9090
 # Zipkin     http://localhost:9411
 ```
@@ -615,13 +615,13 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 | `MANAGEMENT_SERVER_ADDRESS` | 127.0.0.1 | 管理端口监听地址；容器/远程采集设 `0.0.0.0` |
 | `APEX_LOG_DIR` | `./logs` | 日志根目录（见 [§9](#9-日志与监控)） |
 | `TZ` | Asia/Shanghai | 时区 |
-| `APEX_GOVERNANCE_DEPLOYMENT_MODE` | compose | 服务治理部署模式（`auto`/`compose`/`k8s`） |
+| `APEX_GOVERNANCE_DEPLOYMENT_MODE` | 代码/`.env` 默认 `auto`；Compose 注入默认 `compose` | 服务治理部署模式（`auto`/`compose`/`k8s`） |
 | `APEX_GOVERNANCE_SHUTDOWN_TIMEOUT` | 90s | 统一优雅关停预算 |
-| `APEX_REDIS_CLEANUP_ON_STARTUP` | false | 启动时是否清理 Redis 缓存 |
-| `STORAGE_LOCAL_BASE_PATH` | `./data/storage` | 本地存储根目录（apex-file-service 文件上传） |
+| `APEX_REDIS_CLEANUP_ON_STARTUP` | true | 启动时是否清理 Redis 缓存 |
+| `STORAGE_LOCAL_BASE_PATH` | yml 默认 `/root/data/apex/uploads`；Compose 固定 `/app/data/storage`；`.env` 模板值 `./data/storage` | 本地存储根目录（apex-file-service 文件上传） |
 | `FILE_MAX_SIZE_BYTES` | 10485760 | 单文件最大字节数（文件域） |
-| `MEILISEARCH_ENABLED` / `MEILISEARCH_URL` | true / `http://meilisearch:7700` | 全文搜索（系统服务） |
-| `LOKI_ENABLED` / `LOKI_URL` | true / `http://loki:3100` | 日志查询（配合 Grafana） |
+| `MEILISEARCH_ENABLED` / `MEILISEARCH_URL` | yml 默认 `false` / `http://localhost:7700`；Compose 注入 `true` / `http://meilisearch:7700` | 全文搜索（系统服务） |
+| `LOKI_ENABLED` / `LOKI_URL` | yml 默认 `false` / `http://localhost:3100`；Compose 注入 `true` / `http://loki:3100` | 日志查询（配合 Grafana） |
 
 ### 7.7 compose 编排变量（见 .env.example）
 
@@ -864,7 +864,7 @@ podman run --rm -v apex-scaffold_redis-data:/data -v "$(pwd)":/backup \
 - [ ] 接入外部 Nacos 集群（本地 `nacos` 单机服务仅用于起步）；确认 `NACOS_NAMESPACE` 按环境隔离
 - [ ] `MANAGEMENT_SERVER_ADDRESS`：公网裸跑建议保持 `127.0.0.1` 或经防火墙仅放行监控网段；容器/内网采集再设 `0.0.0.0`
 - [ ] 网关对外仅暴露 8080；各微服务管理端口不直接对外暴露（经网关路由）
-- [ ] 管理端点仅暴露 `health,info,metrics,prometheus,circuitbreakers`（已内置，勿开启 `env/configprops`）
+- [ ] 管理端点按服务最小暴露（system 为 `health,info,metrics,prometheus,circuitbreakers`；gateway 为 `health,info,prometheus,gateway`；auth 为 `health,info,prometheus,circuitbreakers`；integration 为 `health,info,metrics,prometheus`；job/masking 更小），勿开启 `env/configprops`
 - [ ] CORS：生产配置白名单（`cors.allowed-origins` 逗号分隔），非 `allow-all-origins`
 - [ ] 商业授权文件以只读卷挂载（`:ro`），私钥/公钥不入镜像与仓库
 - [ ] 确认文件域由 apex-file-service 独立提供（`FILE_MAX_SIZE_BYTES` / `STORAGE_*` 见 §7.6），并完成存储后端连通性校验

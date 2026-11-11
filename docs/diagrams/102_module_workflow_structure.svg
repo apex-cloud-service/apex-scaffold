@@ -46,7 +46,7 @@
   <text x="60" y="624" class="legend" font-weight="600">依赖</text>
   <text x="60" y="650" class="box-desc">→ 仅依赖 apex-domain + apex-common</text>
   <text x="60" y="672" class="box-desc">← 被 apex-workflow-service / apex-boot-all 装配</text>
-  <text x="60" y="694" class="box-desc">← apex-example 仅 test scope 依赖</text>
+  <text x="60" y="694" class="box-desc">← apex-example 无对本库的依赖</text>
 
   <!-- right: 4 layers -->
   <rect x="500" y="92" width="860" height="150" rx="10" fill="#0891b2" opacity="0.08" stroke="#0891b2" stroke-width="1.5"/>
@@ -102,6 +102,6 @@
   <line x1="700" y1="566" x2="700" y2="578" stroke="#059669" stroke-width="2" marker-end="url(#arrow)"/>
 
   <text x="700" y="762" class="note" text-anchor="middle">apex-workflow 是自包含 DDD 分层的业务模块：应用 → 领域 → 基础设施内聚成独立引擎，HTTP 出口在 apex-workflow-service</text>
-  <text x="700" y="790" class="note" text-anchor="middle">运行装配由 apex-workflow-service / apex-boot-all 完成；apex-example 仅 test scope 依赖本库</text>
+  <text x="700" y="790" class="note" text-anchor="middle">运行装配由 apex-workflow-service / apex-boot-all 完成；apex-example 无对本库的依赖</text>
   <text x="700" y="836" class="note" text-anchor="middle">外部依赖仅 apex-domain + apex-common，保证引擎可独立测试与演进</text>
 </svg>

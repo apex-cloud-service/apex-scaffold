@@ -56,7 +56,7 @@
 
   - `header()` 默认 `Idempotency-Key`；`expireTime()` 默认 600 秒；`required()` 默认 true（严格模式）
 
-- 切面：`apex-interfaces/.../aspect/IdempotentApiAspect.java`
+- 切面：`apex-system/.../aspect/IdempotentApiAspect.java`
 
   - `@Order(HIGHEST_PRECEDENCE + 10)`，拦截 `@annotation(idempotentApi)`
 
@@ -168,14 +168,14 @@ Reactor `Retry` 编程式完成，参数含义与声明式配置存在差异。�
 | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `apex-common/.../annotation/IdempotentApi.java`              | 新增注解                                                                                                                                                                 |
 | `apex-common/.../result/ResultCode.java`                     | 新增 4742 / 5002 / 5003                                                                                                                                                |
-| `apex-interfaces/.../aspect/IdempotentApiAspect.java`        | 新增响应式幂等切面；请求上下文经 `AspectRequestUtil.RequestMeta` 统一解析                                                                                                                |
-| `apex-interfaces/.../aspect/AntiReplayAspect.java`           | 修复函数式端点识别；请求头解析收敛至 `AspectRequestUtil.resolveHttpHeaders`                                                                                                            |
-| `apex-interfaces/.../aspect/AspectRequestUtil.java`          | 统一请求解析工具：`RequestMeta` record + `resolveRequestMeta`（函数式端点不依赖 `exchange()`）                                                                                          |
-| `apex-interfaces/.../monitor/SecurityMetricsRecorder.java`   | 新增 `recordRepeatSubmitRejected`                                                                                                                                      |
-| `apex-interfaces/.../config/MetricsConfig.java`              | 新增 `apex.security.repeat.submit.rejected` 计数器                                                                                                                        |
-| `apex-interfaces/.../handler/AuthHandler.java`               | `register` 接线 `@IdempotentApi(required=false)`                                                                                                                       |
-| `apex-application/.../config/LoginProtectionProperties.java` | 新增 `enabled` / `captchaAfterFailures`                                                                                                                                |
-| `apex-application/.../service/AuthService.java`              | 接线 `enabled` 开关 + 验证码升级强制                                                                                                                                            |
+| `apex-system/.../aspect/IdempotentApiAspect.java`        | 新增响应式幂等切面；请求上下文经 `AspectRequestUtil.RequestMeta` 统一解析                                                                                                                |
+| `apex-system/.../aspect/AntiReplayAspect.java`           | 修复函数式端点识别；请求头解析收敛至 `AspectRequestUtil.resolveHttpHeaders`                                                                                                            |
+| `apex-system/.../aspect/AspectRequestUtil.java`          | 统一请求解析工具：`RequestMeta` record + `resolveRequestMeta`（函数式端点不依赖 `exchange()`）                                                                                          |
+| `apex-system/.../monitor/SecurityMetricsRecorder.java`   | 新增 `recordRepeatSubmitRejected`                                                                                                                                      |
+| `apex-system/.../config/MetricsConfig.java`              | 新增 `apex.security.repeat.submit.rejected` 计数器                                                                                                                        |
+| `apex-system/.../handler/AuthHandler.java`               | `register` 接线 `@IdempotentApi(required=false)`                                                                                                                       |
+| `apex-system/.../config/LoginProtectionProperties.java` | 新增 `enabled` / `captchaAfterFailures`                                                                                                                                |
+| `apex-system/.../service/AuthService.java`              | 接线 `enabled` 开关 + 验证码升级强制                                                                                                                                            |
 | `application.yml` / `application-prod.yml`                   | 新增 `captcha-after-failures: 3`；更新开关注释                                                                                                                                |
 | i18n `messages_{zh_CN,zh_TW,en_US,th_TH}.properties`         | 新增 3 组文案                                                                                                                                                             |
 | 测试                                                           | `IdempotentApiAspectTest`（新增）、`AntiReplayAspectTest`（补函数式端点用例）、`SecurityMetricsRecorderTest`（补计数器）、`AuthServiceTest`（补开关/升级用例）；函数式/注解式端点请求解析用例覆盖 `AspectRequestUtil` |
@@ -203,7 +203,7 @@ Reactor `Retry` 编程式完成，参数含义与声明式配置存在差异。�
 
 | 缺口                                      | 影响               | 建议                                     |
 | --------------------------------------- | ---------------- | -------------------------------------- |
-| `DeadLetterQueueProcessor` 零处理器注册       | 死信消息无人消费，问题不可见   | 按业务注册 DLQ handler 并告警                  |
+| ~~`DeadLetterQueueProcessor` 零处理器注册~~（已缓解：`UserMessageDlqHandler` 已注册用户消息 DLQ 处理） | 其余业务域死信仍需按需注册 | 按业务注册 DLQ handler 并告警                  |
 | 百度内容审核适配器未接入上传链路                        | 图片/文本审核未真正生效     | 在 `FileHandler` 上传管线中接线                |
 | prod `login-protection.enabled: false`  | 生产无爆破防护（有意的暂缓决策） | 完成 yml 注释中 3 项验证后开启                    |
 | `lock-duration` 配置键未被属性类读取              | 配置漂移，运维误以为生效     | 删除该键或在 `LoginProtectionProperties` 中消费 |

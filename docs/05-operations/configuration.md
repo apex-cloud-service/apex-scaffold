@@ -79,7 +79,7 @@ bash scripts/utils/local-deployment.sh rollback --bundle /secure/totp-review --o
 ```yaml
 jwt:
   # JWT签名密钥(生产环境必须修改为强随机字符串,至少32字符)
-  secret: ${JWT_SECRET:change-this-in-production-min-32-chars}
+  secret: ${JWT_SECRET:change-me-in-production}
 
   # Access Token过期时间(毫秒),默认2小时
   access-token-expire: 7200000
@@ -89,12 +89,6 @@ jwt:
 
   # JWT密钥最小长度
   min-secret-length: 32
-  
-  # Token请求头名称
-  header: Authorization
-  
-  # Token前缀
-  prefix: "Bearer "
 ```
 
 **安全建议**:
@@ -438,14 +432,13 @@ apex:
 spring:
   cloud:
     sentinel:
-      # 是否启用 Sentinel 客户端
-      enabled: true
-      # 控制台地址（空 = 不连接控制台，仅本地规则生效）
       transport:
-        dashboard: localhost:8858
-        port: 8719
+        # 控制台地址（空 = 不连接控制台，仅本地规则生效；生产经 SENTINEL_DASHBOARD_URL 注入）
+        dashboard: ${SENTINEL_DASHBOARD_URL:}
+        # 客户端传输端口，与宿主/容器内其他占用对齐
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
       # 启动即初始化客户端，避免首请求懒加载延迟
-      eager: true
+      eager: ${SENTINEL_EAGER:true}
 ```
 
 **规则 Nacos 动态下发（apex.sentinel.nacos，生产热更新）**：
@@ -504,7 +497,7 @@ resilience4j:
 
 apex:
   circuit-breaker:
-    default:
+    default-config:
       failure-rate-threshold: 50
       wait-duration-in-open-state: 60s
       sliding-window-size: 100
@@ -581,18 +574,11 @@ rocketmq:
     
     # 异步发送失败重试次数
     retry-times-when-send-async-failed: 2
-  
-  # 消费者配置
+
+  # 消费者配置（项目仅启用开关，其余以 rocketmq-spring 默认值运行）
   consumer:
-    # 消费者组名
-    group: apex-consumer-group
-    
-    # 每次拉取消息数量
-    pull-batch-size: 32
-    
-    # 消费线程数
-    consume-thread-min: 10
-    consume-thread-max: 20
+    # 是否启用消息消费
+    enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
 
 mq:
   consumer:
@@ -789,20 +775,18 @@ apex:
 
 ### Prometheus配置
 
+各服务暴露清单不同，以各自 `application.yml` 为准：
+
+| 服务 | management.endpoints.web.exposure.include |
+| --- | --- |
+| apex-gateway | `health,info,prometheus,gateway` |
+| apex-system-service | `health,info,metrics,prometheus,circuitbreakers` |
+| apex-auth-service | `health,info,prometheus,circuitbreakers` |
+| apex-integration-service | `health,info,metrics,prometheus` |
+
 ```yaml
 management:
-  endpoints:
-    web:
-      exposure:
-        # 暴露的端点
-        include: health,info,prometheus,metrics
-    
   metrics:
-    export:
-      prometheus:
-        # 是否启用
-        enabled: true
-    
     tags:
       # 应用标签
       application: ${spring.application.name}
@@ -811,19 +795,15 @@ management:
 ### Zipkin链路追踪配置
 
 ```yaml
-spring:
+management:
+  tracing:
+    # 采样率（0.0-1.0，默认 0.1，经 TRACE_SAMPLING_RATE 覆盖）
+    sampling:
+      probability: ${TRACE_SAMPLING_RATE:0.1}
   zipkin:
-    # Zipkin服务器地址
-    base-url: http://localhost:9411
-    
-    # 采样率(0.0-1.0)
-    sampler:
-      probability: 1.0
-  
-  sleuth:
-    # 采样率
-    sampler:
-      probability: 1.0
+    tracing:
+      # Zipkin 上报端点（Boot 3 起为 management.zipkin.tracing.endpoint，spring.zipkin/spring.sleuth 已废弃）
+      endpoint: ${ZIPKIN_BASE_URL:http://localhost:9411}/api/v2/spans
 ```
 
 ### Grafana告警配置
@@ -913,39 +893,28 @@ springdoc:
 
 ## 🔄 功能开关
 
-通过以下配置可以按需启用/禁用功能模块:
+功能开关命名空间为 `apex.features.*`（`FeatureProperties`），当前共 6 个键：
 
 ```yaml
-features:
-  # JWT认证
-  jwt-auth: true
-  
-  # RBAC权限
-  rbac: true
-  
-  # 多级缓存
-  multi-level-cache: true
-  
-  # 限流熔断
-  rate-limit: true
-  
-  # 消息队列
-  message-queue: false  # 不需要时关闭以简化部署
-  
-  # 链路追踪
-  tracing: false  # 开发环境可关闭提升性能
-  
-  # 操作日志
-  operation-log: true
-  
-  # 监控指标
-  monitoring: true
-  
-  # API文档
-  api-docs: true
-  
-  # 国际化
-  i18n: true
+apex:
+  features:
+    # JWT认证（默认 true）
+    jwt-auth: true
+
+    # RBAC权限（默认 false；启用后管理端按角色授权）
+    rbac: false
+
+    # 多级缓存（默认 false）
+    cache: false
+
+    # 消息队列（默认 false）
+    message-queue: false
+
+    # 监控指标（默认 false）
+    monitoring: false
+
+    # 链路追踪（默认 false）
+    tracing: false
 ```
 
 ## 🎯 环境特定配置示例
@@ -955,16 +924,17 @@ features:
 ```yaml
 spring:
   profiles: dev
-  
+
 logging:
   level:
     root: DEBUG
     com.apex: DEBUG
 
 # 关闭不必要的功能提升启动速度
-features:
-  tracing: false
-  monitoring: false
+apex:
+  features:
+    tracing: false
+    monitoring: false
 ```
 
 ### 生产环境 (application-prod.yml)
@@ -972,20 +942,20 @@ features:
 ```yaml
 spring:
   profiles: prod
-  
+
 logging:
   level:
     root: WARN
     com.apex: INFO
-  
+
   file:
     name: /var/log/apex/application.log
 
-# 启用所有功能
-features:
-  tracing: true
-  monitoring: true
-  alert-enabled: true
+# 按需启用功能（其余键见上文，默认值均为 false）
+apex:
+  features:
+    tracing: true
+    monitoring: true
 
 # 安全加固
 jwt:
@@ -1040,7 +1010,7 @@ apex:
       queue-capacity: 128
       fair: false
       virtual-threads: false # 开启后该池改用虚拟线程执行器
-      max-concurrency: 32    # 可选，<= 0 或省略时沿用 threads
+      max-concurrency: 32    # 可选，省略或 0 时沿用 threads；负值启动校验直接失败
 ```
 
 ### 开关语义

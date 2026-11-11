@@ -1,43 +1,33 @@
 # CI/CD 集成说明 - Y2038 时间戳检查
 
-本文档说明如何在 CI/CD 流水线中集成 Y2038 时间戳问题的自动检查机制。
+本文档说明 Y2038 时间戳问题的自动检查机制及其与 CI/CD 的关系。
+
+> **口径说明（2026-11-11 更新）**：当前 `.github/workflows/ci-cd.yml` 仅有
+> `code-quality / unit-test / integration-test / build-image / release` 五个 job，
+> 此前描述的独立 `database-check` job 与 `unit-test` 中的专项 ArchUnit 步骤
+> **已不存在**；本文检查脚本与 ArchUnit 测试规则本身仍有效，但属**本地检查 +
+> verify 门禁间接覆盖**，未在 CI 中单独接线。
 
 ## 集成概述
 
-我们已将以下检查集成到 GitHub Actions CI/CD 流水线中:
-
-1. **数据库脚本检查** (`database-check` job)
-2. **ArchUnit 架构测试** (`unit-test` job 中的专项测试)
-
-这些检查会在每次提交和 Pull Request 时自动运行,确保新增代码符合时间字段使用规范。
+1. **数据库脚本检查**（本地脚本 `scripts/dev/check/check-flyway-timestamp-usage.sh`，当前未单独接入 CI）
+2. **ArchUnit 架构测试**（`TimeFieldArchTest` 等，随 `mvnd verify` 全量测试执行）
 
 ## 集成详情
 
-### 1. 数据库脚本检查任务 (database-check)
+### 1. 数据库脚本检查任务（本地脚本）
 
-**任务位置**: `.github/workflows/ci-cd.yml` 第 16-38 行
-
-**运行时机**: 
-- 推送到 `main` 或 `develop` 分支时
-- 创建针对 `main` 分支的 Pull Request 时
+**脚本位置**: `scripts/dev/check/check-flyway-timestamp-usage.sh`
 
 **检查内容**:
 - 扫描所有 MySQL Flyway 迁移脚本
 - 检测是否使用了 `TIMESTAMP` 类型(应使用 `DATETIME`)
 - 排除合法的 `CURRENT_TIMESTAMP` 用法
 
-**执行步骤**:
-```yaml
-- name: Check Flyway scripts for TIMESTAMP type usage
-  run: |
-    chmod +x scripts/dev/check/check-flyway-timestamp-usage.sh
-    bash scripts/dev/check/check-flyway-timestamp-usage.sh
+**执行方式**:
+```bash
+bash scripts/dev/check/check-flyway-timestamp-usage.sh
 ```
-
-**失败处理**:
-- 如果检查失败,任务会上传检查结果到 GitHub Artifacts
-- 构建、发布等后续任务将被阻止
-- PR 无法合并,直到问题修复
 
 **示例输出**:
 ```
@@ -58,23 +48,21 @@ apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_serv
 [ERROR] TIMESTAMP 类型范围限制为 1970-2038，存在 Y2038 问题
 ```
 
-### 2. ArchUnit 架构测试 (unit-test job)
+### 2. ArchUnit 架构测试
 
-**任务位置**: `.github/workflows/ci-cd.yml` 第 101-102 行
+**测试位置**: `apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java`
 
-**运行时机**: 
-- 在单元测试任务 (`unit-test`) 中执行
-- 每次提交和 Pull Request 时运行
+**运行时机**:
+- 随 `mvnd -T4 -B clean verify` 的 test 阶段全量执行（CI 的 `unit-test` job 同样会运行）
 
 **检查内容**:
 - 检查 PO 类和领域实体中的时间字段是否使用 `LocalDateTime`
 - 检查是否存在使用 32 位整数存储时间戳的情况
 - 验证时间字段命名规范
 
-**执行步骤**:
-```yaml
-- name: Run ArchUnit architecture tests
-  run: mvn -B -pl apex-infrastructure test -Dtest=TimeFieldArchTest,TenantIsolationArchTest
+**本地单独执行**:
+```bash
+mvnd -B -pl apex-infrastructure-persistence -am test -Dtest=TimeFieldArchTest
 ```
 
 **测试规则**:
@@ -97,21 +85,20 @@ apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_serv
 
 ### 3. 任务依赖关系
 
-我们已更新 CI/CD 流水线的任务依赖关系,确保质量检查通过后才进行构建和发布:
+CI/CD 流水线的任务依赖关系（以 `.github/workflows/ci-cd.yml` 实际定义为准）:
 
 ```yaml
 build-image:
-  needs: [database-check, code-quality, unit-test, integration-test]
+  needs: [code-quality, unit-test, integration-test]
 
 release:
-  needs: [database-check, code-quality, unit-test, integration-test]
+  needs: [code-quality, unit-test, integration-test]
 ```
 
 **依赖链**:
 ```
-database-check ──┐
-code-quality ────┤
-unit-test ───────┼──> build-image ──> Podman 镜像发布
+code-quality ─────┐
+unit-test ────────┼──> build-image ──> Podman 镜像发布
 integration-test ┘                   或
                                      release ──> GitHub Release
 ```
@@ -144,42 +131,36 @@ mvnd -pl apex-infrastructure test -Dtest=TimeFieldArchTest
 
 ### 提交到分支时
 
-1. **数据库脚本检查** (database-check)
-   - ✅ 通过: 检查下一个任务
-   - ❌ 失败: 阻止后续任务,提示开发者修复
-
-2. **代码质量检查** (code-quality)
+1. **代码质量检查** (code-quality)
    - 编译检查
    - Spotless 代码格式检查
    - PMD 静态分析
 
-3. **单元测试** (unit-test)
-   - 运行所有单元测试
-   - **运行 ArchUnit 架构测试**(包含时间字段检查)
+2. **单元测试** (unit-test)
+   - 运行所有单元测试（含 ArchUnit 架构测试）
    - 上传测试报告和覆盖率
 
-4. **集成测试** (integration-test)
+3. **集成测试** (integration-test)
    - 启动 MySQL 和 Redis 服务
    - 运行集成测试
 
-5. **构建镜像** (build-image, 仅 main 分支)
+4. **构建镜像** (build-image, 仅 main 分支)
    - 构建 JAR 包
    - 构建 Podman 镜像
-   - 推送到 Docker Hub
+   - 推送到镜像仓库
 
 ### Pull Request 时
 
 PR 检查会自动运行以下任务:
-- ✅ Database Script Check
 - ✅ Code Quality Check
 - ✅ Unit Tests (含 ArchUnit)
 - ✅ Integration Tests
 
-所有检查通过后,PR 才能合并。
+所有检查通过后,PR 才能合并；Flyway 脚本检查须在本地或按需手动执行。
 
 ## 常见问题
 
-### Q1: 如果 database-check 失败怎么办?
+### Q1: 如果 Flyway 脚本检查发现问题怎么办?
 
 **原因**: 新增或修改的 Flyway 脚本中使用了 `TIMESTAMP` 类型。
 
@@ -231,11 +212,10 @@ private LocalDateTime createTime;
 **GitHub Actions 页面**:
 1. 进入仓库 → Actions 标签页
 2. 选择对应的工作流运行记录
-3. 查看 `database-check` 或 `unit-test` 任务的日志
+3. 查看 `unit-test` 等任务的日志
 
-**失败时**:
-- 下载 Artifacts 中的检查结果文件
-- 查看详细的错误信息和文件列表
+**本地 Flyway 脚本检查**:
+- 直接运行 `bash scripts/dev/check/check-flyway-timestamp-usage.sh` 查看输出
 
 ## 最佳实践
 
