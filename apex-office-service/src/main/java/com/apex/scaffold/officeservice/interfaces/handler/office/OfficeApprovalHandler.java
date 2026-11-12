@@ -203,7 +203,7 @@ public class OfficeApprovalHandler {
 
     /**
      * 按流程实例 ID 请求撤销审批。
-     * @param request 包含 processInstanceId 路径参数的请求
+     * @param request 包含 processInstanceId 路径参数与可选 Idempotency-Key 请求头的请求
      * @return Result 包装的布尔操作结果，业务失败时 HTTP 400
      */
     @RequirePermission("office:approval:cancel")
@@ -222,6 +222,12 @@ public class OfficeApprovalHandler {
                         in = ParameterIn.PATH,
                         required = true,
                         description = "流程实例ID",
+                        schema = @Schema(type = "string")),
+                @Parameter(
+                        name = "Idempotency-Key",
+                        in = ParameterIn.HEADER,
+                        required = false,
+                        description = "幂等键，同一流程的重复撤销请求会重放首次结果",
                         schema = @Schema(type = "string"))
             },
             responses = {
@@ -242,10 +248,11 @@ public class OfficeApprovalHandler {
             })
     public Mono<ServerResponse> cancelApproval(ServerRequest request) {
         String processInstanceId = request.pathVariable("processInstanceId");
-        log.info("撤销审批，流程实例ID：{}", processInstanceId);
+        String idempotencyKey = request.headers().firstHeader("Idempotency-Key");
+        log.info("撤销审批，流程实例ID：{}，幂等键：{}", processInstanceId, idempotencyKey);
 
         return approvalService
-                .cancelApproval(processInstanceId)
+                .cancelApproval(processInstanceId, idempotencyKey)
                 .flatMap(success -> requestHandlerUtil.ok(Result.success(success)))
                 .doOnSuccess(res -> log.info("撤销审批完成"))
                 .onErrorResume(requestHandlerUtil::handleError);

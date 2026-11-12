@@ -3,6 +3,8 @@ package com.apex.scaffold.officeservice.interfaces.handler.office;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -211,7 +213,8 @@ class OfficeApprovalHandlerTest {
         @Test
         @DisplayName("happy path 返回 HTTP 200")
         void happyPath() {
-            when(approvalService.cancelApproval("inst_1")).thenReturn(Mono.just(true));
+            when(approvalService.cancelApproval(eq("inst_1"), nullable(String.class)))
+                    .thenReturn(Mono.just(true));
 
             StepVerifier.create(handler.cancelApproval(MockServerRequest.builder()
                             .pathVariable("processInstanceId", "inst_1")
@@ -223,7 +226,8 @@ class OfficeApprovalHandlerTest {
         @Test
         @DisplayName("服务异常时返回 HTTP 400")
         void serviceError() {
-            when(approvalService.cancelApproval("inst_1")).thenReturn(Mono.error(new IllegalStateException("boom")));
+            when(approvalService.cancelApproval(eq("inst_1"), nullable(String.class)))
+                    .thenReturn(Mono.error(new IllegalStateException("boom")));
 
             StepVerifier.create(handler.cancelApproval(MockServerRequest.builder()
                             .pathVariable("processInstanceId", "inst_1")

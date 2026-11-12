@@ -218,6 +218,7 @@ class OfficeFlywayMigrationTest {
 
         Set<String> migrationTables = new LinkedHashSet<>(EXPECTED_TABLES);
         migrationTables.add("undo_log");
+        migrationTables.add("off_approval_cancel_operation");
         assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
         assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
         Set<String> undoColumns =
