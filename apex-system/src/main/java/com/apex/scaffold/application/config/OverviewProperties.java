@@ -19,6 +19,9 @@ import org.springframework.stereotype.Component;
  *       缺省指向 8094 业务端口，部署时按实际拓扑覆盖）</li>
  *   <li>{@code apex.overview.cache-ttl-seconds}：聚合结果短 TTL 缓存秒数（默认 30）</li>
  *   <li>{@code apex.overview.timeout-millis}：单源调用超时毫秒数（默认 3000）</li>
+ *   <li>{@code apex.overview.bulkhead.<source>}：单源并发隔离舱壁的最大并发数；未配置的源
+ *       使用 {@code apex.overview.default-bulkhead-max-concurrency}（默认 8）。饱和即该源
+ *       立即降级（不排队等待），与其他源的隔离语义一致</li>
  * </ul>
  *
  * @author Apex Team
@@ -42,4 +45,10 @@ public class OverviewProperties {
 
     /** 单数据源调用超时毫秒数。 */
     private long timeoutMillis = 3000;
+
+    /** 数据源名称 → 舱壁最大并发数；仅对门面实际拉取的源生效。 */
+    private Map<String, Integer> bulkhead = new LinkedHashMap<>();
+
+    /** 未显式配置舱壁并发数的源的默认最大并发数。 */
+    private int defaultBulkheadMaxConcurrency = 8;
 }
