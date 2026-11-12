@@ -25,6 +25,8 @@
 | 2026-11-08 | all-projects | 通知 SSE 打通与评审收口 | [2026-11-08-all-projects-daily-report.md](./2026-11-08-all-projects-daily-report.md) |
 | 2026-11-09 | all-projects | 质量门禁收口与中台在途 | [2026-11-09-all-projects-daily-report.md](./2026-11-09-all-projects-daily-report.md) |
 | 2026-11-10 | all-projects | 中台整改 G1–G8 与能力治理收尾 | [2026-11-10-all-projects-daily-report.md](./2026-11-10-all-projects-daily-report.md) |
+| 2026-11-11 | all-projects | 文档与代码一致性收口 | [2026-11-11-all-projects-daily-report.md](./2026-11-11-all-projects-daily-report.md) |
+| 2026-11-12 | all-projects | 查询聚合能力落地 | [2026-11-12-all-projects-daily-report.md](./2026-11-12-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 
