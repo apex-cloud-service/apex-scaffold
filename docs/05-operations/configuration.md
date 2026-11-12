@@ -507,6 +507,48 @@ apex:
 
 `resilience4j.retry`、`resilience4j.timelimiter` 和 `resilience4j.ratelimiter` 即使存在于配置中，也不会自动作用于当前 `RemoteApiClient` 调用链；当前远程重试和超时分别由 Reactor Retry 与 `remote.api` 参数控制。
 
+### 概览聚合门面并发隔离（system-service）
+
+`GET /internal/v1/overview` 的跨域聚合门面（`OverviewFacadeService`）对每个数据源维护独立并发舱壁（JDK `Semaphore` 实现，饱和即降级、不排队等待，等价于 Resilience4j `SemaphoreBulkhead` 的降级语义且不引入 basic 档裁剪依赖）：
+
+```yaml
+apex:
+  overview:
+    timeout-millis: 3000            # 单源调用超时
+    cache-ttl-seconds: 30           # 全源 UP 结果的租户缓存 TTL
+    default-bulkhead-max-concurrency: 8   # 未显式配置的源的舱壁并发上限
+    bulkhead:
+      workflow: 4                   # 按源覆盖并发上限（键与 apex.overview.sources 一致）
+```
+
+- 舱壁饱和时该源立即降级（`DEGRADED`，错误摘要 `bulkhead saturated`），不影响其他源；许可随上游调用终止（完成/错误/超时）释放，并发合并下调用方取消不会中断共享刷新（释放在上游终止时发生，超时为上界）。
+- 降级结果不进入租户缓存；仅全源 UP 的结果按租户缓存共享，同（租户、调用方凭证）的并发请求合并为一次下游刷新。
+
+### 统一待办聚合（apex-aggregation-service）
+
+`GET /api/v2/todo` 的跨域待办门面（`UnifiedTodoAggregationService`）并行聚合两个来源：workflow 当前用户任务（内部 HTTP）、office 待审批与未读站内信（内部 HTTP）。该门面于 2026-11-12 由 system 应用层迁至独立只读聚合运行模块 `apex-aggregation-service`（默认端口 8098，无数据库连接、无 Flyway 迁移、不引入事务组件），原 system 进程内站内通知源已删除。与概览门面不同，**个人维度数据不做任何缓存，也不做 in-flight 合并**，每次请求实时聚合：
+
+```yaml
+apex:
+  todo:
+    timeout-millis: 3000              # 单源调用超时
+    page-size: 10                     # workflow 任务分页大小（上限 50）
+    approval-limit: 10                # office 待审批条目上限（上限 50）
+    message-limit: 10                 # office 未读站内信条目上限（上限 50）
+    default-bulkhead-max-concurrency: 8   # 未显式配置的源的舱壁并发上限
+    bulkhead:
+      workflow: 4                     # 按源覆盖并发上限
+      office: 4
+    sources:
+      workflow: http://127.0.0.1:8093   # workflow 内部待办端点地址
+      office: http://127.0.0.1:8084     # office 内部待办端点地址
+```
+
+- 两源并发执行；单源超时、不可达、信封非 0 或解析失败时该源降级为 `DEGRADED` 并携带错误摘要，`degraded=true`，不影响其他源，也不向上抛错。
+- 舱壁沿用 JDK `Semaphore`（饱和即降级、不排队，许可随订阅终止释放），语义与概览门面一致，不引入 basic 档裁剪依赖。
+- `sources.*` 默认指向本机端口，部署时须与 workflow/office 实际地址一致；关闭 Nacos 的直连部署需显式覆盖。对外路由由网关 `/api/v2/**` 转发至 `lb://apex-aggregation-service`（`ROUTE_AGGREGATION_URI`，服务默认业务端口 8098）；关闭 Nacos 的直连部署须显式注入该地址并指向实际聚合实例。
+- 部署须在 `apex.internal-auth.callers` 白名单登记 `apex-aggregation-service`，否则其出站内部签名被下游 fail-closed 拒绝，workflow 与 office 两源同时降级。
+
 ### 接口级限流
 
 ```yaml

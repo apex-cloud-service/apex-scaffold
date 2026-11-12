@@ -1,7 +1,7 @@
 # 记忆卡 · apex-scaffold（后端基座）
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
-> **基线**：2026-11-10 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 35 个 reactor 模块
+> **基线**：2026-11-12 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 36 个 reactor 模块
 > **权威优先级**：源码 > `AGENTS.md` > `docs/` > `.workbuddy/knowledge/` > 本卡。本卡是**导航与结论**，不是规范原文。
 
 ## 1. 一句话
@@ -32,6 +32,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | `apex-office-service` | 8084 | `apex_office` | V8 |
 | `apex-file-service` | 8085 | `apex_file` | V7 |
 | `apex-integration-service` | 8094（管理 8097） | `apex_integration` | V3 |
+| `apex-aggregation-service` | 8098 | 无（只读聚合，无 DB/迁移/事务） | — |
 | `apex-job-service` | 8095 | 无（固定代理 system） | — |
 | `apex-masking-service` | 8096 | 无 | — |
 | `apex-example` | 8080 | `apex_example` | — |
@@ -67,9 +68,9 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 统一授权「默认开启」判断错误 | 组件库缺省 true，但 `apex-system-service/application.yml` 覆盖为 `${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}` → 排查按「运行模块 yml → 环境变量 → 组件默认」 |
 | 集成服务启动即失败 | 连接器/设备子域依赖外部 EMQX；本地无 broker 时需显式关闭 MQTT 并核 `hivemq-mqtt-client` 为 optional |
 
-## 6. 当前状态（2026-11-10）
+## 6. 当前状态（2026-11-12）
 
-- **规模**：主源码 **2132** 个 Java 文件、测试类 **724** 个；启动入口 **11** 个（10 个部署单元含 `apex-example` + `apex-boot-all` 组合档）。
+- **规模**：主源码 **2132** 个 Java 文件、测试类 **724** 个；启动入口 **12** 个（11 个部署单元含 `apex-example` + `apex-boot-all` 组合档）。
 - **主线《评审收口调整方案》**（`docs/08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md`）：
   - 批次 **A（A1–A7 统一认证）已完成并提交**（10-31）。
   - 批次 **B（B1–B9 多租户）已完成并提交**（10-31～11-01，B9 为 M2 收官）。
@@ -77,7 +78,7 @@ mvnd -T4 -B clean verify                  # 全量基线
   - 批次 **D 完成 D1/D2/D4/D5/D6**（D5 共享数据服务层 11-02 提交）；**D3 为文档沉淀**，`/open-api` 路由已补。
   - 批次 **E1–E4 已完成并提交**（11-02）：`apex-integration`（connector/device 双子域）+ `apex-integration-service` 8094，含 EMQX ACL 与真实环境验证。
 - **中台架构整改 G1–G8**（`docs/08-project-management/plans/middle-platform-remediation-plan.md`）：11-10 提交 `3b61027b` 实施完成——服务侧能力二次校验默认开启、auth 域分层倒置清理、治理字段与守卫覆盖补齐；`clean verify` 6,251 测试通过，真实 Nacos/MySQL/RocketMQ/EMQX/Seata TC 与第三方消费方验收仍未验证。
-- **工作树**：此前 77 项在途（G1–G8 收尾）已随 `6db7df11` / `3a969da0` 于 11-10 提交清空；当前在途以 `git status` 实测为准，**不得把在途改动当作已交付**。
+- **工作树**：此前 77 项在途（G1–G8 收尾）已随 `6db7df11` / `3a969da0` 于 11-10 提交清空，11-11 文档对齐批次（`60d78304`～`5e29aca5`）提交；11-12 新增在途 **47 项**（23 修改 + 24 未跟踪），核心是**只读查询聚合服务 `apex-aggregation-service`（8098）** 及其方案/评审文档、办公审批取消与统一待办端点，尚未提交；当前在途以 `git status` 实测为准，**不得把在途改动当作已交付**（`pom.xml` 已登记该模块，故 reactor 模块数按 36 计）。
 - **结构债**：`apex-system` 仍四层合一（interfaces/application/domain/infrastructure 同包），868 个主源码文件；C4/D07 已于 2026-11-01 裁决维持现状不实施（记录于 `docs/08-project-management/plans/platform-closure-remediation-plan.md`）。
 
 ## 7. 下一步
