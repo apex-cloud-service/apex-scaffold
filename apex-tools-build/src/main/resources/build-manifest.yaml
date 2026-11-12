@@ -1,7 +1,7 @@
 # ============================================================
 # Apex Scaffold 模块注册表（单一事实来源 / Single Source of Truth）
 # ============================================================
-# 本文件登记全部 35 个 Maven 模块的职责分类、交付口径（是否产出可执行/交付 JAR）、
+# 本文件登记全部 36 个 Maven 模块的职责分类、交付口径（是否产出可执行/交付 JAR）、
 # 默认端口与显式启动类，是 apex-tools-build 的核心配置。三处消费方：
 #
 #   1. BuildManifestSyncTest（verify 门禁）：校验本文件与根 POM <modules>、各模块 POM
@@ -19,7 +19,7 @@
 #   deliverable    交付口径，四态：
 #                    none        不产出可执行/交付 JAR（库、starter、兼容聚合等）；
 #                    service-jar 进入交付包的服务 fat jar（== release.sh SERVICES 数组，
-#                                当前为网关 + 六个业务服务共 7 个，测试强校验）；
+#                                当前为网关 + 六个业务服务 + 聚合服务共 8 个，测试强校验）；
 #                    optional    按需单独构建的可执行 JAR（不进标准交付包）；
 #                    tool-jar    shade 打包的运维工具 jar（== apex-tools-deployment）。
 #                  与打包插件双向绑定：none ⇔ 无 spring-boot/shade 插件；
@@ -114,7 +114,7 @@ modules:
   - artifactId: apex-api-contract
     category: 共享契约
     deliverable: none
-  # ── 运行模块：七个 service-jar 恰好等于 release.sh SERVICES 数组（网关 + 六个业务服务）。
+  # ── 运行模块：八个 service-jar 恰好等于 release.sh SERVICES 数组（网关 + 六个业务服务 + 聚合服务）。
   #    端口为默认业务端口；system-service 管理端口 8083 与业务端口分离；workflow 业务
   #    端口 8093（2026-11-07 起，原 8083 与 system 管理端口冲突已消除）；integration-service
   #    管理端口 8097。apex-system-service 显式声明 mainClass（第二处显式声明）。
@@ -184,6 +184,10 @@ modules:
     deliverable: service-jar
     port: 8094
     managementPort: 8097
+  - artifactId: apex-aggregation-service
+    category: 运行模块
+    deliverable: service-jar
+    port: 8098
   # ── 运维工具：shade fat jar（target/local-deployment.jar），仅由 scripts/utils/、
   #    scripts/ci/check-doc-links.sh 与 Compose security-key-check 调用，
   #    不参与服务运行期装配、不进交付包。

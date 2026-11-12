@@ -58,7 +58,7 @@ esac
 
 source "${ROOT_DIR}/scripts/build/init-build-env.sh"
 
-SERVICES=(apex-system-service apex-auth-service apex-workflow-service apex-office-service apex-file-service apex-integration-service apex-gateway)
+SERVICES=(apex-system-service apex-auth-service apex-workflow-service apex-office-service apex-file-service apex-integration-service apex-aggregation-service apex-gateway)
 SERVICE_MODULES="${(j:,:)SERVICES},apex-tools-deployment"
 
 echo "==> [1/3] 构建 ${PROFILE} 版本 (v${VERSION})"

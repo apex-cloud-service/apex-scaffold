@@ -190,6 +190,8 @@
     <module>apex-integration</module>
     <!-- 集成服务：启动类/Router 装配/独立 apex_integration 库（方案 M5 / 批次 E4） -->
     <module>apex-integration-service</module>
+    <!-- 查询聚合服务：跨源统一待办只读聚合（舱壁隔离 + 单源降级，无数据库） -->
+    <module>apex-aggregation-service</module>
     <!-- 运维工具模块：本地部署密钥/配置校验、TOTP 离线迁移与 V42 结构恢复（不参与服务运行期装配） -->
     <module>apex-tools-deployment</module>
     <!-- 构建发布管理模块：模块注册表与 build/package/deploy 统一编排入口（不参与服务运行期装配） -->

@@ -17,7 +17,7 @@
 | 形态 | 构建档位 | 运行组件 | 适用场景 |
 | --- | --- | --- | --- |
 | 单体演示包 | `-Pbasic` / `-Pstandard`（`SERVICE_MODULE=apex-example`） | 单个可执行 jar | 本地评估、功能演示 |
-| 微服务部署 | `-Penterprise` 或任意档位 + 分服务镜像 | 网关 + 五个业务服务 | 生产与私有化交付 |
+| 微服务部署 | `-Penterprise` 或任意档位 + 分服务镜像 | 网关 + 六个业务服务 + 只读查询聚合服务 | 生产与私有化交付 |
 | 源码交付 | 三档均支持 | 客户自行构建 | 标准版 / 企业版源码授权 |
 
 > 档位决定功能范围与依赖裁剪，不决定服务数量。`basic` 档仍以 `apex-example` 作为聚合装配模块，不提供微服务拓扑。
@@ -26,7 +26,7 @@
 
 ## 2. 范围内的 Maven 模块
 
-根 POM 聚合 35 个模块。交付相关模块按职责分组如下，完整依赖关系见 [README 模块结构](../../../README.md#模块结构)。
+根 POM 聚合 36 个模块。交付相关模块按职责分组如下，完整依赖关系见 [README 模块结构](../../../README.md#模块结构)。
 
 | 分类 | 模块 | 是否随交付包发布 |
 | --- | --- | --- |
@@ -37,7 +37,7 @@
 | 跨服务契约 | `apex-api-contract` | 作为依赖 |
 | 服务父 POM | `apex-services-bom` | 仅构建期 |
 | 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration` | 作为依赖 |
-| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service` | **可执行 jar** |
+| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service`、`apex-aggregation-service` | **可执行 jar** |
 | 服务增强 | `apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter`、`apex-job-service`、`apex-masking-service` | jar（前两者为依赖，后两者可选部署） |
 | 对象存储 | `apex-storage-spring-boot-starter` | 作为依赖 |
 | 授权 | `apex-license-spring-boot-starter` | 作为依赖 |
@@ -47,7 +47,7 @@
 | 运维工具 | `apex-tools-deployment` | **不发布**（离线运维用） |
 | 构建管理 | `apex-tools-build` | **不发布**（模块注册表与构建/打包/部署编排入口，见 [构建发布管理模块方案](../plans/build-management-plan.md)） |
 
-> 发布脚本实际打包的服务清单为网关与六个业务服务，见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。
+> 发布脚本实际打包的服务清单为网关、六个业务服务与只读查询聚合服务（`SERVICES` 数组共 8 项），见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。
 
 ---
 
@@ -63,6 +63,8 @@
 | 工作流服务 | `apex-workflow-service` | 8093 | 未单独配置 | 工作流引擎与审批（2026-11-07 起，原 8083 与 system 管理端口冲突已消除） |
 | 办公服务 | `apex-office-service` | 8084 | 未单独配置 | 含站内信 HTTP 与 WebSocket |
 | 文件服务 | `apex-file-service` | 8085 | 未单独配置 | 含对象存储与文件分享 |
+| 集成服务 | `apex-integration-service` | 8094 | 8097 | 连接器与设备接入 |
+| 聚合服务 | `apex-aggregation-service` | 8098 | 未单独配置 | 只读聚合 workflow 与 office 内部待办，无 DB/迁移/事务 |
 | 任务代理 | `apex-job-service` | 8095 | — | 可选，固定 system 地址 |
 | 脱敏服务 | `apex-masking-service` | 8096 | — | 可选，无持久化 |
 
@@ -138,6 +140,7 @@
 | 日期 | 基线 | 变更 |
 | --- | --- | --- |
 | 2026-10-30 | `b8e5733` + 工作区未提交 V70～V72 | 建立本文档；登记数据库基线缺口 |
+| 2026-11-12 | 工作区（未提交） | 新增只读查询聚合服务 `apex-aggregation-service`（端口 8098，无 DB）；模块数 35→36，`SERVICES` 数组 7→8 |
 
 ---
 

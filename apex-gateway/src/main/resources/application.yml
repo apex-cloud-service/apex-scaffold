@@ -163,6 +163,18 @@ spring:
                 name: officeService
                 fallbackUri: forward:/__gateway/fallback
 
+        # ---- 只读查询聚合（S4-c/S4-d 统一待办门面，无本地存储） ----
+        # 💡 无状态只读转发，舱壁与超时降级在聚合服务内部完成。
+        - id: aggregation-domain
+          uri: ${ROUTE_AGGREGATION_URI:lb://apex-aggregation-service}
+          predicates:
+            - Path=/api/v2/todo
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: aggregationService
+                fallbackUri: forward:/__gateway/fallback
+
         # ---- 文件域（Phase 4 切换为 apex-file-service） ----
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}

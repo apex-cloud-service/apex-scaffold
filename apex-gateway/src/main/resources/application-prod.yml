@@ -67,6 +67,16 @@ spring:
           uri: ${ROUTE_OFFICE_URI:lb://apex-office-service}
           predicates:
             - Path=/api/v1/office/**,/api/v2/office/**,/api/office/**,/api/v1/messages/**,/admin-api/v1/office/**,/admin-api/v1/org/**,/admin-api/v1/message-templates,/admin-api/v1/message-templates/**
+        # 只读查询聚合（S4-c/S4-d 统一待办门面）：无本地存储，舱壁与超时降级在聚合服务内部完成。
+        - id: aggregation-domain
+          uri: ${ROUTE_AGGREGATION_URI:lb://apex-aggregation-service}
+          predicates:
+            - Path=/api/v2/todo
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: aggregationService
+                fallbackUri: forward:/__gateway/fallback
         - id: file-domain
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}
           predicates:

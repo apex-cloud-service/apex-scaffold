@@ -1,0 +1,73 @@
+# ============================================================
+# Apex Scaffold - 查询聚合服务 application.yml
+# ============================================================
+# 【定位】 纯只读跨源聚合运行模块（S4-c/S4-d）：GET /api/v2/todo 并行拉取
+#   workflow 待办任务与 office 待审批/未读站内信，聚合为统一待办负载。
+# 【约束】 无数据库、无 MyBatis、无 Flyway、无 Seata、无 job starter；
+#   不缓存、不合并并发请求（个人数据）。
+# @author Apex Team
+# ============================================================
+
+apex:
+  internal-auth:
+    # 透传调用方凭证到下游内部端点；共享密钥由部署编排注入，
+    # 启用但未配置密钥时一律 503 拒绝。仅本地单测可显式关闭。
+    enabled: ${APEX_INTERNAL_AUTH_ENABLED:true}
+    secret: ${APEX_INTERNAL_AUTH_SECRET:}
+    service-name: apex-aggregation-service
+    allowed-skew-seconds: ${APEX_INTERNAL_AUTH_SKEW_SECONDS:60}
+  todo:
+    sources:
+      # 工作流服务基址（内部端点 /internal/v1/workflow/todo/tasks）
+      workflow: ${APEX_TODO_WORKFLOW_BASE_URL:http://127.0.0.1:8093}
+      # office 服务基址（内部端点 /internal/v1/office/todo）
+      office: ${APEX_TODO_OFFICE_BASE_URL:http://127.0.0.1:8084}
+    # 工作流待办单次拉取条数
+    page-size: ${APEX_TODO_PAGE_SIZE:10}
+    # office 待审批条目单次拉取上限
+    approval-limit: ${APEX_TODO_APPROVAL_LIMIT:10}
+    # office 未读站内信单次拉取上限
+    message-limit: ${APEX_TODO_MESSAGE_LIMIT:10}
+    # 单源调用超时毫秒数
+    timeout-millis: ${APEX_TODO_TIMEOUT_MILLIS:3000}
+    # 单源并发隔离舱壁；未配置的源使用 default-bulkhead-max-concurrency（饱和即降级）
+    bulkhead: {}
+    default-bulkhead-max-concurrency: ${APEX_TODO_DEFAULT_BULKHEAD:8}
+
+server:
+  port: 8098
+
+spring:
+  application:
+    name: apex-aggregation-service
+
+  codec:
+    max-in-memory-size: 256MB
+
+logging:
+  level:
+    root: INFO
+    com.apex.scaffold.aggregationservice: DEBUG
+    org.springframework.web: INFO
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
