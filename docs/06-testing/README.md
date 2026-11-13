@@ -12,6 +12,10 @@
 - [P0 路由清单](jdk21-unified-auth/20261016-p0/routes.json)：250 条已解析路由与 148 条未解析候选，非运行期注册或 OpenAPI 覆盖证明。
 - [P0 迁移表清单](jdk21-unified-auth/20261016-p0/tables.json)：170 个脚本的 767 条静态表事件，不是真实 schema 或 SQL 语义等价。
 
+## 查询聚合与统一待办验证
+
+- [查询聚合与统一待办测试报告](aggregation-todo-20261113/report.md)：覆盖 `apex-aggregation-service`（8098）统一待办门面、office 审批撤销幂等编排（V9/V10）、system 概览聚合舱壁的单元/集成/压力/真实压测四类结果，以及本轮发现并修复的 9 项缺陷。报告含本地最小栈压测的真实数值与未覆盖边界（网关层、MySQL/PG 真实库执行）。
+
 ## 中台架构整改验证
 
 - [中台架构整改完成测试报告](middle-platform/20261110-completion/report.md)：记录 G1–G8 代码/静态契约关闭、定向 `mvnd` 测试、完整 `clean verify`、双库迁移测试结果及真实环境未验证项。该报告不构成完整中台生产验收结论。
