@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
  * 缺失时回退身份中继过滤器建立的可信租户上下文，两者均缺失则以 401 失败。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Slf4j

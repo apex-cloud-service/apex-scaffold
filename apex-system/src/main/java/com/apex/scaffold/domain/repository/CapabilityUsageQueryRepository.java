@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
  * 消费；只读统计，不做计费与配额扣减。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 public interface CapabilityUsageQueryRepository {

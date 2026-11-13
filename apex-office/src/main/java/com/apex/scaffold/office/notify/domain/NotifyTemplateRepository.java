@@ -10,8 +10,8 @@ import reactor.core.publisher.Mono;
  * <p>所有方法按租户隔离，调用方必须显式传入租户标识；数据库访问在 JDBC 调度器执行。
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  * @see NotifyTemplate
  */
 public interface NotifyTemplateRepository {

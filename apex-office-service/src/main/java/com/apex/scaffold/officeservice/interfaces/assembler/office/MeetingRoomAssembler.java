@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
  * 因此转换需显式序列化/反序列化，避免把存储细节泄漏给客户端。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Slf4j
 @Component

@@ -14,7 +14,7 @@ import java.io.InputStream;
  * @param fileSize 文件大小（字节）
  * @param content 文件内容流
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Schema(name = "FileShareContent", description = "分享文件内容（内部流载体，经服务端代理以二进制流输出，非 JSON 响应体）")

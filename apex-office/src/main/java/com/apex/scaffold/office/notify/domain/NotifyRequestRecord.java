@@ -14,8 +14,8 @@ import lombok.ToString;
  * 投递失败不抛出到调用链（由门面收敛为失败结果），但必须留痕以便排障与补偿。
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Getter
 @NoArgsConstructor

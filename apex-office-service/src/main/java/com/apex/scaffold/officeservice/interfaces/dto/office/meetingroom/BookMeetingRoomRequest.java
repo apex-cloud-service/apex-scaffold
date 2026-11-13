@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
  * 已有未取消事件不重叠。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

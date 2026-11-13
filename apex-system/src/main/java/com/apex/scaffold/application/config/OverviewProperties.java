@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Data

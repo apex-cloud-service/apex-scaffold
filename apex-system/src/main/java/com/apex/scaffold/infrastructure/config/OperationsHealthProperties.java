@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Apex Team
  * @version 1.1.0
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Getter
 @Setter

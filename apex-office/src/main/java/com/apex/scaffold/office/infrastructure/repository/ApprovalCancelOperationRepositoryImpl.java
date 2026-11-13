@@ -18,7 +18,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import reactor.core.publisher.Mono;
 
 /**
- * 审批撤销编排状态仓储实现
+ * 审批撤销编排状态仓储实现。
  *
  * <p>负责撤销编排记录的持久化，以及「远端撤销成功后本地落库」的补偿事务。
  *
@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Slf4j
 @Repository
@@ -92,7 +92,7 @@ public class ApprovalCancelOperationRepositoryImpl implements ApprovalCancelOper
                         }
                         process.setStatus("CANCELLED");
                         process.setCompletedAt(LocalDateTime.now());
-                        // 携带原 version 触发乐观锁：并发审批推进后版本已变更，需回滚由调用方重试
+                        // 携带原 version 触发乐观锁：并发审批推进后版本已变更，需回滚由调用方重试。
                         int processRows = approvalProcessMapper.updateById(process);
                         if (processRows == 0) {
                             return false;

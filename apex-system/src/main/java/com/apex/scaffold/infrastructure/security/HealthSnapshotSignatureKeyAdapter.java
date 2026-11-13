@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  * @see HealthSnapshotSignatureKeyPort
  */
 @Slf4j

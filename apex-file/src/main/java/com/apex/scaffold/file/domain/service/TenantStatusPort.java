@@ -7,7 +7,7 @@ package com.apex.scaffold.file.domain.service;
  * 由部署侧维护停用租户清单；若后续接入租户中心，只需替换该端口的适配器。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 public interface TenantStatusPort {

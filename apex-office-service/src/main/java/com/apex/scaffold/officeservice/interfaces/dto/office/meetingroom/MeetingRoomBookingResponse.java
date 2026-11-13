@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>一次预订对应一条会议室日历事件，返回事件主键供后续取消使用。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * 对应数据源不可达时同样为 {@code null}（按源降级）。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Data

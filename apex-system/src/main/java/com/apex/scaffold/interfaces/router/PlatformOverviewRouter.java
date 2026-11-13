@@ -20,7 +20,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 与内部端点 {@code /internal/v1/overview} 共用同一聚合门面服务。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Configuration

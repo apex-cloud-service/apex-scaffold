@@ -65,7 +65,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @DisplayName("办公服务全接口路由回归测试")

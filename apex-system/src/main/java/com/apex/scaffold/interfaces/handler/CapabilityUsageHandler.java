@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * 访问由 {@code capability:usage:read} 权限门控（V84 登记）。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Slf4j

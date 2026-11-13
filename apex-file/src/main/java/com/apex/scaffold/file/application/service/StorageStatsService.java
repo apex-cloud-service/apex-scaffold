@@ -17,7 +17,7 @@ import reactor.core.publisher.Mono;
  * 其他聚合口径，避免配额与统计两套数字漂移。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Service

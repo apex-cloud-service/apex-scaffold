@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
  * 拒绝公网流量，不暴露给终端客户端。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

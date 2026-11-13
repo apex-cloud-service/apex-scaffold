@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  * 逻辑删除由 MyBatis-Plus 逻辑删除插件维护。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Repository
 @RequiredArgsConstructor

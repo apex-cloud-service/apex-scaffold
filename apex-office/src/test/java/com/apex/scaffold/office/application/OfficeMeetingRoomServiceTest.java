@@ -32,7 +32,7 @@ import reactor.test.StepVerifier;
  * <p>覆盖编码/名称唯一性、停用与占用拒绝，以及取消预订的越权、幂等与归属校验。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("会议室资源应用服务")

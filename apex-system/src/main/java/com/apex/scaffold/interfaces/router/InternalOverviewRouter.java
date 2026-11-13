@@ -23,7 +23,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 实例数与集成设备数，单源不可达时按源降级（部分可用）。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Configuration

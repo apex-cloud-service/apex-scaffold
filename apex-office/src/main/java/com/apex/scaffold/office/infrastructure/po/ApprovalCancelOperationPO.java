@@ -8,12 +8,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 审批撤销操作编排状态持久化对象
+ * 审批撤销操作编排状态持久化对象。
  *
  * <p>对应数据库表 off_approval_cancel_operation。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder
@@ -44,23 +44,23 @@ public class ApprovalCancelOperationPO {
     private String idempotencyKey;
 
     /**
-     * 编排状态
+     * 编排状态。
      */
     private String status;
 
     /**
-     * 最近一次失败原因
+     * 最近一次失败原因。
      */
     private String errorMessage;
 
     /**
-     * 创建时间
+     * 创建时间。
      */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**
-     * 更新时间
+     * 更新时间。
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
@@ -72,7 +72,7 @@ public class ApprovalCancelOperationPO {
     private Integer version;
 
     /**
-     * 逻辑删除标志
+     * 逻辑删除标志。
      */
     @TableLogic
     private Boolean deleted;

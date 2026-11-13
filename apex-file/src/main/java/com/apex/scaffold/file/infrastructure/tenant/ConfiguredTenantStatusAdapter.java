@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * 不构成对租户中心实时状态的替代。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  * @see TenantStatusPort
  */

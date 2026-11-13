@@ -13,8 +13,8 @@ import lombok.ToString;
  * 渲染语义见 {@link NotifyTemplateRenderer}。停用模板拒绝投递但不影响历史留痕。
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Getter
 @NoArgsConstructor

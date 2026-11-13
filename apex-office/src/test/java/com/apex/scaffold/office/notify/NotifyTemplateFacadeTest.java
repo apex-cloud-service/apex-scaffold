@@ -33,8 +33,8 @@ import reactor.test.StepVerifier;
  * （模板缺失/停用拒绝、占位符渲染、投递成败均落留痕）。
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @DisplayName("统一通知模板与按模板投递测试")
 class NotifyTemplateFacadeTest {

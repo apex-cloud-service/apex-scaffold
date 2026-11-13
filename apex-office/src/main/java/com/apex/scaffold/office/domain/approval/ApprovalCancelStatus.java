@@ -4,13 +4,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 审批撤销编排状态
+ * 审批撤销编排状态。
  *
  * <p>描述一次撤销操作在"远端平台撤销"与"本地流程状态更新"两步之间的推进阶段，
  * 供幂等重放与失败补偿判定使用。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Getter
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public enum ApprovalCancelStatus {
     private final String description;
 
     /**
-     * 重放是否可以直接返回成功
+     * 重放是否可以直接返回成功。
      *
      * <p>远端已撤销的阶段同样视为成功：再次调用不应重复触发远端撤销。
      *

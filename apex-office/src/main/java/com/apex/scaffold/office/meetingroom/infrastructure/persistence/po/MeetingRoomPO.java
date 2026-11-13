@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * {@link BasePO} 提供的通用字段（雪花主键、时间戳、逻辑删除、乐观锁版本）。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  * @see BasePO
  */
 @Data

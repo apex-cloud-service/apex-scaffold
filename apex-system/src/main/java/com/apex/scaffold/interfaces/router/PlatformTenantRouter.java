@@ -26,7 +26,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 权限。租户管理员不具备这些权限，无法访问平台级租户目录。</p>
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Configuration
 public class PlatformTenantRouter {

@@ -17,7 +17,7 @@ import java.util.Map;
  * @param degraded    是否存在降级数据源
  * @param sources     数据源名称 → 单源结果（file/workflow/integration）
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Schema(name = "OverviewResponse", description = "跨域只读聚合门面响应；单源降级不影响其他数据源")

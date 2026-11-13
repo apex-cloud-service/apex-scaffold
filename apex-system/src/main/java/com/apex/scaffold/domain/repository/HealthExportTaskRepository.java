@@ -11,8 +11,8 @@ import reactor.core.publisher.Mono;
  * 以保证同一个任务同一时刻只有一个实例在处理。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  * @see com.apex.scaffold.domain.model.monitor.HealthExportTaskEntity
  */
 public interface HealthExportTaskRepository {

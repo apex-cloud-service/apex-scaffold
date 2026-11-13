@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  * 不接受请求参数指定租户。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Slf4j

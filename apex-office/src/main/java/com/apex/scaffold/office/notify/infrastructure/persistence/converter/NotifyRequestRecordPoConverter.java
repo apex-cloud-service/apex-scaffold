@@ -9,7 +9,7 @@ import org.mapstruct.ReportingPolicy;
  * 统一通知投递留痕实体与持久化对象转换器。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface NotifyRequestRecordPoConverter {

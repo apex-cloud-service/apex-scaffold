@@ -13,7 +13,7 @@ import lombok.ToString;
  * 弱关联（字符串主键），可用性判断由应用服务按时间区间与状态计算，不在实体内缓存占用结果。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Getter
 @NoArgsConstructor

@@ -16,8 +16,8 @@ import org.apache.ibatis.annotations.Update;
  * 因为以下 SQL 是注解手写，不会经过持久化拦截器的自动租户追加。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Mapper
 public interface HealthExportTaskMapper extends BaseMapper<HealthExportTaskPO> {

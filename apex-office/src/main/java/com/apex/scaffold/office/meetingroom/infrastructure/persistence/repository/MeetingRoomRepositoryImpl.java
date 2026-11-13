@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * 不依赖客户端可覆盖的入参。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Repository
 @RequiredArgsConstructor

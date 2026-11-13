@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>仓储实现必须保证撤销操作同时校验租户与创建者，避免跨租户代为撤销。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 public interface FileShareRepository {

@@ -22,8 +22,8 @@ import lombok.ToString;
  * </ul>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  * @see BaseEntity
  */
 @Getter

@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 认证用户），供 system 聚合/待办门面转发调用方凭证消费。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Configuration

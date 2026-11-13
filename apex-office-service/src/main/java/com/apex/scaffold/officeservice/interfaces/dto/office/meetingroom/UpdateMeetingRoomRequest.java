@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * <p>仅更新显式传入的字段，未传字段保持原值。会议室编码与名称变更时仍需满足租户内唯一。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

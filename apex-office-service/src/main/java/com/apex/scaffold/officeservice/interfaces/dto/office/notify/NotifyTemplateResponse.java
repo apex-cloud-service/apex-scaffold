@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>返回统一通知模板的完整定义，包含正文占位符模板与参数契约。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

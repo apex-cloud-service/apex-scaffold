@@ -11,8 +11,8 @@ import lombok.Data;
  * <p>仅草稿状态允许更新；流程编码与版本号不可修改。</p>
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @Schema(description = "更新流程定义草稿请求")

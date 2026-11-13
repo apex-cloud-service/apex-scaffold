@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
  * 避免列表与轮询接口返回大字段。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @Builder

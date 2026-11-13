@@ -21,7 +21,7 @@ import reactor.test.StepVerifier;
  * 行为，以及 {@code PackageScope} 的菜单、权限码和能力判定语义。</p>
  *
  * @author Apex Team
- * @version 1.4.0
+ * @version 1.3.2
  * @since 1.3.1
  */
 @DisplayName("租户套餐服务测试")

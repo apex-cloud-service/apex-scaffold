@@ -15,8 +15,8 @@ import lombok.experimental.SuperBuilder;
  * 支持按租户编码、名称模糊匹配与状态精确匹配。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @NoArgsConstructor

@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * <p>对应数据库中的 file_share 表，仅保存分享令牌的摘要，不保存明文令牌。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Data

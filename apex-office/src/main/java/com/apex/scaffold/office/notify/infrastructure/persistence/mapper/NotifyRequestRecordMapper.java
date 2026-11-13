@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
  * {@link BaseMapper} 获得通用单表 CRUD 能力。</p>
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  * @see NotifyRequestRecordPO
  */
 @Mapper

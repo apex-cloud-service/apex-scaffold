@@ -9,7 +9,7 @@ import org.mapstruct.ReportingPolicy;
  * 会议室 PO 与领域实体转换器
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MeetingRoomPoConverter {

@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * 缺失即失败（fail-closed），不退化为跨租户统计。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Service

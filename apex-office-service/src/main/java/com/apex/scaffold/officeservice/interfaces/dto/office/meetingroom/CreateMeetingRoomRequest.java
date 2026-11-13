@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
  * 状态未显式指定时按启用处理。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

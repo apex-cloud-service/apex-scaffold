@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  * {@code Authorization} 头原样透传给需要认证的数据源。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Slf4j

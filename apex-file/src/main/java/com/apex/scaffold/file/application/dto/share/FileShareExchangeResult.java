@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @param fileSize 文件大小（字节）
  * @param expireAt 分享失效时间
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Schema(name = "FileShareExchangeResult", description = "分享兑换结果（不含文件内容）")

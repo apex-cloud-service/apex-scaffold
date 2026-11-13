@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * @param token 明文分享令牌
  * @param expireAt 分享失效时间
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Schema(name = "FileShareCreated", description = "文件分享创建结果；token 明文仅创建响应返回一次")

@@ -42,7 +42,7 @@ import reactor.test.StepVerifier;
  * {@link MockServerRequest} 不支持直接设置 principal，因此统一经 {@link ServerRequest} mock 注入。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @DisplayName("会议室资源处理器单元测试")
 class OfficeMeetingRoomHandlerTest {

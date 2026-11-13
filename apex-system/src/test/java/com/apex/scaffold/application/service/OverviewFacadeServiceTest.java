@@ -22,7 +22,7 @@ import reactor.test.StepVerifier;
  * 信封解析、降级映射与短 TTL 缓存逻辑；不发起真实网络调用。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @DisplayName("跨域只读聚合门面测试")

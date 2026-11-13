@@ -21,8 +21,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 按模板投递走内部契约 {@code POST /internal/v1/notify}，不在此注册。
  *
  * @author Apex Scaffold Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Configuration
 @RequiredArgsConstructor

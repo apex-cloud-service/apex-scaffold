@@ -17,7 +17,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 网关与服务安全配置只放行这两个精确路径，不放开整个文件 API。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Configuration

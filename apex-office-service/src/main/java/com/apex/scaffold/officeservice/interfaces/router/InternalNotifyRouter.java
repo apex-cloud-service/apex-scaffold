@@ -26,8 +26,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 与 {@code OfficeSecurityConfig} 既有内部契约口径一致。
  *
  * @author Apex Scaffold Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Configuration
 public class InternalNotifyRouter {

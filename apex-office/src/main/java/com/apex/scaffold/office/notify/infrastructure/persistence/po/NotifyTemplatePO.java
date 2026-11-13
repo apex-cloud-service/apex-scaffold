@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
  * 正文以 {@code ${key}} 占位符声明参数，停用模板拒绝投递但保留定义。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @NoArgsConstructor

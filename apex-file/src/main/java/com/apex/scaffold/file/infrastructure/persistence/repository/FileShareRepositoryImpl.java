@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * 受影响行数不等于 1 时视为无权撤销或状态已变更。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  * @see FileShareRepository
  */

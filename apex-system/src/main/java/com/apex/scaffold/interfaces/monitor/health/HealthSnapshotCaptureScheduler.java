@@ -36,8 +36,8 @@ import reactor.core.publisher.Mono;
  * <p><b>范围约束</b>：采集结果只代表当前实例，多实例部署会各自落一条快照。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Slf4j
 @Component

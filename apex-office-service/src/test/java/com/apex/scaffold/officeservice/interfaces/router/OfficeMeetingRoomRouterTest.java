@@ -30,7 +30,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 交由 {@code OfficeMeetingRoomHandlerTest} 覆盖，此处只断言路由与未授权落点。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @DisplayName("会议室路由匹配回归测试")
 class OfficeMeetingRoomRouterTest {

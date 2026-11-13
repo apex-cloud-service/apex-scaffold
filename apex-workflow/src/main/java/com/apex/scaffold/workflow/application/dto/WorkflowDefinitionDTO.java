@@ -15,8 +15,8 @@ import lombok.NoArgsConstructor;
  * <p>用于前端展示流程定义，包含节点和连线信息。</p>
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @Builder

@@ -9,7 +9,7 @@ import org.mapstruct.ReportingPolicy;
  * {@link FileShareEntity} 与 {@link FileSharePO} 之间的 MapStruct 双向转换器。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)

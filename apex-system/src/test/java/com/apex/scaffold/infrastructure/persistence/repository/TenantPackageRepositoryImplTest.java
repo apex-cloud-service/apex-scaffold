@@ -23,8 +23,8 @@ import reactor.test.StepVerifier;
  * null 与空白 JSON 保持历史数据语义，解析为空集合并视为有效。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @DisplayName("租户套餐仓储实现测试")
 class TenantPackageRepositoryImplTest {

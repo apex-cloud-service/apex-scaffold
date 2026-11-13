@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * {@code capability:usage:read} 权限的管理入口调用。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Repository

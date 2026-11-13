@@ -15,8 +15,8 @@ import lombok.NoArgsConstructor;
  * 不传时退化为无条件更新，仅保留状态机校验。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @Builder

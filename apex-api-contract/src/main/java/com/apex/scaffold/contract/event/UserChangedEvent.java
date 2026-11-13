@@ -26,7 +26,7 @@ import lombok.Getter;
  * 本类仅携带变更动作的业务负载。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  * @see AbstractDomainEvent
  */

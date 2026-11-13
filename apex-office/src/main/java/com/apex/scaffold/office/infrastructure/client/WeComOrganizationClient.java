@@ -93,8 +93,8 @@ public class WeComOrganizationClient implements OfficePlatformOrganizationClient
     @Override
     public Mono<OfficeOrganizationService.OrganizationSyncResult<OfficeMember>> fetchMembers(
             String appId, String secret, String cursor) {
-        // 企业微信需要先获取部门列表，然后逐个拉取部门成员
-        // 这里简化处理，拉取根部门(id=1)的成员
+        // 成员聚合口径：统一从根部门(id=1)拉取直属成员，子部门成员由平台侧的
+        // 部门维度接口覆盖，避免本地递归遍历全部部门
         return fetchDepartmentMembers(appId, secret, "1", cursor);
     }
 

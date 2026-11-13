@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Select;
  * <p>显式声明租户条件，不使用数据库方言函数，保证 MySQL 与 PostgreSQL 语义一致。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Mapper
 public interface ApprovalCancelOperationMapper extends BaseMapper<ApprovalCancelOperationPO> {

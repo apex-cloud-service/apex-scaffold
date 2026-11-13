@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  * 租户条件须显式携带，不能依赖租户行级拦截器自动改写。阻塞查询通过专用调度器隔离。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Slf4j

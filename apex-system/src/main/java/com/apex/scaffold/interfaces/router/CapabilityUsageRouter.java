@@ -22,7 +22,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 数据源为既有操作审计日志聚合；访问由 {@code capability:usage:read}（V84）门控。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @Configuration

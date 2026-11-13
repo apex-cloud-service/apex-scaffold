@@ -17,8 +17,8 @@ import lombok.experimental.SuperBuilder;
  * 使用 LONGBLOB/BYTEA 承载；MyBatis 对 {@code byte[]} 默认映射为 BLOB，无需额外类型处理器。
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  * @see com.apex.scaffold.domain.model.monitor.HealthExportTaskEntity
  */
 @Data

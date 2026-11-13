@@ -13,8 +13,8 @@ import lombok.Data;
  * 草稿发布前可继续编辑，发布后该版本内容不可变。</p>
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @Schema(description = "创建流程定义草稿请求")

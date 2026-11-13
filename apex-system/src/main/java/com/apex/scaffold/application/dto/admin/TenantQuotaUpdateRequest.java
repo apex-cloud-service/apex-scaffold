@@ -14,8 +14,8 @@ import lombok.NoArgsConstructor;
  * {@code expectedVersion} 为客户端读取到的租户版本号，用于乐观锁并发控制。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @Builder

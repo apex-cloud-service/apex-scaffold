@@ -19,7 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * 办公平台审批应用服务
+ * 办公平台审批应用服务。
  *
  * <p>负责审批流程的用例编排和业务逻辑协调，是Application层的核心服务。
  * 主要职责包括：
@@ -33,7 +33,8 @@ import reactor.core.publisher.Mono;
  * <p>本服务依赖 {@link ApprovalPort} 端口接口而非具体实现，
  * 符合依赖倒置原则和端口-适配器架构模式。
  *
- * @author Apex Scaffold
+ * @author Apex Team
+ * @version 1.3.1
  * @since 1.0.0
  */
 @Slf4j
@@ -47,7 +48,7 @@ public class OfficeApprovalService {
     private final ObjectMapper objectMapper;
 
     /**
-     * 发起审批流程
+     * 发起审批流程。
      *
      * <p>在指定的办公平台创建审批流程，并在本地数据库保存审批流程记录。
      *
@@ -60,16 +61,16 @@ public class OfficeApprovalService {
      */
     public Mono<ApprovalProcess> initiateApproval(
             OfficePlatform platform, Long appId, String processDefinitionId, String initiatorId, String formData) {
-        // 使用processDefinitionId作为templateId
+        // 流程定义 ID 同时作为审批模板标识：office 侧无独立模板实体，模板信息随定义下发。
         String templateId = processDefinitionId;
         String processInstanceId = java.util.UUID.randomUUID().toString();
         String title = "审批流程-" + processInstanceId;
-        // 简化处理，实际应查询用户名
+        // 发起人展示名暂以发起人 ID 兜底：本地不回查组织用户，展示名由办公平台侧解析。
         String initiatorName = initiatorId;
-        // 从表单数据中提取或使用默认值
+        // 审批人由办公平台按流程定义动态指定，本地发起阶段不预置。
         String[] approverIds = new String[0];
 
-        // 将JSON字符串转换为Map（简化处理，实际应使用JSON解析器）
+        // 表单原文整体透传（data 键承载原文），不在本地做 JSON 结构解析，字段语义由平台侧维护。
         Map<String, Object> formDataMap = new java.util.HashMap<>();
         formDataMap.put("data", formData);
 
@@ -114,7 +115,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 查询审批详情
+     * 查询审批详情。
      *
      * <p>根据业务流程实例ID查询审批流程的详细信息，包括审批记录、当前状态等。
      *
@@ -131,7 +132,7 @@ public class OfficeApprovalService {
                     ApprovalPort client = getApprovalClient(process.getPlatform());
                     return client.getApprovalDetail(process.getPlatformInstanceId())
                             .map(detail -> {
-                                // 解析平台返回的审批明细并回填审批记录
+                                // 解析平台返回的审批明细并回填审批记录。
                                 List<ApprovalRecord> records = parseApprovalRecords(process.getPlatform(), detail);
                                 process.setRecords(records);
                                 return process;
@@ -142,7 +143,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 执行审批操作
+     * 执行审批操作。
      *
      * <p>审批人对审批流程执行同意或拒绝操作。
      *
@@ -168,7 +169,7 @@ public class OfficeApprovalService {
                     return client.approveProcess(process.getPlatformInstanceId(), approverId, action.name(), comment)
                             .flatMap(success -> {
                                 if (success) {
-                                    // 添加审批记录
+                                    // 添加审批记录。
                                     ApprovalRecord record = ApprovalRecord.builder()
                                             .approverId(approverId)
                                             .action(action)
@@ -177,7 +178,7 @@ public class OfficeApprovalService {
                                             .build();
                                     process.addRecord(record);
 
-                                    // 按动作映射流程状态：仅 APPROVE/REJECT 变更状态
+                                    // 按动作映射流程状态：仅 APPROVE/REJECT 变更状态。
                                     if (action == ApprovalAction.APPROVE) {
                                         process.updateStatus(ApprovalStatus.APPROVED);
                                     } else if (action == ApprovalAction.REJECT) {
@@ -248,7 +249,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 重放既有撤销记录
+     * 重放既有撤销记录。
      *
      * @param operation 已存在的编排记录
      * @return 撤销结果
@@ -267,7 +268,7 @@ public class OfficeApprovalService {
             return Mono.error(new RuntimeException("撤销操作正在处理中，请稍后重试"));
         }
 
-        // FAILED：重置为待撤销阶段后重新执行
+        // FAILED：重置为待撤销阶段后重新执行。
         operation.markPending();
         return approvalCancelOperationRepository.update(operation).flatMap(retried -> approvalProcessRepository
                 .findByProcessInstanceId(retried.getProcessInstanceId())
@@ -281,7 +282,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 首次撤销：校验流程状态，写入编排记录并执行远端撤销
+     * 首次撤销：校验流程状态，写入编排记录并执行远端撤销。
      *
      * @param tenantId 租户ID
      * @param processInstanceId 业务流程实例ID
@@ -303,7 +304,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 调用远端撤销并推进编排状态
+     * 调用远端撤销并推进编排状态。
      *
      * <p>远端成功后先落 REMOTE_CANCELLED，再通过 {@link #compensateLocal(ApprovalCancelOperation)}
      * 在同步事务内补齐本地流程状态；远端已撤销后本地落库失败不得回退为失败状态，保留待补偿阶段即可。
@@ -336,7 +337,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 本地补偿：在同一同步事务内更新流程状态并标记编排记录完成
+     * 本地补偿：在同一同步事务内更新流程状态并标记编排记录完成。
      *
      * <p>本地落库未生效时不视为撤销失败，保留 REMOTE_CANCELLED 以便同键重放补齐。
      *
@@ -369,7 +370,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 截断异常信息以匹配编排记录 errorMessage 字段长度
+     * 截断异常信息以匹配编排记录 errorMessage 字段长度。
      *
      * @param error 异常
      * @return 可持久化的失败原因
@@ -383,7 +384,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 查询待审批列表
+     * 查询待审批列表。
      *
      * <p>查询指定审批人的所有待审批流程。
      *
@@ -417,7 +418,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 查询我发起的审批列表
+     * 查询我发起的审批列表。
      *
      * <p>查询指定发起人发起的所有审批流程。
      *
@@ -435,7 +436,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 根据平台类型获取审批端口实现
+     * 根据平台类型获取审批端口实现。
      *
      * <p>本地审批过程保存的平台标识为枚举名（大写，如 {@code FEISHU}），
      * 而客户端 Bean 名为小写前缀（如 {@code feishuApprovalClient}），
@@ -454,7 +455,7 @@ public class OfficeApprovalService {
     }
 
     /**
-     * 将对象转换为JSON字符串
+     * 将对象转换为JSON字符串。
      *
      * <p>对于已经是JSON字符串的入参（如表单数据），直接原样返回，避免二次转义；
      * 其他对象（如审批人ID数组）通过 {@link ObjectMapper} 序列化为合法JSON。
@@ -635,7 +636,7 @@ public class OfficeApprovalService {
         }
         try {
             long epoch = Long.parseLong(String.valueOf(value).trim());
-            // 小于 1e12 视为秒级时间戳，放大为毫秒
+            // 小于 1e12 视为秒级时间戳，放大为毫秒。
             return epoch < 1_000_000_000_000L ? epoch * 1000L : epoch;
         } catch (NumberFormatException ex) {
             return null;

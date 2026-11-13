@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  * 在存储层即为 JSON 文本，接口层原样透出，不做二次解析。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Component
 public class NotifyAssembler {

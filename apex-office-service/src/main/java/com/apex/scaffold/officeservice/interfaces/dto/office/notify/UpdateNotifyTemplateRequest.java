@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
  * <p>局部变更语义：仅提交的非空字段生效，未提交字段保持原值。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

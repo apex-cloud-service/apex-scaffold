@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
  * 避免应用层直接依赖基础设施层配置类。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Component
 @RequiredArgsConstructor

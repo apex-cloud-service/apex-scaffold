@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
  * {@code LambdaQueryWrapper} 显式拼接。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  * @see MeetingRoomPO
  */
 @Mapper

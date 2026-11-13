@@ -9,13 +9,13 @@ import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
 /**
- * 审批撤销操作编排状态转换器
+ * 审批撤销操作编排状态转换器。
  *
  * <p>使用MapStruct实现领域对象与持久化对象之间的转换，主要处理撤销编排状态枚举与字符串的互转。
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 @SuppressWarnings({"PMD.AbstractClassShouldStartWithAbstractNamingRule", "PMD.LowerCamelCaseVariableNamingRule"})
@@ -31,7 +31,7 @@ public abstract class ApprovalCancelOperationConverter {
     public abstract ApprovalCancelOperationPO toPO(ApprovalCancelOperation entity);
 
     /**
-     * PO转领域对象
+     * PO转领域对象。
      *
      * @param po 持久化对象
      * @return 领域对象
@@ -40,7 +40,7 @@ public abstract class ApprovalCancelOperationConverter {
     public abstract ApprovalCancelOperation toEntity(ApprovalCancelOperationPO po);
 
     /**
-     * 撤销编排状态枚举转字符串
+     * 撤销编排状态枚举转字符串。
      */
     @Named("cancelStatusToString")
     protected String cancelStatusToString(ApprovalCancelStatus status) {
@@ -48,7 +48,7 @@ public abstract class ApprovalCancelOperationConverter {
     }
 
     /**
-     * 字符串转撤销编排状态枚举
+     * 字符串转撤销编排状态枚举。
      */
     @Named("stringToCancelStatus")
     protected ApprovalCancelStatus stringToCancelStatus(String status) {

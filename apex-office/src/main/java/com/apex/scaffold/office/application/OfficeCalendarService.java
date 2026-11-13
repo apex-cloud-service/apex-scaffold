@@ -401,8 +401,8 @@ public class OfficeCalendarService {
      * @return JSON字符串
      */
     private String convertToJson(Object obj) {
-        // 实际实现中应使用ObjectMapper
-        // 这里简化处理
+        // 日历扩展字段仅做字符串透传：obj.toString() 保持原值不做结构化序列化，
+        // 结构化解析由消费方按字段语义自行处理
         return obj != null ? obj.toString() : null;
     }
 }

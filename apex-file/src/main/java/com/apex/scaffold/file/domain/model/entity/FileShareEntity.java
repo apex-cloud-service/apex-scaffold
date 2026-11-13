@@ -16,7 +16,7 @@ import lombok.ToString;
  * 携带的身份信息，也不放宽原文件访问规则。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  * @see FileEntity
  */

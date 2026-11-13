@@ -10,8 +10,8 @@ import org.mapstruct.ReportingPolicy;
  * {@link HealthExportTaskEntity} 与 {@link HealthExportTaskPO} 之间的 MapStruct 双向转换器。
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface HealthExportTaskPoConverter {

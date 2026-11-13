@@ -19,8 +19,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * （个人自有数据，无需权限码）。
  *
  * @author Apex Team
- * @version 1.3.1
- * @since 1.3.1
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Configuration
 public class UnifiedTodoRouter {

@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * <p>定义会议室资源的持久化契约。所有查询均按租户隔离，调用方必须显式传入租户标识。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  * @see MeetingRoomEntity
  */
 public interface MeetingRoomRepository {

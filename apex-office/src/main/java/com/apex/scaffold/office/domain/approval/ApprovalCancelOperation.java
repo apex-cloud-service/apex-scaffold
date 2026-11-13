@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 审批撤销操作编排状态聚合
+ * 审批撤销操作编排状态聚合。
  *
  * <p>记录一次撤销请求的幂等键与推进阶段，用于：
  * <ul>
@@ -17,7 +17,8 @@ import lombok.NoArgsConstructor;
  * </ul>
  *
  * @author Apex Team
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @Builder
@@ -50,7 +51,7 @@ public class ApprovalCancelOperation {
     private LocalDateTime updateTime;
 
     /**
-     * 构造一个待撤销的编排记录
+     * 构造一个待撤销的编排记录。
      *
      * @param tenantId 租户ID
      * @param processInstanceId 业务流程实例ID
@@ -69,7 +70,7 @@ public class ApprovalCancelOperation {
     }
 
     /**
-     * 重置为待撤销阶段，用于失败后重试
+     * 重置为待撤销阶段，用于失败后重试。
      *
      * <p>保持幂等键不变，仅刷新时间并清空上次失败原因。
      */
@@ -80,7 +81,7 @@ public class ApprovalCancelOperation {
     }
 
     /**
-     * 标记远端撤销成功、本地尚未落库
+     * 标记远端撤销成功、本地尚未落库。
      */
     public void markRemoteCancelled() {
         this.status = ApprovalCancelStatus.REMOTE_CANCELLED;
@@ -88,7 +89,7 @@ public class ApprovalCancelOperation {
     }
 
     /**
-     * 标记远端与本地均已完成
+     * 标记远端与本地均已完成。
      */
     public void markCompleted() {
         this.status = ApprovalCancelStatus.COMPLETED;
@@ -97,7 +98,7 @@ public class ApprovalCancelOperation {
     }
 
     /**
-     * 标记失败并保留原因
+     * 标记失败并保留原因。
      *
      * @param errorMessage 失败原因
      */
@@ -108,7 +109,7 @@ public class ApprovalCancelOperation {
     }
 
     /**
-     * 重放是否可直接返回成功
+     * 重放是否可直接返回成功。
      *
      * @return 已完成或远端已撤销返回 true
      */

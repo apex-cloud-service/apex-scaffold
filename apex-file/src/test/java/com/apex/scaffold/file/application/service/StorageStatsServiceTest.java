@@ -20,7 +20,7 @@ import reactor.test.StepVerifier;
  * 的 file_document 聚合口径（与存储配额校验一致），不引入第二套聚合逻辑。
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  */
 @DisplayName("StorageStatsService 单元测试")

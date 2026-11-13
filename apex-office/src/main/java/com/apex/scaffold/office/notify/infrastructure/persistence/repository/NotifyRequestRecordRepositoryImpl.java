@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * 不依赖客户端可覆盖的入参。所有数据库访问均延迟到订阅后在 JDBC 调度器执行。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Repository
 @RequiredArgsConstructor

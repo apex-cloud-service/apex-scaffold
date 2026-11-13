@@ -1,7 +1,6 @@
 package com.apex.scaffold.aggregationservice.interfaces;
 
 import com.apex.scaffold.aggregationservice.application.UnifiedTodoAggregationService;
-import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
@@ -31,8 +30,10 @@ import reactor.core.publisher.Mono;
  * （待审批 / 未读站内信）的待办条目。任一数据源超时、不可达或舱壁饱和时，
  * 该源降级为 {@code DEGRADED}，整体返回部分可用，不因单源失败返回错误。
  *
- * <p>身份取自网关验签后注入的 {@link Principal}（{@code getName()} 为用户标识）；
- * 未认证或标识非法返回 401。调用方 {@code Authorization} 头原样透传给下游内部端点。
+ * <p>身份取自本服务验签 JWT 构建的 {@link Principal}（{@code getName()} 为用户标识，
+ * 见 {@code IdentityRelayAuthenticationFilter}）；未认证或标识非法返回 401。
+ * 调用方 {@code Authorization} 头原样透传给下游内部端点；可信租户经内部签名过滤器
+ * 转换为 {@code X-Internal-Tenant} 参与下游签名校验。
  *
  * @author Apex Team
  * @version 1.3.2
@@ -67,17 +68,11 @@ public class UnifiedTodoHandler {
         @ApiResponse(responseCode = "401", description = "未认证"),
         @ApiResponse(responseCode = "500", description = "聚合失败")
     })
-    @OperationLog(
-            module = "UnifiedTodo",
-            type = OperationLog.OperationType.SELECT,
-            description = "查询统一待办",
-            saveRequest = false,
-            saveResponse = false)
     public Mono<ServerResponse> todo(ServerRequest request) {
         String authorization = request.headers().firstHeader(HttpHeaders.AUTHORIZATION);
         return request.principal()
                 .flatMap(principal -> Mono.justOrEmpty(parseUserId(principal.getName())))
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "未认证")))
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED)))
                 .flatMap(userId -> aggregationService.getUnifiedTodo(userId, authorization))
                 .map(response -> Result.success(response).setTraceId(TraceIdUtil.getTraceId()))
                 .flatMap(result -> ServerResponse.ok()
@@ -118,6 +113,6 @@ public class UnifiedTodoHandler {
         }
         log.error("统一待办聚合失败", error);
         return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .bodyValue(Result.error(ResultCode.ERROR, "统一待办查询失败").setTraceId(TraceIdUtil.getTraceId()));
+                .bodyValue(Result.error(ResultCode.ERROR).setTraceId(TraceIdUtil.getTraceId()));
     }
 }

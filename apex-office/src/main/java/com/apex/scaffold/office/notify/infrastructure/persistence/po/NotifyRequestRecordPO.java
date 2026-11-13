@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
  * （插入时由数据库默认值填充）。
  *
  * @author Apex Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @NoArgsConstructor

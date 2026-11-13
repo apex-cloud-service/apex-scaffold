@@ -7,8 +7,8 @@ package com.apex.scaffold.domain.service;
  * 实现位于基础设施/接口配置层，可在此处叠加占位值拒绝等校验。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 public interface HealthSnapshotSignatureKeyPort {
 

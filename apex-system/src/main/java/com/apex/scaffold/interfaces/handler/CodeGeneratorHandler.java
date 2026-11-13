@@ -62,7 +62,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * @author Apex Team
- * @version 1.4.0
+ * @version 1.3.2
  * @since 1.2.0
  * @see com.apex.scaffold.application.service.GeneratorWizardService
  */

@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * <p>返回会议室的完整资源信息，包含启停状态与设备清单。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

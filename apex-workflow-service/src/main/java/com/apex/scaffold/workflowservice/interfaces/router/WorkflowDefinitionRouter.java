@@ -24,8 +24,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * 发布、启停及版本列表。请求体与响应契约在 {@link WorkflowDefinitionHandler} 方法声明。
  *
  * @author Apex Team
- * @version 1.4.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  * @see WorkflowDefinitionHandler
  */
 @Configuration

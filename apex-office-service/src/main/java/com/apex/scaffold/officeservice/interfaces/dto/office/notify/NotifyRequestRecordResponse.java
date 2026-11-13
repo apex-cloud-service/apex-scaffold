@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  * 接收目标与渲染参数以 JSON 文本原样透出，便于排障与补偿。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Data
 @Builder

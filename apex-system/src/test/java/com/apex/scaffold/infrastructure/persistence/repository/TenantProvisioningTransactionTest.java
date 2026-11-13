@@ -47,7 +47,7 @@ import reactor.test.StepVerifier;
  * 未知、停用、逻辑删除和权限 JSON 损坏时在任何 INSERT 前整体失败的安全边界。</p>
  *
  * @author Apex Team
- * @version 1.4.0
+ * @version 1.3.2
  * @since 1.3.1
  */
 @DisplayName("租户开通事务测试")

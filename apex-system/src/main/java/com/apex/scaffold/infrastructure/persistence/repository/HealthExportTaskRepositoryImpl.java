@@ -19,8 +19,8 @@ import reactor.core.publisher.Mono;
  * 所有 JDBC 阻塞操作调度到 {@link BlockingIoSchedulers#jdbc()}。</p>
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  * @see HealthExportTaskRepository
  */
 @Repository

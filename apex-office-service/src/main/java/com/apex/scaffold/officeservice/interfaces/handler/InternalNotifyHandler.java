@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
  * 模板不存在、已停用或参数缺失报业务异常（HTTP 400）。
  *
  * @author Apex Scaffold Team
- * @since 1.4.0
+ * @since 1.3.2
  */
 @Slf4j
 @Component

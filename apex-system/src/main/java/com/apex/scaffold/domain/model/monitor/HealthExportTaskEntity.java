@@ -20,8 +20,8 @@ import lombok.ToString;
  * RUNNING 超过租约时间未更新时，其他实例可重新认领，避免实例崩溃后任务永久挂起。
  *
  * @author Apex Team
- * @version 1.0.0
- * @since 1.4.0
+ * @version 1.3.2
+ * @since 1.3.2
  */
 @Data
 @ToString(callSuper = true)

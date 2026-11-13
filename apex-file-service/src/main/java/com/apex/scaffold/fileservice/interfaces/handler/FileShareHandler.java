@@ -40,7 +40,7 @@ import reactor.core.publisher.Mono;
  * 确定租户与文件，不读取匿名请求携带的任何身份头；所有端点都不记录令牌与正文。</p>
  *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.3.2
  * @since 1.3.2
  * @see FileShareService
  */
