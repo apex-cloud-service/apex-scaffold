@@ -4,7 +4,7 @@
 # ============================================================
 # 微服务模式下每个进程对应一个微服务模块（apex-gateway / apex-auth-service /
 # apex-system-service / apex-workflow-service / apex-office-service / apex-file-service /
-# apex-integration-service / apex-job-service / apex-masking-service），
+# apex-integration-service / apex-aggregation-service / apex-job-service / apex-masking-service），
 # 由 APEX_SERVICE_MODULE 指定；旧单体 apex-interfaces 可执行 jar 已随单体退役移除。
 # 支持普通 java -jar 方式在各环境（dev/it/prod）后台运行、停止、
 # 重启、查看状态与日志，无需 Podman / systemd。

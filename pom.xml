@@ -140,62 +140,20 @@
     <pmd.skip>false</pmd.skip>
   </properties>
   <modules>
-    <module>apex-common</module>
-    <module>apex-storage-spring-boot-starter</module>
-    <module>apex-license-spring-boot-starter</module>
-    <!-- 卖方内部工具模块：发行源码/发布包必须剥离（详见模块 pom 说明） -->
-    <module>apex-license-tools</module>
-    <module>apex-domain</module>
-    <module>apex-infrastructure-persistence</module>
-    <module>apex-infrastructure-cache</module>
-    <module>apex-infrastructure-messaging</module>
-    <module>apex-infrastructure-remote</module>
-    <module>apex-infrastructure-integration</module>
-    <!-- 旧坐标兼容聚合，不再包含实现源码。 -->
-    <module>apex-infrastructure</module>
-    <!-- 工作流模块：聚合工作流引擎、办公审批集成与监控统计能力 -->
-    <module>apex-workflow</module>
-    <module>apex-system</module>
-    <module>apex-example</module>
-    <module>apex-generator</module>
-    <!-- ========== 微服务化改造模块（详见 docs/08-project-management/plans/microservice-migration-plan.md） ========== -->
-    <!-- 微服务依赖版本 BOM：统一锁定各服务模块与第三方依赖 -->
+    <!-- 共享基础、领域、契约与基础设施能力 JAR -->
+    <module>apex-shared-parent</module>
+    <!-- 六个脚手架能力库，项目专属业务另归 business -->
+    <module>apex-components-parent</module>
+    <!-- 存储、授权、任务与分布式事务 starter -->
+    <module>apex-starters-parent</module>
+    <!-- 服务依赖管理及十个运行模块聚合，八个标准发布服务范围不变 -->
     <module>apex-services-bom</module>
-    <!-- 跨服务内部 API 契约：内部接口 DTO 与领域事件（服务间调用统一 WebClient，不使用 Feign） -->
-    <module>apex-api-contract</module>
-    <!-- API 网关：统一入口/路由/JWT 验签/限流/追踪 -->
-    <module>apex-gateway</module>
-    <!-- 工作流服务：启动类/Router+Handler/独立 apex_workflow 库/审批事件（Phase 3） -->
-    <module>apex-workflow-service</module>
-    <!-- 文件模块：文件/文档/图表 领域+应用+基础设施/存储 SPI（Phase 4 库模块） -->
-    <module>apex-file</module>
-    <!-- 文件服务：启动类/Router+Handler/独立 apex_file 库/分片与预览（Phase 4） -->
-    <module>apex-file-service</module>
-    <!-- 办公模块：组织/审批/日历/消息/三平台同步 领域+应用+基础设施（Phase 5 库模块） -->
-    <module>apex-office</module>
-    <!-- 办公服务：启动类/Router+Handler/独立 apex_office 库/三平台同步（Phase 5） -->
-    <module>apex-office-service</module>
-    <!-- 系统服务：user/rbac/config/log/job/tenant/sso/oauth2 + ApiRouter 拆分收敛（Phase 6） -->
-    <module>apex-system-service</module>
-    <!-- 认证模块：Token/会话/OAuth2 领域+应用+基础设施（Phase 6 库模块） -->
-    <module>apex-auth</module>
-    <!-- 认证服务：启动类/Router+Handler/独立 apex_auth 库（Phase 6） -->
-    <module>apex-auth-service</module>
-    <module>apex-job-spring-boot-starter</module>
-    <module>apex-job-service</module>
-    <module>apex-masking-service</module>
-    <module>apex-seata-spring-boot-starter</module>
-    <!-- 组合部署包：basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 -->
-    <module>apex-boot-all</module>
-    <module>apex-integration</module>
-    <!-- 集成服务：启动类/Router 装配/独立 apex_integration 库（方案 M5 / 批次 E4） -->
-    <module>apex-integration-service</module>
-    <!-- 查询聚合服务：跨源统一待办只读聚合（舱壁隔离 + 单源降级，无数据库） -->
-    <module>apex-aggregation-service</module>
-    <!-- 运维工具模块：本地部署密钥/配置校验、TOTP 离线迁移与 V42 结构恢复（不参与服务运行期装配） -->
-    <module>apex-tools-deployment</module>
-    <!-- 构建发布管理模块：模块注册表与 build/package/deploy 统一编排入口（不参与服务运行期装配） -->
-    <module>apex-tools-build</module>
+    <!-- 示例应用与组合装配，叶子打包行为不变 -->
+    <module>apex-applications-parent</module>
+    <!-- 授权、生成、离线运维与构建管理工具 -->
+    <module>apex-tools-parent</module>
+    <!-- 项目专属业务库管理入口，第一阶段无子模块 -->
+    <module>apex-business-parent</module>
   </modules>
   <dependencyManagement>
     <dependencies>

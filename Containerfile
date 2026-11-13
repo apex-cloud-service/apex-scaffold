@@ -63,6 +63,12 @@ RUN mkdir -p /usr/share/maven/ref && printf '%s\n' \
 
 # 先拷贝全部模块的 pom.xml，充分利用容器层缓存
 COPY pom.xml .
+COPY apex-shared-parent/pom.xml apex-shared-parent/
+COPY apex-components-parent/pom.xml apex-components-parent/
+COPY apex-starters-parent/pom.xml apex-starters-parent/
+COPY apex-applications-parent/pom.xml apex-applications-parent/
+COPY apex-tools-parent/pom.xml apex-tools-parent/
+COPY apex-business-parent/pom.xml apex-business-parent/
 COPY apex-common/pom.xml apex-common/
 COPY apex-license-spring-boot-starter/pom.xml apex-license-spring-boot-starter/
 COPY apex-license-tools/pom.xml apex-license-tools/
@@ -97,8 +103,10 @@ COPY apex-infrastructure-integration/pom.xml apex-infrastructure-integration/
 COPY apex-storage-spring-boot-starter/pom.xml apex-storage-spring-boot-starter/
 COPY apex-integration/pom.xml apex-integration/
 COPY apex-integration-service/pom.xml apex-integration-service/
+COPY apex-aggregation-service/pom.xml apex-aggregation-service/
 COPY apex-boot-all/pom.xml apex-boot-all/
 COPY apex-tools-deployment/pom.xml apex-tools-deployment/
+COPY apex-tools-build/pom.xml apex-tools-build/
 
 COPY .sdkmanrc .
 COPY scripts/build/init-build-env.sh scripts/build/init-build-env.sh

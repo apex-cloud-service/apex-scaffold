@@ -6,8 +6,9 @@
 
     <parent>
         <groupId>com.apex.scaffold</groupId>
-        <artifactId>apex-scaffold</artifactId>
+        <artifactId>apex-tools-parent</artifactId>
         <version>1.3.1</version>
+        <relativePath>../apex-tools-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>apex-tools-deployment</artifactId>

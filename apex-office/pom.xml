@@ -3,7 +3,7 @@
   - Apex Scaffold - 办公模块 POM 配置文件
   - 微服务化改造 Phase 5：将办公能力（组织/审批/日历/消息/三平台同步）从单体抽取为独立模块，
   - 供 apex-office-service 复用；本模块聚合办公领域模型、仓储契约与应用服务。
-  - 约束：本模块 <parent> 指向根 POM（库模块），业务代码禁止自行声明第三方版本号。
+  - 约束：本模块 <parent> 指向 apex-components-parent，统一依赖版本继续继承根 POM。
   - 注意：本骨架由 scaffold-phase5-6.sh 生成，业务代码待 Phase 5 分阶段迁移。
   - @author Apex Team
 -->
@@ -12,8 +12,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.apex.scaffold</groupId>
-        <artifactId>apex-scaffold</artifactId>
+        <artifactId>apex-components-parent</artifactId>
         <version>1.3.1</version>
+        <relativePath>../apex-components-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

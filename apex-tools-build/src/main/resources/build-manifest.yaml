@@ -1,10 +1,10 @@
 # ============================================================
 # Apex Scaffold 模块注册表（单一事实来源 / Single Source of Truth）
 # ============================================================
-# 本文件登记全部 36 个 Maven 模块的职责分类、交付口径（是否产出可执行/交付 JAR）、
-# 默认端口与显式启动类，是 apex-tools-build 的核心配置。三处消费方：
+# 本文件登记根 POM 递归聚合的全部 42 个 Maven 模块（不含总根 POM），包括七个分组父 POM；
+# 职责分类、交付口径、默认端口与显式启动类是 apex-tools-build 的核心配置。三处消费方：
 #
-#   1. BuildManifestSyncTest（verify 门禁）：校验本文件与根 POM <modules>、各模块 POM
+#   1. BuildManifestSyncTest（verify 门禁）：校验本文件与根 POM 递归 <modules>、各模块 POM
 #      打包插件/显式 mainClass、scripts/release/release.sh SERVICES 数组的四方一致，
 #      任何一方单方面漂移都会构建失败；
 #   2. bin/apex.sh（运行时编排）：awk 行式解析本文件，为 package/image/deploy 子命令
@@ -12,9 +12,9 @@
 #   3. apex.sh status：按本文件渲染模块概览与 target 产物状态。
 #
 # 字段说明：
-#   artifactId     模块坐标，必须与根 POM <modules> 一致（BuildManifestSyncTest 校验）。
+#   artifactId     模块坐标，必须与根 POM 的递归聚合清单一致（BuildManifestSyncTest 校验）。
 #   category       职责分类，口径与 AGENTS.md「模块与物理边界」表一致：
-#                  共享基础/共享领域/共享设施/共享契约/服务父POM/业务库/运行模块/
+#                  共享基础/共享领域/共享设施/共享契约/服务父POM/分组父POM/业务库/运行模块/
 #                  服务增强/对象存储/授权模块/示例与工具/组合部署/运维工具/构建管理。
 #   deliverable    交付口径，四态：
 #                    none        不产出可执行/交付 JAR（库、starter、兼容聚合等）；
@@ -45,8 +45,8 @@
 #     调整结构时必须同步 apex.sh 的 manifest_service_modules/manifest_field。
 #
 # 新增/删除/改名模块的同步清单（缺一会被门禁拦截或造成口径漂移）：
-#   1. 根 pom.xml <modules>；
-#   2. 本文件条目（保持与根 POM 相同的声明顺序，便于人工比对）；
+#   1. 所属分组 POM <modules>（新分组还须登记根 POM）；
+#   2. 本文件条目（按分组或稳定顺序登记，保持既有行式格式）；
 #   3. 模块自身 pom.xml 的打包插件与显式 mainClass（如适用）；
 #   4. scripts/release/release.sh 的 SERVICES 数组（仅发布服务集合变化时）；
 #   5. AGENTS.md「模块与物理边界」分类表与依赖表；
@@ -55,6 +55,26 @@
 # schema: 注册表结构版本；字段增删或语义变更（而非条目增删）时递增。
 schema: 1
 modules:
+  # ── 分组父 POM：仅聚合与继承管理，不携带运行依赖或配置资源。
+  #    services-bom 保留现有条目及服务依赖管理；business-parent 第一阶段无业务子模块。
+  - artifactId: apex-shared-parent
+    category: 分组父POM
+    deliverable: none
+  - artifactId: apex-components-parent
+    category: 分组父POM
+    deliverable: none
+  - artifactId: apex-starters-parent
+    category: 分组父POM
+    deliverable: none
+  - artifactId: apex-applications-parent
+    category: 分组父POM
+    deliverable: none
+  - artifactId: apex-tools-parent
+    category: 分组父POM
+    deliverable: none
+  - artifactId: apex-business-parent
+    category: 分组父POM
+    deliverable: none
   # ── 共享基础/共享领域/共享设施/共享契约/服务父POM：全局横切与契约层，全部不产出可执行 JAR。
   #    apex-infrastructure 为旧坐标兼容聚合，不含实现源码；apex-license-tools 为卖方内部工具，
   #    发行源码/交付包必须剥离。
@@ -190,7 +210,7 @@ modules:
     port: 8098
   # ── 运维工具：shade fat jar（target/local-deployment.jar），仅由 scripts/utils/、
   #    scripts/ci/check-doc-links.sh 与 Compose security-key-check 调用，
-  #    不参与服务运行期装配、不进交付包。
+  #    不参与业务服务运行期装配；仅作为离线校验工具随包复制到 tools/。
   - artifactId: apex-tools-deployment
     category: 运维工具
     deliverable: tool-jar

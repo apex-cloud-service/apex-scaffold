@@ -7,8 +7,9 @@
     
     <parent>
         <groupId>com.apex.scaffold</groupId>
-        <artifactId>apex-scaffold</artifactId>
+        <artifactId>apex-applications-parent</artifactId>
         <version>1.3.1</version>
+        <relativePath>../apex-applications-parent/pom.xml</relativePath>
     </parent>
     
     <artifactId>apex-example</artifactId>

@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   - Apex Scaffold - Services BOM
-  - 微服务改造依赖版本管理 (Bill of Materials)
-  - 用途：作为网关、契约、五个业务服务及任务/脱敏服务的 parent，统一锁定：
+  - 服务依赖版本管理与运行模块聚合 (Bill of Materials)
+  - 用途：作为 13 个既有项目的 parent，统一锁定：
   -   1) 内部模块版本（apex-common / apex-api-contract / apex-license-starter…）
   -   2) 第三方依赖版本（Spring Cloud / Alibaba / MyBatis-Plus / Redis / MQ / Sentinel / Resilience4j…）
+  - 聚合：只登记 10 个运行模块（网关、六个业务服务、只读聚合服务、任务/脱敏服务）；
+  -       契约、集成能力库、组合部署包保持继承，分别聚合在 shared/components/applications。
   - 约束：
-  -   * 各业务服务、网关、契约模块的 <parent> 必须指向本 BOM；
-  -   * 业务代码禁止自行声明第三方版本号，统一经本 BOM 管理（版本单源）；
-  -   * 新增第三方依赖须先在本 BOM 声明 <dependencyManagement> 后再使用。
+  -   * 保留既有 13 个子项目的 parent，不向其他能力库或工具扩大服务 BOM 继承范围；
+  -   * 既有依赖管理保持不变，聚合不自动引入业务依赖或激活可执行打包插件；
+  -   * 第三方版本沿用根 POM 与本 BOM 的现有 dependencyManagement。
   - @author Apex Team
   - @since 1.3.1 (微服务改造 Phase 1)
   - @version 1.3.1
@@ -27,7 +29,22 @@
     <artifactId>apex-services-bom</artifactId>
     <packaging>pom</packaging>
     <name>apex-services-bom</name>
-    <description>Apex Scaffold - 微服务 BOM (统一锁定各服务模块与第三方依赖版本)</description>
+    <description>Apex Scaffold - 服务依赖版本管理与运行模块聚合</description>
+
+    <modules>
+        <!-- 八个标准发布运行模块 -->
+        <module>../apex-gateway</module>
+        <module>../apex-system-service</module>
+        <module>../apex-auth-service</module>
+        <module>../apex-workflow-service</module>
+        <module>../apex-file-service</module>
+        <module>../apex-office-service</module>
+        <module>../apex-integration-service</module>
+        <module>../apex-aggregation-service</module>
+        <!-- 两个可选运行模块，不扩大标准发布集合 -->
+        <module>../apex-job-service</module>
+        <module>../apex-masking-service</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>

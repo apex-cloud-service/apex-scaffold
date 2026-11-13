@@ -4,7 +4,7 @@
   - 微服务化改造 Phase 4：将文件/文档/图表能力从单体中抽取为独立模块，
   - 供 apex-file-service 复用；本模块聚合领域模型、仓储契约、应用服务与
   - 存储 SPI（MinIO / 火山 TOS / 本地）基础设施适配。
-  - 约束：本模块 <parent> 指向根 POM（库模块），业务代码禁止自行声明第三方版本号。
+  - 约束：本模块 <parent> 指向 apex-components-parent，统一依赖版本继续继承根 POM。
   - @author Apex Team
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -12,8 +12,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.apex.scaffold</groupId>
-        <artifactId>apex-scaffold</artifactId>
+        <artifactId>apex-components-parent</artifactId>
         <version>1.3.1</version>
+        <relativePath>../apex-components-parent/pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 

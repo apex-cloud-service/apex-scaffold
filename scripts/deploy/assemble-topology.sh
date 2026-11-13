@@ -5,7 +5,7 @@
 # 组合部署拓扑装配（方案 §13 脚本交付物 / C9）。
 #
 # 支持三种拓扑，用于本地验证"组件可按需组合拔插"：
-#   split       五+服务拆分：逐服务启动（需外部 MySQL/Redis）
+#   split       网关 + 六业务服务 + 只读聚合服务：逐服务构建启动（需外部 MySQL/Redis）
 #   all-in-one  单进程装配全部组件（apex-boot-all，H2 + 本地存储）
 #   subset      任意子集：按 APEX_COMPONENTS 指定组件在同进程装配
 #
@@ -62,10 +62,11 @@ case "$TOPOLOGY" in
             --server.port="${PORT:-8080}"
         ;;
     split)
-        log_info "拓扑：split（五+服务拆分）"
+        log_info "拓扑：split（网关 + 六业务服务 + 只读聚合服务）"
         log_warn "拆分拓扑需外部 MySQL/Redis；请先按 docs/05-operations 准备依赖"
-        for module in apex-system-service apex-auth-service apex-workflow-service \
-                      apex-file-service apex-office-service apex-integration-service; do
+        for module in apex-gateway apex-system-service apex-auth-service apex-workflow-service \
+                      apex-file-service apex-office-service apex-integration-service \
+                      apex-aggregation-service; do
             log_info "构建 $module"
             mvnd -q -B -pl "$module" -am package -DskipTests
         done

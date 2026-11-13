@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-scaffold</artifactId>
+        <version>1.3.1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>apex-starters-parent</artifactId>
+    <packaging>pom</packaging>
+    <name>Apex Starters Parent</name>
+    <description>存储、授权、任务与分布式事务 starter 的聚合及构建管理入口</description>
+
+    <modules>
+        <module>../apex-storage-spring-boot-starter</module>
+        <module>../apex-license-spring-boot-starter</module>
+        <module>../apex-job-spring-boot-starter</module>
+        <module>../apex-seata-spring-boot-starter</module>
+    </modules>
+</project>

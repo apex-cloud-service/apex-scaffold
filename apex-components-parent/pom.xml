@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-scaffold</artifactId>
+        <version>1.3.1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>apex-components-parent</artifactId>
+    <packaging>pom</packaging>
+    <name>Apex Components Parent</name>
+    <description>六个脚手架能力库的聚合与构建管理入口，不承载项目专属业务</description>
+
+    <modules>
+        <module>../apex-system</module>
+        <module>../apex-auth</module>
+        <module>../apex-workflow</module>
+        <module>../apex-file</module>
+        <module>../apex-office</module>
+        <!-- 聚合归属 components，保留 apex-services-bom 继承以维持既有依赖管理。 -->
+        <module>../apex-integration</module>
+    </modules>
+</project>
