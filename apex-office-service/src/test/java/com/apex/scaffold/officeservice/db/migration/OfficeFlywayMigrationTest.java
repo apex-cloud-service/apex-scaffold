@@ -7,6 +7,7 @@ import com.apex.scaffold.office.infrastructure.persistence.OfficeBindingPO;
 import com.apex.scaffold.office.infrastructure.persistence.OfficeOrganizationMappingPO;
 import com.apex.scaffold.office.infrastructure.persistence.OfficeSyncTaskPO;
 import com.apex.scaffold.office.infrastructure.persistence.po.OfficeMessagePO;
+import com.apex.scaffold.office.infrastructure.po.ApprovalCancelOperationPO;
 import com.apex.scaffold.office.infrastructure.po.ApprovalProcessPO;
 import com.apex.scaffold.office.infrastructure.po.CalendarEventPO;
 import com.apex.scaffold.office.infrastructure.po.DocumentInfoPO;
@@ -87,7 +88,8 @@ class OfficeFlywayMigrationTest {
             "off_sync_history",
             "office_meeting_room",
             "off_notify_template",
-            "off_notify_request");
+            "off_notify_request",
+            "off_approval_cancel_operation");
 
     /** 各表必须具备的索引名（MySQL 带反引号，PostgreSQL 不带，故按裸名断言）。 */
     private static final Map<String, Set<String>> REQUIRED_INDEXES = Map.ofEntries(
@@ -169,7 +171,13 @@ class OfficeFlywayMigrationTest {
             Map.entry("off_notify_template", Set.of("uk_off_notify_template", "idx_off_notify_template_tenant_status")),
             Map.entry(
                     "off_notify_request",
-                    Set.of("idx_off_notify_request_tenant_status", "idx_off_notify_request_template")));
+                    Set.of("idx_off_notify_request_tenant_status", "idx_off_notify_request_template")),
+            Map.entry(
+                    "off_approval_cancel_operation",
+                    Set.of(
+                            "uk_off_approval_cancel_operation",
+                            "idx_off_approval_cancel_operation_process",
+                            "idx_off_approval_cancel_operation_status")));
 
     /** 以 PO 类为唯一事实来源：表名 → 持久化对象。 */
     private static final Map<String, Class<?>> PO_TABLES = Map.ofEntries(
@@ -190,7 +198,8 @@ class OfficeFlywayMigrationTest {
             Map.entry("off_sync_history", OffSyncHistoryPO.class),
             Map.entry("office_meeting_room", MeetingRoomPO.class),
             Map.entry("off_notify_template", NotifyTemplatePO.class),
-            Map.entry("off_notify_request", NotifyRequestRecordPO.class));
+            Map.entry("off_notify_request", NotifyRequestRecordPO.class),
+            Map.entry("off_approval_cancel_operation", ApprovalCancelOperationPO.class));
 
     @Test
     void shouldHaveUniqueContiguousVersions() throws Exception {
@@ -218,7 +227,6 @@ class OfficeFlywayMigrationTest {
 
         Set<String> migrationTables = new LinkedHashSet<>(EXPECTED_TABLES);
         migrationTables.add("undo_log");
-        migrationTables.add("off_approval_cancel_operation");
         assertThat(mysqlTables).as("MySQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
         assertThat(postgresqlTables).as("PostgreSQL 迁移表集合").containsExactlyInAnyOrderElementsOf(migrationTables);
         Set<String> undoColumns =

@@ -39,6 +39,14 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository {
 
+    /** {@code current_approver_ids} 的 JSON 字符串数组反序列化引用（静态常量避免每次重建）。 */
+    private static final com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>> LIST_OF_STRING =
+            new com.fasterxml.jackson.core.type.TypeReference<>() {};
+
+    /** 共享 JSON 解析器（仓储层方言规避解析用）。 */
+    private static final com.fasterxml.jackson.databind.ObjectMapper OBJECT_MAPPER =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+
     private final ApprovalProcessMapper mapper;
     private final ApprovalProcessConverter converter;
     private final BlockingIoSchedulers blockingIoSchedulers;
@@ -159,11 +167,36 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
                     Long tenantId = TenantContext.currentTenantId()
                             .map(Long::valueOf)
                             .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
-                    List<ApprovalProcessPO> poList = mapper.selectPendingByApprover(approverId, tenantId);
+                    // 审批人归属在仓储层解析 JSON 数组：JSON_CONTAINS 为 MySQL 专有函数，
+                    // H2 basic 与 PostgreSQL 不支持（与 selectAllByTenant 的方言规避口径一致）
+                    List<ApprovalProcessPO> poList = mapper.selectPendingByTenant(tenantId).stream()
+                            .filter(po -> containsApprover(po.getCurrentApproverIds(), approverId))
+                            .toList();
                     return poList.stream().map(converter::toEntity).toList();
                 })
                 .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(list -> log.debug("查询待审批列表完成，审批人：{}，数量：{}", approverId, list.size()));
+    }
+
+    /**
+     * 判断审批人 ID 是否在 {@code current_approver_ids} JSON 字符串数组中。
+     *
+     * <p>字段为空、非合法 JSON 数组或元素类型不符时返回 false，不抛出：该字段由
+     * 办公平台侧写入，本地发起阶段可能为空数组或占位文本。
+     *
+     * @param currentApproverIds JSON 数组字符串（元素为审批人 ID）
+     * @param approverId         待匹配的审批人 ID
+     * @return 数组包含该 ID 时返回 true
+     */
+    private boolean containsApprover(String currentApproverIds, String approverId) {
+        if (currentApproverIds == null || currentApproverIds.isBlank()) {
+            return false;
+        }
+        try {
+            return OBJECT_MAPPER.readValue(currentApproverIds, LIST_OF_STRING).contains(approverId);
+        } catch (Exception parseFailure) {
+            return false;
+        }
     }
 
     @Override

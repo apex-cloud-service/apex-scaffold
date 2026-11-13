@@ -16,6 +16,15 @@ apex:
     secret: ${APEX_INTERNAL_AUTH_SECRET:}
     service-name: apex-aggregation-service
     allowed-skew-seconds: ${APEX_INTERNAL_AUTH_SKEW_SECONDS:60}
+
+aggregation:
+  security:
+    # 本服务自验访问 JWT 的公钥/密钥（与下游各服务同口径）：
+    # 认证上下文由 IdentityRelayAuthenticationFilter 构建，身份头不作为认证依据。
+    # 共享密钥必须由部署编排注入；未配置验签密钥时保持拒绝认证。
+    jwt-public-keys-base64: ${AGGREGATION_JWT_PUBLIC_KEYS_BASE64:}
+    jwt-public-key-base64: ${AGGREGATION_JWT_PUBLIC_KEY_BASE64:}
+    jwt-secret: ${AGGREGATION_JWT_SECRET:}
   todo:
     sources:
       # 工作流服务基址（内部端点 /internal/v1/workflow/todo/tasks）

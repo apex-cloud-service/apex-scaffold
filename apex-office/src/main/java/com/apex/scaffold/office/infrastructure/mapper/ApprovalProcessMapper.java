@@ -67,17 +67,17 @@ public interface ApprovalProcessMapper extends BaseMapper<ApprovalProcessPO> {
             @Param("initiatorId") String initiatorId, @Param("tenantId") Long tenantId);
 
     /**
-     * 查询待审批列表
+     * 查询租户下待审批与进行中的流程列表（含审批人字段原文）。
      *
-     * <p>查询当前审批人列表中包含指定审批人的待审批流程。
+     * <p>审批人归属由仓储层解析 {@code current_approver_ids} JSON 数组后过滤：
+     * {@code JSON_CONTAINS}/{@code JSON_QUOTE} 为 MySQL 专有函数，H2 basic 档与
+     * PostgreSQL 均不支持，与本文件 {@code selectAllByTenant} 的方言规避口径一致。
      *
-     * @param approverId 审批人ID
      * @param tenantId 租户ID
-     * @return 待审批流程列表
+     * @return 待审批与进行中的流程列表
      */
     @Select(
-            "SELECT * FROM office_approval_process WHERE JSON_CONTAINS(current_approver_ids, JSON_QUOTE(#{approverId})) "
-                    + "AND status IN ('PENDING', 'IN_PROGRESS') AND tenant_id = #{tenantId} AND deleted = 0 ORDER BY created_at DESC")
-    List<ApprovalProcessPO> selectPendingByApprover(
-            @Param("approverId") String approverId, @Param("tenantId") Long tenantId);
+            "SELECT * FROM office_approval_process "
+                    + "WHERE status IN ('PENDING', 'IN_PROGRESS') AND tenant_id = #{tenantId} AND deleted = 0 ORDER BY created_at DESC")
+    List<ApprovalProcessPO> selectPendingByTenant(@Param("tenantId") Long tenantId);
 }

@@ -51,7 +51,9 @@ public class InternalAuthProperties {
             "apex-office-service",
                     java.util.List.of(
                             "/internal/v1/tenants/**", "/internal/v1/org/**", "/internal/v1/open-app-subjects/**"),
-            "apex-integration-service", java.util.List.of("/internal/v1/notify", "/internal/v1/tenants/**")));
+            "apex-integration-service", java.util.List.of("/internal/v1/notify", "/internal/v1/tenants/**"),
+            "apex-aggregation-service",
+                    java.util.List.of("/internal/v1/workflow/todo/**", "/internal/v1/office/todo")));
 
     /** 仅撤销流与平台应用档位查询允许无租户签名；其他路径必须绑定租户。 */
     private java.util.List<String> unscopedPaths =

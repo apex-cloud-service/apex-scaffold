@@ -27,6 +27,7 @@
 --   office_meeting_room          会议室资源（V7 新增）
 --   off_notify_template          统一通知模板（V8 新增）
 --   off_notify_request           统一通知投递请求留痕（V8 新增）
+--   off_approval_cancel_operation 审批撤销编排状态（V9 新增）
 --
 -- @author Apex Team
 -- @version 1.0.0
@@ -498,3 +499,23 @@ CREATE TABLE IF NOT EXISTS off_notify_request (
 );
 CREATE INDEX IF NOT EXISTS idx_off_notify_request_tenant_status ON off_notify_request (tenant_id, status, create_time);
 CREATE INDEX IF NOT EXISTS idx_off_notify_request_template ON off_notify_request (tenant_id, template_code, create_time);
+
+-- ------------------------------------------------------------
+-- 审批撤销操作编排状态（V9）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS off_approval_cancel_operation (
+    id                  BIGINT       NOT NULL AUTO_INCREMENT,
+    tenant_id           BIGINT       NOT NULL,
+    process_instance_id VARCHAR(64)  NOT NULL,
+    idempotency_key     VARCHAR(128) NOT NULL,
+    status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',
+    error_message       VARCHAR(512),
+    create_time         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             TINYINT      NOT NULL DEFAULT 0,
+    version             INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_off_approval_cancel_operation ON off_approval_cancel_operation (tenant_id, idempotency_key, deleted);
+CREATE INDEX IF NOT EXISTS idx_off_approval_cancel_operation_process ON off_approval_cancel_operation (tenant_id, process_instance_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_off_approval_cancel_operation_status ON off_approval_cancel_operation (tenant_id, status, update_time);
