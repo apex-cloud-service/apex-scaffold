@@ -86,7 +86,7 @@ import reactor.core.publisher.Mono;
  * @see SecurityWebFilterChain
  */
 @Configuration
-@Profile("!it")
+@Profile("!it & !it-local")
 @EnableWebFluxSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {

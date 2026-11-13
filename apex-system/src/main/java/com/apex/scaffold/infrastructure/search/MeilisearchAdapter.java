@@ -32,6 +32,10 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+        prefix = "meilisearch",
+        name = "enabled",
+        havingValue = "true")
 public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
 
     private static final int PHONE_NUMBER_LENGTH = 11;

@@ -25,6 +25,10 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+        prefix = "loki",
+        name = "enabled",
+        havingValue = "true")
 public class LokiAdapter implements RuntimeLogRepository {
 
     private final WebClient.Builder webClientBuilder;
