@@ -42,7 +42,9 @@
 ## 发版与依赖约定
 
 - 本模块版本由根 `pom.xml` 统一管理（`${project.version}`）。
-- 网关、契约、各业务微服务通过父 POM `apex-services-bom` 统一引用本模块，**禁止**在服务内自行指定 SDK 版本。
+- 本模块直接继承 `apex-shared-parent`，经它继承根 POM 的版本与构建配置；目录与 JAR 坐标不变，见 [当前分组说明](../README.md#maven-分组与父链)。
+- 网关、契约、各业务微服务仍通过 `apex-services-bom` 的现有依赖管理引用本模块，**禁止**在服务内自行指定 SDK 版本。契约聚合在 shared，但其直接 parent 保持 services-bom；聚合不等于继承或生产依赖。
+- 安装或未来发布 Maven 构件须同时提供根与所需分组 parent POM，不可仅发布子 JAR/POM 后留下缺失继承链。此约定不授权远程发布。
 - 任何向本模块新增内容，必须先对照上表评估；触及「禁止进入」项应改放对应服务或 `apex-infrastructure`。
 
 ## 包结构

@@ -1,7 +1,7 @@
 # 记忆卡 · apex-scaffold（后端基座）
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
-> **基线**：2026-11-12 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 36 个 reactor 模块
+> **基线**：2026-11-13 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 根直接聚合 7 组、递归 42 个模块、含根 43 个 reactor 项目
 > **权威优先级**：源码 > `AGENTS.md` > `docs/` > `.workbuddy/knowledge/` > 本卡。本卡是**导航与结论**，不是规范原文。
 
 ## 1. 一句话
@@ -19,7 +19,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 - JDK `21.0.13.0+9-tem`、mvnd `2.0.0-rc-3`；**缺 mvnd 直接失败，不得回退系统 mvn**。
 - 不得依赖 `java/current` 软链；换过 JDK 先 `mvnd --stop` 清 daemon。
 - 本地仓库固定 `~/.m2/repository`；**禁止** `-Dmaven.repo.local` 指向 `target/`（`clean` 会连仓库带产物一起删）。
-- 统一编排入口 `bin/apex.sh`（属 `apex-tools-build`）：只做编排，委托既有脚本与 mvnd；其 `build-manifest.yaml` 是模块注册表单一事实来源，由 `BuildManifestSyncTest` 校验与根 POM modules、各模块打包插件、`release.sh SERVICES` 一致。
+- 统一编排入口 `bin/apex.sh`（属 `apex-tools-build`）：只做编排，委托既有脚本与 mvnd；其 `build-manifest.yaml` 是模块注册表单一事实来源，由 `BuildManifestSyncTest` 校验与根 POM **递归聚合**模块集合（不含总根）、各模块打包插件、`release.sh SERVICES` 一致。
 
 ## 3. 拓扑、端口、库、迁移
 
@@ -78,7 +78,7 @@ mvnd -T4 -B clean verify                  # 全量基线
   - 批次 **D 完成 D1/D2/D4/D5/D6**（D5 共享数据服务层 11-02 提交）；**D3 为文档沉淀**，`/open-api` 路由已补。
   - 批次 **E1–E4 已完成并提交**（11-02）：`apex-integration`（connector/device 双子域）+ `apex-integration-service` 8094，含 EMQX ACL 与真实环境验证。
 - **中台架构整改 G1–G8**（`docs/08-project-management/plans/middle-platform-remediation-plan.md`）：11-10 提交 `3b61027b` 实施完成——服务侧能力二次校验默认开启、auth 域分层倒置清理、治理字段与守卫覆盖补齐；`clean verify` 6,251 测试通过，真实 Nacos/MySQL/RocketMQ/EMQX/Seata TC 与第三方消费方验收仍未验证。
-- **工作树**：此前 77 项在途（G1–G8 收尾）已随 `6db7df11` / `3a969da0` 于 11-10 提交清空，11-11 文档对齐批次（`60d78304`～`5e29aca5`）提交；11-12 新增在途 **47 项**（23 修改 + 24 未跟踪），核心是**只读查询聚合服务 `apex-aggregation-service`（8098）** 及其方案/评审文档、办公审批取消与统一待办端点，尚未提交；当前在途以 `git status` 实测为准，**不得把在途改动当作已交付**（`pom.xml` 已登记该模块，故 reactor 模块数按 36 计）。
+- **工作树**：11-13 Maven 分组父 POM 第一阶段已实施（新增 6 个分组 parent、根直接聚合 7 组、递归 42 模块/含根 43 项目；22 叶子迁移 parent、13 保留 services-bom 继承），工作区改动以 `git status` 实测为准，**不得把在途改动当作已提交**。
 - **结构债**：`apex-system` 仍四层合一（interfaces/application/domain/infrastructure 同包），868 个主源码文件；C4/D07 已于 2026-11-01 裁决维持现状不实施（记录于 `docs/08-project-management/plans/platform-closure-remediation-plan.md`）。
 
 ## 7. 下一步

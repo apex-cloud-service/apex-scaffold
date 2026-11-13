@@ -1,216 +1,286 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1150" width="1400" height="1150">
-  <defs>
-    <style>
-      .title{font:700 30px sans-serif;fill:#0f172a;text-anchor:middle}
-      .subtitle{font:500 13px sans-serif;fill:#64748b;text-anchor:middle}
-      .band-label{font:600 12px sans-serif;fill:#475569}
-      .band-note{font:400 10px sans-serif;fill:#64748b}
-      .box-title{font:600 13px sans-serif;fill:#0f172a;text-anchor:middle}
-      .box-desc{font:400 10px sans-serif;fill:#475569;text-anchor:middle}
-      .rail-label{font:500 11px sans-serif;fill:#64748b;text-anchor:middle}
-      .legend{font:500 11px sans-serif;fill:#475569}
-      .tools-label{font:600 12px sans-serif;fill:#64748b}
-    </style>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
-    </marker>
-    <marker id="arrowDark" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
-    </marker>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="2561" viewBox="0 0 1600 2561" role="img" aria-labelledby="title desc">
+<title id="title">直接内部生产依赖图（35 个 JAR 模块）</title>
+<desc id="desc">每行以箭头从依赖方指向完整的直接内部 compile 依赖集合。无依赖行以无表示。排除 parent、modules、dependencyManagement、传递依赖、test 和第三方依赖。</desc>
+<!-- Semantic pair: 95_module_dependency_graph.mmd. Handwritten adjacency layout, not Mermaid output. -->
+<defs><style>
+text{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;fill:#0f172a}
+.title{font-size:30px;font-weight:700;text-anchor:middle}.sub{font-size:16px;fill:#475569;text-anchor:middle}
+.head{font-size:20px;font-weight:700}.row{font-size:17px}.note{font-size:17px;fill:#475569}.small{font-size:15px;fill:#475569}
+</style><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#64748b"/></marker></defs>
+<rect width="1600" height="2561" fill="#fff"/>
 
-  <rect width="1400" height="1150" fill="#fff"/>
-  <text x="700" y="40" class="title">模块依赖关系图（35 个 Maven 模块）</text>
-  <text x="700" y="64" class="subtitle">数据源：各模块 pom.xml（生产 scope 直接依赖）· 箭头由依赖方指向被依赖方 · 粗箭头为成组聚合，细线为单条依赖 · v1.3.1</text>
-
-  <text x="700" y="102" class="band-label" text-anchor="middle">L0 共享基础</text>
-
-  <!-- ==================== bands (containers, drawn first) ==================== -->
-  <rect x="260" y="200" width="1130" height="80" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="275" y="218" class="band-label">L1 共享领域 / 契约</text>
-  <rect x="260" y="312" width="1130" height="198" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="275" y="330" class="band-label">L2 共享设施 / starter / 授权工具</text>
-  <rect x="260" y="560" width="1130" height="90" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="275" y="578" class="band-label">L3 业务库</text>
-  <rect x="260" y="690" width="1130" height="140" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="275" y="706" class="band-label">L4 运行模块</text>
-  <text x="1390" y="706" class="band-note" text-anchor="end">六个业务 service：业务库 + common·domain + job/seata starter（auth/system/workflow/office 另依赖 api-contract）</text>
-  <rect x="260" y="870" width="1130" height="70" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="275" y="888" class="band-label">L5 组合部署 / 示例</text>
-
-  <!-- ==================== edges: thin single deps (dependent -> dependency) ==================== -->
-  <g stroke="#94a3b8" stroke-width="1.2" fill="none" opacity="0.7">
-    <!-- L1 -> L0 -->
-    <line x1="460" y1="232" x2="560" y2="169" marker-end="url(#arrow)"/>
-    <line x1="860" y1="232" x2="760" y2="169" marker-end="url(#arrow)"/>
-    <!-- L2 intra: messaging -> persistence, integration -> remote -->
-    <path d="M 1048 346 L 1048 336 L 400 336 L 400 346" marker-end="url(#arrow)"/>
-    <path d="M 1264 346 L 1264 328 L 832 328 L 832 346" marker-end="url(#arrow)"/>
-    <line x1="660" y1="452" x2="650" y2="452" marker-end="url(#arrow)"/>
-    <!-- band3 -> common / domain (all six business libs) -->
-    <path d="M 260 600 L 100 600 L 100 150 L 517 150" marker-end="url(#arrow)"/>
-    <path d="M 280 610 L 130 610 L 130 252 L 297 252" marker-end="url(#arrow)"/>
-    <!-- band4 -> common / domain (all run modules) -->
-    <path d="M 260 740 L 160 740 L 160 138 L 517 138" marker-end="url(#arrow)"/>
-    <path d="M 280 750 L 170 750 L 170 240 L 297 240" marker-end="url(#arrow)"/>
-    <!-- service -> its business lib -->
-    <line x1="359" y1="706" x2="359" y2="640" marker-end="url(#arrow)"/>
-    <line x1="545" y1="706" x2="545" y2="640" marker-end="url(#arrow)"/>
-    <line x1="731" y1="706" x2="731" y2="640" marker-end="url(#arrow)"/>
-    <line x1="917" y1="706" x2="917" y2="640" marker-end="url(#arrow)"/>
-    <line x1="1103" y1="706" x2="1103" y2="640" marker-end="url(#arrow)"/>
-    <line x1="1289" y1="706" x2="1289" y2="640" marker-end="url(#arrow)"/>
-    <!-- boot-all -> six business libs -->
-    <path d="M 300 910 L 185 910 L 185 650" marker-end="url(#arrow)"/>
-  </g>
-
-  <!-- ==================== edges: aggregated group arrows ==================== -->
-  <g stroke="#475569" stroke-width="2.4" fill="none" opacity="0.85">
-    <line x1="825" y1="312" x2="825" y2="284" marker-end="url(#arrowDark)"/>
-  </g>
-  <text x="840" y="303" class="band-note">5×设施 JAR → common + domain ｜ license/storage/job/seata starter → common</text>
-
-  <!-- corridor labels -->
-  <text transform="rotate(-90 88 420)" x="88" y="420" class="rail-label">六个业务库均直接依赖 common · domain</text>
-  <text transform="rotate(-90 146 480)" x="146" y="480" class="rail-label">运行模块亦直接依赖 common · domain</text>
-  <text transform="rotate(-90 199 780)" x="199" y="780" class="rail-label">boot-all → common · domain · api-contract · 六个业务库</text>
-
-  <!-- ==================== L0 ==================== -->
-  <rect x="520" y="110" width="360" height="56" rx="8" fill="#4f46e5" opacity="0.1" stroke="#4f46e5" stroke-width="2"/>
-  <text x="700" y="134" class="box-title">apex-common</text>
-  <text x="700" y="154" class="box-desc">通用能力 / 上下文 / 调度器 / 响应契约（无内部依赖）</text>
-
-  <!-- ==================== L1 ==================== -->
-  <rect x="300" y="232" width="320" height="40" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="460" y="249" class="box-title">apex-domain</text>
-  <text x="460" y="264" class="box-desc">基础实体 · 通用事件 · 端口/Gateway 契约 · 依赖 common</text>
-  <rect x="700" y="232" width="320" height="40" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="860" y="249" class="box-title">apex-api-contract</text>
-  <text x="860" y="264" class="box-desc">跨服务内部 API 与 DTO · 依赖 common</text>
-
-  <!-- ==================== L2 row1: 能力 JAR ==================== -->
-  <rect x="300" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
-  <text x="400" y="363" class="box-title">infrastructure-persistence</text>
-  <text x="400" y="381" class="box-desc">持久化辅助 · common · domain</text>
-  <rect x="516" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
-  <text x="616" y="363" class="box-title">infrastructure-cache</text>
-  <text x="616" y="381" class="box-desc">同步缓存/分布式锁 · common · domain</text>
-  <rect x="732" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
-  <text x="832" y="363" class="box-title">infrastructure-remote</text>
-  <text x="832" y="381" class="box-desc">同步远程调用 · common · domain</text>
-  <rect x="948" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
-  <text x="1048" y="363" class="box-title">infrastructure-messaging</text>
-  <text x="1048" y="381" class="box-desc">消息/Outbox · common · domain · persistence</text>
-  <rect x="1164" y="346" width="200" height="44" rx="8" fill="#d97706" opacity="0.1" stroke="#d97706" stroke-width="2"/>
-  <text x="1264" y="363" class="box-title">infrastructure-integration</text>
-  <text x="1264" y="381" class="box-desc">第三方集成 · common · domain · remote</text>
-
-  <!-- ==================== L2 row2: 兼容坐标 / starter / 工具 ==================== -->
-  <rect x="300" y="430" width="170" height="44" rx="8" fill="#d97706" opacity="0.14" stroke="#d97706" stroke-width="2.5"/>
-  <text x="385" y="447" class="box-title">apex-infrastructure</text>
-  <text x="385" y="465" class="box-desc">聚合五个能力 JAR（兼容坐标）</text>
-  <rect x="480" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="565" y="447" class="box-title">license-starter</text>
-  <text x="565" y="465" class="box-desc">授权门控 AutoConfig · common</text>
-  <rect x="660" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="745" y="447" class="box-title">license-tools</text>
-  <text x="745" y="465" class="box-desc">LicenseGenerator · license-starter</text>
-  <rect x="840" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="925" y="447" class="box-title">storage-starter</text>
-  <text x="925" y="465" class="box-desc">五后端对象存储 · common</text>
-  <rect x="1020" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="1105" y="447" class="box-title">job-starter</text>
-  <text x="1105" y="465" class="box-desc">XXL 执行器（默认禁用） · common</text>
-  <rect x="1200" y="430" width="170" height="44" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="1285" y="447" class="box-title">seata-starter</text>
-  <text x="1285" y="465" class="box-desc">AT/TCC/SAGA/XA · common</text>
-
-  <!-- ==================== L3 业务库 ==================== -->
-  <rect x="270" y="580" width="178" height="60" rx="8" fill="#0891b2" opacity="0.14" stroke="#0891b2" stroke-width="2.5"/>
-  <text x="359" y="598" class="box-title">apex-system</text>
-  <text x="359" y="614" class="box-desc">四层实现 + 专属 domain/infra</text>
-  <text x="359" y="630" class="box-desc">common·domain·契约·5×设施·license</text>
-  <rect x="456" y="580" width="178" height="60" rx="8" fill="#0891b2" opacity="0.1" stroke="#0891b2" stroke-width="2"/>
-  <text x="545" y="598" class="box-title">apex-auth</text>
-  <text x="545" y="614" class="box-desc">认证领域与集成</text>
-  <text x="545" y="630" class="box-desc">common·domain·契约·infra-integration</text>
-  <rect x="642" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="731" y="598" class="box-title">apex-workflow</text>
-  <text x="731" y="614" class="box-desc">工作流引擎 · JdbcTemplate</text>
-  <text x="731" y="630" class="box-desc">common · domain</text>
-  <rect x="828" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="917" y="598" class="box-title">apex-file</text>
-  <text x="917" y="614" class="box-desc">文件领域 · 对象存储</text>
-  <text x="917" y="630" class="box-desc">common · domain · storage-starter</text>
-  <rect x="1014" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="1103" y="598" class="box-title">apex-office</text>
-  <text x="1103" y="614" class="box-desc">办公平台 · 站内信/WS</text>
-  <text x="1103" y="630" class="box-desc">common · domain</text>
-  <rect x="1200" y="580" width="178" height="60" rx="8" fill="#059669" opacity="0.1" stroke="#059669" stroke-width="2"/>
-  <text x="1289" y="598" class="box-title">apex-integration</text>
-  <text x="1289" y="614" class="box-desc">connector · device 子域</text>
-  <text x="1289" y="630" class="box-desc">common·domain·persistence·remote</text>
-
-  <!-- ==================== L4 row1: 业务 service ==================== -->
-  <rect x="270" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="359" y="724" class="box-title">apex-system-service</text>
-  <text x="359" y="739" class="box-desc">运行 system 库 · Flyway 迁移</text>
-  <text x="359" y="751" class="box-desc">job/seata starter</text>
-  <rect x="456" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="545" y="724" class="box-title">apex-auth-service</text>
-  <text x="545" y="739" class="box-desc">运行 auth 库 · MFA/OAuth2</text>
-  <text x="545" y="751" class="box-desc">system 仅 test</text>
-  <rect x="642" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="731" y="724" class="box-title">apex-workflow-service</text>
-  <text x="731" y="739" class="box-desc">运行 workflow 库</text>
-  <text x="731" y="751" class="box-desc">job/seata starter</text>
-  <rect x="828" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="917" y="724" class="box-title">apex-file-service</text>
-  <text x="917" y="739" class="box-desc">运行 file 库</text>
-  <text x="917" y="751" class="box-desc">无 api-contract</text>
-  <rect x="1014" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="1103" y="724" class="box-title">apex-office-service</text>
-  <text x="1103" y="739" class="box-desc">运行 office 库 · 站内信</text>
-  <text x="1103" y="751" class="box-desc">gateway 仅 test</text>
-  <rect x="1200" y="706" width="178" height="48" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="1289" y="724" class="box-title">apex-integration-service</text>
-  <text x="1289" y="739" class="box-desc">运行 integration 库 · WebClient</text>
-  <text x="1289" y="751" class="box-desc">job/seata starter</text>
-
-  <!-- ==================== L4 row2: 网关与辅助服务 ==================== -->
-  <rect x="270" y="782" width="178" height="38" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="359" y="800" class="box-title">apex-gateway</text>
-  <text x="359" y="814" class="box-desc">WebFlux 网关 · common</text>
-  <rect x="456" y="782" width="178" height="38" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="545" y="800" class="box-title">apex-job-service</text>
-  <text x="545" y="814" class="box-desc">system 任务代理 · infra-remote</text>
-  <rect x="642" y="782" width="178" height="38" rx="8" fill="#6366f1" opacity="0.12" stroke="#6366f1" stroke-width="2"/>
-  <text x="731" y="800" class="box-title">apex-masking-service</text>
-  <text x="731" y="814" class="box-desc">脱敏接口（启动配置） · common</text>
-
-  <!-- ==================== L5 ==================== -->
-  <rect x="300" y="890" width="340" height="40" rx="8" fill="#475569" opacity="0.1" stroke="#475569" stroke-width="2.5"/>
-  <text x="470" y="907" class="box-title">apex-boot-all</text>
-  <text x="470" y="924" class="box-desc">basic/示例档单进程装配 · common·domain·契约·六个业务库</text>
-  <rect x="700" y="890" width="300" height="40" rx="8" fill="#475569" opacity="0.1" stroke="#475569" stroke-width="2.5"/>
-  <text x="850" y="907" class="box-title">apex-example</text>
-  <text x="850" y="924" class="box-desc">common·domain·cache·integration·system（workflow test）</text>
-
-  <!-- ==================== 独立工具 ==================== -->
-  <text x="300" y="962" class="tools-label">独立工具（无内部生产依赖）</text>
-  <rect x="300" y="970" width="200" height="36" rx="8" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
-  <text x="400" y="992" class="box-title">apex-generator</text>
-  <rect x="520" y="970" width="220" height="36" rx="8" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
-  <text x="630" y="992" class="box-title">apex-tools-deployment</text>
-  <rect x="760" y="970" width="220" height="36" rx="8" fill="#4f46e5" opacity="0.08" stroke="#4f46e5" stroke-width="2"/>
-  <text x="870" y="992" class="box-title">apex-tools-build</text>
-
-  <!-- ==================== legend ==================== -->
-  <rect x="40" y="1020" width="1320" height="112" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
-  <text x="60" y="1044" class="legend" font-weight="600">依赖要点（依据各模块 pom.xml 与 AGENTS.md 模块边界核验）</text>
-  <text x="60" y="1066" class="legend">• 35 个 reactor 模块：共享基础/领域/契约 4（含服务父 POM apex-services-bom，仅 dependencyManagement，图中未单列）· 设施与 starter 11 · 业务库 6 · 运行模块 9 · 组合/示例 2 · 独立工具 3。</text>
-  <text x="60" y="1086" class="legend">• 框内文字列出该模块全部直接内部生产依赖；test 与 optional 依赖不计入箭头。</text>
-  <text x="60" y="1106" class="legend">• apex-common 被 27 个模块直接依赖，apex-domain 被 19 个；无循环依赖：共享层不依赖业务库，业务库不依赖运行模块。</text>
-  <text x="60" y="1126" class="legend">• 仅为 test scope 的依赖：auth-service→apex-system、office-service→apex-gateway；MQTT 客户端为 optional。apex-infrastructure 仅兼容旧坐标，聚合五个能力 JAR。</text>
+<text x="800" y="44" class="title" >直接内部生产依赖图 · 35 个 JAR 模块</text>
+<text x="800" y="74" class="sub" >数据源：各叶子 pom.xml 的 dependencies · v1.3.1 · 第一阶段管理分组不改变生产依赖</text>
+<text x="800" y="102" class="sub" >每行：依赖方 → 全部直接内部 compile 依赖；箭头不是 Maven 聚合、parent 或 HTTP 调用</text>
+<rect x="50" y="126" width="1500" height="110" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+<text x="70" y="158" class="head" >简称规则（只用于右列；左列均为完整 artifactId）</text>
+<text x="70" y="188" class="note" >一般省略 apex-；infra-X = apex-infrastructure-X；X-starter = apex-X-spring-boot-starter。</text>
+<text x="70" y="218" class="note" >contract = apex-api-contract；infra-integration 是共享集成设施，integration 是业务库，两者不同。</text>
+<text x="70" y="271" class="head" >依赖方（35 个独立 JAR）</text>
+<text x="552" y="271" class="head" >被依赖方（只列直接内部生产依赖，完整集合）</text>
+<rect x="50" y="290" width="1500" height="40" rx="6" fill="#4f46e5" fill-opacity="0.10"/>
+<text x="70" y="317" class="head" >共享基础 / 领域 / 契约 · 3 个 JAR</text>
+<g data-module="apex-common" data-dependencies="">
+<rect x="50" y="334" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 379H1550" stroke="#e2e8f0"/>
+<text x="70" y="362" class="row" >apex-common</text>
+<text x="552" y="362" class="row" >无内部生产依赖</text>
+</g>
+<g data-module="apex-domain" data-dependencies="apex-common">
+<rect x="50" y="379" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 424H1550" stroke="#e2e8f0"/>
+<text x="70" y="407" class="row" >apex-domain</text>
+<path d="M488 401H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="407" class="row" >common</text>
+</g>
+<g data-module="apex-api-contract" data-dependencies="apex-common">
+<rect x="50" y="424" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 469H1550" stroke="#e2e8f0"/>
+<text x="70" y="452" class="row" >apex-api-contract</text>
+<path d="M488 446H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="452" class="row" >common</text>
+</g>
+<rect x="50" y="485" width="1500" height="40" rx="6" fill="#d97706" fill-opacity="0.10"/>
+<text x="70" y="512" class="head" >共享设施 · 6 个 JAR（含旧坐标兼容 JAR）</text>
+<g data-module="apex-infrastructure-persistence" data-dependencies="apex-domain,apex-common">
+<rect x="50" y="529" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 574H1550" stroke="#e2e8f0"/>
+<text x="70" y="557" class="row" >apex-infrastructure-persistence</text>
+<path d="M488 551H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="557" class="row" >domain · common</text>
+</g>
+<g data-module="apex-infrastructure-cache" data-dependencies="apex-domain,apex-common">
+<rect x="50" y="574" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 619H1550" stroke="#e2e8f0"/>
+<text x="70" y="602" class="row" >apex-infrastructure-cache</text>
+<path d="M488 596H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="602" class="row" >domain · common</text>
+</g>
+<g data-module="apex-infrastructure-messaging" data-dependencies="apex-domain,apex-common,apex-infrastructure-persistence">
+<rect x="50" y="619" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 664H1550" stroke="#e2e8f0"/>
+<text x="70" y="647" class="row" >apex-infrastructure-messaging</text>
+<path d="M488 641H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="647" class="row" >domain · common · infra-persistence</text>
+</g>
+<g data-module="apex-infrastructure-remote" data-dependencies="apex-domain,apex-common">
+<rect x="50" y="664" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 709H1550" stroke="#e2e8f0"/>
+<text x="70" y="692" class="row" >apex-infrastructure-remote</text>
+<path d="M488 686H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="692" class="row" >domain · common</text>
+</g>
+<g data-module="apex-infrastructure-integration" data-dependencies="apex-domain,apex-common,apex-infrastructure-remote">
+<rect x="50" y="709" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 754H1550" stroke="#e2e8f0"/>
+<text x="70" y="737" class="row" >apex-infrastructure-integration</text>
+<path d="M488 731H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="737" class="row" >domain · common · infra-remote</text>
+</g>
+<g data-module="apex-infrastructure" data-dependencies="apex-infrastructure-persistence,apex-infrastructure-cache,apex-infrastructure-messaging,apex-infrastructure-remote,apex-infrastructure-integration">
+<rect x="50" y="754" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 799H1550" stroke="#e2e8f0"/>
+<text x="70" y="782" class="row" >apex-infrastructure</text>
+<path d="M488 776H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="782" class="row" >infra-persistence · infra-cache · infra-messaging · infra-remote · infra-integration</text>
+</g>
+<rect x="50" y="815" width="1500" height="40" rx="6" fill="#0891b2" fill-opacity="0.10"/>
+<text x="70" y="842" class="head" >自动装配 starter · 4 个 JAR</text>
+<g data-module="apex-storage-spring-boot-starter" data-dependencies="apex-common">
+<rect x="50" y="859" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 904H1550" stroke="#e2e8f0"/>
+<text x="70" y="887" class="row" >apex-storage-spring-boot-starter</text>
+<path d="M488 881H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="887" class="row" >common</text>
+</g>
+<g data-module="apex-license-spring-boot-starter" data-dependencies="apex-common">
+<rect x="50" y="904" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 949H1550" stroke="#e2e8f0"/>
+<text x="70" y="932" class="row" >apex-license-spring-boot-starter</text>
+<path d="M488 926H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="932" class="row" >common</text>
+</g>
+<g data-module="apex-job-spring-boot-starter" data-dependencies="apex-common">
+<rect x="50" y="949" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 994H1550" stroke="#e2e8f0"/>
+<text x="70" y="977" class="row" >apex-job-spring-boot-starter</text>
+<path d="M488 971H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="977" class="row" >common</text>
+</g>
+<g data-module="apex-seata-spring-boot-starter" data-dependencies="apex-common">
+<rect x="50" y="994" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1039H1550" stroke="#e2e8f0"/>
+<text x="70" y="1022" class="row" >apex-seata-spring-boot-starter</text>
+<path d="M488 1016H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1022" class="row" >common</text>
+</g>
+<rect x="50" y="1055" width="1500" height="40" rx="6" fill="#059669" fill-opacity="0.10"/>
+<text x="70" y="1082" class="head" >脚手架业务库 · 6 个 JAR（非项目 business 组）</text>
+<g data-module="apex-system" data-dependencies="apex-common,apex-infrastructure-persistence,apex-infrastructure-cache,apex-infrastructure-messaging,apex-infrastructure-remote,apex-infrastructure-integration,apex-domain,apex-api-contract,apex-license-spring-boot-starter">
+<rect x="50" y="1099" width="1500" height="66" fill="#f8fafc"/>
+<path d="M50 1165H1550" stroke="#e2e8f0"/>
+<text x="70" y="1127" class="row" >apex-system</text>
+<path d="M488 1121H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1127" class="row" >common · infra-persistence · infra-cache · infra-messaging · infra-remote · infra-integration · domain ·</text>
+<text x="552" y="1151" class="row" >contract · license-starter</text>
+</g>
+<g data-module="apex-auth" data-dependencies="apex-domain,apex-common,apex-infrastructure-integration,apex-api-contract">
+<rect x="50" y="1165" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1210H1550" stroke="#e2e8f0"/>
+<text x="70" y="1193" class="row" >apex-auth</text>
+<path d="M488 1187H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1193" class="row" >domain · common · infra-integration · contract</text>
+</g>
+<g data-module="apex-workflow" data-dependencies="apex-domain,apex-common">
+<rect x="50" y="1210" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1255H1550" stroke="#e2e8f0"/>
+<text x="70" y="1238" class="row" >apex-workflow</text>
+<path d="M488 1232H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1238" class="row" >domain · common</text>
+</g>
+<g data-module="apex-file" data-dependencies="apex-domain,apex-common,apex-storage-spring-boot-starter">
+<rect x="50" y="1255" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1300H1550" stroke="#e2e8f0"/>
+<text x="70" y="1283" class="row" >apex-file</text>
+<path d="M488 1277H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1283" class="row" >domain · common · storage-starter</text>
+</g>
+<g data-module="apex-office" data-dependencies="apex-domain,apex-common">
+<rect x="50" y="1300" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1345H1550" stroke="#e2e8f0"/>
+<text x="70" y="1328" class="row" >apex-office</text>
+<path d="M488 1322H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1328" class="row" >domain · common</text>
+</g>
+<g data-module="apex-integration" data-dependencies="apex-common,apex-domain,apex-infrastructure-persistence,apex-infrastructure-remote">
+<rect x="50" y="1345" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1390H1550" stroke="#e2e8f0"/>
+<text x="70" y="1373" class="row" >apex-integration</text>
+<path d="M488 1367H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1373" class="row" >common · domain · infra-persistence · infra-remote</text>
+</g>
+<rect x="50" y="1406" width="1500" height="40" rx="6" fill="#4f46e5" fill-opacity="0.10"/>
+<text x="70" y="1433" class="head" >运行装配 · 10 个 JAR（八个发布运行模块 + 两个可选运行模块）</text>
+<g data-module="apex-gateway" data-dependencies="apex-common">
+<rect x="50" y="1450" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1495H1550" stroke="#e2e8f0"/>
+<text x="70" y="1478" class="row" >apex-gateway</text>
+<path d="M488 1472H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1478" class="row" >common</text>
+</g>
+<g data-module="apex-system-service" data-dependencies="apex-seata-spring-boot-starter,apex-job-spring-boot-starter,apex-common,apex-domain,apex-api-contract,apex-system">
+<rect x="50" y="1495" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1540H1550" stroke="#e2e8f0"/>
+<text x="70" y="1523" class="row" >apex-system-service</text>
+<path d="M488 1517H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1523" class="row" >seata-starter · job-starter · common · domain · contract · system</text>
+</g>
+<g data-module="apex-auth-service" data-dependencies="apex-infrastructure-cache,apex-infrastructure-messaging,apex-infrastructure-integration,apex-seata-spring-boot-starter,apex-job-spring-boot-starter,apex-common,apex-auth,apex-domain,apex-api-contract">
+<rect x="50" y="1540" width="1500" height="66" fill="#f8fafc"/>
+<path d="M50 1606H1550" stroke="#e2e8f0"/>
+<text x="70" y="1568" class="row" >apex-auth-service</text>
+<path d="M488 1562H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1568" class="row" >infra-cache · infra-messaging · infra-integration · seata-starter · job-starter · common · auth · domain</text>
+<text x="552" y="1592" class="row" >· contract</text>
+</g>
+<g data-module="apex-workflow-service" data-dependencies="apex-seata-spring-boot-starter,apex-job-spring-boot-starter,apex-common,apex-workflow,apex-domain,apex-api-contract">
+<rect x="50" y="1606" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1651H1550" stroke="#e2e8f0"/>
+<text x="70" y="1634" class="row" >apex-workflow-service</text>
+<path d="M488 1628H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1634" class="row" >seata-starter · job-starter · common · workflow · domain · contract</text>
+</g>
+<g data-module="apex-file-service" data-dependencies="apex-seata-spring-boot-starter,apex-job-spring-boot-starter,apex-common,apex-file,apex-domain">
+<rect x="50" y="1651" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1696H1550" stroke="#e2e8f0"/>
+<text x="70" y="1679" class="row" >apex-file-service</text>
+<path d="M488 1673H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1679" class="row" >seata-starter · job-starter · common · file · domain</text>
+</g>
+<g data-module="apex-office-service" data-dependencies="apex-seata-spring-boot-starter,apex-job-spring-boot-starter,apex-common,apex-office,apex-domain,apex-api-contract">
+<rect x="50" y="1696" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1741H1550" stroke="#e2e8f0"/>
+<text x="70" y="1724" class="row" >apex-office-service</text>
+<path d="M488 1718H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1724" class="row" >seata-starter · job-starter · common · office · domain · contract</text>
+</g>
+<g data-module="apex-integration-service" data-dependencies="apex-seata-spring-boot-starter,apex-job-spring-boot-starter,apex-common,apex-integration,apex-domain">
+<rect x="50" y="1741" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1786H1550" stroke="#e2e8f0"/>
+<text x="70" y="1769" class="row" >apex-integration-service</text>
+<path d="M488 1763H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1769" class="row" >seata-starter · job-starter · common · integration · domain</text>
+</g>
+<g data-module="apex-aggregation-service" data-dependencies="apex-common,apex-api-contract">
+<rect x="50" y="1786" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1831H1550" stroke="#e2e8f0"/>
+<text x="70" y="1814" class="row" >apex-aggregation-service</text>
+<path d="M488 1808H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1814" class="row" >common · contract</text>
+</g>
+<g data-module="apex-job-service" data-dependencies="apex-infrastructure-remote">
+<rect x="50" y="1831" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1876H1550" stroke="#e2e8f0"/>
+<text x="70" y="1859" class="row" >apex-job-service</text>
+<path d="M488 1853H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1859" class="row" >infra-remote</text>
+</g>
+<g data-module="apex-masking-service" data-dependencies="apex-common">
+<rect x="50" y="1876" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 1921H1550" stroke="#e2e8f0"/>
+<text x="70" y="1904" class="row" >apex-masking-service</text>
+<path d="M488 1898H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="1904" class="row" >common</text>
+</g>
+<rect x="50" y="1937" width="1500" height="40" rx="6" fill="#0891b2" fill-opacity="0.10"/>
+<text x="70" y="1964" class="head" >组合装配 / 示例 · 2 个 JAR</text>
+<g data-module="apex-boot-all" data-dependencies="apex-common,apex-domain,apex-api-contract,apex-system,apex-auth,apex-workflow,apex-file,apex-office,apex-integration">
+<rect x="50" y="1981" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 2026H1550" stroke="#e2e8f0"/>
+<text x="70" y="2009" class="row" >apex-boot-all</text>
+<path d="M488 2003H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="2009" class="row" >common · domain · contract · system · auth · workflow · file · office · integration</text>
+</g>
+<g data-module="apex-example" data-dependencies="apex-common,apex-domain,apex-infrastructure-cache,apex-infrastructure-integration,apex-system">
+<rect x="50" y="2026" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 2071H1550" stroke="#e2e8f0"/>
+<text x="70" y="2054" class="row" >apex-example</text>
+<path d="M488 2048H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="2054" class="row" >common · domain · infra-cache · infra-integration · system</text>
+</g>
+<rect x="50" y="2087" width="1500" height="40" rx="6" fill="#64748b" fill-opacity="0.10"/>
+<text x="70" y="2114" class="head" >开发 / 运维工具 · 4 个 JAR</text>
+<g data-module="apex-license-tools" data-dependencies="apex-license-spring-boot-starter">
+<rect x="50" y="2131" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 2176H1550" stroke="#e2e8f0"/>
+<text x="70" y="2159" class="row" >apex-license-tools</text>
+<path d="M488 2153H530" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="552" y="2159" class="row" >license-starter</text>
+</g>
+<g data-module="apex-generator" data-dependencies="">
+<rect x="50" y="2176" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 2221H1550" stroke="#e2e8f0"/>
+<text x="70" y="2204" class="row" >apex-generator</text>
+<text x="552" y="2204" class="row" >无内部生产依赖</text>
+</g>
+<g data-module="apex-tools-deployment" data-dependencies="">
+<rect x="50" y="2221" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 2266H1550" stroke="#e2e8f0"/>
+<text x="70" y="2249" class="row" >apex-tools-deployment</text>
+<text x="552" y="2249" class="row" >无内部生产依赖</text>
+</g>
+<g data-module="apex-tools-build" data-dependencies="">
+<rect x="50" y="2266" width="1500" height="45" fill="#f8fafc"/>
+<path d="M50 2311H1550" stroke="#e2e8f0"/>
+<text x="70" y="2294" class="row" >apex-tools-build</text>
+<text x="552" y="2294" class="row" >无内部生产依赖</text>
+</g>
+<rect x="50" y="2327" width="1500" height="204" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="70" y="2361" class="head" >读图边界与核对结果</text>
+<text x="70" y="2393" class="note" >全 35 个 JAR / 104 条直接内部 compile 边；common 被 28 个 JAR 直接依赖，domain 被 19 个。</text>
+<text x="70" y="2423" class="note" >第一阶段：42 个后代 / 43 个 reactor 项目含根，8 个 POM 不画为生产依赖节点；聚合见 128，继承见 129。</text>
+<text x="70" y="2453" class="note" >排除 test：infra-integration→cache、auth-service→system、office-service→gateway、aggregation-service→gateway。</text>
+<text x="70" y="2483" class="note" >第三方 MQTT 客户端 optional 不在内部依赖图中；parent / modules / dependencyManagement 不会被画为 compile 边。</text>
+<text x="70" y="2513" class="note" >aggregation 仅依赖 common / contract，HTTP 聚合 workflow 与 office 不等于依赖它们的业务 JAR；内部依赖无环。</text>
 </svg>

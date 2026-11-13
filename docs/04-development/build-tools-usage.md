@@ -32,7 +32,7 @@
 | 组成 | 路径 | 作用 |
 | --- | --- | --- |
 | 模块注册表 | `apex-tools-build/src/main/resources/build-manifest.yaml` | 全部模块的**单一事实来源**：分类、交付口径、端口、显式启动类 |
-| 防漂移门禁 | `apex-tools-build/src/test/java/.../BuildManifestSyncTest.java` | 在 `verify` 阶段校验注册表与根 POM、各模块 POM、`release.sh` 四方一致 |
+| 防漂移门禁 | `apex-tools-build/src/test/java/.../BuildManifestSyncTest.java` | 校验扁平注册表与根 POM 递归 `<modules>` 集合、各模块 POM、`release.sh` 四方一致；完整门禁由 `verify` 承载 |
 | 统一编排入口 | `apex-tools-build/bin/apex.sh` | 编译/构建/打包/发布/镜像/部署的命令行入口 |
 | 模块 POM | `apex-tools-build/pom.xml` | 薄 jar，零生产依赖（仅 test scope 的 SnakeYAML/JUnit） |
 
@@ -56,6 +56,14 @@ Maven reactor 内的模块**无法编排包含它自己的那次构建**。因�
 - **reactor 外**：`bin/apex.sh` 由人/CI 调用，负责编排。
 
 这也解释了为什么 `apex.sh` 不使用 `scripts/lib/common.sh` 的 `get_project_root`：本模块自身含 `pom.xml`，向上探测会提前命中模块目录，因此根目录由脚本位置（`SCRIPT_DIR/../..`）推算。
+
+### 1.4 当前分组与递归范围
+
+根 POM 直接声明 shared/components/starters/services/applications/tools/business 七组，递归聚合 42 个模块；含根全量 reactor 为 43 个项目（8 个 POM、35 个既有 JAR）。本模块聚合并继承 `apex-tools-parent`。完整映射见 [README 分组表](../../README.md#maven-分组与父链)，图见[聚合分组](../diagrams/128_maven_module_groups.svg)与[parent 继承](../diagrams/129_maven_parent_inheritance.svg)。
+
+六个新 parent 只承载管理与聚合，现有叶子仍在仓库根级。22 个既有叶子迁移直接 parent；原有 13 个 services-bom 子继承不变，其中 api-contract / integration / boot-all 分别聚合在 shared / components / applications，另 10 个运行模块聚合在 services。聚合、继承、物理目录和生产依赖不可混用。
+
+`apex-business-parent` 第一阶段为空，只管理未来项目业务 JAR 库；框架实现由其他支撑模块提供。新独立运行模块归 services，不重复聚合在 business，也不自动加入八服务发布集合。后续模块数以实际递归清单为准，不永久硬编码 42 / 43。
 
 ---
 
@@ -90,7 +98,15 @@ Maven reactor 内的模块**无法编排包含它自己的那次构建**。因�
 ✓ JDK/mvnd 已按 .sdkmanrc 校验通过
 ```
 
-若失败，先安装 SDKMAN 候选版本并 `sdk env`（详见 [.sdkmanrc](../../.sdkmanrc) 与 [开发规范](../04-development/development-standards.md)）。此前用过其他 JDK 时，先 `mvnd --stop` 清理 daemon 再重试。
+若失败，先安装 SDKMAN 候选版本并 `sdk env`（详见 [.sdkmanrc](../../.sdkmanrc) 与 [开发规范](../04-development/development-standards.md)）。此前用过其他 JDK 时，先加载正确环境，再 `mvnd --stop` 清理 daemon 后重试。
+
+`apex.sh env` 在子进程内加载环境，不切换调用者 shell。直接执行 mvnd 前仍需在仓库根的当前 shell 激活：
+
+```bash
+source scripts/build/init-build-env.sh
+java -version
+mvnd --version
+```
 
 **第 2 步：确认模块状态**
 
@@ -98,7 +114,7 @@ Maven reactor 内的模块**无法编排包含它自己的那次构建**。因�
 ./apex-tools-build/bin/apex.sh status
 ```
 
-输出包含 JDK/mvnd 版本、35 个模块的交付口径与端口、以及各模块 `target/` 产物是否已构建。首次运行全部显示"未构建"属正常。
+输出包含 JDK/mvnd 版本、全部递归注册模块（第一阶段 42 项，不含总根）的交付口径与端口，以及可执行产物的存在性。分组 parent 没有端口，`deliverable=none` 显示为“不产出可执行 JAR”；可执行 JAR 首次未构建属正常，不把 parent 当作待启动服务。
 
 **第 3 步（仅部署需要）：准备 `.env`**
 
@@ -142,7 +158,7 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 | `env` | 校验并加载固定构建环境 | `apex.sh env` |
 | `build` | 整仓或指定模块构建 | `apex.sh build -Pbasic` / `apex.sh build --module apex-common` |
 | `test` | 快速测试（不含 Failsafe 门禁） | `apex.sh test --module apex-system` |
-| `verify` | 完整回归门禁（约 20 分钟） | `apex.sh verify` |
+| `verify` | 完整回归门禁（耗时按实际环境记录） | `apex.sh verify` |
 | `package` | 构建 8 个发布服务 fat jar 并校验唯一性 | `apex.sh package -Penterprise` |
 | `release` | 产出交付 zip + sha256 | `apex.sh release standard` |
 | `image build` | 构建服务镜像（podman/docker） | `apex.sh image build --module apex-gateway` |
@@ -181,7 +197,16 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 
 行为：`mvnd clean package -Pstandard -pl <模块列表> -am [-DskipTests]`。
 
-> **`-am` 必带**：被依赖模块未安装到本地仓库时，仅 `-pl` 会编译失败或运行时 `NoSuchMethodError`。脚本已强制带上，请勿手工去掉。
+> **`-am` 必带**：从总根选择叶子，补齐 reactor 中其构建所需的上游项目，避免使用缺失或陈旧的本地依赖。脚本保留此方式，叶子目录不变。
+
+直接调用示例（在当前 shell 激活固定环境）：
+
+```bash
+source scripts/build/init-build-env.sh
+mvnd -T4 -B -pl apex-system-service -am clean package -Pstandard -DskipTests
+```
+
+**不新增 `--group`**：`-pl apex-services-bom -am` 不表示构建 services 组全部叶子；需要整组时从总根明确列出叶子并带 `-am`。不以 `-f 分组/pom.xml` 代替总根构建并假定跨组未安装依赖均可解析。分组不改变生产依赖或保证构建提速。
 
 ### 4.3 测试
 
@@ -201,7 +226,7 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 ./apex-tools-build/bin/apex.sh verify
 ```
 
-等价于 `mvnd -T4 -B clean verify`，包含单元测试、Failsafe 集成测试、Spotless 格式、PMD/p3c 静态检查、JaCoCo 覆盖率（行 60% / 分支 50%）以及本模块的注册表一致性测试。耗时约 20 分钟，建议后台执行：
+等价于 `mvnd -T4 -B clean verify`，包含单元测试、Failsafe 集成测试、Spotless 格式、PMD/p3c 静态检查、JaCoCo 覆盖率（父 POM 默认行 60% / 分支 50%，实际范围以有效配置为准）以及注册表一致性测试。新增 POM-only 项目没有业务测试报告，不代表业务测试通过；耗时与执行范围按实际结果记录。可保存日志：
 
 ```bash
 ./apex-tools-build/bin/apex.sh verify > /tmp/verify.log 2>&1; echo "exit=$?"
@@ -210,12 +235,12 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 **通过判定标准**（不能只看退出码）：
 
 ```bash
-grep -c "SUCCESS \[" /tmp/verify.log                    # 反应堆条目数（35 模块 + 根聚合 = 36）
+grep -c "SUCCESS \[" /tmp/verify.log                    # 辅助核对全量 reactor 摘要，第一阶段含根应为 43 项
 grep -E "BUILD (SUCCESS|FAILURE)" /tmp/verify.log
 grep -cE "Tests run:.*Failures: [1-9]|Tests run:.*Errors: [1-9]" /tmp/verify.log   # 应为 0
 ```
 
-> 约 33 个用例会因环境依赖被跳过（Seata TC、MQTT/EMQX、MQ broker、MySQL TLS、方言类），属正常，**不计为通过**。
+> `grep` 计数只辅助核对 Reactor Summary，不能单凭条目数证明通过；定向构建范围不同，后续新增模块也会改变全量计数。完整通过仍要求实际范围全部 `BUILD SUCCESS`、`Failures: 0 / Errors: 0`，并按 Surefire / Failsafe 分别记录跳过项。Seata TC、MQTT/EMQX、MQ broker、真实数据库 TLS 等环境依赖导致的跳过不计为通过，数量不得沿用旧报告。
 
 ### 4.5 提交前的最小检查
 
@@ -241,7 +266,7 @@ mvnd -T4 -B -pl apex-tools-build spotless:check          # 本模块格式（约
 2. `mvnd clean package -pl <列表> -am -DskipTests`；
 3. 逐一校验每个服务 `target/` 下"**有且仅有一个**发布 JAR"（排除 `-sources`/`-javadoc`/`-test-support`/`-tests` 辅助产物），不满足即失败。
 
-预期输出：7 行 `✓ apex-xxx-service: apex-xxx-service-1.3.1.jar`。
+预期为 8 项服务 JAR 校验，包含网关及查询聚合服务；具体输出以实际脚本执行为准。分组 parent 不加入服务 JAR 集合，`apex-boot-all` 仍是薄 JAR。
 
 ### 5.2 产出完整交付包
 
@@ -292,25 +317,26 @@ cd dist && shasum -a 256 -c apex-scaffold-1.3.1-standard.zip.sha256
 # 指定引擎与镜像引用
 ./apex-tools-build/bin/apex.sh image build --module apex-gateway --engine docker --tag apex-gateway:v1.3.1
 
-# 容器内全量编译（无需宿主先 package，但更慢）
-./apex-tools-build/bin/apex.sh image build --module apex-gateway --mode source
+# source 分支仅列作已有选项，不用于第一阶段验收：当前容器内仍调用系统 mvn
+# ./apex-tools-build/bin/apex.sh image build --module apex-gateway --mode source
 ```
 
 | 参数 | 取值 | 说明 |
 | --- | --- | --- |
 | `--module` | 模块 artifactId | 目标模块 |
 | `--all` | — | 注册表 `service-jar` 全集 |
-| `--mode` | `prebuilt`（默认）/ `source` | prebuilt 复用 `target/` 下的 fat jar；source 在容器内用 Maven 全量编译 |
+| `--mode` | `prebuilt`（默认）/ `source` | prebuilt 复用宿主固定工具链构建的 JAR；source 仍用系统 `mvn`，未整改前不符合本仓构建约束、不记为验收通过 |
 | `--engine` | `podman`（默认）/ `docker` | 容器引擎 |
 | `--tag` | 镜像引用 | 缺省为 `<模块>:${TAG:-latest}`（与 `podman-compose.yml` 的 `image:` 命名一致） |
 
-> **prebuilt 模式前提**：先执行 `apex.sh package`（或 `build`），否则容器构建上下文缺少 fat jar 会失败。
+> **prebuilt 模式前提**：先在固定环境执行 `apex.sh package`（或 `build`）；JAR 还须被 `.containerignore` 放行，否则构建上下文缺少产物会失败。parent 不产生服务 JAR，无需放行其 target；显式 POM COPY 清单仍须覆盖全部递归模块，供 source 分支解析模型。
 
 ### 6.2 K8s 单体镜像
 
-K8s 清单使用 `apex-scaffold:latest`（单体聚合形态，对应 `apex-example` 模块）：
+K8s 清单使用 `apex-scaffold:latest`（单体聚合形态，对应 `apex-example` 模块）。example 不在八服务 `package` 集合内，需单独构建，并确认 `.containerignore` 已放行 example 目标 JAR；这属于可选示例镜像范围，不可用八服务验收替代：
 
 ```bash
+./apex-tools-build/bin/apex.sh build --module apex-example
 ./apex-tools-build/bin/apex.sh image build --module apex-example --tag apex-scaffold
 ```
 
@@ -544,7 +570,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 # ① 环境就绪
 ./apex-tools-build/bin/apex.sh env
 
-# ② 完整门禁（必须先通过，约 20 分钟）
+# ② 完整门禁（必须先通过，耗时按实际环境记录）
 ./apex-tools-build/bin/apex.sh verify
 
 # ③ 提交并确认工作区干净（release 会强校验）
@@ -586,20 +612,24 @@ K8s 路线把 ⑥⑦⑧ 替换为 `deploy k8s precheck → apply → health`。
 
 ## 9. 模块注册表维护
 
-注册表 `build-manifest.yaml` 是单一事实来源，**新增/删除/改名模块时必须同步六处**，否则门禁失败或口径漂移：
+注册表 `build-manifest.yaml` 是交付口径的单一事实来源，与根 POM **递归聚合后代集合**对齐（第一阶段 42 项，含七个管理组、不含总根）。新增/删除/改名模块时同步：
 
-1. 根 `pom.xml` 的 `<modules>`；
-2. `apex-tools-build/src/main/resources/build-manifest.yaml`（保持与根 POM 相同的声明顺序）；
-3. 模块自身 `pom.xml` 的打包插件与显式 `mainClass`（如适用）；
-4. `scripts/release/release.sh` 的 `SERVICES` 数组（仅发布服务集合变化时）；
-5. `AGENTS.md` 的模块表与依赖表；
-6. `docs/08-project-management/delivery/delivery-scope.md` §2（交付口径变化时）。
+1. 所属分组 POM 的 `<modules>`（路径相对该 POM，例如 `../apex-xxx`）；根 `<modules>` 只登记顶层组；
+2. `apex-tools-build/src/main/resources/build-manifest.yaml`（保留扁平记录；不要求等于根直接七项或照抄其顺序）；
+3. 模块自身 parent / `relativePath`、打包插件与显式 `mainClass`（如适用）；
+4. `Containerfile` 显式 POM 收集清单及相关结构测试，目标服务 prebuilt JAR 放行规则（如适用）；
+5. `scripts/release/release.sh` 的 `SERVICES` 数组（仅发布服务集合变化时，parent 不加入）；
+6. `AGENTS.md` 模块表与真实依赖表，以及开发、架构与交付范围等受影响当前说明。
+
+递归只沿 `<modules>`，不沿 `<parent>`；对规整路径与项目坐标检查唯一性，拒绝重复、环、越界或缺失 POM，不以 Set 静默去重。三项继承例外不能因 parent 回溯被重复收集。新 parent（包括空 business）应为 `packaging=pom`、`deliverable=none`，无业务运行依赖、端口、mainClass 或可执行打包行为。
+
+未来增加业务 JAR 只登记到 business；独立运行模块只登记到 services，不能重复聚合。安装或未来发布 Maven 构件须包含根及所需 parent POM，以保证外部解析；此文档不授权远程发布。客户源码包剥离 `apex-license-tools` 时同时处理 tools parent 聚合清单，不得重新带入卖方工具。
 
 ### 9.1 字段说明
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| `artifactId` | 是 | 模块坐标，必须与根 POM `<modules>` 一致 |
+| `artifactId` | 是 | 模块坐标，必须与根 POM 递归 `<modules>` 解析出的项目一致；当前仍等于根级模块目录名 |
 | `category` | 是 | 职责分类（口径同 `AGENTS.md`） |
 | `deliverable` | 是 | `none` / `service-jar` / `optional` / `tool-jar`，与打包插件双向绑定 |
 | `port` | 否 | 容器内/进程内默认业务端口 |
@@ -625,7 +655,7 @@ modules:
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -T4 -B -pl apex-tools-build -am test     # 四方一致性（BuildManifestSyncTest 5 个测试）
+mvnd -T4 -B -pl apex-tools-build -am test     # 递归聚合、结构负面用例与交付口径一致性
 ./apex-tools-build/bin/apex.sh status          # 渲染验证
 ```
 
@@ -638,7 +668,7 @@ mvnd -T4 -B -pl apex-tools-build -am test     # 四方一致性（BuildManifestS
 | `command not found: mvnd` | 未加载 SDKMAN 环境 | `./apex-tools-build/bin/apex.sh env` 或 `source scripts/build/init-build-env.sh` |
 | `JDK 版本不符合要求` | `java/current` 链接漂移 | `sdk env`；必要时 `mvnd --stop` 后重试 |
 | `BUILD FAILURE` 且报 `mainClass 在 POM 与注册表之间不一致` | 改了 POM 未同步注册表 | 按 §9 同步，或改回 POM |
-| `BUILD FAILURE` 且报 `根 POM modules 与注册表不一致` | 新增模块只改了 POM | 同步注册表条目 |
+| `BUILD FAILURE` 且报递归模块与注册表不一致 | 分组 `<modules>` 或注册表漏项/多项、重复登记等 | 核对所属分组聚合路径及完整注册表，不只核对根七项 |
 | `BUILD FAILURE` 且报 `SERVICES 数组与注册表 service-jar 集合不一致` | 改了 `release.sh` 服务集合 | 同步注册表 `deliverable` |
 | `release` 报"工作区存在未提交变更" | 发布基线不干净 | 提交后重试；临时豁免 `--allow-dirty`（不推荐） |
 | `release` 报版本不一致 | 显式版本 ≠ POM 版本 | 省略版本号（自动读 POM）或对齐 POM |
@@ -648,7 +678,7 @@ mvnd -T4 -B -pl apex-tools-build -am test     # 四方一致性（BuildManifestS
 | `deploy k8s precheck` 报"Secret 仍为占位值" | 清单未改 | 按 §7.4 第 2 步修改，或演示环境加 `--allow-placeholder` |
 | `deploy k8s down` 被拒绝 | 缺少确认 | 追加 `--yes` |
 | `deploy ... health` 报 workflow 8093 未就绪 | workflow 未启动或端口被改 | 检查 `WORKFLOW_PORT` 与容器状态 |
-| `image build` 失败且提示缺少 JAR | prebuilt 模式下未先打包 | 先执行 `apex.sh package`，或用 `--mode source` |
+| `image build` 失败且提示缺少 JAR | prebuilt 未打包或 JAR 被忽略 | 先用固定环境执行 `apex.sh package`（示例单独 build），再核对 `.containerignore`，不回退 source 绕过工具链约束 |
 | `image build` 在 `FROM ...` 处超时 | 基础镜像拉取网络问题 | 预先 `podman pull`/`docker pull` 基础镜像后重试 |
 | `deploy java-jar start` 立即退出 | 业务变量缺失（DB/Redis/JWT） | 检查 `APEX_ENV_FILE` 与必需变量 |
 
@@ -674,7 +704,7 @@ kubectl -n apex-scaffold logs -l app=apex-scaffold --tail=100
 | 不搬移/不重写现有脚本 | `build.sh`、`release.sh`、`app.sh`、`start.sh`、`stop.sh` 保持原样作为底层执行器 |
 | 不含 SSH 远程部署 | 所有部署都是本机/本地集群执行；远程主机需自行分发产物 |
 | K8s 不替代密钥管理 | Secret 修改、Ingress 域名/TLS 仍由部署者按 `k8s/README.md` 维护 |
-| 不进交付发布包 | 与 `apex-tools-deployment` 同口径，交付包内不含本模块 |
+| 不进交付发布包 | `apex-tools-build` 不进交付包；`apex-tools-deployment` 则以 `tools/local-deployment.jar` 随既有发布脚本交付，不作为业务服务 |
 | 不做镜像仓库认证 | `image push` 只执行 `push`，登录（`podman login`/`docker login`）需提前完成 |
 
 ### 11.2 常见误解
@@ -715,6 +745,7 @@ apex-tools-build/
 
 | 主题 | 文档 |
 | --- | --- |
+| 当前 Maven 分组与父链 | [README 分组表](../../README.md#maven-分组与父链) |
 | 方案设计与决策记录 | [build-management-plan.md](../08-project-management/plans/build-management-plan.md) |
 | 部署指南（手工流程、systemd、K8s 细节） | [deployment.md](../05-operations/deployment.md) |
 | 配置项与环境变量 | [configuration.md](../05-operations/configuration.md) |
@@ -726,4 +757,4 @@ apex-tools-build/
 ---
 
 **维护者**: Apex Team
-**最后核对**: 2026-11-06（对应 `apex-tools-build` 四运行时改造与注释规范化完成时点）
+**最后核对**: 2026-11-13（七组聚合与递归注册口径的文档同步；构建、性能与运行验证以本轮实际执行记录为准）

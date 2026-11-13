@@ -4,6 +4,7 @@
 > **核对日期**: 2026-10-30
 > **基线提交**: `b8e5733`（`main`）
 > **项目版本**: 1.3.1（根 [pom.xml](../../../pom.xml)）
+> **当前结构同步**: 2026-11-13（第 2 节七组/递归模块口径；历史基线与验证记录不追溯改写）
 > **维护者**: Apex Team
 
 本文档定义一次交付的边界：包含哪些模块、依赖哪些运行组件、数据库处在什么版本、哪些内容**不在**本次交付内。范围和基线变化时先改本文档。
@@ -26,7 +27,23 @@
 
 ## 2. 范围内的 Maven 模块
 
-根 POM 聚合 36 个模块。交付相关模块按职责分组如下，完整依赖关系见 [README 模块结构](../../../README.md#模块结构)。
+根 POM 直接聚合七个管理组；第一阶段递归模块 42 个、含根 reactor 43 个项目（8 个 POM、35 个既有 JAR）。当前分组与父链见 [README 分组说明](../../../README.md#maven-分组与父链)，既有生产依赖边界不因 parent 分组而改变。
+
+| 管理组 | 聚合范围 | 交付影响 |
+| --- | --- | --- |
+| `apex-shared-parent` | 9 个共享基础/领域/契约/设施 JAR | 新 parent 仅构建期，无可执行产物 |
+| `apex-components-parent` | 六个脚手架能力库 | 原有业务库与能力不变 |
+| `apex-starters-parent` | 四个存储/授权/任务/事务 starter | 原有普通依赖 JAR 不变 |
+| `apex-services-bom` | 10 个运行模块 | 标准发布仍为八服务，job/masking 仍可选 |
+| `apex-applications-parent` | example、boot-all | 示例/组合装配行为不变，boot-all 保持薄 JAR |
+| `apex-tools-parent` | license-tools、generator、tools-deployment、tools-build | 不扩大工具交付或授权范围 |
+| `apex-business-parent` | 第一阶段为空 | 只建立项目业务 JAR 管理入口，没有新增业务库、服务或数据库 |
+
+七组均继承根，22 个既有叶子直接 parent 迁移；13 个 services-bom 子继承不变。api-contract / integration / boot-all 分别聚合在 shared / components / applications，仍继承 services-bom，其余 10 个运行模块聚合与继承均在 services。所有叶子目录、资源和 target 仍在根级；分组 parent 不是运行服务，也不代表新增交付 JAR。
+
+后续业务库只聚合并继承 business，领域专属适配留在该库，通用框架复用其他支撑模块；独立运行模块聚合并继承 services，不重复登记、不自动纳入现有八服务发布范围。后续数量依实际新增项目更新，本阶段 42 / 43 不包含尚未确认的项目业务。
+
+以下按既有模块职责列出交付口径。
 
 | 分类 | 模块 | 是否随交付包发布 |
 | --- | --- | --- |
@@ -35,7 +52,7 @@
 | 共享设施 | `apex-infrastructure-persistence`、`-cache`、`-messaging`、`-remote`、`-integration` | 作为依赖 |
 | 兼容聚合 | `apex-infrastructure` | 作为依赖（旧坐标） |
 | 跨服务契约 | `apex-api-contract` | 作为依赖 |
-| 服务父 POM | `apex-services-bom` | 仅构建期 |
+| 分组父 POM | 六个 `apex-*-parent` 与复用的 `apex-services-bom` | 仅构建期，不进可执行交付清单；Maven 构件/源码交付须保留所需 parent 链 |
 | 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration` | 作为依赖 |
 | 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service`、`apex-aggregation-service` | **可执行 jar** |
 | 服务增强 | `apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter`、`apex-job-service`、`apex-masking-service` | jar（前两者为依赖，后两者可选部署） |
@@ -43,11 +60,13 @@
 | 授权 | `apex-license-spring-boot-starter` | 作为依赖 |
 | 授权工具 | `apex-license-tools` | **不发布**（卖方专属） |
 | 示例与工具 | `apex-example`、`apex-generator` | 示例 jar / 构建工具 |
-| 组合部署 | `apex-boot-all` | 可作为单体包发布（可选） |
-| 运维工具 | `apex-tools-deployment` | **不发布**（离线运维用） |
+| 组合部署 | `apex-boot-all` | 普通薄 JAR，不是现有发布脚本的可执行服务 JAR |
+| 运维工具 | `apex-tools-deployment` | 以 **`tools/local-deployment.jar`** 随既有发布脚本交付，不作为业务运行服务 |
 | 构建管理 | `apex-tools-build` | **不发布**（模块注册表与构建/打包/部署编排入口，见 [构建发布管理模块方案](../plans/build-management-plan.md)） |
 
-> 发布脚本实际打包的服务清单为网关、六个业务服务与只读查询聚合服务（`SERVICES` 数组共 8 项），见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。
+> 发布脚本实际打包的服务清单为网关、六个业务服务与只读查询聚合服务（`SERVICES` 数组共 8 项），见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。分组 parent 不加入该数组，部署工具仍以 `tools/local-deployment.jar` 随包交付。
+
+源码或未来 Maven 构件交付须包含根及所需分组 parent POM；客户源码包剥离卖方 `apex-license-tools` 时同步 tools parent 的聚合清单，不能恢复卖方工具以满足构建。构建仍从总根加载固定环境后使用 `mvnd -pl <叶子列表> -am`。本节更新的是结构和范围，不代表新结构的构建、性能或运行验收已经通过；历史基线与旧数字保留在第 7 节记录。
 
 ---
 
@@ -92,7 +111,7 @@
 
 | 组件 | 必需性 | 说明 |
 | --- | --- | --- |
-| MySQL 8.x 或 PostgreSQL | 必需 | 按迁移目录选择，五个库独立 |
+| MySQL 8.x 或 PostgreSQL | 必需 | 按迁移目录选择，各业务域数据库独立（system/auth/workflow/file/office/integration） |
 | Redis 6.2+ / 7.x | 必需（认证、系统、网关） | 会话、缓存、限流、幂等键 |
 | Nacos | 可选 | 关闭时须把网关 `lb://` 路由改为明确 HTTP 地址 |
 | RocketMQ | 可选 | 默认关闭，企业版消息能力 |
@@ -112,7 +131,7 @@
 
 1. **管理后台前端源码**。仓库不包含 `apex-admin-web`；Compose 中的前端是独立镜像。
 2. **License 发放能力**。`scripts/license/`、`apex-license-tools` 为卖方专属，不进入发行包。
-3. **`apex-tools-deployment`**。离线运维工具，仅由仓库脚本与 Compose 初始化容器调用。
+3. **新增管理 parent 的可执行服务产物**。七个管理组只提供 POM，既有部署工具仍以 `tools/local-deployment.jar` 随包交付，不是新增业务服务。
 4. **私钥与真实凭据**。`config/license/private.key` 被 `.gitignore` 排除；交付包只允许出现公钥。
 5. **未提交的本地改动**。工作区中未提交的代码、迁移与配置不属于 `b8e5733` 基线。
 
@@ -141,6 +160,7 @@
 | --- | --- | --- |
 | 2026-10-30 | `b8e5733` + 工作区未提交 V70～V72 | 建立本文档；登记数据库基线缺口 |
 | 2026-11-12 | 工作区（未提交） | 新增只读查询聚合服务 `apex-aggregation-service`（端口 8098，无 DB）；模块数 35→36，`SERVICES` 数组 7→8 |
+| 2026-11-13 | 第一阶段分组实施（未提交） | 根直接 36 项收拢为七组，新增六个 parent，递归 42 模块/含根 43 项，原 35 个 JAR 与八服务发布集合不变；同步当前说明，验证结果另据实际执行 |
 
 ---
 

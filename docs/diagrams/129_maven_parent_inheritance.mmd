@@ -1,0 +1,34 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#4f46e5','fontFamily':'sans-serif'}}}%%
+%% 第一阶段直接 parent 关系，箭头子项目 -> 直接 parent；不是 modules 或 compile 依赖。
+%% 叶子集合是卡内清单；与同名手写 SVG 语义配对维护，不展开全 43 个项目。
+flowchart TB
+    ROOT["apex-scaffold · 总父 POM<br/>继承外部 Spring Boot parent 3.5.15<br/>七个管理 POM 均直接继承根；版本、档位与质量门禁继续由根治理"]
+    SHARED["apex-shared-parent · 新增 POM"]
+    COMPONENTS["apex-components-parent · 新增 POM"]
+    STARTERS["apex-starters-parent · 新增 POM"]
+    SERVICES["apex-services-bom · 现有 POM<br/>保留依赖管理来源；直接 parent 为根"]
+    APPLICATIONS["apex-applications-parent · 新增 POM"]
+    TOOLS["apex-tools-parent · 新增 POM"]
+    BUSINESS["apex-business-parent · 新增 POM<br/>第一阶段无子模块"]
+    SHARED -->|parent| ROOT
+    COMPONENTS -->|parent| ROOT
+    STARTERS -->|parent| ROOT
+    SERVICES -->|parent| ROOT
+    APPLICATIONS -->|parent| ROOT
+    TOOLS -->|parent| ROOT
+    BUSINESS -->|parent| ROOT
+    SHARED_LEAVES["8 个叶子迁移 parent<br/>apex-common / apex-domain<br/>五个 apex-infrastructure-* 能力 JAR<br/>apex-infrastructure 兼容 JAR<br/>不含 apex-api-contract"]
+    COMPONENT_LEAVES["5 个叶子迁移 parent<br/>apex-system / apex-auth / apex-workflow<br/>apex-file / apex-office<br/>不含 apex-integration"]
+    STARTER_LEAVES["4 个叶子迁移 parent<br/>storage / license / job / seata<br/>完整坐标：apex-*-spring-boot-starter"]
+    APPLICATION_LEAVES["1 个叶子迁移 parent<br/>apex-example<br/>不含 apex-boot-all"]
+    TOOL_LEAVES["4 个叶子迁移 parent<br/>apex-license-tools / apex-generator<br/>apex-tools-deployment / apex-tools-build"]
+    RUN_LEAVES["10 个运行模块保留 parent<br/>apex-gateway + 六个业务 service<br/>apex-aggregation-service<br/>apex-job-service / apex-masking-service<br/>聚合与继承均归 services-bom"]
+    EXCEPTIONS["3 个继承例外保留 parent<br/>apex-api-contract：聚合在 shared<br/>apex-integration：聚合在 components<br/>apex-boot-all：聚合在 applications<br/>直接 parent 仍为 services-bom"]
+    SHARED_LEAVES -->|parent| SHARED
+    COMPONENT_LEAVES -->|parent| COMPONENTS
+    STARTER_LEAVES -->|parent| STARTERS
+    APPLICATION_LEAVES -->|parent| APPLICATIONS
+    TOOL_LEAVES -->|parent| TOOLS
+    RUN_LEAVES -->|parent 不变| SERVICES
+    EXCEPTIONS -->|parent 不变| SERVICES
+    NOTE["22 个既有叶子改变 parent：8 + 5 + 4 + 1 + 4；13 个 services-bom 子项目保持 parent：10 + 3。<br/>business 第一阶段为空；未来业务库继承 business-parent，独立 business-domain-service 仅归 services-bom。<br/>聚合 / parent / dependencies 是三种关系；dependencyManagement 不自动引入生产依赖。<br/>叶子物理目录、坐标、Java 包、打包行为、生产依赖与运行拓扑不变。"]

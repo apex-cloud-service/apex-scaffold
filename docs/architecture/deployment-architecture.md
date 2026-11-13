@@ -6,7 +6,7 @@
 > 适用版本: apex-scaffold v1.3.1+
 > 部署方式: Kubernetes / Podman / podman-compose
 
-> **⚠️ 架构演进说明**：本文档中的 Containerfile、Deployment YAML 和 podman-compose 示例部分保留了**单体部署的历史形态**（单一 `apex-app` 镜像）。当前运行架构已拆分为网关 + 五业务服务 + 任务代理/脱敏服务的独立镜像，各服务独立端口。实际部署以仓库根目录的 `podman-compose.yml`、`podman-compose.infra.yml`、`Containerfile`/`Containerfile.quick` 和 [system-architecture.md](system-architecture.md) §3.2 为准。日志聚合当前使用 Grafana Loki + Alloy（非 ELK）。
+> **⚠️ 架构演进说明**：本文档中的 Containerfile、Deployment YAML 和 podman-compose 示例部分保留了**单体部署的历史形态**（单一 `apex-app` 镜像）。当前运行架构已拆分为网关 + 六个业务服务（system/auth/workflow/file/office/integration）+ 只读查询聚合服务 + 任务代理/脱敏服务的独立镜像，各服务独立端口。实际部署以仓库根目录的 `podman-compose.yml`、`podman-compose.infra.yml`、`Containerfile`/`Containerfile.quick` 和 [system-architecture.md](system-architecture.md) §3.2 为准。Maven 管理结构（根聚合七组）不改变部署拓扑，见 [128 聚合分组图](../diagrams/128_maven_module_groups.svg)。日志聚合当前使用 Grafana Loki + Alloy（非 ELK）。
 
 > **配套架构图**:
 > - [部署架构拓扑图](../diagrams/45_deployment_flow.svg)

@@ -3,7 +3,7 @@
 **版本**: v1.0.0\
 **适用范围**: Apex Scaffold 后端多模块 Maven 工程\
 **技术栈**: Java 21、Spring Boot 3.5.15、Spring WebFlux、Project Reactor、DDD、MyBatis-Plus、MySQL、PostgreSQL、Redis、Nacos、Sentinel、RocketMQ、MapStruct、Lombok\
-**最后更新**: 2026-10-10
+**最后更新**: 2026-11-13（Maven 分组与模块创建规则；验证结果另据实际执行）
 
 > 本文档由原有零散规范整合而成，统一收录：后端开发规范、注释规范、JavaDoc 指南、Lombok 指南、构建工具（mvnd）标准。文中所有约束均为强制性要求，与仓库根目录 [AGENTS.md](../../AGENTS.md) 及 [CONTRIBUTING.md](../../CONTRIBUTING.md) 保持一致；如有冲突，以 AGENTS.md 为准。
 
@@ -45,12 +45,14 @@
 
 - 代码格式、测试和提交信息必须符合仓库已有工具链与 `CONTRIBUTING.md` 约定。
 
-项目基础命令（构建工具统一使用 `mvnd`，禁止 `mvn`，详见第 11 节）：
+项目基础命令（在仓库根的当前 shell 激活固定环境，构建工具统一使用 `mvnd`，禁止 `mvn`，详见第 11 节）：
 
 ```bash
-mvnd clean test
-mvnd spotless:check
-mvnd spotless:apply
+source scripts/build/init-build-env.sh
+mvnd -T4 -B clean test
+mvnd -T4 -B spotless:check
+# 应用格式化前先检查 diff 范围
+mvnd -T4 -B spotless:apply
 ```
 
 ***
@@ -102,6 +104,22 @@ interfaces → application → domain ← infrastructure
 | `apex-common`                      | Result、异常、上下文、工具、公共注解                        | 只放跨模块稳定的公共能力                       |
 
 > `apex-infrastructure` 模块仅保留旧坐标兼容，不再承载实现源码；实际实现位于五个 `apex-infrastructure-*` 能力模块。
+
+### 2.3 Maven 分组与模块创建
+
+根直接聚合 shared/components/starters/services/applications/tools/business 七组，递归 42 个模块、含根 reactor 43 个项目；35 个既有 JAR 不变。完整映射见 [README 分组表](../../README.md#maven-分组与父链)。七组 parent 均继承总根，负责配置管理和聚合，不代表生产依赖或物理嵌套。
+
+第一阶段 22 个既有叶子直接 parent 迁移到各自新分组；原有 13 个 services-bom 子继承保留，其中 api-contract / integration / boot-all 分别聚合在 shared / components / applications，其 parent 仍是 `apex-services-bom`。10 个运行模块聚合并继承 services-bom。不得为了统一外观扩散服务 BOM 管理或调整实际依赖、插件执行和业务边界。
+
+新增模块时：
+
+1. 先区分框架能力与项目业务：共享底座归 shared，六个脚手架能力库归 components，自动装配归 starters，项目专属业务 JAR 归 business，运行模块归 services，示例/组合装配归 applications，构建/运维工具归 tools。第一阶段 business 为空，没有可复用的虚构订单等模块。
+2. 新模块目录仍建在仓库根级，业务源码、资源和测试留在实际 JAR 模块；父 POM 不存放业务源码或运行资源。只在所属组 `<modules>` 登记一次，使用 `../<模块目录>`；根只登记七组，不把聚合图改造成嵌套目录。
+3. 声明唯一直接 parent，版本沿用根策略；同级 parent 的 `relativePath` 应为 `../<分组>/pom.xml`，不能沿用默认 `../pom.xml`。项目业务库继承 `apex-business-parent`；若另建独立 service，聚合并继承 `apex-services-bom`，不在 business 重复登记，不以 import BOM 替代完整构建继承。
+4. 项目业务库只实现本域模型、规则、用例、端口、业务配置和业务适配。仓储、Mapper / PO 留在本域 infrastructure；数据源、租户底座、安全、缓存、消息、日志、存储、调度等通用框架复用支撑模块，不复制第二套。独立运行模块负责启动、安全装配和 Router + Handler；system / integration 已有协议层例外不变。
+5. 同步扁平 `build-manifest.yaml`、容器显式 POM 收集清单、结构测试及有效文档。注册表匹配总根沿 `<modules>` 递归得到的后代集合（含空 parent、不含总根），不沿 parent 回溯；拒绝重复、环、越界、缺失 POM。parent 为 `packaging=pom`、`deliverable=none`，无端口、mainClass 或可执行打包插件。
+6. 实际服务、路由、数据库、端口与交付范围另行登记；新业务库不自动装配到所有服务，独立服务不自动加入现有八服务发布集合。后续数量随实际新增模块变化，不永久硬编码 42 / 43。
+7. 在总根加载固定环境后 `mvnd -T4 -B -pl <叶子列表> -am test`，按变更再执行完整 `verify` 与链接/diff 检查。新分组不降低质量、安全或业务测试门禁，文档不得用旧测试结果证明新结构通过。安装或未来发布构件须包含总根及所需 parent POM，不授权本轮远程发布。
 
 新增功能时先确定聚合和用例，再按 `Handler → Application Service → Domain → Repository/Gateway` 实现。禁止在 Handler 中直接拼接 SQL、操作 Redis 或调用第三方 SDK。
 
@@ -936,7 +954,7 @@ mvnd -pl apex-system-service -am compile -DskipTests
 - ✅ **必须使用** `mvnd`（Maven Daemon，版本 `2.0.0-rc-3`）。
 - 未找到 mvnd 时应直接失败并提示安装，**不得回退到系统 Maven**。
 
-原因：mvnd 守护进程模式提供约 3 倍增量构建速度提升，并自动管理守护进程。
+原因：仓库统一固定工具链与守护进程管理，保证构建入口一致；本次 Maven 分组不承诺构建提速，性能差异须由同环境实测证明。
 
 ### 11.2 环境配置
 
@@ -960,8 +978,10 @@ mvnd --version     # 输出应包含 Apache Maven Daemon (mvnd) 2.0.0-rc-3
 ```
 
 - JDK 必须为 `21.0.13.0+9-tem`；禁止依赖 `~/.sdkman/candidates/java/current`（会随 `sdk use`/`sdk default` 漂移）。
-- 如需显式指定 `JAVA_HOME`，必须使用绝对路径 `/Users/eric/.sdkman/candidates/java/21.0.13.0+9-tem`。
-- 若此前用过其他 JDK 构建，先 `mvnd --stop` 清掉残留 daemon，再以正确的 `JAVA_HOME` 重新构建。
+- 如需显式指定 `JAVA_HOME`，必须使用固定版本路径 `$HOME/.sdkman/candidates/java/21.0.13.0+9-tem`，不依赖 `java/current`。
+- 若此前用过其他 JDK 构建，先加载正确环境，再 `mvnd --stop` 清掉残留 daemon 后重新构建。
+- 初始化脚本必须在当前 shell `source`；单独运行 `apex.sh env` 不切换调用者环境。
+- 聚合分组后仍从总根构建，叶子 `target/`、`${project.basedir}` 和兄弟模块资源路径不变；不以直接 parent 目录推导仓库根，不为日志/classpath 机械增加一层 `../`。
 
 ### 11.3 命令对照表
 
@@ -976,9 +996,14 @@ mvnd --version     # 输出应包含 Apache Maven Daemon (mvnd) 2.0.0-rc-3
 ### 11.4 完整回归门禁
 
 ```bash
-sdk env
+source scripts/build/init-build-env.sh
+# 定向快速验证：从总根选择叶子及其上游依赖
+mvnd -T4 -B -pl apex-system-service -am test
+# 完整门禁
 mvnd -T4 -B clean verify
 ```
+
+选择分组 parent 并加 `-am` 不表示构建该组全部叶子；需要整组时明确列出叶子。不把 `-f 分组/pom.xml` 当成跨组依赖未安装时也必然可用的入口。
 
 - 并行度建议 `-T4`，不要使用过高并行度（如 `-T1C`）。CPU 争用会使计时敏感的 SLA 集成测试偶发超时（典型为 `DualServiceAuthorizationIntegrationTest` 报 `TimeoutException 3000ms`），属负载 flake，重跑或降低并行度即可。
 - 门禁通过标准：反应堆全模块 `BUILD SUCCESS`、测试 `Failures: 0 / Errors: 0`。

@@ -2,7 +2,7 @@
 
 > 本索引登记部分既有 SVG 和 Mermaid 源文件；编号不是文件总数，登记不代表图表验证通过。
 
-本目录包含 Apex Scaffold 项目的既有 SVG 图表和 `sequence/` 下的 Mermaid 源文件。部分图表保留历史设计，接口、配置和运行边界应以当前代码及配套文档为准。本轮同步索引，尚未重新渲染 Mermaid 或执行 SVG 全量验证。
+本目录包含 Apex Scaffold 项目的既有 SVG 图表和 `sequence/` 下的 Mermaid 源文件。部分图表保留历史设计，接口、配置和运行边界应以当前代码及配套文档为准。第一阶段 Maven 分组的当前入口为 128（聚合）、129（parent）与 95（生产依赖）；三种关系不得混用，管理组不是运行服务。
 
 ---
 
@@ -58,7 +58,7 @@
 
 | 编号 | 文件名                               | 标题            | 说明                                 |
 | -- | --------------------------------- | ------------- | ---------------------------------- |
-| 01 | `01_logical_architecture.svg`     | DDD四层逻辑架构     | 接口/应用/领域/基础设施四层（数量以当前源码为准） |
+| 01 | `01_logical_architecture.svg`     | DDD四层逻辑架构     | 历史分层设计；图内 31 模块等统计保留为旧快照，当前 Maven 数量见 128，运行边界见系统架构 §1.2。 |
 | 02 | `02_physical_architecture.svg`    | 网络物理部署架构      | 五层拓扑(客户端/DMZ/应用/数据/监控),端口见各服务 application.yml    |
 | 03 | `03_technical_architecture.svg`   | 全栈技术选型全景图     | 60+技术组件,Spring Boot 3.5.15 / Vue 3.5.13 |
 
@@ -139,27 +139,42 @@
 
 > 注：本清单当前仅完整登记至 29 号，30–83、87–91 号图表（工作流、多租户、缓存、消息、License 等）未在本清单逐项登记。
 
+### 当前 Maven 管理结构与历史拓扑入口
+
+| 编号 | 图源 / SVG | 关系与适用边界 |
+| --- | --- | --- |
+| 95 | [Mermaid](95_module_dependency_graph.mmd) / [SVG](95_module_dependency_graph.svg) | **35 个 JAR 的直接内部生产依赖**。当前均为 compile scope；SVG 用逐模块邻接清单表示全部 104 条边，排除 parent、聚合、版本管理、传递依赖、HTTP 调用、test 与第三方依赖。aggregation 仅依赖 common / api-contract，不依赖 workflow / office 业务 JAR。 |
+| 128 | [Mermaid](128_maven_module_groups.mmd) / [SVG](128_maven_module_groups.svg) | **根 → 七管理组的 Maven 聚合**。6 个新 POM + 现有 services-bom，分组叶子为 9/6/4/10/2/4/0；42 个后代、43 个 reactor 项目含根、35 个 JAR、8 个 POM 含根。卡内清单不是展开的独立图节点。 |
+| 129 | [Mermaid](129_maven_parent_inheritance.mmd) / [SVG](129_maven_parent_inheritance.svg) | **子项目 → 直接 parent**。22 个叶子迁移 parent，13 个保留 services-bom；api-contract / integration / boot-all 分别聚合在 shared / components / applications，直接 parent 仍为 services-bom。 |
+| 93 / 94 | [历史系统图](93_overall_system_architecture.svg) / [历史部署图](94_deployment_topology.svg) | 微服务化迁移前视图，旧模块、端口与单库口径保留为历史；不作为当前部署证据，也不因 Maven 分组重绘。当前运行拓扑见[系统架构 §1.2](../architecture/system-architecture.md#12-当前运行拓扑系统架构图)。 |
+| 107–127 | 下表 UML / ER / 流程图 | 第一阶段不改变类、表、业务状态机或时序；只核对与新管理分组有关的模块标签，不把管理 POM 画为领域类或运行服务。 |
+
+所有既有叶子物理目录仍位于仓库根，管理 POM 使用 `../apex-xxx` 聚合同级模块；生产坐标、JAR、依赖与服务拓扑不变。business 组第一阶段为空，只管理项目业务库及业务专属配置 / 资源，通用框架能力由其他组提供；未来独立 `business-domain-service` 只归 services 聚合与继承，不重复登记到 business。新增 N 个项目后须重新递归统计，不能沿用 42/43 的空 business 基线。
+
+历史图不因本次分组改写：`01_logical_architecture.svg` 图内“Maven模块: 全仓 31 个”等脚注是**历史快照**，保留原图不动；当前模块数量、聚合与 parent 关系分别以 128、129 和本节口径为准。93 / 94 的旧模块、端口与单库口径同样只作历史视图。
+
 ### 图表双源规范（重要）
 
-本目录图表存在两类载体，维护时必须区分：
+本目录有单源 SVG、自动渲染双源和手写配对三种维护方式，不能仅凭同名 `.mmd` / `.svg` 就假定自动同源：
 
 | 类型 | 载体 | 编辑方式 | 覆盖范围 |
 | --- | --- | --- | --- |
-| 手写设计稿 | `.svg`（1400×N 画布，自定义 CSS 类） | 直接编辑 SVG 文本 | 01–92 等历史设计稿，无 `.mmd` 源 |
-| Mermaid 双源 | `.mmd` 源 + `.svg` 渲染产物 | 先改 `.mmd`，再重新渲染 SVG | 93–127（UML/ER/模块结构/流程/聚合与撤销），`sequence/` 下 30–95 |
+| 手写设计稿 | `.svg`（自定义画布与 CSS 类） | 直接编辑 SVG 文本，保留历史定位 | 01–92 等历史设计稿，无同名 `.mmd` 源 |
+| Mermaid 自动渲染双源 | `.mmd` 源 + Mermaid 导出的 `.svg` | 先改 `.mmd`，再用本地可用 mermaid-cli 重渲染该图 | 107–127 等已有 Mermaid 导出 SVG（可见 Mermaid 的类 / 布局标记） |
+| 手写语义配对 | `.mmd` + 自定义 SVG 布局 | 两份分别维护相同节点、成员集合、箭头语义与说明；变更后核对内容并验收 SVG | 95、96、128、129；93–106 中其他图也需先检查载体，不保证全区间自动导出 |
 
-**重渲染命令**（需 mermaid-cli）：
+本地已安装 mermaid-cli 时的单图重渲染示例（不要求下载工具）：
 
 ```bash
-bun x @mermaid-js/mermaid-cli -i docs/diagrams/107_uml_auth_center_domain.mmd \
+mmdc -i docs/diagrams/107_uml_auth_center_domain.mmd \
     -o docs/diagrams/107_uml_auth_center_domain.svg
 ```
 
-改动 `.mmd` 后未重渲染 SVG 会导致两者内容不一致；SVG 是渲染产物，**以 `.mmd` 源码为准**。
+自动渲染双源以 `.mmd` 为语义源；手写配对需要同时更新两份。95 的 SVG 以邻接清单替代密集连线，与 `.mmd` 的 35 JAR / 104 条生产边对应；128 / 129 将叶子合并为清单卡片，并不把全 43 项目塞成一张节点图。不得只改一侧、将 parent 箭头作为 compile 依赖，或为本次 Maven 分组全仓重渲染历史图。SVG 可用本地 `rsvg-convert` 渲染后检查文本与连线；渲染通过不等于业务运行验证。
 
 ### 107–123 UML 类图 / ER 表图 / 模块结构图
 
-以下图表同时提供 `.mmd` 源文件与 `.svg` 渲染产物，统一使用 `theme:base` + 企业四色规范。本节内容已按真实源码逐类核对修正，并补齐 system/file/common 域缺失的 UML。
+以下图表同时提供 `.mmd` 源文件与 `.svg` 渲染产物，使用 `theme:base` + 企业四色规范。本节既有类、表与字段说明不是第一阶段 Maven 分组的重新验证结果；本次没有改变相关业务实现。
 
 #### UML 类图（107–120）
 
@@ -189,7 +204,7 @@ bun x @mermaid-js/mermaid-cli -i docs/diagrams/107_uml_auth_center_domain.mmd \
 
 | 编号 | 文件名 | 标题 | 覆盖模块 | 说明 |
 | -- | ------ | ---- | -------- | ---- |
-| 97–106 | `97–106_module_*.mmd` | 共享/业务模块结构图 | common/domain/infrastructure/application/interfaces/auth/workflow/example/generator/license | DDD 四层包结构 flowchart |
+| 97–106 | `97–106_module_*.mmd` | 共享/业务模块结构图 | common/domain/infrastructure/application/interfaces/auth/workflow/example/generator/license | 既有四层包结构；101 / 103 的 application / interfaces 是 system 库内包，不是恢复退役叶子模块，100 的设施布局亦不代表单一父 POM。 |
 | 122 | `122_module_file_structure.mmd` | **apex-file 模块结构图（新增）** | file | interfaces→application→domain→infrastructure 四层 + 五后端存储策略 |
 | 123 | `123_module_system_structure.mmd` | **apex-system 模块结构图（新增）** | system | 四层 + office/governance/monitor/security 子包 + 45 实体域模型 |
 | 124 | `124_aggregation_todo_architecture.mmd` | **查询聚合服务与统一待办架构图（新增）** | aggregation | 网关路由 / 自验 JWT / 舱壁 / 内部签名调用 workflow 与 office 待办端点 |
@@ -211,10 +226,9 @@ bun x @mermaid-js/mermaid-cli -i docs/diagrams/107_uml_auth_center_domain.mmd \
 
 #### 校验状态
 
-- **XML 合法性**：`docs/diagrams/` 下 124 个 `.svg` 全部通过 XML 解析校验（2026-10-28；2026-11-13 新增 124–127 并重渲染 114）。本轮修复了 4 个既存缺陷：`70`/`71`/`72` 中未转义的 `<`、`>`、`&`，以及 `86` 中错位的属性引号（`height">150"` → `height="150"`）。
-- **内容一致性**：全量扫描确认无 `Java 17`、退役模块名（`apex-interfaces`/`apex-application`/`apex-auth-center`）、`MySQL 8.0`、`Spring Boot 3.5.13`、旧统计数字（32 Handler/34 Service/47 Repository）残留。
-- **统计基准**：Handler 86、Service 159、Router 50、Repository 90、domain 实体 73、Maven 模块 31、唯一表 117（按源码与迁移脚本实测）。
-- **SVG 渲染**：`docs/diagrams/` 与 `sequence/` 下 `.mmd` 均经 mermaid-cli 验证语法有效；本轮新渲染 110b、119、120、121、122、123 六张 SVG。
+- **第一阶段结构口径**：根聚合七管理组；42 个后代、43 个 reactor 项目含根、35 个 JAR、8 个 POM 含根（business 为空）。95 覆盖 35 个 JAR 的 104 条直接内部生产依赖，common 被 28 个 JAR 直接依赖、domain 被 19 个。
+- **历史统计不作现状证明**：旧版 Handler / Service / Router / Repository / 表数量及全量 XML、Mermaid 渲染记录不是本次门禁结果；Maven 分组也不改变类或表的数量。93 / 94 的退役模块名是历史图内容，不应以全局替换清除。
+- **本次静态核对范围**：95 / 128 / 129 的 SVG XML 与源内容配对；本地 librsvg 测得文本包围盒无画布 / 所属卡片越界、无文本包围盒重叠。107 等 UML 未因 parent 分组重绘。**视觉验收未完成**（当前环境无法查看渲染图像）；文本几何检查不是视觉验收，更不是 Java 构建 / 启动或完整门禁结果。
 
 ---
 

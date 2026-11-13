@@ -54,7 +54,7 @@
 
 | # | 验收项 | 判定标准 | 证据 |
 | --- | --- | --- | --- |
-| B-01 | 六个服务 JAR | 每个模块 `target/` 下恰好一个 `*.jar` | 目录清单 |
+| B-01 | 八个服务 JAR | 网关、六个业务服务与只读查询聚合服务的 `target/` 下各恰好一个发布 `*.jar` | 目录清单 |
 | B-02 | 档位标识 | `build.profile.id` 与构建命令一致 | `apex-build.properties` |
 | B-03 | 无敏感文件 | 包内无私钥、`.env`、真实凭据 | `unzip -l` 输出 |
 | B-04 | 无卖方工具 | 包内无 `apex-license-tools`、`scripts/license/` | `unzip -l` 输出 |
@@ -82,7 +82,7 @@
 
 | # | 验收项 | 判定标准 | 命令 |
 | --- | --- | --- | --- |
-| D-01 | 数据库初始化 | 五个库迁移执行成功，`flyway_schema_history` 无失败记录 | 启动日志 |
+| D-01 | 数据库初始化 | 各业务域数据库迁移执行成功，`flyway_schema_history` 无失败记录 | 启动日志 |
 | D-02 | 服务启动 | 每个服务日志出现 `Started ...Application` | 启动日志 |
 | D-03 | 健康检查 | 业务端口健康检查返回 UP | `curl http://<host>:<port>/actuator/health` |
 | D-04 | 网关路由 | 各域请求经网关正确转发 | 接口调用 |

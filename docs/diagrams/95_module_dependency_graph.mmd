@@ -1,6 +1,9 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
-%% 模块依赖关系图（35 个 Maven 模块）· 数据源：各模块 pom.xml（生产 scope 直接依赖）· v1.3.1
-%% 与 95_module_dependency_graph.svg 同源维护：先改本文件，再同步 SVG。
+%% 直接内部生产依赖图（35 个 JAR 模块）· 数据源：各叶子 pom.xml 的 dependencies · v1.3.1
+%% 第一阶段 Maven 分组：42 个后代 / 43 个 reactor 项目含根；8 个 POM 不画为生产依赖节点。
+%% 与 95_module_dependency_graph.svg 语义配对维护；SVG 为手写邻接清单，不是 Mermaid 自动导出。
+%% 箭头由依赖方指向被依赖方；只列直接内部 compile 依赖（当前内部生产依赖均为 compile）。
+%% 不含 parent、modules、dependencyManagement、传递依赖、HTTP 调用、test 依赖或第三方依赖。
 flowchart LR
     subgraph L0["L0 共享基础"]
         COMMON["apex-common<br/>通用能力/上下文/调度器（无内部依赖）"]
@@ -17,7 +20,7 @@ flowchart LR
         REMOTE["apex-infrastructure-remote<br/>common · domain"]
         MSG["apex-infrastructure-messaging<br/>common · domain · persistence"]
         INTEG["apex-infrastructure-integration<br/>common · domain · remote"]
-        COMPAT["apex-infrastructure<br/>聚合五个能力 JAR（仅兼容旧坐标）"]
+        COMPAT["apex-infrastructure<br/>依赖五个能力 JAR（仅兼容旧坐标）"]
         LIC_S["apex-license-spring-boot-starter<br/>common"]
         LIC_T["apex-license-tools<br/>license-starter"]
         STO_S["apex-storage-spring-boot-starter<br/>common"]
@@ -41,6 +44,7 @@ flowchart LR
         FILE_SVC["apex-file-service<br/>file（无 api-contract）"]
         OFF_SVC["apex-office-service<br/>office（另依赖 api-contract；gateway 仅 test）"]
         INT_SVC["apex-integration-service<br/>integration"]
+        AGG_SVC["apex-aggregation-service<br/>common · api-contract（无业务库依赖、无 DB；gateway 仅 test）"]
         GW["apex-gateway<br/>common"]
         JOB_SVC["apex-job-service<br/>infrastructure-remote"]
         MASK["apex-masking-service<br/>common"]
@@ -68,11 +72,11 @@ flowchart LR
     INTEG --> DOMAIN
     INTEG --> COMMON
     INTEG --> REMOTE
-    COMPAT -.-> PERSIST
-    COMPAT -.-> CACHE
-    COMPAT -.-> REMOTE
-    COMPAT -.-> MSG
-    COMPAT -.-> INTEG
+    COMPAT --> PERSIST
+    COMPAT --> CACHE
+    COMPAT --> REMOTE
+    COMPAT --> MSG
+    COMPAT --> INTEG
     LIC_T --> LIC_S
     LIC_S --> COMMON
     STO_S --> COMMON
@@ -141,6 +145,8 @@ flowchart LR
     INT_SVC --> DOMAIN
     INT_SVC --> JOB_S
     INT_SVC --> SEA_S
+    AGG_SVC --> COMMON
+    AGG_SVC --> CONTRACT
     GW --> COMMON
     JOB_SVC --> REMOTE
     MASK --> COMMON
@@ -160,5 +166,4 @@ flowchart LR
     EXAMPLE --> INTEG
     EXAMPLE --> SYSTEM
 
-    NOTE["test scope 未计入：auth-service→system、office-service→gateway；MQTT 客户端 optional；无循环依赖"]
-    TOOLS -.-> NOTE
+    NOTE["排除 test：infra-integration→cache、auth-service→system、office-service→gateway、aggregation-service→gateway。<br/>MQTT 客户端 optional 属第三方依赖；无内部循环依赖。<br/>TOOLS 表示 generator / tools-deployment / tools-build 三个独立 JAR，无内部生产依赖。"]

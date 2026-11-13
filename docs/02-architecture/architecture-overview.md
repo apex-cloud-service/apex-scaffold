@@ -1,6 +1,28 @@
 # 架构设计说明
 
-> 当前运行架构为「API 网关 + 6 个业务微服务（system/auth/workflow/file/office/integration）+ 只读查询聚合服务（apex-aggregation-service，8098）+ 共享 SDK/契约」，另有任务代理（8095）与脱敏服务（8096）作为轻量侧车。微服务改造已完成：网关 `apex-gateway`、契约 `apex-api-contract`、版本源 `apex-services-bom` 与各运行服务均已在根 `pom.xml` 注册。
+> 当前运行架构为「API 网关 + 6 个业务微服务（system/auth/workflow/file/office/integration）+ 只读查询聚合服务（apex-aggregation-service，8098）+ 共享 SDK/契约」，另有任务代理（8095）与脱敏服务（8096）。Maven 管理由总根直接聚合七组，再递归聚合现有模块；这不改变服务拓扑、业务调用或生产依赖。
+
+## 当前 Maven 分组（2026-11-13）
+
+根 POM 是总父与总聚合入口，直接声明 shared/components/starters/services/applications/tools/business 七组。第一阶段递归 42 个模块，含根 reactor 43 个项目（8 个 POM、35 个既有 JAR）；六个新 parent 没有业务源码、启动类、端口或可执行 JAR。完整清单见 [README 分组表](../../README.md#maven-分组与父链)，图见[聚合分组](../diagrams/128_maven_module_groups.svg)与[parent 继承](../diagrams/129_maven_parent_inheritance.svg)。
+
+| 聚合组 | 当前范围 | 第一阶段直接 parent |
+| --- | --- | --- |
+| shared（`apex-shared-parent`） | 9 个共享基础/领域/契约/设施 JAR | 8 个继承 shared；api-contract 保留 services-bom |
+| components（`apex-components-parent`） | 6 个脚手架能力库 | 5 个继承 components；integration 保留 services-bom |
+| starters（`apex-starters-parent`） | 4 个存储/授权/任务/事务 starter | starters |
+| services（`apex-services-bom`） | 10 个运行模块，含八个标准发布服务及 job/masking | 保持 services-bom |
+| applications（`apex-applications-parent`） | example、boot-all | example 继承 applications；boot-all 保留 services-bom |
+| tools（`apex-tools-parent`） | license-tools、generator、tools-deployment、tools-build | tools |
+| business（`apex-business-parent`） | 第一阶段为空，无项目业务子模块 | 后续项目业务 JAR 继承 business |
+
+22 个既有叶子变更直接 parent，原有 13 个 services-bom 子继承保留。七组均直接继承根 POM，统一版本、构建档位和质量门禁仍由根治理，services-bom 保留原有依赖管理；聚合边与继承边不同，不能把 api-contract / integration / boot-all 三个例外误画为已迁移。
+
+**物理与运行边界不变**：所有既有叶子仍在仓库根级，分组通过 `../<叶子>` 聚合，不存在 parent 目录下嵌套源码。35 个既有 JAR 的坐标与打包形态、服务接口、数据库所有权、资源和端口不因分组而变。parent 管理不是 compile 依赖，也不会产生新服务、日志目录或监控目标；本阶段不承诺构建性能提升，验证结果以实际执行记录为准。
+
+business 只承载未来项目专属模型、规则、用例、业务配置和领域适配；通用框架实现由其余支撑模块提供，不复制第二套安全、数据源、缓存、消息或日志框架。业务仓储、Mapper / PO 仍留在本域 infrastructure。独立运行模块应聚合并继承 services-bom，不在 business 重复登记、不自动进入八服务发布集合；后续数量据实际新增模块更新。
+
+根 POM 沿 `<modules>` 递归的后代集合（含空 parent、不含总根）与 `apex-tools-build` 扁平注册表一致；不沿 `<parent>` 回溯。创建步骤见[开发规范](../04-development/development-standards.md#23-maven-分组与模块创建)。构建继续从总根加载固定环境后 `mvnd -pl <叶子列表> -am`。
 
 ## 当前物理边界（2026-10-12）
 
@@ -41,27 +63,22 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 └─────────────────────────────────────────┘
 ```
 
-> 注：`apex-common` 在微服务改造后作为 **共享 SDK** 独立复用，其内容受 `apex-common/README.md` 的「SDK 内容准入规则」约束（结果/异常/上下文/注解/纯工具可进，Redis/MQ/Storage 实现与业务实体禁入）。版本由 `apex-services-bom` 统一管理。
+> 注：`apex-common` 在微服务改造后作为 **共享 SDK** 独立复用，其内容受 [SDK 内容准入规则](../../apex-common/README.md#sdk-内容准入规则强制)约束（结果/异常/上下文/注解/纯工具可进，Redis/MQ/Storage 实现与业务实体禁入）。它直接继承 shared parent，版本治理最终来自根 POM；服务仍经 services-bom 获得已有依赖管理。
 
-## 微服务共享层（Phase 1 新增）
+## 微服务共享层
 
 | 模块 | 定位 | 依赖 |
 |---|---|---|
-| `apex-services-bom` | 微服务统一版本清单（parent 唯一来源）：锁定 `apex-common`/`apex-api-contract`/`apex-license-starter` 及 MyBatis-Plus/Redisson/RocketMQ/Sentinel/Resilience4j 等 | 继承根 `pom.xml`，供网关/契约/各业务服务 parent 引用 |
-| `apex-api-contract` | 跨服务内部 API 契约（`/internal/v1/**` 的 DTO 与领域事件）+ 阻塞 IO 桥接约定（`BlockingIoSchedulers.remote()`） | `apex-common` |
+| `apex-services-bom` | 运行模块聚合与父 POM，保留原有服务依赖管理，不是纯 import BOM，也不是全仓唯一版本源 | 继承根；聚合 10 个运行模块，保留它们及三个例外的 13 项直接子继承 |
+| `apex-api-contract` | 跨服务内部 API 与 DTO，不放具体业务实体 | 生产依赖 `apex-common`；聚合在 shared，parent 仍为 services-bom |
 | `apex-gateway` | Spring Cloud Gateway（WebFlux）：路由 / JWT(JWKS) 验签 / 用户上下文注入 / 全局限流 / TraceId / CORS / 灰度路由 / 访问日志 | `apex-common` + gateway-webflux + nacos + Resilience4j + redis-reactive |
 
 ```
 客户端 → apex-gateway ──(lb://apex-auth-service)──→ 认证/各业务微服务
-              │ 依赖 + 统一契约
-              ▼
-   apex-api-contract（内部契约：DTO 与事件）+ apex-common（SDK）
-              ▲
-              │ parent 统一版本
-        apex-services-bom（唯一版本源）
+共享代码：apex-common（SDK）与 apex-api-contract（内部 API/DTO）按实际 POM 依赖复用
 ```
 
-三个模块均已在根 `pom.xml` `<modules>` 注册，是微服务改造的基座；六个业务服务（auth/system/workflow/office/file/integration）与只读查询聚合服务（aggregation）均以此为模板装配。服务间同步调用一律使用 `WebClient`，项目不引入 Feign。
+以上只描述运行调用和代码复用，不表示 Maven parent 关系；继承使用独立图表达。gateway 聚合在 services、契约聚合在 shared，二者仍继承 services-bom，common 聚合并继承 shared；全部从总根递归纳入 reactor。六个业务服务（auth/system/workflow/office/file/integration）与只读查询聚合服务（aggregation）保留现有装配。服务间同步调用一律使用 `WebClient`，项目不引入 Feign。
 
 ### 分层职责
 
@@ -159,16 +176,17 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 
 ### 添加新的业务模块
 
-1. 在 `apex-domain` 中定义聚合根和仓储接口
-2. 在 `apex-infrastructure` 中实现仓储（Mapper + PO + Converter）
-3. 在 `apex-system` 中编写应用服务
-4. 在 `apex-system` 中创建 Handler 和路由
+1. 先明确是扩展既有脚手架能力库还是新增项目业务 JAR；前者留在所属 components 库，后者聚合并继承 `apex-business-parent`。具体模块另行登记，空 business parent 不等于已有业务实现。
+2. 在本业务库的 domain 定义模型、聚合与仓储端口，在本域 infrastructure 实现仓储/Mapper/PO，在 application 编排用例。只把真正跨域稳定契约放共享 domain；不把业务实现放回旧兼容 `apex-infrastructure`。
+3. 通用持久化、缓存、消息、远程客户端、安全和日志能力按需复用支撑模块，不在 business 重写；业务专属适配仍属于业务库。
+4. 若需要新独立 HTTP 服务，在根级创建运行模块，聚合并继承 services-bom，定向装配业务库，以 Router + Handler 适配用例；不在 business 重复聚合，不自动加入八服务发布集合。只装配到现有应用时不必新增 service。system 与 integration 已有协议层归属不变。
+5. 按[模块创建规则](../04-development/development-standards.md#23-maven-分组与模块创建)同步注册表、容器 POM 清单、权限/i18n、迁移与有效文档；从总根加载固定环境后使用 `-pl <叶子> -am` 验证实际依赖与业务边界。
 
 ### 添加新的基础设施组件
 
-1. 在 `apex-infrastructure` 中创建新包
-2. 定义接口和实现
-3. 通过 Spring 自动配置暴露给应用层使用
+1. 先选择 shared 组中对应的 `apex-infrastructure-persistence/cache/messaging/remote/integration` 能力模块；`apex-infrastructure` 仍是普通兼容 JAR，不新增实现源码，也不改成 parent。
+2. 定义稳定契约和适配实现，不向共享层引入具体业务库的反向依赖。
+3. 按现有自动装配模式暴露能力；确需新 Maven 模块时登记到所属支撑分组，不放到 business 孵化第二套框架。
 
 ### 自定义配置
 

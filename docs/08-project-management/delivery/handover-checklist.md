@@ -32,7 +32,7 @@
 
 ### 1.3 交付物
 
-- [ ] 六个服务 JAR 齐全且每个模块唯一
+- [ ] 八个服务 JAR 齐全且每个模块唯一（网关 + 六个业务服务 + 只读查询聚合服务）
 - [ ] 发布包已生成：`dist/apex-scaffold-<版本>-<档位>.zip`
 - [ ] 包内无 `private.key`、无 `.env`、无真实凭据
 - [ ] 包内无 `apex-license-tools`、无 `scripts/license/`
@@ -43,7 +43,7 @@
 
 ### 1.4 数据库
 
-- [ ] 五个域 MySQL/PostgreSQL 版本集合一致
+- [ ] 六个业务域（system/auth/workflow/file/office/integration）MySQL/PostgreSQL 版本集合一致
 - [ ] 空库可从头执行至最新版本
 - [ ] 目标环境已执行到最新版本
 - [ ] 迁移脚本无本地未提交修改
@@ -64,7 +64,7 @@
 ### 2.1 环境确认
 
 - [ ] JDK 21 可用（客户侧运行只需 JRE 21）
-- [ ] MySQL 8.x 或 PostgreSQL 已就绪，五个库已创建
+- [ ] MySQL 8.x 或 PostgreSQL 已就绪，各业务域数据库已创建
 - [ ] Redis 已就绪
 - [ ] 可选组件按合同确认（Nacos / RocketMQ / XXL-JOB / Seata / 对象存储 / Keycloak）
 - [ ] 端口规划已确认（workflow 业务端口 8093，2026-11-07 起与 system 管理端口 8083 不再冲突，R-05 已消除）
@@ -86,7 +86,7 @@
 
 - [ ] 数据库迁移执行成功
 - [ ] 网关启动成功
-- [ ] 五个业务服务启动成功
+- [ ] 六个业务服务与只读查询聚合服务启动成功
 - [ ] 可选服务按需启动
 - [ ] 各服务健康检查返回 UP
 - [ ] 网关路由各域连通

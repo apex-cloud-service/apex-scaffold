@@ -45,7 +45,29 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 
 ## 模块结构
 
-根 POM 当前聚合 36 个模块。
+根 POM 直接聚合七个管理组，递归聚合 42 个模块；含根 POM 的全量 reactor 为 43 个项目，其中 8 个为 `packaging=pom`、35 个为既有 JAR 模块。第一阶段只增加六个分组 parent，复用 `apex-services-bom`，不增加业务服务或项目业务库。后续新增模块按实际递归清单计数，不永久锁死 42 / 43。
+
+### Maven 分组与父链
+
+[聚合分组图](docs/diagrams/128_maven_module_groups.svg) · [parent 继承图](docs/diagrams/129_maven_parent_inheritance.svg)
+
+| 根级管理组 | 聚合 JAR 数 | 聚合模块与职责 |
+| --- | ---: | --- |
+| `apex-shared-parent` | 9 | `apex-common`、`apex-domain`、`apex-api-contract`、五个 `apex-infrastructure-*` 能力 JAR 及旧坐标兼容 JAR `apex-infrastructure` |
+| `apex-components-parent` | 6 | 六个脚手架能力库：`apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office`、`apex-integration` |
+| `apex-starters-parent` | 4 | `apex-storage-spring-boot-starter`、`apex-license-spring-boot-starter`、`apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter` |
+| `apex-services-bom` | 10 | 网关、六个业务 service、只读查询聚合 service，以及 job / masking 两个可选运行模块 |
+| `apex-applications-parent` | 2 | `apex-example` 示例应用和 `apex-boot-all` 组合装配 |
+| `apex-tools-parent` | 4 | `apex-license-tools`、`apex-generator`、`apex-tools-deployment`、`apex-tools-build` |
+| `apex-business-parent` | 0 | 项目专属业务库管理入口；第一阶段为空，不虚构业务子模块 |
+
+**聚合与继承不是同一关系**：七组均直接继承根 POM；22 个既有叶子的直接 parent 改为所属新分组。原有 13 个 `apex-services-bom` 子项目仍继承它，其中 `apex-api-contract` 聚合在 shared、`apex-integration` 聚合在 components、`apex-boot-all` 聚合在 applications，另外 10 个运行模块的聚合和继承归属均为 services。根 POM 仍保留统一版本、构建档位和质量门禁；分组 parent 不自动引入运行依赖或激活叶子打包插件。
+
+所有既有叶子目录仍位于仓库根级，分组通过 `../apex-xxx` 聚合同级目录，不存在 `apex-components-parent/apex-system/` 这样的嵌套源码路径。模块坐标、35 个原 JAR 的打包形态、业务接口、服务拓扑和端口不因分组而改变；分组不承诺构建提速或产物缩小。
+
+`apex-business-parent` 只管理未来项目业务 JAR 的模型、规则、用例、领域专属适配和业务配置；通用框架实现由 shared / components / starters 等支撑模块提供，不在 business 复制。业务仓储、Mapper / PO 仍留在本域 infrastructure 层。若另建独立运行模块，聚合并继承 `apex-services-bom`，不在 business 重复登记；第一阶段没有新增此类模块，也不自动进入八服务发布集合。
+
+以下按能力列出既有模块职责；分组不改变其生产依赖边界。
 
 | 分类 | 模块 | 职责 |
 | --- | --- | --- |
@@ -53,7 +75,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | 共享领域 | `apex-domain` | 基础实体、通用事件、端口与 Gateway 契约 |
 | 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration` | 按持久化、缓存、消息、远程调用和第三方集成拆分发布；`apex-infrastructure` 保留为旧坐标兼容聚合，不再承载实现源码 |
 | 跨服务契约 | `apex-api-contract` | 内部 API 接口和共享 DTO |
-| 服务父 POM | `apex-services-bom` | 网关、六个业务服务、只读查询聚合服务、集成能力库、组合部署包及任务代理、脱敏服务的 parent，统一依赖与构建配置 |
+| 服务父 POM | `apex-services-bom` | 聚合 10 个运行模块，保留现有依赖管理；仍为这 10 个模块及 api-contract / integration / boot-all 三个继承例外的 parent |
 | 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration` | 各业务域的领域、应用与专属基础设施实现；`apex-integration` 含连接器与物联网设备两个子域 |
 | 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service`、`apex-aggregation-service` | 网关、业务服务或只读查询聚合服务的启动、配置与装配 |
 | 组合部署 | `apex-boot-all` | basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 |
@@ -62,6 +84,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | 授权 | `apex-license-spring-boot-starter`、`apex-license-tools` | 运行时许可证校验与离线授权工具 |
 | 示例与工具 | `apex-example`、`apex-generator` | 示例应用与代码生成器 |
 | 运维工具 | `apex-tools-deployment` | 离线部署密钥/配置校验、TOTP 敏感字段迁移包生成与回滚、MySQL V42 结构恢复；只由 `scripts/utils/`、`scripts/ci/check-doc-links.sh` 脚本与 `podman-compose.yml` 的 `security-key-check` 调用，不参与服务运行期装配 |
+| 构建管理 | `apex-tools-build` | 模块注册表与构建/发布/部署编排入口；注册表对齐根 POM 的递归聚合集合，见[使用说明](docs/04-development/build-tools-usage.md) |
 
 `apex-system` 已接收原接口层、应用层及 system 专属领域和基础设施代码，保留 `com.apex.scaffold.interfaces/application/domain/infrastructure` Java 包名。原 `apex-interfaces`、`apex-application` 和 `apex-auth-center` 不再作为当前运行入口。
 
@@ -132,6 +155,8 @@ mvnd -T4 -B -pl apex-system-service -am clean package -Pbasic -DskipTests
 ```
 
 这是便于本地运行的打包命令，跳过测试，不代表通过质量门禁。默认产物为 `apex-system-service/target/apex-system-service-1.3.1.jar`；其他服务也使用各自模块名与项目版本，不附加版本档位后缀。
+
+分组后仍从总根使用 `-pl <叶子列表> -am`，叶子路径不变。`-pl apex-services-bom -am` 不表示构建该组全部服务；整组构建应明确列出叶子，不能用 parent 选择或 `-f 分组/pom.xml` 假定跨组依赖均在 reactor 中。
 
 ### 3. 准备运行配置
 

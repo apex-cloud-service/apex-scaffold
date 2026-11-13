@@ -2,7 +2,7 @@
 
 > 文档版本: v1.1\
 > 创建时间: 2026-09-03\
-> 最近更新: 2026-10-28（按当前代码实现修正运行拓扑、端口与图表）\
+> 最近更新: 2026-11-13（第一阶段 Maven 分组、当前运行拓扑与图表入口）\
 > 适用版本: apex-scaffold v1.3.1+\
 > 架构模式: DDD (领域驱动设计) + 网关微服务拆分
 
@@ -34,7 +34,14 @@
 >
 > - [后端技术栈架构图](../diagrams/29_technology_stack_overview.svg)
 >
-> 上述 SVG 属于历史图集，与当前实现有出入的部分以本文 1.2 节的运行架构图与网关路由表为准。
+> 上述 SVG 属于历史图集，与当前实现有出入的部分以本文 1.2 节的运行架构图与网关路由表为准。93 / 94 的单体历史视图保留，不因 Maven 分组重绘。
+>
+> **当前 Maven 结构图**：
+> - [七管理组聚合图（128）](../diagrams/128_maven_module_groups.svg) / [Mermaid 源](../diagrams/128_maven_module_groups.mmd)
+> - [直接 parent 继承图（129）](../diagrams/129_maven_parent_inheritance.svg) / [Mermaid 源](../diagrams/129_maven_parent_inheritance.mmd)
+> - [35 JAR 直接内部生产依赖图（95）](../diagrams/95_module_dependency_graph.svg) / [Mermaid 源](../diagrams/95_module_dependency_graph.mmd)
+>
+> 聚合、parent 与生产依赖是三种关系；95 / 128 / 129 为语义配对的手写 SVG，维护方式见[图表指南](../diagrams/README.md#图表双源规范重要)。
 
 ***
 
@@ -48,7 +55,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)思想,结合**响应式编程(Reac
 | --------- | ----------- | -------------------------------- |
 | **分层解耦**  | 清晰的四层架构边界   | 接口层 → 应用层 → 领域层 → 基础设施层（每个业务服务内部）|
 | **依赖倒置**  | 高层模块不依赖低层模块 | 领域层定义接口,基础设施层实现                  |
-| **服务拆分**  | 网关统一入口,按业务域拆分运行单元 | Spring Cloud Gateway + 五业务服务 + 任务代理/脱敏服务 |
+| **服务拆分**  | 网关统一入口,按业务域拆分运行单元 | Spring Cloud Gateway + 六业务服务 + 只读查询聚合 + 任务代理/可选脱敏服务 |
 | **响应式优先** | 非阻塞异步编程     | Spring WebFlux + Project Reactor |
 | **阻塞隔离**  | 同步 I/O 与事件循环隔离 | `BlockingIoSchedulers` 专用池（jdbc/cache/storage/event/remote/general） |
 | **可观测性**  | 全链路监控追踪     | Prometheus + Grafana + Loki/Alloy（Zipkin/SkyWalking 为可选组件） |
@@ -56,6 +63,10 @@ Apex Scaffold 采用**领域驱动设计(DDD)思想,结合**响应式编程(Reac
 | **安全合规**  | 多租户数据隔离     | tenant\_id + RBAC权限              |
 
 ### 1.2 当前运行拓扑（系统架构图）
+
+第一阶段 Maven 管理结构为 **7 个根级管理组、42 个后代、43 个 reactor 项目含根**：6 个新增 `packaging=pom` 分组加现有 `apex-services-bom`，共 8 个 POM 含根、35 个 JAR。shared / components / starters / services / applications / tools / business 分别聚合 9/6/4/10/2/4/0 个 JAR；所有既有叶子物理目录仍在仓库根，分组以 `../apex-xxx` 聚合同级目录，不改变坐标、生产依赖或运行拓扑。
+
+22 个叶子调整直接 parent；api-contract / integration / boot-all 分别聚合到 shared / components / applications，却继续继承 services-bom，连同 10 个运行模块共 13 个 parent 不变。business 第一阶段为空，只管理项目业务库及业务专属配置 / 资源；通用框架实现在其他组，未来独立 `business-domain-service` 只归 services 聚合与继承，不重复登记到 business。管理 POM 不是新服务，不含业务实现、端口或可执行 JAR。
 
 当前运行架构为**一个网关 + 六个业务服务 + 只读查询聚合服务 + 两个辅助服务**：网关负责 JWT 验签、可信头注入、限流、灰度与熔断回退；各业务服务内部保持 DDD 四层与 WebFlux 函数式路由；查询聚合服务（`apex-aggregation-service`，8098）无数据库，仅提供统一待办等只读跨源聚合；任务代理与脱敏服务是轻量侧车，未注册 Nacos，走固定受信地址。
 
@@ -77,6 +88,9 @@ flowchart TB
         OFFICE["apex-office-service :8084<br>办公协同 + 站内信 WebSocket"]
         FILE["apex-file-service :8085<br>文件上传 / 分片 / 下载"]
         INTEGRATION["apex-integration-service :8094<br>连接器 / MQTT 设备接入<br>管理端口 :8097"]
+    end
+
+    subgraph aggregation["只读查询聚合（非业务四层 / 无 DB）"]
         AGG["apex-aggregation-service :8098<br>只读跨源聚合（统一待办 /api/v2/todo）<br>无数据库 · 无管理端口"]
     end
 
@@ -93,6 +107,7 @@ flowchart TB
         XXL["XXL-Job Admin（可选）"]
         SEATA["Seata TC（可选，默认关闭）"]
         NACOS["Nacos（可选，默认可关）"]
+        EMQX["外部 EMQX（设备接入，MQTT 桥接默认关闭）"]
     end
 
     subgraph storage["对象存储（五后端按配置选择）"]
@@ -123,18 +138,21 @@ flowchart TB
     FILE --> MYSQL
     FILE --> ST
     INTEGRATION --> MYSQL
-    INTEGRATION --> MQ
+    INTEGRATION -.->|"MQTT 桥接（显式启用且有客户端依赖）"| EMQX
+    AGG -->|"WebClient · 内部签名只读接口"| WF
+    AGG -->|"WebClient · 内部签名只读接口"| OFFICE
     JOB -->|"HTTP 转发"| SYSTEM
     XXL -.->|"执行器（默认禁用，按需开启）"| SYSTEM
     XXL -.-> WF
     SYSTEM -.-> SEATA
     WF -.-> SEATA
     services -.->|"可选注册与发现"| NACOS
+    AGG -.->|"可选注册与发现"| NACOS
 ```
 
 要点：
 
-- `job-domain`、`masking-domain` 两条路由以及 office 的 WS/HTTP 消息路由使用固定地址，不依赖 Nacos；office 两条路由必须指向同一实例（票据与连接注册表是单实例内存态）。
+- `job-domain`、`masking-domain` 两条路由使用固定地址，不依赖 Nacos；office 的 WS/HTTP 消息路由缺省与 office 主路由同为 `lb://apex-office-service`，直连部署必须显式注入 `ROUTE_OFFICE_MESSAGE_URI` / `ROUTE_OFFICE_WS_URI` 并指向同一实例（票据与连接注册表是单实例内存态）。
 - 关闭 Nacos 时，`lb://` 路由须通过 `ROUTE_*` 环境变量改为明确地址；各路由均带 `ROUTE_*` 覆盖能力，可一键回滚。
 - XXL 执行器与 Seata 均默认禁用；Seata 通过 `apex.seata.mode` 选择 AT/TCC/SAGA/XA。
 
@@ -144,9 +162,10 @@ flowchart TB
 | --- | --- | --- |
 | auth-service | `/auth/v1/**`、`/auth/v2/**`、`/oauth2/**`、`/.well-known/**`、`/api/v1/mfa/**`、`/api/mfa/**`、`/api/ip-access-control/**`、`/api/v1/auth/configs/**`、`/api/v1/auth/audit-logs/**` | `lb://apex-auth-service` |
 | workflow-domain | `/api/v1/workflows/**`、`/api/v2/workflow-definitions/**`、`/api/workflow/**`、`/admin-api/v1/workflows/**` | `lb://apex-workflow-service` |
-| office-message-websocket | `/api/v1/messages/ws`（要求 `Upgrade: websocket`） | `ws://127.0.0.1:8084` |
-| office-message-http | `/api/v1/messages`、`/api/v1/messages/**` | `http://127.0.0.1:8084` |
+| office-message-websocket | `/api/v1/messages/ws`（要求 `Upgrade: websocket`） | `lb://apex-office-service`（`ROUTE_OFFICE_WS_URI`） |
+| office-message-http | `/api/v1/messages`、`/api/v1/messages/**` | `lb://apex-office-service`（`ROUTE_OFFICE_MESSAGE_URI`） |
 | office-domain | `/api/v1/office/**`、`/api/v2/office/**`、`/api/office/**`、`/api/v1/messages/**`、`/admin-api/v1/office/**`、`/admin-api/v1/org/**`、`/admin-api/v1/message-templates` | `lb://apex-office-service` |
+| aggregation-domain | `/api/v2/todo` | `lb://apex-aggregation-service` |
 | file-domain | `/api/v1/file/**`、`/api/v1/files/**`、`/api/v1/documents/**`、`/admin-api/v1/documents/**`、`/admin-api/v1/charts/**`、`/api/v2/files/**`、`/api/v2/file-shares/**` | `lb://apex-file-service` |
 | job-domain | `/admin-api/v1/jobs`、`/admin-api/v1/jobs/**` | `http://127.0.0.1:8095` |
 | masking-domain | `/api/v1/masking/**` | `http://127.0.0.1:8096` |
@@ -420,59 +439,18 @@ public interface UserRepository {
 
 ### 2.3 模块依赖关系
 
-全仓 34 个 Maven 模块的直接内部依赖（完整清单与职责见根 [AGENTS.md](../../AGENTS.md)）：
+全 35 个 JAR 的直接内部生产依赖见[95 依赖图](../diagrams/95_module_dependency_graph.svg)及[Mermaid 源](../diagrams/95_module_dependency_graph.mmd)，共 104 条内部 compile 边；第一阶段 42 个后代中的 7 个管理 POM（加根共 8 个 POM）不是生产 JAR，不画为 compile 节点。
 
-```mermaid
-flowchart LR
-    COMMON["apex-common<br>响应/异常/上下文/调度器"]
-    DOMAIN["apex-domain<br>基础实体与端口契约"]
-    PERSIST["infrastructure-persistence"]
-    CACHE["infrastructure-cache"]
-    MSG["infrastructure-messaging"]
-    REMOTE["infrastructure-remote"]
-    INTG["infrastructure-integration"]
-    CONTRACT["apex-api-contract"]
-    SYS["apex-system<br>system 业务库"]
-    AUTH["apex-auth<br>认证中心业务库"]
-    WFL["apex-workflow"]
-    FILE["apex-file"]
-    OFFICE["apex-office"]
-    SYSTEMSVC["apex-system-service"]
-    AUTHSVC["apex-auth-service"]
-    WFSVC["apex-workflow-service"]
-    FILESVC["apex-file-service"]
-    OFFICESVC["apex-office-service"]
-    GW["apex-gateway"]
-    JOBSVC["apex-job-service"]
-    MASKSVC["apex-masking-service"]
+| 边界 | 直接内部生产依赖要点 |
+| --- | --- |
+| 五个共享设施 JAR | 均依赖 common / domain；messaging 另依赖 persistence，infrastructure-integration 另依赖 remote。 |
+| 六业务库 | 均依赖 common / domain；system 另依赖 api-contract、五设施 JAR 与 license starter；auth 另依赖 api-contract / infrastructure-integration；file 另依赖 storage starter；integration 另依赖 persistence / remote。 |
+| 六业务 service | 各自依赖所属业务库、common / domain、job / seata starter；system / auth / workflow / office 另依赖 api-contract，auth 另依赖 cache / messaging / infrastructure-integration。 |
+| aggregation | 只依赖 common / api-contract；通过 WebClient 聚合 workflow / office 的内部 HTTP 接口，不依赖两业务库或运行模块的 JAR，无数据库。 |
+| gateway / job / masking | gateway 与 masking 仅依赖 common；job 仅依赖 infrastructure-remote，system 数据所有权不变。 |
+| apex-infrastructure | 仍为兼容 JAR，生产依赖五个设施能力 JAR，不是 Maven 分组父 POM。 |
 
-    DOMAIN --> COMMON
-    PERSIST --> DOMAIN
-    CACHE --> DOMAIN
-    REMOTE --> DOMAIN
-    MSG --> PERSIST
-    INTG --> REMOTE
-    CONTRACT --> COMMON
-    SYS --> PERSIST
-    SYS --> CACHE
-    SYS --> MSG
-    SYS --> INTG
-    AUTH --> INTG
-    AUTH --> CONTRACT
-    FILE -->|"storage-spring-boot-starter 五后端"| COMMON
-    SYSTEMSVC --> SYS
-    AUTHSVC --> AUTH
-    WFSVC --> WFL
-    FILESVC --> FILE
-    OFFICESVC --> OFFICE
-    SYSTEMSVC --> CONTRACT
-    AUTHSVC -->|"api-contract 内部 Feign 契约"| CONTRACT
-    GW --> COMMON
-    JOBSVC --> REMOTE
-    MASKSVC --> COMMON
-```
-
-约束：common、共享 domain/infrastructure、api-contract 不得反向依赖具体业务库；网关只依赖 common，不承载业务四层实现；auth-service 对 system 的依赖仅为 test scope。`apex-infrastructure` 聚合 JAR 仅保留旧坐标兼容。
+约束：common、共享 domain/infrastructure、api-contract 不得反向依赖具体业务库；网关不承载业务四层实现。图中排除 test scope 的 auth-service→system、office-service→gateway、aggregation-service→gateway、infrastructure-integration→cache；第三方 optional MQTT 客户端也不在内部依赖图范围。聚合见 128，parent 见 129，不根据管理归属推导生产依赖。
 
 ***
 
@@ -480,49 +458,31 @@ flowchart LR
 
 ### 3.1 部署架构图
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  客户端层                                                            │
-│  ┌────────────────────────┐    ┌────────────────────────┐          │
-│  │ Web 管理端              │    │ 移动端/小程序/H5        │          │
-│  │ (apex-admin-web 镜像)   │    │ (统一账户, 多会话)       │          │
-│  └────────────────────────┘    └────────────────────────┘          │
-└────────────────────────────┬────────────────────────────────────────┘
-                             │ HTTPS :8080
-┌────────────────────────────┴────────────────────────────────────────┐
-│  网关层  apex-gateway :8080                                          │
-│  JwtSignatureFilter 验签 → UserContextRelayFilter 可信头             │
-│  限流 / 灰度路由 / Resilience4j 熔断回退 forward:/__gateway/fallback │
-└──┬─────────┬─────────┬─────────┬─────────┬──────────┬──────────────┘
-   │         │         │         │         │          │
-┌──┴──┐  ┌───┴───┐  ┌──┴───┐  ┌──┴───┐  ┌──┴───┐  ┌───┴────────────┐
-│auth │  │system │  │work- │  │office│  │file  │  │ job :8095      │
-│:8081│  │:8082  │  │flow  │  │:8084 │  │:8085 │  │ masking :8096  │
-│认证 │  │系统管 │  │:8093 │  │办公+ │  │文件/ │  │ (未注册 Nacos, │
-│中心 │  │理兜底 │  │工作流│  │站内信│  │分片  │  │  固定受信地址)  │
-└──┬──┘  └───┬───┘  └──┬───┘  └──┬───┘  └──┬───┘  └───┬────────────┘
-   │         │         │         │         │          │
-┌──┴─────────┴─────────┴─────────┴─────────┴──────────┴──────────────┐
-│  集成与只读聚合                                                     │
-│  apex-integration-service :8094（管理 :8097）                       │
-│  apex-aggregation-service :8098（只读跨源聚合，无数据库）            │
-└────────────────────────────────────────────────────────────────────┘
-   │         │         │         │         │          │
-┌──┴─────────┴─────────┴─────────┴─────────┴──────────┴──────────────┐
-│  数据与中间件层                                                      │
-│  ┌────────┐ ┌─────────┐ ┌──────────┐ ┌──────────────────────────┐  │
-│  │ MySQL  │ │ Redis / │ │RocketMQ  │ │ 对象存储五后端            │  │
-│  │ 3306   │ │Redisson │ │ 9876     │ │ Local/MinIO/OSS/         │  │
-│  │        │ │ 6379    │ │ (Outbox) │ │ 七牛/火山TOS             │  │
-│  └────────┘ └─────────┘ └──────────┘ └──────────────────────────┘  │
-│  ┌─────────────┐ ┌────────────┐ ┌─────────────┐                    │
-│  │ Meilisearch │ │ Nacos      │ │ XXL-Job     │                    │
-│  │ (全文检索)   │ │ 8848 (可选) │ │ Admin :8097 │                    │
-│  └─────────────┘ └────────────┘ └─────────────┘                    │
-│  可选：Seata TC、Keycloak (SSO)、Resilience4j（内置）、Zipkin          │
-└─────────────────────────────────────────────────────────────────────┘
-可观测性：Actuator/Micrometer → Prometheus + Grafana + Alertmanager
-日志聚合：Logback → Loki (Grafana Alloy 采集)
+当前运行访问方向见 §1.2 的 Mermaid 图。下面按部署单元列出清单，**不是串联调用或 Maven 聚合树**：
+
+```text
+客户端 / 独立管理前端 -> apex-gateway :8080
+    六个业务服务（网关各自直接路由）：
+        apex-auth-service        :8081
+        apex-system-service      :8082  / 管理 :8083
+        apex-workflow-service    :8093
+        apex-office-service      :8084  / HTTP 与 WS 必须同实例
+        apex-file-service        :8085
+        apex-integration-service :8094  / 管理 :8097
+    只读查询聚合（网关独立路由）：
+        apex-aggregation-service :8098
+        -> 内部签名 WebClient -> workflow / office；无 DB / 迁移 / 事务
+    辅助运行模块（固定受信地址）：
+        apex-job-service         :8095 -> 仅代理 system 九个任务接口
+        apex-masking-service     :8096 -> 启动期脱敏策略，无持久化
+
+设施访问按业务配置启用（不表示每个服务全依赖）：
+    业务域独立数据库 / Flyway；Redis / Redisson；RocketMQ / Outbox
+    system 全文检索 Meilisearch；file 五后端对象存储
+    integration 外部 EMQX（MQTT 桥接默认关闭）
+    可选 Nacos / XXL-Job Admin / Seata TC / Keycloak
+可观测性：Actuator/Micrometer -> Prometheus + Grafana + Alertmanager
+日志聚合：Logback -> Loki（Grafana Alloy 采集）
 ```
 
 > 注：`apex-system-service` 管理端口 8083 与业务端口 8082 物理隔离（管理端口默认仅绑定 127.0.0.1）。workflow 业务端口 8093（2026-11-07 由 8083 调整，与 system 管理端口 8083 不再冲突）。
@@ -537,6 +497,8 @@ flowchart LR
 | **apex-workflow-service** | DAG 工作流引擎 | 8093   | Podman / K8s       |
 | **apex-office-service** | 办公协同 + 站内信 WebSocket | 8084                | Podman / K8s       |
 | **apex-file-service** | 文件上传/分片/下载 | 8085                | Podman / K8s       |
+| **apex-integration-service** | 连接器 / 设备接入，HTTP WebClient 与可选 MQTT 桥接 | 8094 业务 / 8097 管理 | Podman / K8s |
+| **apex-aggregation-service** | 只读统一待办聚合，无 DB / 迁移 / 事务 | 8098 | Podman / K8s |
 | **apex-job-service** | 任务管理接口代理（9 个接口） | 8095（仅 127.0.0.1）  | Podman / K8s       |
 | **apex-masking-service** | 启动期脱敏策略（无持久化） | 8096（仅 127.0.0.1） | Podman / K8s       |
 | **MySQL**      | 关系型数据库，按业务域独立迁移链 | 3306                | 独立部署 / RDS         |
@@ -699,7 +661,7 @@ flowchart LR
 
 ### 5.1 当前架构 (v1.3.x)
 
-- ✅ 网关 + 五业务服务 + 任务代理/脱敏服务的微服务拆分已完成
+- ✅ 当前运行拓扑为网关 + 六业务服务 + 只读查询聚合 + 任务代理 / 可选脱敏；Maven 七组调整不改变运行单元
 
 - ✅ 各业务服务内部保持 DDD 四层与 WebFlux 函数式路由
 

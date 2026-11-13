@@ -25,7 +25,29 @@ mvnd -T4 -B clean verify
 
 ## 模块与物理边界
 
-根 POM 聚合 36 个模块：共享基础、共享领域、五个按能力拆分的共享设施 JAR（`apex-infrastructure` 仅保留旧坐标兼容）、共享契约、服务父 POM、六个业务库、八个运行模块、服务增强、对象存储、授权、示例与工具、组合部署包，离线运维工具 `apex-tools-deployment`，以及构建发布管理模块 `apex-tools-build`。
+根 POM 直接聚合七个管理组；第一阶段递归聚合 42 个模块，含根 POM 的全量 reactor 为 43 个项目（8 个 POM、35 个既有 JAR）。六个新分组 parent 与复用的 `apex-services-bom` 均直接继承根 POM。所有现有叶子目录仍在仓库根级，分组用 `../apex-xxx` 聚合同级目录，不移动源码、资源或 target；模块坐标、实际生产依赖、业务接口、服务与端口不变。后续新增项目以实际递归清单计数，不把 42 / 43 固定为永久门槛。
+
+### Maven 分组与继承
+
+| 根直接聚合的管理组 | 聚合叶子数 | 职责 |
+| --- | ---: | --- |
+| `apex-shared-parent` | 9 | common、共享 domain、api-contract、五个 infrastructure 能力 JAR 和旧坐标兼容 JAR |
+| `apex-components-parent` | 6 | system/auth/workflow/file/office/integration 六个脚手架能力库 |
+| `apex-starters-parent` | 4 | storage/license/job/seata starter |
+| `apex-services-bom` | 10 | 八个标准发布运行模块及 job/masking 两个可选运行模块 |
+| `apex-applications-parent` | 2 | example 与 boot-all 装配 |
+| `apex-tools-parent` | 4 | license-tools、generator、tools-deployment、tools-build |
+| `apex-business-parent` | 0 | 只管理项目专属业务 JAR 库；第一阶段为空，无业务源码或运行模块 |
+
+- 聚合、parent 继承、物理目录、生产依赖和运行部署是不同关系，完整模块映射见 [README 分组说明](README.md#maven-分组与父链)。
+- 第一阶段 22 个既有叶子的直接 parent 改为各自新分组；13 个 `apex-services-bom` 子项目保持继承。其中 api-contract 聚合在 shared、integration 聚合在 components、boot-all 聚合在 applications，10 个运行模块的聚合与继承均在 services；不为外观一致而消除三个例外或扩大服务 BOM 管理范围。
+- 根保留统一版本、构建档位与质量门禁；分组 parent 只管理配置与聚合，不自动注入整套设施依赖或激活 Boot repackage / Shade。叶子依赖、scope、optional、exclusions 和打包行为仍按各 POM 保留。
+- business 只实现项目专属模型、规则、用例、领域端口、业务适配及配置；通用框架由 shared / components / starters 等支撑模块提供，不能复制安全、数据源、缓存、消息、日志或调度框架。领域专属仓储、Mapper / PO 留在业务库 infrastructure 层。
+- 新业务库直接继承并聚合到 business；若新建独立运行模块，其唯一 parent 与聚合归属为 services，不在 business 重复登记。不自动装配全部项目业务或扩大八服务发布清单，具体模块与运行形态须另行确认。
+- 新增模块只在所属分组 `<modules>` 登记一次，根只登记顶层分组；同步注册表和容器 POM 收集清单、相关测试与有效文档。注册表对齐从根沿 `<modules>` 递归得到的全部后代项目（含空 parent、不含总根），不是根直接七项或 `<parent>` 继承树。
+- 构建仍从总根加载固定环境后使用 `mvnd -pl <叶子列表> -am`；选择 parent 加 `-am` 不等于构建其全部聚合叶子。构件安装或未来发布须包含根与所需 parent POM；分组不授权远程发布，也不承诺性能提升。
+
+以下按既有能力列出模块职责，不改变生产依赖边界。
 
 | 分类 | 模块及职责 |
 | --- | --- |
@@ -33,7 +55,7 @@ mvnd -T4 -B clean verify
 | 共享领域 | `apex-domain`：基础实体、通用事件与服务端口/Gateway 契约 |
 | 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration`：分别提供持久化、缓存、消息、远程调用和第三方集成能力；`apex-infrastructure` 仅保留旧坐标兼容，不再承载实现源码 |
 | 共享契约 | `apex-api-contract`：跨服务内部 API 与 DTO，无具体业务实体 |
-| 服务父 POM | `apex-services-bom`：网关、六个业务服务、集成能力库、组合部署包及任务代理、脱敏服务的 parent |
+| 服务父 POM | `apex-services-bom`：聚合十个运行模块，保留其及 api-contract/integration/boot-all 三个例外的直接 parent 继承与原依赖管理 |
 | 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office`、`apex-integration`：`apex-integration` 含 connector（连接器/租户凭据/出站调用/入站 webhook）与 device（设备注册/影子/遥测/命令/规则）两个包结构隔离的子域 |
 | 运行模块 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-file-service`、`apex-office-service`、`apex-integration-service`、`apex-aggregation-service`（只读查询聚合，无 DB/迁移/事务，仅通过 WebClient 聚合 workflow 与 office 的内部接口） |
 | 组合部署 | `apex-boot-all`：basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 |
@@ -42,7 +64,7 @@ mvnd -T4 -B clean verify
 | 授权模块 | `apex-license-spring-boot-starter`、`apex-license-tools` |
 | 示例与工具 | `apex-example`、`apex-generator` |
 | 运维工具 | `apex-tools-deployment`：离线部署密钥/配置校验、TOTP 敏感字段迁移包生成与回滚、MySQL V42 结构恢复、文档链接校验与本地文档静态服务；仅由 `scripts/utils/`、`scripts/ci/check-doc-links.sh` 脚本与 Compose `security-key-check` 以 fat jar 调用，不参与服务运行期装配 |
-| 构建管理 | `apex-tools-build`：全部模块注册表 `build-manifest.yaml`（单一事实来源，`BuildManifestSyncTest` 校验其与根 POM modules、各模块打包插件/mainClass、release.sh SERVICES 一致）与编译/构建/打包/发布/镜像/部署统一编排入口 `bin/apex.sh`（只做编排，委托既有脚本与 mvnd 执行；部署覆盖 java -jar、Podman Compose、Docker Compose、K8s 四种运行时，K8s 为 fail-closed 编排）；不参与服务运行期装配，不进交付发布包 |
+| 构建管理 | `apex-tools-build`：全部模块注册表 `build-manifest.yaml`（单一事实来源，`BuildManifestSyncTest` 校验其与根 POM 递归 modules 集合（不含总根）、各模块打包插件/mainClass、release.sh SERVICES 一致）与编译/构建/打包/发布/镜像/部署统一编排入口 `bin/apex.sh`（只做编排，委托既有脚本与 mvnd 执行；部署覆盖 java -jar、Podman Compose、Docker Compose、K8s 四种运行时，K8s 为 fail-closed 编排）；不参与服务运行期装配，不进交付发布包 |
 
 ### 当前依赖
 
