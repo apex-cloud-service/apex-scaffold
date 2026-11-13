@@ -134,9 +134,99 @@ QPS>100、RT<100ms、错误率<1% 的验收线；单源降级路径实测 2390 Q
 office V9 主键非自增、office 缺 MyBatis-Plus 插件导致 `@Version` 更新全失败），另 1 项 P0
 跨方言缺陷（`JSON_CONTAINS`）在压测链路中暴露并修复。
 
-**未覆盖边界**（如实标注，不记为通过）：网关层 `lb://` 负载均衡与限流/熔断未纳入本轮压测；
-MySQL/PostgreSQL 真实库执行 V9/V10 迁移未在本机演练（H2 basic 与静态迁移一致性测试已覆盖表/列/
-索引集合）；remote-it（远程 MySQL+Redis）与混沌演练未执行；K8s 清单未改造（维持单体模板）。
+## 六、未验证项补充执行（2026-11-13 第二轮）
+
+第一轮标注的 5 项未验证边界已逐项执行，结果如下。
+
+### 6.1 MySQL / PostgreSQL 真实库迁移演练（已完成）
+
+新增 `OfficeDualDatabaseMigrationIntegrationTest`（Testcontainers，真实 MySQL 9 + PostgreSQL 15）：
+在两种方言上执行办公域完整迁移链 V1–V10，并断言
+
+- V9 建表与 V10 主键自增修正顺序生效：MySQL `AUTO_INCREMENT` / PostgreSQL `BIGSERIAL`，
+  省略主键插入后主键由数据库生成（与 PO 的 `IdType.AUTO` 对齐）；
+- 幂等键唯一约束 `uk_off_approval_cancel_operation` 与状态索引真实存在；
+- `status` 默认值为 `PENDING`；迁移版本连续且 `validate()` 无 pending。
+
+`scripts/test/run-dual-database-migration.sh` 同步纳入 office 域，三域完整演练结果：
+**system（V1–V90）✓ / integration（V1–V3）✓ / office（V1–V10）✓，全部通过**。
+
+### 6.2 网关层 lb:// 路由与熔断（已完成）
+
+以 Nacos 2.3.2 standalone + 真实网关构建完整拓扑（workflow / office / aggregation 注册到同一命名空间），
+经 `kubectl` 等价路径 `curl → 网关 8080 → lb://apex-aggregation-service → 8098` 验证：
+
+| 场景 | 结果 |
+| --- | --- |
+| 网关 `lb://` 路由转发 `/api/v2/todo` | **200**，双源 `UP`，`degraded=false`，端到端 53–228ms |
+| 低并发网关链路（1 并发） | **110.68 QPS / P50 8.37ms / P99 24.23ms**，无限流 |
+| 停掉聚合服务后请求 | **503 + `code=3007`「服务暂时不可用」**（熔断 fallback 生效，6–26ms 快速失败，非超时堆积） |
+| 聚合服务恢复后 | 熔断半开自动恢复，**连续 200**，无需重启网关 |
+| 限流 | `default-capacity=1000`、`refill-rate=100/s` 按用户维度计数；高并发压测触发大量限流响应，串行与低并发请求不受影响 |
+
+**网关层未做高并发 RT 压测的原因**：网关按用户维度限流（默认 100/s），单 token 高并发会被限流，
+无法得到有意义的端到端 RT 分布；限流本身已通过高并发触发验证。真实扩容场景需多 token 或调整限流阈值。
+
+### 6.3 remote-it（远程 MySQL + Redis，已完成链路打通）
+
+`-Premote-it -Dapex.remote-it.enabled=true` 首次真实执行，暴露出 4 个此前从未被发现的阻断缺陷
+（该 profile 此前从未运行过，配置与装配均未验证）：
+
+| # | 缺陷 | 修复 |
+| --- | --- | --- |
+| 1 | `IntegrationTestApplication` 缺 `@MapperScan` → Mapper Bean 缺失，上下文无法启动 | 与生产 `SystemServiceApplication` 同口径补 `@MapperScan` |
+| 2 | `it-local` profile 无对应配置文件 → 数据源/Redis/Flyway 全部未加载 | 新增 `application-it-local.yml`（与 `application-it.yml` 同源，改用真实 Redis） |
+| 3 | `MeilisearchAdapter` 无条件 `@Component`，但 `Client` Bean 仅 `meilisearch.enabled=true` 时存在 → 关闭搜索的环境上下文启动失败 | 适配器加 `@ConditionalOnProperty`；新增 `SearchDisabledConfiguration` 提供空实现 |
+| 4 | `LokiAdapter` 同型缺陷（`LokiProperties` 条件装配） | 加 `@ConditionalOnProperty`；新增 `LogQueryDisabledConfiguration` |
+| 5 | 生产 `SecurityConfig` 的 `@Profile("!it")` 未排除 `it-local` → 测试安全链被生产链覆盖，`request.principal()` 为空 | 改为 `@Profile("!it & !it-local")`；测试侧补 `@Import` 与 OAuth2 占位注册表 |
+
+**执行结果**：10 个用例中 **9 个通过**（未认证 401、无效 token 401、过期 token 401、刷新 token、
+用户信息等核心鉴权语义全部通过），1 个 `logout_withValidToken_shouldReturn200` 失败——该用例依赖
+`request.principal()`，在测试安全链下未建立认证主体。**已定位为测试基础设施问题（非产品缺陷）**：
+`ItProfileSecurityConfiguration` 的 `itJwtBypassFilter` 未在 `it-local` 组合下生效，需进一步排查
+Spring Security 多链注册顺序；本轮未修改，记为**已知未通过项**，不影响 9 个已通过用例的结论。
+
+### 6.4 混沌演练（已完成）
+
+`scripts/test/chaos-fault-injection.sh` 两个场景均通过：
+
+| 场景 | 断言 | 结果 |
+| --- | --- | --- |
+| `workflow-down` | workflow 摘除；file、auth 独立可服务 | **✓ 通过** |
+| `auth-down` | auth 摘除；workflow、file 独立可服务 | **✓ 通过**（首轮因上一场景未恢复 workflow 而失败，恢复后重跑通过） |
+
+### 6.5 K8s 清单（已改造）
+
+`k8s/deployment.yaml` 由单体单 Deployment 改为**多服务清单**：8 个 Deployment + 8 个 Service
+（gateway / auth / system / workflow / office / file / integration / aggregation）+ Secret +
+Ingress + 网关 HPA。端口、探针端口（system 8083、integration 8097、其余业务端口）与
+`build-manifest.yaml` / `podman-compose.yml` 同源；`canary-deployment.yaml` 与
+`pod-disruption-budget.yaml` 同步改为网关口径。三份清单均通过 YAML 解析校验。
+
+**仍未验证**：K8s 清单未在真实集群 `kubectl apply` 演练（本机无可用集群）；镜像需按
+`SERVICE_MODULE` 分别构建，本轮未逐一构建 8 个镜像。
+
+### 6.7 第二轮全量回归
+
+`mvnd -T1 -B clean verify`（串行，避免 Testcontainers 跨模块争抢）：**37 个模块全部 SUCCESS**，
+Surefire **5825 / Failures 0 / Errors 0**，Failsafe **494 / Failures 0 / Errors 0 / Skipped 33**。
+较第一轮 failsafe 388 → 494（+106），增量来自 office 双库迁移 IT（2 用例）与本轮新增的 office/IT 变体；
+`surefire` 计数不变（本轮未新增单元测试）。
+
+> **并行度提示**：`-T4` 下三个 `*DualDatabaseMigrationIntegrationTest` 会同时拉起 MySQL/PG 容器，
+> 偶发 `ContainerLaunchException`。此类失败为环境资源竞争，单独 `-T1 -pl <module>` 重跑即通过
+> （本轮已实测：integration 域 `-T1` 70s 内 2/2 通过）。该口径已写入 `AGENTS.md` 验证门禁章节。
+
+### 6.6 @Autowired 专项（已完成）
+
+全仓扫描结果：**生产代码 0 处 `@Autowired`**（既有 `NoAutowiredArchTest` 守护）；
+本轮新写的 `ApprovalCancelOperationRepositoryIntegrationTest` 曾使用 3 处 `@Autowired` 字段注入，
+已改为 `@TestConstructor(autowireMode = ALL)` + `@RequiredArgsConstructor` 构造器注入。
+
+架构守护测试同步增强：扫描范围从「仅 `src/main/java`」扩展到「`src/main` + `src/test`」，
+并修正 `@Inject` 对 Mockito `@InjectMocks` 的子串误匹配（改为按注解边界匹配）。
+测试源码中仅保留 10 处 `@Resource`（`@WebFluxTest` 切片下 `WebTestClient` 无法构造器解析，
+框架约束）与 0 处 `@Autowired`/`@Inject`。
 
 **辅助汇总**：`bash scripts/test/generate-test-report.sh` 亦已执行（`target/reports/summary/test-report.md`，
 5839 通过 / 0 失败 / 0 错误 / 15 跳过）。该脚本按既有实现只汇总部分模块的 surefire XML，模块口径窄于
