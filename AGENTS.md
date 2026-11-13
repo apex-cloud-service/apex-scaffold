@@ -249,6 +249,7 @@ git diff --check
 - `remote-it`、`stress-tests` 等额外场景按对应配置准备依赖，不能用其结果替代默认完整门禁。
 - 完整通过标准为反应堆全部模块 `BUILD SUCCESS`，测试 `Failures: 0 / Errors: 0`。
 - 推荐 `-T4`，不要使用过高并行度如 `-T1C`。真实 Redis/HTTPS 的计时敏感测试可能因负载超时；出现此类失败应分析日志，必要时重跑或降低并行度，不改弱业务 SLA 来掩盖问题。
+- `*DualDatabaseMigrationIntegrationTest`（system / integration / office 三域）以 Testcontainers 拉起真实 MySQL 9 + PostgreSQL 15，属于默认 Failsafe 门禁。`-T4` 下多个模块同时拉容器可能因资源竞争出现 `ContainerLaunchException`/连接超时；此类失败属环境问题，单独重跑该模块（`mvnd -T1 -pl <module> integration-test -Dit.test='*DualDatabaseMigrationIntegrationTest'`）或整体降为 `-T1` 复核，不得据单次并发失败判定迁移脚本缺陷。
 
 ### 已有架构检查的实际范围
 

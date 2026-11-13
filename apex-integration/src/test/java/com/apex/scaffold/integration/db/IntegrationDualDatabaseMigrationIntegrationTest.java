@@ -26,6 +26,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * @version 1.3.1
  * @since 1.3.1
  */
+@org.junit.jupiter.api.parallel.ResourceLock("dual-database-container")
 class IntegrationDualDatabaseMigrationIntegrationTest {
 
     /** 集成域业务表（全部要求 tenant_id NOT NULL）。 */

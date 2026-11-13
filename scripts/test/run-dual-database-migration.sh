@@ -8,11 +8,13 @@
 #   - system：V1–V90（含 V76 租户编码统一、V77 RBAC 租户化、V78 套餐、
 #             V79 租户配置、V80 自助菜单、V81–V84 权限种子、V87–V90 能力门禁）
 #   - integration：V1–V3（连接器/凭据/审计、IoT 设备、Seata undo_log）
+#   - office：V1–V10（办公平台/消息/组织/会议室/通知 + V9/V10 审批撤销编排与主键自增）
 #
 # 用法：
 #   bash scripts/test/run-dual-database-migration.sh            # 全部
 #   bash scripts/test/run-dual-database-migration.sh system     # 仅 system
 #   bash scripts/test/run-dual-database-migration.sh integration # 仅 integration
+#   bash scripts/test/run-dual-database-migration.sh office      # 仅 office
 #
 # 依赖：Docker（Testcontainers 自动拉起 MySQL 9 / PostgreSQL 15）、JDK 21、mvnd
 ###############################################################################
@@ -62,6 +64,10 @@ fi
 
 if [[ "$TARGET" == "all" || "$TARGET" == "integration" ]]; then
     run_suite "integration（V1-V3）" "apex-integration" "IntegrationDualDatabaseMigrationIntegrationTest"
+fi
+
+if [[ "$TARGET" == "all" || "$TARGET" == "office" ]]; then
+    run_suite "office（V1-V10，含 V9/V10 撤销编排）" "apex-office-service" "OfficeDualDatabaseMigrationIntegrationTest"
 fi
 
 if [[ $FAILED -ne 0 ]]; then

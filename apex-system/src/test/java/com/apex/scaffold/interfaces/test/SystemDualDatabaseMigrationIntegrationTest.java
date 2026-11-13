@@ -22,6 +22,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * @author Apex Team
  * @since 1.3.1
  */
+@org.junit.jupiter.api.parallel.ResourceLock("dual-database-container")
 class SystemDualDatabaseMigrationIntegrationTest {
 
     /**
