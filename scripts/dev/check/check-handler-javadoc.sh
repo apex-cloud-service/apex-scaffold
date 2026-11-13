@@ -89,18 +89,31 @@ check_handler_file() {
     local stripped
     stripped=$(strip_java_comments "$file")
 
-    # 1. 类级 JavaDoc：public class 前必须有 JavaDoc（/** ... */）
-    # 跳过注解行（@...）和空行后，检查紧邻的上一非空行是否以 */ 结尾
+    # 1. 类级 JavaDoc：public class 前必须有 JavaDoc（/** ... */）。
+    #    窗口判定与 scan-javadoc-issues.sh 的 doc_above 同口径：跳过注解行与独立行
+    #    注释、裸空行即停；声明与 javadoc 之间的独立行注释不得打断窗口（否则固定误报）。
     local missing_class_javadoc
     missing_class_javadoc=$(awk '
-        /^[[:space:]]*@/ { next }
-        /^[[:space:]]*$/ { next }
-        /^public (class|interface|enum|@interface)/ {
-            if (last !~ /\*\/[[:space:]]*$/) {
-                print FILENAME ":" NR
+        { raw[NR] = $0 }
+        END {
+            for (i = 1; i <= NR; i++) {
+                if (raw[i] !~ /^public (class|interface|enum|@interface)/) continue
+                found = 0
+                for (j = i - 1; j >= 1; j--) {
+                    if (raw[j] ~ /^[[:space:]]*\/\//) continue
+                    if (raw[j] ~ /^[[:space:]]*$/) break
+                    if (raw[j] ~ /^[[:space:]]*@[A-Za-z_]/) continue
+                    if (raw[j] ~ /^[[:space:]]*\*\/[[:space:]]*$/) {
+                        for (k = j; k >= 1; k--) {
+                            if (raw[k] ~ /^[[:space:]]*\/\*\*/) { found = 1; break }
+                            if (k < j && raw[k] !~ /^[[:space:]]*$/ && raw[k] !~ /^[[:space:]]*\*/) break
+                        }
+                    }
+                    break
+                }
+                if (!found) print FILENAME ":" i
             }
         }
-        { last = $0 }
     ' "$file")
     if [[ -n "$missing_class_javadoc" ]]; then
         printf '  %s 类级 JavaDoc 缺失\n' "$missing_class_javadoc"

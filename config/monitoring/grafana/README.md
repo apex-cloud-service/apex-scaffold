@@ -163,7 +163,8 @@ Prometheus 按服务拆分为独立 job：`apex-gateway`、`apex-auth-service`�
    14 项元素（12 个数据面板）。性能开销需结合实际采集量和浏览器性能评估。
 3. **权限管理**：生产环境务必修改 Grafana 默认口令并配置 SSO / 权限
 4. **管理端口安全**：各服务监控端点分别位于 gateway `8080`、auth `8081`、
-   system `8083`、workflow `8093`、office `8084`、file `8085`、integration `8097`；
+   system `8083`、workflow `8093`、office `8084`、file `8085`、integration `8097`、
+   aggregation `8098`；
    生产应仅在内网或受控网络暴露。
 5. **告警通道**：规则已定义且 Alertmanager 已编排，但占位 webhook 的真实触达未验证。
 

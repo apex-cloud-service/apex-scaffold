@@ -33,6 +33,7 @@ service_port() {
     workflow) echo 8093 ;;
     office)   echo 8084 ;;
     file)     echo 8085 ;;
+    aggregation) echo 8098 ;;
     *)        echo "" ;;
   esac
 }

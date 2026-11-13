@@ -237,7 +237,7 @@ if (( $(echo "$CLASS_COVERAGE < 90" | bc -l) )); then
     echo "📝 类级JavaDoc需要改进:"
     echo "   - 为所有public类添加类级注释"
     echo "   - 包含: 功能概述、主要功能列表、使用示例"
-    echo "   - 参考: docs/JAVADOC_GUIDE.md"
+    echo "   - 参考: docs/04-development/development-standards.md"
     echo ""
 fi
 
@@ -245,14 +245,14 @@ if (( $(echo "$METHOD_COVERAGE < 90" | bc -l) )); then
     echo "📝 方法级JavaDoc需要改进:"
     echo "   - 为所有public/protected方法添加注释"
     echo "   - 包含: @param, @return, @throws"
-    echo "   - 参考: docs/JAVADOC_GUIDE.md"
+    echo "   - 参考: docs/04-development/development-standards.md"
     echo ""
 fi
 
 echo "🔧 快速修复建议:"
 echo "   1. 使用IDE自动生成JavaDoc框架(Ctrl+Shift+D / ⌘⇧D)"
 echo "   2. 按优先级补充: Handler > Service > Repository > DTO"
-echo "   3. 使用模板: docs/JAVADOC_GUIDE.md 中的模板"
+echo "   3. 使用模板: docs/04-development/development-standards.md 的注释规范"
 echo ""
 
 # 6. 生成待办清单

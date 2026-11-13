@@ -125,6 +125,7 @@ case "${SERVICE_MODULE}" in
   apex-office-service) DEFAULT_SERVER_PORT=8084 ;;
   apex-file-service) DEFAULT_SERVER_PORT=8085 ;;
   apex-integration-service) DEFAULT_SERVER_PORT=8094 ;;
+  apex-aggregation-service) DEFAULT_SERVER_PORT=8098 ;;
   apex-job-service) DEFAULT_SERVER_PORT=8095 ;;
   apex-masking-service) DEFAULT_SERVER_PORT=8096 ;;
   *) DEFAULT_SERVER_PORT=8080 ;;

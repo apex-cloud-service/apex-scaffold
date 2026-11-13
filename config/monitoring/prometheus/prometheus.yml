@@ -21,7 +21,8 @@ alerting:
 
 scrape_configs:
   # 网关与六个业务服务：宿主机运行时按各自业务端口抓取；容器栈内改为服务名。
-  # system 的管理端口为 8083（业务 8082），integration 管理端口 8097（业务 8094）。
+  # system 的管理端口为 8083（业务 8082），integration 管理端口 8097（业务 8094），
+  # aggregation 无独立管理端口（业务 8098）。
   - job_name: apex-gateway
     metrics_path: /actuator/prometheus
     static_configs:
@@ -64,6 +65,12 @@ scrape_configs:
       - targets: ["host.containers.internal:8097"]
         labels: {application: apex-scaffold, module: integration-service}
 
+  - job_name: apex-aggregation-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.containers.internal:8098"]
+        labels: {application: apex-scaffold, module: aggregation-service}
+
   - job_name: apex-sentinel
     metrics_path: /metrics
     scrape_interval: 15s
@@ -90,6 +97,7 @@ scrape_configs:
           - "http://host.containers.internal:8084/actuator/health"
           - "http://host.containers.internal:8085/actuator/health"
           - "http://host.containers.internal:8097/actuator/health"
+          - "http://host.containers.internal:8098/actuator/health"
         labels:
           application: apex-scaffold
     relabel_configs:

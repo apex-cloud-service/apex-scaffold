@@ -173,7 +173,7 @@ health = jobs.get("apex-scaffold-health") or {}
 health_targets = []
 for static in health.get("static_configs", []):
     health_targets.extend(static.get("targets", []))
-expected_ports = {"8080", "8081", "8083", "8093", "8084", "8085", "8097"}
+expected_ports = {"8080", "8081", "8083", "8093", "8084", "8085", "8097", "8098"}
 health_ports = {
     re.search(r":(\d+)/actuator/health", str(target)).group(1)
     for target in health_targets

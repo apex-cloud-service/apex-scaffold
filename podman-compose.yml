@@ -189,6 +189,7 @@ services:
       ROUTE_JOB_URI: ${ROUTE_JOB_URI:-http://apex-job-service:8095}
       ROUTE_MASKING_URI: ${ROUTE_MASKING_URI:-http://apex-masking-service:8096}
       ROUTE_INTEGRATION_URI: ${ROUTE_INTEGRATION_URI:-http://apex-integration-service:8094}
+      ROUTE_AGGREGATION_URI: ${ROUTE_AGGREGATION_URI:-http://apex-aggregation-service:8098}
     depends_on:
       security-key-check:
         condition: service_completed_successfully
@@ -524,6 +525,52 @@ services:
       - apex-network
       - observability
 
+  # 查询聚合服务：只读跨源聚合（统一待办 GET /api/v2/todo），无数据库、无 Redis、无管理端口。
+  # 个人维度数据不缓存不合并；出站内部签名要求 APEX_INTERNAL_AUTH_SECRET 与下游一致。
+  apex-aggregation-service:
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-aggregation-service
+        SERVICE_PORT: "8098"
+        MANAGEMENT_PORT: "8098"
+        HEALTHCHECK_PORT: "8098"
+    image: apex-aggregation-service:${TAG:-latest}
+    volumes:
+      - ./logs/apex-aggregation-service:/app/logs
+    ports:
+      - "${AGGREGATION_PORT:-8098}:8098"
+    environment:
+      <<: *app-common-environment
+      AGGREGATION_JWT_PUBLIC_KEY_BASE64: ${AGGREGATION_JWT_PUBLIC_KEY_BASE64:-}
+      AGGREGATION_JWT_PUBLIC_KEYS_BASE64: ${AGGREGATION_JWT_PUBLIC_KEYS_BASE64:-}
+      AGGREGATION_JWT_SECRET: ${AGGREGATION_JWT_SECRET:-}
+      APEX_TODO_WORKFLOW_BASE_URL: ${APEX_TODO_WORKFLOW_BASE_URL:-http://apex-workflow-service:8093}
+      APEX_TODO_OFFICE_BASE_URL: ${APEX_TODO_OFFICE_BASE_URL:-http://apex-office-service:8084}
+      APEX_TODO_PAGE_SIZE: ${APEX_TODO_PAGE_SIZE:-10}
+      APEX_TODO_APPROVAL_LIMIT: ${APEX_TODO_APPROVAL_LIMIT:-10}
+      APEX_TODO_MESSAGE_LIMIT: ${APEX_TODO_MESSAGE_LIMIT:-10}
+      APEX_TODO_TIMEOUT_MILLIS: ${APEX_TODO_TIMEOUT_MILLIS:-3000}
+      APEX_TODO_DEFAULT_BULKHEAD: ${APEX_TODO_DEFAULT_BULKHEAD:-8}
+    depends_on:
+      security-key-check:
+        condition: service_completed_successfully
+      nacos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8098/actuator/health/readiness"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 60s
+    stop_grace_period: ${APEX_STOP_GRACE_PERIOD:-105s}
+    restart: unless-stopped
+    networks:
+      - apex-network
+      - observability
+
   # 任务代理无数据库和注册中心；403 探针只证明 HTTP 安全链存活，不证明上游就绪。
   apex-job-service:
     build:
@@ -597,7 +644,7 @@ services:
           create_host_path: false
       - xxl-job-logs:/data/applogs
     ports:
-      - "127.0.0.1:${XXL_ADMIN_PORT:-8098}:8080"
+      - "127.0.0.1:${XXL_ADMIN_PORT:-8099}:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/xxl-job-admin/actuator/health >/dev/null"]
       interval: 15s

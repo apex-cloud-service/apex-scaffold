@@ -44,7 +44,7 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 
 应用侧无需额外配置：各服务通过 `spring-boot-starter-actuator` 在各自管理端口暴露
 `/actuator/prometheus`，Prometheus 分别抓取网关（8080）、auth（8081）、system 管理端口（8083）、
-workflow（8093）、office（8084）、file（8085）与 integration 管理端口（8097）；容器栈内改用服务名。
+workflow（8093）、office（8084）、file（8085）、integration 管理端口（8097）与聚合服务（8098）；容器栈内改用服务名。
 链路采样数据由应用按 `trace.zipkin-url`（默认 `http://localhost:9411`）上报 Zipkin；Redis 健康探针
 （`redisson_healthy`）由应用侧 `RedissonMetricsBinder` 自动上报。
 
