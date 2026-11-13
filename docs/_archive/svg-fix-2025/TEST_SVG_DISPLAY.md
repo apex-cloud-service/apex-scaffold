@@ -1,36 +1,38 @@
 # SVG 图表显示测试
 
+> 归档件：链接已重定向至 `docs/diagrams/` 下的在役同号图表。
+
 本文件用于测试SVG图表在markdown中的显示效果。
 
 ---
 
 ## 14. 网络架构图
 
-![网络架构图](14_kubernetes_production_deployment.svg)
+![网络架构图](../../diagrams/14_kubernetes_production_deployment.svg)
 
 ---
 
 ## 15. 数据流转架构图
 
-![数据流转架构图](62_data_flow_consistency.svg)
+![数据流转架构图](../../diagrams/62_data_flow_consistency.svg)
 
 ---
 
 ## 16. RocketMQ消息队列架构图
 
-![消息队列架构图](61_message_queue_reliability.svg)
+![消息队列架构图](../../diagrams/61_message_queue_reliability.svg)
 
 ---
 
 ## 17. 监控体系架构图
 
-![监控体系架构图](24_prometheus_grafana_monitoring.svg)
+![监控体系架构图](../../diagrams/24_prometheus_grafana_monitoring.svg)
 
 ---
 
 ## 18. 微服务治理架构图
 
-![微服务治理架构图](18_spring_cloud_gateway.svg)
+![微服务治理架构图](../../diagrams/18_spring_cloud_gateway.svg)
 
 ---
 

@@ -1,0 +1,44 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+    subgraph CLIENT["管理后台前端"]
+        UI["个人工作台<br/>跨域待办视图"]
+    end
+
+    subgraph GW["API 网关 apex-gateway :8080"]
+        ROUTE["aggregation-domain 路由<br/>Path=/api/v2/todo<br/>ROUTE_AGGREGATION_URI（默认 lb://apex-aggregation-service）<br/>CircuitBreaker + fallback"]
+    end
+
+    subgraph AGG["只读查询聚合服务 apex-aggregation-service :8098（无数据库）"]
+        AUTH["IdentityRelayAuthenticationFilter<br/>自验 JWT · 不信任身份头"]
+        HANDLER["UnifiedTodoHandler<br/>GET /api/v2/todo"]
+        SERVICE["UnifiedTodoAggregationService<br/>个人维度不缓存 · 不合并并发请求"]
+        BH_W["workflow 舱壁<br/>Semaphore 4"]
+        BH_O["office 舱壁<br/>Semaphore 4"]
+        SIGN["InternalAuthExchangeFilter<br/>出站内部签名 X-Internal-Service / X-Internal-Tenant"]
+    end
+
+    subgraph WF["工作流服务 apex-workflow-service :8093"]
+        WFI["WorkflowInternalHandler<br/>GET /internal/v1/workflow/todo/tasks<br/>当前用户待办任务分页（上限 50）"]
+    end
+
+    subgraph OFFICE["办公服务 apex-office-service :8084"]
+        OFI["OfficeInternalHandler<br/>GET /internal/v1/office/todo<br/>待审批 + 未读站内信"]
+    end
+
+    UI -->|HTTPS| ROUTE
+    ROUTE -->|验签后转发| AUTH
+    AUTH --> HANDLER
+    HANDLER --> SERVICE
+    SERVICE --> BH_W
+    SERVICE --> BH_O
+    BH_W --> SIGN
+    BH_O --> SIGN
+    SIGN -->|"内部签名 + Authorization 透传"| WFI
+    SIGN -->|"内部签名 + Authorization 透传"| OFI
+
+    classDef gateway fill:#fef3c7,stroke:#d97706,color:#92400e
+    classDef aggregate fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+    classDef domain fill:#ecfdf5,stroke:#059669,color:#065f46
+    class ROUTE gateway
+    class AUTH,HANDLER,SERVICE,BH_W,BH_O,SIGN aggregate
+    class WFI,OFI domain

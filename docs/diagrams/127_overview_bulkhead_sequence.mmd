@@ -1,0 +1,27 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+sequenceDiagram
+    autonumber
+    participant Caller as 调用方（管理端 /api/v2/overview<br/>或内部 /internal/v1/overview）
+    participant Facade as OverviewFacadeService（system 进程内）
+    participant FILE as apex-file-service :8085
+    participant WF as apex-workflow-service :8093
+    participant INT as apex-integration-service :8094
+
+    Caller->>Facade: getOverview(tenantId, authorization)
+    Facade->>Facade: 命中租户短 TTL 缓存（默认 30s）直接返回<br/>未命中：按（租户，凭证）合并进行中的刷新
+
+    par file 源（舱壁 Semaphore）
+        Facade->>FILE: GET /internal/v1/file/stats?tenantId=…
+        FILE-->>Facade: 存储用量统计
+    and workflow 源
+        Facade->>WF: GET /internal/v1/workflow/stats
+        WF-->>Facade: 进行中实例数
+    and integration 源
+        Facade->>INT: GET /internal/v1/iot/devices/stats?tenantId=…
+        INT-->>Facade: 设备统计
+    end
+
+    Facade->>Facade: 组装 OverviewResponse<br/>任一源失败 → 该源 DEGRADED + degraded=true<br/>仅全源 UP 的结果写入租户缓存
+    Facade-->>Caller: 部分可用响应
+
+    note over Facade: 舱壁饱和（JDK Semaphore）该源立即降级不排队，<br/>许可随订阅终止释放；降级结果不进租户缓存

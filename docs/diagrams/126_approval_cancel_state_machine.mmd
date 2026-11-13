@@ -1,0 +1,16 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+stateDiagram-v2
+    direction TB
+    [*] --> PENDING: DELETE /api/office/approvals/{id}<br/>创建编排记录（幂等键租户内唯一）
+    PENDING --> REMOTE_CANCELLED: 远端平台撤销成功<br/>本地流程状态尚未落库
+    PENDING --> FAILED: 远端撤销失败
+    REMOTE_CANCELLED --> COMPLETED: 补偿事务（同一同步事务）<br/>流程置 CANCELLED + 编记录 COMPLETED<br/>乐观锁冲突 → 回滚由调用方重试
+    FAILED --> PENDING: 重试（markPending，幂等键不变）
+    COMPLETED --> [*]: 重放直接返回成功
+    REMOTE_CANCELLED --> REMOTE_CANCELLED: 重复请求重放<br/>isReplayableAsSuccess=true
+
+    note right of REMOTE_CANCELLED
+        落库表 off_approval_cancel_operation（V9/V10）
+        幂等键 (tenant_id, idempotency_key, deleted) 唯一
+        error_message 保留审计线索，成功后不清理
+    end note

@@ -8,6 +8,7 @@ erDiagram
     OFF_MESSAGE ||--o{ OFF_MESSAGE_RECIPIENT : "message_id"
     OFF_MESSAGE ||--o{ OFF_MESSAGE_DELIVERY : "message_id"
     OFF_NOTIFY_TEMPLATE ||--o{ OFF_NOTIFY_REQUEST : "template_code"
+    OFFICE_APPROVAL_PROCESS ||--o{ OFF_APPROVAL_CANCEL_OPERATION : "process_instance_id 撤销编排"
 
     OFFICE_PLATFORM_APP {
         bigint id PK "主键"
@@ -191,6 +192,19 @@ erDiagram
         varchar initiator_id "发起人"
         varchar status "状态"
         text form_data "表单数据"
+    }
+
+    OFF_APPROVAL_CANCEL_OPERATION {
+        bigint id PK "主键（自增）"
+        bigint tenant_id "租户"
+        varchar process_instance_id "流程实例ID"
+        varchar idempotency_key UK "幂等键（租户内唯一）"
+        varchar status "PENDING/REMOTE_CANCELLED/COMPLETED/FAILED"
+        varchar error_message "最近失败原因"
+        datetime create_time "创建时间"
+        datetime update_time "更新时间"
+        tinyint deleted "逻辑删除"
+        int version "乐观锁"
     }
 
     OFFICE_CALENDAR_EVENT {

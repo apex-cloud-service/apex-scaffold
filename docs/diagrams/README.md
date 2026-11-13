@@ -146,7 +146,7 @@
 | 类型 | 载体 | 编辑方式 | 覆盖范围 |
 | --- | --- | --- | --- |
 | 手写设计稿 | `.svg`（1400×N 画布，自定义 CSS 类） | 直接编辑 SVG 文本 | 01–92 等历史设计稿，无 `.mmd` 源 |
-| Mermaid 双源 | `.mmd` 源 + `.svg` 渲染产物 | 先改 `.mmd`，再重新渲染 SVG | 93–123（UML/ER/模块结构/流程），`sequence/` 下 30–95 |
+| Mermaid 双源 | `.mmd` 源 + `.svg` 渲染产物 | 先改 `.mmd`，再重新渲染 SVG | 93–127（UML/ER/模块结构/流程/聚合与撤销），`sequence/` 下 30–95 |
 
 **重渲染命令**（需 mermaid-cli）：
 
@@ -192,6 +192,10 @@ bun x @mermaid-js/mermaid-cli -i docs/diagrams/107_uml_auth_center_domain.mmd \
 | 97–106 | `97–106_module_*.mmd` | 共享/业务模块结构图 | common/domain/infrastructure/application/interfaces/auth/workflow/example/generator/license | DDD 四层包结构 flowchart |
 | 122 | `122_module_file_structure.mmd` | **apex-file 模块结构图（新增）** | file | interfaces→application→domain→infrastructure 四层 + 五后端存储策略 |
 | 123 | `123_module_system_structure.mmd` | **apex-system 模块结构图（新增）** | system | 四层 + office/governance/monitor/security 子包 + 45 实体域模型 |
+| 124 | `124_aggregation_todo_architecture.mmd` | **查询聚合服务与统一待办架构图（新增）** | aggregation | 网关路由 / 自验 JWT / 舱壁 / 内部签名调用 workflow 与 office 待办端点 |
+| 125 | `125_unified_todo_sequence.mmd` | **统一待办查询时序图（新增）** | aggregation | /api/v2/todo 双源并行聚合、单源降级、不缓存不合并语义 |
+| 126 | `126_approval_cancel_state_machine.mmd` | **审批撤销幂等编排状态机（新增）** | office | PENDING/REMOTE_CANCELLED/COMPLETED/FAILED + 补偿重放（V9/V10 编排表） |
+| 127 | `127_overview_bulkhead_sequence.mmd` | **概览聚合舱壁时序图（新增）** | system | 概览门面三源并行、短 TTL 缓存、请求合并与舱壁降级 |
 
 #### 配色规范
 
@@ -207,7 +211,7 @@ bun x @mermaid-js/mermaid-cli -i docs/diagrams/107_uml_auth_center_domain.mmd \
 
 #### 校验状态
 
-- **XML 合法性**：`docs/diagrams/` 下 124 个 `.svg` 全部通过 XML 解析校验（2026-10-28）。本轮修复了 4 个既存缺陷：`70`/`71`/`72` 中未转义的 `<`、`>`、`&`，以及 `86` 中错位的属性引号（`height">150"` → `height="150"`）。
+- **XML 合法性**：`docs/diagrams/` 下 124 个 `.svg` 全部通过 XML 解析校验（2026-10-28；2026-11-13 新增 124–127 并重渲染 114）。本轮修复了 4 个既存缺陷：`70`/`71`/`72` 中未转义的 `<`、`>`、`&`，以及 `86` 中错位的属性引号（`height">150"` → `height="150"`）。
 - **内容一致性**：全量扫描确认无 `Java 17`、退役模块名（`apex-interfaces`/`apex-application`/`apex-auth-center`）、`MySQL 8.0`、`Spring Boot 3.5.13`、旧统计数字（32 Handler/34 Service/47 Repository）残留。
 - **统计基准**：Handler 86、Service 159、Router 50、Repository 90、domain 实体 73、Maven 模块 31、唯一表 117（按源码与迁移脚本实测）。
 - **SVG 渲染**：`docs/diagrams/` 与 `sequence/` 下 `.mmd` 均经 mermaid-cli 验证语法有效；本轮新渲染 110b、119、120、121、122、123 六张 SVG。

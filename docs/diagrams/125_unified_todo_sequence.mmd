@@ -1,0 +1,27 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+sequenceDiagram
+    autonumber
+    actor User as 用户（管理后台工作台）
+    participant GW as 网关 apex-gateway
+    participant AGG as apex-aggregation-service :8098
+    participant WF as apex-workflow-service :8093
+    participant OF as apex-office-service :8084
+
+    User->>GW: GET /api/v2/todo（Bearer JWT）
+    GW->>GW: JWT 验签 · 注入 X-User-Id/X-Tenant-Id
+    GW->>AGG: 转发 /api/v2/todo（Authorization 透传）
+    AGG->>AGG: IdentityRelayAuthenticationFilter 自验 JWT<br/>建立认证上下文 + 可信租户
+
+    par workflow 源（舱壁 4）
+        AGG->>WF: GET /internal/v1/workflow/todo/tasks 内部签名
+        WF-->>AGG: 分页待办条目 Result 响应
+    and office 源（舱壁 4）
+        AGG->>OF: GET /internal/v1/office/todo 内部签名
+        OF-->>AGG: 待审批与未读站内信 Result 响应
+    end
+
+    AGG->>AGG: 合并两源条目（来源标识 + 总数相加）<br/>任一源失败 → 该源 DEGRADED + 错误摘要<br/>不缓存 · 不合并并发请求（个人数据）
+    AGG-->>GW: Result UnifiedTodoResponse（degraded 标记）
+    GW-->>User: 200 部分可用（单源降级不整体失败）
+
+    note over AGG,OF: 出站签名经 apex.internal-auth.callers 白名单校验：<br/>apex-aggregation-service → /internal/v1/workflow/todo/** 与 /internal/v1/office/todo
