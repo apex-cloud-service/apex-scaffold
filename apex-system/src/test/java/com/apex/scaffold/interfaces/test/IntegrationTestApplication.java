@@ -20,7 +20,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * <ul>
  *   <li>扫描 {@code com.apex.scaffold}，排除 {@code auth} / {@code authservice} 包；</li>
  *   <li>{@code @ConfigurationPropertiesScan} 覆盖 {@code com.apex.scaffold}；</li>
- *   <li>启用异步执行与 Nacos 服务发现（测试 profile 下服务发现被禁用）。</li>
+ *   <li>启用异步执行与 Nacos 服务发现（测试 profile 下服务发现被禁用）；</li>
+ *   <li>{@code @MapperScan} 与生产启动类 {@code SystemServiceApplication} 同口径，
+ *       否则 Mapper Bean 缺失会导致 remote-it 上下文装配失败。</li>
  * </ul>
  *
  * @author Apex Team
@@ -35,6 +37,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
             @ComponentScan.Filter(type = FilterType.REGEX, pattern = "com\\.apex\\.scaffold\\.authservice\\..*")
         })
 @ConfigurationPropertiesScan(basePackages = "com.apex.scaffold")
+@org.mybatis.spring.annotation.MapperScan(
+        basePackages = {"com.apex.scaffold.infrastructure.persistence", "com.apex.scaffold.infrastructure.outbox"},
+        annotationClass = org.apache.ibatis.annotations.Mapper.class)
 @EnableAsync
 @EnableDiscoveryClient
 public class IntegrationTestApplication {

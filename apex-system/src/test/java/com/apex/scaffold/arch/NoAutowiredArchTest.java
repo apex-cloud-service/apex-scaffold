@@ -29,9 +29,12 @@ import org.junit.jupiter.api.Test;
  *   <li>命中 {@code @Autowired}（含全限定名写法 {@code @org.springframework.beans.factory.annotation.Autowired}）。</li>
  *   <li>命中作为字段/方法注入使用的 {@code @Resource} 与 {@code @Inject}。</li>
  *   <li>注释与字符串字面量在匹配前剥离，避免 Javadoc 中说明性文字造成误报。</li>
- *   <li>{@code src/test/java} 不在扫描范围：{@code @WebFluxTest} 下的 {@code WebTestClient}
- *       无法构造器解析，测试代码允许 {@code @Resource}；Mockito 的 {@code @InjectMocks}
- *       不属于 Spring 注入。</li>
+ *   <li>生产源码（{@code src/main/java}）与测试源码（{@code src/test/java}）分别扫描：</li>
+ *   <li>两段范围均禁止 {@code @Autowired}（含全限定名）。</li>
+ *   <li>测试源码额外禁止 {@code @Inject}；{@code @Resource} 仅允许出现在
+ *       {@code @WebFluxTest} 切片测试的 {@code WebTestClient} 字段——该上下文无法
+ *       构造器解析该 Bean，属框架约束而非代码选择。其余 {@code @Resource} 按违规处理。</li>
+ *   <li>Mockito 的 {@code @InjectMocks} 不属于 Spring 注入，不参与匹配。</li>
  * </ul>
  *
  * @author Apex Team
@@ -40,12 +43,20 @@ import org.junit.jupiter.api.Test;
  */
 class NoAutowiredArchTest {
 
-    /** 源码相对路径。 */
+    /** 生产源码相对路径。 */
     private static final String SRC_MAIN_JAVA = "src/main/java";
 
-    /** 禁止出现的注入注解（匹配 {@code @注解名}，允许全限定名前缀）。 */
-    private static final String[] FORBIDDEN_ANNOTATIONS = {
+    /** 测试源码相对路径。 */
+    private static final String SRC_TEST_JAVA = "src/test/java";
+
+    /** 生产源码禁止出现的注入注解（匹配 {@code @注解名}，允许全限定名前缀）。 */
+    private static final String[] FORBIDDEN_IN_MAIN = {
         "@Autowired", "@Resource", "@Inject", "@org.springframework.beans.factory.annotation.Autowired"
+    };
+
+    /** 测试源码禁止出现的注入注解：{@code @Resource} 另行按白名单场景判定。 */
+    private static final String[] FORBIDDEN_IN_TEST = {
+        "@Autowired", "@Inject", "@org.springframework.beans.factory.annotation.Autowired"
     };
 
     /**
@@ -54,15 +65,47 @@ class NoAutowiredArchTest {
      * @throws IOException 遍历源码目录失败时直接失败，避免守护静默跳过
      */
     @Test
-    @DisplayName("生产代码不得使用 @Autowired / @Resource / @Inject 字段注入")
-    void noFieldInjectionInProductionSources() throws IOException {
+    @DisplayName("生产与测试代码均不得使用 @Autowired（测试额外禁 @Inject）")
+    void noFieldInjectionAcrossSources() throws IOException {
+        Path repoRoot = locateRepoRoot();
+        List<String> moduleDirs = listModuleDirs(repoRoot);
+        assertTrue(moduleDirs.size() > 20, "模块目录数量异常，重新检查扫描范围");
+
+        List<Violation> violations = new ArrayList<>();
+        int scannedMainModules = 0;
+        int scannedTestModules = 0;
+        for (String module : moduleDirs) {
+            Path mainSrc = repoRoot.resolve(module).resolve(SRC_MAIN_JAVA);
+            if (Files.isDirectory(mainSrc)) {
+                scannedMainModules++;
+                scanDirectory(mainSrc, repoRoot, FORBIDDEN_IN_MAIN, violations);
+            }
+            Path testSrc = repoRoot.resolve(module).resolve(SRC_TEST_JAVA);
+            if (Files.isDirectory(testSrc)) {
+                scannedTestModules++;
+                scanTestDirectory(testSrc, repoRoot, violations);
+            }
+        }
+        assertTrue(scannedMainModules > 15, "生产源码实际扫描模块数少于预期，守护范围可能失效");
+        assertTrue(scannedTestModules > 15, "测试源码实际扫描模块数少于预期，守护范围可能失效");
+
+        assertTrue(violations.isEmpty(), () -> buildViolationMessage(violations));
+        assertEquals(0, violations.size(), "违规计数应为 0");
+    }
+
+    /** 定位仓库根目录（含 apex-common 目录）。 */
+    private static Path locateRepoRoot() {
         Path repoRoot =
                 Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
         while (repoRoot != null && !Files.isDirectory(repoRoot.resolve("apex-common"))) {
             repoRoot = repoRoot.getParent();
         }
         assertTrue(repoRoot != null, "必须定位到仓库根目录，防止源码守护静默跳过");
+        return repoRoot;
+    }
 
+    /** 列出仓库根下的模块目录（apex-* 前缀）。 */
+    private static List<String> listModuleDirs(Path repoRoot) throws IOException {
         List<String> moduleDirs = new ArrayList<>();
         try (Stream<Path> entries = Files.list(repoRoot)) {
             entries.filter(Files::isDirectory)
@@ -71,22 +114,88 @@ class NoAutowiredArchTest {
                     .sorted()
                     .forEach(moduleDirs::add);
         }
-        assertTrue(moduleDirs.size() > 20, "模块目录数量异常，重新检查扫描范围");
+        return moduleDirs;
+    }
 
-        List<Violation> violations = new ArrayList<>();
-        int scannedModules = 0;
-        for (String module : moduleDirs) {
-            Path moduleSrc = repoRoot.resolve(module).resolve(SRC_MAIN_JAVA);
-            if (!Files.isDirectory(moduleSrc)) {
+    /**
+     * 扫描测试源码目录：禁用 {@code @Autowired}/{@code @Inject}；{@code @Resource} 仅当
+     * 所在文件属于 {@code @WebFluxTest} 切片且用于 {@code WebTestClient} 字段时豁免。
+     */
+    private static void scanTestDirectory(Path testSrc, Path repoRoot, List<Violation> violations) throws IOException {
+        Files.walkFileTree(testSrc, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (!file.toString().endsWith(".java")) {
+                    return FileVisitResult.CONTINUE;
+                }
+                String content = Files.readString(file);
+                String stripped = stripCommentsAndStrings(content);
+                boolean webFluxSlice = stripped.contains("@WebFluxTest");
+                String[] lines = stripped.split("\\R", -1);
+                String relativePath = repoRoot.relativize(file).toString();
+                for (int i = 0; i < lines.length; i++) {
+                    String line = stripLineComment(lines[i]);
+                    for (String annotation : FORBIDDEN_IN_TEST) {
+                        if (matchesAnnotation(line, annotation)) {
+                            violations.add(new Violation(relativePath, i + 1, line.trim(), annotation));
+                            break;
+                        }
+                    }
+                    if (line.contains("@Resource") && !isAllowedResourceField(webFluxSlice, lines, i)) {
+                        violations.add(new Violation(relativePath, i + 1, line.trim(), "@Resource"));
+                    }
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exc) {
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    /**
+     * 按注解边界精确匹配：命中文本之后不得紧跟标识符字符。
+     *
+     * <p>避免 {@code @Inject} 误匹配 Mockito 的 {@code @InjectMocks}（二者语义无关），
+     * 也避免 {@code @Autowired} 误匹配自定义的 {@code @AutowiredCandidate} 之类命名。
+     *
+     * @param line       待匹配代码行
+     * @param annotation 注解文本（含 {@code @}）
+     * @return 命中时为 true
+     */
+    private static boolean matchesAnnotation(String line, String annotation) {
+        int from = 0;
+        while (true) {
+            int idx = line.indexOf(annotation, from);
+            if (idx < 0) {
+                return false;
+            }
+            int after = idx + annotation.length();
+            if (after >= line.length() || !Character.isJavaIdentifierPart(line.charAt(after))) {
+                return true;
+            }
+            from = after;
+        }
+    }
+
+    /**
+     * 判定 {@code @Resource} 是否属于允许的切片场景：文件为 {@code @WebFluxTest} 且
+     * 紧随其后的字段声明为 {@code WebTestClient}。
+     */
+    private static boolean isAllowedResourceField(boolean webFluxSlice, String[] lines, int annotationIndex) {
+        if (!webFluxSlice) {
+            return false;
+        }
+        for (int j = annotationIndex + 1; j < Math.min(annotationIndex + 4, lines.length); j++) {
+            String next = stripLineComment(lines[j]).trim();
+            if (next.isEmpty() || next.startsWith("@")) {
                 continue;
             }
-            scannedModules++;
-            scanDirectory(moduleSrc, repoRoot, violations);
+            return next.contains("WebTestClient");
         }
-        assertTrue(scannedModules > 15, "实际扫描的模块数少于预期，守护范围可能失效");
-
-        assertTrue(violations.isEmpty(), () -> buildViolationMessage(violations));
-        assertEquals(0, violations.size(), "违规计数应为 0");
+        return false;
     }
 
     /**
@@ -97,12 +206,13 @@ class NoAutowiredArchTest {
      * @param violations 违规收集器
      * @throws IOException 遍历失败时抛出
      */
-    private static void scanDirectory(Path srcDir, Path repoRoot, List<Violation> violations) throws IOException {
+    private static void scanDirectory(Path srcDir, Path repoRoot, String[] forbidden, List<Violation> violations)
+            throws IOException {
         Files.walkFileTree(srcDir, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
                 if (file.toString().endsWith(".java")) {
-                    scanJavaFile(file, repoRoot, violations);
+                    scanJavaFile(file, repoRoot, forbidden, violations);
                 }
                 return FileVisitResult.CONTINUE;
             }
@@ -121,7 +231,7 @@ class NoAutowiredArchTest {
      * @param repoRoot   仓库根目录
      * @param violations 违规收集器
      */
-    private static void scanJavaFile(Path file, Path repoRoot, List<Violation> violations) {
+    private static void scanJavaFile(Path file, Path repoRoot, String[] forbidden, List<Violation> violations) {
         try {
             String content = Files.readString(file);
             String stripped = stripCommentsAndStrings(content);
@@ -129,8 +239,8 @@ class NoAutowiredArchTest {
             String relativePath = repoRoot.relativize(file).toString();
             for (int i = 0; i < lines.length; i++) {
                 String line = stripLineComment(lines[i]);
-                for (String annotation : FORBIDDEN_ANNOTATIONS) {
-                    if (line.contains(annotation)) {
+                for (String annotation : forbidden) {
+                    if (matchesAnnotation(line, annotation)) {
                         violations.add(new Violation(relativePath, i + 1, line.trim(), annotation));
                         break;
                     }

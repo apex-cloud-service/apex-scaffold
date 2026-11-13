@@ -16,13 +16,14 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestConstructor;
 import reactor.test.StepVerifier;
 
 /**
@@ -53,6 +54,8 @@ import reactor.test.StepVerifier;
             "spring.autoconfigure.exclude=org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration"
         })
 @ActiveProfiles("basic")
+@TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
+@RequiredArgsConstructor
 @DisplayName("审批撤销编排状态仓储集成测试")
 class ApprovalCancelOperationRepositoryIntegrationTest {
 
@@ -61,14 +64,11 @@ class ApprovalCancelOperationRepositoryIntegrationTest {
 
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
-    @Autowired
-    private ApprovalCancelOperationRepository repository;
+    private final ApprovalCancelOperationRepository repository;
 
-    @Autowired
-    private ApprovalProcessMapper approvalProcessMapper;
+    private final ApprovalProcessMapper approvalProcessMapper;
 
-    @Autowired
-    private ApprovalCancelOperationMapper operationMapper;
+    private final ApprovalCancelOperationMapper operationMapper;
 
     @AfterEach
     void cleanUp() {

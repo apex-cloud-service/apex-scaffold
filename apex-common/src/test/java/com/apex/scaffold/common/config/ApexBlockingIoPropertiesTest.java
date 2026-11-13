@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import jakarta.annotation.Resource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -64,10 +64,19 @@ class ApexBlockingIoPropertiesTest {
 
         /**
          * 被测试的配置属性对象。{@code @Nested} 内部类的构造器首参为外部类实例，
-         * 无法通过构造器注入 Spring Bean，故采用 JSR-250 {@code @Resource} 字段注入。
+         * 无法通过构造器注入 Spring Bean；此处以测试方法参数接收 {@link ApplicationContext}
+         * 后显式获取，不使用任何字段注入注解。
          */
-        @Resource
         private ApexBlockingIoProperties properties;
+
+        /**
+         * 从测试上下文解析被测配置属性（每个测试方法调用一次）。
+         *
+         * @param context Spring 测试上下文
+         */
+        private void resolveProperties(ApplicationContext context) {
+            this.properties = context.getBean(ApexBlockingIoProperties.class);
+        }
 
         /**
          * 验证六大专用池的默认参数与 application.yml 基线完全对齐。
@@ -90,8 +99,9 @@ class ApexBlockingIoPropertiesTest {
          */
         @Test
         @DisplayName("默认值应与 application.yml 基线对齐")
-        void defaultValuesShouldMatchBaseline() {
-            assertNotNull(properties, "ApexBlockingIoProperties 应被 Spring 注入");
+        void defaultValuesShouldMatchBaseline(ApplicationContext context) {
+            resolveProperties(context);
+            assertNotNull(properties, "ApexBlockingIoProperties 应能从测试上下文解析");
 
             ApexBlockingIoProperties.PoolConfig jdbc = properties.getJdbc();
             assertEquals(32, jdbc.getThreads(), "jdbc.threads 默认值应为 32");
@@ -149,9 +159,9 @@ class ApexBlockingIoPropertiesTest {
 
         /**
          * 被测试的配置属性对象。{@code @Nested} 内部类的构造器首参为外部类实例，
-         * 无法通过构造器注入 Spring Bean，故采用 JSR-250 {@code @Resource} 字段注入。
+         * 无法通过构造器注入 Spring Bean；此处以测试方法参数接收 {@link ApplicationContext}
+         * 后显式获取，不使用任何字段注入注解。
          */
-        @Resource
         private ApexBlockingIoProperties properties;
 
         /**
@@ -165,8 +175,9 @@ class ApexBlockingIoPropertiesTest {
          */
         @Test
         @DisplayName("自定义属性应通过属性源正确覆盖默认值")
-        void customValuesShouldOverrideViaProperty() {
-            assertNotNull(properties, "ApexBlockingIoProperties 应被 Spring 注入");
+        void customValuesShouldOverrideViaProperty(ApplicationContext context) {
+            this.properties = context.getBean(ApexBlockingIoProperties.class);
+            assertNotNull(properties, "ApexBlockingIoProperties 应能从测试上下文解析");
 
             ApexBlockingIoProperties.PoolConfig jdbc = properties.getJdbc();
             assertEquals(64, jdbc.getThreads(), "jdbc.threads 应被覆盖为 64");

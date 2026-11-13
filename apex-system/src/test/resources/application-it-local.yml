@@ -1,0 +1,446 @@
+# ============================================================================
+# Apex Service — 本地外部依赖集成测试（it-local）Profile 配置文件
+# ============================================================================
+# 适用场景：-P remote-it + -Dapex.remote-it.enabled=true 的远程 IT。
+# 与 application-it.yml 的区别：
+#   1. it 使用嵌入式 Redis 替身（ItProfileMockRedisConfiguration）与本地 MySQL；
+#   2. it-local 要求真实 MySQL 与真实 Redis 均可达（默认 127.0.0.1:3306/6379），
+#      用于验证真实缓存/数据库语义；连接信息经 DB_MASTER_* / embedded.redis.* 覆盖。
+# 本文件内容与 application-it.yml 保持同源（数据源、Flyway、安全与日志口径一致），
+# 仅 profile 激活名不同；修改其一时必须同步另一份，避免两个 IT 基类行为漂移。
+# ============================================================================
+
+spring:
+  # --------------------------------------------------------------------------
+  # 配置加密密钥（it-local 走真实组件装配，ConfigEncryptionService 要求 32 字节）
+  # --------------------------------------------------------------------------
+  security:
+    config:
+      encryption:
+        key: 01234567890123456789012345678901
+    # it-local 不启动 Keycloak：OAuth2 客户端注册由 autoconfigure.exclude 排除
+    # （见下方 OAuth2ClientAutoConfiguration），此处不再声明 keycloak registration。
+  # --------------------------------------------------------------------------
+  # 控制台输出
+  # --------------------------------------------------------------------------
+  output:
+    ansi:
+      # 始终启用 ANSI 彩色输出，便于开发者在命令行中阅读测试日志
+      enabled: always
+
+  # ==========================================================================
+  # 数据源配置 — MySQL（与 prod 同构：dynamic-datasource + Druid）
+  # ==========================================================================
+  # 集成测试使用真实 MySQL（默认 127.0.0.1:3306/apex_test，与 prod 结构一致），
+  # 理由：
+  #   1. Flyway 迁移脚本（db/migration，MySQL 版当前 V1-V19）在测试环境真实执行，
+  #      保证「各环境 Flyway 均可用」且 schema 与生产完全一致
+  #   2. 表结构与生产零差异，规避内存数据库兼容性造成的假阳性/漏检
+  #   3. 每次启动经 Flyway migrate + data-it.sql 幂等重置，保证测试确定性
+  # 前提：本地 MySQL 可达（如 podman run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=apex-root
+  #       -e MYSQL_DATABASE=apex_test docker.io/library/mysql:9.0），连接信息可经环境变量覆盖。
+  # --------------------------------------------------------------------------
+  datasource:
+    dynamic:
+      # 主数据源名称，与生产配置保持一致
+      primary: master
+      # 关闭严格模式：允许未显式声明的数据源
+      strict: false
+      # 关闭 P6Spy SQL 日志代理 — 集成测试通过 logging.level 控制 SQL 日志
+      p6spy: false
+      datasource:
+        master:
+          # 测试库 JDBC URL；默认本机 MySQL（apex_test 库）
+          url: ${DB_MASTER_URL:jdbc:mysql://127.0.0.1:3306/apex_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_MASTER_USERNAME:root}
+          password: ${DB_MASTER_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 prod 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            # 集成测试并发量低，连接池适当缩小
+            initial-size: 2
+            min-idle: 1
+            max-active: ${DB_MAX_ACTIVE:10}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+        # 从库（配置与 master 完全一致，仅环境变量前缀 DB_SLAVE_*）
+        # ✅ 集成测试默认指向同一 MySQL 实例（apex_test 库），无需额外部署；
+        #    用于验证 @DataSource("slave") 动态切换链路（Druid 池参数与 master 一致）。
+        slave:
+          # 测试从库 JDBC URL；默认本机 MySQL（apex_test 库），可经 DB_SLAVE_URL 覆盖
+          url: ${DB_SLAVE_URL:jdbc:mysql://127.0.0.1:3306/apex_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+          # 数据库凭据；默认本机 root/apex-root，可经环境变量覆盖
+          username: ${DB_SLAVE_USERNAME:root}
+          password: ${DB_SLAVE_PASSWORD:apex-root}
+          # MySQL 驱动与连接池（与 master 一致：Alibaba Druid）
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          type: com.alibaba.druid.pool.DruidDataSource
+          druid:
+            db-type: mysql
+            # 与 master 一致：集成测试并发量低，连接池适当缩小
+            initial-size: 2
+            min-idle: 1
+            max-active: ${DB_MAX_ACTIVE:10}
+            max-wait: 3000
+            validation-query: SELECT 1 FROM DUAL
+            test-while-idle: true
+
+  # ==========================================================================
+  # Redis 配置 — 嵌入式 Redis（替代外部 Redis 服务）
+  # ==========================================================================
+  # 集成测试使用嵌入式 Redis（通过 embedded-redis 库或 ItProfileMockRedisConfiguration
+  # 提供的 Mock 连接工厂），避免依赖外部 Redis 实例。
+  # 注意：虽然此处配置了连接信息，但 spring.autoconfigure.exclude 中已排除
+  # RedisAutoConfiguration 和 RedissonAutoConfigurationV2，真实 Redis 不会启动。
+  # 此处配置仅为满足某些 Bean 的条件注入校验，实际 Redis 行为由测试专用 Mock 提供。
+  # --------------------------------------------------------------------------
+  data:
+    redis:
+      # 嵌入式 Redis 主机地址，支持环境变量覆盖以适配特殊 CI 环境
+      host: ${embedded.redis.host:127.0.0.1}
+      # 嵌入式 Redis 端口，支持环境变量覆盖以规避端口冲突
+      port: ${embedded.redis.port:6379}
+      # 无密码认证
+      password: ''
+      lettuce:
+        pool:
+          # 连接池参数与生产配置保持一致，但数值适当缩小
+          max-active: 16    # 最大活跃连接数
+          max-idle: 8       # 最大空闲连接数
+          min-idle: 2       # 最小空闲连接数
+          max-wait: 2s      # 获取连接最大等待时间
+
+  # ==========================================================================
+  # 服务发现与配置中心 — 测试环境全部禁用
+  # ==========================================================================
+  # 集成测试运行在本地 CI 环境中，不应连接外部基础设施：
+  #   - Nacos 禁用：避免向注册中心注册测试实例，也无需拉取远程配置
+  #   - Sentinel 禁用：无需流量控制和熔断，测试应直接验证业务逻辑
+  # --------------------------------------------------------------------------
+  cloud:
+    nacos:
+      discovery:
+        # 禁用服务注册与发现 — 测试无需向 Nacos 注册
+        enabled: false
+      config:
+        # 禁用远程配置拉取 — 测试完全使用本文件的本地配置
+        enabled: false
+        import-check:
+          # 关闭配置导入检查，避免因缺少 Nacos 上的 shared-configs 而启动失败
+          enabled: false
+    sentinel:
+      # 禁用 Sentinel 流量控制和熔断 — 集成测试直接验证业务逻辑，
+      # 不应被限流/降级规则干扰，也无需连接 Sentinel Dashboard
+      enabled: false
+      transport:
+        # Dashboard 地址（保留默认值，但已禁用不会实际连接）
+        dashboard: ${SENTINEL_DASHBOARD_URL:http://127.0.0.1:8858}
+        # 客户端上报端口
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+        # 客户端 IP（留空自动探测）
+        client-ip: ${SENTINEL_CLIENT_IP:}
+      # 关闭饥饿加载 — 测试不需要在应用启动时预初始化 Sentinel 规则
+      eager: false
+
+  # ==========================================================================
+  # 排除自动配置类 — 精简测试上下文
+  # ==========================================================================
+  # 集成测试通过排除不需要的自动配置来加快启动速度并避免外部依赖。
+  # 每个排除项的具体原因见下方注释。
+  # --------------------------------------------------------------------------
+  autoconfigure:
+    exclude:
+      # --- Keycloak / OIDC 相关排除 ---
+      # it-local 不启动 Keycloak；不排除时 Spring 会在启动期拉取
+      # http://localhost:8180/realms/apex/.well-known/openid-configuration 并失败。
+      - org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
+      # WebFlux 变体：注册 reactiveClientRegistrationRepository 并在启动期拉取 issuer 元数据
+      - org.springframework.boot.autoconfigure.security.oauth2.client.ReactiveOAuth2ClientAutoConfiguration
+      # --- Redis 相关：it-local 连接真实 Redis，因此不排除 ---
+      # 与 application-it.yml 的关键差异：it 用嵌入式替身并排除 Redis 自动配置；
+      # it-local 需要真实 Lettuce/ReactiveStringRedisTemplate 与 Redisson 能力，
+      # 故保留 Spring Boot 的 Redis 自动配置（连接 127.0.0.1:6379）。
+
+      # --- RocketMQ 相关排除 ---
+      # 排除 RocketMQ 自动配置：集成测试不应连接外部 RocketMQ Broker。
+      # 消息发送/消费的契约测试由独立的专门测试类负责（使用 Mock/Stub），
+      # 数据库 API 集成测试无需真实消息队列。
+      - org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
+
+      # --- 链路追踪相关排除 ---
+      # 排除 Zipkin 自动配置：集成测试无需将调用链路上报到 Zipkin Server，
+      # 减少网络调用开销和测试不确定性。
+      - org.springframework.boot.actuate.autoconfigure.tracing.zipkin.ZipkinAutoConfiguration
+
+  # ==========================================================================
+  # 数据库迁移 — Flyway(与 prod 一致,MySQL 版 db/migration)
+  # ==========================================================================
+  # 集成测试通过 Flyway 真实执行 MySQL 版版本化迁移(db/migration 当前 V1-V26),
+  # 保证「各环境 Flyway 均可用」且测试库 schema 与生产完全一致;
+  # 表结构由 Flyway 建立,data-it.sql 仅负责灌入测试种子数据(幂等重置)。
+  # --------------------------------------------------------------------------
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/${apex.database.type:mysql}
+    # 禁用严格校验以避免checksum不匹配
+    validate-on-migrate: false
+    # 允许在已有数据库上创建baseline
+    baseline-on-migrate: true
+    # 允许乱序执行迁移
+    out-of-order: true
+    # 忽略特定状态的迁移
+    ignore-migration-patterns: "*:pending,*:ignored,*:future"
+    # 清理失败的迁移记录
+    clean-on-validation-error: true
+    # 清理数据库(仅测试环境)
+    clean-disabled: false
+
+  sql:
+    init:
+      # mode: always — 每次启动 Spring 容器都执行数据初始化脚本，
+      # 确保每个测试类获得确定性的数据基线(表结构由 Flyway 负责)
+      mode: always
+      # data-it.sql：集成测试的预置数据集，包含测试用例运行所需的基础记录
+      # (如系统配置、示例用户等),通过 DELETE + INSERT 幂等重置
+      data-locations: classpath:data-it.sql
+
+  # ==========================================================================
+  # 应用类型配置
+  # ==========================================================================
+  main:
+    # 使用 Reactive Web 类型（WebFlux），与生产环境保持一致
+    web-application-type: reactive
+    # 允许 Bean 定义覆盖 — 测试环境可能需要通过 @Primary 或 @TestConfiguration
+    # 覆盖某些生产 Bean，允许覆盖避免启动报错
+    allow-bean-definition-overriding: true
+
+# ============================================================================
+# MyBatis / MyBatis-Plus 配置
+# ============================================================================
+mybatis:
+  # Mapper XML 文件扫描路径（classpath* 表示扫描所有 classpath 目录）
+  mapper-locations: classpath*:mapper/**/*.xml
+
+# ============================================================================
+# 链路追踪配置
+# ============================================================================
+trace:
+  # Zipkin 服务地址（保留默认值，但已排除 ZipkinAutoConfiguration 不会实际使用）
+  zipkin-url: ${ZIPKIN_BASE_URL:http://127.0.0.1:9411}/api/v2/spans
+  # 采样率 1.0（100%）— 已排除 Zipkin，此配置仅用于满足属性注入占位符
+  sampling-rate: ${TRACE_SAMPLING_RATE:1.0}
+
+# ============================================================================
+# RocketMQ 配置（保留占位，已排除自动配置）
+# ============================================================================
+# RocketMQAutoConfiguration 已在 spring.autoconfigure.exclude 中排除，
+# 因此以下配置不会被实际消费。保留这些默认值仅为满足可能存在的
+# @ConfigurationProperties 绑定和启动检查，避免因缺失属性而启动失败。
+# --------------------------------------------------------------------------
+rocketmq:
+  # Name Server 地址
+  name-server: ${ROCKETMQ_NAMESRV_ADDR:127.0.0.1:9876}
+  producer:
+    # 生产者组名
+    group: ${ROCKETMQ_PRODUCER_GROUP:apex-producer-group}
+    # AccessKey（生产环境通过阿里云 RAM 认证使用）
+    access-key: ${ROCKETMQ_ACCESS_KEY:}
+    # SecretKey
+    secret-key: ${ROCKETMQ_SECRET_KEY:}
+    # 发送消息超时时间（毫秒）
+    send-message-timeout: 30000
+    # 消息体压缩阈值（字节），超过此大小的消息将自动压缩
+    compress-message-body-threshold: 1024
+    # 同步发送失败重试次数
+    retry-times-when-send-failed: 2
+    # 异步发送失败重试次数
+    retry-times-when-send-async-failed: 2
+    # 最大消息大小（字节），4MB
+    max-message-size: 4194304
+  consumer:
+    # 消费者 AccessKey
+    access-key: ${ROCKETMQ_ACCESS_KEY:}
+    # 消费者 SecretKey
+    secret-key: ${ROCKETMQ_SECRET_KEY:}
+
+# ============================================================================
+# JWT 认证配置
+# ============================================================================
+# 集成测试使用固定且仅限测试环境的长密钥，同时满足注册限制 HMAC 的启动校验。
+# --------------------------------------------------------------------------
+jwt:
+  # 固定测试密钥，不得用于真实环境。
+  secret: ${JWT_SECRET:apex-it-only-secret-32-bytes-minimum-2026}
+  # Access Token 有效期（毫秒），默认 2 小时
+  access-token-expire: ${JWT_ACCESS_EXPIRE:7200000}
+  # Refresh Token 有效期（毫秒），默认 7 天
+  refresh-token-expire: ${JWT_REFRESH_EXPIRE:604800000}
+
+# ============================================================================
+# Apex 通用配置 + 业务自定义配置
+# ============================================================================
+apex:
+  # --------------------------------------------------------------------------
+  # 领域事件与 Outbox — 测试环境禁用
+  # --------------------------------------------------------------------------
+  events:
+    outbox:
+      # 集成测试由 Flyway 执行 MySQL 版迁移（V1 即含 sys_domain_event_outbox 表），
+      # 与生产结构一致。Outbox 的可靠性由独立的存储/调度单元测试验证，
+      # 无需在 API 集成测试中重复覆盖。
+      enabled: false
+
+  # --------------------------------------------------------------------------
+  # 安全防护 — 测试环境全部禁用
+  # --------------------------------------------------------------------------
+  # 理由：
+  #   1. 集成测试验证的是业务逻辑的正确性，安全防护属于基础设施关注点
+  #   2. 安全组件（限流、重放检测、登录保护等）依赖 Redis / 数据库，
+  #      测试环境中这些基础设施为简化/Mock 版本，无法提供完整的安全功能
+  #   3. 安全防护的作用由专门的单元测试和架构测试保证，不在集成测试中重复验证
+  #   4. 放宽安全限制后，测试可以更高效地准备数据、模拟请求，无需绕过防护逻辑
+  # --------------------------------------------------------------------------
+  security:
+    guard:
+      # 禁用安全守卫 — 不拦截/校验请求
+      enabled: false
+    ip-rate-limit:
+      # 禁用 IP 限流 — 测试可能在短时间内发送大量请求，不应被限流
+      enabled: false
+      # 测试环境不信任任何转发代理，客户端 IP 一律取 TCP 直连地址
+      trusted-proxy-cidrs: ${APEX_TRUSTED_PROXY_CIDRS:}
+    login-protection:
+      # 禁用登录保护 — 测试中可能频繁登录/登出，不应触发风控策略
+      enabled: false
+    anti-replay:
+      # 禁用防重放攻击 — 测试可能发送相同请求多次验证幂等性
+      enabled: false
+    input-validation:
+      # 禁用输入校验守卫 — 测试可发送各种边界/异常输入，由业务层校验处理
+      enabled: false
+    security-headers:
+      # 禁用安全响应头注入 — 测试不关心 HTTP 响应头安全策略
+      enabled: false
+
+  # --------------------------------------------------------------------------
+  # Sentinel — 测试环境关闭系统保护规则
+  # --------------------------------------------------------------------------
+  # 系统保护规则基于整机 CPU/入口 QPS 触发全局限流（SystemBlockException）。
+  # 多个 IT 类在同一 JVM 顺序加载上下文，本机 CPU 波动时会误拦正常请求
+  # （如 /api/v1/auth/refresh 返回 503），因此测试环境统一关闭。
+  sentinel:
+    system-rules:
+      # 关闭系统保护规则（CPU 使用率/入口 QPS 过载拦截）；生产环境才开启
+      enabled: false
+
+# ============================================================================
+# 告警配置 — 测试环境大幅放宽阈值
+# ============================================================================
+# 集成测试可能故意触发异常场景（如参数校验、权限拒绝、资源不存在等），
+# 如果使用生产环境的告警阈值（通常为 10 次 / 60 秒），测试运行期间可能
+# 频繁触发告警，干扰测试日志输出。将阈值大幅放宽可避免这种情况。
+# --------------------------------------------------------------------------
+alert:
+  exception:
+    # 异常告警阈值：连续 100 次异常才触发 — 远高于生产的 10 次，
+    # 确保正常测试场景不会误触发
+    threshold: 100
+    # 统计窗口（秒）：60 秒滑动窗口内累计异常次数达到 threshold 才告警
+    window: 60
+
+# ============================================================================
+# CORS 配置 — 测试环境允许所有来源
+# ============================================================================
+# 集成测试的 HTTP 客户端（如 WebTestClient）不设置 Origin 请求头，
+# 即使设置也可能是 localhost 的不同端口。放开所有来源避免 CORS 拦截。
+# --------------------------------------------------------------------------
+cors:
+  # 允许所有 Origin 发起跨域请求
+  allow-all-origins: true
+
+# ============================================================================
+# Actuator 健康检查配置
+# ============================================================================
+management:
+  endpoint:
+    health:
+      # 集成测试 Profile 主动排除了 Redis 自动配置（见上方 autoconfigure.exclude），
+      # 生产就绪检查组（readiness group）默认要求 Redis 等组件就绪。
+      # 关闭组成员校验，避免因 Redis 组件缺失导致健康检查失败。
+      validate-group-membership: false
+
+# ============================================================================
+# 日志配置
+# ============================================================================
+logging:
+  level:
+    # 根日志级别 INFO — 不过多输出框架内部日志
+    root: INFO
+    # Apex 全模块 DEBUG 级别 — 集成测试需要详细的业务日志用于故障排查
+    com.apex.scaffold: DEBUG
+    com.apex.scaffold.application: DEBUG
+    com.apex.scaffold.domain: DEBUG
+    com.apex.scaffold.infrastructure: DEBUG
+    com.apex.scaffold.interfaces: DEBUG
+    # MyBatis Mapper 日志设为 WARN — 减少 SQL 参数/结果集日志噪音，
+    # 如需排查 SQL 问题可临时改为 DEBUG
+    com.apex.scaffold.infrastructure.persistence.mapper: WARN
+    # Spring Security 日志 INFO — 不过多输出认证/授权细节
+    org.springframework.security: INFO
+    # Redisson 日志 INFO — 测试不依赖 Redisson，降低噪音
+    org.redisson: INFO
+    # Sentinel 日志 INFO — Sentinel 已禁用，降低日志噪音
+    sentinelRecordLogger: INFO
+    sentinelCommandCenterLogger: INFO
+    # ===== DEBUG日志排查自动配置问题 =====
+    com.baomidou.dynamic.datasource: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+    org.springframework.boot.autoconfigure: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.mybatis: DEBUG
+    org.flywaydb: DEBUG
+  pattern:
+    # 控制台日志格式：
+    #   %d{yyyy-MM-dd HH:mm:ss.SSS} — 时间戳精确到毫秒
+    #   %-5level — 日志级别（左对齐，5 字符宽）
+    #   [%thread] — 线程名
+    #   [%X{traceId:-N/A}] — MDC 中的 traceId，无则显示 N/A
+    #   %logger{60} — Logger 名称（最多 60 字符）
+    #   %msg%n%wEx — 消息 + 换行 + 异常堆栈（有则输出）
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%thread]){cyan} %clr([%X{traceId:-N/A}]){magenta} %clr(%logger{60}){green} - %msg%n%wEx"
+
+# ============================================================================
+# 对象存储配置 — 文件域已迁出，单体不再执行上传/下载/删除
+# ============================================================================
+# 文件上传/下载/删除能力已随文件域迁移至 apex-file-service，
+# 单体集成测试不再访问真实对象存储（如 Volcengine TOS / AWS S3）。
+# 此处仅保留配置占位，不产生任何真实外部调用。
+# --------------------------------------------------------------------------
+storage:
+  # default-type: test — 测试占位值，单体已无存储实现消费该配置。
+  default-type: test
+  # 测试桶名称占位，不会创建真实云存储桶
+  bucket-name: test-bucket
+
+# ============================================================================
+# 远程服务配置 — 人脸分析服务
+# ============================================================================
+# 集成测试使用本地模拟的人脸分析 Python 服务（或 Mock HTTP Server），
+# 而非连接真实部署的 AI 分析服务。这样可以：
+#   1. 保证测试的确定性和可重复性（不受 AI 模型版本变化影响）
+#   2. 避免消耗 GPU 计算资源和 API 调用配额
+#   3. 测试执行速度更快
+# --------------------------------------------------------------------------
+remote:
+  api:
+    face-analysis:
+      auth:
+        # 启用内部认证 — 模拟服务需要验证请求签名以模拟真实交互
+        enabled: true
+        # 内部认证签名密钥 — 仅用于生成合法请求头，不访问真实外部服务。
+        # 使用环境变量 FACE_ANALYSIS_JWT_SECRET 可覆盖，未设置时使用测试专用默认值。
+        secret: ${FACE_ANALYSIS_JWT_SECRET:test-face-analysis-secret-for-it-only}

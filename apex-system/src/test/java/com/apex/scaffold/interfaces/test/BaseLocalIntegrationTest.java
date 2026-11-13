@@ -32,6 +32,7 @@ import reactor.netty.http.client.HttpClient;
  */
 @SpringBootTest(classes = IntegrationTestApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("it-local")
+@org.springframework.context.annotation.Import(ItProfileSecurityConfiguration.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 public abstract class BaseLocalIntegrationTest {

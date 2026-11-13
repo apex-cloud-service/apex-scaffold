@@ -31,7 +31,7 @@ import reactor.core.publisher.Mono;
  * @author Apex Team
  */
 @Configuration
-@Profile("it")
+@Profile({"it", "it-local"})
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 class ItProfileSecurityConfiguration {
