@@ -144,7 +144,7 @@
 | POST | `/api/office/approvals` | `OfficeApprovalRouter` | `OfficeApprovalHandler.initiateApproval` | 发起审批流程 |
 | GET | `/api/office/approvals/{processInstanceId}` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getApprovalDetail` | 查询审批详情 |
 | POST | `/api/office/approvals/{processInstanceId}/approve` | `OfficeApprovalRouter` | `OfficeApprovalHandler.approveProcess` | 执行审批操作 |
-| DELETE | `/api/office/approvals/{processInstanceId}` | `OfficeApprovalRouter` | `OfficeApprovalHandler.cancelApproval` | 撤销审批 |
+| DELETE | `/api/office/approvals/{processInstanceId}` | `OfficeApprovalRouter` | `OfficeApprovalHandler.cancelApproval` | 撤销审批（幂等编排：重复请求重放既有撤销单，下游失败走补偿重放） |
 | GET | `/api/office/approvals/pending` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getPendingApprovals` | 查询待审批列表 |
 | GET | `/api/office/approvals/completed` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getCompletedApprovals` | 查询当前用户已同意或拒绝的审批 |
 | GET | `/api/office/approvals/initiated` | `OfficeApprovalRouter` | `OfficeApprovalHandler.getMyInitiatedApprovals` | 查询我发起的审批 |
@@ -460,6 +460,14 @@
 | DELETE | `/api/v2/file-shares/{shareId}` | `FileShareRouter` | 撤销文件分享 |
 | POST | `/api/v2/file-shares/exchange`、`/api/v2/file-shares/download` | `FileShareRouter` | 公开兑换码换票与下载（`SystemConstants.PUBLIC_PATHS` 放行） |
 
+### 2.18 查询聚合服务端点（`apex-aggregation-service` 运行模块）
+
+> 运行边界：`apex-aggregation-service`（Router 位于运行模块）。网关 `aggregation-domain` 路由（`ROUTE_AGGREGATION_URI`，默认 `lb://apex-aggregation-service`）承载 `/api/v2/todo`；服务自验访问 JWT，无本地数据库。workflow/office 供其调用的 `/internal/v1/*/todo` 内部端点不在本清单登记，见 `internal-api-contracts.md`。
+
+| 方法 | 路径 | Router | Handler 方法 | 说明 |
+| --- | --- | --- | --- | --- |
+| GET | `/api/v2/todo` | `UnifiedTodoRouter` | `UnifiedTodoHandler.todo` | 当前用户跨域统一待办聚合（workflow 任务 + office 待审批/未读站内信）；单源降级部分可用，个人维度不缓存 |
+
 ## 3. 独立认证中心路由
 
 ### 3.1 登录、注销和令牌
@@ -614,9 +622,9 @@
 
 ### 4.4 核对范围
 
-当前清单登记 409 条方法与路径注册：§2（`/api`、`/admin-api`、`/open-api` 前缀族，含 office/file/workflow 等运行模块注册）329 条，§3 独立认证中心（`apex-auth-service`）80 条，来自本文列出的各 Router 类。Keycloak 的 6 条条件装配路由包含在 §2 计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量。
+当前清单登记 410 条方法与路径注册：§2（`/api`、`/admin-api`、`/open-api` 前缀族，含 office/file/workflow/aggregation 等运行模块注册）330 条，§3 独立认证中心（`apex-auth-service`）80 条，来自本文列出的各 Router 类。Keycloak 的 6 条条件装配路由包含在 §2 计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量。
 
-> 计数口径：仅为本文表格行数（2026-11-11 按方法列重算，合并单元格如 `POST/GET` 计 1 条），用于快速核对文档自身完整性；新增或删除端点时应同步更新本表，路由完整性以各 Router 源码为准。
+> 计数口径：仅为本文表格行数（2026-11-11 按方法列重算，2026-11-13 增补 §2.18 聚合服务，合并单元格如 `POST/GET` 计 1 条），用于快速核对文档自身完整性；新增或删除端点时应同步更新本表，路由完整性以各 Router 源码为准。
 
 ## 5. 主要源码索引
 

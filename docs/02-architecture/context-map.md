@@ -13,6 +13,7 @@
 | 办公协同 | `apex-office` | `OfficeMessage`、`NotifyTemplate`、`MeetingRoomEntity`、`OfficeOrganizationMapping` | 站内信与投递、办公平台同步、会议室 |
 | 对外集成与设备 | `apex-integration` | 连接器配置、设备注册/影子/命令模型（connector 与 device 两个子域） | 出站连接器调用、租户凭据、入站 Webhook、IoT 设备接入（MQTT 由外部 EMQX 承载） |
 | 网关（薄适配层） | `apex-gateway` | —（无业务聚合） | 路由、验签、限流、灰度、访问日志 |
+| 查询聚合（只读侧车） | `apex-aggregation-service` | —（无本地聚合，无数据库） | 跨域只读聚合：统一待办 `GET /api/v2/todo`（经内部签名契约拉取 workflow 任务与 office 待审批/未读站内信）；个人维度数据不缓存、不合并 |
 
 ## 2. 上下文关系（合作模式）
 
@@ -33,6 +34,8 @@ graph LR
     SYS -->|发布主数据事件<br/>UserChanged / TenantChanged| CONTRACT
     AUTH -->|订阅 TenantChanged| CONTRACT
     SYS -->|Overview 聚合 /internal/v1/*/stats| STATS[各域统计端点<br/>file / office / workflow / integration]
+    AGG[查询聚合侧车<br/>apex-aggregation-service] -->|统一待办门面 /api/v2/todo<br/>内部签名 /internal/v1/*/todo| WFT[工作流待办端点]
+    AGG -->|内部签名 /internal/v1/office/todo| OFT[office 待审批/未读端点]
 
     SHARED[共享内核<br/>apex-common / apex-domain] -.->|被全部上下文依赖| SYS
     SHARED -.-> AUTH

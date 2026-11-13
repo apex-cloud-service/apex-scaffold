@@ -88,7 +88,7 @@
 
 ### F6(P2)端口规划存在既有冲突,网关兜底默认值形态不一
 
-- workflow 业务端口 8083 与 system 管理端口 8083 冲突,当前靠 Compose hostPort 8093 规避(manifest 已登记);同机直跑两个服务仍需人工错开。
+- workflow 业务端口 8083 与 system 管理端口 8083 冲突,当前靠 Compose hostPort 8093 规避(manifest 已登记);同机直跑两个服务仍需人工错开。（已由 R6 修复：workflow 业务端口改为 8093，hostPort 特例与冲突同时消除）
 - 网关路由兜底默认值形态不一:auth/workflow/file/office/system/integration 用 `lb://apex-*-service`,而 office 消息两条路由与 job/masking 用硬编码 `http://127.0.0.1:80xx`、office WS 用 `ws://127.0.0.1:8084`。关闭 Nacos 时改明确地址是既定口径,但默认值两套形态并存,依赖注入遗漏时故障面不同。
 - job-service `ROUTE_JOB_URI`、masking `ROUTE_MASKING_URI` 为 optional 服务,网关路由常驻但其目标可缺席,健康语义已在 manifest 说明,无阻塞问题(记录备查)。
 

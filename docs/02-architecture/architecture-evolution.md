@@ -17,7 +17,7 @@ Apex Scaffold 当前为**模块化单体**（Modular Monolith）：
 | 扩展点 | 通用能力全部内聚（认证/RBAC/系统管理/文件/缓存/MQ/监控） |
 
 > **2026-11-02 状态更新**：本节的"不拆、保持模块化单体"结论**已过时**。当前实现为
-> **API 网关 + 六个业务服务**（system/auth/workflow/file/office/integration）拆分拓扑，
+> **API 网关 + 六个业务服务 + 只读查询聚合服务**（system/auth/workflow/file/office/integration + aggregation）拆分拓扑，
 > 并同时提供 `apex-boot-all` 组合部署包（单进程装配全部组件）供 basic/示例档使用。
 > 组件化能力（组件入口自动装配、事件通道自适应、SPI 扩展点）使两种拓扑可并存切换。
 > 以下"不建议拆分"的历史论证仅作决策留档，不代表当前架构。
@@ -88,7 +88,7 @@ Apex Scaffold 当前为**模块化单体**（Modular Monolith）：
 
 ## 四、结论
 
-- **微服务**：**已完成拆分**——当前为网关 + 六个业务服务拓扑（system/auth/workflow/file/office/integration），
+- **微服务**：**已完成拆分**——当前为网关 + 六个业务服务 + 只读查询聚合服务拓扑（system/auth/workflow/file/office/integration + aggregation），
   并保留 `apex-boot-all` 组合部署包支持单进程装配；组件化（自动装配入口、事件通道自适应、SPI）
   使"拆分服务"与"组合部署"可按部署规模选择，无需改代码。
 - **监控与链路追踪**：已具备（Micrometer + Prometheus + Zipkin/Brave + TraceId + Sentinel/Resilience4j），

@@ -547,7 +547,8 @@ apex:
 - 两源并发执行；单源超时、不可达、信封非 0 或解析失败时该源降级为 `DEGRADED` 并携带错误摘要，`degraded=true`，不影响其他源，也不向上抛错。
 - 舱壁沿用 JDK `Semaphore`（饱和即降级、不排队，许可随订阅终止释放），语义与概览门面一致，不引入 basic 档裁剪依赖。
 - `sources.*` 默认指向本机端口，部署时须与 workflow/office 实际地址一致；关闭 Nacos 的直连部署需显式覆盖。对外路由由网关 `/api/v2/**` 转发至 `lb://apex-aggregation-service`（`ROUTE_AGGREGATION_URI`，服务默认业务端口 8098）；关闭 Nacos 的直连部署须显式注入该地址并指向实际聚合实例。
-- 部署须在 `apex.internal-auth.callers` 白名单登记 `apex-aggregation-service`，否则其出站内部签名被下游 fail-closed 拒绝，workflow 与 office 两源同时降级。
+- 调用方 `apex-aggregation-service` 已登记在 `InternalAuthProperties` 默认 `callers` 白名单（`/internal/v1/workflow/todo/**` 与 `/internal/v1/office/todo`）；租户取自本服务验签 JWT 并经 `InternalAuthExchangeFilter` 转换为 `X-Internal-Tenant` 参与下游签名。未登记调用方的出站签名会被下游 fail-closed 拒绝。
+- 本服务自验访问 JWT（`aggregation.security.jwt-public-keys-base64/jwt-public-key-base64/jwt-secret`，env 前缀 `AGGREGATION_JWT_*`），身份头不作为认证依据；`/api/v2/todo` 要求已认证，未配置验签密钥且未启用 JWKS 拉取时拒绝认证。
 
 ### 接口级限流
 

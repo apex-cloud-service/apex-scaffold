@@ -1,5 +1,7 @@
 # API 路由文档
 
+> **维护口径**：本文件为早期整理的路由快照，不再随端点增删逐条维护；现行权威清单为 [API_ROUTES.md](API_ROUTES.md)（含计数口径与运行边界）。两个文件的差异以 API_ROUTES.md 与各 Router 源码为准。
+
 本文档整理了 Apex Scaffold 项目所有 API 路由配置，包括 HTTP 方法、路径、Handler 方法、权限要求等信息。
 
 ## 文件接口安全与存储约束

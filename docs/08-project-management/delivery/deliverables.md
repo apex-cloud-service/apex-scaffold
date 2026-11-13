@@ -42,7 +42,7 @@ source scripts/build/init-build-env.sh
 
 | 内容 | 来源 | 说明 |
 | --- | --- | --- |
-| 七个服务 JAR | 各服务 `target/` | 网关 + 六个业务服务 |
+| 八个服务 JAR | 各服务 `target/` | 网关 + 六个业务服务 + 查询聚合服务 |
 | `LICENSE` / `LICENSE-COMMERCIAL.md` | 仓库根 | 双轨授权 |
 | `README.md` / `CHANGELOG.md` / `CODE_OF_CONDUCT.md` / `CONTRIBUTING.md` | 仓库根 | |
 | `docs/` | `docs/` 全目录 | 保留子目录结构，仅复制 Markdown 与图片（排除测试证据 json/log/jfr 等） |
@@ -108,7 +108,7 @@ source scripts/build/init-build-env.sh
 
 | # | 校验项 | 方法 | 判定 |
 | --- | --- | --- | --- |
-| 1 | 七个服务 JAR 存在且唯一 | 每个服务 `target/` 下 `*.jar` 计数为 1 | 通过 / 不通过 |
+| 1 | 八个服务 JAR 存在且唯一 | 每个服务 `target/` 下 `*.jar` 计数为 1 | 通过 / 不通过 |
 | 2 | 档位标识正确 | `grep build.profile.id <module>/target/classes/apex-build.properties` | 与命令一致 |
 | 3 | 私钥未打入 | `unzip -l <交付包> \| grep private.key` 无输出 | 通过 / 不通过 |
 | 4 | 授权工具未打入 | 包内无 `apex-license-tools`、无 `scripts/license/` | 通过 / 不通过 |

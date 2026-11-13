@@ -1,6 +1,6 @@
 # 架构设计说明
 
-> 当前运行架构为「API 网关 + 6 个业务微服务（system/auth/workflow/file/office/integration）+ 共享 SDK/契约」，另有任务代理（8095）与脱敏服务（8096）作为轻量侧车。微服务改造已完成：网关 `apex-gateway`、契约 `apex-api-contract`、版本源 `apex-services-bom` 与六个业务服务均已在根 `pom.xml` 注册。
+> 当前运行架构为「API 网关 + 6 个业务微服务（system/auth/workflow/file/office/integration）+ 只读查询聚合服务（apex-aggregation-service，8098）+ 共享 SDK/契约」，另有任务代理（8095）与脱敏服务（8096）作为轻量侧车。微服务改造已完成：网关 `apex-gateway`、契约 `apex-api-contract`、版本源 `apex-services-bom` 与各运行服务均已在根 `pom.xml` 注册。
 
 ## 当前物理边界（2026-10-12）
 
@@ -61,7 +61,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
         apex-services-bom（唯一版本源）
 ```
 
-三个模块均已在根 `pom.xml` `<modules>` 注册，是微服务改造的基座；六个业务服务（auth/system/workflow/office/file/integration）均以此为模板装配。服务间同步调用一律使用 `WebClient`，项目不引入 Feign。
+三个模块均已在根 `pom.xml` `<modules>` 注册，是微服务改造的基座；六个业务服务（auth/system/workflow/office/file/integration）与只读查询聚合服务（aggregation）均以此为模板装配。服务间同步调用一律使用 `WebClient`，项目不引入 Feign。
 
 ### 分层职责
 

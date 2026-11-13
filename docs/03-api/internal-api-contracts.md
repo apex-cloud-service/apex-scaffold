@@ -28,6 +28,8 @@
 | office | `GET /internal/v1/office/messages/stats` | system（`/internal/v1/overview` 聚合） | 只读统计，字段名勿改 |
 | file | `GET /internal/v1/file/stats` | system（`/internal/v1/overview` 聚合） | 只读统计，字段名勿改（`FileInternalHandler`） |
 | workflow | `GET /internal/v1/workflow/stats` | system（`/internal/v1/overview` 聚合） | 只读统计，字段名勿改（`WorkflowInternalHandler`） |
+| workflow | `GET /internal/v1/workflow/todo/tasks`（`pageNum`/`pageSize` 查询参数，`pageSize` 上限 50） | apex-aggregation-service（统一待办聚合 `GET /api/v2/todo`，透传调用方 Authorization） | `apex-api-contract` 的 `InternalTodoItem` + common `PageResponse`（2026-11-12 契约化） |
+| office | `GET /internal/v1/office/todo`（`approvalLimit`/`messageLimit` 查询参数） | apex-aggregation-service（统一待办聚合 `GET /api/v2/todo`，透传调用方 Authorization） | `apex-api-contract` 的 `OfficeTodoInternalResponse` / `InternalTodoItem`（2026-11-12 契约化） |
 | integration | `GET /internal/v1/iot/devices/stats` | system（`/internal/v1/overview` 聚合） | 只读统计 |
 | integration | `POST /internal/v1/iot/devices/{key}/commands` | 集群内服务（设备命令下发代理） | 提供方契约接口 |
 | integration | `POST /internal/v1/iot/mqtt/auth`、`POST /internal/v1/iot/mqtt/acl` | 外部 EMQX（MQTT 接入认证/ACL 钩子回调） | EMQX HTTP 钩子载荷 |

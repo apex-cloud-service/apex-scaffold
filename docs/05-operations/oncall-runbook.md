@@ -3,7 +3,7 @@
 > **性质**：Phase 7 加固配套运维文档（执行计划 §7.3「告警调优 + runbook、值班手册」）。
 > **关联**：告警规则 `config/monitoring/prometheus/alert-rules.yml`；总览见
 > `docs/05-operations/microservice-hardening-guide.md`。
-> **适用**：网关 + 六个业务微服务（auth / system / workflow / office / file / integration）生产运维。
+> **适用**：网关 + 六个业务微服务（auth / system / workflow / office / file / integration）+ 只读查询聚合服务（aggregation）生产运维。
 
 ---
 
@@ -101,8 +101,8 @@
 
 ```bash
 # 服务健康（gateway 8080、auth 8081、system 管理 8083、workflow 8093、
-# office 8084、file 8085、integration 管理 8097）
-for port in 8080 8081 8083 8093 8084 8085 8097; do
+# office 8084、file 8085、integration 业务 8094、integration 管理 8097、aggregation 8098）
+for port in 8080 8081 8083 8093 8084 8085 8094 8097 8098; do
   curl -fsS "http://127.0.0.1:${port}/actuator/health" >/dev/null     && echo "OK ${port}" || echo "FAIL ${port}"
 done
 

@@ -46,7 +46,7 @@
 3. **[02_physical_architecture.svg](../diagrams/02_physical_architecture.svg)** - 网络物理部署架构
    - 📌 **为什么要看**: 理解生产环境的5层网络拓扑
    - 🔍 **重点关注**:
-     - 端口分配:gateway 8080、auth 8081、system 8082（管理 8083）、workflow 8093、office 8084、file 8085、integration 8094（管理 8097）、job 8095、masking 8096
+     - 端口分配:gateway 8080、auth 8081、system 8082（管理 8083）、workflow 8093、office 8084、file 8085、integration 8094（管理 8097）、job 8095、masking 8096、aggregation 8098
      - Podman Compose默认栈 vs Kubernetes生产扩展
      - Profile配置:basic/standard/enterprise
    - 💡 **实践建议**: 执行 `podman-compose -f podman-compose.yml up -d` 启动本地开发环境

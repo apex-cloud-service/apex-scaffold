@@ -57,7 +57,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)思想,结合**响应式编程(Reac
 
 ### 1.2 当前运行拓扑（系统架构图）
 
-当前运行架构为**一个网关 + 六个业务服务 + 两个辅助服务**：网关负责 JWT 验签、可信头注入、限流、灰度与熔断回退；各业务服务内部保持 DDD 四层与 WebFlux 函数式路由；任务代理与脱敏服务是轻量侧车，未注册 Nacos，走固定受信地址。
+当前运行架构为**一个网关 + 六个业务服务 + 只读查询聚合服务 + 两个辅助服务**：网关负责 JWT 验签、可信头注入、限流、灰度与熔断回退；各业务服务内部保持 DDD 四层与 WebFlux 函数式路由；查询聚合服务（`apex-aggregation-service`，8098）无数据库，仅提供统一待办等只读跨源聚合；任务代理与脱敏服务是轻量侧车，未注册 Nacos，走固定受信地址。
 
 ```mermaid
 flowchart TB
@@ -77,6 +77,7 @@ flowchart TB
         OFFICE["apex-office-service :8084<br>办公协同 + 站内信 WebSocket"]
         FILE["apex-file-service :8085<br>文件上传 / 分片 / 下载"]
         INTEGRATION["apex-integration-service :8094<br>连接器 / MQTT 设备接入<br>管理端口 :8097"]
+        AGG["apex-aggregation-service :8098<br>只读跨源聚合（统一待办 /api/v2/todo）<br>无数据库 · 无管理端口"]
     end
 
     subgraph aux["辅助服务"]
@@ -105,6 +106,7 @@ flowchart TB
     GF -->|" /api/v1/office/** /api/v1/messages/**（含 WS 握手路由）"| OFFICE
     GF -->|" /api/v1/file/** /api/v1/documents/**"| FILE
     GF -->|" /integration/v1/**"| INTEGRATION
+    GF -->|" /api/v2/todo"| AGG
     GF -->|" /admin-api/v1/jobs/**"| JOB
     GF -->|" /api/v1/masking/**"| MASK
     GF -->|" 兜底 /api/v1/** /admin-api/v1/**"| SYSTEM
@@ -496,9 +498,15 @@ flowchart LR
 ┌──┴──┐  ┌───┴───┐  ┌──┴───┐  ┌──┴───┐  ┌──┴───┐  ┌───┴────────────┐
 │auth │  │system │  │work- │  │office│  │file  │  │ job :8095      │
 │:8081│  │:8082  │  │flow  │  │:8084 │  │:8085 │  │ masking :8096  │
-│认证 │  │系统管 │  │:8083 │  │办公+ │  │文件/ │  │ (未注册 Nacos, │
+│认证 │  │系统管 │  │:8093 │  │办公+ │  │文件/ │  │ (未注册 Nacos, │
 │中心 │  │理兜底 │  │工作流│  │站内信│  │分片  │  │  固定受信地址)  │
 └──┬──┘  └───┬───┘  └──┬───┘  └──┬───┘  └──┬───┘  └───┬────────────┘
+   │         │         │         │         │          │
+┌──┴─────────┴─────────┴─────────┴─────────┴──────────┴──────────────┐
+│  集成与只读聚合                                                     │
+│  apex-integration-service :8094（管理 :8097）                       │
+│  apex-aggregation-service :8098（只读跨源聚合，无数据库）            │
+└────────────────────────────────────────────────────────────────────┘
    │         │         │         │         │          │
 ┌──┴─────────┴─────────┴─────────┴─────────┴──────────┴──────────────┐
 │  数据与中间件层                                                      │

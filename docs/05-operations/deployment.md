@@ -71,7 +71,7 @@ bash scripts/utils/token-v42-recover.sh \
 |------|---------|------|------|
 | **java -jar** | 传统服务器 / 已有 MySQL+Redis+Nacos 的机房、云主机 | 最轻量、便于和 systemd/监控代理结合 | JDK 21 + MySQL + Redis + Nacos |
 | **Podman 单容器** | 已容器化的 K8s 以外的裸容器环境 | 一镜像一服务，多服务互不干扰 | Podman + 外部 MySQL/Redis/Nacos |
-| **Podman Compose** | 一键拉起完整微服务环境（开发/测试/生产单机） | 网关 + 6 个业务服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/任务代理/脱敏）全部编排 | Podman + podman-compose |
+| **Podman Compose** | 一键拉起完整微服务环境（开发/测试/生产单机） | 网关 + 6 个业务服务 + 查询聚合服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/任务代理/脱敏）全部编排 | Podman + podman-compose |
 
 各服务共享**同一套配置体系与环境变量**（见 [§7](#7-环境变量完整参考表)），切换部署方式无需修改代码或配置。
 
@@ -92,9 +92,9 @@ bash scripts/utils/token-v42-recover.sh \
 │  DB apex_workflow       │   ├──────────────────────────────────┤
 ├─────────────────────────┤   │ apex-file-service:8085            │
 │ apex-integration-service│   │  DB apex_file                     │
-│  :8094 (管理 8097)      │   │                                    │
-│  DB apex_integration    │   │                                    │
-├─────────────────────────┤   │                                    │
+│  :8094 (管理 8097)      │   ├──────────────────────────────────┤
+│  DB apex_integration    │   │ apex-aggregation-service:8098     │
+├─────────────────────────┤   │  （无 DB，只读跨源聚合）           │
 │  共享: Redis / Nacos /  │   │                                    │
 │  RocketMQ / License     │   │                                    │
 └─────────────────────────┘   └──────────────────────────────────┘
@@ -390,7 +390,7 @@ podman run -d --name apex-auth-service ...（同上参数，镜像换 1.4.0）
 
 ## 6. 部署方式三：Podman Compose 编排
 
-> 一键拉起「网关 + 6 个业务服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/前端）」，适合本地开发、测试环境与生产单机。
+> 一键拉起「网关 + 6 个业务服务 + 查询聚合服务 + Nacos + MySQL + Redis（+可选 RocketMQ/Keycloak/前端）」，适合本地开发、测试环境与生产单机。
 > 旧单体 `apex-scaffold` 服务已移除（见 `podman-compose.yml` 头部注释）。
 
 <a id="61-一键启动完整微服务栈"></a>
@@ -437,6 +437,7 @@ curl http://localhost:8080/api/v1/health
 | apex-office-service | 本地构建 | `${OFFICE_PORT:-8084}` | apex_office | 组织/办公 |
 | apex-file-service | 本地构建 | `${FILE_PORT:-8085}` | apex_file | 文件/文档 |
 | apex-integration-service | 本地构建 | `${INTEGRATION_PORT:-8094}` / 管理 `${INTEGRATION_MANAGEMENT_PORT:-8097}` | apex_integration | 集成中心连接器/凭据 + 物联网设备/规则；MQTT 桥接默认关闭 |
+| apex-aggregation-service | 本地构建 | `${AGGREGATION_PORT:-8098}` | —（无库） | 只读跨源聚合（统一待办 /api/v2/todo），无数据库、无管理端口 |
 | nacos | nacos/nacos-server:v2.4.3 | `${NACOS_PORT:-8848}` / gRPC `${NACOS_GRPC_PORT:-9848}` | — | 服务发现 + 配置中心 |
 | mysql | mysql:9.0 | `${MYSQL_PORT:-3306}` | apex_system（引导库） | 各服务经 createDatabaseIfNotExist 自建独立库 |
 | redis | redis:7-alpine | `${REDIS_PORT:-6379}` | — | AOF 持久化 |

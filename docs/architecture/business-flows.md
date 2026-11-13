@@ -420,9 +420,35 @@ stateDiagram-v2
 
 ---
 
-## 五、文件上传流程
+## 五、office 审批撤销流程（幂等编排）
 
-### 5.1 流程概述
+> 状态机与时序细节见 `docs/diagrams/126_approval_cancel_state_machine.svg`（`.mmd` 源同名）。
+
+office 审批（`OfficeApprovalService`）发起后可撤销：撤销涉及"远端办公平台撤销 + 本地流程状态更新"
+两步非原子操作，2026-11-12 起改为幂等编排（`off_approval_cancel_operation` 表，V9/V10 迁移）：
+
+1. **受理**：`DELETE /api/office/approvals/{processInstanceId}` 创建编排记录（`PENDING`，
+   幂等键客户端传入、租户内唯一；未传时自动生成），重复请求命中既有编排直接重放结果。
+2. **远端撤销**：调用办公平台撤销 API；成功后编排记录置 `REMOTE_CANCELLED`（远端已撤销、
+   本地未落库的中间态）。
+3. **本地补偿**：`ApprovalCancelOperationRepositoryImpl#completeCancel` 在同一同步事务内
+   （jdbc 阻塞池执行）将流程置 `CANCELLED` 并推进编排记录为 `COMPLETED`；审批流程更新使用
+   乐观锁，版本冲突整体回滚返回 false，由调用方按远端已撤销语义重试。
+4. **失败**：任一步失败置 `FAILED` 并保留 `error_message`（成功后不清理，留审计线索），
+   重试经 `markPending` 复用同一幂等键。
+5. **重放口径**：`COMPLETED` 与 `REMOTE_CANCELLED` 均视为重放成功（`isReplayableAsSuccess`），
+   不再触发远端撤销。
+
+| 阶段 | 含义 | 后续 |
+| --- | --- | --- |
+| `PENDING` | 已受理，未收到远端结果 | 远端成功 → `REMOTE_CANCELLED`；失败 → `FAILED` |
+| `REMOTE_CANCELLED` | 远端撤销成功、本地未落库 | 补偿事务 → `COMPLETED`；重放直接成功 |
+| `COMPLETED` | 远端与本地均完成 | 终态，重放直接返回成功 |
+| `FAILED` | 远端或本地失败 | `markPending` 重试 |
+
+## 六、文件上传流程
+
+### 6.1 流程概述
 
 **支持的存储策略**（由 `apex-storage-spring-boot-starter` 自动装配，五后端按配置选择）：
 1. **本地存储**（`LocalStorage`）：应用服务器本地磁盘
@@ -445,7 +471,7 @@ apex:
       - application/pdf
 ```
 
-### 5.2 接口路由
+### 6.2 接口路由
 
 文件域接口由 `apex-file-service` 的 `FileRouter` / `ChunkRouter` / `DocumentRouter` / `ChartRouter` 注册，网关谓词覆盖 `/api/v1/file/**`、`/api/v1/files/**`、`/api/v1/documents/**`、`/admin-api/v1/documents/**`。
 
@@ -465,7 +491,7 @@ apex:
 
 > 注：管理后台是独立前端项目，下列前端片段仅为协议示意，不代表后端生成或维护前端代码。
 
-### 5.3 上传处理链
+### 6.3 上传处理链
 
 普通上传（`FileRouter` → Handler → 应用服务）：校验大小/类型/租户 → 生成新文件名（UUID + 原扩展名）→ 调用 `ObjectStorage` 写入后端（`subscribeOn(storage())` 隔离阻塞）→ 保存文件元数据到 `file` 域表（含 `md5`、`storageType`、`bizType`、`uploadUserId`、`tenantId`）→ 返回 `fileId` 与访问 URL。
 
@@ -505,7 +531,7 @@ sequenceDiagram
     FH-->>C: Result<FileUploadResponse>
 ```
 
-### 5.4 文件访问控制
+### 6.4 文件访问控制
 
 **公开文件**：直接访问 URL（如 CDN 加速的公开桶对象）。
 
@@ -519,9 +545,9 @@ Authorization: Bearer {accessToken}
 
 ---
 
-## 六、流程优化建议
+## 七、流程优化建议
 
-### 6.1 登录流程优化
+### 7.1 登录流程优化
 
 以下为既有设计建议，示例路径不作为当前已注册接口；当前登录、刷新与登出契约见第 2 节。
 
@@ -548,7 +574,7 @@ GET /oauth/authorize
   &response_type=code
 ```
 
-### 6.2 权限校验优化
+### 7.2 权限校验优化
 
 以下为历史本地授权优化建议，不适用于当前远程统一授权。统一授权缓存默认关闭、TTL 上限 30 秒，尚无跨实例主动失效；不得按下面的 1 小时缓存或预加载示例配置远程授权。
 
@@ -573,7 +599,7 @@ public void updateRolePermissions(Long roleId, List<Long> permissionIds) {
 }
 ```
 
-### 6.3 工作流优化
+### 7.3 工作流优化
 
 **优化点1**: 并行审批
 ```java
@@ -602,7 +628,7 @@ POST /api/workflow/tasks/{taskId}/delegate
 }
 ```
 
-### 6.4 文件上传优化
+### 7.4 文件上传优化
 
 **优化点1**: 分片上传(大文件)
 ```javascript
@@ -637,136 +663,15 @@ if (existFile != null) {
 
 ---
 
-## 六、流程优化建议
+## 八、附录
 
-### 6.1 登录流程优化
-
-以下为既有设计建议，示例路径不作为当前已注册接口；当前登录、刷新与登出契约见第 2 节。
-
-**优化点1**: 验证码防暴力破解
-```java
-// 登录失败3次后要求验证码
-if (loginFailCount >= 3) {
-  requireCaptcha = true;
-}
-```
-
-**优化点2**: 短信验证码登录
-```java
-POST /admin-api/v1/auth/login-by-sms
-{
-  "phone": "13800138000",
-  "code": "123456"
-}
-```
-
-**优化点3**: 单点登录(SSO)
-```java
-// OAuth2授权码模式
-GET /oauth/authorize
-  ?client_id=xxx
-  &redirect_uri=xxx
-  &response_type=code
-```
-
-### 6.2 权限校验优化
-
-以下为历史本地授权优化建议，不适用于当前远程统一授权。统一授权缓存默认关闭、TTL 上限 30 秒，尚无跨实例主动失效；不得按下面的 1 小时缓存或预加载示例配置远程授权。
-
-**优化点1**: 权限缓存
-```java
-// 缓存用户权限1小时,减少数据库查询
-@Cacheable(value = "user:permissions", key = "#userId", ttl = 3600)
-```
-
-**优化点2**: 权限预加载
-```java
-// 登录时一次性加载所有权限到Redis
-redisTemplate.opsForSet().add("user:permissions:" + userId, permissions);
-```
-
-**优化点3**: 权限变更实时失效
-```java
-// 角色权限修改后,清除相关用户缓存
-@CacheEvict(value = "user:permissions", allEntries = true)
-public void updateRolePermissions(Long roleId, List<Long> permissionIds) {
-  // 更新逻辑
-}
-```
-
-### 6.3 工作流优化
-
-**优化点1**: 并行审批
-```java
-// DAG 并行节点,多人同时审批
-<parallelGateway id="parallelGateway1" />
-```
-
-**优化点2**: 审批超时提醒
-```java
-// 定时任务扫描超时任务
-@Scheduled(cron = "0 */30 * * * ?")
-public void checkTimeout() {
-  List<Task> timeoutTasks = taskRepository
-    .findByStatusAndCreateTimeBefore("PENDING",
-                                     LocalDateTime.now().minusDays(2));
-  // 发送提醒
-}
-```
-
-**优化点3**: 审批委托
-```java
-// 审批人设置委托人代为审批
-POST /admin-api/v1/workflow/tasks/{taskId}/delegate
-{
-  "delegateUserId": 10002
-}
-```
-
-### 6.4 文件上传优化
-
-**优化点1**: 分片上传(大文件)
-```javascript
-// 前端分片上传
-function uploadChunks(file) {
-  const chunkSize = 2 * 1024 * 1024; // 2MB
-  const chunks = Math.ceil(file.size / chunkSize);
-
-  for (let i = 0; i < chunks; i++) {
-    const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
-    uploadChunk(chunk, i, chunks);
-  }
-}
-```
-
-**优化点2**: 断点续传
-```java
-// 记录已上传分片
-redisTemplate.opsForSet().add("upload:" + uploadId, chunkIndex);
-```
-
-**优化点3**: 文件秒传(MD5去重)
-```java
-// 上传前计算MD5,检查是否已存在
-String md5 = calculateMD5(file);
-FileEntity existFile = fileRepository.findByMd5(md5);
-if (existFile != null) {
-  // 秒传,直接返回已有文件
-  return existFile;
-}
-```
-
----
-
-## 七、附录
-
-### 7.1 相关文档
+### 8.1 相关文档
 
 - [系统架构设计文档](system-architecture.md)
 - [数据库设计文档](database-design.md)
 - [配置文件完整性检查报告](../_archive/operations/configuration.md)
 
-### 7.2 状态码说明
+### 8.2 状态码说明
 
 业务 JSON 响应沿用 `Result<T>`：`code` 为 **0** 表示成功（`ResultCode.SUCCESS`，不是 HTTP 200）；HTTP 状态码由安全链或异常处理路径决定。
 
@@ -779,7 +684,7 @@ if (existFile != null) {
 | 404 | 不存在 | 资源不存在 |
 | 500 | 服务器错误 | 服务器内部错误 |
 
-### 7.3 业务错误码
+### 8.3 业务错误码
 
 下列为示意性错误码，实际编码以 `apex-common` 的 `ResultCode` 枚举为准（成功=0，认证=401，禁止=403，业务错误码为 4xxx 段）。
 

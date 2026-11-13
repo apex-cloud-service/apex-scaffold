@@ -22,7 +22,7 @@
 | 文件服务 | `apex-file-service` | 8085 | 1 |
 | 集成服务 | `apex-integration-service` | 8094（管理 8097） | 1 |
 
-> 现状：六个业务服务与网关均已独立运行（各自启动类、独立数据库与 Flyway 版本链），本节的加固口径对全部服务统一适用。任务代理（8095）与脱敏服务（8096）为轻量侧车，未注册 Nacos，走固定受信地址。
+> 现状：六个业务服务、只读查询聚合服务（apex-aggregation-service，8098，无数据库）与网关均已独立运行（各自启动类、独立数据库与 Flyway 版本链，聚合服务无数据库），本节的加固口径对全部服务统一适用。任务代理（8095）与脱敏服务（8096）为轻量侧车，未注册 Nacos，走固定受信地址。
 
 加固内容对应执行计划 §7：
 
@@ -30,7 +30,7 @@
 - **7.2 容量规划**：每服务 JVM 1G 起步、网关/auth 2 副本、HPA。
 - **7.3 告警调优 + runbook/值班手册/SDK 升级指南**。
 - **7.4 Grafana 四类 dashboard + 告警规则上线、Zipkin traceId 贯通验证**。
-- **7.5 K8s 清单 + podman-compose**（gateway + 六个业务服务 + mysql/redis/rocketmq/nacos；对象存储经 `STORAGE_*` 变量外接）。
+- **7.5 K8s 清单 + podman-compose**（gateway + 六个业务服务 + 查询聚合服务 + mysql/redis/rocketmq/nacos；对象存储经 `STORAGE_*` 变量外接）。
 
 ---
 
@@ -136,7 +136,7 @@ for p in 8080 8081 8083 8084 8085 8097; do curl -sf "http://127.0.0.1:${p}/actua
 BENCH_SCENARIO=login BENCH_LOGIN_ENABLED=true \
   BENCH_USERNAME=<account> BENCH_PASSWORD=<pwd> ./scripts/bench/bench.sh http://127.0.0.1:8080 60s 8 400
 
-# 2) 全链路（gateway 入口 → 六个业务服务）：
+# 2) 全链路（gateway 入口 → 六个业务服务 + 聚合服务）：
 ./scripts/performance/run-load-test.sh http://127.0.0.1:8080
 
 # 3) JMeter 完整场景（登录/工作流发起/审批/文件上传/办公消息）：

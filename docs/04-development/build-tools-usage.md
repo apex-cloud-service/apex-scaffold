@@ -43,7 +43,7 @@
 | 改造前 | 改造后 |
 | --- | --- |
 | 需分别记住 `build.sh`、`release.sh`、`start.sh`、`stop.sh`、`pull-infra-images.sh`、`app.sh` 的用法 | 统一为 `apex.sh <子命令>`，底层仍调用这些脚本 |
-| "6 个还是 7 个服务 JAR"曾出现文档与脚本口径漂移 | 注册表 + 门禁测试锁定为 7 个，改错即构建失败 |
+| "6/7/8 个服务 JAR"曾出现文档与脚本口径漂移 | 注册表 + 门禁测试锁定为 8 个（网关 + 六个业务服务 + 查询聚合服务），改错即构建失败 |
 | 部署前需手工构建 `tools/local-deployment.jar` | `deploy precheck` 自动补建 |
 | 仅支持 Podman Compose | 支持 **java -jar / Podman Compose / Docker Compose / K8s** 四种运行时 |
 | 无镜像构建/推送统一入口 | `image build` / `image push`，支持 podman/docker 双引擎 |
@@ -143,7 +143,7 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 | `build` | 整仓或指定模块构建 | `apex.sh build -Pbasic` / `apex.sh build --module apex-common` |
 | `test` | 快速测试（不含 Failsafe 门禁） | `apex.sh test --module apex-system` |
 | `verify` | 完整回归门禁（约 20 分钟） | `apex.sh verify` |
-| `package` | 构建 7 个发布服务 fat jar 并校验唯一性 | `apex.sh package -Penterprise` |
+| `package` | 构建 8 个发布服务 fat jar 并校验唯一性 | `apex.sh package -Penterprise` |
 | `release` | 产出交付 zip + sha256 | `apex.sh release standard` |
 | `image build` | 构建服务镜像（podman/docker） | `apex.sh image build --module apex-gateway` |
 | `image push` | 打 registry 前缀并推送 | `apex.sh image push --module apex-gateway --registry harbor.example.com/apex` |
@@ -237,7 +237,7 @@ mvnd -T4 -B -pl apex-tools-build spotless:check          # 本模块格式（约
 
 行为：
 
-1. 从注册表读取 `service-jar` 集合（网关 + 六个业务服务，共 7 个），加 `apex-tools-deployment`；
+1. 从注册表读取 `service-jar` 集合（网关 + 六个业务服务 + 查询聚合服务，共 8 个），加 `apex-tools-deployment`；
 2. `mvnd clean package -pl <列表> -am -DskipTests`；
 3. 逐一校验每个服务 `target/` 下"**有且仅有一个**发布 JAR"（排除 `-sources`/`-javadoc`/`-test-support`/`-tests` 辅助产物），不满足即失败。
 
@@ -253,7 +253,7 @@ mvnd -T4 -B -pl apex-tools-build spotless:check          # 本模块格式（约
 行为：
 
 1. **前置检查**：工作区必须干净（`git status --porcelain` 为空），否则拒绝发布；如需临时豁免用 `--allow-dirty`（不推荐）；
-2. 委托 `scripts/release/release.sh`：构建 7 个服务 JAR + 部署工具 → 组装 `dist/apex-scaffold-<版本>-<档位>/` → 压缩并生成校验和；
+2. 委托 `scripts/release/release.sh`：构建 8 个服务 JAR + 部署工具 → 组装 `dist/apex-scaffold-<版本>-<档位>/` → 压缩并生成校验和；
 3. **收尾校验**：`dist/apex-scaffold-<版本>-<档位>.zip` 与 `.zip.sha256` 必须同时存在。
 
 预期产物：
@@ -264,7 +264,7 @@ dist/
 └── apex-scaffold-1.3.1-standard.zip.sha256
 ```
 
-**包内内容**：7 个服务 JAR、`LICENSE`/`LICENSE-COMMERCIAL.md`、`docs/`（Markdown + 图片）、`config/`（已剔除 `private.key`）、`podman-compose.yml`、`podman-compose.infra.yml`、`Containerfile`、`k8s/`、`scripts/{build,deploy,lib}`、`tools/local-deployment.jar`。
+**包内内容**：8 个服务 JAR、`LICENSE`/`LICENSE-COMMERCIAL.md`、`docs/`（Markdown + 图片）、`config/`（已剔除 `private.key`）、`podman-compose.yml`、`podman-compose.infra.yml`、`Containerfile`、`k8s/`、`scripts/{build,deploy,lib}`、`tools/local-deployment.jar`。
 
 **包内禁止项**（`release.sh` 自检，命中即拒绝打包）：`config/license/private.key`、`scripts/license/`、`apex-license-tools`。
 
@@ -440,7 +440,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 ./apex-tools-build/bin/apex.sh deploy podman-compose health
 ```
 
-`health` 依次探测 7 个发布服务的 `/actuator/health/readiness`，任一未就绪即退出码 1。**端口取注册表**：workflow 探测 8093（容器内与宿主一致），system 探测 8083，integration 探测 8097。
+`health` 依次探测 8 个发布服务的 `/actuator/health/readiness`，任一未就绪即退出码 1。**端口取注册表**：workflow 探测 8093（容器内与宿主一致），system 探测 8083，integration 探测 8097，aggregation 探测 8098。
 
 **第 5 步：停止**
 
