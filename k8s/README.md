@@ -6,9 +6,29 @@
 
 | 文件 | 说明 |
 |------|------|
-| `deployment.yaml` | 基础部署：Namespace / Secret / Deployment（稳定版滚动更新）/ Service / Ingress / HPA（CPU 70% + 内存 80% 自动伸缩 2~10 副本） |
-| `canary-deployment.yaml` | 金丝雀（灰度）发布：金丝雀 Deployment + Service + Nginx Ingress 按权重/请求头导流 |
-| `pod-disruption-budget.yaml` | 稳定版 PodDisruptionBudget，节点维护时至少保留一个稳定副本 |
+| `deployment.yaml` | 基础部署：Namespace / Secret / **8 个服务各自的 Deployment + Service**（gateway、auth、system、workflow、office、file、integration、aggregation）/ Ingress / 网关 HPA（CPU 70% + 内存 80% 自动伸缩 2~10 副本） |
+| `canary-deployment.yaml` | 网关金丝雀（灰度）发布：金丝雀 Deployment + Service + Nginx Ingress 按权重/请求头导流 |
+| `pod-disruption-budget.yaml` | 网关稳定版 PodDisruptionBudget，节点维护时至少保留一个稳定副本 |
+
+## 服务与端口（与 `build-manifest.yaml` / `podman-compose.yml` 同源）
+
+| 服务 | 镜像 | 业务端口 | 管理端口 | 数据库 |
+|------|------|---------:|---------:|--------|
+| `apex-gateway` | `apex-gateway:latest` | 8080 | — | — |
+| `apex-auth-service` | `apex-auth-service:latest` | 8081 | — | `apex_auth` |
+| `apex-system-service` | `apex-system-service:latest` | 8082 | 8083 | `apex_system` |
+| `apex-workflow-service` | `apex-workflow-service:latest` | 8093 | — | `apex_workflow` |
+| `apex-office-service` | `apex-office-service:latest` | 8084 | — | `apex_office` |
+| `apex-file-service` | `apex-file-service:latest` | 8085 | — | `apex_file` |
+| `apex-integration-service` | `apex-integration-service:latest` | 8094 | 8097 | `apex_integration` |
+| `apex-aggregation-service` | `apex-aggregation-service:latest` | 8098 | — | —（只读跨源聚合，无库） |
+
+镜像构建示例：`podman build -f Containerfile --build-arg SERVICE_MODULE=apex-aggregation-service --build-arg SERVICE_PORT=8098 --build-arg MANAGEMENT_PORT=8098 -t apex-aggregation-service:latest .`
+（`MANAGEMENT_PORT` 对无管理端口的服务取业务端口，与 Containerfile `HEALTHCHECK_PORT` 一致。）
+
+**探针端口**：system 与 integration 使用管理端口（8083 / 8097），其余使用业务端口。
+**服务发现**：默认关闭 Nacos（Secret 中 `NACOS_DISCOVERY_ENABLED=false`），网关经 `ROUTE_*_URI`
+直连各 Service DNS；接入 Nacos 时改为 true 并注入 `NACOS_SERVER_ADDR`。
 
 ## 基础部署
 
@@ -27,7 +47,7 @@ kubectl apply -f k8s/deployment.yaml
 kubectl -n apex-scaffold get deploy,svc,ing
 
 # 2. 部署金丝雀（v-next 镜像），此时不接收流量
-#    修改 canary-deployment.yaml 中的 image: apex-scaffold:v-next 为实际新版本镜像
+#    修改 canary-deployment.yaml 中的 image: apex-gateway:v-next 为实际新版本网关镜像
 kubectl apply -f k8s/canary-deployment.yaml
 
 # 3. 观察灰度流量（约 10% 请求进入金丝雀）

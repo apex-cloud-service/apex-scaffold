@@ -1,21 +1,21 @@
 # ============================================================
-# Apex Scaffold Kubernetes 稳定版 PodDisruptionBudget
+# Apex Scaffold Kubernetes 网关稳定版 PodDisruptionBudget
 # ============================================================
 # 节点维护或集群自愿驱逐时，至少保留一个稳定版副本可用。
-# 仅匹配 track: stable，金丝雀不参与稳定版可用性预算。
+# 仅匹配网关的 track: stable，金丝雀不参与稳定版可用性预算。
 # ============================================================
 
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: apex-scaffold-stable-pdb
+  name: apex-gateway-stable-pdb
   namespace: apex-scaffold
   labels:
-    app: apex-scaffold
+    app: apex-gateway
     track: stable
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: apex-scaffold
+      app: apex-gateway
       track: stable

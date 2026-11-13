@@ -20,35 +20,35 @@
 # ============================================================
 
 ---
-# 金丝雀 Deployment（新版本，先部署但仅接收灰度流量）
+# 网关金丝雀 Deployment（新版本先部署，仅接收灰度流量；多服务拓扑下灰度以入口为单位）
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apex-scaffold-canary
+  name: apex-gateway-canary
   namespace: apex-scaffold
   labels:
-    app: apex-scaffold
+    app: apex-gateway
     track: canary
     version: v-next
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: apex-scaffold
+      app: apex-gateway
       track: canary
   template:
     metadata:
       labels:
-        app: apex-scaffold
+        app: apex-gateway
         track: canary
         version: v-next
     spec:
       # 120 秒覆盖应用 90 秒总关停预算、readiness 摘流传播与容器退出缓冲
       terminationGracePeriodSeconds: 120
       containers:
-        - name: apex-scaffold
+        - name: apex-gateway
           # 替换为新版本镜像（灰度验证对象）
-          image: apex-scaffold:v-next
+          image: apex-gateway:v-next
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -113,15 +113,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: apex-scaffold-canary-service
+  name: apex-gateway-canary-service
   namespace: apex-scaffold
   labels:
-    app: apex-scaffold
+    app: apex-gateway
     track: canary
 spec:
   type: ClusterIP
   selector:
-    app: apex-scaffold
+    app: apex-gateway
     track: canary
   ports:
     - name: http
@@ -135,7 +135,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: apex-scaffold-canary-ingress
+  name: apex-gateway-canary-ingress
   namespace: apex-scaffold
   annotations:
     nginx.ingress.kubernetes.io/canary: "true"
@@ -153,6 +153,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: apex-scaffold-canary-service
+                name: apex-gateway-canary-service
                 port:
                   number: 80

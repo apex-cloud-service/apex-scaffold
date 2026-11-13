@@ -1,16 +1,19 @@
 # ============================================================
-# Apex Scaffold Kubernetes 部署配置
+# Apex Scaffold Kubernetes 部署配置（多服务清单）
 # ============================================================
 # 使用方式:
 #   kubectl apply -f k8s/
 # 说明:
+#   - 一镜像一服务：每个 Deployment 由 Containerfile + SERVICE_MODULE 构建独立镜像，
+#     镜像名与 build-manifest.yaml 的 service-jar 集合一致（8 个发布服务）。
 #   - 配置注入方式与应用 Podman/Compose 一致：全部通过环境变量（Secret + env），
 #     不覆盖 classpath 内 application*.yml（应用本身已含完整配置）。
-#   - 镜像: 本地 podman build -t apex-scaffold:latest .（使用根目录 Containerfile，可显式指定 -f Containerfile；详见 ../docs/05-operations/deployment.md §5）
-#   - 探针: startup/liveness/readiness 指向 8080 的 Actuator 端点
-#     （目标镜像经 SERVICE_MODULE=apex-example 构建，未配置独立管理端口，
-#      actuator 与业务同端口，与 Containerfile HEALTHCHECK_PORT=8080 一致）
-#   - 数据库/Redis 为集群外服务时，将 Secret 与 env 中的地址改为实际 Service/DNS。
+#   - 端口与 podman-compose.yml / build-manifest.yaml 同源：
+#     gateway 8080、auth 8081、system 8082（管理 8083）、workflow 8093、
+#     office 8084、file 8085、integration 8094（管理 8097）、aggregation 8098。
+#   - 探针统一指向各服务 /actuator/health/{readiness,liveness}；system 与 integration
+#     走管理端口，aggregation 无数据库、无独立管理端口故走 8098。
+#   - 数据库/Redis/Nacos 为集群外服务时，将 Secret 与 env 中的地址改为实际 Service/DNS。
 # ============================================================
 
 ---
@@ -41,6 +44,18 @@ stringData:
   REDIS_PORT: "6379"
   REDIS_PASSWORD: changeme-to-a-strong-redis-password
   JWT_SECRET: change-this-to-a-secure-random-string-min-32-chars!!!
+  # 内部服务调用签名（/internal/v1/**）：所有服务必须使用同一密钥
+  APEX_INTERNAL_AUTH_SECRET: change-this-to-a-secure-internal-auth-secret-32ch
+  # 配置加密密钥（恰好 32 字节）与数据/Token 加密密钥（Base64 编码 32 字节）
+  CONFIG_ENCRYPTION_KEY: change-this-to-32-byte-config-key!!
+  APEX_SECURITY_DATA_ENCRYPTION_KEY: Y2hhbmdlLXRoaXMtYmFzZTY0LTMyLWJ5dGUta2V5MDA=
+  SECURITY_ENCRYPTION_KEY: Y2hhbmdlLXRoaXMtYmFzZTY0LTMyLWJ5dGUta2V5MDA=
+  # 各服务独立验签密钥（生产按服务拆分轮换；HMAC 过渡口径）
+  WORKFLOW_JWT_SECRET: change-this-to-a-secure-random-string-min-32-chars!!!
+  OFFICE_JWT_SECRET: change-this-to-a-secure-random-string-min-32-chars!!!
+  FILE_JWT_SECRET: change-this-to-a-secure-random-string-min-32-chars!!!
+  INTEGRATION_JWT_SECRET: change-this-to-a-secure-random-string-min-32-chars!!!
+  AGGREGATION_JWT_SECRET: change-this-to-a-secure-random-string-min-32-chars!!!
   # 无 Nacos 部署时保持 false；接入时改 true 并注入 NACOS_SERVER_ADDR / NACOS_NAMESPACE
   NACOS_CONFIG_ENABLED: "false"
   NACOS_DISCOVERY_ENABLED: "false"
@@ -66,21 +81,21 @@ stringData:
   OUTBOX_RETENTION_BATCH_SIZE: "5000"
 
 ---
-# Deployment
+# ============================================================
+# 网关（8080）
+# ============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apex-scaffold
+  name: apex-gateway
   namespace: apex-scaffold
   labels:
-    app: apex-scaffold
-    version: v1.3.1
+    app: apex-gateway
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: apex-scaffold
-      track: stable
+      app: apex-gateway
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -89,31 +104,50 @@ spec:
   template:
     metadata:
       labels:
-        app: apex-scaffold
-        version: v1.3.1
+        app: apex-gateway
     spec:
       containers:
-        - name: apex-scaffold
-          image: apex-scaffold:latest
+        - name: apex-gateway
+          image: apex-gateway:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
               name: http
-              protocol: TCP
           envFrom:
             - secretRef:
                 name: apex-secrets
           env:
-            # JVM 生产级调优参数（与 Containerfile 默认一致；GC 日志/堆转储写入容器 /app/logs）
+            - name: GATEWAY_PORT
+              value: "8080"
+            # 关闭 Nacos 时直连各服务（与 podman-compose 同口径）
+            - name: ROUTE_JOB_URI
+              value: http://apex-job-service:8095
+            - name: ROUTE_MASKING_URI
+              value: http://apex-masking-service:8096
+            - name: ROUTE_INTEGRATION_URI
+              value: http://apex-integration-service:8094
+            - name: ROUTE_AGGREGATION_URI
+              value: http://apex-aggregation-service:8098
             - name: JAVA_OPTS
-              value: "-Xms512m -Xmx768m -Xss512k -XX:MaxDirectMemorySize=128m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=/app/logs/gc.log:time,uptime,level,tags:filecount=5,filesize=20m -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
           startupProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8080
             periodSeconds: 10
-            timeoutSeconds: 3
             failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
           resources:
             requests:
               memory: "512Mi"
@@ -121,57 +155,638 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: 8080
-            periodSeconds: 30
-            timeoutSeconds: 3
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
           lifecycle:
             preStop:
               # 仅留出 readiness 摘流传播时间，实际排空由应用响应 SIGTERM 完成
               exec:
                 command: ["/bin/sh", "-c", "sleep 8"]
-      restartPolicy: Always
-
 ---
-# Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: apex-scaffold-service
+  name: apex-gateway
   namespace: apex-scaffold
-  labels:
-    app: apex-scaffold
 spec:
   type: ClusterIP
   selector:
-    app: apex-scaffold
-    track: stable
+    app: apex-gateway
   ports:
     - name: http
       port: 80
       targetPort: 8080
-      protocol: TCP
+---
+# ============================================================
+# apex-auth-service
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-auth-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-auth-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-auth-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-auth-service
+    spec:
+      containers:
+        - name: apex-auth-service
+          image: apex-auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: http
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          env:
+            - name: DB_NAME
+              value: apex_auth
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/apex_auth?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            periodSeconds: 10
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+            limits:
+              memory: "1536Mi"
+              cpu: "1500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-auth-service
+  namespace: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-auth-service
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
 
 ---
-# Ingress (可选,需要安装Ingress Controller)
+# ============================================================
+# apex-system-service
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-system-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-system-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-system-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-system-service
+    spec:
+      containers:
+        - name: apex-system-service
+          image: apex-system-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+              name: http
+            - containerPort: 8083
+              name: management
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          env:
+            - name: MANAGEMENT_SERVER_PORT
+              value: "8083"
+            - name: DB_NAME
+              value: apex_system
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/apex_system?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8083
+            periodSeconds: 10
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8083
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8083
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+            limits:
+              memory: "1536Mi"
+              cpu: "1500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-system-service
+  namespace: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-system-service
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082
+    - name: management
+      port: 8083
+      targetPort: 8083
+
+---
+# ============================================================
+# apex-workflow-service
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-workflow-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-workflow-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-workflow-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-workflow-service
+    spec:
+      containers:
+        - name: apex-workflow-service
+          image: apex-workflow-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8093
+              name: http
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          env:
+            - name: DB_NAME
+              value: apex_workflow
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/apex_workflow?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+            - name: WORKFLOW_JWT_HMAC_ENABLED
+              value: "true"
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8093
+            periodSeconds: 10
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8093
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8093
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+            limits:
+              memory: "1536Mi"
+              cpu: "1500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-workflow-service
+  namespace: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-workflow-service
+  ports:
+    - name: http
+      port: 8093
+      targetPort: 8093
+
+---
+# ============================================================
+# apex-office-service
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-office-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-office-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-office-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-office-service
+    spec:
+      containers:
+        - name: apex-office-service
+          image: apex-office-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+              name: http
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          env:
+            - name: DB_NAME
+              value: apex_office
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/apex_office?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8084
+            periodSeconds: 10
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8084
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8084
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+            limits:
+              memory: "1536Mi"
+              cpu: "1500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-office-service
+  namespace: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-office-service
+  ports:
+    - name: http
+      port: 8084
+      targetPort: 8084
+
+---
+# ============================================================
+# apex-file-service
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-file-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-file-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-file-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-file-service
+    spec:
+      containers:
+        - name: apex-file-service
+          image: apex-file-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8085
+              name: http
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          env:
+            - name: DB_NAME
+              value: apex_file
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/apex_file?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8085
+            periodSeconds: 10
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8085
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8085
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+            limits:
+              memory: "1536Mi"
+              cpu: "1500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-file-service
+  namespace: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-file-service
+  ports:
+    - name: http
+      port: 8085
+      targetPort: 8085
+
+---
+# ============================================================
+# apex-integration-service
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-integration-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-integration-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-integration-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-integration-service
+    spec:
+      containers:
+        - name: apex-integration-service
+          image: apex-integration-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8094
+              name: http
+            - containerPort: 8097
+              name: management
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          env:
+            - name: MANAGEMENT_SERVER_PORT
+              value: "8097"
+            - name: DB_NAME
+              value: apex_integration
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-service:3306/apex_integration?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+            - name: APEX_IOT_MQTT_ENABLED
+              value: "false"
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8097
+            periodSeconds: 10
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8097
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8097
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+            limits:
+              memory: "1536Mi"
+              cpu: "1500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-integration-service
+  namespace: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-integration-service
+  ports:
+    - name: http
+      port: 8094
+      targetPort: 8094
+    - name: management
+      port: 8097
+      targetPort: 8097
+
+---
+# ============================================================
+# apex-aggregation-service（只读跨源聚合：8098，无数据库、无管理端口）
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apex-aggregation-service
+  namespace: apex-scaffold
+  labels:
+    app: apex-aggregation-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apex-aggregation-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: apex-aggregation-service
+    spec:
+      containers:
+        - name: apex-aggregation-service
+          image: apex-aggregation-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8098
+              name: http
+          envFrom:
+            - secretRef:
+                name: apex-secrets
+          env:
+            - name: APEX_TODO_WORKFLOW_BASE_URL
+              value: http://apex-workflow-service:8093
+            - name: APEX_TODO_OFFICE_BASE_URL
+              value: http://apex-office-service:8084
+            - name: APEX_TODO_TIMEOUT_MILLIS
+              value: "3000"
+            - name: APEX_TODO_DEFAULT_BULKHEAD
+              value: "8"
+            - name: JAVA_OPTS
+              value: "-XX:+UseG1GC -XX:MaxRAMPercentage=70 -Dfile.encoding=UTF-8"
+          startupProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8098
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8098
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8098
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apex-aggregation-service
+  namespace: apex-scaffold
+spec:
+  type: ClusterIP
+  selector:
+    app: apex-aggregation-service
+  ports:
+    - name: http
+      port: 8098
+      targetPort: 8098
+
+---
+# ============================================================
+# Ingress（网关统一入口，需集群已安装 Ingress Controller）
+# ============================================================
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: apex-scaffold-ingress
   namespace: apex-scaffold
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   rules:
@@ -182,7 +797,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: apex-scaffold-service
+                name: apex-gateway
                 port:
                   number: 80
   tls:
@@ -191,17 +806,19 @@ spec:
       secretName: apex-tls-secret
 
 ---
-# Horizontal Pod Autoscaler
+# ============================================================
+# 网关 HPA
+# ============================================================
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: apex-scaffold-hpa
+  name: apex-gateway-hpa
   namespace: apex-scaffold
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: apex-scaffold
+    name: apex-gateway
   minReplicas: 2
   maxReplicas: 10
   metrics:
