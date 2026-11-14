@@ -45,7 +45,7 @@ run_suite() {
     local test_class=$3
 
     log_info "开始 ${name} 双库迁移演练（真实 MySQL 9 + PostgreSQL 15）"
-    if mvnd -T1 -B -pl "$module" verify \
+    if mvnd -T1 -B -pl ":${module}" verify \
         -Dit.test="$test_class" \
         -Dtest=NoSuchDummy \
         -Dsurefire.failIfNoSpecifiedTests=false \
@@ -53,7 +53,7 @@ run_suite() {
         -Djacoco.skip=true; then
         log_success "${name} 双库迁移演练通过"
     else
-        log_failure "${name} 双库迁移演练失败（详见 ${module}/target/failsafe-reports）"
+        log_failure "${name} 双库迁移演练失败（详见 ${module} 模块所在分组目录下 target/failsafe-reports）"
         FAILED=1
     fi
 }

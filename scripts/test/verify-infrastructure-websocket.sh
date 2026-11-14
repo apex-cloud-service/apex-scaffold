@@ -60,10 +60,10 @@ zsh -c '
     fi
     case "$2" in
         infrastructure)
-            mvnd -T4 -B -pl apex-infrastructure,apex-system-service,apex-auth-service,apex-job-service,apex-example -am clean verify
+            mvnd -T4 -B -pl :apex-infrastructure,:apex-system-service,:apex-auth-service,:apex-job-service,:apex-example -am clean verify
             ;;
         websocket)
-            mvnd -T4 -B -pl apex-office-service,apex-gateway -am clean verify
+            mvnd -T4 -B -pl :apex-office-service,:apex-gateway -am clean verify
             ;;
         full)
             mvnd -T4 -B clean verify

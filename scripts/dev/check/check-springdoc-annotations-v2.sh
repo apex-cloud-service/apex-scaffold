@@ -133,7 +133,7 @@ check_router_annotations() {
     log_to_report "1. Router 类 @RouterOperations 注解检查"
     log_to_report "========================================"
 
-    local router_dir="${PROJECT_ROOT}/apex-system/src/main/java/com/apex/scaffold/interfaces/router"
+    local router_dir="${PROJECT_ROOT}/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router"
 
     if ! require_directory "$router_dir" "Router目录"; then
         return 1
@@ -203,7 +203,7 @@ check_handler_annotations() {
     log_to_report "2. Handler 方法 @Operation 注解检查"
     log_to_report "========================================"
 
-    local handler_dir="${PROJECT_ROOT}/apex-system/src/main/java/com/apex/scaffold/interfaces/handler"
+    local handler_dir="${PROJECT_ROOT}/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler"
 
     if ! require_directory "$handler_dir" "Handler目录"; then
         return 1
@@ -273,13 +273,13 @@ check_dto_schema_annotations() {
     log_to_report "========================================"
 
     local dto_dirs=(
-        "${PROJECT_ROOT}/apex-system/src/main/java/com/apex/scaffold/interfaces/dto"
-        "${PROJECT_ROOT}/apex-system/src/main/java/com/apex/scaffold/application/dto"
-        "${PROJECT_ROOT}/apex-auth/src/main/java/com/apex/scaffold/auth/application/dto"
-        "${PROJECT_ROOT}/apex-workflow/src/main/java/com/apex/scaffold/workflow/application/dto"
-        "${PROJECT_ROOT}/apex-file/src/main/java/com/apex/scaffold/file/application/dto"
-        "${PROJECT_ROOT}/apex-office/src/main/java/com/apex/scaffold/office/application/dto"
-        "${PROJECT_ROOT}/apex-office/src/main/java/com/apex/scaffold/office/off/application/dto"
+        "${PROJECT_ROOT}/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/dto"
+        "${PROJECT_ROOT}/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto"
+        "${PROJECT_ROOT}/apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/dto"
+        "${PROJECT_ROOT}/apex-components-parent/apex-workflow/src/main/java/com/apex/scaffold/workflow/application/dto"
+        "${PROJECT_ROOT}/apex-components-parent/apex-file/src/main/java/com/apex/scaffold/file/application/dto"
+        "${PROJECT_ROOT}/apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/application/dto"
+        "${PROJECT_ROOT}/apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/off/application/dto"
     )
 
     for dto_dir in "${dto_dirs[@]}"; do

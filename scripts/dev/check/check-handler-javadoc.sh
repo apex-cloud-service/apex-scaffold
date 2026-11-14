@@ -7,7 +7,7 @@
 #
 # 使用方法：
 #   ./scripts/dev/check/check-handler-javadoc.sh
-#   ./scripts/dev/check/check-handler-javadoc.sh --handler-dir apex-system/src/main/java/com/apex/scaffold/interfaces/handler
+#   ./scripts/dev/check/check-handler-javadoc.sh --handler-dir apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler
 #
 # 退出码：
 #   0 - 所有检查通过
@@ -24,7 +24,7 @@ source "${SCRIPT_DIR}/../../lib/common.sh"
 PROJECT_ROOT=$(get_project_root)
 cd -- "$PROJECT_ROOT"
 
-HANDLER_DIR="apex-system/src/main/java/com/apex/scaffold/interfaces/handler"
+HANDLER_DIR="apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -40,7 +40,7 @@ while [[ $# -gt 0 ]]; do
             echo "使用方法: $0 [选项]"
             echo ""
             echo "选项:"
-            echo "    --handler-dir PATH  Handler 源码目录（默认：apex-system/src/main/java/.../handler）"
+            echo "    --handler-dir PATH  Handler 源码目录（默认：apex-components-parent/apex-system/src/main/java/.../handler）"
             echo "    --help, -h          显示此帮助信息"
             exit 0
             ;;

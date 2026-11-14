@@ -15,13 +15,13 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 PROJECT_ROOT="$(get_project_root)"
 
 require_directory "$PROJECT_ROOT" || exit 1
-JAR="$PROJECT_ROOT/apex-tools-deployment/target/local-deployment.jar"
+JAR="$PROJECT_ROOT/apex-tools-parent/apex-tools-deployment/target/local-deployment.jar"
 
 if [ ! -f "$JAR" ]; then
     log_info "未找到离线运维工具 JAR，自动构建 apex-tools-deployment ..."
     # init-build-env.sh 依赖 sdkman 的 zsh 语法，macOS bash 3.2 无法直接 source，
     # 统一经子进程加载环境后原地构建；sdk env 需在项目根读取 .sdkmanrc
-    BUILD_SCRIPT='cd -- "$APEX_ROOT" && source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-tools-deployment -am verify'
+    BUILD_SCRIPT='cd -- "$APEX_ROOT" && source scripts/build/init-build-env.sh && mvnd -T4 -B -pl :apex-tools-deployment -am verify'
     set +e
     if command -v zsh >/dev/null 2>&1; then
         APEX_ROOT="$PROJECT_ROOT" zsh -c "$BUILD_SCRIPT"
@@ -31,7 +31,7 @@ if [ ! -f "$JAR" ]; then
     BUILD_STATUS=$?
     set -e
     if [ "$BUILD_STATUS" -ne 0 ]; then
-        log_error "自动构建失败（exit $BUILD_STATUS）；请手动执行: source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-tools-deployment -am verify"
+        log_error "自动构建失败（exit $BUILD_STATUS）；请手动执行: source scripts/build/init-build-env.sh && mvnd -T4 -B -pl :apex-tools-deployment -am verify"
         exit 1
     fi
     if [ ! -f "$JAR" ]; then

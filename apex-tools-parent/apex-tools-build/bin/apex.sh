@@ -175,6 +175,33 @@ colonize_ids() {
   print -r -- "${(j:,:)out}"
 }
 
+# ------------------------------------------------------------
+# 函数: apex_module_dir <artifactId>（zsh 覆盖 common.sh 同名函数）
+# 用途: 本脚本运行于 zsh，common.sh 的 get_project_root 在 zsh 下因 BASH_SOURCE
+#       缺失回退 $0，向上探测会命中本模块自身 pom.xml，导致根解析错误；
+#       故在已按 .mvn/ 标记定位 PROJECT_ROOT 的前提下覆盖为根锚定实现，
+#       候选顺序与 common.sh 版本完全一致（分组约定 + 根级兜底）。
+# 调用方: cmd_package / deploy_jar precheck / precheck_common / cmd_status / image_build
+# ------------------------------------------------------------
+apex_module_dir() {
+  local id="$1" candidate
+  for candidate in \
+    "${PROJECT_ROOT}/apex-shared-parent" \
+    "${PROJECT_ROOT}/apex-components-parent" \
+    "${PROJECT_ROOT}/apex-starters-parent" \
+    "${PROJECT_ROOT}/apex-services-bom" \
+    "${PROJECT_ROOT}/apex-applications-parent" \
+    "${PROJECT_ROOT}/apex-tools-parent" \
+    "${PROJECT_ROOT}/apex-business-parent" \
+    "${PROJECT_ROOT}"; do
+    if [[ -f "${candidate}/${id}/pom.xml" ]]; then
+      printf '%s\n' "${candidate}/${id}"
+      return 0
+    fi
+  done
+  return 1
+}
+
 # ============================================================
 # 子命令: env —— 构建环境校验
 # ============================================================

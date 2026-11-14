@@ -59,7 +59,8 @@ esac
 source "${ROOT_DIR}/scripts/build/init-build-env.sh"
 
 SERVICES=(apex-system-service apex-auth-service apex-workflow-service apex-office-service apex-file-service apex-integration-service apex-aggregation-service apex-gateway)
-SERVICE_MODULES="${(j:,:)SERVICES},apex-tools-deployment"
+# -pl 冒号形式按坐标匹配（第二阶段起叶子嵌套于分组父目录，裸路径不再命中）
+SERVICE_MODULES="${(j:,:)${SERVICES/#/:}},:apex-tools-deployment"
 
 echo "==> [1/3] 构建 ${PROFILE} 版本 (v${VERSION})"
 MAVEN_OPTS="-Xmx1024m" mvnd -o -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests \
@@ -72,7 +73,7 @@ MAVEN_OPTS="-Xmx1024m" mvnd -o -q clean package -P"${PROFILE}" -pl "${SERVICE_MO
 SERVICE_JARS=()
 for svc in "${SERVICES[@]}"; do
   jars=()
-  for candidate in "${svc}"/target/"${svc}"-*.jar(N); do
+  for candidate in "apex-services-bom/${svc}"/target/"${svc}"-*.jar(N); do
     case "${candidate}" in
       *-sources.jar|*-javadoc.jar|*-test-support.jar|*-tests.jar) continue ;;
     esac
@@ -91,7 +92,7 @@ mkdir -p "${DIST_DIR}/docs" "${DIST_DIR}/config/license" "${DIST_DIR}/scripts" "
 cp "${SERVICE_JARS[@]}" "${DIST_DIR}/"
 
 # 离线部署校验工具：Compose security-key-check 按包内相对路径挂载，必须随包交付。
-TOOLS_JAR="apex-tools-deployment/target/local-deployment.jar"
+TOOLS_JAR="apex-tools-parent/apex-tools-deployment/target/local-deployment.jar"
 if [[ ! -f "${TOOLS_JAR}" ]]; then
   echo "缺少部署校验工具 ${TOOLS_JAR}，请在发布构建中包含 apex-tools-deployment" >&2
   exit 1
@@ -165,4 +166,4 @@ cd ..
 echo ""
 echo "✅ 发布包已生成: dist/apex-scaffold-${VERSION}-${PROFILE}.zip"
 echo "   校验文件: dist/apex-scaffold-${VERSION}-${PROFILE}.zip.sha256"
-echo "   构建标识: $(cat apex-system/target/classes/apex-build.properties | grep build.profile.id)"
+echo "   构建标识: $(cat apex-components-parent/apex-system/target/classes/apex-build.properties | grep build.profile.id)"

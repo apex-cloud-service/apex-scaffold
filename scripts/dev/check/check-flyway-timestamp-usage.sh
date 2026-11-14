@@ -15,8 +15,8 @@ cd "$PROJECT_ROOT"
 
 print_header "检查 Flyway 脚本中的 TIMESTAMP 类型使用..."
 
-MYSQL_MIGRATION_DIR="apex-system/src/main/resources/db/migration/mysql"
-POSTGRESQL_MIGRATION_DIR="apex-system/src/main/resources/db/migration/postgresql"
+MYSQL_MIGRATION_DIR="apex-components-parent/apex-system/src/main/resources/db/migration/mysql"
+POSTGRESQL_MIGRATION_DIR="apex-components-parent/apex-system/src/main/resources/db/migration/postgresql"
 
 require_directory "$MYSQL_MIGRATION_DIR" "MySQL 迁移脚本目录" || exit 1
 require_directory "$POSTGRESQL_MIGRATION_DIR" "PostgreSQL 迁移脚本目录" || exit 1

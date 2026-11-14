@@ -39,7 +39,7 @@ print_header "Reactor Netty 指标验证"
 echo "1. 检查应用健康状态..."
 if ! curl -s -f -m 10 "$APP_URL/actuator/health" >/dev/null 2>&1; then
     log_failure "应用未运行或不健康: $APP_URL"
-    echo "   请先启动网关：mvnd spring-boot:run -pl apex-gateway"
+    echo "   请先启动网关：mvnd spring-boot:run -pl :apex-gateway"
     exit 1
 fi
 log_success "应用运行正常: $APP_URL"

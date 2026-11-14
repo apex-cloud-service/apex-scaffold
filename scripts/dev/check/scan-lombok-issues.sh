@@ -9,9 +9,9 @@ PROJECT_ROOT=$(get_project_root)
 cd -- "$PROJECT_ROOT"
 JAVA_FILES=$(safe_find "apex-*/src/main/java" "*.java")
 DTO_FILES=$(safe_find_custom "apex-*/src/main/java" -type f '(' -path '*/dto/*.java' -o -name '*Request.java' -o -name '*Response.java' ')')
-DOMAIN_DTOS=$(safe_find "apex-domain/src/main/java" "*DTO.java")
+DOMAIN_DTOS=$(safe_find "apex-shared-parent/apex-domain/src/main/java" "*DTO.java")
 DTO_FILES=$(printf '%s\n' "$DTO_FILES" "$DOMAIN_DTOS" | sort -u)
-PO_FILES=$(safe_find_custom "apex-infrastructure-persistence/src/main/java" -path '*/po/*PO.java' -type f)
+PO_FILES=$(safe_find_custom "apex-shared-parent/apex-infrastructure-persistence/src/main/java" -path '*/po/*PO.java' -type f)
 
 print_header "扫描 Lombok 使用问题..."
 

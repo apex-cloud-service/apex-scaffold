@@ -71,7 +71,7 @@ zsh -c '
 
     case "$2" in
         targeted)
-            mvnd -T4 -B -pl "$3" -am test
+            mvnd -T4 -B -pl "${(j:,:)${(ps:,,:)3/#/#:}}" -am test
             ;;
         full)
             mvnd -T4 -B clean verify

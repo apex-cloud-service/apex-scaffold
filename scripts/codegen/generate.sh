@@ -50,12 +50,12 @@ if [[ -f "$HOME/.sdkman/bin/sdkman-init.sh" ]]; then
 fi
 
 echo "=== 构建 apex-generator 模块 ==="
-(cd "${PROJECT_ROOT}" && MAVEN_OPTS="-Xmx512m" mvnd -o -q install -pl apex-generator -DskipTests)
+(cd "${PROJECT_ROOT}" && MAVEN_OPTS="-Xmx512m" mvnd -o -q install -pl :apex-generator -DskipTests)
 
 echo "=== 生成代码 ==="
 CP_FILE="$(mktemp)"
-(cd "${PROJECT_ROOT}" && mvnd -o -q dependency:build-classpath -pl apex-generator -Dmdep.outputFile="${CP_FILE}" 2>/dev/null)
-CP="apex-generator/target/classes:$(cat "${CP_FILE}")"
+(cd "${PROJECT_ROOT}" && mvnd -o -q dependency:build-classpath -pl :apex-generator -Dmdep.outputFile="${CP_FILE}" 2>/dev/null)
+CP="apex-tools-parent/apex-generator/target/classes:$(cat "${CP_FILE}")"
 rm -f "${CP_FILE}"
 (cd "${PROJECT_ROOT}" && java -cp "${CP}" \
   com.apex.scaffold.generator.GeneratorCli -i "${INPUT_FILE}" -o "${OUTPUT_DIR}" -v "${MIGRATION_VERSION}" \

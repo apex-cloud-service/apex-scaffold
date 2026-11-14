@@ -57,28 +57,28 @@ MIGRATION_SERVICES=(
 
 # 各业务服务独立库的 V1 迁移脚本（每服务独立 Flyway 链，方案 §7 风险 7）
 SERVICE_CHAIN_FILES=(
-    "apex-workflow-service/src/main/resources/db/migration/mysql/V1__init_workflow_schema.sql"
-    "apex-workflow-service/src/main/resources/db/migration/postgresql/V1__init_workflow_schema.sql"
-    "apex-file-service/src/main/resources/db/migration/mysql/V1__init_file_schema.sql"
-    "apex-file-service/src/main/resources/db/migration/postgresql/V1__init_file_schema.sql"
-    "apex-office-service/src/main/resources/db/migration/mysql/V1__init_office_schema.sql"
-    "apex-office-service/src/main/resources/db/migration/postgresql/V1__init_office_schema.sql"
+    "apex-services-bom/apex-workflow-service/src/main/resources/db/migration/mysql/V1__init_workflow_schema.sql"
+    "apex-services-bom/apex-workflow-service/src/main/resources/db/migration/postgresql/V1__init_workflow_schema.sql"
+    "apex-services-bom/apex-file-service/src/main/resources/db/migration/mysql/V1__init_file_schema.sql"
+    "apex-services-bom/apex-file-service/src/main/resources/db/migration/postgresql/V1__init_file_schema.sql"
+    "apex-services-bom/apex-office-service/src/main/resources/db/migration/mysql/V1__init_office_schema.sql"
+    "apex-services-bom/apex-office-service/src/main/resources/db/migration/postgresql/V1__init_office_schema.sql"
 )
 
 MYSQL_FILES=(
-    "apex-auth-service/src/main/resources/db/migration/mysql/V44__create_auth_center_core_tables.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V45__align_auth_domain_fields.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V46__insert_test_users.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V47__insert_auth_center_seed_data.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V48__add_config_and_audit_menu_permissions.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V51__add_high_risk_authorization_permissions.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V52__align_auth_token_fields.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V53__create_oauth2_authorization_tables.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V54__scope_oauth2_authorization_by_tenant.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql"
-    "apex-auth-service/src/main/resources/db/migration/mysql/V56__create_domain_event_outbox.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V44__create_auth_center_core_tables.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V45__align_auth_domain_fields.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V46__insert_test_users.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V47__insert_auth_center_seed_data.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V48__add_config_and_audit_menu_permissions.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V51__add_high_risk_authorization_permissions.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V52__align_auth_token_fields.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V53__create_oauth2_authorization_tables.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V54__scope_oauth2_authorization_by_tenant.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V55__auth_user_account_binding.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V56__create_domain_event_outbox.sql"
 )
 
 ALL_MYSQL_EXISTS=true
@@ -103,19 +103,19 @@ echo -e "${YELLOW}[2/9] 检查 PostgreSQL 迁移文件...${NC}"
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
 PG_FILES=(
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V44__create_auth_center_core_tables.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V45__align_auth_domain_fields.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V46__insert_test_users.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V47__insert_auth_center_seed_data.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V50__create_totp_and_mfa_config_tables.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V51__add_high_risk_authorization_permissions.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V52__align_auth_token_fields.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V53__create_oauth2_authorization_tables.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V54__scope_oauth2_authorization_by_tenant.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V55__auth_user_account_binding.sql"
-    "apex-auth-service/src/main/resources/db/migration/postgresql/V56__create_domain_event_outbox.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V44__create_auth_center_core_tables.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V45__align_auth_domain_fields.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V46__insert_test_users.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V47__insert_auth_center_seed_data.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V50__create_totp_and_mfa_config_tables.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V51__add_high_risk_authorization_permissions.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V52__align_auth_token_fields.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V53__create_oauth2_authorization_tables.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V54__scope_oauth2_authorization_by_tenant.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V55__auth_user_account_binding.sql"
+    "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V56__create_domain_event_outbox.sql"
 )
 
 ALL_PG_EXISTS=true
@@ -139,8 +139,8 @@ echo ""
 echo -e "${YELLOW}[3/9] 检查 V49 auth_config 表创建脚本...${NC}"
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
-if [ -f "apex-auth-service/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql" ] && \
-   [ -f "apex-auth-service/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql" ]; then
+if [ -f "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql" ] && \
+   [ -f "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql" ]; then
     check_pass "V49 auth_config 表创建脚本存在（MySQL + PostgreSQL）"
 else
     check_fail "V49 auth_config 表创建脚本缺失"
@@ -152,17 +152,17 @@ echo -e "${YELLOW}[4/9] 检查 V50 文件位置...${NC}"
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
 V50_IN_ROOT=false
-if [ -f "apex-auth-service/src/main/resources/db/migration/V50__create_totp_and_mfa_config_tables.sql" ]; then
+if [ -f "apex-services-bom/apex-auth-service/src/main/resources/db/migration/V50__create_totp_and_mfa_config_tables.sql" ]; then
     V50_IN_ROOT=true
 fi
 
 V50_IN_MYSQL=false
-if [ -f "apex-auth-service/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql" ]; then
+if [ -f "apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql" ]; then
     V50_IN_MYSQL=true
 fi
 
 V50_IN_PG=false
-if [ -f "apex-auth-service/src/main/resources/db/migration/postgresql/V50__create_totp_and_mfa_config_tables.sql" ]; then
+if [ -f "apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V50__create_totp_and_mfa_config_tables.sql" ]; then
     V50_IN_PG=true
 fi
 
@@ -259,7 +259,7 @@ echo ""
 echo -e "${YELLOW}[7/9] 检查双库迁移回归测试...${NC}"
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
-DUAL_DB_TEST="apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java"
+DUAL_DB_TEST="apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java"
 
 if [ -f "$DUAL_DB_TEST" ]; then
     check_pass "双库迁移回归测试存在（Testcontainers，由 Failsafe 执行）"
@@ -284,7 +284,7 @@ echo ""
 echo -e "${YELLOW}[9/9] 检查 PostgreSQL V48 语法修复...${NC}"
 TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 
-PG_V48="apex-auth-service/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql"
+PG_V48="apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql"
 
 if [ -f "$PG_V48" ]; then
     # 检查是否包含 DO $$ 语法

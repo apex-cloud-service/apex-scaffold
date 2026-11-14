@@ -41,7 +41,7 @@ start_backend() {
     echo "启动后端服务"
     echo "========================================="
     cd "${PROJECT_ROOT}"
-    echo "执行命令: source scripts/build/init-build-env.sh && mvnd spring-boot:run -pl apex-system-service"
+    echo "执行命令: source scripts/build/init-build-env.sh && mvnd spring-boot:run -pl :apex-system-service"
     echo "请在新终端窗口中执行上述命令"
     echo ""
 }

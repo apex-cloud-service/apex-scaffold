@@ -153,7 +153,7 @@ if check_service "应用 (Apex Scaffold)" "$APP_URL" "/actuator/health"; then
     APP_OK=1
 else
     echo -e "  ${YELLOW}提示: 请检查应用是否正在运行${NC}"
-    echo -e "  启动命令: ${BLUE}mvnd -pl apex-gateway spring-boot:run${NC}"
+    echo -e "  启动命令: ${BLUE}mvnd -pl :apex-gateway spring-boot:run${NC}"
 fi
 
 echo ""

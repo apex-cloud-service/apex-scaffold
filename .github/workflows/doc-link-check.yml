@@ -48,7 +48,7 @@ jobs:
       - name: 构建离线运维工具 JAR
         run: |
           source scripts/build/init-build-env.sh
-          mvnd -B -pl apex-tools-deployment -am verify
+          mvnd -B -pl :apex-tools-deployment -am verify
 
       # 仓库内部链接是本仓可判定的门禁：失败必须阻断，不能只生成报告。
       - name: 运行内部链接检查脚本

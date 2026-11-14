@@ -55,8 +55,8 @@ case "$TOPOLOGY" in
     all-in-one)
         log_info "拓扑：all-in-one（单进程装配全部组件，basic 档）"
         log_info "事件通道 auto：无 MQ 时自动退化为进程内派发"
-        mvnd -q -B -pl apex-boot-all -am package -DskipTests
-        exec java -jar apex-boot-all/target/apex-boot-all-1.3.1.jar \
+        mvnd -q -B -pl :apex-boot-all -am package -DskipTests
+        exec java -jar apex-applications-parent/apex-boot-all/target/apex-boot-all-1.3.1.jar \
             --spring.profiles.active=basic \
             --apex.events.channel=auto \
             --server.port="${PORT:-8080}"
@@ -68,16 +68,16 @@ case "$TOPOLOGY" in
                       apex-file-service apex-office-service apex-integration-service \
                       apex-aggregation-service; do
             log_info "构建 $module"
-            mvnd -q -B -pl "$module" -am package -DskipTests
+            mvnd -q -B -pl ":${module}" -am package -DskipTests
         done
         log_success "各服务 JAR 已产出，按部署文档分别启动（或使用 podman-compose.yml）"
         ;;
     subset)
         log_info "拓扑：subset（子集：${COMPONENTS}）"
         log_info "未列出的组件将被显式关闭（--apex.component.<name>.enabled=false）"
-        mvnd -q -B -pl apex-boot-all -am package -DskipTests
+        mvnd -q -B -pl :apex-boot-all -am package -DskipTests
         # shellcheck disable=SC2046
-        exec java -jar apex-boot-all/target/apex-boot-all-1.3.1.jar \
+        exec java -jar apex-applications-parent/apex-boot-all/target/apex-boot-all-1.3.1.jar \
             --spring.profiles.active=basic \
             --apex.events.channel=auto \
             --server.port="${PORT:-8080}" \

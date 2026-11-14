@@ -75,20 +75,20 @@ check_code_generality() {
     print_header "检查1: 代码通用性"
     
     # 检查Sample/Report实体是否有说明
-    if matches_file "模块说明" apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SampleEntity.java; then
+    if matches_file "模块说明" apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/SampleEntity.java; then
         print_success "Sample实体已添加通用说明"
     else
         print_error "Sample实体缺少通用说明"
     fi
     
-    if matches_file "模块说明" apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/ReportEntity.java; then
+    if matches_file "模块说明" apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/ReportEntity.java; then
         print_success "Report实体已添加通用说明"
     else
         print_error "Report实体缺少通用说明"
     fi
     
     # 检查微信集成标注
-    if matches_file "可选集成" apex-domain/src/main/java/com/apex/scaffold/domain/gateway/WeChatGateway.java; then
+    if matches_file "可选集成" apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain/gateway/WeChatGateway.java; then
         print_success "微信集成已标注为可选模块"
     else
         print_error "微信集成未标注可选性"
@@ -135,14 +135,14 @@ check_database_scripts() {
     print_header "检查3: 数据库迁移脚本"
     
     # 检查V9脚本注释
-    if matches_file "通用用户属性" apex-system/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql; then
+    if matches_file "通用用户属性" apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V9__add_birthday_onboarding_to_sys_user.sql; then
         print_success "V9迁移脚本注释已优化"
     else
         print_error "V9迁移脚本注释未优化"
     fi
     
     # 统计迁移脚本数量
-    MIGRATION_COUNT=$(safe_find apex-system/src/main/resources/db/migration/mysql 'V*.sql' | wc -l)
+    MIGRATION_COUNT=$(safe_find apex-components-parent/apex-system/src/main/resources/db/migration/mysql 'V*.sql' | wc -l)
     print_info "Flyway迁移脚本总数: $MIGRATION_COUNT"
 }
 
@@ -202,7 +202,7 @@ check_license_mechanism() {
     
     # 检查FeatureGate注解
     local feature_files
-    feature_files=$(safe_find apex-common/src 'FeatureGate.java')
+    feature_files=$(safe_find apex-shared-parent/apex-common/src 'FeatureGate.java')
     if [[ -n "$feature_files" ]]; then
         print_success "FeatureGate注解存在"
     else

@@ -42,7 +42,7 @@
 
 ```bash
 source ./scripts/build/init-build-env.sh
-mvnd -pl apex-system -am -Dtest=RouterOpenApiCoverageTest -Dsurefire.failIfNoSpecifiedTests=false test
+mvnd -pl :apex-system -am -Dtest=RouterOpenApiCoverageTest -Dsurefire.failIfNoSpecifiedTests=false test
 bash scripts/ci/check-springdoc-coverage.sh
 bash scripts/dev/check/check-handler-javadoc.sh
 ```

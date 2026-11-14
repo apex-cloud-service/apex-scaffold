@@ -264,7 +264,7 @@ main() {
         echo "  # 方式一: 本地编排一键启动网关 + 全部微服务（推荐）"
         echo "  podman-compose -f podman-compose.yml up -d --build"
         echo "  # 方式二: 单独启动网关（承接原单体 8080 统一入口）"
-        echo "  java -jar apex-gateway/target/apex-gateway-1.3.1.jar"
+        echo "  java -jar apex-services-bom/apex-gateway/target/apex-gateway-1.3.1.jar"
         echo ""
         exit 1
     fi

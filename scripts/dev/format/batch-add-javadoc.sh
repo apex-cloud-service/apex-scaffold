@@ -123,25 +123,25 @@ $javadoc\\
 }
 
 echo "🔧 正在处理 DTO 类..."
-find apex-system/src/main/java apex-auth/src/main/java apex-file/src/main/java apex-office/src/main/java apex-workflow/src/main/java apex-integration/src/main/java \( -name "*DTO.java" -o -name "*Request.java" -o -name "*Response.java" \) | while read file; do
+find apex-components-parent/apex-system/src/main/java apex-components-parent/apex-auth/src/main/java apex-components-parent/apex-file/src/main/java apex-components-parent/apex-office/src/main/java apex-components-parent/apex-workflow/src/main/java apex-components-parent/apex-integration/src/main/java \( -name "*DTO.java" -o -name "*Request.java" -o -name "*Response.java" \) | while read file; do
     add_dto_javadoc "$file"
 done
 
 echo ""
 echo "🔧 正在处理 PO 类..."
-find apex-infrastructure-persistence/src/main/java -name "*PO.java" | while read file; do
+find apex-shared-parent/apex-infrastructure-persistence/src/main/java -name "*PO.java" | while read file; do
     add_po_javadoc "$file"
 done
 
 echo ""
 echo "🔧 正在处理 Mapper 接口..."
-find apex-infrastructure-persistence/src/main/java -name "*Mapper.java" | while read file; do
+find apex-shared-parent/apex-infrastructure-persistence/src/main/java -name "*Mapper.java" | while read file; do
     add_mapper_javadoc "$file"
 done
 
 echo ""
 echo "🔧 正在处理 Service 类..."
-find apex-system/src/main/java apex-auth/src/main/java apex-file/src/main/java apex-office/src/main/java apex-workflow/src/main/java apex-integration/src/main/java -name "*Service.java" | while read file; do
+find apex-components-parent/apex-system/src/main/java apex-components-parent/apex-auth/src/main/java apex-components-parent/apex-file/src/main/java apex-components-parent/apex-office/src/main/java apex-components-parent/apex-workflow/src/main/java apex-components-parent/apex-integration/src/main/java -name "*Service.java" | while read file; do
     add_service_javadoc "$file"
 done
 

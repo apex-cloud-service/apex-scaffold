@@ -25,5 +25,5 @@ MAVEN_OPTS="-Xmx1024m" mvnd -o clean package "${PROFILE}" -DskipTests \
   || MAVEN_OPTS="-Xmx1024m" mvnd clean package "${PROFILE}" -DskipTests
 
 echo "✅ 构建完成"
-echo "JAR 文件位于: apex-gateway/target/ 和 apex-*-service/target/"
-echo "   构建标识: $(cat apex-system/target/classes/apex-build.properties 2>/dev/null | grep build.profile.id || echo 'unknown')"
+echo "JAR 文件位于: apex-services-bom/apex-gateway/target/ 与 apex-services-bom/apex-*-service/target/"
+echo "   构建标识: $(cat apex-components-parent/apex-system/target/classes/apex-build.properties 2>/dev/null | grep build.profile.id || echo 'unknown')"

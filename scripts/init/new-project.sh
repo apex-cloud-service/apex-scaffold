@@ -114,7 +114,7 @@ fi
 
 # ---------- 4. 目录级包名路径（com/apex/scaffold → newPackage 路径） ----------
 echo "=== 4/5 包路径迁移 ==="
-# 源码包目录分散在各模块下（如 apex-common/src/main/java/com/apex/scaffold/...）。
+# 源码包目录分散在各模块下（如 apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/...）。
 # 迁移规则: 去掉 "com/apex/scaffold" 尾部，替换为新的包路径（含 com 开头）。
 NEW_PKG_PATH="$(echo "${PACKAGE}" | tr '.' '/')"
 NEW_EXAMPLE_PATH="${NEW_PKG_PATH}/example"
@@ -170,7 +170,7 @@ cat << 'EOF'
 
 3. 构建并启动（dev 环境）
    source ~/.sdkman/bin/sdkman-init.sh
-   mvnd spring-boot:run -pl apex-system-service
+   mvnd spring-boot:run -pl :apex-system-service
 
 4. 验证清单
    □ http://localhost:<port>/doc.html        API 文档可访问

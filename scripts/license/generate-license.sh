@@ -90,9 +90,9 @@ if ! command -v mvnd >/dev/null 2>&1; then
   echo "❌ 未找到 mvnd，请先安装: sdk install mvnd 2.0.0-rc-3"
   exit 1
 fi
-MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
-  || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl apex-license-tools -Dmdep.outputFile="${CP_FILE}"
-CP="apex-license-tools/target/classes:apex-license-spring-boot-starter/target/classes:apex-common/target/classes:$(cat "${CP_FILE}")"
+MAVEN_OPTS="-Xmx512m" mvnd -o -q dependency:build-classpath -pl :apex-license-tools -Dmdep.outputFile="${CP_FILE}" 2>/dev/null \
+  || MAVEN_OPTS="-Xmx512m" mvnd -q dependency:build-classpath -pl :apex-license-tools -Dmdep.outputFile="${CP_FILE}"
+CP="apex-tools-parent/apex-license-tools/target/classes:apex-starters-parent/apex-license-spring-boot-starter/target/classes:apex-shared-parent/apex-common/target/classes:$(cat "${CP_FILE}")"
 rm -f "${CP_FILE}"
 
 OUTPUT_DIR_DEFAULT="dist/license"

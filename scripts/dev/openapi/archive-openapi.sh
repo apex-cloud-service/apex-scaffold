@@ -104,12 +104,12 @@ if ! command -v mvnd &>/dev/null; then
     exit 1
 fi
 
-mvnd -pl apex-system -am \
+mvnd -pl :apex-system -am \
     -Dtest=OpenApiExportTest \
     -Dsurefire.failIfNoSpecifiedTests=false \
     test 2>&1 | tail -5
 
-EXPORT_DIR="apex-system/target/openapi-export"
+EXPORT_DIR="apex-components-parent/apex-system/target/openapi-export"
 if [[ ! -f "${EXPORT_DIR}/openapi.json" ]]; then
     log_error "OpenAPI 导出失败：未找到 ${EXPORT_DIR}/openapi.json"
     exit 1

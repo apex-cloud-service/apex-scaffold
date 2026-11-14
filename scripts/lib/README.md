@@ -129,7 +129,7 @@ export LOG_LEVEL=3  # ERROR
 java_files=$(safe_find "apex-*/src/main/java" "*.java")
 
 # 查找所有 Router 类
-router_files=$(safe_find "apex-system/src/main/java/com/apex/scaffold/interfaces/router" "*Router.java")
+router_files=$(safe_find "apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router" "*Router.java")
 
 # 遍历结果
 for file in $java_files; do
@@ -143,7 +143,7 @@ done
 
 ```bash
 # 查找特定文件
-result=$(safe_find_custom "apex-common/src" -name "FeatureGate.java")
+result=$(safe_find_custom "apex-shared-parent/apex-common/src" -name "FeatureGate.java")
 
 # 查找所有测试文件
 test_files=$(safe_find_custom "." -name "*Test.java")

@@ -87,7 +87,7 @@ if [[ "$MODE" == "acl" ]]; then
 fi
 
 log_info "运行 MQTT 集成测试：${TESTS}"
-mvnd -T1 -B -pl apex-integration test \
+mvnd -T1 -B -pl :apex-integration test \
     -Dtest="$TESTS" \
     -Dsurefire.failIfNoSpecifiedTests=false \
     -Djacoco.skip=true \

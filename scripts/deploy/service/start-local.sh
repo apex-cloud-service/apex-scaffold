@@ -72,11 +72,11 @@ if [ "${SW_AGENT_ENABLED}" = "true" ]; then
   echo "🔗 已接入 SkyWalking Agent: ${SW_AGENT_NAME} -> ${SW_AGENT_COLLECTOR_BACKEND_SERVICES}"
 fi
 
-# 定位可执行 jar（模块 target 下，排除 sources 包）
+# 定位可执行 jar（嵌套布局：<分组父>/<模块>/target 下，通配一级目录，排除 sources 包）
 if [ -n "${APEX_JAR:-}" ]; then
   JAR="${APEX_JAR}"
 else
-  JAR="$(ls "${PROJECT_ROOT}"/"${SERVICE_MODULE}"/target/"${SERVICE_MODULE}"-*.jar 2>/dev/null | grep -Ev -- '-sources\.jar|-javadoc\.jar|-test-support\.jar|-tests\.jar' | head -n 1)"
+  JAR="$(ls "${PROJECT_ROOT}"/*/"${SERVICE_MODULE}"/target/"${SERVICE_MODULE}"-*.jar 2>/dev/null | grep -Ev -- '-sources\.jar|-javadoc\.jar|-test-support\.jar|-tests\.jar' | head -n 1)"
 fi
 if [ -z "${JAR:-}" ] || [ ! -f "${JAR}" ]; then
   echo "❌ 未找到可执行 JAR（模块 ${SERVICE_MODULE}）。请先构建: ./scripts/build/build.sh -Penterprise"

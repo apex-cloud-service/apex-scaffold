@@ -166,7 +166,7 @@ jobs:
       
       - name: Initialize database
         run: |
-          podman exec -i apex-ci-mysql mysql -u root -proot123 apex_example < apex-example/src/main/resources/db/init.sql
+          podman exec -i apex-ci-mysql mysql -u root -proot123 apex_example < apex-applications-parent/apex-example/src/main/resources/db/init.sql
       
       - name: Set up Maven Daemon
         run: |
@@ -282,14 +282,14 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            apex-gateway/target/*.jar
-            apex-auth-service/target/*.jar
-            apex-system-service/target/*.jar
-            apex-workflow-service/target/*.jar
-            apex-office-service/target/*.jar
-            apex-file-service/target/*.jar
-            apex-integration-service/target/*.jar
-            apex-aggregation-service/target/*.jar
+            apex-services-bom/apex-gateway/target/*.jar
+            apex-services-bom/apex-auth-service/target/*.jar
+            apex-services-bom/apex-system-service/target/*.jar
+            apex-services-bom/apex-workflow-service/target/*.jar
+            apex-services-bom/apex-office-service/target/*.jar
+            apex-services-bom/apex-file-service/target/*.jar
+            apex-services-bom/apex-integration-service/target/*.jar
+            apex-services-bom/apex-aggregation-service/target/*.jar
             docs/03-api/openapi/openapi-latest.json
             docs/03-api/openapi/openapi-latest.yaml
           generate_release_notes: true

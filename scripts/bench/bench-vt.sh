@@ -156,10 +156,10 @@ resolve_jar() {
         return 0
     fi
     local candidate
-    candidate="$(ls -1t "${PROJECT_ROOT}"/apex-system-service/target/apex-system-service-*.jar 2>/dev/null \
+    candidate="$(ls -1t "${PROJECT_ROOT}"/apex-services-bom/apex-system-service/target/apex-system-service-*.jar 2>/dev/null \
         | grep -v '\.original$' | head -n 1 || true)"
     if [[ -z "$candidate" ]]; then
-        fail "未找到可执行 JAR，请先执行：mvnd -T4 -B -pl apex-system-service -am package，或用 BENCH_JAR 指定路径"
+        fail "未找到可执行 JAR，请先执行：mvnd -T4 -B -pl :apex-system-service -am package，或用 BENCH_JAR 指定路径"
     fi
     BENCH_JAR="$candidate"
     log_info "使用 JAR：${BENCH_JAR}"

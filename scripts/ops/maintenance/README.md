@@ -179,7 +179,7 @@ chmod +x scripts/ops/maintenance/*.sh
 链接检查由 `apex-tools-deployment` 的 Java 工具承担，需先构建 fat jar:
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -B -pl apex-tools-deployment -am verify
+mvnd -B -pl :apex-tools-deployment -am verify
 ```
 
 ### 3. 路径问题

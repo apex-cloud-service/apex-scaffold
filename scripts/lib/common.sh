@@ -122,7 +122,7 @@ safe_find() {
 
 # 安全的 find 命令（支持自定义类型）
 # 用法：safe_find_custom <路径> <find其他参数...>
-# 示例：safe_find_custom "apex-common/src" -name "FeatureGate.java"
+# 示例：safe_find_custom "apex-shared-parent/apex-common/src" -name "FeatureGate.java"
 safe_find_custom() {
     if [[ $# == 0 || -z ${1:-} ]]; then
         log_error "safe_find_custom: 缺少路径参数"
@@ -377,7 +377,7 @@ apex_module_dir() {
         "$root/apex-business-parent" \
         "$root"; do
         if [ -f "$candidate/$1/pom.xml" ]; then
-            printf '%s\n' "$candidate"
+            printf '%s\n' "$candidate/$1"
             return 0
         fi
     done

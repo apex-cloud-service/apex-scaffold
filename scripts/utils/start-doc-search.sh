@@ -31,10 +31,10 @@ if ! command -v "$JAVA" &> /dev/null; then
     exit 1
 fi
 
-JAR="${PROJECT_ROOT}/apex-tools-deployment/target/local-deployment.jar"
+JAR="${PROJECT_ROOT}/apex-tools-parent/apex-tools-deployment/target/local-deployment.jar"
 if [ ! -f "$JAR" ]; then
     echo "❌ 错误: 未找到离线运维工具 JAR"
-    echo "   请先运行: mvnd -B -pl apex-tools-deployment -am verify"
+    echo "   请先运行: mvnd -B -pl :apex-tools-deployment -am verify"
     echo ""
     exit 1
 fi
