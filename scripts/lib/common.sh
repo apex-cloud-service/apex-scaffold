@@ -355,6 +355,36 @@ get_project_root() (
     done
 )
 
+# 解析模块物理目录（第二阶段嵌套布局：仓库根/<分组父>/<artifactId>）
+# 用法：apex_module_dir <artifactId>
+# 输出：模块目录路径（stdout）；未命中返回非零（调用方显式失败，不静默降级）
+# 说明：分组顺序与根 POM 聚合顺序一致；保留根级直下兜底仅作防御，
+#       正常两级布局由 apex-tools-build 的 MavenModuleInventory 门禁锁定。
+apex_module_dir() {
+    if [[ $# != 1 || -z ${1:-} ]]; then
+        log_error "用法: apex_module_dir <artifactId>"
+        return 2
+    fi
+    local root candidate
+    root=$(get_project_root) || return
+    for candidate in \
+        "$root/apex-shared-parent" \
+        "$root/apex-components-parent" \
+        "$root/apex-starters-parent" \
+        "$root/apex-services-bom" \
+        "$root/apex-applications-parent" \
+        "$root/apex-tools-parent" \
+        "$root/apex-business-parent" \
+        "$root"; do
+        if [ -f "$candidate/$1/pom.xml" ]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    log_error "apex_module_dir: 未找到模块 $1（检查分组归属或 build-manifest.yaml）"
+    return 1
+}
+
 ###############################################################################
 # 格式化输出函数
 ###############################################################################

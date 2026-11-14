@@ -49,20 +49,22 @@ final class ContainerBuildContract {
         assertEquals(expected, copies, "Containerfile 依赖预下载前的 POM COPY 与递归 modules 不一致");
     }
 
-    static void assertPrebuiltAllowlist(Set<String> services, String ignore) {
+    /** 第二阶段嵌套布局：moduleDirectories 为仓库根相对的模块目录（如 apex-services-bom/apex-gateway）。 */
+    static void assertPrebuiltAllowlist(Set<String> moduleDirectories, String ignore) {
         List<String> rules = instructions(ignore);
         int excluded = rules.lastIndexOf("**/target");
         assertTrue(excluded >= 0, ".containerignore 必须保留默认 target 排除");
         assertTrue(rules.contains("**/classes"), ".containerignore 必须继续排除 classes");
-        assertTrue(!services.isEmpty(), "标准服务集合不得为空");
-        for (String id : services) {
-            String directory = "!" + id + "/target/";
-            String jar = "!" + id + "/target/" + id + "-*.jar";
-            int directoryIndex = rules.lastIndexOf(directory);
+        assertTrue(!moduleDirectories.isEmpty(), "标准服务集合不得为空");
+        for (String directory : moduleDirectories) {
+            String id = Path.of(directory).getFileName().toString();
+            String allowDirectory = "!" + directory + "/target/";
+            String jar = "!" + directory + "/target/" + id + "-*.jar";
+            int directoryIndex = rules.lastIndexOf(allowDirectory);
             int jarIndex = rules.lastIndexOf(jar);
             assertTrue(directoryIndex > excluded, id + " prebuilt 缺少默认排除后的 target 目录放行");
             assertTrue(jarIndex > directoryIndex, id + " prebuilt 缺少目录放行后的目标 JAR 放行");
-            for (String reexcluded : List.of(id + "/target", id + "/target/", id + "/target/" + id + "-*.jar")) {
+            for (String reexcluded : List.of(directory + "/target", directory + "/target/", directory + "/target/" + id + "-*.jar")) {
                 assertTrue(rules.lastIndexOf(reexcluded) < directoryIndex, id + " prebuilt 放行后又被显式排除");
             }
         }

@@ -2,13 +2,16 @@ FROM docker.io/library/eclipse-temurin:21-jre-alpine
 RUN apk add --no-cache tzdata wget
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
-# 目标微服务模块（默认网关）；构建前需先执行 mvnd clean package -DskipTests -Penterprise
+# 目标微服务模块（默认网关）；构建前需先执行 mvnd clean package -DskipTests -Penterprise。
+# 模块物理目录（第二阶段嵌套布局）缺省按 apex-services-bom/<模块> 推导；
+# apex-example 等其他分组模块需显式 --build-arg MODULE_PATH=<仓库根相对目录>。
 ARG SERVICE_MODULE=apex-gateway
+ARG MODULE_PATH=apex-services-bom/${SERVICE_MODULE}
 ARG SERVICE_PORT=8080
 ARG MANAGEMENT_PORT=8080
 ARG HEALTHCHECK_PORT=8080
 ENV HEALTHCHECK_PORT="${HEALTHCHECK_PORT}"
-COPY ${SERVICE_MODULE}/target/${SERVICE_MODULE}-*.jar /app/app.jar
+COPY ${MODULE_PATH}/target/${SERVICE_MODULE}-*.jar /app/app.jar
 RUN mkdir -p /app/logs /app/data/storage && chown -R appuser:appgroup /app/logs /app/data/storage
 ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump.hprof -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
 ENV SPRING_PROFILES_ACTIVE="prod,enterprise"

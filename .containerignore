@@ -26,26 +26,27 @@ k8s
 .containerignore
 
 # prebuilt 模式复用宿主构建产物：先放行目录，再放行 fat jar（gitignore 语义下
-# 父目录被排除时，子项的 ! 放行不生效）。
-!apex-gateway/target/
-!apex-system-service/target/
-!apex-auth-service/target/
-!apex-workflow-service/target/
-!apex-office-service/target/
-!apex-file-service/target/
-!apex-integration-service/target/
-!apex-aggregation-service/target/
-!apex-job-service/target/
-!apex-masking-service/target/
-!apex-knowledge-service/target/
-!apex-gateway/target/apex-gateway-*.jar
-!apex-system-service/target/apex-system-service-*.jar
-!apex-auth-service/target/apex-auth-service-*.jar
-!apex-workflow-service/target/apex-workflow-service-*.jar
-!apex-office-service/target/apex-office-service-*.jar
-!apex-file-service/target/apex-file-service-*.jar
-!apex-integration-service/target/apex-integration-service-*.jar
-!apex-aggregation-service/target/apex-aggregation-service-*.jar
-!apex-job-service/target/apex-job-service-*.jar
-!apex-masking-service/target/apex-masking-service-*.jar
-!apex-knowledge-service/target/apex-knowledge-service-*.jar
+# 父目录被排除时，子项的 ! 放行不生效）。第二阶段起叶子嵌套于分组父目录，
+# 运行模块统一位于 apex-services-bom/ 之下。
+!apex-services-bom/apex-gateway/target/
+!apex-services-bom/apex-system-service/target/
+!apex-services-bom/apex-auth-service/target/
+!apex-services-bom/apex-workflow-service/target/
+!apex-services-bom/apex-office-service/target/
+!apex-services-bom/apex-file-service/target/
+!apex-services-bom/apex-integration-service/target/
+!apex-services-bom/apex-aggregation-service/target/
+!apex-services-bom/apex-job-service/target/
+!apex-services-bom/apex-masking-service/target/
+!apex-services-bom/apex-knowledge-service/target/
+!apex-services-bom/apex-gateway/target/apex-gateway-*.jar
+!apex-services-bom/apex-system-service/target/apex-system-service-*.jar
+!apex-services-bom/apex-auth-service/target/apex-auth-service-*.jar
+!apex-services-bom/apex-workflow-service/target/apex-workflow-service-*.jar
+!apex-services-bom/apex-office-service/target/apex-office-service-*.jar
+!apex-services-bom/apex-file-service/target/apex-file-service-*.jar
+!apex-services-bom/apex-integration-service/target/apex-integration-service-*.jar
+!apex-services-bom/apex-aggregation-service/target/apex-aggregation-service-*.jar
+!apex-services-bom/apex-job-service/target/apex-job-service-*.jar
+!apex-services-bom/apex-masking-service/target/apex-masking-service-*.jar
+!apex-services-bom/apex-knowledge-service/target/apex-knowledge-service-*.jar

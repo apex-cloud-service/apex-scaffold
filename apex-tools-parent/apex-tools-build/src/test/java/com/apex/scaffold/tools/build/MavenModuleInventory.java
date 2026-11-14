@@ -72,7 +72,10 @@ final class MavenModuleInventory {
             assertFalse(visited.containsKey(pom), "重复模块路径: " + pom + "，再次来自 " + project.pom());
             Module module = readModule(pom, project.artifactId());
             assertNull(coordinates.putIfAbsent(module.gav(), pom), "重复模块 GAV: " + module.gav() + "，路径 " + pom);
-            assertEquals(root.resolve(module.artifactId()), module.directory(), "artifactId 必须匹配根级目录: " + pom);
+            Path expectedDirectory = project.aggregator() == null
+                    ? root.resolve(module.artifactId())
+                    : root.resolve(project.artifactId()).resolve(module.artifactId());
+            assertEquals(expectedDirectory, module.directory(), "artifactId 必须匹配分组父目录: " + pom);
             assertNull(modules.putIfAbsent(module.artifactId(), module), "重复 artifactId: " + module.artifactId());
             visited.put(pom, project.artifactId());
             active.add(pom);

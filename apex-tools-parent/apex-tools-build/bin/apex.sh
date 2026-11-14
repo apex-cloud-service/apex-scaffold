@@ -2,7 +2,7 @@
 # ============================================================
 # Apex Scaffold 生命周期统一编排入口（apex-tools-build）
 # ============================================================
-# 用法: ./apex-tools-build/bin/apex.sh <子命令> [参数]
+# 用法: ./apex-tools-parent/apex-tools-build/bin/apex.sh <子命令> [参数]
 # 子命令: env | build | test | verify | package | release | image | deploy | status | help
 #
 # 设计约定:
@@ -15,18 +15,32 @@
 #     门禁中锁定其与根 POM、各模块 POM、release.sh SERVICES 的四方一致）
 #   - 新增 Bash 脚本规范：复用 scripts/lib/common.sh 的日志/校验函数，kebab-case，
 #     失败显式退出（set -euo pipefail），敏感值不写日志
-#   - 不使用 common.sh 的 get_project_root：本模块自身含 pom.xml，向上探测会提前命中
-#     模块目录；根目录由脚本位置推算（SCRIPT_DIR/../..）
+#   - 不使用 common.sh 的 get_project_root：本模块所在分组父目录自身含 pom.xml，向上探测
+#     会提前命中；根目录以仓库根独有的 .mvn/ 构建配置目录为标记向上探测，与嵌套层级解耦
 # 💡 shebang 用 zsh：macOS 自带 bash 3.2 不支持 sdkman 的 ${var^^} 语法，与 build.sh/release.sh 一致
 # ============================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+# 第二阶段起本脚本位于 apex-tools-parent/apex-tools-build/bin/，固定层数与 pom.xml 探测
+# 都会被分组父目录提前命中；以仓库根独有的 .mvn/ 为标记向上探测。
+PROJECT_ROOT=""
+_root_probe="${SCRIPT_DIR}"
+while [[ "${_root_probe}" != "/" ]]; do
+  if [[ -d "${_root_probe}/.mvn" ]]; then
+    PROJECT_ROOT="${_root_probe}"
+    break
+  fi
+  _root_probe="$(dirname "${_root_probe}")"
+done
+if [[ -z "${PROJECT_ROOT}" ]]; then
+  print -u2 "[ERROR] 无法定位仓库根（向上未找到 .mvn/ 标记）"
+  exit 1
+fi
 # common.sh 在 zsh 下 source 安全：BASH_SOURCE 仅出现在本脚本不调用的函数内部（get_script_dir/get_project_root）
 source "${PROJECT_ROOT}/scripts/lib/common.sh"
 
-MANIFEST="${PROJECT_ROOT}/apex-tools-build/src/main/resources/build-manifest.yaml"
+MANIFEST="${PROJECT_ROOT}/apex-tools-parent/apex-tools-build/src/main/resources/build-manifest.yaml"
 BUILD_ENV="${PROJECT_ROOT}/scripts/build/init-build-env.sh"
 TOOL_JAR="${PROJECT_ROOT}/tools/local-deployment.jar"
 COMPOSE_APP="${PROJECT_ROOT}/podman-compose.yml"
@@ -139,6 +153,28 @@ mvnd_offline_first() {
   MAVEN_OPTS="-Xmx1024m" mvnd -o "$@" || MAVEN_OPTS="-Xmx1024m" mvnd "$@"
 }
 
+# ------------------------------------------------------------
+# 函数: colonize_ids <逗号分隔 artifactId 列表>
+# 用途: 把裸 artifactId 列表转为 :artifactId 形式——mvnd -pl 的非冒号值按"相对路径"
+#       解析，第二阶段叶子嵌套到分组父目录后裸路径不再命中；冒号形式按坐标匹配，
+#       与物理目录层级解耦（已含冒号的项原样保留，幂等）。
+# 调用方: cmd_build / cmd_test / cmd_package
+# ------------------------------------------------------------
+colonize_ids() {
+  local -a parts out
+  parts=("${(@s:,,:)1}")
+  local p
+  out=()
+  for p in "${parts[@]}"; do
+    if [[ "${p}" == :* ]]; then
+      out+=("${p}")
+    else
+      out+=(":${p}")
+    fi
+  done
+  print -r -- "${(j:,:)out}"
+}
+
 # ============================================================
 # 子命令: env —— 构建环境校验
 # ============================================================
@@ -163,7 +199,7 @@ cmd_env() {
 # ------------------------------------------------------------
 # 函数: cmd_build [-P 档位] [--module a,b] [--with-tests]
 # 用途: 整仓构建（无 --module 时 exec scripts/build/build.sh，保持其既有行为）；
-#       指定 --module 时按模块构建：mvnd clean package -pl <列表> -am。
+#       指定 --module 时按模块构建：mvnd clean package -pl :<列表> -am（冒号按坐标匹配）。
 # 约定: -am 必带——被依赖模块未安装到本地仓库时，仅 -pl 会编译失败（项目既有教训）；
 #       默认 -DskipTests，--with-tests 显式开启测试。
 # ------------------------------------------------------------
@@ -184,7 +220,7 @@ cmd_build() {
   fi
   init_build_env
   local -a args
-  args=(clean package "${profile}" -pl "${modules}" -am)
+  args=(clean package "${profile}" -pl "$(colonize_ids "${modules}")" -am)
   if [[ ${with_tests} -eq 0 ]]; then
     args+=(-DskipTests)
   fi
@@ -195,7 +231,7 @@ cmd_build() {
 # ------------------------------------------------------------
 # 函数: cmd_test [--module m]
 # 用途: 快速测试（不含 Failsafe 集成门禁）。
-#       指定模块时 mvnd -pl m -am test（连带其上游依赖模块）；
+#       指定模块时 mvnd -pl :m -am test（冒号按坐标匹配，连带其上游依赖模块）；
 #       缺省整仓 mvnd -T4 -B test。完整门禁请用 verify 子命令。
 # ------------------------------------------------------------
 cmd_test() {
@@ -210,7 +246,7 @@ cmd_test() {
   init_build_env
   if [[ -n "${module}" ]]; then
     log_info "模块测试（-am 连带依赖模块）"
-    MAVEN_OPTS="-Xmx1024m" mvnd -T4 -B -pl "${module}" -am test
+    MAVEN_OPTS="-Xmx1024m" mvnd -T4 -B -pl "$(colonize_ids "${module}")" -am test
   else
     log_info "整仓测试"
     MAVEN_OPTS="-Xmx1024m" mvnd -T4 -B test
@@ -254,15 +290,16 @@ cmd_package() {
   init_build_env
   local -a services
   services=("${(f)$(manifest_service_modules)}")
-  local service_list="${(j:,:)services},apex-tools-deployment"
-  # 口径与 release.sh 阶段 1 一致：发布服务 + 部署工具，连带依赖，跳过测试
+  local service_list="$(colonize_ids "${(j:,:)services},apex-tools-deployment")"
+  # 口径与 release.sh 阶段 1 一致：发布服务 + 部署工具（-pl 冒号按坐标匹配），连带依赖，跳过测试
   mvnd_offline_first clean package "${profile}" -pl "${service_list}" -am -DskipTests
   # 逐一校验"有且仅有一个发布 JAR"（排除 sources/javadoc/test-support/tests 辅助产物）
-  local svc f
+  local svc f svc_dir
   for svc in "${services[@]}"; do
+    svc_dir="$(apex_module_dir "${svc}")" || { log_error "无法定位模块目录: ${svc}"; exit 1; }
     local -a jars
     jars=()
-    for f in "${svc}"/target/"${svc}"-*.jar(N); do
+    for f in "${svc_dir}"/target/"${svc}"-*.jar(N); do
       case "${f}" in
         *-sources.jar|*-javadoc.jar|*-test-support.jar|*-tests.jar) continue ;;
       esac
@@ -392,8 +429,9 @@ image_ref() {
 # 函数: image_build [--module m|--all] [--mode prebuilt|source]
 #                   [--engine podman|docker] [--tag 引用]
 # 用途: 经根目录 Containerfile 构建服务镜像（一镜像一服务）。
-# 注入: SERVICE_MODULE（目标模块）、BUILD_MODE（prebuilt 复用宿主已构建 fat jar /
-#       source 容器内全量编译）、BUILD_VERSION（读根 POM）。
+# 注入: SERVICE_MODULE（目标模块）、MODULE_PATH（仓库根相对的模块物理目录，第二阶段
+#       嵌套布局）、BUILD_MODE（prebuilt 复用宿主已构建 fat jar / source 容器内全量编译）、
+#       BUILD_VERSION（读根 POM）。
 # 约定: --all 目标为注册表 service-jar 全集；默认引擎 podman。
 # ------------------------------------------------------------
 image_build() {
@@ -428,12 +466,14 @@ image_build() {
     log_error "需指定 --module <模块名> 或 --all"
     exit 1
   fi
-  local version="$(pom_version)" m ref
+  local version="$(pom_version)" m ref m_dir
   for m in "${targets[@]}"; do
+    m_dir="$(apex_module_dir "${m}")" || { log_error "无法定位模块目录: ${m}"; exit 1; }
     ref="$(image_ref "${m}" "${tag_override}")"
     log_info "构建镜像 ${ref}（${engine}，模式 ${mode}，版本 ${version}）"
     "${CONTAINER_CMD[@]}" build -f "${PROJECT_ROOT}/Containerfile" \
       --build-arg "SERVICE_MODULE=${m}" \
+      --build-arg "MODULE_PATH=${m_dir#"${PROJECT_ROOT}"/}" \
       --build-arg "BUILD_MODE=${mode}" \
       --build-arg "BUILD_VERSION=${version}" \
       -t "${ref}" \
@@ -533,7 +573,7 @@ cmd_deploy() {
 # ------------------------------------------------------------
 deploy_usage() {
   cat <<'EOF'
-部署运行时用法: ./apex-tools-build/bin/apex.sh deploy <运行时> <动作> [参数]
+部署运行时用法: ./apex-tools-parent/apex-tools-build/bin/apex.sh deploy <运行时> <动作> [参数]
 
   java-jar        precheck|start|stop|restart|status|logs|console|health
                   格式: deploy java-jar <动作> [模块] [dev|it|prod] [basic|standard|enterprise]
@@ -550,7 +590,7 @@ EOF
 # 函数: precheck_common
 # 用途: Compose 两引擎共用的部署前置：根目录 .env 存在性（Compose 以 ${VAR:?}
 #       强制注入密钥，缺失即拒绝启动）+ tools/local-deployment.jar 存在性。
-# 自动补建: 工具 JAR 缺失时执行 mvnd -pl apex-tools-deployment -am package -DskipTests
+# 自动补建: 工具 JAR 缺失时执行 mvnd -pl :apex-tools-deployment -am package -DskipTests
 #       并复制到 tools/——修复"security-key-check 依赖 JAR 无编排"的既有缺口，
 #       首次 Compose 部署不再需要手工构建。
 # ------------------------------------------------------------
@@ -563,9 +603,9 @@ precheck_common() {
   if [[ ! -f "${TOOL_JAR}" ]]; then
     log_warn "缺少 ${TOOL_JAR}：自动构建 apex-tools-deployment 并补齐（Compose security-key-check 依赖）"
     init_build_env
-    mvnd_offline_first clean package -pl apex-tools-deployment -am -DskipTests
+    mvnd_offline_first clean package -pl :apex-tools-deployment -am -DskipTests
     mkdir -p "${PROJECT_ROOT}/tools"
-    cp "${PROJECT_ROOT}/apex-tools-deployment/target/local-deployment.jar" "${TOOL_JAR}"
+    cp "$(apex_module_dir apex-tools-deployment)/target/local-deployment.jar" "${TOOL_JAR}"
   fi
   require_file "${TOOL_JAR}" "部署校验工具 local-deployment.jar"
 }
@@ -593,10 +633,11 @@ deploy_jar() {
       local module="${1:-apex-gateway}"
       print_header "部署前置检查（java -jar，模块 ${module}）"
       require_command java "Java"
+      local module_dir f
+      module_dir="$(apex_module_dir "${module}")" || { log_error "无法定位模块目录: ${module}"; exit 1; }
       local -a release_jars
       release_jars=()
-      local f
-      for f in "${module}"/target/"${module}"-*.jar(N); do
+      for f in "${module_dir}"/target/"${module}"-*.jar(N); do
         case "${f}" in
           *-sources.jar|*-javadoc.jar|*-test-support.jar|*-tests.jar) continue ;;
         esac
@@ -947,7 +988,7 @@ cmd_status() {
     log_warn "mvnd 不可用：先执行 apex.sh env"
   fi
   print_section "模块注册表（交付口径 → target 产物）"
-  local line id deliverable port host_port
+  local line id deliverable port host_port id_dir
   local -a jars
   # awk 输出 "artifactId|deliverable|port|hostPort" 管道分隔行；zsh (N) glob 缺省不报错，
   # 无产物时数组为空，据此渲染"未构建"
@@ -961,7 +1002,11 @@ cmd_status() {
         if [[ -n "${host_port}" && "${host_port}" != "-" ]]; then
           port="${port}(宿主 ${host_port})"
         fi
-        jars=("${id}"/target/"${id}"-*.jar(N))
+        id_dir="$(apex_module_dir "${id}" 2>/dev/null || true)"
+        jars=()
+        if [[ -n "${id_dir}" ]]; then
+          jars=("${id_dir}"/target/"${id}"-*.jar(N))
+        fi
         if (( ${#jars[@]} > 0 )); then
           printf '  %-40s %-12s 端口 %-6s 已构建 %d 个 JAR\n' "${id}" "${deliverable}" "${port}" "${#jars[@]}"
         else
@@ -999,7 +1044,7 @@ cmd_help() {
   cat <<'EOF'
 Apex Scaffold 生命周期统一编排入口（apex-tools-build）
 
-用法: ./apex-tools-build/bin/apex.sh <子命令> [参数]
+用法: ./apex-tools-parent/apex-tools-build/bin/apex.sh <子命令> [参数]
 
 子命令:
   env                     校验并加载固定构建环境（SDKMAN + JDK + mvnd）

@@ -31,6 +31,10 @@ FROM docker.io/library/maven:3.9-eclipse-temurin-21 AS builder
 ARG BUILD_PROFILE=enterprise
 # 目标微服务模块（决定运行时镜像内置哪个 fat jar；默认网关）
 ARG SERVICE_MODULE=apex-gateway
+# 模块物理目录（仓库根相对，第二阶段嵌套布局）。apex.sh image build 显式注入；
+# 缺省按分组约定从 SERVICE_MODULE 推导（八个 service-jar 均在 apex-services-bom 下；
+# apex-example 等其他分组模块需显式 --build-arg MODULE_PATH）。
+ARG MODULE_PATH=apex-services-bom/${SERVICE_MODULE}
 # 构建模式：source | prebuilt（见文件头说明）
 ARG BUILD_MODE=source
 # 项目版本（prebuilt 模式用于校验目标 JAR 是否存在）
@@ -61,7 +65,7 @@ RUN mkdir -p /usr/share/maven/ref && printf '%s\n' \
   '  </mirrors>' \
   '</settings>' > /usr/share/maven/ref/settings.xml
 
-# 先拷贝全部模块的 pom.xml，充分利用容器层缓存
+# 先拷贝全部模块的 pom.xml，充分利用容器层缓存（第二阶段起叶子嵌套于分组父目录）。
 COPY pom.xml .
 COPY apex-shared-parent/pom.xml apex-shared-parent/
 COPY apex-components-parent/pom.xml apex-components-parent/
@@ -69,46 +73,46 @@ COPY apex-starters-parent/pom.xml apex-starters-parent/
 COPY apex-applications-parent/pom.xml apex-applications-parent/
 COPY apex-tools-parent/pom.xml apex-tools-parent/
 COPY apex-business-parent/pom.xml apex-business-parent/
-COPY apex-common/pom.xml apex-common/
-COPY apex-license-spring-boot-starter/pom.xml apex-license-spring-boot-starter/
-COPY apex-license-tools/pom.xml apex-license-tools/
-COPY apex-domain/pom.xml apex-domain/
-COPY apex-infrastructure/pom.xml apex-infrastructure/
-COPY apex-workflow/pom.xml apex-workflow/
-COPY apex-system/pom.xml apex-system/
-COPY apex-example/pom.xml apex-example/
-COPY apex-generator/pom.xml apex-generator/
+COPY apex-shared-parent/apex-common/pom.xml apex-shared-parent/apex-common/
+COPY apex-starters-parent/apex-license-spring-boot-starter/pom.xml apex-starters-parent/apex-license-spring-boot-starter/
+COPY apex-tools-parent/apex-license-tools/pom.xml apex-tools-parent/apex-license-tools/
+COPY apex-shared-parent/apex-domain/pom.xml apex-shared-parent/apex-domain/
+COPY apex-shared-parent/apex-infrastructure/pom.xml apex-shared-parent/apex-infrastructure/
+COPY apex-components-parent/apex-workflow/pom.xml apex-components-parent/apex-workflow/
+COPY apex-components-parent/apex-system/pom.xml apex-components-parent/apex-system/
+COPY apex-applications-parent/apex-example/pom.xml apex-applications-parent/apex-example/
+COPY apex-tools-parent/apex-generator/pom.xml apex-tools-parent/apex-generator/
 COPY apex-services-bom/pom.xml apex-services-bom/
-COPY apex-api-contract/pom.xml apex-api-contract/
-COPY apex-gateway/pom.xml apex-gateway/
-COPY apex-workflow-service/pom.xml apex-workflow-service/
-COPY apex-file/pom.xml apex-file/
-COPY apex-file-service/pom.xml apex-file-service/
-COPY apex-office/pom.xml apex-office/
-COPY apex-office-service/pom.xml apex-office-service/
-COPY apex-system-service/pom.xml apex-system-service/
-COPY apex-auth/pom.xml apex-auth/
-COPY apex-auth-service/pom.xml apex-auth-service/
+COPY apex-shared-parent/apex-api-contract/pom.xml apex-shared-parent/apex-api-contract/
+COPY apex-services-bom/apex-gateway/pom.xml apex-services-bom/apex-gateway/
+COPY apex-services-bom/apex-workflow-service/pom.xml apex-services-bom/apex-workflow-service/
+COPY apex-components-parent/apex-file/pom.xml apex-components-parent/apex-file/
+COPY apex-services-bom/apex-file-service/pom.xml apex-services-bom/apex-file-service/
+COPY apex-components-parent/apex-office/pom.xml apex-components-parent/apex-office/
+COPY apex-services-bom/apex-office-service/pom.xml apex-services-bom/apex-office-service/
+COPY apex-services-bom/apex-system-service/pom.xml apex-services-bom/apex-system-service/
+COPY apex-components-parent/apex-auth/pom.xml apex-components-parent/apex-auth/
+COPY apex-services-bom/apex-auth-service/pom.xml apex-services-bom/apex-auth-service/
 # 新能力模块的 POM 必须在依赖预下载阶段可见。
-COPY apex-job-spring-boot-starter/pom.xml apex-job-spring-boot-starter/
-COPY apex-seata-spring-boot-starter/pom.xml apex-seata-spring-boot-starter/
-COPY apex-job-service/pom.xml apex-job-service/
-COPY apex-masking-service/pom.xml apex-masking-service/
+COPY apex-starters-parent/apex-job-spring-boot-starter/pom.xml apex-starters-parent/apex-job-spring-boot-starter/
+COPY apex-starters-parent/apex-seata-spring-boot-starter/pom.xml apex-starters-parent/apex-seata-spring-boot-starter/
+COPY apex-services-bom/apex-job-service/pom.xml apex-services-bom/apex-job-service/
+COPY apex-services-bom/apex-masking-service/pom.xml apex-services-bom/apex-masking-service/
 # 根 reactor 全部模块的 POM 都必须可见，否则 dependency:go-offline 解析反应堆失败。
-COPY apex-infrastructure-persistence/pom.xml apex-infrastructure-persistence/
-COPY apex-infrastructure-cache/pom.xml apex-infrastructure-cache/
-COPY apex-infrastructure-messaging/pom.xml apex-infrastructure-messaging/
-COPY apex-infrastructure-remote/pom.xml apex-infrastructure-remote/
-COPY apex-infrastructure-integration/pom.xml apex-infrastructure-integration/
-COPY apex-storage-spring-boot-starter/pom.xml apex-storage-spring-boot-starter/
-COPY apex-integration/pom.xml apex-integration/
-COPY apex-integration-service/pom.xml apex-integration-service/
-COPY apex-aggregation-service/pom.xml apex-aggregation-service/
-COPY apex-boot-all/pom.xml apex-boot-all/
-COPY apex-tools-deployment/pom.xml apex-tools-deployment/
-COPY apex-tools-build/pom.xml apex-tools-build/
-COPY apex-knowledge/pom.xml apex-knowledge/
-COPY apex-knowledge-service/pom.xml apex-knowledge-service/
+COPY apex-shared-parent/apex-infrastructure-persistence/pom.xml apex-shared-parent/apex-infrastructure-persistence/
+COPY apex-shared-parent/apex-infrastructure-cache/pom.xml apex-shared-parent/apex-infrastructure-cache/
+COPY apex-shared-parent/apex-infrastructure-messaging/pom.xml apex-shared-parent/apex-infrastructure-messaging/
+COPY apex-shared-parent/apex-infrastructure-remote/pom.xml apex-shared-parent/apex-infrastructure-remote/
+COPY apex-shared-parent/apex-infrastructure-integration/pom.xml apex-shared-parent/apex-infrastructure-integration/
+COPY apex-starters-parent/apex-storage-spring-boot-starter/pom.xml apex-starters-parent/apex-storage-spring-boot-starter/
+COPY apex-components-parent/apex-integration/pom.xml apex-components-parent/apex-integration/
+COPY apex-services-bom/apex-integration-service/pom.xml apex-services-bom/apex-integration-service/
+COPY apex-services-bom/apex-aggregation-service/pom.xml apex-services-bom/apex-aggregation-service/
+COPY apex-applications-parent/apex-boot-all/pom.xml apex-applications-parent/apex-boot-all/
+COPY apex-tools-parent/apex-tools-deployment/pom.xml apex-tools-parent/apex-tools-deployment/
+COPY apex-tools-parent/apex-tools-build/pom.xml apex-tools-parent/apex-tools-build/
+COPY apex-business-parent/apex-knowledge/pom.xml apex-business-parent/apex-knowledge/
+COPY apex-services-bom/apex-knowledge-service/pom.xml apex-services-bom/apex-knowledge-service/
 
 COPY .sdkmanrc .
 COPY scripts/build/init-build-env.sh scripts/build/init-build-env.sh
@@ -145,8 +149,8 @@ COPY . .
 RUN if [ "${BUILD_MODE}" = "source" ]; then \
       mvn -B -DskipTests -P "${BUILD_PROFILE}" clean package; \
     else \
-      test -f "${SERVICE_MODULE}/target/${SERVICE_MODULE}-${BUILD_VERSION}.jar" \
-        || { echo "prebuilt 模式缺少 ${SERVICE_MODULE}/target/${SERVICE_MODULE}-${BUILD_VERSION}.jar，请先在宿主机执行 mvnd package" >&2; exit 1; }; \
+      test -f "${MODULE_PATH}/target/${SERVICE_MODULE}-${BUILD_VERSION}.jar" \
+        || { echo "prebuilt 模式缺少 ${MODULE_PATH}/target/${SERVICE_MODULE}-${BUILD_VERSION}.jar，请先在宿主机执行 mvnd package" >&2; exit 1; }; \
     fi
 
 # ============================================================
@@ -161,6 +165,7 @@ RUN apk add --no-cache tzdata
 ARG BUILD_PROFILE=enterprise
 ARG BUILD_VERSION=1.3.1
 ARG SERVICE_MODULE=apex-gateway
+ARG MODULE_PATH=apex-services-bom/${SERVICE_MODULE}
 # 是否内置 SkyWalking 探针（与 builder 阶段同名参数保持一致，用于运行时降级判断）
 ARG BUNDLE_SKYWALKING_AGENT=true
 # 业务端口（网关示例 8080；其余服务见 §5.1 端口规划）
@@ -177,7 +182,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 
 # 拷贝目标微服务的可执行 fat jar（无 classifier，唯一 *.jar）
-COPY --from=builder /app/${SERVICE_MODULE}/target/${SERVICE_MODULE}-*.jar /app/app.jar
+COPY --from=builder /app/${MODULE_PATH}/target/${SERVICE_MODULE}-*.jar /app/app.jar
 
 # 拷贝已校验的 SkyWalking Java Agent
 COPY --from=builder /opt/skywalking-agent /app/skywalking-agent

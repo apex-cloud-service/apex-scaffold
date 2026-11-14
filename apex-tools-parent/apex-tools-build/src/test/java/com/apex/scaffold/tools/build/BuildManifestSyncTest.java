@@ -237,8 +237,13 @@ class BuildManifestSyncTest {
     /** 静态校验现有放行格式和顺序；真实构建上下文及镜像验收仍须独立执行。 */
     @Test
     void containerIgnoreAllowsStandardServicePrebuiltJars() throws Exception {
-        ContainerBuildContract.assertPrebuiltAllowlist(
-                serviceModules(loadManifest()), Files.readString(projectRoot().resolve(".containerignore")));
+        MavenModuleInventory.Inventory inventory = MavenModuleInventory.read(projectRoot());
+        Set<String> directories = new LinkedHashSet<>();
+        for (String id : serviceModules(loadManifest())) {
+            directories.add(
+                    inventory.root().directory().relativize(inventory.modules().get(id).directory()).toString());
+        }
+        ContainerBuildContract.assertPrebuiltAllowlist(directories, Files.readString(projectRoot().resolve(".containerignore")));
     }
 
     private static Set<String> serviceModules(Map<String, Map<String, String>> manifest) {
@@ -253,7 +258,7 @@ class BuildManifestSyncTest {
 
     @Test
     void exampleProductionDependenciesMatchAgentsTable() throws Exception {
-        Document pom = parseXml(projectRoot().resolve("apex-example/pom.xml"));
+        Document pom = parseXml(projectRoot().resolve("apex-applications-parent/apex-example/pom.xml"));
         Element dependencies = child(pom.getDocumentElement(), "dependencies");
         assertNotNull(dependencies, "apex-example 缺少直接 dependencies");
         Set<String> pomDependencies = new LinkedHashSet<>();

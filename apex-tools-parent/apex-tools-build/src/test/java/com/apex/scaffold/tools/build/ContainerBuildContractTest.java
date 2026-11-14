@@ -21,7 +21,8 @@ class ContainerBuildContractTest {
     @Test
     void allRecursivePomsMustBeCopiedBeforeDependencyResolution() throws Exception {
         MavenModuleInventory.Inventory inventory = inventory();
-        Path file = containerfile("COPY pom.xml .\nCOPY group/pom.xml group/\nCOPY child/pom.xml child/\n" + offline());
+        Path file = containerfile(
+                "COPY pom.xml .\nCOPY group/pom.xml group/\nCOPY group/child/pom.xml group/child/\n" + offline());
         ContainerBuildContract.assertPomCopies(inventory, Files.readString(file));
     }
 
@@ -34,12 +35,15 @@ class ContainerBuildContractTest {
         String content =
                 switch (scenario) {
                     case "missing" -> copies + offline();
-                    case "late" -> copies + offline() + "COPY child/pom.xml child/\n";
-                    case "duplicate" -> copies + "COPY child/pom.xml child/\nCOPY child/pom.xml child/\n" + offline();
-                    case "extra" -> copies + "COPY child/pom.xml child/\nCOPY stale/pom.xml stale/\n" + offline();
-                    case "wrong-destination" -> copies + "COPY child/pom.xml group/\n" + offline();
-                    case "no-boundary" -> copies + "COPY child/pom.xml child/\n";
-                    case "early-source" -> copies + "COPY child/pom.xml child/\nCOPY . .\n" + offline();
+                    case "late" -> copies + offline() + "COPY group/child/pom.xml group/child/\n";
+                    case "duplicate" -> copies
+                            + "COPY group/child/pom.xml group/child/\nCOPY group/child/pom.xml group/child/\n"
+                            + offline();
+                    case "extra" -> copies
+                            + "COPY group/child/pom.xml group/child/\nCOPY stale/pom.xml stale/\n" + offline();
+                    case "wrong-destination" -> copies + "COPY group/child/pom.xml group/\n" + offline();
+                    case "no-boundary" -> copies + "COPY group/child/pom.xml group/child/\n";
+                    case "early-source" -> copies + "COPY group/child/pom.xml group/child/\nCOPY . .\n" + offline();
                     default -> throw new IllegalArgumentException(scenario);
                 };
         Path file = containerfile(content);
@@ -80,8 +84,8 @@ class ContainerBuildContractTest {
                 root.resolve("group"),
                 "group",
                 parent("root", "../pom.xml"),
-                "<modules><module>../child</module></modules>");
-        pom(root.resolve("child"), "child", parent("group", "../group/pom.xml"), "");
+                "<modules><module>child</module></modules>");
+        pom(root.resolve("group/child"), "child", parent("group", "../pom.xml"), "");
         return MavenModuleInventory.read(root);
     }
 

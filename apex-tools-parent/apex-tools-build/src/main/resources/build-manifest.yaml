@@ -1,7 +1,7 @@
 # ============================================================
 # Apex Scaffold 模块注册表（单一事实来源 / Single Source of Truth）
 # ============================================================
-# 本文件登记根 POM 递归聚合的全部 42 个 Maven 模块（不含总根 POM），包括七个分组父 POM；
+# 本文件登记根 POM 递归聚合的全部 44 个 Maven 模块（不含总根 POM），包括七个分组父 POM；
 # 职责分类、交付口径、默认端口与显式启动类是 apex-tools-build 的核心配置。三处消费方：
 #
 #   1. BuildManifestSyncTest（verify 门禁）：校验本文件与根 POM 递归 <modules>、各模块 POM
@@ -56,7 +56,7 @@
 schema: 1
 modules:
   # ── 分组父 POM：仅聚合与继承管理，不携带运行依赖或配置资源。
-  #    services-bom 保留现有条目及服务依赖管理；business-parent 第一阶段无业务子模块。
+  #    services-bom 保留现有条目及服务依赖管理；business-parent 聚合项目专属业务库 apex-knowledge。
   - artifactId: apex-shared-parent
     category: 分组父POM
     deliverable: none

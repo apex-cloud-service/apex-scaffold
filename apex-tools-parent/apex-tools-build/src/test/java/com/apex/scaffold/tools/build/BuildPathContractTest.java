@@ -34,7 +34,7 @@ class BuildPathContractTest {
                     .findFirst()
                     .orElseThrow();
             String argLine = childText(child(plugin, "configuration"), "argLine");
-            assertTrue(argLine.contains("-Dapex.log.dir=${project.basedir}/../logs"), id + " 日志路径声明漂移");
+            assertTrue(argLine.contains("-Dapex.log.dir=${project.basedir}/../../logs"), id + " 日志路径声明漂移");
             assertTrue(
                     argLine.contains("-Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs"),
                     id + " Sentinel 路径声明漂移");
@@ -53,7 +53,7 @@ class BuildPathContractTest {
     void currentMavenForkReceivesRootAndLeafPaths() throws Exception {
         assumeTrue(System.getProperty("apex.root") != null, "IDE 未注入 apex.root；仅 Maven fork 校验此项");
         Path root = BuildManifestSyncTest.projectRoot().toRealPath();
-        Path module = root.resolve("apex-tools-build").toRealPath();
+        Path module = root.resolve("apex-tools-parent/apex-tools-build").toRealPath();
         assertEquals(module, Path.of(System.getProperty("user.dir")).toRealPath(), "当前 fork workingDirectory 应仍为叶子目录");
         assertEquals(root.resolve("logs"), propertyPath("apex.log.dir"), "当前 fork 日志属性应指向根 logs");
         assertEquals(module.resolve("target/sentinel-logs"), propertyPath("csp.sentinel.log.dir"));
@@ -62,9 +62,9 @@ class BuildPathContractTest {
     @Test
     void siblingBasedirAndExplicitPathWriteOnlyToTemporaryProbeLocations() throws Exception {
         Path root = Files.createDirectory(temp.resolve("repository"));
-        Path leaf = Files.createDirectory(root.resolve("apex-tools-build"));
         Path group = Files.createDirectory(root.resolve("apex-tools-parent"));
-        Path logs = leaf.resolve("../logs").normalize();
+        Path leaf = Files.createDirectory(group.resolve("apex-tools-build"));
+        Path logs = leaf.resolve("../../logs").normalize();
         Path sentinel = leaf.resolve("target/sentinel-logs");
         Path explicit = temp.resolve("explicit-logs");
         for (Path directory : List.of(logs, sentinel, explicit)) {

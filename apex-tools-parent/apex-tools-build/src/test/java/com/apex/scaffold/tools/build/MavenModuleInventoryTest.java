@@ -33,13 +33,13 @@ class MavenModuleInventoryTest {
                 root.resolve("shared"),
                 "shared",
                 parent("root", "../pom.xml"),
-                "<modules><module>../contract</module></modules>");
+                "<modules><module>contract</module></modules>");
         pom(root.resolve("services"), "services", parent("root", "../pom.xml"), "");
         pom(root.resolve("business"), "business", parent("root", "../pom.xml"), "");
         pom(
-                root.resolve("contract"),
+                root.resolve("shared/contract"),
                 "contract",
-                parent("services", "../services/pom.xml"),
+                parent("services", "../../services/pom.xml"),
                 "<profiles><profile><id>unused</id><modules><module>missing</module></modules></profile></profiles>");
         MavenModuleInventory.Inventory inventory = MavenModuleInventory.read(root);
         assertEquals(
@@ -76,7 +76,7 @@ class MavenModuleInventoryTest {
                     case "apex-boot-all" -> "apex-applications-parent";
                     default -> throw new IllegalArgumentException(id);
                 };
-        pom(root.resolve(id), id, parent(group, "../" + group + "/pom.xml"), "");
+        pom(root.resolve(group + "/" + id), id, parent(group, "../pom.xml"), "");
         assertThrows(
                 AssertionError.class, () -> BuildManifestSyncTest.assertLeafParents(MavenModuleInventory.read(root)));
     }
@@ -95,8 +95,8 @@ class MavenModuleInventoryTest {
                 business,
                 "apex-business-parent",
                 parent("root", "../pom.xml"),
-                "<packaging>pom</packaging><modules><module>../orders</module></modules>");
-        pom(root.resolve("orders"), "orders", parent("apex-business-parent", "../apex-business-parent/pom.xml"), "");
+                "<packaging>pom</packaging><modules><module>orders</module></modules>");
+        pom(business.resolve("orders"), "orders", parent("apex-business-parent", "../pom.xml"), "");
         MavenModuleInventory.assertManifestMatches(
                 MavenModuleInventory.read(root), Set.of("apex-business-parent", "orders"));
     }
@@ -116,8 +116,9 @@ class MavenModuleInventoryTest {
         failure(root, "重复模块路径");
     }
 
+    /** 符号链接 + .. 的真实路径解析不能把模块挪出其聚合分组目录（第二阶段布局约定）。 */
     @Test
-    void symlinkAndDotDotResolveByFilesystemRatherThanLexicalNormalization() throws Exception {
+    void symlinkDotDotCannotSmuggleModuleOutsideItsAggregatorDirectory() throws Exception {
         Path root = fixture("<module>group</module>");
         pom(
                 root.resolve("group"),
@@ -127,22 +128,19 @@ class MavenModuleInventoryTest {
         pom(root.resolve("child"), "child", parent("group", "../group/pom.xml"), "");
         Files.createDirectory(root.resolve("destination"));
         Files.createSymbolicLink(root.resolve("group/alias"), Path.of("../destination"));
-        assertEquals(
-                Set.of("group", "child"),
-                MavenModuleInventory.read(root).modules().keySet());
+        failure(root, "artifactId 必须匹配分组父目录");
     }
 
     @Test
     void moduleRegisteredByTwoAggregatorsFails() throws Exception {
         Path root = fixture("<module>first</module><module>second</module>");
-        for (String group : List.of("first", "second")) {
-            pom(
-                    root.resolve(group),
-                    group,
-                    parent("root", "../pom.xml"),
-                    "<modules><module>../child</module></modules>");
-        }
-        pom(root.resolve("child"), "child", parent("first", "../first/pom.xml"), "");
+        pom(root.resolve("first"), "first", parent("root", "../pom.xml"), "<modules><module>child</module></modules>");
+        pom(
+                root.resolve("second"),
+                "second",
+                parent("root", "../pom.xml"),
+                "<modules><module>../first/child</module></modules>");
+        pom(root.resolve("first/child"), "child", parent("first", "../pom.xml"), "");
         failure(root, "重复模块路径");
     }
 
@@ -190,18 +188,24 @@ class MavenModuleInventoryTest {
     }
 
     @Test
-    void artifactIdMustMatchRootLevelDirectory() throws Exception {
+    void artifactIdMustMatchAggregatorDirectory() throws Exception {
         Path root = fixture("<module>child</module>");
         pom(root.resolve("child"), "different", parent("root", "../pom.xml"), "");
-        failure(root, "artifactId 必须匹配根级目录");
+        failure(root, "artifactId 必须匹配分组父目录");
     }
 
+    /** 第二阶段嵌套布局：叶子必须位于聚合它的分组父目录之下，越组即失败。 */
     @Test
-    void physicallyNestedLeafFailsRootLevelConvention() throws Exception {
-        Path root = fixture("<module>group</module>");
-        pom(root.resolve("group"), "group", parent("root", "../pom.xml"), "<modules><module>child</module></modules>");
-        pom(root.resolve("group/child"), "child", parent("group", "../pom.xml"), "");
-        failure(root, "artifactId 必须匹配根级目录");
+    void leafOutsideItsAggregatorDirectoryFails() throws Exception {
+        Path root = fixture("<module>group</module><module>other-group</module>");
+        pom(
+                root.resolve("group"),
+                "group",
+                parent("root", "../pom.xml"),
+                "<modules><module>../other-group/child</module></modules>");
+        pom(root.resolve("other-group"), "other-group", parent("root", "../pom.xml"), "");
+        pom(root.resolve("other-group/child"), "child", parent("group", "../../group/pom.xml"), "");
+        failure(root, "artifactId 必须匹配分组父目录");
     }
 
     @Test
@@ -235,19 +239,19 @@ class MavenModuleInventoryTest {
     @ParameterizedTest
     @ValueSource(strings = {"wrong-gav", "wrong-version", "wrong-path", "missing-path", "disabled-path"})
     void parentCoordinatesAndRelativePathAreBothChecked(String scenario) throws Exception {
-        Path root = fixture("<module>group</module><module>child</module>");
-        pom(root.resolve("group"), "group", parent("root", "../pom.xml"), "");
+        Path root = fixture("<module>group</module>");
+        pom(root.resolve("group"), "group", parent("root", "../pom.xml"), "<modules><module>child</module></modules>");
         String declared =
                 switch (scenario) {
-                    case "wrong-gav" -> parent("root", "../group/pom.xml");
-                    case "wrong-version" -> parent("group", "../group/pom.xml")
+                    case "wrong-gav" -> parent("root", "../pom.xml");
+                    case "wrong-version" -> parent("group", "../pom.xml")
                             .replace("<version>1</version>", "<version>2</version>");
-                    case "wrong-path" -> parent("group", "../pom.xml");
+                    case "wrong-path" -> parent("group", "../group/pom.xml");
                     case "missing-path" -> parent("group", "../missing/pom.xml");
                     case "disabled-path" -> parent("group", "");
                     default -> throw new IllegalArgumentException(scenario);
                 };
-        pom(root.resolve("child"), "child", declared, "");
+        pom(root.resolve("group/child"), "child", declared, "");
         MavenModuleInventory.Inventory inventory = MavenModuleInventory.read(root);
         assertThrows(
                 AssertionError.class,
@@ -324,11 +328,11 @@ class MavenModuleInventoryTest {
                     root.resolve(entry.getKey()),
                     entry.getKey(),
                     parent("root", "../pom.xml"),
-                    "<modules><module>../" + entry.getValue() + "</module></modules>");
+                    "<modules><module>" + entry.getValue() + "</module></modules>");
             pom(
-                    root.resolve(entry.getValue()),
+                    root.resolve(entry.getKey() + "/" + entry.getValue()),
                     entry.getValue(),
-                    parent("apex-services-bom", "../apex-services-bom/pom.xml"),
+                    parent("apex-services-bom", "../../apex-services-bom/pom.xml"),
                     "");
         }
         pom(root.resolve("apex-services-bom"), "apex-services-bom", parent("root", "../pom.xml"), "");
