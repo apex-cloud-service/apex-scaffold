@@ -596,10 +596,10 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| LoginRequest.java | `../apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java` | ❌ 未找到目标 |
+| LoginRequest.java | `../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java` | ❌ 未找到目标 |
 | UserPO.java | `../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java` | ❌ 未找到目标 |
 | RoleMapper.java | `../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/RoleMapper.java` | ❌ 未找到目标 |
-| UserService.java | `../apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java` | ❌ 未找到目标 |
+| UserService.java | `../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java` | ❌ 未找到目标 |
 | batch-add-lombok.sh | `../scripts/batch-add-lombok.sh` | ❌ 未找到目标 |
 | batch-add-javadoc.sh | `../scripts/batch-add-javadoc.sh` | ❌ 未找到目标 |
 | PHASE2_FIX_EXAMPLES.md | `../docs/PHASE2_FIX_EXAMPLES.md` | `../../../_archive/PHASE2_FIX_EXAMPLES.md` |
@@ -696,24 +696,24 @@
 
 | 链接文本 | 原路径 | 建议修复 |
 |----------|---------|----------|
-| IdempotentApiAspect.java | `/Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java` | ❌ 未找到目标 |
-| IdempotentApiAspectTest.java | `/Users/work/apex-scaffold/apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java` | ❌ 未找到目标 |
-| UserRegisteredEventListener.java | `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java` | ❌ 未找到目标 |
-| SubscriptionEventListener.java | `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java` | ❌ 未找到目标 |
-| CreditEventListener.java | `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java` | ❌ 未找到目标 |
+| IdempotentApiAspect.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java` | ❌ 未找到目标 |
+| IdempotentApiAspectTest.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java` | ❌ 未找到目标 |
+| UserRegisteredEventListener.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java` | ❌ 未找到目标 |
+| SubscriptionEventListener.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java` | ❌ 未找到目标 |
+| CreditEventListener.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java` | ❌ 未找到目标 |
 | BaseDomainEvent.java | `/Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/event/BaseDomainEvent.java` | ❌ 未找到目标 |
 | EnhancedDomainEventPublisherImpl.java | `/Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/event/EnhancedDomainEventPublisherImpl.java` | ❌ 未找到目标 |
-| OperationLogAspect.java | `/Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java` | ❌ 未找到目标 |
+| OperationLogAspect.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java` | ❌ 未找到目标 |
 | ApiCallLogFilter.java | `/Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/remote/filter/ApiCallLogFilter.java` | ❌ 未找到目标 |
-| OperationLogService.java | `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/OperationLogService.java` | ❌ 未找到目标 |
+| OperationLogService.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OperationLogService.java` | ❌ 未找到目标 |
 | LocalCacheService.java | `/Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java` | ❌ 未找到目标 |
 | MqConsumerService.java | `/Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java` | ❌ 未找到目标 |
 | MqConsumerServiceTest.java | `/Users/work/apex-scaffold/apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerServiceTest.java` | ❌ 未找到目标 |
 | DataScopeContext.java | `/Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/context/DataScopeContext.java` | ❌ 未找到目标 |
 | DataSourceContext.java | `/Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/context/DataSourceContext.java` | ❌ 未找到目标 |
 | TenantContext.java | `/Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/context/TenantContext.java` | ❌ 未找到目标 |
-| AntiReplayAspect.java | `/Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java` | ❌ 未找到目标 |
-| OperationLogServiceTest.java | `/Users/work/apex-scaffold/apex-application/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java` | ❌ 未找到目标 |
+| AntiReplayAspect.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java` | ❌ 未找到目标 |
+| OperationLogServiceTest.java | `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java` | ❌ 未找到目标 |
 
 ### 📄 _archive/integration/README.md
 

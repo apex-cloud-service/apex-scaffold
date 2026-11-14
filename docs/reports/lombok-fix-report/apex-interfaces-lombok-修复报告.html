@@ -408,7 +408,7 @@
                     <h2>2. 修复详情</h2>
 
                     <h3>2.1 AuthConfigRouter.java 导入错误</h3>
-                    <p><strong>文件</strong>: <code>apex-interfaces/src/main/java/.../router/AuthConfigRouter.java</code></p>
+                    <p><strong>文件</strong>: <code>apex-components-parent/apex-system/src/main/java/.../router/AuthConfigRouter.java</code></p>
                     <p><strong>问题</strong>: 错误导入 <code>RequestMethod</code> 类</p>
 
                     <pre><code>// 错误
@@ -418,7 +418,7 @@ import org.springframework.web.reactive.function.server.RequestMethod;
 import org.springframework.web.bind.annotation.RequestMethod;</code></pre>
 
                     <h3>2.2 LdapProtocolAdapter.java 方法调用错误</h3>
-                    <p><strong>文件</strong>: <code>apex-application/src/main/java/.../sso/LdapProtocolAdapter.java</code></p>
+                    <p><strong>文件</strong>: <code>apex-components-parent/apex-system/src/main/java/.../sso/LdapProtocolAdapter.java</code></p>
                     <p><strong>问题</strong>: 调用不存在的 <code>BlockingIoSchedulers.getScheduler(String)</code> 方法</p>
 
                     <pre><code>// 错误
@@ -502,7 +502,7 @@ return buildError(ResultCode.ERROR, TraceIdUtil.getTraceId());</code></pre>
                     <h2>3. 编译验证</h2>
 
                     <h3>3.1 编译成功</h3>
-                    <pre><code>$ mvnd clean compile -pl apex-interfaces -am -DskipTests -Dpmd.skip=true
+                    <pre><code>$ mvnd clean compile -pl :apex-system -am -DskipTests -Dpmd.skip=true
 
 [INFO] Reactor Summary for Apex Scaffold 1.2.0:
 [INFO]

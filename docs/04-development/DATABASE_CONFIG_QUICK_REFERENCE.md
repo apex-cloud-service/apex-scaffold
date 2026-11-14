@@ -37,7 +37,7 @@ apex-admin-web/
 
 ```
 apex-scaffold/
-├── apex-application/
+├── apex-components-parent/apex-system/
 │   ├── dto/admin/
 │   │   ├── DatabaseConfigRequest.java         # 请求 DTO（已创建）
 │   │   ├── DatabaseTestResultDTO.java         # 测试结果（已创建）
@@ -45,7 +45,7 @@ apex-scaffold/
 │   │   └── CurrentDatabaseInfoDTO.java        # 当前数据库（已创建）
 │   └── service/
 │       └── DatabaseConfigService.java         # 业务服务（已创建）
-├── apex-interfaces/
+├── apex-components-parent/apex-system/
 │   ├── handler/
 │   │   └── DatabaseConfigHandler.java         # 请求处理器（已创建）
 │   └── router/

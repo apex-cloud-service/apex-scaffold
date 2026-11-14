@@ -119,7 +119,7 @@
 
 ### 4.1 G01 Vue3 管理前端工程（最大缺口，投入最大）
 
-**现状**：`apex-interfaces/src/main/resources/static/admin/index.html` 为单文件静态控制台（用户/菜单/字典/参数/任务/登录日志 + 验证码登录），可演示但不可交付为"管理后台"。
+**现状**：`apex-components-parent/apex-system/src/main/resources/static/admin/index.html` 为单文件静态控制台（用户/菜单/字典/参数/任务/登录日志 + 验证码登录），可演示但不可交付为"管理后台"。
 
 **目标**：交付独立前端工程 `apex-admin-vue3`（随包分发，Standard/Enterprise 档随源码交付），与后端 API 全量打通。
 

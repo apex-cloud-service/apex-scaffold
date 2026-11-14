@@ -4,7 +4,7 @@
 
 ## 问题描述
 
-**文件**: `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java`
+**文件**: `apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java`
 
 **错误信息**:
 ```
@@ -82,7 +82,7 @@ context.registerBean(
 
 **命令**:
 ```bash
-mvnd -pl apex-interfaces -am test-compile
+mvnd -pl :apex-system -am test-compile
 ```
 
 **结果**: ✅ 编译成功
@@ -166,8 +166,8 @@ public AdminUserManagementService(
 
 | 文件路径 | 修改类型 | 修改内容 |
 |---------|---------|---------|
-| apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java | 新增导入 | 添加 `AdminUserAssembler` 导入 |
-| apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java | 修改代码 | 添加 `mock(AdminUserAssembler.class)` 作为第12个构造器参数 |
+| apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java | 新增导入 | 添加 `AdminUserAssembler` 导入 |
+| apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/DataScopeServiceTest.java | 修改代码 | 添加 `mock(AdminUserAssembler.class)` 作为第12个构造器参数 |
 
 ---
 

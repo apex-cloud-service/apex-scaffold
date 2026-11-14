@@ -97,14 +97,14 @@
 
 **Handler类分布** (总计: 100+):
 ```
-apex-interfaces/src/main/java/.../handler/
+apex-components-parent/apex-system/src/main/java/.../handler/
 ├── AuthHandler.java
 ├── UserHandler.java
 ├── WorkflowHandler.java
 ├── OfficeIntegrationHandler.java
 ├── ... (50+ Handler类)
 
-apex-auth-center/src/main/java/.../handler/
+apex-services-bom/apex-auth-service/src/main/java/.../handler/
 ├── AuthenticationHandler.java
 ├── MfaHandler.java
 ├── ... (15+ Handler类)
@@ -128,7 +128,7 @@ apex-domain/src/main/java/.../repository/
 
 **Service类分布** (总计: 100+):
 ```
-apex-application/src/main/java/.../service/
+apex-components-parent/apex-system/src/main/java/.../service/
 ├── AuthService.java
 ├── UserService.java
 ├── WorkflowService.java
@@ -139,7 +139,7 @@ apex-infrastructure/src/main/java/.../service/
 ├── CacheService.java
 ├── ... (10+ Service类)
 
-apex-auth-center/src/main/java/.../service/
+apex-services-bom/apex-auth-service/src/main/java/.../service/
 ├── TotpService.java
 ├── ... (10+ Service类)
 

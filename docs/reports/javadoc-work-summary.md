@@ -1399,7 +1399,7 @@ mvnd clean compile -DskipTests
 ### 1. **修复已知代码问题** ✅
 
 #### 1.1 修复 UserService 重复注释
-- **文件**: `apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java:49`
+- **文件**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java:49`
 - **问题**: 方法 JavaDoc 重复
 - **状态**: 已修复
 
@@ -1458,19 +1458,19 @@ mvnd clean compile -DskipTests
 为 **4 个新增 Handler** 补充了完整的类级 JavaDoc（每个 38-40 行）：
 
 1. **CodeGeneratorHandler**
-   - 文件: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/CodeGeneratorHandler.java`
+   - 文件: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/CodeGeneratorHandler.java`
    - 内容: DDD 代码生成器执行处理器，数据源管理、表结构分析、代码生成
 
 2. **OfficeIntegrationHandler**
-   - 文件: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeIntegrationHandler.java`
+   - 文件: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OfficeIntegrationHandler.java`
    - 内容: 办公集成处理器（飞书、钉钉、企业微信），审批流程、日历事件
 
 3. **MessageHandler**
-   - 文件: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/MessageHandler.java`
+   - 文件: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/MessageHandler.java`
    - 内容: 消息管理处理器，站内消息发送、收发件箱管理
 
 4. **OrgSyncHandler**
-   - 文件: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OrgSyncHandler.java`
+   - 文件: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OrgSyncHandler.java`
    - 内容: 组织同步管理处理器，外部平台组织架构同步
 
 ### 4. **补充缺少 @author 标签的文件** ✅

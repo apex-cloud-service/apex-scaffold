@@ -37,7 +37,7 @@
 
 ### 步骤 1: 添加 R2DBC 依赖
 
-**文件**: `apex-application/pom.xml`
+**文件**: `apex-components-parent/apex-system/pom.xml`
 
 **操作**:
 ```xml
@@ -73,14 +73,14 @@
 **验证**:
 ```bash
 cd /Users/work/apex-scaffold
-mvnd dependency:tree -pl apex-application | grep r2dbc
+mvnd dependency:tree -pl :apex-system | grep r2dbc
 ```
 
 ---
 
 ### 步骤 2: 创建 R2DBC 配置类
 
-**文件**: `apex-application/src/main/java/com/apex/scaffold/application/config/R2dbcTestConfig.java`
+**文件**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/config/R2dbcTestConfig.java`
 
 **完整代码**:
 ```java
@@ -178,7 +178,7 @@ public class R2dbcTestConfig {
 
 ### 步骤 3: 重构 DatabaseConfigService
 
-**文件**: `apex-application/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java`
+**文件**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java`
 
 #### 3.1 更新 import 语句
 
@@ -388,7 +388,7 @@ public Mono<CurrentDatabaseInfoDTO> getCurrentDatabaseInfo() {
 
 **问题**: Spring Boot 检测到 R2DBC 依赖后，自动配置可能与 MyBatis 冲突，导致 `sqlSessionTemplate` Bean 创建失败。
 
-**文件**: `apex-interfaces/src/main/java/com/apex/scaffold/Application.java`
+**文件**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/Application.java`
 
 **修改前**:
 ```java
@@ -430,7 +430,7 @@ public class Application {
 ```bash
 cd /Users/work/apex-scaffold
 source ./scripts/build/init-build-env.sh
-mvnd clean compile -pl apex-application
+mvnd clean compile -pl :apex-system
 ```
 
 **预期输出**:
@@ -472,7 +472,7 @@ lsof -ti:8080 | xargs kill -9
 ```bash
 cd /Users/work/apex-scaffold
 source ./scripts/build/init-build-env.sh
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 ```
 
 #### 6.3 验证启动成功
@@ -660,7 +660,7 @@ cannot find symbol: class ConnectionFactory
 **排查步骤**:
 1. 检查依赖是否正确添加
 ```bash
-mvnd dependency:tree -pl apex-application | grep r2dbc
+mvnd dependency:tree -pl :apex-system | grep r2dbc
 ```
 
 2. 清理并重新下载依赖
@@ -764,28 +764,28 @@ if ("mysql".equalsIgnoreCase(dbType)) {
 
 ### 1. 恢复 pom.xml
 ```bash
-git checkout apex-application/pom.xml
+git checkout apex-components-parent/apex-system/pom.xml
 ```
 
 ### 2. 恢复 Service 类
 ```bash
-git checkout apex-application/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java
+git checkout apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java
 ```
 
 ### 3. 删除 R2DBC 配置类
 ```bash
-rm apex-application/src/main/java/com/apex/scaffold/application/config/R2dbcTestConfig.java
+rm apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/config/R2dbcTestConfig.java
 ```
 
 ### 4. 恢复 Application 类
 ```bash
-git checkout apex-interfaces/src/main/java/com/apex/scaffold/Application.java
+git checkout apex-components-parent/apex-system/src/main/java/com/apex/scaffold/Application.java
 ```
 
 ### 5. 重新编译启动
 ```bash
-mvnd clean compile -pl apex-application
-mvnd spring-boot:run -pl apex-interfaces
+mvnd clean compile -pl :apex-system
+mvnd spring-boot:run -pl :apex-system
 ```
 
 ---

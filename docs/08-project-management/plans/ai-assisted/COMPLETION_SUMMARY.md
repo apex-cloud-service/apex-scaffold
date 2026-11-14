@@ -35,8 +35,8 @@
 | 2 | **UserMapper.java** | `apex-infrastructure/.../mapper/UserMapper.java` | ✅ 详细方法注释<br>✅ SQL 语义说明<br>✅ 使用场景和注意事项 |
 | 3 | **UserPoConverter.java** | `apex-infrastructure/.../converter/UserPoConverter.java` | ✅ MapStruct 注释<br>✅ 转换规则说明<br>✅ 使用示例 |
 | 4 | **UserRepositoryImpl.java** | `apex-infrastructure/.../repository/UserRepositoryImpl.java` | ✅ 已有良好注释（作为参考） |
-| 5 | **LoginRequest.java** | `apex-application/.../dto/LoginRequest.java` | ✅ @Builder + 构造器<br>✅ 详细字段注释<br>✅ 使用示例 |
-| 6 | **AuthService.java** | `apex-application/.../service/AuthService.java` | ✅ 已有良好注释（作为参考） |
+| 5 | **LoginRequest.java** | `apex-components-parent/apex-system/.../dto/LoginRequest.java` | ✅ @Builder + 构造器<br>✅ 详细字段注释<br>✅ 使用示例 |
+| 6 | **AuthService.java** | `apex-components-parent/apex-system/.../service/AuthService.java` | ✅ 已有良好注释（作为参考） |
 
 ### 2. 文档文件（新创建）
 

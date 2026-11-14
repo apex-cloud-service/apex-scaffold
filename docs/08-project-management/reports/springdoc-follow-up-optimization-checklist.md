@@ -214,7 +214,7 @@ v2 脚本已经通过当前代码库验证，但目前主要依赖真实项目�
 ```bash
 ./scripts/dev/check/check-springdoc-annotations-v2.sh
 source ./scripts/build/init-build-env.sh
-mvnd -pl apex-interfaces -am \
+mvnd -pl :apex-system -am \
   -Dtest=RouterOpenApiCoverageTest \
   -Dsurefire.failIfNoSpecifiedTests=false test
 ```

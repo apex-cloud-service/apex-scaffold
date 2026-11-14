@@ -6,7 +6,7 @@
 
 ## 实施内容
 
-### 1. DTO 层 (`apex-application/dto/admin`)
+### 1. DTO 层 (`apex-components-parent/apex-system/dto/admin`)
 
 #### DatabaseConfigRequest.java
 数据库配置请求 DTO，包含：
@@ -41,7 +41,7 @@
 - `version`: 数据库版本
 - `driverVersion`: 驱动版本
 
-### 2. Service 层 (`apex-application/service`)
+### 2. Service 层 (`apex-components-parent/apex-system/service`)
 
 #### DatabaseConfigService.java
 
@@ -76,7 +76,7 @@
 - 密码仅用于临时连接测试，不持久化
 - 配置导出建议使用环境变量注入密码
 
-### 3. Handler 层 (`apex-interfaces/handler`)
+### 3. Handler 层 (`apex-components-parent/apex-system/handler`)
 
 #### DatabaseConfigHandler.java
 
@@ -105,7 +105,7 @@
 - 使用 `@Operation` 提供 OpenAPI 文档
 - 使用 Jakarta Bean Validation 自动校验请求参数
 
-### 4. Router 层 (`apex-interfaces/router`)
+### 4. Router 层 (`apex-components-parent/apex-system/router`)
 
 #### ApiRouter.java
 
@@ -229,7 +229,7 @@ GET /admin-api/v1/database/current
 
 ```
 apex-scaffold/
-├── apex-application/
+├── apex-components-parent/apex-system/
 │   ├── dto/admin/
 │   │   ├── DatabaseConfigRequest.java           # 新增
 │   │   ├── DatabaseTestResultDTO.java           # 新增
@@ -237,7 +237,7 @@ apex-scaffold/
 │   │   └── CurrentDatabaseInfoDTO.java          # 新增
 │   └── service/
 │       └── DatabaseConfigService.java            # 新增
-├── apex-interfaces/
+├── apex-components-parent/apex-system/
 │   ├── handler/
 │   │   └── DatabaseConfigHandler.java           # 新增
 │   └── router/

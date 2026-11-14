@@ -325,8 +325,8 @@
 
 ### 08-project-management/plans/ai-assisted/PHASE2A_COMPLETION_REPORT.md
 - 链接文本: `LoginRequest.java`
-  原始路径: `../apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java`
-  解析路径: `08-project-management/plans/apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java`
+  原始路径: `../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java`
+  解析路径: `08-project-management/plans/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java`
 - 链接文本: `UserPO.java`
   原始路径: `../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java`
   解析路径: `08-project-management/plans/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java`
@@ -334,8 +334,8 @@
   原始路径: `../apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/RoleMapper.java`
   解析路径: `08-project-management/plans/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/RoleMapper.java`
 - 链接文本: `UserService.java`
-  原始路径: `../apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java`
-  解析路径: `08-project-management/plans/apex-application/src/main/java/com/apex/scaffold/application/service/UserService.java`
+  原始路径: `../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java`
+  解析路径: `08-project-management/plans/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java`
 - 链接文本: `batch-add-lombok.sh`
   原始路径: `../scripts/batch-add-lombok.sh`
   解析路径: `08-project-management/plans/scripts/batch-add-lombok.sh`
@@ -422,20 +422,20 @@
 
 ### _archive/changes/concurrency-fix-summary.md
 - 链接文本: `IdempotentApiAspect.java`
-  原始路径: `/Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java`
-  解析路径: `Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspect.java`
 - 链接文本: `IdempotentApiAspectTest.java`
-  原始路径: `/Users/work/apex-scaffold/apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java`
-  解析路径: `Users/work/apex-scaffold/apex-interfaces/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/aspect/IdempotentApiAspectTest.java`
 - 链接文本: `UserRegisteredEventListener.java`
-  原始路径: `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java`
-  解析路径: `Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/UserRegisteredEventListener.java`
 - 链接文本: `SubscriptionEventListener.java`
-  原始路径: `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java`
-  解析路径: `Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/SubscriptionEventListener.java`
 - 链接文本: `CreditEventListener.java`
-  原始路径: `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java`
-  解析路径: `Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/listener/CreditEventListener.java`
 - 链接文本: `BaseDomainEvent.java`
   原始路径: `/Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/event/BaseDomainEvent.java`
   解析路径: `Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/event/BaseDomainEvent.java`
@@ -443,14 +443,14 @@
   原始路径: `/Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/event/EnhancedDomainEventPublisherImpl.java`
   解析路径: `Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/event/EnhancedDomainEventPublisherImpl.java`
 - 链接文本: `OperationLogAspect.java`
-  原始路径: `/Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java`
-  解析路径: `Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/OperationLogAspect.java`
 - 链接文本: `ApiCallLogFilter.java`
   原始路径: `/Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/remote/filter/ApiCallLogFilter.java`
   解析路径: `Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/remote/filter/ApiCallLogFilter.java`
 - 链接文本: `OperationLogService.java`
-  原始路径: `/Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/OperationLogService.java`
-  解析路径: `Users/work/apex-scaffold/apex-application/src/main/java/com/apex/scaffold/application/service/OperationLogService.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OperationLogService.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OperationLogService.java`
 - 链接文本: `LocalCacheService.java`
   原始路径: `/Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java`
   解析路径: `Users/work/apex-scaffold/apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java`
@@ -470,11 +470,11 @@
   原始路径: `/Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/context/TenantContext.java`
   解析路径: `Users/work/apex-scaffold/apex-common/src/main/java/com/apex/scaffold/common/context/TenantContext.java`
 - 链接文本: `AntiReplayAspect.java`
-  原始路径: `/Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java`
-  解析路径: `Users/work/apex-scaffold/apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/AntiReplayAspect.java`
 - 链接文本: `OperationLogServiceTest.java`
-  原始路径: `/Users/work/apex-scaffold/apex-application/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java`
-  解析路径: `Users/work/apex-scaffold/apex-application/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java`
+  原始路径: `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java`
+  解析路径: `Users/work/apex-scaffold/apex-components-parent/apex-system/src/test/java/com/apex/scaffold/application/service/OperationLogServiceTest.java`
 
 ### _archive/integration/README.md
 - 链接文本: `打开文档搜索工具`

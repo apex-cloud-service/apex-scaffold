@@ -31,11 +31,11 @@
 
 | 指标 | 数量 | 位置 |
 |------|------|------|
-| **Handler** | 45 | apex-interfaces/src/main/java |
-| **Service 接口** | 50 | apex-application/src/main/java |
+| **Handler** | 45 | apex-components-parent/apex-system/src/main/java |
+| **Service 接口** | 50 | apex-components-parent/apex-system/src/main/java |
 | **Repository 接口** | 54 | apex-domain/src/main/java |
 | **PO 实体** | 49 | apex-infrastructure/src/main/java |
-| **Flyway 最新版本** | V40 | apex-interfaces/src/main/resources/db/migration |
+| **Flyway 最新版本** | V40 | apex-components-parent/apex-system/src/main/resources/db/migration |
 
 ### 1.3 新增高级功能实现情况
 

@@ -42,7 +42,7 @@
 
 ## 2. 已具备的能力（真实落地，有测试佐证）
 
-**管理端功能域**（WebFlux 函数式，`apex-interfaces/.../handler/`）：认证（多登录策略/双 Token/续期/黑名单）、RBAC、后台用户、部门、菜单、字典、参数、定时任务（自研 Reactor 调度器 + Cron 解析）、登录/审计/操作/调用日志、文件（Local/MinIO/火山 TOS 三实现）、验证码、在线用户、监控大盘、SSE 通知、健康检查。
+**管理端功能域**（WebFlux 函数式，`apex-components-parent/apex-system/.../handler/`）：认证（多登录策略/双 Token/续期/黑名单）、RBAC、后台用户、部门、菜单、字典、参数、定时任务（自研 Reactor 调度器 + Cron 解析）、登录/审计/操作/调用日志、文件（Local/MinIO/火山 TOS 三实现）、验证码、在线用户、监控大盘、SSE 通知、健康检查。
 
 **安全纵深**：JWT 双 Token + 设备绑定 + 启动密钥校验、登录防爆破（IP/用户/锁定升级验证码）、IP 滑窗限流 + 封禁、Sentinel 热点限流 + Nacos 动态规则、防重放、XSS/SQL 注入过滤、扫描器拦截、SecurityHeader；prod 配置强制安全项（`JWT_SECRET`/`REDIS_PASSWORD` 无默认值）。
 

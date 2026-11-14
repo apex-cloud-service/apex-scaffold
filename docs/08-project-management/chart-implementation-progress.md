@@ -22,7 +22,7 @@
 ### 第一步：数据库设计（Flyway 迁移脚本）
 
 #### MySQL 迁移脚本
-**文件**：`apex-interfaces/src/main/resources/db/migration/mysql/V27__create_document_and_chart_tables.sql`
+**文件**：`apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V27__create_document_and_chart_tables.sql`
 **大小**：3.7KB
 
 **内容**：
@@ -34,7 +34,7 @@
 - 支持全文搜索（FULLTEXT 索引）
 
 #### PostgreSQL 迁移脚本
-**文件**：`apex-interfaces/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql`
+**文件**：`apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql`
 **大小**：5.7KB
 
 **内容**：
@@ -108,7 +108,7 @@
 
 ### 第三步：Request 和 Response DTO
 
-**目录**：`apex-application/src/main/java/com/apex/scaffold/application/dto/data/`
+**目录**：`apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/`
 
 #### 文档相关 DTO
 
@@ -199,8 +199,8 @@ public interface ChartRepository {
 需要创建的文件：
 
 #### 1. Application Service（应用服务）
-- `apex-application/src/main/java/com/apex/scaffold/application/service/DocumentService.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/service/ChartService.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/DocumentService.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/ChartService.java`
 
 **DocumentService 方法**：
 ```java
@@ -247,8 +247,8 @@ public interface ChartService {
 需要创建的文件：
 
 #### 1. Handler（处理器）
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/DocumentHandler.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/ChartHandler.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/DocumentHandler.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/ChartHandler.java`
 
 **Handler 方法示例**：
 ```java
@@ -274,8 +274,8 @@ public class DocumentHandler {
 ```
 
 #### 2. Router（路由配置）
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/DocumentRouter.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ChartRouter.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/DocumentRouter.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/ChartRouter.java`
 
 **Router 配置示例**：
 ```java
@@ -485,21 +485,21 @@ public class DocumentRouter {
 ### 已创建的文件
 
 **数据库迁移脚本**：
-- `apex-interfaces/src/main/resources/db/migration/mysql/V27__create_document_and_chart_tables.sql`
-- `apex-interfaces/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql`
+- `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V27__create_document_and_chart_tables.sql`
+- `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql`
 
 **实体类**：
 - `apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/DocumentEntity.java`
 - `apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/ChartEntity.java`
 
 **DTO 类**：
-- `apex-application/src/main/java/com/apex/scaffold/application/dto/data/DocumentRequest.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/dto/data/DocumentQueryRequest.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/dto/data/DocumentResponse.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartRequest.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartQueryRequest.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartResponse.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/dto/data/ChartDataResponse.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/DocumentRequest.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/DocumentQueryRequest.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/DocumentResponse.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/ChartRequest.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/ChartQueryRequest.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/ChartResponse.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/data/ChartDataResponse.java`
 
 ### 待创建的文件
 
@@ -510,16 +510,16 @@ public class DocumentRouter {
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/ChartRepositoryImpl.java`
 
 **Service 层**：
-- `apex-application/src/main/java/com/apex/scaffold/application/service/DocumentService.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/service/ChartService.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/service/impl/DocumentServiceImpl.java`
-- `apex-application/src/main/java/com/apex/scaffold/application/service/impl/ChartServiceImpl.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/DocumentService.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/ChartService.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/impl/DocumentServiceImpl.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/impl/ChartServiceImpl.java`
 
 **Handler/Router 层**：
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/DocumentHandler.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/ChartHandler.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/DocumentRouter.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ChartRouter.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/DocumentHandler.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/ChartHandler.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/DocumentRouter.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/ChartRouter.java`
 
 **测试文件**：
 - 单元测试：6-8 个测试类

@@ -45,8 +45,8 @@
 - Create: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/po/Office*.java`
 - Create: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/mapper/Office*Mapper.java`
 - Create: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/repository/OfficeRepositoryImpl.java`
-- Create: `apex-interfaces/src/main/resources/db/migration/mysql/V29__create_office_platform_tables.sql`
-- Create: `apex-interfaces/src/main/resources/db/migration/postgresql/V29__create_office_platform_tables.sql`
+- Create: `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V29__create_office_platform_tables.sql`
+- Create: `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V29__create_office_platform_tables.sql`
 - Test: `apex-domain/src/test/java/com/apex/scaffold/domain/office/*Test.java`
 - Test: `apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/office/*Test.java`
 
@@ -65,13 +65,13 @@
 - Create: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/security/OfficeSignatureVerifier.java`
 - Create: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/security/OfficeStateService.java`
 - Create: `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/config/OfficePlatformProperties.java`
-- Modify: `apex-interfaces/src/main/resources/application.yml`
-- Modify: `apex-interfaces/src/main/resources/application-basic.yml`
-- Modify: `apex-interfaces/src/main/resources/application-dev.yml`
-- Modify: `apex-interfaces/src/main/resources/application-standard.yml`
-- Modify: `apex-interfaces/src/main/resources/application-enterprise.yml`
-- Modify: `apex-interfaces/src/main/resources/application-performance.yml`
-- Modify: `apex-interfaces/src/main/resources/application-prod.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application-basic.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application-dev.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application-standard.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application-enterprise.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application-performance.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application-prod.yml`
 - Test: `apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/office/security/OfficeStateServiceTest.java`
 - Test: `apex-infrastructure/src/test/java/com/apex/scaffold/infrastructure/office/config/OfficePlatformPropertiesTest.java`
 
@@ -130,16 +130,16 @@
 ### Task 6: Implement application services and MapStruct DTO assembly
 
 **Files:**
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/service/office/OfficeAuthApplicationService.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/service/office/OfficeBindingApplicationService.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/service/office/OfficeOrganizationApplicationService.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/service/office/OfficeMessageApplicationService.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/service/office/OfficeApprovalApplicationService.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/service/office/OfficeCalendarApplicationService.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/service/office/OfficeFileApplicationService.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/dto/office/*.java`
-- Create: `apex-application/src/main/java/com/apex/scaffold/application/assembler/office/*.java`
-- Test: `apex-application/src/test/java/com/apex/scaffold/application/service/office/*Test.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/office/OfficeAuthApplicationService.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/office/OfficeBindingApplicationService.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/office/OfficeOrganizationApplicationService.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/office/OfficeMessageApplicationService.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/office/OfficeApprovalApplicationService.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/office/OfficeCalendarApplicationService.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/office/OfficeFileApplicationService.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/office/*.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/assembler/office/*.java`
+- Test: `apex-components-parent/apex-system/src/test/java/com/apex/scaffold/application/service/office/*Test.java`
 
 - [ ] Implement login start/callback: validate state, exchange platform code, resolve external identity, require approved tenant-scoped binding, then invoke existing Apex token issuance service.
 - [ ] Implement administrator-only binding create/approve/reject/unbind with duplicate, conflict, inactive tenant and cross-tenant rejection.
@@ -152,20 +152,20 @@
 ### Task 7: Add routers, handlers, validation and permissions
 
 **Files:**
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeAuthHandler.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeConfigHandler.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeBindingHandler.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeOrganizationHandler.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeOperationHandler.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/OfficeCallbackHandler.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/OfficeRouter.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/request/office/*.java`
-- Create: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/response/office/*.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OfficeAuthHandler.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OfficeConfigHandler.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OfficeBindingHandler.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OfficeOrganizationHandler.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OfficeOperationHandler.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OfficeCallbackHandler.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/OfficeRouter.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/request/office/*.java`
+- Create: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/response/office/*.java`
 - Modify: existing router aggregation file discovered during implementation
 - Modify: Flyway menu/permission seed files for office administration
-- Test: `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/handler/office/*Test.java`
-- Test: `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/router/OfficeRouterTest.java`
-- Test: `apex-interfaces/src/test/java/com/apex/scaffold/interfaces/test/OfficeOpenApiContractTest.java`
+- Test: `apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/handler/office/*Test.java`
+- Test: `apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/router/OfficeRouterTest.java`
+- Test: `apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/test/OfficeOpenApiContractTest.java`
 
 - [ ] Add public endpoints for platform login start/callback and callback verification; never accept access/refresh tokens from query parameters.
 - [ ] Add authenticated tenant-admin endpoints for platform app config, connectivity test, binding approval, organization sync and capability status.
@@ -218,7 +218,7 @@
 ### Task 10: Add environment templates and operational scripts
 
 **Files:**
-- Modify: `apex-interfaces/src/main/resources/application.yml`
+- Modify: `apex-components-parent/apex-system/src/main/resources/application.yml`
 - Modify: all existing profile YAML files
 - Create: `config/office-platforms.env.example`
 - Create: `scripts/office/validate-office-config.sh`
@@ -258,7 +258,7 @@
 
 - [ ] Run focused domain, infrastructure adapter, application, interface and frontend tests using repository-standard commands.
 - [ ] Run contract tests for all provider callbacks, OAuth state, signature verification, tenant isolation, binding conflicts, pagination, retries, token expiry and idempotency.
-- [ ] Run `mvnd spotless:check`, `mvnd pmd:check`, `mvnd -pl apex-interfaces -am test`, relevant frontend lint/typecheck/test commands discovered from `package.json`, and documentation link/consistency checks.
+- [ ] Run `mvnd spotless:check`, `mvnd pmd:check`, `mvnd -pl :apex-system -am test`, relevant frontend lint/typecheck/test commands discovered from `package.json`, and documentation link/consistency checks.
 - [ ] Run `git diff --check` and inspect generated report contents; report exact commands, pass/fail result, coverage and any limitation caused by absent real platform credentials.
 - [ ] Keep real platform smoke tests opt-in and clearly mark them skipped when credentials or public callback infrastructure are unavailable.
 

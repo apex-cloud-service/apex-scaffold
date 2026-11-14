@@ -70,7 +70,7 @@
    - `converter/GenDatasourcePoConverter.java` 等 4 个 MapStruct Converter(`@Mapper(componentModel="spring", unmappedTargetPolicy=ReportingPolicy.IGNORE)`)
    - `repository/GenDatasourceRepositoryImpl.java` 等 4 个实现,通过 `BlockingIoSchedulers.jdbc()` 隔离 JDBC
 
-3. **application**: `apex-application/src/main/java/com/apex/scaffold/application/`
+3. **application**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/`
    - `service/GenDatasourceService.java`, `service/GenConfigService.java`, `service/CodeGenerationService.java`(模板渲染 + 文件生成)
    - `dto/admin/GenDatasourceRequest.java`, `dto/admin/GenDatasourceDTO.java`, `dto/admin/GenConfigRequest.java`, `dto/admin/GenConfigDTO.java`, `dto/admin/GeneratedFileDTO.java`, `dto/admin/TableInfoDTO.java`, `dto/admin/ColumnInfoDTO.java`
    - `assembler/GenDatasourceAssembler.java`, `assembler/GenConfigAssembler.java`(MapStruct)
@@ -79,7 +79,7 @@
    - `support/TypeMapper.java`(DB 类型 → Java 类型映射)
    - `support/CodeTemplateEngine.java`(FreeMarker 集成,沿用 `apex-generator/CodeGenerator.java` 既有逻辑)
 
-4. **interfaces**: `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/`
+4. **interfaces**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/`
    - `handler/GenDatasourceHandler.java`, `handler/GenConfigHandler.java`(继承 `BaseHandler`)
    - `router/GeneratorAdminRouter.java`(参考 `OfficeAdminRouter.java` 模式,使用 `SpringdocRouteBuilder` + `@RouterOperations`)
    - 路径: `/admin-api/v1/generator/datasources*`, `/generator/configs*`
@@ -106,7 +106,7 @@
 - interfaces: 在 `AuthConfigRouter` 注册 `POST /admin-api/v1/auth/permissions/sync`,委托给 `PermissionSyncService`
 
 **别名路由(复用现有 Service)**:
-- 新建 `apex-interfaces/.../router/AuthConfigRouter.java`,在同一个 `RouterFunction<ServerResponse>` Bean 中:
+- 新建 `apex-components-parent/apex-system/.../router/AuthConfigRouter.java`,在同一个 `RouterFunction<ServerResponse>` Bean 中:
   - `GET/POST/PUT/DELETE /admin-api/v1/auth/config/oauth2/clients` → 调用 `OAuth2ClientManagementHandler` 现有方法
   - `GET /admin-api/v1/auth/sessions` → `OnlineUserHandler::list`
   - `POST /admin-api/v1/auth/sessions/kickout` → 委托 `AdminUserManagementHandler` 现有会话撤销逻辑(若无批量端点,新增一个轻量方法)
@@ -140,8 +140,8 @@ DDD 全栈,3 张表 → 3 套 CRUD + 1 个统计端点 + 1 个测试连接端点
 ### 阶段 5:测试与报告
 
 **测试范围:**
-- 单元测试(`apex-application/src/test`):每个新 Service 1 个测试类,Mockito + `StepVerifier`,覆盖成功/参数校验/异常/边界
-- 集成测试(`apex-interfaces/src/test`):每个新 Handler 1 个集成测试类,继承 `BaseIntegrationTest`,WebTestClient 调用,覆盖:
+- 单元测试(`apex-components-parent/apex-system/src/test`):每个新 Service 1 个测试类,Mockito + `StepVerifier`,覆盖成功/参数校验/异常/边界
+- 集成测试(`apex-components-parent/apex-system/src/test`):每个新 Handler 1 个集成测试类,继承 `BaseIntegrationTest`,WebTestClient 调用,覆盖:
   - 成功路径 200
   - 未授权 401 / 权限不足 403
   - 参数校验失败 400
@@ -170,31 +170,31 @@ mvnd -pl :apex-common,:apex-domain,apex-application,:apex-infrastructure,apex-in
 
 | 用途 | 路径 |
 |---|---|
-| Handler 模板 | `apex-interfaces/.../handler/DictHandler.java` |
-| Router 模板 | `apex-interfaces/.../router/OfficeAdminRouter.java` |
-| Service 模板 | `apex-application/.../service/DictService.java` |
+| Handler 模板 | `apex-components-parent/apex-system/.../handler/DictHandler.java` |
+| Router 模板 | `apex-components-parent/apex-system/.../router/OfficeAdminRouter.java` |
+| Service 模板 | `apex-components-parent/apex-system/.../service/DictService.java` |
 | RepositoryImpl 模板 | `apex-infrastructure/.../persistence/repository/DictTypeRepositoryImpl.java` |
-| DTO 模板 | `apex-application/.../dto/admin/DictTypeRequest.java` |
-| 测试基类 | `apex-interfaces/src/test/.../test/BaseIntegrationTest.java` |
+| DTO 模板 | `apex-components-parent/apex-system/.../dto/admin/DictTypeRequest.java` |
+| 测试基类 | `apex-components-parent/apex-system/src/test/.../test/BaseIntegrationTest.java` |
 | 测试报告模板 | `docs/_archive/test-reports/test-summary-20260916.md` |
 | 菜单种子模板 | `db/migration/mysql/V23__add_database_config_menu.sql` |
 | PG 菜单模板 | `db/migration/postgresql/V36__add_office_message_menu_and_permissions.sql` |
-| 现有 JwtConfig | `apex-interfaces/.../config/JwtConfig.java`(启动配置,勿破坏) |
-| 现有 OAuth2 | `apex-interfaces/.../config/OAuth2RouterConfig.java` + `OAuth2ClientManagementHandler.java` |
-| 现有在线用户 | `apex-interfaces/.../handler/OnlineUserHandler.java` |
-| 现有登录日志 | `apex-interfaces/.../handler/LoginLogHandler.java` |
-| 现有权限管理 | `apex-interfaces/.../handler/AuthorizationHandler.java` + `PermissionService.java` |
+| 现有 JwtConfig | `apex-components-parent/apex-system/.../config/JwtConfig.java`(启动配置,勿破坏) |
+| 现有 OAuth2 | `apex-components-parent/apex-system/.../config/OAuth2RouterConfig.java` + `OAuth2ClientManagementHandler.java` |
+| 现有在线用户 | `apex-components-parent/apex-system/.../handler/OnlineUserHandler.java` |
+| 现有登录日志 | `apex-components-parent/apex-system/.../handler/LoginLogHandler.java` |
+| 现有权限管理 | `apex-components-parent/apex-system/.../handler/AuthorizationHandler.java` + `PermissionService.java` |
 
 ---
 
 ## 5. 验证步骤(端到端)
 
-1. **编译验证:** `mvnd -pl apex-interfaces -am compile -DskipTests`
+1. **编译验证:** `mvnd -pl :apex-system -am compile -DskipTests`
 2. **格式化:** `mvnd spotless:check`
 3. **代码质量:** `mvnd pmd:check`
 4. **Flyway 迁移:** 启动应用 → 验证 V41 执行成功 → `SELECT * FROM gen_datasource LIMIT 0` 等验证表存在 → `SELECT * FROM sys_menu WHERE path LIKE '/admin-api/v1/generator%'` 验证菜单种子
-5. **单测:** `mvnd -pl apex-application -am test`
-6. **集成测试:** `mvnd -pl apex-interfaces -am test -P basic`
+5. **单测:** `mvnd -pl :apex-system -am test`
+6. **集成测试:** `mvnd -pl :apex-system -am test -P basic`
 7. **OpenAPI:** 启动应用 → `curl http://localhost:8080/v3/api-docs | jq '.paths | keys[] | select(startwith("/admin-api/v1/generator") or startwith("/admin-api/v1/sso") or startwith("/admin-api/v1/auth/config"))'`
 8. **报告生成:** `bash scripts/test/generate-test-report.sh` → 校验 `docs/_archive/test-reports/backend-admin-apis-test-report-YYYYMMDD.md` 包含所有新测试通过统计
 

@@ -46,8 +46,8 @@
 - 数据库迁移（V26）添加加密支持
 
 **文件变更**：
-- ✅ 新增：`apex-auth-center/.../TokenEncryptionService.java`
-- ✅ 新增：`apex-interfaces/.../V26__add_token_encryption.sql`
+- ✅ 新增：`apex-services-bom/apex-auth-service/.../TokenEncryptionService.java`
+- ✅ 新增：`apex-components-parent/apex-system/.../V26__add_token_encryption.sql`
 - ✅ 修改：`TokenServiceImpl.java` 集成加密服务
 
 **风险降低**：🔴 严重 → 🟢 低风险
@@ -66,7 +66,7 @@
 - 重复使用检测（撤销整个Token家族）
 
 **文件变更**：
-- ✅ 新增：`apex-auth-center/.../RefreshTokenRotationService.java`
+- ✅ 新增：`apex-services-bom/apex-auth-service/.../RefreshTokenRotationService.java`
 - ✅ 修改：`TokenServiceImpl.java` 集成轮换逻辑
 
 **风险降低**：🔴 严重 → 🟡 中等风险
@@ -85,7 +85,7 @@
 - 密钥版本管理（Redis存储）
 
 **文件变更**：
-- ✅ 新增：`apex-auth-center/.../JwtKeyRotationService.java`
+- ✅ 新增：`apex-services-bom/apex-auth-service/.../JwtKeyRotationService.java`
 - ✅ 配置：定时任务（每天凌晨2点检查）
 
 **风险降低**：🔴 严重 → 🟡 中等风险
@@ -104,7 +104,7 @@
 - 记录安全事件
 
 **文件变更**：
-- ✅ 修改：`apex-auth-center/.../SamlProtocolAdapter.java`
+- ✅ 修改：`apex-services-bom/apex-auth-service/.../SamlProtocolAdapter.java`
 - ✅ 新增：Redis依赖（spring-boot-starter-data-redis-reactive）
 
 **风险降低**：🔴 严重 → 🟢 低风险
@@ -123,7 +123,7 @@
 - 验证后删除State（防止重放）
 
 **文件变更**：
-- ✅ 修改：`apex-auth-center/.../OidcProtocolAdapter.java`
+- ✅ 修改：`apex-services-bom/apex-auth-service/.../OidcProtocolAdapter.java`
 - ✅ 新增：State生成和验证逻辑
 
 **风险降低**：🔴 严重 → 🟢 低风险
@@ -143,7 +143,7 @@
 - 密钥SHA-256哈希存储
 
 **文件变更**：
-- ✅ 新增：`apex-application/.../ClientSecretRotationService.java`
+- ✅ 新增：`apex-components-parent/apex-system/.../ClientSecretRotationService.java`
 - ✅ 配置：定时任务（每天凌晨3点检查）
 
 **风险降低**：🟠 高危 → 🟡 中等风险
@@ -162,7 +162,7 @@
 - 集成ELK Stack（可选）
 
 **文件变更**：
-- ✅ 新增：`apex-auth-center/.../UnifiedAuditService.java`
+- ✅ 新增：`apex-services-bom/apex-auth-service/.../UnifiedAuditService.java`
 - ✅ 集成：所有认证授权服务调用审计日志
 
 **风险降低**：🟠 高危 → 🟢 低风险
@@ -181,7 +181,7 @@
 - 透明加密/解密
 
 **文件变更**：
-- ✅ 新增：`apex-auth-center/.../SsoConfigEncryptionService.java`
+- ✅ 新增：`apex-services-bom/apex-auth-service/.../SsoConfigEncryptionService.java`
 - ✅ 配置：主密钥环境变量
 
 **风险降低**：🟠 高危 → 🟡 中等风险

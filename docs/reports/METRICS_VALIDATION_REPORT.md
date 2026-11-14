@@ -158,7 +158,7 @@ public class MetricsConfig {
 
 **步骤：**
 
-1. 修改 `apex-interfaces/src/main/resources/application.yml`
+1. 修改 `apex-components-parent/apex-system/src/main/resources/application.yml`
 
 ```yaml
 management:
@@ -170,7 +170,7 @@ management:
 2. 重启应用
 
 ```bash
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 ```
 
 3. 验证指标

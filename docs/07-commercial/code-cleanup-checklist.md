@@ -137,7 +137,7 @@ apex-domain/src/main/java/com/apex/scaffold/domain/
 
 **Application层**:
 ```
-apex-application/src/main/java/com/apex/scaffold/application/service/login/
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/
   ├── WeChatCodeLoginStrategy.java
   ├── WeChatCodeLoginStrategyTest.java
   ├── WeChatPhoneLoginStrategy.java
@@ -182,7 +182,7 @@ mv apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/wechat \
 
 #### 3.1 数据库配置
 
-**文件**: `apex-interfaces/src/main/resources/application.yml`
+**文件**: `apex-components-parent/apex-system/src/main/resources/application.yml`
 
 **需检查项**:
 ```yaml
@@ -225,7 +225,7 @@ public static final String CACHE_PREFIX = "apex:";
 
 #### 4.1 Flyway脚本清单
 
-**位置**: `apex-interfaces/src/main/resources/db/migration/mysql/`
+**位置**: `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/`
 
 **脚本总数**: 26个
 
@@ -499,7 +499,7 @@ grep -r "原\|兴趣\|对战" --include="*.md" docs/ | wc -l
 
 ```bash
 # 4. 表名/字段名通用化
-grep -i "interest\|battle\|elo" apex-interfaces/src/main/resources/db/migration/mysql/*.sql | wc -l
+grep -i "interest\|battle\|elo" apex-components-parent/apex-system/src/main/resources/db/migration/mysql/*.sql | wc -l
 # 期望: 0
 ```
 

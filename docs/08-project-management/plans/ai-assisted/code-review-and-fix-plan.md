@@ -423,7 +423,7 @@ find apex-*/src/main/java -name "*.java" -exec grep -l "public.*get[A-Z]" {} \; 
 
 # 2. 查找 DTO 类但没有 @Builder 的
 echo "==> 查找缺少 @Builder 的 DTO 类..."
-find apex-application/src/main/java -path "*/dto/*.java" -exec grep -L "@Builder" {} \; > lombok-issues-builder.txt
+find apex-components-parent/apex-system/src/main/java -path "*/dto/*.java" -exec grep -L "@Builder" {} \; > lombok-issues-builder.txt
 
 # 3. 查找 Service 类有手写构造器的
 echo "==> 查找 Service 类手写构造器..."
@@ -487,7 +487,7 @@ echo "扫描完成，结果保存在 javadoc-issues-*.txt"
 # fix-lombok-simple.sh
 
 # 示例：批量为 DTO 类添加 @Builder 注解
-find apex-application/src/main/java -path "*/dto/*.java" | while read file; do
+find apex-components-parent/apex-system/src/main/java -path "*/dto/*.java" | while read file; do
     if ! grep -q "@Builder" "$file"; then
         # 在 @Data 后添加 @Builder
         sed -i.bak '/^@Data$/a\

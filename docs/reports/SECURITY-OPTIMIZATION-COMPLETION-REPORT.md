@@ -285,7 +285,7 @@
 
 ### 数据库迁移清单
 
-所有迁移脚本位于: `apex-interfaces/src/main/resources/db/migration/mysql/`
+所有迁移脚本位于: `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/`
 
 ```
 V25__oauth2_authorization_server_schema.sql  ✅

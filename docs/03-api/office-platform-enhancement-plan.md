@@ -179,7 +179,7 @@ apex-infrastructure/
     │       ├── OffMessageRepositoryImpl.java
     │       └── ...
 
-apex-application/
+apex-components-parent/apex-system/
 └── src/main/java/com/apex/scaffold/application/
     ├── service/
     │   ├── OffMessageService.java
@@ -195,7 +195,7 @@ apex-application/
         ├── OffMessageAssembler.java
         └── ...
 
-apex-interfaces/
+apex-components-parent/apex-system/
 └── src/main/java/com/apex/scaffold/interfaces/
     ├── handler/
     │   └── office/

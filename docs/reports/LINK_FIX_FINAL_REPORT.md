@@ -136,7 +136,7 @@ KEYCLOAK_INTEGRATION_GUIDE.md → 01-guides/keycloak-integration-guide.md
    - `/Users/work/apex-scaffold/docs`
 
 4. **源代码文件链接** (用于开发参考)
-   - `file:///Users/work/apex-scaffold/apex-interfaces/src/main/java/...`
+   - `file:///Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/java/...`
 
 ## 修复的关键文档
 

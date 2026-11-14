@@ -62,7 +62,7 @@
 ### 核心安全服务 (9个)
 
 ```
-apex-auth-center/src/main/java/com/apex/scaffold/authcenter/
+apex-services-bom/apex-auth-service/src/main/java/com/apex/scaffold/authcenter/
 ├── infrastructure/
 │   ├── crypto/
 │   │   ├── TokenEncryptionService.java          ✨ Token加密服务 (AES-256-GCM)
@@ -86,7 +86,7 @@ apex-common/src/main/java/com/apex/scaffold/common/security/
 ### 单元测试 (2个)
 
 ```
-apex-auth-center/src/test/java/.../crypto/
+apex-services-bom/apex-auth-service/src/test/java/.../crypto/
 └── TokenEncryptionServiceTest.java              ✨ Token加密测试
 
 apex-common/src/test/java/.../security/
@@ -99,14 +99,14 @@ apex-common/src/test/java/.../security/
 scripts/utils/
 └── ConfigEncryptionTool.java                    ✨ 配置加密命令行工具
 
-apex-interfaces/src/main/resources/db/migration/mysql/
+apex-components-parent/apex-system/src/main/resources/db/migration/mysql/
 └── V26__security_enhancements.sql               ✨ 安全增强数据库迁移
 ```
 
 ### 配置文件 (1个)
 
 ```
-apex-interfaces/src/main/resources/
+apex-components-parent/apex-system/src/main/resources/
 └── application.yml                              🔧 新增安全配置项
 ```
 
@@ -337,7 +337,7 @@ java ConfigEncryptionTool interactive "01234567890123456789012345678901"
 
 ## 🗄️ 数据库迁移
 
-**迁移脚本**: V26__security_enhancements.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/apex-interfaces/src/main/resources/db/migration/mysql/V26__security_enhancements.sql`）
+**迁移脚本**: V26__security_enhancements.sql（目标不存在，无已核实替代文件；原路径：`file:///Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V26__security_enhancements.sql`）
 
 ### 新增表结构 (10个表)
 

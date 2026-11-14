@@ -223,7 +223,7 @@ VITE v6.4.3  ready in 673 ms
 **启动命令**：
 ```bash
 cd /Users/work/apex-scaffold
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 ```
 
 **接口列表**：
@@ -241,7 +241,7 @@ mvnd spring-boot:run -pl apex-interfaces
 
 ```bash
 cd /Users/work/apex-scaffold
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 ```
 
 ### 2. 前端服务已启动

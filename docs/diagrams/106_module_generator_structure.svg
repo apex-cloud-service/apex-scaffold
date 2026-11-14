@@ -99,7 +99,7 @@
   <text x="520" y="648" class="box-desc">2. 生成产物遵循 DDD 分层命名，可直接落入目标模块。</text>
   <text x="520" y="676" class="box-desc">3. 元模型与模板分离，新增生成类型仅需扩展模板。</text>
   <text x="780" y="590" class="box-title" font-size="14">运行方式</text>
-  <text x="780" y="620" class="code">CLI：mvnd -pl apex-generator exec:java -Dexec.mainClass=GeneratorCli</text>
+  <text x="780" y="620" class="code">CLI：mvnd -pl :apex-generator exec:java -Dexec.mainClass=GeneratorCli</text>
   <text x="780" y="648" class="box-desc">纯工具模块，运行期不加载</text>
   <text x="780" y="676" class="note">与 52_codegen_pipeline.svg 相互呼应</text>
 

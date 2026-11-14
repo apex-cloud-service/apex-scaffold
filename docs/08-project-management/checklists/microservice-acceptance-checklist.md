@@ -28,8 +28,8 @@
 
 | # | 验收项 | 状态 | 证据 / 说明 |
 |---|---|---|---|
-| 17.1.1 | `/api/v1/**` 与 `/admin-api/v1/**` 全部现有接口回归通过，`Result` 结构与错误码逐字段一致（`export-api-docs.sh` OpenAPI diff 为空） | `[x]` 离线基线 / `[~]` 在线回归 | 离线契约基线已导出：`apex-interfaces/target/openapi-export/openapi.json`（79 paths，`OpenApiExportTest`）；归档 `docs/03-api/openapi/`。在线逐字段 diff 需 MySQL/Redis/Nacos 环境。 |
-| 17.1.2 | 登录（密码/短信/微信/SSO）、MFA、刷新、登出、Token 黑名单全链路正常 | `[x]` | Phase 2.7：`AuthenticationHandlerIntegrationTest` / `MfaHandlerIntegrationTest` / `SessionHandlerIntegrationTest` / `OAuth2BootTest`。见 `apex-auth-center/TESTING.md`。 |
+| 17.1.1 | `/api/v1/**` 与 `/admin-api/v1/**` 全部现有接口回归通过，`Result` 结构与错误码逐字段一致（`export-api-docs.sh` OpenAPI diff 为空） | `[x]` 离线基线 / `[~]` 在线回归 | 离线契约基线已导出：`apex-components-parent/apex-system/target/openapi-export/openapi.json`（79 paths，`OpenApiExportTest`）；归档 `docs/03-api/openapi/`。在线逐字段 diff 需 MySQL/Redis/Nacos 环境。 |
+| 17.1.2 | 登录（密码/短信/微信/SSO）、MFA、刷新、登出、Token 黑名单全链路正常 | `[x]` | Phase 2.7：`AuthenticationHandlerIntegrationTest` / `MfaHandlerIntegrationTest` / `SessionHandlerIntegrationTest` / `OAuth2BootTest`。见 `apex-services-bom/apex-auth-service/TESTING.md`。 |
 | 17.1.3 | 多租户隔离：跨租户数据访问在各服务均被拦截（含缓存 key、MQ 消费、异步任务） | `[x]` | `TenantContext` + `DefaultTenantLineHandler` + `TenantContext.withTenant(Mono/Flux)` 显式桥接；13 处桥接调用点已补齐（p4-7）。 |
 | 17.1.4 | 工作流审批、办公平台推送、文件上传下载端到端可用 | `[x]` 代码/测试 / `[~]` 在线 | 工作流/文件已完成（Phase 3/4，`WorkflowHandlerIntegrationTest`/`FileHandlerIntegrationTest`）；**办公已完成（Phase 5）**：`apex-office-service` 独立化 + `OfficeRouterRegressionTest`/各子域 handler 测试 + `OfficeFlywayMigrationTest`。三平台（企微/钉钉/飞书）真机端到端推送需在线平台凭证环境执行。 |
 

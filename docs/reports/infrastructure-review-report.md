@@ -351,7 +351,7 @@ management:
 |---------|------|
 | `apex-infrastructure/.../BloomFilterService.java` | 布隆过滤器服务 |
 | `apex-infrastructure/.../BloomFilterCacheWarmer.java` | 缓存预热器 |
-| `apex-interfaces/.../SentinelDynamicRulesLoader.java` | Sentinel 动态规则加载器 |
+| `apex-components-parent/apex-system/.../SentinelDynamicRulesLoader.java` | Sentinel 动态规则加载器 |
 | `config/sentinel/sentinel-rules.json` | Sentinel 规则配置文件 |
 
 ---

@@ -11,7 +11,7 @@
 ### 1. 数据库脚本修复（P0 - 最高优先级）
 
 #### 1.1 PostgreSQL V37 缺失脚本 ✅
-- **文件**：`apex-interfaces/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql`
+- **文件**：`apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql`
 - **内容**：添加 `email` 和 `keycloak_sub` 字段，创建唯一索引
 - **验证**：已确认 UserPO.java 包含对应字段
 - **结果**：PostgreSQL 脚本版本完整（V1-V40）
@@ -26,8 +26,8 @@
 - **验证结果**：6 个表 100% 匹配，4 个表已通过 V40 修复
 
 #### 1.3 V40 补丁脚本创建 ✅
-- **MySQL 脚本**：`apex-interfaces/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql`
-- **PostgreSQL 脚本**：`apex-interfaces/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql`
+- **MySQL 脚本**：`apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql`
+- **PostgreSQL 脚本**：`apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql`
 - **修复原则**：以代码实体类（PO）为标准
 - **修复内容**：
   - OAuth2：主键改为单一 id，保留复合键作为唯一索引
@@ -135,9 +135,9 @@
 ## 📁 文件变更统计
 
 ### 新建文件（5 个）
-1. `apex-interfaces/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql`
-2. `apex-interfaces/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql`
-3. `apex-interfaces/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql`
+1. `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql`
+2. `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql`
+3. `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql`
 4. `scripts/update-frontend-version.sh`
 5. `docs/reports/code_review_and_standardization_report_2026-09-17.md`
 
@@ -162,7 +162,7 @@
    podman-compose -f podman-compose.infra.yml up -d mysql
    
    # 启动应用（自动执行 Flyway）
-   mvnd spring-boot:run -pl apex-interfaces -P basic
+   mvnd spring-boot:run -pl :apex-system -P basic
    
    # 验证表结构
    mysql -u root -p apex_scaffold -e "SHOW COLUMNS FROM oauth2_authorization_consent;"
@@ -176,7 +176,7 @@
    ```
 
 3. **三种部署方式测试**：
-   - java -jar：`mvnd clean package && java -jar apex-interfaces/target/*.jar`
+   - java -jar：`mvnd clean package && java -jar apex-components-parent/apex-system/target/*.jar`
    - Podman：`podman build -f Containerfile -t apex-scaffold:1.3.1 . && podman run -p 8080:8080 apex-scaffold:1.3.1`
    - Podman Compose：`podman-compose -f podman-compose.yml up -d`
 

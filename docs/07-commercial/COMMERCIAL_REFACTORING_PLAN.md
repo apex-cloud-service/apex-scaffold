@@ -150,9 +150,9 @@ Apex Scaffold 是一个基于 Spring Boot 3.5 + WebFlux 响应式 + DDD 五层�
 apex-scaffold/
 ├── apex-common/            # [重构] 通用核心：工具/注解/Result/异常/事件/SPI/License/脱敏/限流/缓存常量（零业务残留）
 ├── apex-domain/            # [重构] 通用领域：用户/认证/RBAC/审计/文件/信用/订阅/短信/存储/缓存/事件总线（零业务残留）
-├── apex-application/       # [重构] 通用应用：认证/用户/RBAC/文件用例 + 通用 DTO（零业务残留）
+├── apex-components-parent/apex-system/       # [重构] 通用应用：认证/用户/RBAC/文件用例 + 通用 DTO（零业务残留）
 ├── apex-infrastructure/    # [重构] 通用基础实施：MyBatis-Plus/缓存/存储Provider/短信/消息/Flyway(通用)（零业务残留）
-├── apex-interfaces/        # [重构] 通用接口：Auth/User/File/Health/RBAC-Admin 路由与 Handler/安全/全局异常/i18n(零业务残留)
+├── apex-components-parent/apex-system/        # [重构] 通用接口：Auth/User/File/Health/RBAC-Admin 路由与 Handler/安全/全局异常/i18n(零业务残留)
 ├── apex-example/           # [增强] 业务示例：完整垂直切片（CRUD+登录+缓存+文件+MQ+多数据源最佳实践）
 ├── apex-admin-ui/          # [改造] 通用管理后台（沿用 static/admin 现有样式改造，零业务残留）
 ├── apex-codegen/           # [二期] 代码生成器（本期不做，保留路线图）
@@ -190,7 +190,7 @@ apex-scaffold/
 当前 87 个迁移中 64 个为业务脚本，且多个含 `业务` 字样（库名 `apex_data`、`@apex_*` 变量、`原偏好模型` 表名等）。**重建通用迁移基线**（产品全新、无历史用户，重建成本最低且可彻底消除 业务）：
 
 ```
-apex-interfaces/src/main/resources/db/migration/
+apex-components-parent/apex-system/src/main/resources/db/migration/
 ├── V1__init_schema.sql        # 通用表全量基线（零业务残留）
 ├── V2__add_indexes.sql        # 通用索引
 └── ...                        # 后续按功能增量
@@ -246,7 +246,7 @@ apex-interfaces/src/main/resources/db/migration/
 - **动作**:
   1. **删除全部模块下 `target/` 目录**（构建产物 + surefire 报告内含大量 `apex.log.dir` 属性、`原算法配置类Test`/`原阻塞IO配置类Test` 报告）；
   2. **删除拷贝脚本**：`scripts/copy_all_modules.py`、`copy_common.py`、`copy_common_files.py`、`fix-author.sh`（这些脚本本身含大量 `com.apex.*` 替换逻辑，是 业务 来源的元凶，且不属于交付物）；
-  3. 删除 `apex-interfaces/src/main/resources/rebel.xml`（JRebel 个人配置）；
+  3. 删除 `apex-components-parent/apex-system/src/main/resources/rebel.xml`（JRebel 个人配置）；
   4. **删除内部修复报告**：`docs/FIX_PROGRESS_REPORT.md`、`docs/MEDIUM_FIX_COMPLETION_REPORT.md`、`docs/OPTIMIZATION_SUMMARY.md`（内容基于原 原业务项目，不适合对外）；
   5. 全库扫描并清除 `@author Apex Team` 残留（如有）。
 - **验收**: `target/` 目录全部删除；`scripts/` 中无 copy 脚本；`docs/` 中无内部修复报告。
@@ -349,7 +349,7 @@ apex-interfaces/src/main/resources/db/migration/
   3. 删除业务 application service/listener/port（PhotoBatchReadiness、SingleRecommendation、FuturePartner、Interest*、**原偏好模型ModelService/原偏好模型ReportService/原偏好模型PreferenceAnalysisService/原偏好模型VoteExportService/原偏好模型FeatureBackfillService** 等）；
   4. 删除 `application/config/BattlePrefetchProperties.java`、`FuturePartnerProperties.java`（业务配置类）；
   5. 同步删除对应测试。
-- **验收**: apex-application 仅剩通用 DTO 与用例；编译通过；`mvn test -pl apex-application` 全绿。
+- **验收**: apex-application 仅剩通用 DTO 与用例；编译通过；`mvn test -pl :apex-system` 全绿。
 
 #### B3. apex-interfaces 业务剥离
 
@@ -362,7 +362,7 @@ apex-interfaces/src/main/resources/db/migration/
   5. 删除 `db/interest/v1_2/` 种子数据（manifest.json 含 `APEX-N-*` ID、`原兴趣目录` schema 等）；
   6. `AuthHandler` 通用化：抽取通用登录（用户名密码 + 短信验证码 + JWT），微信/创蓝登录改为可插拔 Provider（SPI 或条件装配），默认不激活；
   7. 删除对应业务 IT 测试。
-- **验收**: `mvn test -pl apex-interfaces` 全绿；应用可启动；`/api/v1/health`、`/api/v1/auth/login`（密码）、`/api/v1/user/info` 可用；业务路由 404；admin 后台无 业务 字样与业务审核视图。
+- **验收**: `mvn test -pl :apex-system` 全绿；应用可启动；`/api/v1/health`、`/api/v1/auth/login`（密码）、`/api/v1/user/info` 可用；业务路由 404；admin 后台无 业务 字样与业务审核视图。
 
 #### B4. apex-infrastructure 业务剥离
 
@@ -691,17 +691,17 @@ apex-interfaces/src/main/resources/db/migration/
 | 文件 | 残留内容 | 处理方式 |
 |---|---|---|
 | `pom.xml` L902-905,929-931 | `apex.log.dir` 属性 + 注释 `apex-interfaces`/`apex-test.log` | 改为 `apex.log.dir`/`apex-interfaces`/`apex-test.log` |
-| `apex-interfaces/.../logback-spring.xml` | `com.apex` 日志级别 | 改为 `com.apex.scaffold` |
-| `apex-interfaces/.../application-prod.yml` | `com.apex` | 改为 `com.apex.scaffold` |
-| `apex-interfaces/.../application-performance.yml` | `com.apex` | 改为 `com.apex.scaffold` |
-| `apex-interfaces/.../test/application-it.yml` | `com.apex` | 改为 `com.apex.scaffold` |
-| `apex-interfaces/.../test/logback-test.xml` | `com.apex` | 改为 `com.apex.scaffold` |
-| `apex-interfaces/.../spy.properties` | 待查 | 排查并清除或删除文件 |
-| `apex-interfaces/.../bootstrap.yml` | 待查 | 排查并清除 |
-| `apex-interfaces/.../i18n/messages_en_US.properties` | 含 业务字样 | 逐条排查清除 |
-| `apex-interfaces/.../i18n/messages_zh_CN.properties` | 含 业务字样 | 逐条排查清除 |
-| `apex-interfaces/.../i18n/messages_zh_TW.properties` | 含 业务字样 | 逐条排查清除 |
-| `apex-interfaces/.../i18n/messages_th_TH.properties` | 含 业务字样 | 逐条排查清除 |
+| `apex-components-parent/apex-system/.../logback-spring.xml` | `com.apex` 日志级别 | 改为 `com.apex.scaffold` |
+| `apex-components-parent/apex-system/.../application-prod.yml` | `com.apex` | 改为 `com.apex.scaffold` |
+| `apex-components-parent/apex-system/.../application-performance.yml` | `com.apex` | 改为 `com.apex.scaffold` |
+| `apex-components-parent/apex-system/.../test/application-it.yml` | `com.apex` | 改为 `com.apex.scaffold` |
+| `apex-components-parent/apex-system/.../test/logback-test.xml` | `com.apex` | 改为 `com.apex.scaffold` |
+| `apex-components-parent/apex-system/.../spy.properties` | 待查 | 排查并清除或删除文件 |
+| `apex-components-parent/apex-system/.../bootstrap.yml` | 待查 | 排查并清除 |
+| `apex-components-parent/apex-system/.../i18n/messages_en_US.properties` | 含 业务字样 | 逐条排查清除 |
+| `apex-components-parent/apex-system/.../i18n/messages_zh_CN.properties` | 含 业务字样 | 逐条排查清除 |
+| `apex-components-parent/apex-system/.../i18n/messages_zh_TW.properties` | 含 业务字样 | 逐条排查清除 |
+| `apex-components-parent/apex-system/.../i18n/messages_th_TH.properties` | 含 业务字样 | 逐条排查清除 |
 
 ### 10.3 业务代码中的 业务痕迹（阶段 B 随业务剥离消除）
 

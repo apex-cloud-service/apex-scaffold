@@ -306,7 +306,7 @@ rateLimitService.reset("/api/v1/users")
 
 ```bash
 # 启动应用
-./mvnw spring-boot:run -pl apex-interfaces
+./mvnw spring-boot:run -pl :apex-system
 
 # 使用 ab 压测
 ab -n 10000 -c 100 http://localhost:8080/api/v1/users

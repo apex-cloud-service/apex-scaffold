@@ -449,7 +449,7 @@ cd /Users/work/apex-scaffold
 podman-compose -f podman-compose.infra.yml up -d redis
 
 # 启动应用
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 ```
 
 ### 2. 访问 API 文档
@@ -513,8 +513,8 @@ mvnd spring-boot:run -pl apex-interfaces
 
 ### 源代码
 
-- Handler 类：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/`
-- Router 配置：`apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/`
+- Handler 类：`apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/`
+- Router 配置：`apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/`
 
 ---
 

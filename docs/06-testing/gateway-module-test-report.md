@@ -71,7 +71,7 @@
 
 | # | 现象 | 根因 | 修复 |
 |---|------|------|------|
-| 1 | 上下文加载抛 `ConfigurationPropertiesBindException` / `ConverterNotFoundException` | `application.yml` 中 `jwks.ks` 写成标量字符串占位符 `ks: ${JWKS_KEYS:[]}`，无法绑定到 `List<JwksProfile>` | 改为 YAML 列表 `ks: []`，并以注释说明必须用列表/JSON 数组、不可用标量占位符（与 `apex-interfaces/application.yml` 既有注释规则一致） |
+| 1 | 上下文加载抛 `ConfigurationPropertiesBindException` / `ConverterNotFoundException` | `application.yml` 中 `jwks.ks` 写成标量字符串占位符 `ks: ${JWKS_KEYS:[]}`，无法绑定到 `List<JwksProfile>` | 改为 YAML 列表 `ks: []`，并以注释说明必须用列表/JSON 数组、不可用标量占位符（与 `apex-components-parent/apex-system/application.yml` 既有注释规则一致） |
 | 2 | 启动抛 `IllegalStateException: cors.allow-all-origins=false 但 cors.allowed-origins 未配置` | `CorsGlobalConfig` 启动校验：允许任意源关闭且未声明白名单即拒绝启动；`application-dev.yml` 未配置 CORS | `application-dev.yml` 新增 `cors.allowed-origins`（放行前端本机端口 3000/5173/5174/5175，与主应用 dev 配置一致） |
 | 3 | PMD `p3c-pmd-check` 报 4 处违规 | `EqualsAvoidNullRule`×2（`path.equals(...)` 应常量优先）、`UndefineMagicConstantRule`×2（字符串字面量 `"Bearer "`/`"HS"`） | `JwtSignatureFilter.isInternalPath` 改常量前置比较；`resolveBearerToken` 改用既有 `SystemConstants.TOKEN_PREFIX`；`GatewayJwtVerifierService` 新增 `HMAC_ALG_PREFIX = "HS"` 常量 |
 

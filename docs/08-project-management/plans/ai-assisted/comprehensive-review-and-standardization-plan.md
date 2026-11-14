@@ -52,7 +52,7 @@
 ### 1.2 已识别问题
 
 #### 问题 1：PostgreSQL Flyway 脚本缺失 V37
-- **位置**：`apex-interfaces/src/main/resources/db/migration/postgresql/`
+- **位置**：`apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/`
 - **影响**：PostgreSQL 部署时 Flyway 迁移会失败（版本号不连续）
 - **MySQL 对应版本**：`V37__add_email_and_keycloak_sub_to_sys_user.sql` 已存在
 

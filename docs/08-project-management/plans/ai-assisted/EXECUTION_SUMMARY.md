@@ -73,16 +73,16 @@
 
 **示例文件**（前 10 个）：
 ```
-apex-application/src/main/java/com/apex/scaffold/application/dto/CreditResponse.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/ConsentRequest.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/RoleRequest.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/MobileValidateResponse.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowTrendDTO.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/PermissionDTO.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/SendSmsRequest.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/PageResponse.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/WorkflowTaskDTO.java
-apex-application/src/main/java/com/apex/scaffold/application/dto/RegisterRequest.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/CreditResponse.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/ConsentRequest.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/RoleRequest.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/MobileValidateResponse.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/WorkflowTrendDTO.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/PermissionDTO.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/SendSmsRequest.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/PageResponse.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/WorkflowTaskDTO.java
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/RegisterRequest.java
 ```
 
 ---

@@ -29,8 +29,8 @@
 ### 实施内容
 
 **文件清单**:
-1. `/Users/work/apex-scaffold/apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`
-2. `/Users/work/apex-scaffold/apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`
+1. `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`
+2. `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`
 
 **数据库表(11 张)**:
 

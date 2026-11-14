@@ -102,7 +102,7 @@ SQL 执行成功后，重新启动后端应用：
 ```bash
 cd /Users/work/apex-scaffold
 source ./scripts/build/init-build-env.sh
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 ```
 
 ## 前端验证
@@ -155,8 +155,8 @@ WHERE id = 1000;
 
 - **手动 SQL 脚本**：`/Users/work/apex-scaffold/add_database_config_menu_manual.sql`
 - **Flyway 脚本**（已改为 V23，暂时不使用）：
-  - MySQL: `apex-interfaces/src/main/resources/db/migration/mysql/V23__add_database_config_menu.sql`
-  - PostgreSQL: `apex-interfaces/src/main/resources/db/migration/postgresql/V23__add_database_config_menu.sql`
+  - MySQL: `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V23__add_database_config_menu.sql`
+  - PostgreSQL: `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V23__add_database_config_menu.sql`
 
 ## 后续工作
 

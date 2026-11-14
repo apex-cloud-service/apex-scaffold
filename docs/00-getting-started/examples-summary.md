@@ -342,7 +342,7 @@ UserPO toPo(UserEntity entity);
 
 ### 4. LoginRequest.java（DTO 类）
 
-**文件路径**：`apex-application/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java`
+**文件路径**：`apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java`
 
 **关键改进**：
 

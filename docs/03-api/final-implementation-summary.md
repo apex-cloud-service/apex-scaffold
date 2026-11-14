@@ -43,8 +43,8 @@
 #### Flyway V41 迁移脚本
 
 **文件位置**:
-- MySQL: [`apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
-- PostgreSQL: [`apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
+- MySQL: [`apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+- PostgreSQL: [`apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
 
 **包含表结构** (11张表):
 

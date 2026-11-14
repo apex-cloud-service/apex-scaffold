@@ -129,7 +129,7 @@ import com.apex.scaffold.interfaces.dto.workflow.TransferTaskRequest;
 - ✅ `resumeInstance`
 
 #### 文件路径
-[apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/WorkflowRouter.java](../../../apex-services-bom/apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/WorkflowRouter.java)
+[apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/WorkflowRouter.java](../../../apex-services-bom/apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/WorkflowRouter.java)
 
 ---
 
@@ -200,8 +200,8 @@ public static class UpdateStatusRequest {
 - ✅ `updateChartStatus`
 
 #### 文件路径
-- [apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ChartRouter.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/ChartRouter.java)
-- [apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/ChartHandler.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/handler/ChartHandler.java)
+- [apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/ChartRouter.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/ChartRouter.java)
+- [apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/ChartHandler.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/handler/ChartHandler.java)
 
 ---
 
@@ -280,8 +280,8 @@ public static class UpdateStatusRequest {
 - ✅ `getDocumentDownloadUrl`
 
 #### 文件路径
-- [apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/DocumentRouter.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/DocumentRouter.java)
-- [apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/DocumentHandler.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/handler/DocumentHandler.java)
+- [apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/DocumentRouter.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/DocumentRouter.java)
+- [apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/DocumentHandler.java](../../../apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/handler/DocumentHandler.java)
 
 ---
 
@@ -321,7 +321,7 @@ public static class UpdateStatusRequest {
 ```
 
 #### 文件路径
-[apex-interfaces/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/NotificationRouter.java)
+[apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/ApiRouter.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/NotificationRouter.java)
 
 ---
 
@@ -343,7 +343,7 @@ public static class UpdateStatusRequest {
 原因：`OpenApiDocumentationCustomizer` 和 `RouterOpenApiCoverageTest` 依赖 operationId 进行路径、请求体和响应映射，Router 和 Handler 必须保持一致。
 
 #### 文件路径
-[apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/RouterOpenApiConfig.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/RouterOpenApiConfig.java)
+[apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/RouterOpenApiConfig.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/RouterOpenApiConfig.java)
 
 ---
 
@@ -409,7 +409,7 @@ Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 **命令**：
 ```bash
 source ./scripts/build/init-build-env.sh
-mvnd -pl apex-interfaces -am \
+mvnd -pl :apex-system -am \
   -Dtest=RouterOpenApiCoverageTest \
   -Dsurefire.failIfNoSpecifiedTests=false test
 ```
@@ -599,7 +599,7 @@ public static class UpdateStatusRequest { ... }
 - name: Run OpenAPI Coverage Test
   run: |
     source ./scripts/build/init-build-env.sh
-    mvnd -pl apex-interfaces -am \
+    mvnd -pl :apex-system -am \
       -Dtest=RouterOpenApiCoverageTest test
 ```
 
@@ -639,7 +639,7 @@ public static class UpdateStatusRequest { ... }
 4. **测试验证**
    ```bash
    ./scripts/dev/check/check-springdoc-annotations-v2.sh
-   mvnd -pl apex-interfaces -am -Dtest=RouterOpenApiCoverageTest test
+   mvnd -pl :apex-system -am -Dtest=RouterOpenApiCoverageTest test
    ```
 
 ### 7.3 文档生成

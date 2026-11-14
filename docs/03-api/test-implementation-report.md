@@ -176,14 +176,14 @@ void revoke_Success() {
 
 | 文件路径 | 测试类 | 测试方法数 | 状态 |
 |---------|--------|-----------|------|
-| `apex-application/src/test/java/...service/GenDatasourceServiceTest.java` | GenDatasourceServiceTest | 8 | ✅ |
-| `apex-application/src/test/java/...service/GenConfigServiceTest.java` | GenConfigServiceTest | 7 | ✅ |
-| `apex-application/src/test/java/...service/CodeGenerationServiceTest.java` | CodeGenerationServiceTest | 6 | ⚠️ 待调整 |
-| `apex-application/src/test/java/...service/SysJwtConfigServiceTest.java` | SysJwtConfigServiceTest | 6 | ✅ |
-| `apex-application/src/test/java/...service/SysSsoProviderServiceTest.java` | SysSsoProviderServiceTest | 10 | ✅ |
-| `apex-application/src/test/java/...service/SysSsoSessionServiceTest.java` | SysSsoSessionServiceTest | 6 | ✅ |
-| `apex-application/src/test/java/...support/sso/SamlProtocolAdapterTest.java` | SamlProtocolAdapterTest | 8 | ✅ |
-| `apex-application/src/test/java/...support/sso/OidcProtocolAdapterTest.java` | OidcProtocolAdapterTest | 6 | ✅ |
+| `apex-components-parent/apex-system/src/test/java/...service/GenDatasourceServiceTest.java` | GenDatasourceServiceTest | 8 | ✅ |
+| `apex-components-parent/apex-system/src/test/java/...service/GenConfigServiceTest.java` | GenConfigServiceTest | 7 | ✅ |
+| `apex-components-parent/apex-system/src/test/java/...service/CodeGenerationServiceTest.java` | CodeGenerationServiceTest | 6 | ⚠️ 待调整 |
+| `apex-components-parent/apex-system/src/test/java/...service/SysJwtConfigServiceTest.java` | SysJwtConfigServiceTest | 6 | ✅ |
+| `apex-components-parent/apex-system/src/test/java/...service/SysSsoProviderServiceTest.java` | SysSsoProviderServiceTest | 10 | ✅ |
+| `apex-components-parent/apex-system/src/test/java/...service/SysSsoSessionServiceTest.java` | SysSsoSessionServiceTest | 6 | ✅ |
+| `apex-components-parent/apex-system/src/test/java/...support/sso/SamlProtocolAdapterTest.java` | SamlProtocolAdapterTest | 8 | ✅ |
+| `apex-components-parent/apex-system/src/test/java/...support/sso/OidcProtocolAdapterTest.java` | OidcProtocolAdapterTest | 6 | ✅ |
 
 **总计**: 8 个测试类,57 个测试方法
 

@@ -13,12 +13,12 @@
 ### 新增文件（3个）
 
 1. **MySQL V49 迁移脚本**
-   - 路径：`apex-auth-center/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql`
+   - 路径：`apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql`
    - 作用：创建 auth_config 表，为 V48 提供表结构支持
    - 大小：1.4 KB
 
 2. **PostgreSQL V49 迁移脚本**
-   - 路径：`apex-auth-center/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql`
+   - 路径：`apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql`
    - 作用：创建 auth_config 表（PostgreSQL 版本）
    - 大小：1.8 KB
 
@@ -30,15 +30,15 @@
 ### 修改文件（1个）
 
 1. **PostgreSQL V48 迁移脚本**
-   - 路径：`apex-auth-center/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql`
+   - 路径：`apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql`
    - 修改：完全重写，修复所有 PostgreSQL 语法问题
    - 大小：9.0 KB（原 8.0 KB）
 
 ### 移动文件（1个）
 
 1. **V50 迁移脚本**
-   - 原路径：`apex-auth-center/src/main/resources/db/migration/V50__create_totp_and_mfa_config_tables.sql`
-   - 新路径：`apex-auth-center/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql`
+   - 原路径：`apex-services-bom/apex-auth-service/src/main/resources/db/migration/V50__create_totp_and_mfa_config_tables.sql`
+   - 新路径：`apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql`
    - 同时创建：`postgresql/V50__create_totp_and_mfa_config_tables.sql`
 
 ### 文档（1个）
@@ -109,8 +109,8 @@ sdk env && mvnd -T4 -B clean verify
 ### 手动验证
 ```bash
 # 检查迁移文件完整性
-ls -la apex-auth-center/src/main/resources/db/migration/mysql/*.sql
-ls -la apex-auth-center/src/main/resources/db/migration/postgresql/*.sql
+ls -la apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/*.sql
+ls -la apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/*.sql
 
 # 预期输出：每个目录都应该有 V44-V50 共7个文件
 ```
@@ -162,7 +162,7 @@ ls -la apex-auth-center/src/main/resources/db/migration/postgresql/*.sql
 
 2. **恢复原始文件**
    ```bash
-   git checkout apex-auth-center/src/main/resources/db/migration/
+   git checkout apex-services-bom/apex-auth-service/src/main/resources/db/migration/
    ```
 
 3. **重新修复**

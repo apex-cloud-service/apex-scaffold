@@ -67,7 +67,7 @@ JWT 配置测试功能（文档模块 1，核心能力 testJwt）：
 | 问题 | 归因 | 建议 |
 |------|------|------|
 | ~~FlywayMigrationVersionTest 失败~~ | ✅ **已解决**：历史 mysql 迁移的同版本号重复（V26×5/V27×3/V28×3）及与 postgresql 版本集不对齐问题已通过补齐对齐占位脚本闭环。当前 `apex-interfaces` 与 `apex-auth-center` 的 mysql/postgresql 迁移目录均为 **V1–V58 完整、无重复、无缺号**（postgresql V51–V58 为对齐占位），符合 FlywayMigrationVersionTest 的"两库版本一致"契约 | 已闭环，无需进一步处理 |
-| ~~LayeringArchTest 53 处违规~~ | ✅ **已解决（2026-09-30）**：`apex-application` 移除对 `apex-auth-center` 的跨模块依赖，`SecurityAuditService` 接口+实现下沉至 `:apex-common`，`apex-interfaces` 排除对 `authcenter` 包的组件扫描；重跑 `mvn -pl apex-interfaces -am test -Dtest=LayeringArchTest` 结果为 **6/6 通过，0 违规** | 已闭环，无需进一步处理 |
+| ~~LayeringArchTest 53 处违规~~ | ✅ **已解决（2026-09-30）**：`apex-application` 移除对 `apex-auth-center` 的跨模块依赖，`SecurityAuditService` 接口+实现下沉至 `:apex-common`，`apex-interfaces` 排除对 `authcenter` 包的组件扫描；重跑 `mvn -pl :apex-system -am test -Dtest=LayeringArchTest` 结果为 **6/6 通过，0 违规** | 已闭环，无需进一步处理 |
 | SentinelDynamicRulesLoaderTest 失败 | 规则 fixture 含 2 条 system rule 而断言期望 1 条 | 修正 fixture 或断言 |
 | DataScopeServiceTest 失败 | 需要本地 MySQL（环境连接失败） | 启动本地 MySQL 后重跑 |
 | PMD 违规（199+65+50） | 全部为预存文件；本次新增文件仅 2 处魔术常量（DEFAULT_* 常量已定义待生效确认） | 预存部分专项清理 |
@@ -78,7 +78,7 @@ JWT 配置测试功能（文档模块 1，核心能力 testJwt）：
 
 **新增**：SysDatasource、SysDatasourceRepository（domain）；SysDatasourcePO、SysDatasourceMapper、SysDatasourcePoConverter、SysDatasourceRepositoryImpl（infrastructure）；DataSourceAssembler、DataSourceManagementService（application）；DatabaseConfigHandler 5 方法、ApiRouter 5 路由（interfaces）；Flyway mysql V49/V50、postgresql V49/V50；测试 2 个类 15 用例。
 
-**修改**：OAuth2ClientManagementHandler（权限注解）、DatabaseConfigHandler（扩展）、ApiRouter（扩展）、CacheProperties（事故恢复）、OAuth2RegisteredClientEntity/PO（轮换字段）、SentinelDynamicRulesLoader（loadRulesFromFile）、AGENTS.md（恢复扩展版）、apex-application/pom.xml（java-jwt、auth-center 依赖）、根 pom（模块注册）、basic-schema.sql（补头注释）。
+**修改**：OAuth2ClientManagementHandler（权限注解）、DatabaseConfigHandler（扩展）、ApiRouter（扩展）、CacheProperties（事故恢复）、OAuth2RegisteredClientEntity/PO（轮换字段）、SentinelDynamicRulesLoader（loadRulesFromFile）、AGENTS.md（恢复扩展版）、apex-components-parent/apex-system/pom.xml（java-jwt、auth-center 依赖）、根 pom（模块注册）、basic-schema.sql（补头注释）。
 
 ## 六、追加：apex-application / apex-auth-center 模块 Bean 冲突修复（2026-09-30）
 
@@ -97,8 +97,8 @@ JWT 配置测试功能（文档模块 1，核心能力 testJwt）：
 | `SecurityAuditService` 接口+实现下沉 | 由 `apex-auth-center` 迁移至 `apex-common`（`com.apex.scaffold.common.audit`），作为跨模块共享的安全审计能力 |
 | 删除死代码 | 移除 `apex-auth-center` 下不再被引用的 `JwtKeyManagementHandler`、旧 `SecurityAuditServiceImplTest` |
 | 更新内部引用 | `JwtKeyRotationServiceTest`、`RefreshTokenRotationServiceTest`、`TokenServiceImplTest`、`OAuth2ClientSecretRotationServiceImpl` 的 import 路径改指向 `com.apex.scaffold.common.audit.SecurityAuditService` |
-| 移除跨模块依赖 | `apex-application/pom.xml` 移除对 `apex-auth-center` 的模块依赖 |
-| 组件扫描隔离 | `apex-interfaces/Application.java` 的 `@ComponentScan` 增加 `excludeFilters` 排除 `com.apex.scaffold.authcenter.*` 包 |
+| 移除跨模块依赖 | `apex-components-parent/apex-system/pom.xml` 移除对 `apex-auth-center` 的模块依赖 |
+| 组件扫描隔离 | `apex-components-parent/apex-system/Application.java` 的 `@ComponentScan` 增加 `excludeFilters` 排除 `com.apex.scaffold.authcenter.*` 包 |
 | 回退过渡性补丁 | `AuditLogAssembler`、`PermissionAssembler`、`RoleAssembler` 的 `@Mapper` 注解移除临时性 `implementationName` 属性 |
 | 新增测试 | `apex-common` 下新增 `SecurityAuditServiceImplTest`，覆盖登录/登出、Token 签发与验证、暴力破解、权限拒绝、密钥轮换等约 29 个场景 |
 
@@ -106,7 +106,7 @@ JWT 配置测试功能（文档模块 1，核心能力 testJwt）：
 
 - 编译：`apex-common`、`apex-domain`、`apex-infrastructure`、`apex-application`、`apex-interfaces`、`apex-auth-center` 全部通过。
 - 单元测试：六模块合计约 1988 个测试全部通过，无回归。
-- 架构测试：重跑 `mvn -pl apex-interfaces -am test -Dtest=LayeringArchTest -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`：
+- 架构测试：重跑 `mvn -pl :apex-system -am test -Dtest=LayeringArchTest -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false`：
 
   ```
   [INFO] Running com.apex.scaffold.arch.LayeringArchTest

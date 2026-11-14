@@ -183,7 +183,7 @@
 
 2. **配置数据库连接** (15分钟)
    
-   检查 [`apex-interfaces/src/main/resources/application-basic.yml`](../../apex-components-parent/apex-system/src/main/resources/application-basic.yml):
+   检查 [`apex-components-parent/apex-system/src/main/resources/application-basic.yml`](../../apex-components-parent/apex-system/src/main/resources/application-basic.yml):
    ```yaml
    spring:
      r2dbc:
@@ -472,7 +472,7 @@
    
    查看覆盖率报告:
    ```bash
-   open apex-application/target/site/jacoco/index.html
+   open apex-components-parent/apex-system/target/site/jacoco/index.html
    ```
 
 **验收标准**:
@@ -508,7 +508,7 @@ apex-interfaces 模块存在 Keycloak 相关依赖冲突,这是历史遗留问�
 
 2. **排除冲突的传递依赖** (1-2小时)
    
-   在 `apex-interfaces/pom.xml` 中添加排除:
+   在 `apex-components-parent/apex-system/pom.xml` 中添加排除:
    ```xml
    <dependency>
        <groupId>org.springframework.boot</groupId>

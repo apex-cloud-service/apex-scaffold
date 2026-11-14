@@ -296,7 +296,7 @@ sdk env
 mvnd clean package -DskipTests
 
 # 4. 启动应用（Flyway自动执行V28脚本）
-java -jar apex-interfaces/target/apex-interfaces-*.jar
+java -jar apex-components-parent/apex-system/target/apex-interfaces-*.jar
 
 # 5. 验证接口
 curl -X GET "http://localhost:8080/api/jobs/page?pageNum=1&pageSize=20" \

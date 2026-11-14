@@ -439,7 +439,7 @@ public interface UserRepository {
 
 ### 2.3 模块依赖关系
 
-35 个既有 JAR（95 图尚未纳入知识库两模块的依赖边，其依赖见 AGENTS.md 依赖表）的直接内部生产依赖见[95 依赖图](../diagrams/95_module_dependency_graph.svg)及[Mermaid 源](../diagrams/95_module_dependency_graph.mmd)，共 104 条内部 compile 边；44 个后代中的 7 个管理 POM（加根共 8 个 POM）不是生产 JAR，不画为 compile 节点。
+全部 37 个 JAR 的直接内部生产依赖见[95 依赖图](../diagrams/95_module_dependency_graph.svg)及[Mermaid 源](../diagrams/95_module_dependency_graph.mmd)，共 109 条内部 compile 边；44 个后代中的 7 个管理 POM（加根共 8 个 POM）不是生产 JAR，不画为 compile 节点。
 
 | 边界 | 直接内部生产依赖要点 |
 | --- | --- |

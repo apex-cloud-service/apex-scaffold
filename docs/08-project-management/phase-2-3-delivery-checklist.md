@@ -213,13 +213,13 @@ cd /Users/work/apex-scaffold
 cat apex-domain/src/main/java/com/apex/scaffold/domain/office/OfficeOrganizationService.java
 
 # 应用层
-cat apex-application/src/main/java/com/apex/scaffold/application/office/OfficeOrganizationSyncService.java
+cat apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/office/OfficeOrganizationSyncService.java
 
 # 基础设施层（飞书客户端）
 cat apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/FeishuOrganizationClient.java
 
 # 接口层
-cat apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/office/OfficeOrganizationHandler.java
+cat apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/office/OfficeOrganizationHandler.java
 ```
 
 ### 2. 查看实施指南
@@ -246,7 +246,7 @@ cat .trae/documents/phase-2-3-implementation-summary.md
 
 # 查看生成的文件
 ls -la apex-domain/src/main/java/com/apex/scaffold/domain/office/message/
-ls -la apex-application/src/main/java/com/apex/scaffold/application/office/message/
+ls -la apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/office/message/
 ```
 
 ### 4. 开始实现新功能

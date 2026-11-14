@@ -61,7 +61,7 @@
 
 ### 2.2 对外路由清单（必须原样保留）
 
-来源：`apex-interfaces/.../router/WorkflowRouter.java`，3 个 `RouterFunction` Bean，共 12 条路由：
+来源：`apex-components-parent/apex-system/.../router/WorkflowRouter.java`，3 个 `RouterFunction` Bean，共 12 条路由：
 
 **管理端（admin）**
 - `GET /admin-api/v1/workflows/instances`
@@ -96,7 +96,7 @@
 
 ### 2.4 数据库迁移（不迁移，仅复核）
 
-工作流相关 Flyway 脚本位于 `apex-interfaces/src/main/resources/db/migration/{mysql,postgresql}/`（V20/V21/V24/V40 等），以及 `apex-example/src/test/resources/` 下的 `schema-it.sql`。**方案不移动、不重排这些迁移脚本**（保持 Flyway `checksum` 稳定）。
+工作流相关 Flyway 脚本位于 `apex-components-parent/apex-system/src/main/resources/db/migration/{mysql,postgresql}/`（V20/V21/V24/V40 等），以及 `apex-example/src/test/resources/` 下的 `schema-it.sql`。**方案不移动、不重排这些迁移脚本**（保持 Flyway `checksum` 稳定）。
 
 ### 2.5 测试代码（随模块迁移）
 
@@ -182,7 +182,7 @@ com.apex.scaffold.workflow
 > 以下步骤在**方案确认后**执行；每步完成即做编译/测试验证，避免大爆炸式一次性重构。
 
 ### Phase 0：基线确认（执行前先做）
-1. `mvn -pl apex-interfaces -am compile` 基线编译通过。
+1. `mvn -pl :apex-system -am compile` 基线编译通过。
 2. `mvn test`（或按模块）跑一遍现有测试，记录绿色基线。
 3. `git status` 确认工作区干净（或记录现存改动基线）。
 4. 确认仓库内无其它模块直接引用待迁移类的**额外**位置（用 Grep 全仓扫 `import com.apex.scaffold.application.workflow`、`domain.workflow`、`domain.repository.Workflow` 等）。
@@ -205,8 +205,8 @@ com.apex.scaffold.workflow
 3. 检查是否残留对冗余类的 Javadoc 引用，一并修正。
 
 ### Phase 4：POM / 构建配置联动
-1. `apex-interfaces/pom.xml` 增加 `apex-workflow` 依赖。
-2. `apex-application/pom.xml`：工作流相关类迁走后，其 JaCoCo 规则（`service.*`、`scheduler.*` 覆盖基线）在 apex-application 保留给剩余非工作流类；工作流类改由 `apex-workflow` 的 JaCoCo 规则覆盖（新增对应 BUNDLE include 与基线）。
+1. `apex-components-parent/apex-system/pom.xml` 增加 `apex-workflow` 依赖。
+2. `apex-components-parent/apex-system/pom.xml`：工作流相关类迁走后，其 JaCoCo 规则（`service.*`、`scheduler.*` 覆盖基线）在 apex-application 保留给剩余非工作流类；工作流类改由 `apex-workflow` 的 JaCoCo 规则覆盖（新增对应 BUNDLE include 与基线）。
 3. `apex-domain/pom.xml`：移除对已迁出/已删工作流类的 JaCoCo exclude/include 引用（如有）。
 4. `apex-infrastructure/pom.xml`：`persistence/repository/**`、`converter/**`、`po/**` 的 exclude 规则中若含 work workflow 通配，确认与新模块的 exclude 一致。
 5. 复核 `basic/standard/enterprise` profile 中 apex-interfaces 的依赖排除（basic profile 是否排除工作流）。——如 basic 依赖当前不含工作流相关依赖，迁移后需在 apex-interfaces 的对应 profile 排除 `apex-workflow`，或维持“basic 不含 workflow”。**执行阶段按现有 profile 边界对齐。**
@@ -316,7 +316,7 @@ com.apex.scaffold.workflow
 依赖方向概要：`apex-interfaces → apex-workflow / apex-application → apex-infrastructure → apex-domain → apex-common`
 
 - `apex-workflow` 依赖 `apex-domain`、`apex-common`，**不直接依赖 `apex-infrastructure`**。
-- `apex-interfaces` 依赖 `apex-workflow`（见 `apex-interfaces/pom.xml` L34-39）。
+- `apex-interfaces` 依赖 `apex-workflow`（见 `apex-components-parent/apex-system/pom.xml` L34-39）。
 - 根 POM `<modules>` 已登记 `apex-workflow`，`<dependencyManagement>` 已登记其版本。
 
 #### 模块依赖关系图（迁移后，箭头 = 依赖方向）

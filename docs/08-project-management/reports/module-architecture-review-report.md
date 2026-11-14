@@ -95,7 +95,7 @@
 ### F7(P3)仓库根目录残留物
 
 - `:-`(232 字节 macOS 代码签名 designated 字符串,误生成且曾误入库,处置时删除);
-- `apex-interfaces/`、`apex-application/` 空目录(模块已退役,目录残留);
+- `apex-components-parent/apex-system/`、`apex-components-parent/apex-system/` 空目录(模块已退役,目录残留);
 - `backups/`、`_tmp/` 已被 .gitignore 覆盖但仍占工作区;根 `target/` 目录存在。
 - 均不影响构建,属工作区卫生问题。
 
@@ -150,7 +150,7 @@
 
 ### R2 仓库卫生清理(P3/F7,低风险)
 
-- 删除根目录 `:-` 文件与空的 `apex-interfaces/`、`apex-application/` 目录;`backups/`、`_tmp/`、根 `target/` 属本地忽略物,确认无引用后一并清除。
+- 删除根目录 `:-` 文件与空的 `apex-components-parent/apex-system/`、`apex-components-parent/apex-system/` 目录;`backups/`、`_tmp/`、根 `target/` 属本地忽略物,确认无引用后一并清除。
 - 验证:`git status` 干净、`mvnd -T4 -B -pl :apex-tools-build -am test` 不受影响。
 
 ### R3 协议层归属口径成文(P1/F1 修订处置,低风险)
@@ -201,7 +201,7 @@ R1 → R2 → R3 → R5 → R6。每批:受影响模块 `-am test` + `spotless:c
 ## 7. 处置结果(2026-11-07 执行,2026-11-08 补充)
 
 - R1:已执行——context-map 补 integration 上下文、C4 表述修正为 D07 裁决口径、事件关系按核实结果修订;根 POM 两处注释修正;AGENTS.md 补协议层归属口径。
-- R2:已执行——删除 `:-` 误生成文件、`apex-interfaces/` 与 `apex-application/` 空目录、根 `target/` 构建残渣;`backups/` 经查为个人机器备份、`_tmp/` 为 javadoc 扫描工作区、`tools/local-deployment.jar` 为脚本产物,均保留不删。
+- R2:已执行——删除 `:-` 误生成文件、`apex-components-parent/apex-system/` 与 `apex-components-parent/apex-system/` 空目录、根 `target/` 构建残渣;`backups/` 经查为个人机器备份、`_tmp/` 为 javadoc 扫描工作区、`tools/local-deployment.jar` 为脚本产物,均保留不删。
 - R3/R4:按修订处置执行——协议层归属与 D07 裁决口径成文,无代码迁移;初版物理迁移建议撤销(证据见 F1/F2 处置修订)。
 - R5:已执行——新增 `docs/03-api/internal-api-contracts.md` 内部契约清单;`TenantStatusSnapshot` 契约化为 `apex-api-contract` 的 `TenantStatusSnapshotDTO`,system 提供方与 auth-service 消费方同步改用,消除手写 JSON 解析漂移;事件消费关系核实结果:契约事件发布方均类型化引用,消费方现状为消费端 JSON 解析(auth 租户事件监听器、system 用户消息监听器),workflow 事件仓内暂无消费方,已在清单与 context-map 如实记录。
 - R6:已执行——workflow 业务端口 8083→8093 全仓同步(manifest 移除 hostPort 特例、Compose 映射、chaos 脚本、AGENTS/README 与现行运维文档);网关 office 消息/WS 兜底在 application.yml、application-prod.yml 与 `config/nacos/apex-gateway.yaml` 三处统一为 `lb://apex-office-service`,注册/非注册成员兜底口径成文;网关守护测试(`GatewayApplicationTest`/`GatewayRouteProfileConfigTest`)同步放宽为接受 `lb://`/`ws`/`wss` 并修正 javadoc 中"lb:// 丢弃升级握手"的过时论断(依据:SCG 4.3.0 `WebsocketRoutingFilter` 字节码核实,`Upgrade: websocket` 请求头触发 `convertHttpToWs`);历史测试报告与计划文档不改写。

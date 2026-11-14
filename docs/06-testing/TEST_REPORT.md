@@ -293,8 +293,8 @@ mvnd test
 
 - 网关透明代理模式：各路由默认指向单体 `http://127.0.0.1:8080`（`ROUTE_*_URI` 可覆写），迁移期零行为变更。
 - **离线契约基线**：`OpenApiExportTest`（纯 JUnit 5，无需 Spring 上下文 / 数据库）已导出基线快照：
-  - 命令：`mvnd -pl apex-interfaces -am -Dtest=OpenApiExportTest -Dsurefire.failIfNoSpecifiedTests=false test`
-  - 产物：`apex-interfaces/target/openapi-export/openapi.json`（79 paths）、`openapi.yaml`
+  - 命令：`mvnd -pl :apex-system -am -Dtest=OpenApiExportTest -Dsurefire.failIfNoSpecifiedTests=false test`
+  - 产物：`apex-components-parent/apex-system/target/openapi-export/openapi.json`（79 paths）、`openapi.yaml`
 - **环境约束**：本机无 MySQL/Redis/Nacos（端口 3306/6379/8848 未开放），在线透明代理回归（`scripts/utils/export-api-docs.sh` 对运行中应用抓取 `/v3/api-docs` 后与基线 diff）需在具备完整环境时执行，diff 应为空。
 
 ---
@@ -306,8 +306,8 @@ mvnd test
 ### 测试与门禁结果
 
 ```bash
-mvnd -pl apex-auth-center -am test-compile -DskipTests
-mvnd -pl apex-auth-center -am test \
+mvnd -pl :apex-auth-service -am test-compile -DskipTests
+mvnd -pl :apex-auth-service -am test \
   -Dtest='JwtKeyMaterialServiceTest,JwtKeyRotationServiceTest,RefreshTokenRotationServiceTest,TokenServiceImplTest' \
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
@@ -342,7 +342,7 @@ mvnd -pl apex-auth-center -am test \
 ### 测试与门禁结果
 
 ```bash
-mvnd -pl apex-auth-center -am verify
+mvnd -pl :apex-auth-service -am verify
 ```
 
 | 结果 | 说明 |
@@ -367,7 +367,7 @@ mvnd -pl apex-auth-center -am verify
 
 ### 说明
 
-- 上述为**无需在线环境**即可回归的自动化集成测试；`apex-auth-center/TESTING.md` 中「测试结果记录（人工验收，需在线环境）」为另需在线 MySQL/Redis/Nacos + HTTPS 入口的人工验收记录，尚未执行。
+- 上述为**无需在线环境**即可回归的自动化集成测试；`apex-services-bom/apex-auth-service/TESTING.md` 中「测试结果记录（人工验收，需在线环境）」为另需在线 MySQL/Redis/Nacos + HTTPS 入口的人工验收记录，尚未执行。
 - 生产灰度 100% 切流验证为运维动作，需在线环境（同 Phase 1 口径）。
 
 ---

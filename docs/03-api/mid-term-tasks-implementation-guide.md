@@ -559,7 +559,7 @@ scrape_configs:
 - 办公平台规划: [`office-platform-enhancement-plan.md`](office-platform-enhancement-plan.md)
 - 办公平台总结: [`office-platform-summary.md`](office-platform-summary.md)
 - 后续工作指导: [`next-steps-guide.md`](next-steps-guide.md)
-- 数据库脚本: `V42__add_office_platform_tables.sql`（目标不存在，无已核实替代文件；原路径：`../../apex-interfaces/src/main/resources/db/migration/mysql/V42__add_office_platform_tables.sql`）
+- 数据库脚本: `V42__add_office_platform_tables.sql`（目标不存在，无已核实替代文件；原路径：`../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V42__add_office_platform_tables.sql`）
 
 ---
 

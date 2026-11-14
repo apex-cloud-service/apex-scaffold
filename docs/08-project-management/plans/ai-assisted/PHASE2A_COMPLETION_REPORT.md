@@ -240,7 +240,7 @@ mvnd clean compile -DskipTests -T 1C
 
 **修复的示例文件**:
 ```
-apex-application/src/main/java/com/apex/scaffold/application/dto/
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/
 ├── LoginRequest.java                          ⭐ 推荐
 ├── AccountDeletionAcceptedResponse.java
 ├── RoleRequest.java
@@ -259,7 +259,7 @@ apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/
 
 **参考文件**:
 ```
-apex-application/src/main/java/com/apex/scaffold/application/service/
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/
 ├── UserService.java                           ⭐ 参考
 └── RoleService.java                           ⭐ 参考
 

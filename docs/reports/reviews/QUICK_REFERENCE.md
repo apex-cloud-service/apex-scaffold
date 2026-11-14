@@ -223,7 +223,7 @@ auth_brute_force_detected_total
 ### 需要修改的文件
 
 ```
-apex-auth-center/
+apex-services-bom/apex-auth-service/
 ├── application/service/
 │   ├── TokenServiceImpl.java           ← 修改：加密存储、轮换
 │   └── RefreshTokenRotationService.java ← 新增：Token轮换
@@ -232,12 +232,12 @@ apex-infrastructure/
 └── encryption/
     └── TokenEncryptionService.java      ← 新增：Token加密
 
-apex-application/
+apex-components-parent/apex-system/
 └── support/sso/
     ├── SamlProtocolAdapter.java         ← 修改：重放防护
     └── OidcProtocolAdapter.java         ← 修改：State验证
 
-apex-interfaces/
+apex-components-parent/apex-system/
 └── resources/db/migration/mysql/
     └── V42__add_token_encryption.sql    ← 新增：数据库迁移
 ```

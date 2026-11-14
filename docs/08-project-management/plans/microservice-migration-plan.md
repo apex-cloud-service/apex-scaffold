@@ -2,13 +2,13 @@
 
 > **历史快照**：本文记录某一时点的状态，模块数、端口、路径与类名以当前代码为准，不作为现状依据。
 
-> **版本**：v1.0 | **日期**：2026-10-07（2026-10-09 同步实施状态） | **状态**：实施中（已按执行计划推进：Phase 1 共享层/BOM、网关、内部契约、Nacos 配置分层及 Phase 1 验收均已完成并产出测试报告与离线契约基线；Phase 2.1 JWT 对称→非对称（JWKS）、Phase 2.2 auth 库治理、Phase 2.3 Nacos 注册 + 内部 API、Phase 2.4 网关 /auth 切流 + 灰度、Phase 2.5 主应用双通道兼容、Phase 2.6 登出传播（TokenRevokedEvent + Outbox + V56）均已完成，`mvn -pl apex-auth-center -am verify` 全门禁绿）
+> **版本**：v1.0 | **日期**：2026-10-07（2026-10-09 同步实施状态） | **状态**：实施中（已按执行计划推进：Phase 1 共享层/BOM、网关、内部契约、Nacos 配置分层及 Phase 1 验收均已完成并产出测试报告与离线契约基线；Phase 2.1 JWT 对称→非对称（JWKS）、Phase 2.2 auth 库治理、Phase 2.3 Nacos 注册 + 内部 API、Phase 2.4 网关 /auth 切流 + 灰度、Phase 2.5 主应用双通道兼容、Phase 2.6 登出传播（TokenRevokedEvent + Outbox + V56）均已完成，`mvn -pl :apex-auth-service -am verify` 全门禁绿）
 >
 > 本方案基于对当前仓库全部 11 个 Maven 模块的实际代码调研形成，所有图表与结论均以真实文件路径为证据。
 >
 > > **实施状态说明（2026-10-08 更新）**：早期"尚未执行任何代码变更"表述已过期。`.trae/documents/microservice-migration-execution-plan.md` 为当前执行跟踪文档；Phase 1.2 `:apex-gateway` 模块已完成过滤器链 + JWKS 验签 + 统一错误出口，`mvnd -pl :apex-gateway -am verify` 全门禁绿（64/64 测试，JaCoCo LINE 85.9% / BRANCH 64.4%，spotless/pmd/ArchUnit 全过），测试报告见 `docs/06-testing/gateway-module-test-report.md` 及 `docs/06-testing/TEST_REPORT.md` 网关段。
 >
-> > > **Phase 2 状态（2026-10-09 更新）**：Phase 2.1 JWT 对称→非对称（JWKS）已完成 —— 新增 `JwtKeyMaterialService`（RS256 外观：`sign`/`parse`/`availablePublicKeys` JWKS 投影），`TokenServiceImpl` 签发/解析改走响应式 `JwtKeyMaterialService`；`JwtKeyRotationService` 三实现合并为 `domain` 的 Redis-RSA 单一版本。Phase 2.2 库治理已完成（Flyway 重复 V49→V51、`bootstrap.yml` 服务名收敛为 `:apex-auth-service`）。Phase 2.3 Nacos 注册 + 内部 API 已完成（`InternalAuthService` / `InternalAuthRouter`，服务间契约 `/internal/v1/**` 免鉴权白名单）。Phase 2.4 网关 `/auth` 切流 + 灰度已完成。Phase 2.5 主应用双通道兼容已完成。Phase 2.6 登出传播已完成 —— 新增 `TokenRevokedEvent`（`:apex-domain`），`AuthenticationApplicationService.logout()` 经 `DomainEventPublisher` 发布；auth-center 显式装配 Outbox 三件套（`AuthCenterEventConfig`：`DomainEventOutboxStore` / `DomainEventOutboxPublisher` / `DomainEventOutboxDispatcher`）与 H2 降级发布器 `LocalDomainEventPublisher`，补齐 `sys_domain_event_outbox` 表（`V56__create_domain_event_outbox.sql`，mysql/postgresql）。定向验证 `mvn -pl apex-auth-center -am verify` → BUILD SUCCESS（spotless/pmd/JaCoCo/ArchUnit 全过）。
+> > > **Phase 2 状态（2026-10-09 更新）**：Phase 2.1 JWT 对称→非对称（JWKS）已完成 —— 新增 `JwtKeyMaterialService`（RS256 外观：`sign`/`parse`/`availablePublicKeys` JWKS 投影），`TokenServiceImpl` 签发/解析改走响应式 `JwtKeyMaterialService`；`JwtKeyRotationService` 三实现合并为 `domain` 的 Redis-RSA 单一版本。Phase 2.2 库治理已完成（Flyway 重复 V49→V51、`bootstrap.yml` 服务名收敛为 `:apex-auth-service`）。Phase 2.3 Nacos 注册 + 内部 API 已完成（`InternalAuthService` / `InternalAuthRouter`，服务间契约 `/internal/v1/**` 免鉴权白名单）。Phase 2.4 网关 `/auth` 切流 + 灰度已完成。Phase 2.5 主应用双通道兼容已完成。Phase 2.6 登出传播已完成 —— 新增 `TokenRevokedEvent`（`:apex-domain`），`AuthenticationApplicationService.logout()` 经 `DomainEventPublisher` 发布；auth-center 显式装配 Outbox 三件套（`AuthCenterEventConfig`：`DomainEventOutboxStore` / `DomainEventOutboxPublisher` / `DomainEventOutboxDispatcher`）与 H2 降级发布器 `LocalDomainEventPublisher`，补齐 `sys_domain_event_outbox` 表（`V56__create_domain_event_outbox.sql`，mysql/postgresql）。定向验证 `mvn -pl :apex-auth-service -am verify` → BUILD SUCCESS（spotless/pmd/JaCoCo/ArchUnit 全过）。
 
 ---
 
@@ -87,7 +87,7 @@ graph TD
 
 **关键事实**（均经代码核实）：
 
-- 主应用启动类 `apex-interfaces/src/main/java/com/apex/scaffold/Application.java` 通过正则排除 `com.apex.scaffold.authcenter..*`，认证中心与主应用是两个独立进程。
+- 主应用启动类 `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/Application.java` 通过正则排除 `com.apex.scaffold.authcenter..*`，认证中心与主应用是两个独立进程。
 - 认证中心使用独立数据库（`apex_auth` / `apex_auth_dev`）、独立 Flyway 链（V44–V55）、独立 Security 链（`AuthCenterConfig`），已是事实微服务雏形。
 - `apex-workflow` 不依赖 `apex-infrastructure`，内部自带 application/domain/infrastructure 三层，领域模型对主 `apex-domain` 引用为零（仅共享 `common` 的 BasePO 等），是现成的垂直切片。
 - **Spring Cloud 基础已部分就位**：根 POM 已管理 `spring-cloud-dependencies:2025.0.0` 与 `spring-cloud-alibaba:2025.0.0.0`；`apex-interfaces` 已引入 **Nacos Discovery、Nacos Config、Sentinel（含 sentinel-datasource-nacos）**，`Application.java` 已标注 `@EnableDiscoveryClient`，且存在 `bootstrap.yml`。
@@ -182,10 +182,10 @@ graph LR
 | 服务 | 职责 | 代码来源（真实路径） | 数据库 |
 |---|---|---|---|
 | **apex-gateway** | 统一入口、路由、JWT 轻量校验、全局限流、TraceId 注入、CORS | 新建模块 | 无 |
-| **apex-auth-service** | 登录/登出/MFA/TOTP、JWT 签发与轮换、会话、Token 黑名单、角色权限判定、OAuth2 授权服务器、SSO 管理、认证配置 | `apex-auth-center/` 全模块 + `apex-application` 中 SysSso*Service、OAuth2Client*Service、`apex-domain` 中 OAuth2*Entity/SysSso*Entity + `AuthConfigRouter`、`SsoAdminRouter`、`SsoAuthRouter` | `apex_auth`（已有） |
+| **apex-auth-service** | 登录/登出/MFA/TOTP、JWT 签发与轮换、会话、Token 黑名单、角色权限判定、OAuth2 授权服务器、SSO 管理、认证配置 | `apex-services-bom/apex-auth-service/` 全模块 + `apex-application` 中 SysSso*Service、OAuth2Client*Service、`apex-domain` 中 OAuth2*Entity/SysSso*Entity + `AuthConfigRouter`、`SsoAdminRouter`、`SsoAuthRouter` | `apex_auth`（已有） |
 | **apex-system-service** | 用户档案/租户、菜单/部门、字典、系统配置、登录/操作/审计日志、定时任务、Excel 导出、统一搜索、监控大盘、代码生成、在线用户、健康检查 | `apex-domain` 剩余核心实体 + `apex-application` 剩余服务 + `apex-infrastructure` 持久化/缓存 + `ApiRouter` 大部分子路由 | `apex_system`（由 `apex_data` 更名收敛） |
 | **apex-workflow-service** | 流程定义、实例、任务、审批记录、监控统计 | `apex-workflow/` + 把 `apex-interfaces` 的 `WorkflowRouter` 迁入 | `apex_workflow`（新库） |
-| **apex-office-service** | 平台接入（企微/钉钉/飞书）、审批/日历/文档/消息集成、组织同步、身份绑定 | `apex-domain/office/` + `apex-application/office/`、OfficeIntegrationService、OrgSyncService、OffMessage*Service + `router/office/` 5 个 Router、`OfficeAdminRouter`、`OrgSyncRouter` | `apex_office`（新库） |
+| **apex-office-service** | 平台接入（企微/钉钉/飞书）、审批/日历/文档/消息集成、组织同步、身份绑定 | `apex-domain/office/` + `apex-components-parent/apex-system/office/`、OfficeIntegrationService、OrgSyncService、OffMessage*Service + `router/office/` 5 个 Router、`OfficeAdminRouter`、`OrgSyncRouter` | `apex_office`（新库） |
 | **apex-file-service** | 上传/下载、分片、文档管理、缩略图/预览、存储 SPI（MinIO/TOS/Local） | `apex-domain` File/Document/Chart 实体 + FileService、DocumentService、ChartService + `infrastructure/storage/` + `common/spi/StorageProvider` | `apex_file`（新库，对象数据仍在 MinIO） |
 | **apex-common-sdk** | 见 §4 | `apex-common/` 整体发布 | — |
 
@@ -833,7 +833,7 @@ erDiagram
 > - `V29–V36` 中创建 `office_*` 表的是 V29/V31/V32/V34/V35；**V30/V33/V36 仅写入共享 `sys_menu`/`sys_role_menu`/`sys_permission` 种子**，属系统域，不随办公域迁出。
 > - `V41` 主体是 `gen_*`/`sys_*`（系统域），其中“办公平台增强”部分**未新建表**（复用 `office_*`），故不可整份迁出。
 > - `off_*`（`off_department`/`off_employee`/`off_sync_history`/`off_message`/`off_message_recipient`/`off_message_template`）由 `mysql/V57`（等价 `postgresql/V42`）创建，**已于 2026-10-11 迁出至 `apex-office-service`**：新库经 `V2__create_off_msg_org.sql` 重建同构表，`Off*` 代码（`apex-office` 50 类 + `apex-office-service` 5 接口类）整体迁入、单体侧 55 类删除，网关切流已补齐 `/admin-api/v1/message-templates`，进入观察期。
-> - 逐文件归属明细见 `apex-interfaces/src/main/resources/db/migration/OFFICE_MIGRATION_OWNERSHIP.md`。
+> - 逐文件归属明细见 `apex-components-parent/apex-system/src/main/resources/db/migration/OFFICE_MIGRATION_OWNERSHIP.md`。
 
 ### 9.3 迁移执行方案（每个服务抽取时重复此流程）
 
@@ -1144,21 +1144,21 @@ flowchart TD
 
 | 结论 | 证据路径 |
 |---|---|
-| 双入口与包排除 | `apex-interfaces/src/main/java/com/apex/scaffold/Application.java`（excludeFilters 正则排除 authcenter）、`apex-auth-center/.../AuthCenterApplication.java` |
-| 双 Token 兼容现状 | `apex-interfaces/.../security/JwtAuthenticationFilter.java` |
-| 认证安全链 | `apex-interfaces/.../config/SecurityConfig.java`、`apex-auth-center/.../config/AuthCenterConfig.java` |
-| Nacos/Sentinel 已接入 | 根 `pom.xml`（spring-cloud 2025.0.0 / alibaba 2025.0.0.0）、`apex-interfaces/pom.xml`（nacos-config/discovery/bootstrap/sentinel-datasource-nacos）、`apex-interfaces/src/main/resources/bootstrap.yml` |
-| 路由聚合 | `apex-interfaces/.../router/ApiRouter.java`（约 2709 行）、`WorkflowRouter.java`、`router/office/` 5 Router |
+| 双入口与包排除 | `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/Application.java`（excludeFilters 正则排除 authcenter）、`apex-services-bom/apex-auth-service/.../AuthCenterApplication.java` |
+| 双 Token 兼容现状 | `apex-components-parent/apex-system/.../security/JwtAuthenticationFilter.java` |
+| 认证安全链 | `apex-components-parent/apex-system/.../config/SecurityConfig.java`、`apex-services-bom/apex-auth-service/.../config/AuthCenterConfig.java` |
+| Nacos/Sentinel 已接入 | 根 `pom.xml`（spring-cloud 2025.0.0 / alibaba 2025.0.0.0）、`apex-components-parent/apex-system/pom.xml`（nacos-config/discovery/bootstrap/sentinel-datasource-nacos）、`apex-components-parent/apex-system/src/main/resources/bootstrap.yml` |
+| 路由聚合 | `apex-components-parent/apex-system/.../router/ApiRouter.java`（约 2709 行）、`WorkflowRouter.java`、`router/office/` 5 Router |
 | Outbox/MQ/幂等 | `apex-infrastructure/.../outbox/`、`.../mq/service/MqProducerService.java`、`.../mq/aspect/IdempotentAspect.java`、`.../mq/dlq/` |
 | 多级缓存/一致性 | `apex-infrastructure/.../cache/service/MultiLevelCacheService.java`、`CacheConsistencyService.java` |
 | 存储 SPI | `apex-common/.../spi/StorageProvider.java`、`apex-infrastructure/.../storage/`（MinIO/TOS/Local） |
 | 租户/数据权限 | `apex-common/.../context/TenantContext.java`、`apex-infrastructure/.../persistence/datapermission/DefaultTenantLineHandler.java` |
-| 数据库拆分先例 | `apex-auth-center/src/main/resources/db/migration/mysql/`（V44–V55 独立链 vs 主链 V1–V59） |
+| 数据库拆分先例 | `apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/`（V44–V55 独立链 vs 主链 V1–V59） |
 | 工作流垂直切片 | `apex-workflow/pom.xml`（仅依赖 domain+common）、`apex-workflow/.../domain/` |
 | 统一账户铺垫 | 提交 `1634ee2 feat(auth-center): unified account claims...`、V59 迁移（多端统一账户） |
-| JWT/JWKS 非对称（Phase 2.1） | `apex-auth-center/.../domain/service/JwtKeyMaterialService.java`（RS256 `sign`/`parse`/JWKS 投影）、`.../application/service/TokenServiceImpl.java`（改走响应式 `sign`/`parse`）、`.../domain/service/JwtKeyRotationService.java`（Redis-RSA 单一实现）；测试报告 `docs/06-testing/auth-center-jwt-jwks-test-report.md` |
-| auth 库治理（Phase 2.2） | `apex-auth-center/src/main/resources/bootstrap.yml`（服务名 `apex-auth-service`）、`db/migration/{mysql,postgresql}/V51__add_high_risk_authorization_permissions.sql`（修复重复 V49） |
-| 登出传播/Outbox（Phase 2.6） | `apex-domain/.../event/TokenRevokedEvent.java`、`apex-auth-center/.../application/service/AuthenticationApplicationService.java`（logout 发布）、`apex-auth-center/.../config/AuthCenterEventConfig.java`、`.../infrastructure/event/LocalDomainEventPublisher.java`、`resources/db/migration/{mysql,postgresql}/V56__create_domain_event_outbox.sql`、`application-basic.yml`（`apex.events.outbox.enabled=false`） |
+| JWT/JWKS 非对称（Phase 2.1） | `apex-services-bom/apex-auth-service/.../domain/service/JwtKeyMaterialService.java`（RS256 `sign`/`parse`/JWKS 投影）、`.../application/service/TokenServiceImpl.java`（改走响应式 `sign`/`parse`）、`.../domain/service/JwtKeyRotationService.java`（Redis-RSA 单一实现）；测试报告 `docs/06-testing/auth-center-jwt-jwks-test-report.md` |
+| auth 库治理（Phase 2.2） | `apex-services-bom/apex-auth-service/src/main/resources/bootstrap.yml`（服务名 `apex-auth-service`）、`db/migration/{mysql,postgresql}/V51__add_high_risk_authorization_permissions.sql`（修复重复 V49） |
+| 登出传播/Outbox（Phase 2.6） | `apex-domain/.../event/TokenRevokedEvent.java`、`apex-services-bom/apex-auth-service/.../application/service/AuthenticationApplicationService.java`（logout 发布）、`apex-services-bom/apex-auth-service/.../config/AuthCenterEventConfig.java`、`.../infrastructure/event/LocalDomainEventPublisher.java`、`resources/db/migration/{mysql,postgresql}/V56__create_domain_event_outbox.sql`、`application-basic.yml`（`apex.events.outbox.enabled=false`） |
 
 ---
 

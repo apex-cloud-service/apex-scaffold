@@ -1,5 +1,5 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
-%% 直接内部生产依赖图（35 个 JAR 模块）· 数据源：各叶子 pom.xml 的 dependencies · v1.3.1
+%% 直接内部生产依赖图（37 个 JAR 模块，含 2026-11-14 落地的知识库两模块）· 数据源：各叶子 pom.xml 的 dependencies · v1.3.1
 %% 第二阶段 Maven 分组：44 个后代 / 45 个 reactor 项目含根（叶子物理嵌套于分组父目录）；8 个 POM 不画为生产依赖节点。
 %% 与 95_module_dependency_graph.svg 语义配对维护；SVG 为手写邻接清单，不是 Mermaid 自动导出。
 %% 箭头由依赖方指向被依赖方；只列直接内部 compile 依赖（当前内部生产依赖均为 compile）。
@@ -35,6 +35,7 @@ flowchart LR
         FILE["apex-file<br/>common · domain · storage-starter"]
         OFFICE["apex-office<br/>common · domain"]
         INTEGRATION["apex-integration<br/>common · domain · persistence · remote"]
+        KNOWLEDGE["apex-knowledge<br/>common · persistence · storage-starter"]
     end
 
     subgraph L4["L4 运行模块（业务 service = 业务库 + common·domain + job/seata starter）"]
@@ -48,6 +49,7 @@ flowchart LR
         GW["apex-gateway<br/>common"]
         JOB_SVC["apex-job-service<br/>infrastructure-remote"]
         MASK["apex-masking-service<br/>common"]
+        KNOW_SVC["apex-knowledge-service<br/>knowledge · common（可选运行模块）"]
     end
 
     subgraph L5["L5 组合部署 / 示例"]
@@ -150,6 +152,11 @@ flowchart LR
     GW --> COMMON
     JOB_SVC --> REMOTE
     MASK --> COMMON
+    KNOWLEDGE --> COMMON
+    KNOWLEDGE --> PERSIST
+    KNOWLEDGE --> STO_S
+    KNOW_SVC --> KNOWLEDGE
+    KNOW_SVC --> COMMON
 
     BOOT --> COMMON
     BOOT --> DOMAIN
@@ -166,4 +173,4 @@ flowchart LR
     EXAMPLE --> INTEG
     EXAMPLE --> SYSTEM
 
-    NOTE["排除 test：infra-integration→cache、auth-service→system、office-service→gateway、aggregation-service→gateway。<br/>MQTT 客户端 optional 属第三方依赖；无内部循环依赖。<br/>TOOLS 表示 generator / tools-deployment / tools-build 三个独立 JAR，无内部生产依赖。"]
+    NOTE["排除 test：infra-integration→cache、auth-service→system、office-service→gateway、aggregation-service→gateway。<br/>MQTT 客户端 optional 属第三方依赖；无内部循环依赖。<br/>TOOLS 表示 generator / tools-deployment / tools-build 三个独立 JAR，无内部生产依赖。知识库两模块为可选运行模块（knowledge-service 不进标准交付包）。"]

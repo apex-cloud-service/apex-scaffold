@@ -485,7 +485,7 @@ mvn clean compile -DskipTests
 ### 3. 启动应用
 
 ```bash
-mvn spring-boot:run -pl apex-interfaces -Dspring-boot.run.profiles=dev
+mvn spring-boot:run -pl :apex-system -Dspring-boot.run.profiles=dev
 ```
 
 ### 4. 测试索引重建

@@ -26,7 +26,7 @@ mvn clean test
 mvn test -pl :apex-domain
 
 # 仅运行 Application 层测试
-mvn test -pl apex-application
+mvn test -pl :apex-system
 
 # 仅运行 Web 层集成测试
 mvn test -pl :apex-web
@@ -64,7 +64,7 @@ open target/site/jacoco/index.html
 ### 各模块覆盖率报告位置
 
 - **apex-domain**: `apex-domain/target/site/jacoco/index.html`
-- **apex-application**: `apex-application/target/site/jacoco/index.html`
+- **apex-application**: `apex-components-parent/apex-system/target/site/jacoco/index.html`
 - **apex-web**: `apex-web/target/site/jacoco/index.html`
 
 ### 聚合覆盖率报告
@@ -105,7 +105,7 @@ open target/site/jacoco-aggregate/index.html
      - 查看统计
      - 枚举验证
 
-### Service 层单元测试 (apex-application/src/test/java)
+### Service 层单元测试 (apex-components-parent/apex-system/src/test/java)
 
 3. **DocumentServiceImplTest.java**
    - 测试用例: 9 个

@@ -305,9 +305,9 @@
 - [SSO表结构](../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
 
 ### 代码文件
-- **认证中心**: `apex-auth-center/`
-- **OAuth2服务**: `apex-application/src/main/java/com/apex/scaffold/application/service/OAuth2*.java`
-- **SSO适配器**: `apex-application/src/main/java/com/apex/scaffold/application/support/sso/`
+- **认证中心**: `apex-services-bom/apex-auth-service/`
+- **OAuth2服务**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2*.java`
+- **SSO适配器**: `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/`
 - **权限控制**: `apex-common/src/main/java/com/apex/scaffold/common/annotation/RequirePermission.java`
 
 ---

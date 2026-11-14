@@ -11,13 +11,13 @@
 适用于使用 Flyway 进行数据库版本管理的场景。
 
 #### MySQL 版本
-- **文件**: `apex-interfaces/src/main/resources/db/migration/mysql/V22__add_database_config_menu.sql`
+- **文件**: `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V22__add_database_config_menu.sql`
 - **版本**: V22
 - **自动执行**: 应用启动时 Flyway 自动执行
 - **幂等性**: 使用 `ON DUPLICATE KEY UPDATE`
 
 #### PostgreSQL 版本
-- **文件**: `apex-interfaces/src/main/resources/db/migration/postgresql/V22__add_database_config_menu.sql`
+- **文件**: `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V22__add_database_config_menu.sql`
 - **版本**: V22
 - **自动执行**: 应用启动时 Flyway 自动执行
 - **幂等性**: 使用 `ON CONFLICT DO UPDATE`

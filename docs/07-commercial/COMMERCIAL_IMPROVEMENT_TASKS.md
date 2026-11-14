@@ -44,7 +44,7 @@
 - [x] 启动时自动执行迁移
 
 **相关文件**:
-- `apex-interfaces/src/main/resources/db/migration/V1__init_schema.sql` ~ `V87__interest_session_safety_and_topic_ops.sql`（共 87 个版本化迁移脚本）
+- `apex-components-parent/apex-system/src/main/resources/db/migration/V1__init_schema.sql` ~ `V87__interest_session_safety_and_topic_ops.sql`（共 87 个版本化迁移脚本）
 
 ---
 
@@ -63,7 +63,7 @@
 **相关文件**:
 - `apex-common/src/main/java/com/apex/scaffold/common/result/ResultCode.java`
 - `apex-common/src/main/java/com/apex/scaffold/common/result/Result.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/exception/GlobalExceptionHandler.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/exception/GlobalExceptionHandler.java`
 
 ---
 
@@ -120,8 +120,8 @@
 
 **相关文件**:
 - `apex-common/src/main/java/com/apex/scaffold/common/annotation/ApiVersion.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/config/ApiVersionConfig.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/controller/UserControllerV2.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/ApiVersionConfig.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/controller/UserControllerV2.java`
 
 ---
 
@@ -160,7 +160,7 @@
 - [x] License生成工具
 - [x] 功能开关控制
 - [x] **加固项 A**: 三个商业 Profile（basic/standard/enterprise）`features.*` 属性实质化——basic profile 真裁剪 RocketMQ/Zipkin/Sentinel 高级依赖；SecurityConfig / 缓存 / MQ / tracing / Sentinel 组件通过 `@ConditionalOnProperty(apex.features.*) + @ConditionalOnClass` 条件化注册
-- [x] **加固项 B**: License 默认启用策略——`apex.license.enabled=true`（含环境变量 `APEX_LICENSE_ENABLED` 回退），`apex-interfaces/src/main/resources/application.yml` 默认开启；FeatureGate 无 License 时统一降级
+- [x] **加固项 B**: License 默认启用策略——`apex.license.enabled=true`（含环境变量 `APEX_LICENSE_ENABLED` 回退），`apex-components-parent/apex-system/src/main/resources/application.yml` 默认开启；FeatureGate 无 License 时统一降级
 
 **相关文件**:
 - `apex-common/src/main/java/com/apex/scaffold/common/license/`（LicenseValidator / LicenseGenerator / LicenseAutoConfiguration / LicenseProperties / RsaUtil / FeatureGateAspect 等）
@@ -199,7 +199,7 @@
 **相关文件**:
 - `apex-common/src/test/java/com/apex/scaffold/common/util/JsonUtilTest.java`
 - 各模块 `src/test/java`（共 593 个测试文件）
-- `apex-interfaces/src/test/resources/`（application-it.yml / data-it.sql 等；测试表结构由 Flyway db/migration 提供）
+- `apex-components-parent/apex-system/src/test/resources/`（application-it.yml / data-it.sql 等；测试表结构由 Flyway db/migration 提供）
 - 根 `pom.xml` 及各子模块 `pom.xml`（jacoco check 配置）
 
 ---
@@ -248,10 +248,10 @@
 **状态**: ✅ 已完成
 
 **相关文件**:
-- `apex-interfaces/src/main/resources/i18n/messages_en_US.properties`
-- `apex-interfaces/src/main/resources/i18n/messages_zh_CN.properties`
-- `apex-interfaces/src/main/resources/i18n/messages_zh_TW.properties`
-- `apex-interfaces/src/main/resources/i18n/messages_th_TH.properties`
+- `apex-components-parent/apex-system/src/main/resources/i18n/messages_en_US.properties`
+- `apex-components-parent/apex-system/src/main/resources/i18n/messages_zh_CN.properties`
+- `apex-components-parent/apex-system/src/main/resources/i18n/messages_zh_TW.properties`
+- `apex-components-parent/apex-system/src/main/resources/i18n/messages_th_TH.properties`
 
 ---
 
@@ -262,13 +262,13 @@
 
 **相关文件**:
 - `apex-common/src/main/java/com/apex/scaffold/common/tenant/TenantContext.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/aspect/TenantAspect.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/TenantAspect.java`
 - `apex-common/src/main/java/com/apex/scaffold/common/annotation/TenantAware.java`
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java`
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/config/MybatisPlusConfig.java`（条件注册 TenantLineInnerInterceptor）
 - `apex-domain/src/main/java/com/apex/scaffold/domain/model/entity/UserEntity.java`（tenantId 字段）
-- `apex-interfaces/src/main/resources/db/migration/V14__add_tenant_id_to_core_tables.sql`
-- `apex-interfaces/src/main/resources/application-enterprise.yml`（apex.tenant.enabled=true）
+- `apex-components-parent/apex-system/src/main/resources/db/migration/V14__add_tenant_id_to_core_tables.sql`
+- `apex-components-parent/apex-system/src/main/resources/application-enterprise.yml`（apex.tenant.enabled=true）
 
 ---
 
@@ -316,9 +316,9 @@
 **相关文件**:
 - `apex-domain/src/main/java/com/apex/scaffold/domain/workflow/`
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/workflow/`
-- `apex-application/src/main/java/com/apex/scaffold/application/service/WorkflowService.java`
-- `apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/WorkflowHandler.java`
-- `apex-interfaces/src/main/resources/db/migration/V20__Create_workflow_tables.sql`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/WorkflowService.java`
+- `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/WorkflowHandler.java`
+- `apex-components-parent/apex-system/src/main/resources/db/migration/V20__Create_workflow_tables.sql`
 - `docs/WORKFLOW_GUIDE.md`
 
 ---
@@ -338,7 +338,7 @@
 **相关文件**:
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java`
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java`
-- `apex-interfaces/src/main/resources/application-enterprise.yml`
+- `apex-components-parent/apex-system/src/main/resources/application-enterprise.yml`
 - `docs/READ_DEGRADATION_GUIDE.md`
 
 ---
@@ -358,7 +358,7 @@
 **相关文件**:
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/resilience/service/DistributedBulkheadService.java`
 - `apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/resilience/config/BulkheadProperties.java`
-- `apex-interfaces/src/main/resources/application-enterprise.yml`
+- `apex-components-parent/apex-system/src/main/resources/application-enterprise.yml`
 - `docs/DISTRIBUTED_BULKHEAD_GUIDE.md`
 
 ---

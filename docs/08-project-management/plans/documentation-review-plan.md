@@ -93,7 +93,7 @@
 ### 3.3 SQL 脚本现状
 
 #### Flyway 迁移脚本（已规范化）
-位置：`apex-interfaces/src/main/resources/db/migration/mysql/`
+位置：`apex-components-parent/apex-system/src/main/resources/db/migration/mysql/`
 
 当前版本：**V1 ~ V26**（26 个迁移脚本）
 

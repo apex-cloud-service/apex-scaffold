@@ -65,7 +65,7 @@ Apex Scaffold 的技术底座显著强于主流商用脚手架（RuoYi / pig / J
 - `interfaces/exception/GlobalExceptionHandler.java:9` → `infrastructure.remote.exception.RemoteApiException`
 - `interfaces/filter/ApiGatewayFilter.java:3` → `infrastructure.circuitbreaker.CircuitBreakerService`
 - `interfaces/aspect/UserRateLimitAspect.java:7` → `infrastructure.ratelimit.local.LocalRateLimiter`
-- `apex-application/pom.xml` 直接依赖 `apex-infrastructure`（应用层依赖基础设施实现）
+- `apex-components-parent/apex-system/pom.xml` 直接依赖 `apex-infrastructure`（应用层依赖基础设施实现）
 
 **重构方案（依赖倒置 DIP）**：
 1. `RemoteApiException`：提升到 `apex-common`（异常体系本就属于 common），infrastructure 异常继承之。

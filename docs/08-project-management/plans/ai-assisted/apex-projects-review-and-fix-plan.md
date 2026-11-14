@@ -87,7 +87,7 @@ server: {
 
 #### 问题 2：后端 dev 配置中 Flyway 已禁用
 
-**文件**：`/Users/work/apex-scaffold/apex-interfaces/src/main/resources/application-dev.yml`
+**文件**：`/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/application-dev.yml`
 
 **问题描述**：
 ```yaml
@@ -149,7 +149,7 @@ echo "   Grafana    http://localhost:3200"  # 改为 3200
 ```bash
 # 提取后端所有菜单的 component 字段
 cd /Users/work/apex-scaffold
-grep -r "component" apex-interfaces/src/main/resources/db/migration/mysql/V*.sql | grep INSERT
+grep -r "component" apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V*.sql | grep INSERT
 ```
 
 **修复方案**：
@@ -268,7 +268,7 @@ grep -r "component" apex-interfaces/src/main/resources/db/migration/mysql/V*.sql
 ### 5.1 修复文件清单
 
 - ✅ `/Users/work/apex-admin-web/vite.config.ts`（添加 proxy 配置）
-- ⏸️ `/Users/work/apex-scaffold/apex-interfaces/src/main/resources/application-dev.yml`（待确认 Flyway）
+- ⏸️ `/Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/application-dev.yml`（待确认 Flyway）
 - ✅ `/Users/work/apex-scaffold/scripts/deploy/start.sh`（修复 Grafana 端口提示）
 
 ### 5.2 验证报告

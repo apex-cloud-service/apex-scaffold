@@ -71,7 +71,7 @@ cd apex-scaffold
 mvn clean package -DskipTests
 
 # 3. 启动应用
-mvn spring-boot:run -pl apex-interfaces
+mvn spring-boot:run -pl :apex-system
 
 # 4. 访问API文档
 open http://localhost:8080/doc.html

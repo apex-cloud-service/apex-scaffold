@@ -240,7 +240,7 @@ interfaces → application → domain ← infrastructure
 ### 数据库脚本
 - [`V41__add_generator_auth_sso_office_tables.sql (MySQL)`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
 - [`V41__add_generator_auth_sso_office_tables.sql (PostgreSQL)`](../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
-- `V42__add_office_platform_tables.sql (MySQL)`（目标不存在，无已核实替代文件；原路径：`../../apex-interfaces/src/main/resources/db/migration/mysql/V42__add_office_platform_tables.sql`）
+- `V42__add_office_platform_tables.sql (MySQL)`（目标不存在，无已核实替代文件；原路径：`../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V42__add_office_platform_tables.sql`）
 
 ---
 

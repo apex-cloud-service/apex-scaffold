@@ -38,8 +38,8 @@
 - V49 在 V48 之前执行，提前创建 auth_config 表
 
 **新增文件：**
-- `apex-auth-center/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql`
-- `apex-auth-center/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql`
+- `apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql`
+- `apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql`
 
 **表结构：**
 ```sql

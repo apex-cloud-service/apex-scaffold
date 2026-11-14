@@ -438,8 +438,8 @@
    ```
 
 2. 按模块统计缺失情况:
-   - apex-interfaces/
-   - apex-application/
+   - apex-components-parent/apex-system/
+   - apex-components-parent/apex-system/
    - apex-domain/
    - apex-infrastructure/
    - apex-common/

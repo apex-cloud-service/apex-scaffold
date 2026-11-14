@@ -260,7 +260,7 @@
 #### Step 2.4：验证 Swagger UI 显示效果（1 小时）
 
 **任务**：
-1. 启动项目：`mvnd -pl apex-interfaces spring-boot:run`
+1. 启动项目：`mvnd -pl :apex-system spring-boot:run`
 2. 访问 Swagger UI：`http://localhost:8080/doc.html`
 3. 逐个模块验证：
    - 接口是否正确分组显示
@@ -523,8 +523,8 @@ cd /Users/work/apex-scaffold
 ```bash
 cd /Users/work/apex-scaffold
 sdk env
-mvnd -pl apex-interfaces -am compile -DskipTests
-mvnd -pl apex-interfaces spring-boot:run -P dev
+mvnd -pl :apex-system -am compile -DskipTests
+mvnd -pl :apex-system spring-boot:run -P dev
 ```
 
 2. **访问 Swagger UI**：

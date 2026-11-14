@@ -231,7 +231,7 @@ curl -X POST "${WECHAT_WEBHOOK_URL}" \
 md5sum apex-system-service/target/apex-system-service-*.jar > apex-system-service.jar.md5
 
 # 上传到服务器
-scp apex-interfaces/target/apex-interfaces-3.1.0.jar user@prod-server:/opt/apex/
+scp apex-components-parent/apex-system/target/apex-interfaces-3.1.0.jar user@prod-server:/opt/apex/
 scp apex-interfaces-3.1.0.jar.md5 user@prod-server:/opt/apex/
 
 # 在服务器上验证 MD5

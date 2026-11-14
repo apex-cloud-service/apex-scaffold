@@ -391,10 +391,10 @@ mvnd verify -P standard -Dskip.unit.tests=true
 mvnd clean package -DskipTests
 
 # 启动接口模块（开发模式）
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 
 # 单模块构建（如接口层 + 依赖模块）
-mvnd -pl apex-interfaces -am compile -DskipTests
+mvnd -pl :apex-system -am compile -DskipTests
 
 # 代码格式化检查
 mvnd spotless:check

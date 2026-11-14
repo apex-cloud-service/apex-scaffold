@@ -110,7 +110,7 @@
   <!-- legend -->
   <rect x="200" y="590" width="1000" height="150" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
   <text x="220" y="618" class="legend" font-weight="600">依赖规则</text>
-  <text x="220" y="644" class="legend">• 单向依赖：Interfaces → Application → Domain ← Infrastructure（依赖倒置）；interfaces/application 代码位于各业务库包内（原 apex-interfaces/apex-application 模块已退出 reactor）。</text>
+  <text x="220" y="644" class="legend">• 单向依赖：Interfaces → Application → Domain ← Infrastructure（依赖倒置）；interfaces/application 代码位于各业务库包内（原 apex-components-parent/apex-system/apex-application 模块已退出 reactor）。</text>
   <text x="220" y="668" class="legend">• 领域层零框架依赖：共享 apex-domain 仅容纳跨域端口/Gateway 契约，业务实体与业务仓储接口在各业务库 domain 包。</text>
   <text x="220" y="692" class="legend">• 仓储接口定义于领域层，实现位于基础设施层，运行时由 Spring 注入（红色虚线为反向实现关系）。</text>
   <text x="220" y="716" class="legend">• 基础设施按能力拆分为 persistence/cache/messaging/remote/integration 五个 JAR（apex-infrastructure 仅保留旧坐标兼容，无实现源码）。</text>

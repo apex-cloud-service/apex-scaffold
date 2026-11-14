@@ -58,7 +58,7 @@
 ### MySQL 脚本
 
 ```bash
-cd /Users/work/apex-scaffold/apex-interfaces/src/main/resources/db/migration/mysql
+cd /Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/db/migration/mysql
 
 # 1. 删除重复脚本
 rm V30__create_office_approval_process.sql
@@ -77,7 +77,7 @@ mv V33__add_office_message_menu_and_permissions.sql V39__add_office_message_menu
 ### PostgreSQL 脚本
 
 ```bash
-cd /Users/work/apex-scaffold/apex-interfaces/src/main/resources/db/migration/postgresql
+cd /Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/db/migration/postgresql
 
 # 1. 删除重复脚本
 rm V30__create_office_approval_process.sql
@@ -139,22 +139,22 @@ V39  - 添加消息菜单权限 🔄 重新编号
 ### 1. 验证文件重命名
 ```bash
 cd /Users/work/apex-scaffold
-ls -la apex-interfaces/src/main/resources/db/migration/mysql/V{29,30,34,35,36,37,38,39}*.sql
-ls -la apex-interfaces/src/main/resources/db/migration/postgresql/V{29,30,34,35,36,37,38,39}*.sql
+ls -la apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V{29,30,34,35,36,37,38,39}*.sql
+ls -la apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V{29,30,34,35,36,37,38,39}*.sql
 ```
 
 ### 2. 验证无冲突
 ```bash
 # 检查每个版本号只有一个脚本
 for v in 29 30 34 35 36 37 38 39; do
-  echo "V$v: MySQL=$(ls apex-interfaces/src/main/resources/db/migration/mysql/V${v}*.sql 2>/dev/null | wc -l) PostgreSQL=$(ls apex-interfaces/src/main/resources/db/migration/postgresql/V${v}*.sql 2>/dev/null | wc -l)"
+  echo "V$v: MySQL=$(ls apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V${v}*.sql 2>/dev/null | wc -l) PostgreSQL=$(ls apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V${v}*.sql 2>/dev/null | wc -l)"
 done
 ```
 
 ### 3. 验证Flyway执行顺序
 ```bash
 # 模拟Flyway排序
-find apex-interfaces/src/main/resources/db/migration/mysql -name "V*.sql" | sort | grep -E 'V(29|30|3[4-9])' 
+find apex-components-parent/apex-system/src/main/resources/db/migration/mysql -name "V*.sql" | sort | grep -E 'V(29|30|3[4-9])' 
 ```
 
 ---
@@ -189,7 +189,7 @@ DROP DATABASE apex_scaffold;
 CREATE DATABASE apex_scaffold;
 
 # 3. 重新执行Flyway迁移
-mvnd -pl apex-interfaces -am flyway:migrate
+mvnd -pl :apex-system -am flyway:migrate
 ```
 
 ### 3. Git提交

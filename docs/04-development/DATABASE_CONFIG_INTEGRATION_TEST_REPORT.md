@@ -46,7 +46,7 @@ granted_count: 4
 ```bash
 cd /Users/work/apex-scaffold
 source ./scripts/build/init-build-env.sh
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 ```
 
 **启动结果**：
@@ -212,7 +212,7 @@ lsof -ti:8080 | xargs kill -9
 ```bash
 # 方式 1：运行 Flyway repair
 cd /Users/work/apex-scaffold
-mvnd flyway:repair -pl apex-interfaces -Dflyway.url=jdbc:mysql://localhost:3306/apex_data -Dflyway.user=root -Dflyway.password=:apex-root
+mvnd flyway:repair -pl :apex-system -Dflyway.url=jdbc:mysql://localhost:3306/apex_data -Dflyway.user=root -Dflyway.password=:apex-root
 
 # 方式 2：手动更新 checksum
 podman exec -i apex-infra-mysql mysql -u root -papex-root apex_data << 'EOF'

@@ -82,7 +82,7 @@ jobs:
 
 **建议方案**:
 ```
-apex-interfaces/src/main/resources/db/migration/
+apex-components-parent/apex-system/src/main/resources/db/migration/
 ├── V1__create_base_tables.sql
 ├── V2__add_user_indexes.sql
 ├── V3__create_rbac_tables.sql

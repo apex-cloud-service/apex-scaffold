@@ -9,7 +9,7 @@
 
 | 项目 | 结果 |
 |------|------|
-| 模块编译（`mvnd -pl apex-auth-center -am test-compile -DskipTests`） | ✅ BUILD SUCCESS |
+| 模块编译（`mvnd -pl :apex-auth-service -am test-compile -DskipTests`） | ✅ BUILD SUCCESS |
 | 单元测试（surefire，定向 4 个测试类） | ✅ 61/61 通过（0 失败 / 0 错误 / 0 跳过） |
 | 本阶段核心覆盖 | RS256 非对称签发/验签、keyId 选择与回退、密钥轮换、RefreshToken 轮换、Token 服务（签发/校验/撤销/刷新） |
 
@@ -17,10 +17,10 @@
 
 ```bash
 # 编译验证（主代码 + 测试代码）
-mvnd -pl apex-auth-center -am test-compile -DskipTests
+mvnd -pl :apex-auth-service -am test-compile -DskipTests
 
 # 定向运行 Phase 2.1/2.2 相关测试类（-am 构建上游模块时需忽略无匹配用例的模块）
-mvnd -pl apex-auth-center -am test \
+mvnd -pl :apex-auth-service -am test \
   -Dtest='JwtKeyMaterialServiceTest,JwtKeyRotationServiceTest,RefreshTokenRotationServiceTest,TokenServiceImplTest' \
   -Dsurefire.failIfNoSpecifiedTests=false
 ```

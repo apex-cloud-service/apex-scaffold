@@ -178,7 +178,7 @@
 ```
 
 **处理步骤**:
-1. 对比 `.trae/documents/menu-config.sql` 与 `apex-interfaces/src/main/resources/db/migration/mysql/V36__add_office_platform_menus.sql`
+1. 对比 `.trae/documents/menu-config.sql` 与 `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V36__add_office_platform_menus.sql`
 2. 如内容已被 V36 或后续版本覆盖 → 删除
 3. 如有未迁移内容 → 创建新 Flyway 版本
 
@@ -221,7 +221,7 @@
 
 **问题**: 发现重复的版本号
 ```
-apex-interfaces/src/main/resources/db/migration/mysql/
+apex-components-parent/apex-system/src/main/resources/db/migration/mysql/
 ├── V1__init_schema.sql              ← 正式版本
 ├── V1__add_office_message_tables.sql   ← 冲突！
 ├── V2__seed_system_permissions.sql  ← 正式版本
@@ -281,7 +281,7 @@ init-slave.sql
 - **用途**: MySQL 主从复制初始化
 - **处理方案**: 保留（运维脚本，不属于应用迁移）
 
-**F. apex-interfaces/src/test/resources/**:
+**F. apex-components-parent/apex-system/src/test/resources/**:
 ```
 schema-it.sql
 data-it.sql
@@ -351,7 +351,7 @@ config/
 - 保持结构不变
 - 检查 `feature-toggle-example.yml` 和 `office-platforms.env.example` 是否有更好的位置
 
-**C. apex-interfaces/src/main/resources/**:
+**C. apex-components-parent/apex-system/src/main/resources/**:
 ```
 application.yml
 application-basic.yml
@@ -685,7 +685,7 @@ mv reports/project-summary-report docs/_archive/reports/
 
 **详细步骤**:
 ```bash
-cd /Users/work/apex-scaffold/apex-interfaces/src/main/resources/db/migration
+cd /Users/work/apex-scaffold/apex-components-parent/apex-system/src/main/resources/db/migration
 
 # 检查冲突脚本
 for version in 1 2 3 4; do
@@ -714,7 +714,7 @@ head -20 mysql/V1__add_office_message_tables.sql
 cat frontend_button_permission_config.sql | head -50
 
 # 搜索 Flyway 脚本中是否已包含
-grep -r "system:menu:add\|system:dept:add" apex-interfaces/src/main/resources/db/migration/
+grep -r "system:menu:add\|system:dept:add" apex-components-parent/apex-system/src/main/resources/db/migration/
 
 # 决策：
 # - 如已包含 → 删除
@@ -725,7 +725,7 @@ grep -r "system:menu:add\|system:dept:add" apex-interfaces/src/main/resources/db
 ```bash
 # 对比 V36__add_office_platform_menus.sql
 diff .trae/documents/menu-config.sql \
-     apex-interfaces/src/main/resources/db/migration/mysql/V36__add_office_platform_menus.sql
+     apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V36__add_office_platform_menus.sql
 
 # 决策：如内容相同或已被覆盖 → 删除
 ```
@@ -750,7 +750,7 @@ rm scripts/data/init_workflow_test_data.sql
 
 ```bash
 # 确定下一个版本号
-NEXT_VERSION=$(ls apex-interfaces/src/main/resources/db/migration/mysql/ | \
+NEXT_VERSION=$(ls apex-components-parent/apex-system/src/main/resources/db/migration/mysql/ | \
                grep -E "^V[0-9]+" | \
                sed 's/V\([0-9]*\)__.*/\1/' | \
                sort -n | \
@@ -767,10 +767,10 @@ NEXT_VERSION=$(ls apex-interfaces/src/main/resources/db/migration/mysql/ | \
 # 运行 Flyway 版本检查测试
 cd /Users/work/apex-scaffold
 sdk env
-mvnd -pl apex-interfaces test -Dtest=FlywayMigrationVersionTest
+mvnd -pl :apex-system test -Dtest=FlywayMigrationVersionTest
 
 # 运行迁移启动测试
-mvnd -pl apex-interfaces test -Dtest=FlywayMigrationStartupTest
+mvnd -pl :apex-system test -Dtest=FlywayMigrationStartupTest
 
 # 检查版本连续性
 scripts/ci/check-flyway-versions.sh  # 如存在
@@ -815,7 +815,7 @@ cat config/feature-toggle-example.yml
 
 # 决策：
 # - 保留在 config/（如是通用示例）
-# - 移动到 apex-interfaces/src/main/resources/（如是应用配置示例）
+# - 移动到 apex-components-parent/apex-system/src/main/resources/（如是应用配置示例）
 ```
 
 #### 步骤 4.2: 创建配置管理文档
@@ -964,7 +964,7 @@ mvnd test -P basic
 
 ### 4. 配置文件
 
-- **应用配置**: `apex-interfaces/src/main/resources/`
+- **应用配置**: `apex-components-parent/apex-system/src/main/resources/`
 - **基础设施配置**: `config/` 目录
 - **环境变量示例**: 根目录 `.env.example`
 - **更新文档**: 配置变更后同步更新 `docs/05-operations/configuration-guide.md`

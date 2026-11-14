@@ -29,7 +29,7 @@
 
 ### 1. 添加 R2DBC 依赖
 
-在 `apex-application/pom.xml` 中添加：
+在 `apex-components-parent/apex-system/pom.xml` 中添加：
 
 ```xml
 <!-- R2DBC 核心依赖 -->
@@ -71,7 +71,7 @@
 
 ### 1. 新建 R2DBC 连接工厂配置类
 
-创建 `apex-application/src/main/java/com/apex/scaffold/application/config/R2dbcTestConfig.java`：
+创建 `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/config/R2dbcTestConfig.java`：
 
 ```java
 package com.apex.scaffold.application.config;
@@ -159,7 +159,7 @@ public class R2dbcTestConfig {
 
 ### 2. 重构 DatabaseConfigService
 
-修改 `apex-application/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java`：
+修改 `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java`：
 
 ```java
 package com.apex.scaffold.application.service;
@@ -454,7 +454,7 @@ public Mono<DatabaseTestResultDTO> testConnection(DatabaseConfigRequest request)
 cd /Users/work/apex-scaffold
 ```
 
-编辑 `apex-application/pom.xml`，添加 R2DBC 相关依赖（见上文）。
+编辑 `apex-components-parent/apex-system/pom.xml`，添加 R2DBC 相关依赖（见上文）。
 
 ### 步骤 2：创建配置类
 
@@ -467,8 +467,8 @@ cd /Users/work/apex-scaffold
 
 ```bash
 # 备份原始文件
-cp apex-application/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java \
-   apex-application/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java.bak
+cp apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java \
+   apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/DatabaseConfigService.java.bak
 
 # 更新 DatabaseConfigService.java
 # 使用上面的新实现替换 testConnection 方法
@@ -478,10 +478,10 @@ cp apex-application/src/main/java/com/apex/scaffold/application/service/Database
 
 ```bash
 # 编译
-mvnd clean compile -pl apex-application
+mvnd clean compile -pl :apex-system
 
 # 运行测试
-mvnd test -pl apex-application -Dtest=DatabaseConfigServiceTest
+mvnd test -pl :apex-system -Dtest=DatabaseConfigServiceTest
 ```
 
 ### 步骤 5：启动验证
@@ -489,7 +489,7 @@ mvnd test -pl apex-application -Dtest=DatabaseConfigServiceTest
 ```bash
 # 启动应用
 source ./scripts/build/init-build-env.sh
-mvnd spring-boot:run -pl apex-interfaces
+mvnd spring-boot:run -pl :apex-system
 
 # 测试接口（另一个终端）
 TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \

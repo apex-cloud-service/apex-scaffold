@@ -15,13 +15,13 @@
 cat apex-domain/src/main/java/com/apex/scaffold/domain/office/OfficeOrganizationService.java
 
 # 查看应用层
-cat apex-application/src/main/java/com/apex/scaffold/application/office/OfficeOrganizationSyncService.java
+cat apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/office/OfficeOrganizationSyncService.java
 
 # 查看基础设施层（飞书客户端）
 cat apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/office/client/FeishuOrganizationClient.java
 
 # 查看接口层
-cat apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/office/OfficeOrganizationHandler.java
+cat apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/office/OfficeOrganizationHandler.java
 ```
 
 ### 2. 使用模板快速生成新模块
@@ -98,7 +98,7 @@ public class OfficeMessage {
 
 **示例**（消息模块）：
 ```java
-// apex-application/src/main/java/com/apex/scaffold/application/office/message/OfficeMessageApplicationService.java
+// apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/office/message/OfficeMessageApplicationService.java
 /**
  * 办公平台消息应用服务
  *
@@ -216,7 +216,7 @@ public class FeishuMessageClient implements OfficePlatformMessageClient {
 
 **示例**（消息 Handler）：
 ```java
-// apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler/office/OfficeMessageHandler.java
+// apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/office/OfficeMessageHandler.java
 /**
  * 办公平台消息处理器
  *
@@ -267,7 +267,7 @@ public class OfficeMessageHandler {
 
 **示例**（消息表）：
 ```sql
--- apex-interfaces/src/main/resources/db/migration/mysql/V29__add_office_message_tables.sql
+-- apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V29__add_office_message_tables.sql
 
 -- 消息记录表
 CREATE TABLE IF NOT EXISTS office_message (
@@ -314,7 +314,7 @@ CREATE TABLE IF NOT EXISTS office_message_recipient (
 
 **示例**（应用服务测试）：
 ```java
-// apex-application/src/test/java/com/apex/scaffold/application/office/message/OfficeMessageApplicationServiceTest.java
+// apex-components-parent/apex-system/src/test/java/com/apex/scaffold/application/office/message/OfficeMessageApplicationServiceTest.java
 /**
  * 办公平台消息应用服务测试
  *
@@ -400,7 +400,7 @@ mvnd clean package -DskipTests
 ### 启动项目
 ```bash
 # 启动应用
-mvnd -pl apex-interfaces spring-boot:run -P dev
+mvnd -pl :apex-system spring-boot:run -P dev
 
 # 访问 Swagger
 open http://localhost:8080/swagger-ui.html

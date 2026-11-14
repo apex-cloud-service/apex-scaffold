@@ -39,9 +39,9 @@ Apex Scaffold 当前是一个**技术完备但业务耦合严重**的后端项�
 apex-scaffold/
 ├── apex-common/              # 通用工具层 (✅ 基本通用)
 ├── apex-domain/              # 领域模型层 (✅ 已通用化)
-├── apex-application/         # 应用服务层 (✅ 已通用化)
+├── apex-components-parent/apex-system/         # 应用服务层 (✅ 已通用化)
 ├── apex-infrastructure/      # 基础设施层 (✅ 已通用化)
-├── apex-interfaces/          # 接口层 (✅ 已通用化)
+├── apex-components-parent/apex-system/          # 接口层 (✅ 已通用化)
 ├── apex-example/             # 示例模块 (✅ 纯净示例)
 ├── apex-generator/           # 代码生成器 (✅ 通用)
 ├── apex-license-*/           # License管理 (✅ 通用)

@@ -54,7 +54,7 @@
 
 **MySQL 迁移脚本（7 个）：**
 ```
-apex-auth-center/src/main/resources/db/migration/mysql/
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/
 ├── V44__create_auth_center_core_tables.sql          (14.2 KB)
 ├── V45__align_auth_domain_fields.sql                (8.3 KB)
 ├── V46__insert_test_users.sql                       (2.8 KB)
@@ -66,7 +66,7 @@ apex-auth-center/src/main/resources/db/migration/mysql/
 
 **PostgreSQL 迁移脚本（7 个）：**
 ```
-apex-auth-center/src/main/resources/db/migration/postgresql/
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/
 ├── V44__create_auth_center_core_tables.sql          (5.2 KB)
 ├── V45__align_auth_domain_fields.sql                (2.0 KB)
 ├── V46__insert_test_users.sql                       (3.0 KB)
@@ -128,23 +128,23 @@ docs/migration/
 
 ### 迁移文件列表验证
 
-执行命令：`find apex-auth-center/src/main/resources/db/migration -name "*.sql" -type f | sort`
+执行命令：`find apex-services-bom/apex-auth-service/src/main/resources/db/migration -name "*.sql" -type f | sort`
 
 ```
-apex-auth-center/src/main/resources/db/migration/mysql/V44__create_auth_center_core_tables.sql
-apex-auth-center/src/main/resources/db/migration/mysql/V45__align_auth_domain_fields.sql
-apex-auth-center/src/main/resources/db/migration/mysql/V46__insert_test_users.sql
-apex-auth-center/src/main/resources/db/migration/mysql/V47__insert_auth_center_seed_data.sql
-apex-auth-center/src/main/resources/db/migration/mysql/V48__add_config_and_audit_menu_permissions.sql
-apex-auth-center/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql
-apex-auth-center/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql
-apex-auth-center/src/main/resources/db/migration/postgresql/V44__create_auth_center_core_tables.sql
-apex-auth-center/src/main/resources/db/migration/postgresql/V45__align_auth_domain_fields.sql
-apex-auth-center/src/main/resources/db/migration/postgresql/V46__insert_test_users.sql
-apex-auth-center/src/main/resources/db/migration/postgresql/V47__insert_auth_center_seed_data.sql
-apex-auth-center/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql
-apex-auth-center/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql
-apex-auth-center/src/main/resources/db/migration/postgresql/V50__create_totp_and_mfa_config_tables.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V44__create_auth_center_core_tables.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V45__align_auth_domain_fields.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V46__insert_test_users.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V47__insert_auth_center_seed_data.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V48__add_config_and_audit_menu_permissions.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V49__create_auth_config_table.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V50__create_totp_and_mfa_config_tables.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V44__create_auth_center_core_tables.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V45__align_auth_domain_fields.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V46__insert_test_users.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V47__insert_auth_center_seed_data.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V48__add_config_and_audit_menu_permissions.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V49__create_auth_config_table.sql
+apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V50__create_totp_and_mfa_config_tables.sql
 ```
 
 ---

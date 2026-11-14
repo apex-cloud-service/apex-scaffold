@@ -321,7 +321,7 @@ public Mono<Map<String, Object>> authenticate(
 ### 编译验证
 
 ```bash
-mvnd -pl apex-application -am compile -DskipTests
+mvnd -pl :apex-system -am compile -DskipTests
 # BUILD SUCCESS ✅
 ```
 

@@ -19,8 +19,8 @@
 
 | 文件 | 位置 | 状态 |
 |------|------|------|
-| MySQL 迁移脚本 | [`apex-interfaces/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
-| PostgreSQL 迁移脚本 | [`apex-interfaces/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
+| MySQL 迁移脚本 | [`apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
+| PostgreSQL 迁移脚本 | [`apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql) | ✅ 完成 |
 
 #### 数据库表 (11张)
 

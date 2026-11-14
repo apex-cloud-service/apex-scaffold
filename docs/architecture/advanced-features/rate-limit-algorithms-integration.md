@@ -32,7 +32,7 @@ Redis 不可用时，`UserRateLimitAspect` 读取 `apex.ratelimit.local-fallback
 
 ## 配置
 
-配置模板位于 `apex-interfaces/src/main/resources/application-rate-limit.yml`。启用时将其内容合并到当前 profile 配置。
+配置模板位于 `apex-components-parent/apex-system/src/main/resources/application-rate-limit.yml`。启用时将其内容合并到当前 profile 配置。
 
 重要参数：
 

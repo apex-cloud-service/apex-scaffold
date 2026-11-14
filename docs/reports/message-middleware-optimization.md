@@ -658,8 +658,8 @@ public <T> SendResult sendSyncWithOutbox(String topic, String tag, T message) {
 
 | 文件路径 | 说明 |
 |---------|------|
-| `apex-interfaces/src/main/resources/db/migration/mysql/V29__add_message_outbox.sql` | MySQL迁移脚本 |
-| `apex-interfaces/src/main/resources/db/migration/postgresql/V29__add_message_outbox.sql` | PostgreSQL迁移脚本 |
+| `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V29__add_message_outbox.sql` | MySQL迁移脚本 |
+| `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V29__add_message_outbox.sql` | PostgreSQL迁移脚本 |
 
 ### 3.2 实体与持久化
 
@@ -988,8 +988,8 @@ AND delivered_at < DATE_SUB(NOW(), INTERVAL 7 DAY);
 #### 数据库迁移
 
 **文件**: 
-- `apex-interfaces/src/main/resources/db/migration/mysql/V29__add_message_outbox.sql`
-- `apex-interfaces/src/main/resources/db/migration/postgresql/V29__add_message_outbox.sql`
+- `apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V29__add_message_outbox.sql`
+- `apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V29__add_message_outbox.sql`
 
 **表结构**: `sys_message_outbox`
 - 包含完整的主键、索引、触发器和注释

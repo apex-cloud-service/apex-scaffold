@@ -56,7 +56,7 @@
 ```bash
 # 步骤 1: 启动应用（确保 watch-enabled=true）
 cd /Users/work/apex-scaffold
-# 如果有 mvn，执行：mvn spring-boot:run -pl apex-interfaces
+# 如果有 mvn，执行：mvn spring-boot:run -pl :apex-system
 
 # 步骤 2: 查看启动日志
 tail -f logs/application.log | grep "Sentinel 规则文件监听"
@@ -107,7 +107,7 @@ for i in {1..50}; do curl http://localhost:8080/api/v1/users > /dev/null 2>&1; s
 
 ```bash
 # 验证定时任务配置
-grep -A 5 "bloom-filter" apex-interfaces/src/main/resources/application-prod.yml
+grep -A 5 "bloom-filter" apex-components-parent/apex-system/src/main/resources/application-prod.yml
 # 预期输出：
 #   rebuild:
 #     enabled: true
