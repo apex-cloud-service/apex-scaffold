@@ -1153,7 +1153,7 @@
             <!-- apex.log.dir: 将测试日志统一输出到项目根目录 logs/ 下，而非各模块 target/ 目录。
                  ${project.basedir} 在叶子模块（如 apex-system）解析为该模块根目录，../logs 即仓库根 logs/。
                  单元测试使用 logback-test.xml，写入 logs/test/apex-test.log。 -->
-            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Djava.awt.headless=true -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../logs -DsocksNonProxyHosts=localhost|127.*|[::1]</argLine>
+            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Djava.awt.headless=true -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../../logs -DsocksNonProxyHosts=localhost|127.*|[::1]</argLine>
             <skipTests>${skip.unit.tests}</skipTests>
             <testFailureIgnore>false</testFailureIgnore>
             <excludes>
@@ -1175,7 +1175,7 @@
           <configuration>
             <!-- apex.log.dir: 将集成测试日志统一输出到项目根目录 logs/ 下。
                  集成测试使用 logback-spring.xml（it profile），写入 logs/apex-scaffold.log 等。 -->
-            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../logs -DsocksNonProxyHosts=localhost|127.*|[::1]</argLine>
+            <argLine>@{argLine} -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Dcsp.sentinel.log.dir=${project.build.directory}/sentinel-logs -Dapex.log.dir=${project.basedir}/../../logs -DsocksNonProxyHosts=localhost|127.*|[::1]</argLine>
             <includes>
               <include>**/*IntegrationTest.java</include>
               <include>**/*E2ETest.java</include>

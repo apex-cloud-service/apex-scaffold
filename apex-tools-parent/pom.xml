@@ -18,9 +18,9 @@
 
     <modules>
         <!-- 卖方内部工具，发行源码与发布包必须剥离，边界仍由叶子 POM 和交付清单约束。 -->
-        <module>../apex-license-tools</module>
-        <module>../apex-generator</module>
-        <module>../apex-tools-deployment</module>
-        <module>../apex-tools-build</module>
+        <module>apex-license-tools</module>
+        <module>apex-generator</module>
+        <module>apex-tools-deployment</module>
+        <module>apex-tools-build</module>
     </modules>
 </project>

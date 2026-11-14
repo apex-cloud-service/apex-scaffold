@@ -33,18 +33,18 @@
 
     <modules>
         <!-- 八个标准发布运行模块 -->
-        <module>../apex-gateway</module>
-        <module>../apex-system-service</module>
-        <module>../apex-auth-service</module>
-        <module>../apex-workflow-service</module>
-        <module>../apex-file-service</module>
-        <module>../apex-office-service</module>
-        <module>../apex-integration-service</module>
-        <module>../apex-aggregation-service</module>
+        <module>apex-gateway</module>
+        <module>apex-system-service</module>
+        <module>apex-auth-service</module>
+        <module>apex-workflow-service</module>
+        <module>apex-file-service</module>
+        <module>apex-office-service</module>
+        <module>apex-integration-service</module>
+        <module>apex-aggregation-service</module>
         <!-- 可选运行模块，不扩大标准发布集合 -->
-        <module>../apex-job-service</module>
-        <module>../apex-masking-service</module>
-        <module>../apex-knowledge-service</module>
+        <module>apex-job-service</module>
+        <module>apex-masking-service</module>
+        <module>apex-knowledge-service</module>
     </modules>
 
     <dependencyManagement>

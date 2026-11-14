@@ -18,6 +18,6 @@
 
     <!-- 项目专属业务库聚合；独立运行模块归属 services，不在此重复聚合。 -->
     <modules>
-        <module>../apex-knowledge</module>
+        <module>apex-knowledge</module>
     </modules>
 </project>

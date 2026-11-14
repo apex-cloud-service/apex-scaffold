@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  - Apex Scaffold - 办公模块 POM 配置文件
+  - 微服务化改造 Phase 5：将办公能力（组织/审批/日历/消息/三平台同步）从单体抽取为独立模块，
+  - 供 apex-office-service 复用；本模块聚合办公领域模型、仓储契约与应用服务。
+  - 约束：本模块 <parent> 指向 apex-components-parent，统一依赖版本继续继承根 POM。
+  - 注意：本骨架由 scaffold-phase5-6.sh 生成，业务代码待 Phase 5 分阶段迁移。
+  - @author Apex Team
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.apex.scaffold</groupId>
+        <artifactId>apex-components-parent</artifactId>
+        <version>1.3.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>apex-office</artifactId>
+    <packaging>jar</packaging>
+    <name>apex-office</name>
+    <description>Apex Scaffold - Office Module (组织/审批/日历/消息/三平台同步 领域+应用)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apex.scaffold</groupId>
+            <artifactId>apex-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <!-- Spring JDBC：阻塞式持久化访问的调度桥接 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <!-- Spring Data Redis Reactive：办公平台 OAuth state 的原子消费 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+        </dependency>
+
+        <!-- Spring 参数校验 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+        </dependency>
+
+        <!-- springdoc：为功能路由生成 OpenAPI 文档 -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Lombok：编译期生成样板代码 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Lombok 编译期注解处理器 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-mapstruct-binding</artifactId>
+            <version>0.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- MapStruct：办公对象转换 -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+
+        <!-- 测试依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- embedded-redis：办公平台 OAuth state 原子消费的集成测试 -->
+        <dependency>
+            <groupId>com.github.codemonstur</groupId>
+            <artifactId>embedded-redis</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.data</groupId>
+                    <artifactId>spring-data-redis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <!-- PMD 排除 MapStruct 等注解处理器生成的源码 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <configuration>
+                    <excludeRoots>
+                        <excludeRoot>${project.build.directory}/generated-sources/annotations</excludeRoot>
+                    </excludeRoots>
+                    <excludes>
+                        <!-- OAuth 标准命名：OfficeOAuthClient 遵循 OAuth 行业惯例，排除 UpperCamelCase 检查 -->
+                        <exclude>**/OfficeOAuthClient.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- 纯 DTO / 请求对象：仅携带数据，无业务决策分支 -->
+                        <exclude>com/apex/scaffold/office/application/dto/**/*</exclude>
+                        <!-- 纯领域 Port/Gateway 接口：无实现逻辑，排除 -->
+                        <exclude>com/apex/scaffold/office/domain/port/**/*</exclude>
+                        <!-- 持久化对象、转换器与 Mapper：无业务决策分支 -->
+                        <exclude>com/apex/scaffold/office/infrastructure/persistence/po/**/*</exclude>
+                        <exclude>com/apex/scaffold/office/infrastructure/persistence/converter/**/*</exclude>
+                        <exclude>com/apex/scaffold/office/infrastructure/persistence/mapper/**/*</exclude>
+                        <exclude>com/apex/scaffold/office/infrastructure/po/**/*</exclude>
+                        <exclude>com/apex/scaffold/office/infrastructure/converter/**/*</exclude>
+                        <exclude>com/apex/scaffold/office/infrastructure/mapper/**/*</exclude>
+                        <!-- 平台 SPI 接口与纯配置 POJO：无实现逻辑 -->
+                        <exclude>com/apex/scaffold/office/infrastructure/spi/**/*</exclude>
+                        <exclude>com/apex/scaffold/office/infrastructure/config/**/*</exclude>
+                    </excludes>
+                    <rules>
+                        <rule>
+                            <element>BUNDLE</element>
+                            <includes>
+                                <!-- 应用服务：核心编排逻辑 -->
+                                <include>com.apex.scaffold.office.application.*</include>
+                                <include>com.apex.scaffold.office.application.support.*</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>LINE</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.75</minimum>
+                                </limit>
+                                <limit>
+                                    <counter>BRANCH</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.55</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                        <rule>
+                            <element>BUNDLE</element>
+                            <includes>
+                                <!-- OAuth state 安全服务与签名校验 -->
+                                <include>com.apex.scaffold.office.infrastructure.security.*</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>LINE</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.60</minimum>
+                                </limit>
+                                <limit>
+                                    <counter>BRANCH</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.45</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>office-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>office-coverage-check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

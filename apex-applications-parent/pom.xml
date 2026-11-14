@@ -17,8 +17,8 @@
     <description>示例应用与组合装配的聚合及构建管理入口，打包行为由叶子模块保留</description>
 
     <modules>
-        <module>../apex-example</module>
+        <module>apex-example</module>
         <!-- 聚合归属 applications，保留 apex-services-bom 继承与普通薄 JAR 行为。 -->
-        <module>../apex-boot-all</module>
+        <module>apex-boot-all</module>
     </modules>
 </project>

@@ -17,16 +17,16 @@
     <description>共享基础、领域、契约与基础设施能力的聚合及构建管理入口</description>
 
     <modules>
-        <module>../apex-common</module>
-        <module>../apex-domain</module>
+        <module>apex-common</module>
+        <module>apex-domain</module>
         <!-- 聚合归属 shared，保留 apex-services-bom 继承以维持既有依赖管理。 -->
-        <module>../apex-api-contract</module>
-        <module>../apex-infrastructure-persistence</module>
-        <module>../apex-infrastructure-cache</module>
-        <module>../apex-infrastructure-messaging</module>
-        <module>../apex-infrastructure-remote</module>
-        <module>../apex-infrastructure-integration</module>
+        <module>apex-api-contract</module>
+        <module>apex-infrastructure-persistence</module>
+        <module>apex-infrastructure-cache</module>
+        <module>apex-infrastructure-messaging</module>
+        <module>apex-infrastructure-remote</module>
+        <module>apex-infrastructure-integration</module>
         <!-- 旧坐标兼容 JAR，仍由五个能力 JAR 提供实现。 -->
-        <module>../apex-infrastructure</module>
+        <module>apex-infrastructure</module>
     </modules>
 </project>

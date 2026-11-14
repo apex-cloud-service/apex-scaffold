@@ -17,12 +17,12 @@
     <description>六个脚手架能力库的聚合与构建管理入口，不承载项目专属业务</description>
 
     <modules>
-        <module>../apex-system</module>
-        <module>../apex-auth</module>
-        <module>../apex-workflow</module>
-        <module>../apex-file</module>
-        <module>../apex-office</module>
+        <module>apex-system</module>
+        <module>apex-auth</module>
+        <module>apex-workflow</module>
+        <module>apex-file</module>
+        <module>apex-office</module>
         <!-- 聚合归属 components，保留 apex-services-bom 继承以维持既有依赖管理。 -->
-        <module>../apex-integration</module>
+        <module>apex-integration</module>
     </modules>
 </project>

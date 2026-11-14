@@ -17,9 +17,9 @@
     <description>存储、授权、任务与分布式事务 starter 的聚合及构建管理入口</description>
 
     <modules>
-        <module>../apex-storage-spring-boot-starter</module>
-        <module>../apex-license-spring-boot-starter</module>
-        <module>../apex-job-spring-boot-starter</module>
-        <module>../apex-seata-spring-boot-starter</module>
+        <module>apex-storage-spring-boot-starter</module>
+        <module>apex-license-spring-boot-starter</module>
+        <module>apex-job-spring-boot-starter</module>
+        <module>apex-seata-spring-boot-starter</module>
     </modules>
 </project>
