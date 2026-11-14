@@ -28,9 +28,9 @@ import org.junit.jupiter.api.Test;
  */
 class TokenV42RecoverTest {
 
-    /** V42 迁移脚本相对仓库根的路径。 */
+    /** V42 迁移脚本相对仓库根的路径（第二阶段嵌套布局：apex-system 位于 components 分组下）。 */
     private static final String V42_SOURCE =
-            "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql";
+            "apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql";
 
     /** 默认 mysql 客户端命令前缀。 */
     private static final List<String> DEFAULT_COMMAND = List.of("mysql", "--no-defaults");

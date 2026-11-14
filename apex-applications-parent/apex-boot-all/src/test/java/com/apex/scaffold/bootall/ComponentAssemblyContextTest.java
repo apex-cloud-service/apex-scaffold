@@ -42,9 +42,19 @@ class ComponentAssemblyContextTest {
     @Test
     @DisplayName("业务库不应再声明不存在的 interfaces 扫描目录")
     void businessLibrariesHaveNoInterfacesDirectory() {
+        // 嵌套布局：业务库位于 apex-components-parent/<module>；先自检业务库源码目录真实存在，
+        // 再断言其 interfaces 目录不存在——防止路径漂移时守护面静默缩水。
         for (String domain : new String[] {"auth", "workflow", "file", "office"}) {
-            assertThat(java.nio.file.Files.exists(java.nio.file.Path.of(
-                            "../apex-" + domain + "/src/main/java/com/apex/scaffold/" + domain + "/interfaces")))
+            java.nio.file.Path librarySources = java.nio.file.Path.of(
+                    "..",
+                    "..",
+                    "apex-components-parent",
+                    "apex-" + domain,
+                    "src/main/java/com/apex/scaffold/" + domain);
+            assertThat(java.nio.file.Files.isDirectory(librarySources))
+                    .as("业务库源码目录必须存在（守护面自检）：" + domain)
+                    .isTrue();
+            assertThat(java.nio.file.Files.exists(librarySources.resolve("interfaces")))
                     .as("业务库协议层应归属运行模块：" + domain)
                     .isFalse();
         }

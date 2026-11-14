@@ -57,8 +57,8 @@ class GatewayRouteProfileConfigTest {
     /** 生产 profile 配置文件，整表重定义路由。 */
     private static final String PROD_CONFIG = "application-prod.yml";
 
-    /** Nacos 下发文件路径，以网关模块目录为基准指向仓库根 config 目录。 */
-    private static final String NACOS_CONFIG = "../config/nacos/apex-gateway.yaml";
+    /** Nacos 下发文件路径，以网关模块目录为基准经两级回仓库根指向 config 目录（嵌套布局）。 */
+    private static final String NACOS_CONFIG = "../../config/nacos/apex-gateway.yaml";
 
     /** 站内信 WebSocket 握手路由标识。 */
     private static final String WEBSOCKET_ROUTE_ID = "office-message-websocket";
@@ -141,15 +141,15 @@ class GatewayRouteProfileConfigTest {
     /** 从服务侧开放 Router 源代码提取路径字面量。 */
     private static final Pattern OPEN_API_LITERAL = Pattern.compile("\"(/open-api/[^\"\\s]+)\"");
 
-    /** 承载开放端点的服务侧 Router 源文件，路径相对仓库根。 */
+    /** 承载开放端点的服务侧 Router 源文件（两级嵌套布局，路径相对仓库根）。 */
     private static final List<Path> OPEN_ROUTER_FILES = List.of(
             Path.of(
-                    "apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/OpenFileRouter.java"),
+                    "apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/OpenFileRouter.java"),
             Path.of(
-                    "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/OpenWorkflowRouter.java"),
+                    "apex-services-bom/apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/OpenWorkflowRouter.java"),
             Path.of(
-                    "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/OpenMessageRouter.java"),
-            Path.of("apex-system/src/main/java/com/apex/scaffold/interfaces/router/OpenUserRouter.java"));
+                    "apex-services-bom/apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/OpenMessageRouter.java"),
+            Path.of("apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/OpenUserRouter.java"));
 
     /**
      * 验证服务侧实际开放路由均被网关 Path 与共享能力映射覆盖。
@@ -415,13 +415,13 @@ class GatewayRouteProfileConfigTest {
     }
 
     /**
-     * 解析仓库相对路径，兼容模块目录与仓库根两种测试工作目录。
+     * 解析仓库相对路径，兼容嵌套布局模块目录（经两级回仓库根）与仓库根两种测试工作目录。
      *
      * @param repositoryRelativePath 仓库相对路径
      * @return 实际存在的文件路径
      */
     private static Path repositoryPath(String repositoryRelativePath) {
-        Path moduleRelative = Path.of("..", repositoryRelativePath);
+        Path moduleRelative = Path.of("..", "..", repositoryRelativePath);
         if (Files.exists(moduleRelative)) {
             return moduleRelative.toAbsolutePath().normalize();
         }

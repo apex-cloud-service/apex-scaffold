@@ -221,7 +221,9 @@ class AuthDataSourceConfigContractTest {
         YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
         for (String name : new String[] {"application-prod.yml", "application.yml", "bootstrap.yml"}) {
             for (PropertySource<?> source : loader.load(
-                    name, new FileSystemResource(ROOT.resolve("apex-auth-service/src/main/resources/" + name)))) {
+                    name,
+                    new FileSystemResource(
+                            ROOT.resolve("apex-services-bom/apex-auth-service/src/main/resources/" + name)))) {
                 environment.getPropertySources().addLast(source);
             }
         }

@@ -93,26 +93,35 @@ class NoAutowiredArchTest {
         assertEquals(0, violations.size(), "违规计数应为 0");
     }
 
-    /** 定位仓库根目录（含 apex-common 目录）。 */
+    /** 定位仓库根目录（以仓库根独有的 AGENTS.md 为标记）。 */
     private static Path locateRepoRoot() {
         Path repoRoot =
                 Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
-        while (repoRoot != null && !Files.isDirectory(repoRoot.resolve("apex-common"))) {
+        while (repoRoot != null && !Files.exists(repoRoot.resolve("AGENTS.md"))) {
             repoRoot = repoRoot.getParent();
         }
-        assertTrue(repoRoot != null, "必须定位到仓库根目录，防止源码守护静默跳过");
+        assertTrue(repoRoot != null, "必须定位到仓库根目录（AGENTS.md 标记），防止源码守护静默跳过");
         return repoRoot;
     }
 
-    /** 列出仓库根下的模块目录（apex-* 前缀）。 */
+    /** 列出两级嵌套布局下的模块目录（<分组父>/apex-*，第二阶段起叶子不再平铺仓库根）。 */
     private static List<String> listModuleDirs(Path repoRoot) throws IOException {
         List<String> moduleDirs = new ArrayList<>();
-        try (Stream<Path> entries = Files.list(repoRoot)) {
-            entries.filter(Files::isDirectory)
-                    .map(path -> path.getFileName().toString())
-                    .filter(name -> name.startsWith("apex-"))
-                    .sorted()
-                    .forEach(moduleDirs::add);
+        try (Stream<Path> groups = Files.list(repoRoot)) {
+            List<Path> groupDirs =
+                    groups.filter(Files::isDirectory)
+                            .filter(path -> path.getFileName().toString().startsWith("apex-"))
+                            .sorted()
+                            .toList();
+            for (Path group : groupDirs) {
+                try (Stream<Path> modules = Files.list(group)) {
+                    modules.filter(Files::isDirectory)
+                            .filter(path -> path.getFileName().toString().startsWith("apex-"))
+                            .sorted()
+                            .forEach(module -> moduleDirs.add(
+                                    group.getFileName().resolve(module.getFileName()).toString()));
+                }
+            }
         }
         return moduleDirs;
     }

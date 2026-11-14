@@ -31,15 +31,15 @@ class CapabilityUsagePropertiesTest {
     /** 从 Router 源文件提取以 {@code /open-api/} 开头的字符串字面量。 */
     private static final Pattern OPEN_API_LITERAL = Pattern.compile("\"(/open-api/[^\"\\s]+)\"");
 
-    /** 实际承载开放端点的 Router 源文件（相对仓库根）。 */
+    /** 实际承载开放端点的 Router 源文件（两级嵌套布局，相对仓库根）。 */
     private static final List<Path> OPEN_ROUTER_FILES = List.of(
             Path.of(
-                    "apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/OpenFileRouter.java"),
+                    "apex-services-bom/apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/OpenFileRouter.java"),
             Path.of(
-                    "apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/OpenWorkflowRouter.java"),
+                    "apex-services-bom/apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/OpenWorkflowRouter.java"),
             Path.of(
-                    "apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/OpenMessageRouter.java"),
-            Path.of("apex-system/src/main/java/com/apex/scaffold/interfaces/router/OpenUserRouter.java"));
+                    "apex-services-bom/apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/OpenMessageRouter.java"),
+            Path.of("apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/OpenUserRouter.java"));
 
     /**
      * 验证默认计量前缀覆盖所有服务侧开放 Router 中声明的 {@code /open-api/**} 端点。
@@ -100,7 +100,8 @@ class CapabilityUsagePropertiesTest {
     /**
      * 静态提取实际开放 Router 中的 {@code /open-api/...} 字面量路径。
      *
-     * <p>Surefire 以模块目录为工作目录，因此优先使用 {@code ../<router>}；若测试从仓库根运行，
+     * <p>Surefire 以模块目录为工作目录（第二阶段嵌套布局下位于 {@code <分组父>/<模块>}），
+     * 因此优先使用 {@code ../../<router>} 回到仓库根解析；若测试从仓库根运行，
      * 则直接使用仓库相对路径。两种方式均不读取外部运行时状态。
      *
      * @return 去重后的实际开放路径列表
@@ -122,7 +123,7 @@ class CapabilityUsagePropertiesTest {
      * @throws IOException 文件读取失败
      */
     private List<String> extractRoutes(Path repositoryRelativePath) throws IOException {
-        Path fromModule = Path.of("..").resolve(repositoryRelativePath).normalize();
+        Path fromModule = Path.of("..", "..").resolve(repositoryRelativePath).normalize();
         Path source = Files.exists(fromModule) ? fromModule : repositoryRelativePath;
         assertThat(Files.exists(source))
                 .as("开放 Router 源文件必须存在: %s", repositoryRelativePath)

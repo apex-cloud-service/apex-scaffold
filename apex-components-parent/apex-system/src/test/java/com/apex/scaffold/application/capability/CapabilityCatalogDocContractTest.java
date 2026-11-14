@@ -31,8 +31,8 @@ import org.junit.jupiter.api.Test;
 @DisplayName("能力目录文档契约测试")
 class CapabilityCatalogDocContractTest {
 
-    /** 文档相对模块目录的路径（{@code apex-system/../docs/...}）。 */
-    private static final Path DOC_PATH = Path.of("..", "docs", "02-architecture", "capability-catalog.md");
+    /** 文档相对模块目录的路径（嵌套布局下经两级回到仓库根：{@code ../../docs/...}）。 */
+    private static final Path DOC_PATH = Path.of("..", "..", "docs", "02-architecture", "capability-catalog.md");
 
     /** 能力清单表头首列（用于跳过表头行）。 */
     private static final String HEADER_FIRST_CELL = "能力编码";

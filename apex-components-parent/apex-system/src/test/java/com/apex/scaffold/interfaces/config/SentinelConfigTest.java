@@ -364,6 +364,7 @@ class SentinelConfigTest {
         Path templatePath = Path.of(
                         System.getProperty("user.dir"),
                         "..",
+                        "..",
                         "config",
                         "sentinel",
                         resource.substring(resource.lastIndexOf('/') + 1))

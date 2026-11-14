@@ -24,20 +24,24 @@ class LogbackConfigurationTest {
         }) {
             verify(Path.of("src/main/resources/logback-spring.xml"), profiles);
         }
-        verify(Path.of("../apex-auth-service/src/main/resources/logback-spring.xml"), new String[] {});
+        verify(
+                Path.of("../../apex-services-bom/apex-auth-service/src/main/resources/logback-spring.xml"),
+                new String[] {});
     }
 
     @Test
     void jsonFilesPreserveServiceIdentityAndRequestFields() throws Exception {
-        for (String module : new String[] {
-            "apex-system",
-            "apex-gateway",
-            "apex-auth-service",
-            "apex-workflow-service",
-            "apex-office-service",
-            "apex-file-service"
+        // 第二阶段嵌套布局：本模块用自身相对路径，跨组模块经两级回到仓库根再进分组目录
+        for (String[] moduleSpec : new String[][] {
+            {"apex-system", "src/main/resources"},
+            {"apex-gateway", "../../apex-services-bom/apex-gateway/src/main/resources"},
+            {"apex-auth-service", "../../apex-services-bom/apex-auth-service/src/main/resources"},
+            {"apex-workflow-service", "../../apex-services-bom/apex-workflow-service/src/main/resources"},
+            {"apex-office-service", "../../apex-services-bom/apex-office-service/src/main/resources"},
+            {"apex-file-service", "../../apex-services-bom/apex-file-service/src/main/resources"}
         }) {
-            Path configuration = Path.of("../", module, "src/main/resources/logback-spring.xml");
+            String module = moduleSpec[0];
+            Path configuration = Path.of(moduleSpec[1], "logback-spring.xml");
             for (String profile : new String[] {"dev", "test", "it", "prod"}) {
                 LoggerContext context = new LoggerContext();
                 context.setMDCAdapter(org.slf4j.MDC.getMDCAdapter());

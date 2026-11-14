@@ -59,7 +59,8 @@ class MessageOutboxDialectTest {
         }
         Path root = Path.of(System.getProperty("maven.multiModuleProjectDirectory"));
         String schema = Files.readString(root.resolve(
-                "apex-system/src/main/resources/db/migration/" + dialect + "/V45__add_message_outbox.sql"));
+                "apex-components-parent/apex-system/src/main/resources/db/migration/" + dialect
+                        + "/V45__add_message_outbox.sql"));
         for (String statement : splitStatements(schema)) {
             if (!statement.isBlank()) {
                 jdbc.execute(statement);

@@ -47,16 +47,16 @@ import org.junit.jupiter.api.Test;
  */
 class NoBoundedElasticArchGuardTest {
 
-    /** 需要扫描的业务模块名称，按 DDD 分层与物理目录保持一致。 */
+    /** 需要扫描的业务模块两级路径（第二阶段嵌套布局：<分组父>/<artifactId>）。 */
     private static final String[] MODULES = {
-        "apex-common",
-        "apex-domain",
-        "apex-infrastructure-persistence",
-        "apex-infrastructure-cache",
-        "apex-infrastructure-messaging",
-        "apex-infrastructure-remote",
-        "apex-infrastructure-integration",
-        "apex-system"
+        "apex-shared-parent/apex-common",
+        "apex-shared-parent/apex-domain",
+        "apex-shared-parent/apex-infrastructure-persistence",
+        "apex-shared-parent/apex-infrastructure-cache",
+        "apex-shared-parent/apex-infrastructure-messaging",
+        "apex-shared-parent/apex-infrastructure-remote",
+        "apex-shared-parent/apex-infrastructure-integration",
+        "apex-components-parent/apex-system"
     };
 
     /** 每个模块下源码所在的相对路径。 */
@@ -97,17 +97,16 @@ class NoBoundedElasticArchGuardTest {
     void noDirectBoundedElasticCallsInProductionSources() throws IOException {
         Path repoRoot =
                 Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
-        while (repoRoot != null && !Files.isDirectory(repoRoot.resolve("apex-common"))) {
+        while (repoRoot != null && !Files.exists(repoRoot.resolve("AGENTS.md"))) {
             repoRoot = repoRoot.getParent();
         }
-        assertTrue(repoRoot != null, "必须定位到仓库根目录，防止源码守护静默跳过");
+        assertTrue(repoRoot != null, "必须定位到仓库根目录（AGENTS.md 标记），防止源码守护静默跳过");
         List<Violation> violations = new ArrayList<>();
 
         for (String module : MODULES) {
             Path moduleSrc = repoRoot.resolve(module).resolve(SRC_MAIN_JAVA);
-            if (!Files.isDirectory(moduleSrc)) {
-                continue;
-            }
+            // 受约束模块目录缺失即失败，防止布局漂移时守护面静默缩水
+            assertTrue(Files.isDirectory(moduleSrc), "受约束模块源码目录必须存在: " + module);
             scanDirectory(moduleSrc, repoRoot, violations);
         }
 

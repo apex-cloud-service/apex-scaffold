@@ -41,12 +41,12 @@ public final class TokenV42Recover {
     /** 退出码：参数无效。 */
     private static final int EXIT_USAGE = 2;
 
-    /** 被校验的迁移脚本相对仓库根的路径。 */
+    /** 被校验的迁移脚本相对仓库根的路径（第二阶段嵌套布局：apex-system 位于 components 分组下）。 */
     private static final String V42_SOURCE =
-            "apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql";
+            "apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql";
 
-    /** 代码源上溯层数：{@code target/classes} 与 {@code target/local-deployment.jar} 均为 3 级。 */
-    private static final int SOURCE_PARENT_LEVELS = 3;
+    /** 代码源上溯层数：嵌套布局下 {@code <分组父>/<模块>/target/classes} 与 {@code .../target/local-deployment.jar} 均为 4 级到仓库根。 */
+    private static final int SOURCE_PARENT_LEVELS = 4;
 
     /** 期望的新增列数量，防止源文件被静默改写。 */
     private static final int EXPECTED_COLUMN_COUNT = 10;

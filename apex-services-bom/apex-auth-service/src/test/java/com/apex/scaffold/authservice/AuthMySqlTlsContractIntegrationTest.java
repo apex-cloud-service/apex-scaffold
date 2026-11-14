@@ -231,7 +231,8 @@ class AuthMySqlTlsContractIntegrationTest {
         var loader = new YamlPropertySourceLoader();
         for (var source : loader.load(
                 "prod",
-                new FileSystemResource(ROOT.resolve("apex-auth-service/src/main/resources/application-prod.yml")))) {
+                new FileSystemResource(
+                        ROOT.resolve("apex-services-bom/apex-auth-service/src/main/resources/application-prod.yml")))) {
             environment.getPropertySources().addLast(source);
         }
         return environment;

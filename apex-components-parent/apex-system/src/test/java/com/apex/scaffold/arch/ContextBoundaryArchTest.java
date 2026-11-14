@@ -32,14 +32,14 @@ import org.junit.jupiter.api.Test;
 @DisplayName("限界上下文边界守卫")
 class ContextBoundaryArchTest {
 
-    /** 各业务上下文 → 其 main 源码目录（相对仓库根；测试工作目录为模块目录）。 */
+    /** 各业务上下文 → 其 main 源码目录（两级嵌套布局，相对仓库根；测试工作目录为模块目录）。 */
     private static final String[][] CONTEXTS = {
-        {"system", "apex-system/src/main/java/com/apex/scaffold"},
-        {"auth", "apex-auth/src/main/java/com/apex/scaffold/auth"},
-        {"workflow", "apex-workflow/src/main/java/com/apex/scaffold/workflow"},
-        {"file", "apex-file/src/main/java/com/apex/scaffold/file"},
-        {"office", "apex-office/src/main/java/com/apex/scaffold/office"},
-        {"integration", "apex-integration/src/main/java/com/apex/scaffold/integration"}
+        {"system", "apex-components-parent/apex-system/src/main/java/com/apex/scaffold"},
+        {"auth", "apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth"},
+        {"workflow", "apex-components-parent/apex-workflow/src/main/java/com/apex/scaffold/workflow"},
+        {"file", "apex-components-parent/apex-file/src/main/java/com/apex/scaffold/file"},
+        {"office", "apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office"},
+        {"integration", "apex-components-parent/apex-integration/src/main/java/com/apex/scaffold/integration"}
     };
 
     /**
