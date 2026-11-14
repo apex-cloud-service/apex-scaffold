@@ -948,6 +948,26 @@ mvnd --version
 
 结构重组、有效模型等价、依赖等价、三档打包、完整 Maven 门禁、prebuilt 镜像构建与运行、Compose 编排及日志路径均已实际通过。**仅图表人工视觉观感确认仍缺失**，已用 OCR 与几何检测提供程序化可读性证据；如需正式视觉签核，应在具备图像查看能力的环境复核 128 / 129 / 95 三张图。
 
+### 14.6 收尾核验补充（2026-11-14）
+
+对第 14 节实施结果做三路复核（POM 结构、文档、脚本与测试）。结论：**结构、注册表、门禁测试、Containerfile、release.sh 与主要文档均与第 14.1 节一致，无功能性遗漏**；实施后分组改动已随 `63e858b1` / `bba338e5`（2026-11-13）提交入库。复核发现以下收尾项并已在本轮闭合：
+
+| 项 | 处置 |
+| --- | --- |
+| 第 7.3 节点名文档 `交付范围` 只同步了第 2 节 | 第 4 节数据库基线补 integration 域并刷新各域最新版本（system V90、auth V64、workflow V6、file V7、office V10、integration V3；MySQL/PG 双库逐域核对一致） |
+| 第 7.3 节点名文档 `SVG 维护指南` 未同步 | 更新图表计数与索引引用（`docs/diagrams/README.md`）、退役模块统计路径、监控面板路径；触发条件表补 Maven 分组场景（128 / 129 / 95） |
+| `apex.sh` 注释与帮助文案 4 处「7 个发布服务」 | 改为 8，与注册表 service-jar 集合一致（列表本就取自注册表，无行为变化） |
+| `ci-cd.yml` build-image 矩阵仅 6 服务、注释「5 个业务服务」 | 补 integration-service、aggregation-service 共 8 个，与 `release.sh SERVICES` 口径一致 |
+| `ci-cd.yml` GitHub Release 产物 7 JAR（含 example，第 7.7 节挂起项） | 经本轮确认对齐为 8 个标准服务 JAR（补 integration / aggregation、移除 example） |
+| `start-local.sh` 对无库服务注入数据源 | 注入范围收窄为六个有库业务服务，与 `podman-compose.yml` 注入范围一致（gateway / aggregation / job / masking 均跳过，后三者经核实无 JDBC 依赖） |
+| `risk-register.md` R-01 仍标「开放」 | 迁移已于 2026-10-31 随 `0e9dba36` 入库，2026-11-14 复核关闭；`change-control.md`、`quality-plan.md` 中对应失效陈述同步更新 |
+| `grafana/README.md` Prometheus job 清单缺 aggregation | 补齐（`prometheus.yml` 实有 8 个应用 job） |
+| 根 `pom.xml` surefire 注释与 `scripts/lib/README.md` 示例引用退役 `apex-interfaces` | 改为现行模块路径；argLine 与示例行为不变 |
+| `configuration.md` Nacos Data ID 清单缺 integration / aggregation | 补两行服务私有 Data ID（未建模板，按需引入；`spring.application.name` 已核对） |
+| target/ 下构建残渣 37 个 `consumer-*.pom` + 37 个 `failsafe-summary.xml` | 按 AGENTS.md「确认后可清除」约定删除，均位于 target/ 内、不入库 |
+
+保留不动项：历史报告与周期报告中的旧模块计数按第 7.1 节历史材料原则保留原貌；Containerfile `source` 分支工具链整改与图表人工视觉确认仍为第 14.3 节既有未完成项，不在本轮虚构通过。
+
 ## 15. 相关现有文件
 
 - [仓库协作与构建约束](../../../AGENTS.md)。

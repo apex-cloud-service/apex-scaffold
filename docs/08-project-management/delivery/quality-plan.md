@@ -139,7 +139,7 @@ mvnd -T4 -B clean verify
 | 微服务验收 | [microservice-acceptance-checklist.md](../checklists/microservice-acceptance-checklist.md) | 离线项已满足，在线项待环境 | 2026-10-12 |
 | Python→Java 工具迁移 | [迁移总结](../../06-testing/python-to-java-tools-migration-summary-20261021.md) | 链接检查器已 Java 化 | 2026-10-21 |
 
-> **时效声明**：上述证据均在 `b8e5733` 之前或同期产出。工作区当前存在未提交的 V70～V72 迁移与代码改动（见 [风险登记册](./risk-register.md) R-01），这些改动**没有**对应的完整门禁记录。发布前必须重跑完整门禁。
+> **时效声明**：上述证据均在 `b8e5733` 之前或同期产出，仅覆盖当时基线。原登记的未提交 V70～V72 迁移已于 2026-10-31 随 `0e9dba36` 入库（[风险登记册](./risk-register.md) R-01 已于 2026-11-14 关闭）；其后的微服务分组实施另有完整门禁记录（见 [Maven 分组方案](../plans/maven-parent-grouping-optimization-plan.md) 第 14 节，2026-11-13 `clean verify` 43/43 项目通过）。发布前仍必须以当前基线重跑完整门禁。
 
 ---
 

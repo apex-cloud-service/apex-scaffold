@@ -773,6 +773,8 @@ spring:
 | `apex-workflow-service.yaml` | 服务私有 | `apex-workflow-service` | Phase 3 引入 |
 | `apex-office-service.yaml` | 服务私有 | `apex-office-service` | Phase 5 引入 |
 | `apex-file-service.yaml` | 服务私有 | `apex-file-service` | Phase 4 引入 |
+| `apex-integration-service.yaml` | 服务私有 | `apex-integration-service` | 未建模板（按需引入） |
+| `apex-aggregation-service.yaml` | 服务私有 | `apex-aggregation-service` | 未建模板（按需引入） |
 | `{service}-flow-rules` | Sentinel | 各微服务 | [`config/nacos/sentinel/`](../../config/nacos/sentinel/README.md) |
 | `{service}-degrade-rules` | Sentinel | 各微服务 | [`config/nacos/sentinel/`](../../config/nacos/sentinel/README.md) |
 

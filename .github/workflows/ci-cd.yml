@@ -197,7 +197,7 @@ jobs:
 
   # ============================================
   # 构建镜像(仅main分支)
-  # 微服务拓扑：为网关 + 5 个业务服务分别构建独立镜像（一个镜像只打包一个服务）
+  # 微服务拓扑：为网关 + 六个业务服务 + 只读查询聚合服务共 8 个标准服务分别构建独立镜像（一个镜像只打包一个服务）
   # ============================================
   build-image:
     name: Build Podman Image (${{ matrix.service }})
@@ -214,6 +214,8 @@ jobs:
           - apex-workflow-service
           - apex-office-service
           - apex-file-service
+          - apex-integration-service
+          - apex-aggregation-service
     
     steps:
       - name: Checkout code
@@ -286,7 +288,8 @@ jobs:
             apex-workflow-service/target/*.jar
             apex-office-service/target/*.jar
             apex-file-service/target/*.jar
-            apex-example/target/*.jar
+            apex-integration-service/target/*.jar
+            apex-aggregation-service/target/*.jar
             docs/03-api/openapi/openapi-latest.json
             docs/03-api/openapi/openapi-latest.yaml
           generate_release_notes: true

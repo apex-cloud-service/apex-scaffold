@@ -235,7 +235,7 @@ cmd_verify() {
 
 # ------------------------------------------------------------
 # 函数: cmd_package [-P 档位]
-# 用途: 构建 7 个发布服务 fat jar + 部署工具（apex-tools-deployment），
+# 用途: 构建 8 个发布服务 fat jar + 部署工具（apex-tools-deployment），
 #       并逐一校验每个服务 target 下"有且仅有一个发布 JAR"。
 # 口径: 模块列表取注册表 service-jar 集合；构建参数与 release.sh 阶段 1 一致
 #       （-am 连带依赖、-DskipTests）；唯一性校验排除 -sources/-javadoc/
@@ -578,7 +578,7 @@ precheck_common() {
 # precheck: 校验 java 可用 + 模块可执行 JAR 存在（排除辅助 classifier，
 #           与发布口径一致），缺失时提示 build --module。
 # health:   jar_health 单模块 readiness（java -jar 模式只起单个服务，
-#           不适用"7 服务全量 readiness"的 deploy_health）。
+#           不适用"8 服务全量 readiness"的 deploy_health）。
 # 模块缺省: apex-gateway（与 app.sh 的默认一致）。
 # ------------------------------------------------------------
 deploy_jar() {
@@ -885,7 +885,7 @@ k8s_precheck() {
 
 # ------------------------------------------------------------
 # 函数: deploy_health
-# 用途: 7 个发布服务（注册表 service-jar 全集）的 readiness 聚合探测。
+# 用途: 8 个发布服务（注册表 service-jar 全集）的 readiness 聚合探测。
 # 适配: compose 双引擎（发布主机端口）与整仓检查通用；java -jar 模式请用
 #       jar_health 单模块探测。
 # 端口: 优先取注册表 hostPort（Compose 宿主侧映射），缺省回退 managementPort，
@@ -1007,7 +1007,7 @@ Apex Scaffold 生命周期统一编排入口（apex-tools-build）
                           整仓构建（委托 build.sh）；--module 时 mvnd -pl 列表 -am
   test [--module m]       快速测试（默认整仓 mvnd -T4 -B test）
   verify                  完整回归门禁 mvnd -T4 -B clean verify
-  package [-P 档位]       构建 7 个发布服务 fat jar 并逐一校验唯一性
+  package [-P 档位]       构建 8 个发布服务 fat jar 并逐一校验唯一性
   release [档位] [版本] [--allow-dirty]
                           前置检查后委托 release.sh 产出 dist/*.zip(.sha256)
   image build [--module m|--all] [--mode prebuilt|source] [--engine podman|docker] [--tag 引用]

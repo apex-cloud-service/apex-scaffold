@@ -4,7 +4,7 @@
 > **核对日期**: 2026-10-30
 > **基线提交**: `b8e5733`（`main`）
 > **项目版本**: 1.3.1（根 [pom.xml](../../../pom.xml)）
-> **当前结构同步**: 2026-11-13（第 2 节七组/递归模块口径；历史基线与验证记录不追溯改写）
+> **当前结构同步**: 2026-11-13（第 2 节七组/递归模块口径）；2026-11-14（第 4 节数据库基线刷新为六域并核对版本；历史基线与验证记录不追溯改写）
 > **维护者**: Apex Team
 
 本文档定义一次交付的边界：包含哪些模块、依赖哪些运行组件、数据库处在什么版本、哪些内容**不在**本次交付内。范围和基线变化时先改本文档。
@@ -100,14 +100,14 @@
 | 业务域 | 数据库 | 迁移目录 | 当前最新版本 |
 | --- | --- | --- | --- |
 | system | `apex_system` | [mysql](../../../apex-system/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-system/src/main/resources/db/migration/postgresql/) | V91（V91 为 2026-11-14 知识库菜单权限种子） |
-| auth | `apex_auth` | [mysql](../../../apex-auth-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-auth-service/src/main/resources/db/migration/postgresql/) | V59 |
-| workflow | `apex_workflow` | [mysql](../../../apex-workflow-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-workflow-service/src/main/resources/db/migration/postgresql/) | V5 |
-| file | `apex_file` | [mysql](../../../apex-file-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-file-service/src/main/resources/db/migration/postgresql/) | V6 |
+| auth | `apex_auth` | [mysql](../../../apex-auth-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-auth-service/src/main/resources/db/migration/postgresql/) | V64 |
+| workflow | `apex_workflow` | [mysql](../../../apex-workflow-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-workflow-service/src/main/resources/db/migration/postgresql/) | V6 |
+| file | `apex_file` | [mysql](../../../apex-file-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-file-service/src/main/resources/db/migration/postgresql/) | V7 |
 | office | `apex_office` | [mysql](../../../apex-office-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-office-service/src/main/resources/db/migration/postgresql/) | V10 |
 | integration | `apex_integration` | [mysql](../../../apex-integration/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-integration/src/main/resources/db/migration/postgresql/) | V3 |
 | knowledge | `apex_knowledge` | [mysql](../../../apex-knowledge-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-knowledge-service/src/main/resources/db/migration/postgresql/) | V1（2026-11-14 新增知识库域） |
 
-**基线注意**：上表按工作区当前文件统计（2026-11-14 核对，各域 MySQL 与 PostgreSQL 版本集合一致）；已执行迁移禁止修改或重排，破坏 Flyway checksum 会导致存量环境启动失败。
+**基线注意**：上表按工作区当前文件统计（2026-11-14 核对，各域 MySQL 与 PostgreSQL 版本集合一致，迁移均已提交入库）。已执行迁移禁止修改或重排，破坏 Flyway checksum 会导致存量环境启动失败。
 
 ---
 
@@ -165,6 +165,7 @@
 | 2026-10-30 | `b8e5733` + 工作区未提交 V70～V72 | 建立本文档；登记数据库基线缺口 |
 | 2026-11-12 | 工作区（未提交） | 新增只读查询聚合服务 `apex-aggregation-service`（端口 8098，无 DB）；模块数 35→36，`SERVICES` 数组 7→8 |
 | 2026-11-13 | 第一阶段分组实施（未提交） | 根直接 36 项收拢为七组，新增六个 parent，递归 42 模块/含根 43 项，原 35 个 JAR 与八服务发布集合不变；同步当前说明，验证结果另据实际执行 |
+| 2026-11-14 | `bba338e5`（`main`） | 分组实施入库（`63e858b1`/`bba338e5`，2026-11-13 23:13）；第 4 节数据库基线刷新为六域（system V90、auth V64、workflow V6、file V7、office V10、integration V3）；R-01 关闭（V70～V72 已于 2026-10-31 `0e9dba36` 提交） |
 
 ---
 

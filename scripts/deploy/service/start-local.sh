@@ -21,18 +21,22 @@ export SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-prod,enterprise}"
 
 # 数据库配置（指向 Podman Compose 中的 MySQL，按模块使用独立库）
 # 微服务独立库：apex-auth-service -> apex_auth、apex-system-service -> apex_system、……；
-# 网关为响应式服务，不直连数据库，跳过数据源注入。
-if [ "${SERVICE_MODULE}" != "apex-gateway" ]; then
-  DB_NAME="apex_$(echo "${SERVICE_MODULE}" | sed -e 's/^apex-//' -e 's/-service$//')"
-  export DB_HOST="${DB_HOST:-localhost}"
-  export DB_PORT="${DB_PORT:-3306}"
-  export DB_NAME
-  export DB_USERNAME="${DB_USERNAME:-root}"
-  export DB_PASSWORD="${DB_PASSWORD:-apex-root}"
-  export SPRING_DATASOURCE_URL="jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false"
-  export SPRING_DATASOURCE_USERNAME="${DB_USERNAME}"
-  export SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}"
-fi
+# 仅六个有库业务服务注入数据源（与 podman-compose.yml 注入范围一致）：网关为响应式
+# 服务不直连数据库，聚合服务无 DB（仅 WebClient 聚合内部接口），job/masking 服务
+# 无持久化，四者均跳过注入。
+case "${SERVICE_MODULE}" in
+  apex-auth-service|apex-system-service|apex-workflow-service|apex-office-service|apex-file-service|apex-integration-service)
+    DB_NAME="apex_$(echo "${SERVICE_MODULE}" | sed -e 's/^apex-//' -e 's/-service$//')"
+    export DB_HOST="${DB_HOST:-localhost}"
+    export DB_PORT="${DB_PORT:-3306}"
+    export DB_NAME
+    export DB_USERNAME="${DB_USERNAME:-root}"
+    export DB_PASSWORD="${DB_PASSWORD:-apex-root}"
+    export SPRING_DATASOURCE_URL="jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false"
+    export SPRING_DATASOURCE_USERNAME="${DB_USERNAME}"
+    export SPRING_DATASOURCE_PASSWORD="${DB_PASSWORD}"
+    ;;
+esac
 
 # Redis 配置
 export REDIS_HOST="localhost"

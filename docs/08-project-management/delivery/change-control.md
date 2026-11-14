@@ -69,7 +69,7 @@
 | 无未提交迁移 | `git status <模块>/src/main/resources/db/migration` 为空 |
 | 目标库已执行到最新 | 查询 `flyway_schema_history` 的 `success=1` 最大版本 |
 
-> 当前存在未提交的 system V70～V72，违反“无未提交迁移”项，见 [风险登记册](./risk-register.md) R-01。
+> 2026-10-30 曾登记 system V70～V72 未提交、违反“无未提交迁移”项（[风险登记册](./risk-register.md) R-01）；该批迁移已于 2026-10-31 随 `0e9dba36` 提交入库，R-01 已于 2026-11-14 复核关闭。本核对项当前满足，仍按上表在交付时逐项复查。
 
 ### 2.4 回滚边界
 

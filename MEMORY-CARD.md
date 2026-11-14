@@ -6,7 +6,7 @@
 
 ## 1. 一句话
 
-Spring Boot 3.5.15 / Java 21 / WebFlux 纯响应式 / DDD 的 Java 后端基座：**API 网关 + 六个业务服务 + 任务代理 + 可选脱敏 + 可选知识库 + 组合部署档**，业务代码以库模块复用，运行模块只负责启动与装配。仓库不含前端源码（前端独立仓 `apex-admin-web`）。
+Spring Boot 3.5.15 / Java 21 / WebFlux 纯响应式 / DDD 的 Java 后端基座：**API 网关 + 六个业务服务 + 只读查询聚合 + 任务代理 + 可选脱敏 + 可选知识库 + 组合部署档**，业务代码以库模块复用，运行模块只负责启动与装配。仓库不含前端源码（前端独立仓 `apex-admin-web`）。
 
 ## 2. 构建（唯一合法路径）
 
@@ -29,7 +29,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | `apex-auth-service` | 8081 | `apex_auth`（dev `apex_auth_dev`） | V64 |
 | `apex-system-service` | 8082（管理 8083） | `apex_system` | V90 |
 | `apex-workflow-service` | 8093 | `apex_workflow` | V6 |
-| `apex-office-service` | 8084 | `apex_office` | V8 |
+| `apex-office-service` | 8084 | `apex_office` | V10 |
 | `apex-file-service` | 8085 | `apex_file` | V7 |
 | `apex-integration-service` | 8094（管理 8097） | `apex_integration` | V3 |
 | `apex-aggregation-service` | 8098 | 无（只读聚合，无 DB/迁移/事务） | — |
@@ -39,7 +39,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | `apex-boot-all` | 缺省 8080 | 单进程组合多库 | 复用组件迁移 |
 
 - 迁移**按服务归位**在业务库 / 运行模块的 `src/main/resources/db/migration/{mysql,postgresql}`。注意物理位置有历史遗留：system 迁移在 **`apex-system`**（不在 `-service`）、auth 迁移在 **`apex-auth-service`**（不在 `apex-auth`）、integration 迁移在 **`apex-integration`**（库模块，不在 `-service`）；新增时跟随现有位置，不要另起一套。
-- 规模：MySQL 137 + PostgreSQL 137 = **274 个已跟踪迁移**（knowledge 域 2026-11-14 增 V1，双方言配对）。
+- 规模：MySQL 139 + PostgreSQL 139 = **278 个已跟踪迁移**（office 域 11-12～11-13 增 V9/V10；system V91 与 knowledge V1 为 11-14 知识库落地新增，双方言配对）。
 - system 管理端口缺省 8083；workflow 业务端口 2026-11-07 起为 8093，两者不再冲突，同机直跑无须改端口。
 - 组合档 `apex-boot-all` 只装配不实现，无自有 `application.yml`；多实例部署必须显式选 MQ，否则 `apex.events.channel=auto` 退化为进程内派发。
 
@@ -68,9 +68,9 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 统一授权「默认开启」判断错误 | 组件库缺省 true，但 `apex-system-service/application.yml` 覆盖为 `${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}` → 排查按「运行模块 yml → 环境变量 → 组件默认」 |
 | 集成服务启动即失败 | 连接器/设备子域依赖外部 EMQX；本地无 broker 时需显式关闭 MQTT 并核 `hivemq-mqtt-client` 为 optional |
 
-## 6. 当前状态（2026-11-12）
+## 6. 当前状态（2026-11-14）
 
-- **规模**：主源码 **2132** 个 Java 文件、测试类 **724** 个；启动入口 **12** 个（11 个部署单元含 `apex-example` + `apex-boot-all` 组合档）。
+- **规模**：主源码 **2153** 个 Java 文件、测试类 **745** 个；启动入口 **12** 个（11 个部署单元含 `apex-example` + `apex-boot-all` 组合档）。
 - **主线《评审收口调整方案》**（`docs/08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md`）：
   - 批次 **A（A1–A7 统一认证）已完成并提交**（10-31）。
   - 批次 **B（B1–B9 多租户）已完成并提交**（10-31～11-01，B9 为 M2 收官）。
@@ -78,7 +78,7 @@ mvnd -T4 -B clean verify                  # 全量基线
   - 批次 **D 完成 D1/D2/D4/D5/D6**（D5 共享数据服务层 11-02 提交）；**D3 为文档沉淀**，`/open-api` 路由已补。
   - 批次 **E1–E4 已完成并提交**（11-02）：`apex-integration`（connector/device 双子域）+ `apex-integration-service` 8094，含 EMQX ACL 与真实环境验证。
 - **中台架构整改 G1–G8**（`docs/08-project-management/plans/middle-platform-remediation-plan.md`）：11-10 提交 `3b61027b` 实施完成——服务侧能力二次校验默认开启、auth 域分层倒置清理、治理字段与守卫覆盖补齐；`clean verify` 6,251 测试通过，真实 Nacos/MySQL/RocketMQ/EMQX/Seata TC 与第三方消费方验收仍未验证。
-- **工作树**：11-13 Maven 分组父 POM 第一阶段已实施（新增 6 个分组 parent、根直接聚合 7 组、递归 42 模块/含根 43 项目；22 叶子迁移 parent、13 保留 services-bom 继承），工作区改动以 `git status` 实测为准，**不得把在途改动当作已提交**。
+- **Maven 分组**：`63e858b1`（11-13）根聚合收拢为七组并新增 6 个分组 parent（根直接 7 组、递归 42 模块/含根 43 项目；22 叶子迁移 parent、13 保留 services-bom 继承），`bba338e5` 同步文档与图表；11-13 同批提交聚合服务、办公双库迁移回归与 K8s 八服务拓扑。**11-14 分组收尾核验入库**（CI 八服务矩阵、start-local 数据源注入收窄、R-01 关闭、文档基线刷新，见 14.6 节），**同日 RAG 知识库落地提交**（后端 `a63e6666` 140 文件 / 前端 `1efc3cf` 8 文件，45/45 模块 verify 全绿），工作树已清空（11-14 实测），**不得把在途改动当作已提交**。
 - **结构债**：`apex-system` 仍四层合一（interfaces/application/domain/infrastructure 同包），868 个主源码文件；C4/D07 已于 2026-11-01 裁决维持现状不实施（记录于 `docs/08-project-management/plans/platform-closure-remediation-plan.md`）。
 
 ## 7. 下一步

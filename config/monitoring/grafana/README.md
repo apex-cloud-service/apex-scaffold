@@ -132,7 +132,7 @@ podman-compose -f podman-compose.yml up -d
 
 Prometheus 按服务拆分为独立 job：`apex-gateway`、`apex-auth-service`、
 `apex-system-service`、`apex-workflow-service`、`apex-office-service`、
-`apex-file-service`、`apex-integration-service`。所有应用指标统一带
+`apex-file-service`、`apex-integration-service`、`apex-aggregation-service`。所有应用指标统一带
 `application="apex-scaffold"`，并以 `module="gateway|auth-service|system-service|..."` 区分服务。
 
 部署多实例时：

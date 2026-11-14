@@ -1,8 +1,8 @@
 # SVG 架构图表维护指南
 
-> 版本: v1.0 | 发布日期: 2026-09-10 | 维护团队: 架构团队
+> 版本: v1.1 | 发布日期: 2026-09-10 | v1.1 更新: 2026-11-14 | 维护团队: 架构团队
 
-本文档规范了 Apex Scaffold 项目中 29 张 SVG 架构图表的维护流程,确保图表与代码实现保持同步。
+本文档规范了 Apex Scaffold 项目 `docs/diagrams/` 目录下全部 SVG 架构图表的维护流程,确保图表与代码实现保持同步。图表总量随演进变化（2026-11-14 共 130 张）,当前清单、编号与图源/导出配对关系以 [图表目录](../diagrams/README.md) 为准;当前 Maven 分组结构入口为 128（聚合）、129（parent 继承）与 95（生产依赖）三张图。
 
 ---
 
@@ -21,7 +21,7 @@
 - ✅ **跨平台兼容**: 使用静态颜色值,禁用CSS变量
 - ✅ **专业配色**: 使用深色企业级配色方案
 - ✅ **清晰标注**: 版本号、数量统计、配置参数必须准确
-- ✅ **文档配套**: 每次图表更新同步更新ARCHITECTURE_INDEX.md
+- ✅ **文档配套**: 每次图表更新同步更新 [docs/diagrams/README.md](../diagrams/README.md) 图表条目
 
 ---
 
@@ -37,7 +37,8 @@
 | **部署方式变更** (如从Podman迁移到K8s) | 02, 13, 14 | 1周内 |
 | **监控体系变更** (如新增面板/指标) | 24, 25 | 2周内 |
 | **业务流程变更** (如登录流程调整) | 04, 05, 06, 07 | 1周内 |
-| **重大重构** (如DDD四层调整为六边形架构) | 全部29张 | 1个月内 |
+| **Maven 分组/模块结构变更** (如新增分组 parent、模块增减) | 128, 129, 95 | 1周内 |
+| **重大重构** (如DDD四层调整为六边形架构) | 全部图表 | 1个月内 |
 
 ### 可延后更新的场景
 
@@ -81,21 +82,21 @@
 grep -A 10 "<properties>" pom.xml
 grep "\"version\":" package.json
 
-# 代码统计
-cd apex-interfaces/src/main/java/com/apex/scaffold/interfaces/handler
+# 代码统计（system 业务库承载 interfaces/application 协议与应用层）
+cd apex-system/src/main/java/com/apex/scaffold/interfaces/handler
 ls -1 *Handler.java | wc -l  # Handler数量
 
-cd apex-application/src/main/java/com/apex/scaffold/application/service
+cd apex-system/src/main/java/com/apex/scaffold/application/service
 ls -1 *Service.java | wc -l  # Service数量
 
-cd apex-domain/src/main/java/com/apex/scaffold/domain/repository
+cd apex-system/src/main/java/com/apex/scaffold/domain/repository
 ls -1 *Repository.java | wc -l  # Repository数量
 
-# Flyway迁移版本
-ls -1 apex-interfaces/src/main/resources/db/migration/V*.sql | tail -1
+# Flyway迁移版本（六个业务域独立版本链，各域当前版本见交付文档数据库基线）
+ls -1 apex-system/src/main/resources/db/migration/mysql/V*.sql | tail -1
 
 # 监控面板数量
-ls -1 monitoring/grafana/dashboards/*.json | wc -l
+ls -1 config/monitoring/grafana/*.json | wc -l
 ```
 
 #### 步骤3: 更新SVG图表 (1-4小时)
@@ -123,18 +124,14 @@ open docs/diagrams/03_technical_architecture.svg
 #### 步骤4: 同步更新文档 (30分钟)
 
 ```bash
-# 1. 更新ARCHITECTURE_INDEX.md版本号
-# 修改版本号: v2.0 → v2.1
-# 新增更新记录到"文档更新记录"表格
+# 1. 更新 docs/diagrams/README.md
+# 登记新增/变更图表条目（编号、主题、图源与导出配对），同步统计口径
 
 # 2. 更新相关配套文档
 # 如果图表名称或内容有重大变更,同步更新:
 # - architecture/01-logical-architecture-detail.md
 # - architecture/03-technical-architecture-detail.md
 # - 其他引用该图表的文档
-
-# 3. 更新diagrams/README.md
-# 如果新增图表或修改图表说明,同步更新
 ```
 
 #### 步骤5: 提交审核 (1天)
@@ -145,7 +142,8 @@ git checkout -b docs/update-svg-diagrams
 
 # 2. 提交变更
 git add docs/diagrams/*.svg
-git add docs/ARCHITECTURE_INDEX.md
+git add docs/diagrams/*.mmd
+git add docs/diagrams/README.md
 git commit -m "docs: 更新架构图表-Spring Boot升级至3.6.0"
 
 # 3. 推送并创建PR
@@ -168,7 +166,7 @@ gh pr merge --squash
 - 更新日期: 2026-XX-XX
 - 更新图表: 03_technical_architecture.svg, 29_technology_stack_overview.svg
 - 更新内容: Spring Boot 3.5.15 → 3.6.0
-- 查看地址: docs/ARCHITECTURE_INDEX.md
+- 查看地址: docs/diagrams/README.md
 ```
 
 ---
@@ -250,7 +248,7 @@ gh pr merge --squash
 
 - [ ] 在Chrome/Firefox/Safari三个浏览器中打开验证
 - [ ] 在VSCode/Obsidian中预览验证
-- [ ] ARCHITECTURE_INDEX.md引用路径正确
+- [ ] docs/diagrams/README.md图表条目与引用路径正确
 - [ ] 相关配套文档已同步更新
 - [ ] 提交信息清晰,包含变更说明
 
@@ -291,8 +289,8 @@ grep '"vue":' package.json | sed 's/.*: "\(.*\)".*/\1/'
 **解决**:
 ```bash
 # 使用Grep精确统计
-find apex-interfaces/src/main/java -name "*Handler.java" | wc -l
-find apex-application/src/main/java -name "*Service.java" -not -name "*ServiceImpl.java" | wc -l
+find apex-system/src/main/java/com/apex/scaffold/interfaces -name "*Handler.java" | wc -l
+find apex-system/src/main/java/com/apex/scaffold/application -name "*Service.java" -not -name "*ServiceImpl.java" | wc -l
 ```
 
 ### Q4: 图表与文档描述不一致?
@@ -311,7 +309,7 @@ grep -r "01_logical_architecture.svg" docs/ --include="*.md"
 
 ## 📊 维护日志模板
 
-每次更新后,在ARCHITECTURE_INDEX.md的"文档更新记录"表格中新增一行:
+每次更新后,在 [docs/diagrams/README.md](../diagrams/README.md) 登记变更（图表条目或更新记录）:
 
 ```markdown
 | 2026-XX-XX | vX.X | 更新XX张图表:具体更新内容说明 | 架构团队 |
@@ -342,7 +340,7 @@ grep -r "01_logical_architecture.svg" docs/ --include="*.md"
 
 4. **文档同步** (1小时)
    - 检查所有引用链接是否有效
-   - 更新ARCHITECTURE_INDEX.md
+   - 更新 docs/diagrams/README.md 图表条目与统计
 
 ---
 

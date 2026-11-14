@@ -129,7 +129,7 @@ export LOG_LEVEL=3  # ERROR
 java_files=$(safe_find "apex-*/src/main/java" "*.java")
 
 # 查找所有 Router 类
-router_files=$(safe_find "apex-interfaces/src/main/java" "*Router.java")
+router_files=$(safe_find "apex-system/src/main/java/com/apex/scaffold/interfaces/router" "*Router.java")
 
 # 遍历结果
 for file in $java_files; do
@@ -458,7 +458,7 @@ require_command "git" || exit 1
 PROJECT_ROOT=$(get_project_root) || exit 1
 
 # 检查目录
-require_directory "$PROJECT_ROOT/apex-interfaces" "接口模块" || exit 1
+require_directory "$PROJECT_ROOT/apex-system" "系统业务库" || exit 1
 
 # 创建临时文件
 temp_report=$(create_temp_file "report")
