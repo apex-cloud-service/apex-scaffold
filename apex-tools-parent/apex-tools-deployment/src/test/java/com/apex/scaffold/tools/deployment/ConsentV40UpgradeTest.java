@@ -28,9 +28,8 @@ class ConsentV40UpgradeTest {
      * @throws IOException 读取失败时抛出
      */
     static String upgradeSql(String dialect) throws IOException {
-        Path path =
-                ROOT.resolve("apex-components-parent/apex-system/src/main/resources/db/upgrade/" + dialect
-                        + "/consent_before_v40.sql");
+        Path path = ROOT.resolve("apex-components-parent/apex-system/src/main/resources/db/upgrade/" + dialect
+                + "/consent_before_v40.sql");
         assertTrue(Files.isRegularFile(path), dialect + " V40前置修复尚未实现");
         return Files.readString(path, StandardCharsets.UTF_8);
     }

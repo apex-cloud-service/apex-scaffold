@@ -39,8 +39,8 @@ class ContainerBuildContractTest {
                     case "duplicate" -> copies
                             + "COPY group/child/pom.xml group/child/\nCOPY group/child/pom.xml group/child/\n"
                             + offline();
-                    case "extra" -> copies
-                            + "COPY group/child/pom.xml group/child/\nCOPY stale/pom.xml stale/\n" + offline();
+                    case "extra" -> copies + "COPY group/child/pom.xml group/child/\nCOPY stale/pom.xml stale/\n"
+                            + offline();
                     case "wrong-destination" -> copies + "COPY group/child/pom.xml group/\n" + offline();
                     case "no-boundary" -> copies + "COPY group/child/pom.xml group/child/\n";
                     case "early-source" -> copies + "COPY group/child/pom.xml group/child/\nCOPY . .\n" + offline();
@@ -80,11 +80,7 @@ class ContainerBuildContractTest {
     private MavenModuleInventory.Inventory inventory() throws Exception {
         Path root = Files.createDirectory(temp.resolve("repository"));
         pom(root, "root", "", "<modules><module>group</module></modules>");
-        pom(
-                root.resolve("group"),
-                "group",
-                parent("root", "../pom.xml"),
-                "<modules><module>child</module></modules>");
+        pom(root.resolve("group"), "group", parent("root", "../pom.xml"), "<modules><module>child</module></modules>");
         pom(root.resolve("group/child"), "child", parent("group", "../pom.xml"), "");
         return MavenModuleInventory.read(root);
     }

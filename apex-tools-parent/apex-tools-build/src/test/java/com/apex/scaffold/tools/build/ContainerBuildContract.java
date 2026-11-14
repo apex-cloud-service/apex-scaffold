@@ -64,7 +64,8 @@ final class ContainerBuildContract {
             int jarIndex = rules.lastIndexOf(jar);
             assertTrue(directoryIndex > excluded, id + " prebuilt 缺少默认排除后的 target 目录放行");
             assertTrue(jarIndex > directoryIndex, id + " prebuilt 缺少目录放行后的目标 JAR 放行");
-            for (String reexcluded : List.of(directory + "/target", directory + "/target/", directory + "/target/" + id + "-*.jar")) {
+            for (String reexcluded :
+                    List.of(directory + "/target", directory + "/target/", directory + "/target/" + id + "-*.jar")) {
                 assertTrue(rules.lastIndexOf(reexcluded) < directoryIndex, id + " prebuilt 放行后又被显式排除");
             }
         }

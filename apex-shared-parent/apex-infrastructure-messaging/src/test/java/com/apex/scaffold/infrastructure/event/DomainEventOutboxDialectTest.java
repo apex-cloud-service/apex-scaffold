@@ -40,8 +40,9 @@ class DomainEventOutboxDialectTest {
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("DROP TABLE IF EXISTS sys_domain_event_outbox");
         Path root = Path.of(System.getProperty("maven.multiModuleProjectDirectory"));
-        String schema = Files.readString(root.resolve("apex-services-bom/apex-auth-service/src/main/resources/db/migration/"
-                + dialect + "/V56__create_domain_event_outbox.sql"));
+        String schema =
+                Files.readString(root.resolve("apex-services-bom/apex-auth-service/src/main/resources/db/migration/"
+                        + dialect + "/V56__create_domain_event_outbox.sql"));
         for (String statement : schema.split(";")) {
             if (!statement.isBlank()) {
                 jdbc.execute(statement);

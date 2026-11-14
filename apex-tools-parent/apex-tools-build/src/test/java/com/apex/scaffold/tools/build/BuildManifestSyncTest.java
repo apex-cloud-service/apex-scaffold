@@ -240,10 +240,14 @@ class BuildManifestSyncTest {
         MavenModuleInventory.Inventory inventory = MavenModuleInventory.read(projectRoot());
         Set<String> directories = new LinkedHashSet<>();
         for (String id : serviceModules(loadManifest())) {
-            directories.add(
-                    inventory.root().directory().relativize(inventory.modules().get(id).directory()).toString());
+            directories.add(inventory
+                    .root()
+                    .directory()
+                    .relativize(inventory.modules().get(id).directory())
+                    .toString());
         }
-        ContainerBuildContract.assertPrebuiltAllowlist(directories, Files.readString(projectRoot().resolve(".containerignore")));
+        ContainerBuildContract.assertPrebuiltAllowlist(
+                directories, Files.readString(projectRoot().resolve(".containerignore")));
     }
 
     private static Set<String> serviceModules(Map<String, Map<String, String>> manifest) {

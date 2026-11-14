@@ -46,9 +46,7 @@ class SqlScriptCommentContractTest {
                 .filter(name -> name.startsWith("apex-"))
                 .distinct()
                 .count();
-        assertThat(coveredGroups)
-                .as("SQL 契约扫描应覆盖至少三个顶层分组目录")
-                .isGreaterThanOrEqualTo(3);
+        assertThat(coveredGroups).as("SQL 契约扫描应覆盖至少三个顶层分组目录").isGreaterThanOrEqualTo(3);
         for (Path sqlFile : sqlFiles) {
             Path relativePath = root.relativize(sqlFile);
             if (LEGACY_SQL_WITHOUT_LEADING_COMMENT.contains(relativePath)) {

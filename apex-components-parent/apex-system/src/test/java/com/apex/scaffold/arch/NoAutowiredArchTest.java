@@ -108,18 +108,18 @@ class NoAutowiredArchTest {
     private static List<String> listModuleDirs(Path repoRoot) throws IOException {
         List<String> moduleDirs = new ArrayList<>();
         try (Stream<Path> groups = Files.list(repoRoot)) {
-            List<Path> groupDirs =
-                    groups.filter(Files::isDirectory)
-                            .filter(path -> path.getFileName().toString().startsWith("apex-"))
-                            .sorted()
-                            .toList();
+            List<Path> groupDirs = groups.filter(Files::isDirectory)
+                    .filter(path -> path.getFileName().toString().startsWith("apex-"))
+                    .sorted()
+                    .toList();
             for (Path group : groupDirs) {
                 try (Stream<Path> modules = Files.list(group)) {
                     modules.filter(Files::isDirectory)
                             .filter(path -> path.getFileName().toString().startsWith("apex-"))
                             .sorted()
-                            .forEach(module -> moduleDirs.add(
-                                    group.getFileName().resolve(module.getFileName()).toString()));
+                            .forEach(module -> moduleDirs.add(group.getFileName()
+                                    .resolve(module.getFileName())
+                                    .toString()));
                 }
             }
         }

@@ -39,7 +39,8 @@ class CapabilityUsagePropertiesTest {
                     "apex-services-bom/apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/OpenWorkflowRouter.java"),
             Path.of(
                     "apex-services-bom/apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/OpenMessageRouter.java"),
-            Path.of("apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/OpenUserRouter.java"));
+            Path.of(
+                    "apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/OpenUserRouter.java"));
 
     /**
      * 验证默认计量前缀覆盖所有服务侧开放 Router 中声明的 {@code /open-api/**} 端点。

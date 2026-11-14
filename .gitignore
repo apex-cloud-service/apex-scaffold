@@ -58,7 +58,7 @@ config/license/private.key
 *.key
 # License 公钥不是敏感信息，必须入库，否则干净克隆构建的 jar 无法验证商业授权。
 !config/license/public.key
-!apex-common/src/main/resources/license/public.key
+!apex-components-parent/apex-common/src/main/resources/license/public.key
 !apex-shared-parent/apex-common/src/main/resources/license/public.key
 *.keystore
 *.truststore
