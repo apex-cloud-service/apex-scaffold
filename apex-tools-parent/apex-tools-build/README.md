@@ -1,8 +1,8 @@
 # apex-tools-build — 构建发布管理模块
 
 对全部模块的**编译、构建、打包、发布、镜像、部署**提供统一管理与单一入口。方案见
-[构建发布管理模块方案](../docs/08-project-management/plans/build-management-plan.md)，
-完整操作手册见 [构建发布管理模块使用说明](../docs/04-development/build-tools-usage.md)。
+[构建发布管理模块方案](../../docs/08-project-management/plans/build-management-plan.md)，
+完整操作手册见 [构建发布管理模块使用说明](../../docs/04-development/build-tools-usage.md)。
 
 ## 组成
 
@@ -16,9 +16,9 @@
 
 ## Maven 分组与计数
 
-根直接聚合 shared/components/starters/services/applications/tools/business 七组；递归模块 42 个，含根 reactor 43 个，其中 8 个 POM、35 个既有 JAR。完整分组、22 个叶子 parent 调整与保留的 13 个 services-bom 子继承见 [README 分组说明](../README.md#maven-分组与父链)。api-contract / integration / boot-all 的聚合归属分别在 shared / components / applications，直接 parent 仍是 services-bom。
+根直接聚合 shared/components/starters/services/applications/tools/business 七组；递归模块 44 个，含根 reactor 45 个，其中 8 个 POM、37 个 JAR；第二阶段（2026-11-14）起叶子目录嵌套于分组父目录下。完整分组、22 个叶子 parent 调整、第二阶段物理归位与保留的 13 个 services-bom 子继承见 [README 分组说明](../../README.md#maven-分组与父链)。api-contract / integration / boot-all 的聚合归属分别在 shared / components / applications，直接 parent 仍是 services-bom。
 
-注册表保持 `schema: 1` 扁平格式，登记全部递归后代（含六个新 parent 与空 business parent、不含总根）。递归沿 `<modules>` 聚合边，不沿 `<parent>` 继承边；分组路径相对于声明 POM，现有叶子仍在根级。parent 记录为 `deliverable=none`，没有端口、mainClass 或可执行 JAR，仍是模型解析所需的 POM 构件。后续新增模块依实际递归清单登记，不永久硬编码 42 / 43。
+注册表保持 `schema: 1` 扁平格式，登记全部递归后代（含七个分组 parent 与 business 组业务库、不含总根）。递归沿 `<modules>` 聚合边，不沿 `<parent>` 继承边；第二阶段起叶子物理位于 `<分组父>/<artifactId>`（两级布局由 `MavenModuleInventory` 门禁锁定）。parent 记录为 `deliverable=none`，没有端口、mainClass 或可执行 JAR，仍是模型解析所需的 POM 构件。后续新增模块依实际递归清单登记，不永久硬编码 42 / 43。
 
 business 第一阶段无子模块，只为项目业务 JAR 库预留管理入口；框架实现复用其他支撑分组。新独立运行模块应聚合并继承 services-bom，不能在 business 重复登记或未经决策进入八服务发布集合。
 
@@ -76,7 +76,7 @@ apex.sh deploy health       # 全部发布服务 readiness（compose/java-jar �
 4. `scripts/release/release.sh` 的 `SERVICES` 数组（服务集变化时）；
 5. `AGENTS.md` 模块表与依赖表，以及受影响的当前开发和交付说明。
 
-聚合路径相对声明 POM 解析，注册表 artifactId 仍对应根级模块目录。递归门禁拒绝重复聚合、环、越界、缺失 POM 与注册表缺项/多项，并核对 parent 不能误设可执行交付物。不一致时 `BuildManifestSyncTest` 失败；运行 `test` 只验证快速测试，完整验收仍需 `verify`。
+聚合路径相对声明 POM 解析，模块目录 = 仓库根/<分组父>/<artifactId>（两级布局由门禁锁定，注册表 artifactId 与目录名一致）。递归门禁拒绝重复聚合、环、越界、缺失 POM 与注册表缺项/多项，并核对 parent 不能误设可执行交付物。不一致时 `BuildManifestSyncTest` 失败；运行 `test` 只验证快速测试，完整验收仍需 `verify`。
 
 安装或未来发布 Maven 构件时须包含根与所需分组 parent POM，否则外部消费者无法解析继承链；此要求不授权远程发布。客户源码包剥离卖方 `apex-license-tools` 时，须同步 tools parent 的聚合清单，不能重新打包卖方工具来满足构建。
 

@@ -1,6 +1,6 @@
 # Apex Infrastructure
 
-消息中间件能力说明请参阅 [消息中间件使用说明](../docs/01-guides/message-middleware.md)。
+消息中间件能力说明请参阅 [消息中间件使用说明](../../docs/01-guides/message-middleware.md)。
 
 ## 模块定位
 

@@ -158,7 +158,7 @@ apex-example/
 
 ### 集成其他功能
 
-参考 [Apex Scaffold 文档](../docs/README.md) 了解如何集成：
+参考 [Apex Scaffold 文档](../../docs/README.md) 了解如何集成：
 
 - 消息队列（RocketMQ）
 - 缓存（Redisson）
