@@ -40,3 +40,12 @@
 ## 5. 工作量
 
 885 处 / 预计 60–80 个文件；落点映射明确（4 条），机械替换为主，估 0.5–1 人日。
+
+## 6. 执行记录（2026-11-14）
+
+| 项 | 结果 |
+| --- | --- |
+| 改写范围 | 有效区 447 处 / 约 90 文件（apex-interfaces 241 → `apex-components-parent/apex-system/`；apex-application 156 → 同左；apex-auth-center 50 → `apex-services-bom/apex-auth-service/`）；原估 885 处中 364 处位于 `docs/_archive`（豁免区，保持原样），74 处 admin-web 豁免（跨仓有效路径） |
+| 命令改写 | 有效区 -pl 退役命令全部冒号化：`-pl apex-interfaces`/`-pl apex-application` → `-pl :apex-system`；`-pl apex-auth-center` → `-pl :apex-auth-service`；106/85 两张 SVG 图内示意命令同步冒号化 |
+| 门禁 | `check-doc-links.sh` 全绿（758 md + 17 html，3702 链接 0 断裂——含改写产生的 1 条新落点有效链接）；退役模块名清零扫描通过 |
+| 提交 | `9d74067d`（用户在途 weekly 周报改动曾因 `git add docs` 误扫入，已 soft reset 拆出、保留工作区） |

@@ -365,3 +365,11 @@ git diff --check
 | B5 | ✅ 2026-11-14 | 17 文件 / 22 项路径失效修复：根定位统一为仓库根独有标记（AGENTS.md / podman-compose.yml / multiModuleProjectDirectory）；跨组路径常量加分组前缀；两个静默失效守护补自检（SqlScriptComment ≥3 分组覆盖断言、ComponentAssemblyContext 业务库源码目录存在性自检）；NoBoundedElastic 受约束模块目录缺失即失败；TokenV42Recover SOURCE_PARENT_LEVELS 3→4。首轮门禁暴露 OPEN_ROUTER_FILES 常量未前缀（只修了解析深度），已修正重跑 | `mvnd -T4 -B -pl :apex-system,:apex-gateway,:apex-auth-service,:apex-infrastructure-messaging,:apex-boot-all,:apex-tools-deployment -am test` BUILD SUCCESS（5287 单测 0 失败） | test 提交 |
 | B6 | ✅ 2026-11-14 | 机械层：docs 有效区 716 链接 + 归档区 241 文件链接目标按分组映射重指向（归档叙述豁免、链接门禁强制）、html href/src、docs 82 文件 -pl 冒号化；重写：AGENTS/README/双源图 128+129（mmd 与 SVG 同改）/build-tools-usage 等 15+ 篇/模块 README 4 个/根级两工作文档/MEMORY-CARD。**豁免策略修正**：归档叙述不改写但链接目标必须重指向（门禁约束）；发现既有漂移如实标注（95 图未含知识库依赖边；docs 中退役模块 -pl 命令与 HTML 图内示意命令留待 Q7） | `check-doc-links.sh` 全绿（757 md + 17 html，3701 链接 0 断裂）；三轮迭代消除 250→2→0（双前缀去重正则首版有误、归档树误前缀 2 处） | docs 提交 |
 | B7 | ✅ 2026-11-14 | `.gitignore` 旧公钥白名单行清理（去重后仅保留新路径行，公钥 2 处追踪保持）；首轮全量 verify 死于 B5 引入的 ConsentV40UpgradeTest palantir 格式违规（test 门禁不含 spotless），`spotless:apply` 修复 10 个测试文件（纯格式）后重跑；全量脚本 `bash -n`/`zsh -n` 扫尾通过；`git diff --check` 干净。工作区的 MEMORY-CARD 与 weekly 周报为用户侧在途改动，按纪律保留不动、不混入提交 | `mvnd -T4 -B clean verify` **BUILD SUCCESS（45/45 模块，14:33；surefire 6509/0 失败/0 错误/35 跳过，高于基线 6181——含知识库新增；Failsafe/Spotless/PMD/JaCoCo 随 verify 全过）** | 本笔提交 |
+
+## 10. 遗留任务执行记录（2026-11-14，B7 之后）
+
+| 任务 | 结果 |
+| --- | --- |
+| Q7 退役模块引用清理 | 已执行（提交 `9d74067d`）：有效区 447 处清零、-pl 命令冒号化、doc-links 全绿；admin-web 74 处经证据核查豁免（跨仓有效路径），详见 retired-module-reference-cleanup-plan.md §6 |
+| 95 依赖图补录知识库 | 已执行（同提交）：新增 apex-knowledge / apex-knowledge-service 节点与 5 条依赖边（mmd+SVG 双源同改、SVG 画布扩展 2561→2691），计数刷新 37 JAR / 109 边 / common 被 30 个 JAR 依赖；mmd 边端点完整性校验全过；system-architecture 与 diagrams/README 口径同步 |
+| compose 镜像构建冒烟 | **不可本地执行**：podman / podman-compose 均未安装（`which` 实测），维持"CI 首跑验证"口径；apex.sh image build 链路的静态契约（ContainerBuildContract + BuildManifestSyncTest 四方一致）已由 verify 门禁覆盖 |
