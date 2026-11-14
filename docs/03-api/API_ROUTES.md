@@ -4,7 +4,7 @@
 >
 > 路由以 `RouterFunction`、`RouterFunctions.route()`、`RouterFunctions.nest()` 和 `SpringdocRouteBuilder` 的可执行注册代码为准。`RouterOpenApiConfig` 中仅用于 SpringDoc 展示的占位路由不视为独立业务实现。
 >
-> 项目按微服务拆分，路由分属多个 Spring Boot 运行边界：system（`apex-system-service`）、认证中心（`apex-auth-service`）、办公（`apex-office-service`）、文件（`apex-file-service`）、工作流（`apex-workflow-service`）、集成（`apex-integration-service`）、任务代理（`apex-job-service`）与脱敏（`apex-masking-service`）。各服务的路由、Handler、应用服务及数据源应分别理解和部署；下文分节按提供方 Router 登记，"system 域"指原 `/api/v1`、`/admin-api/v1` 前缀族的路由集合，不代表全部由 system-service 注册。
+> 项目按微服务拆分，路由分属多个 Spring Boot 运行边界：system（`apex-system-service`）、认证中心（`apex-auth-service`）、办公（`apex-office-service`）、文件（`apex-file-service`）、工作流（`apex-workflow-service`）、集成（`apex-integration-service`）、任务代理（`apex-job-service`）、脱敏（`apex-masking-service`）与知识库（`apex-knowledge-service`）。各服务的路由、Handler、应用服务及数据源应分别理解和部署；下文分节按提供方 Router 登记，"system 域"指原 `/api/v1`、`/admin-api/v1` 前缀族的路由集合，不代表全部由 system-service 注册。
 
 ## 1. 路径与认证约定
 
@@ -467,6 +467,30 @@
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
 | GET | `/api/v2/todo` | `UnifiedTodoRouter` | `UnifiedTodoHandler.todo` | 当前用户跨域统一待办聚合（workflow 任务 + office 待审批/未读站内信）；单源降级部分可用，个人维度不缓存 |
+
+### 2.19 知识库服务端点（`apex-knowledge-service` 运行模块）
+
+> 运行边界：`apex-knowledge-service`（可选运行模块）。网关 `knowledge-domain` 路由（`ROUTE_KNOWLEDGE_URI`，默认 `http://127.0.0.1:8100`，固定地址口径与 job/masking 一致）承载 `/api/v1/kb/**` 与 `/admin-api/v1/kb/**`；服务独立验签访问 JWT，独立 `apex_knowledge` 库。细粒度权限由本地 `KnowledgeSecurityAspect` 按权限码（`kb:*`）经授权中心快照校验。检索/问答依赖 Meilisearch 索引与模型供应商，未启用时按能力级降级（检索空结果、问答显式报错或模板兜底）。
+
+| 方法 | 路径 | Router | Handler 方法 | 说明 |
+| --- | --- | --- | --- | --- |
+| GET | `/admin-api/v1/kb/spaces` | `KnowledgeSpaceRouter` | `KnowledgeSpaceHandler.page` | 空间分页（`kb:space:read`） |
+| GET | `/admin-api/v1/kb/spaces/{spaceId}` | `KnowledgeSpaceRouter` | `KnowledgeSpaceHandler.detail` | 空间详情（`kb:space:read`） |
+| POST | `/admin-api/v1/kb/spaces` | `KnowledgeSpaceRouter` | `KnowledgeSpaceHandler.create` | 创建空间（`kb:space:create`） |
+| PUT | `/admin-api/v1/kb/spaces/{spaceId}` | `KnowledgeSpaceRouter` | `KnowledgeSpaceHandler.update` | 更新空间（`kb:space:update`） |
+| DELETE | `/admin-api/v1/kb/spaces/{spaceId}` | `KnowledgeSpaceRouter` | `KnowledgeSpaceHandler.delete` | 删除空间（`kb:space:delete`；空间下仍有文档时拒绝） |
+| POST | `/admin-api/v1/kb/spaces/{spaceId}/documents` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.upload` | multipart 上传文档（`kb:doc:upload`），异步解析摄取 |
+| POST | `/admin-api/v1/kb/manual-documents` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.registerManual` | 在线录入纯文本文档（`kb:doc:upload`） |
+| GET | `/admin-api/v1/kb/documents` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.page` | 文档分页（`kb:doc:read`） |
+| GET | `/admin-api/v1/kb/documents/{docId}` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.detail` | 文档详情含分块预览（`kb:doc:read`） |
+| DELETE | `/admin-api/v1/kb/documents/{docId}` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.delete` | 删除文档并同步清理分块与索引（`kb:doc:delete`） |
+| POST | `/admin-api/v1/kb/documents/{docId}/reindex` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.reindex` | 手动重建索引（`kb:doc:reindex`） |
+| GET | `/api/v1/kb/spaces` | `KnowledgeSearchRouter` | `KnowledgeSearchHandler.spaces` | 可用空间列表（登录即可） |
+| GET | `/api/v1/kb/search` | `KnowledgeSearchRouter` | `KnowledgeSearchHandler.search` | 混合检索（`kb:search:query`；hybrid 优先、词法兜底） |
+| POST | `/api/v1/kb/chat/ask` | `KnowledgeChatRouter` | `KnowledgeChatHandler.ask` | SSE 流式问答（`kb:chat:ask`；事件 citations/delta/done/error） |
+| GET | `/api/v1/kb/chat/conversations` | `KnowledgeChatRouter` | `KnowledgeChatHandler.conversations` | 当前用户会话分页（登录即可） |
+| GET | `/api/v1/kb/chat/conversations/{conversationId}/messages` | `KnowledgeChatRouter` | `KnowledgeChatHandler.messages` | 会话消息（归属用户校验） |
+| DELETE | `/api/v1/kb/chat/conversations/{conversationId}` | `KnowledgeChatRouter` | `KnowledgeChatHandler.deleteConversation` | 删除会话（归属用户校验） |
 
 ## 3. 独立认证中心路由
 

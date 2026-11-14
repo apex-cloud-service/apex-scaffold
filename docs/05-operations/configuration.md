@@ -814,6 +814,33 @@ apex:
 
 `mode` 决定的前置条件：**AT** 需业务库 `undo_log`、单 JDBC 数据源；**TCC** 不包装数据源，业务类实现 `@LocalTCC` 三段动作；**SAGA** 需先执行 starter 发布在 `sql/saga/{mysql,postgresql}/seata_state_machine.sql` 的存储三表；**XA** 需数据库支持 XA 且单 JDBC 数据源，无需 `undo_log`。详见 [Seata 接入](seata-integration.md) 的「事务模式选择」章节。
 
+## 📚 知识库服务配置（apex-knowledge-service，可选运行模块）
+
+知识库为可选运行模块（不进标准发布包，Compose `knowledge` profile），三个能力各自独立开关、按能力级降级；生产密钥一律环境变量注入。完整端点见 [API 路由清单](../03-api/API_ROUTES.md)。
+
+| 配置键 | 环境变量 | 默认 | 说明 |
+| --- | --- | --- | --- |
+| `server.port` | `KNOWLEDGE_PORT` | 8100 | 业务端口（宿主 8099 被 XXL 控制台占用） |
+| `spring.datasource.*` | `KNOWLEDGE_DB_URL` 等 | MySQL `apex_knowledge` | 独立库；Flyway 双目录迁移 |
+| `security.config.encryption.key` | `APEX_CONFIG_ENCRYPTION_KEY` | 空（启动失败） | 恰好 32 字节，与认证中心口径一致 |
+| `apex.tenant.enabled` | `APEX_TENANT_ENABLED` | true | 多租户行级隔离；kb_* 全表租户过滤 |
+| `apex.knowledge.security.jwt-public-keys-base64` | `KNOWLEDGE_JWT_PUBLIC_KEYS_BASE64` | 空 | 独立验签多公钥（`kid=Base64X509` 逗号分隔）；生产推荐配 `apex.jwks.remote-url` |
+| `apex.knowledge.security.authorization.*` | `KNOWLEDGE_AUTH_BASE_URL` 等 | 未确认即拒绝 | 授权中心 reader 凭据按租户注入；未配置时受 `@RequirePermission` 保护的端点 fail-closed 拒绝 |
+| `apex.knowledge.meilisearch.enabled` | `KNOWLEDGE_MEILISEARCH_ENABLED` | false | 知识分块索引引擎总开关（独立于 system 的 `meilisearch.*`）；关闭时检索空结果、摄取只入库 |
+| `apex.knowledge.meilisearch.url/api-key/index-prefix` | `KNOWLEDGE_MEILISEARCH_*` | localhost:7700 / 空 / `apex_` | 索引名 `indexPrefix + kb_chunks`；hybrid 检索走 REST 直调 |
+| `apex.knowledge.embedding.enabled` | `KNOWLEDGE_EMBEDDING_ENABLED` | false | 文本向量化；关闭时仅词法索引与检索 |
+| `apex.knowledge.embedding.base-url/api-key/model/dimensions` | `KNOWLEDGE_EMBEDDING_*` | 空 / 空 / 空 / 1024 | OpenAI 兼容协议（Dashscope/DeepSeek/Ollama/vLLM）；维度与模型输出不符启动后首调即失败 |
+| `apex.knowledge.chat.enabled` | `KNOWLEDGE_CHAT_ENABLED` | false | RAG 问答；关闭时问答端点显式报错，检索不受影响 |
+| `apex.knowledge.chat.base-url/api-key/model` | `KNOWLEDGE_CHAT_*` | 空 | OpenAI 兼容协议，SSE 流式 |
+| `apex.knowledge.chat.empty-context-strategy` | `KNOWLEDGE_EMPTY_CONTEXT_STRATEGY` | fallback | 检索为空时：fallback=模板兜底回复不调模型；answer=仍调用模型 |
+| `apex.knowledge.ingest.chunk-size/chunk-overlap` | `KNOWLEDGE_CHUNK_SIZE/OVERLAP` | 800 / 120 | 分块滑窗参数（overlap 必须小于 chunk-size） |
+| `apex.knowledge.ingest.max-upload-size-mb` | `KNOWLEDGE_MAX_UPLOAD_MB` | 50 | 单文件上传上限 |
+| `apex.knowledge.storage.bucket` | `KNOWLEDGE_STORAGE_BUCKET` | knowledge | 文档对象桶（复用五后端存储配置 `storage.*`） |
+| `apex.knowledge.search.semantic-ratio/top-k` | `KNOWLEDGE_SEMANTIC_RATIO` / `KNOWLEDGE_TOP_K` | 0.6 / 5 | hybrid 语义占比与问答引用条数 |
+| `apex.knowledge.reconcile-cron` | `KNOWLEDGE_RECONCILE_CRON` | `0 30 2 * * ?` | 摄取校准 Job（每日 02:30，扫滞留/失败文档） |
+
+网关路由：`knowledge-domain`（`ROUTE_KNOWLEDGE_URI`，默认 `http://127.0.0.1:8100`，可选服务固定地址口径）。菜单与权限种子在 system 域 V91 迁移（权限码 `kb:*`）。
+
 ## 📊 监控告警配置
 
 ### Prometheus配置

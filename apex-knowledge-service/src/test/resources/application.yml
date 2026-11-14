@@ -1,0 +1,73 @@
+server:
+  error:
+    include-message: never
+
+spring:
+  autoconfigure:
+    exclude: com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+  main:
+    web-application-type: reactive
+  datasource:
+    url: jdbc:h2:mem:knowledgeservice;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/basic-schema.sql
+  flyway:
+    enabled: false
+  codec:
+    max-in-memory-size: 8MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+security:
+  config:
+    encryption:
+      key: test-config-encryption-key-32by!
+
+apex:
+  database:
+    type: mysql
+  tenant:
+    enabled: false
+  sql:
+    slow:
+      enabled: false
+  knowledge:
+    security:
+      # 本地 HMAC 过渡密钥（≥32 字节），生产必须走 RS256 公钥
+      jwt-secret: ${KNOWLEDGE_JWT_SECRET:test-knowledge-hmac-secret-32-bytes!!}
+      authorization:
+        shared-user-namespace: false
+        base-url: ""
+        reader-tokens: {}
+    ingest:
+      max-upload-size-mb: 50
+    storage:
+      bucket: test-kb
+    embedding:
+      enabled: false
+    chat:
+      enabled: false
+    meilisearch:
+      enabled: false
+
+storage:
+  local:
+    enabled: true
+    base-path: target/test-uploads
+
+logging:
+  level:
+    com.apex.scaffold.knowledge: INFO

@@ -188,6 +188,16 @@ modules:
     category: 服务增强
     deliverable: optional
     port: 8096
+  # ── 知识库：项目专属业务库（business 聚合）+ 可选运行模块（services 聚合），
+  #    知识空间/文档摄取/混合检索/问答；readiness 走 /actuator/health，
+  #    不进标准交付包（对齐 job/masking 可选口径）。
+  - artifactId: apex-knowledge
+    category: 业务库
+    deliverable: none
+  - artifactId: apex-knowledge-service
+    category: 运行模块
+    deliverable: optional
+    port: 8100
   - artifactId: apex-seata-spring-boot-starter
     category: 服务增强
     deliverable: none

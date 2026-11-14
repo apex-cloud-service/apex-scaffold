@@ -101,6 +101,16 @@ spring:
               args:
                 name: maskingService
                 fallbackUri: forward:/__gateway/fallback
+        # 知识库（可选运行模块）：/api/v1/kb/** 与 /admin-api/v1/kb/**，固定地址兜底同 job/masking
+        - id: knowledge-domain
+          uri: ${ROUTE_KNOWLEDGE_URI:http://127.0.0.1:8100}
+          predicates:
+            - Path=/api/v1/kb/**,/admin-api/v1/kb/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: knowledgeService
+                fallbackUri: forward:/__gateway/fallback
         # ---- 开放平台路由组（/open-api/**，D2）：scope 断言 + 租户能力门禁见 OpenApiScopeGatewayFilter ----
         - id: open-api-file
           uri: ${ROUTE_FILE_URI:lb://apex-file-service}

@@ -1,0 +1,113 @@
+server:
+  port: ${KNOWLEDGE_PORT:8100}
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: apex-knowledge-service
+
+  # 单数据源服务：显式排除多数据源编排（persistence 能力 JAR 传递引入），
+  # 数据源由 spring.datasource.* 直连（对齐 basic 档排除口径）。
+  autoconfigure:
+    exclude: com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+
+  codec:
+    max-in-memory-size: 64MB
+
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${KNOWLEDGE_DB_URL:jdbc:mysql://localhost:3306/apex_knowledge?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false}
+    username: ${KNOWLEDGE_DB_USERNAME:root}
+    password: ${KNOWLEDGE_DB_PASSWORD:root}
+
+  flyway:
+    enabled: ${KNOWLEDGE_FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    locations: classpath:db/migration/mysql
+    out-of-order: true
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never
+
+apex:
+  database:
+    type: ${APEX_DATABASE_TYPE:mysql}
+  # 多租户行级隔离（可选运行模块默认开启；basic 档不部署本服务）
+  tenant:
+    enabled: ${APEX_TENANT_ENABLED:true}
+  jwks:
+    remote-url: ${APEX_JWKS_REMOTE_URL:}
+  knowledge:
+    security:
+      # 独立验签公钥（多键 kid=Base64X509 逗号分隔；旧版单键兜底）
+      jwt-public-keys-base64: ${KNOWLEDGE_JWT_PUBLIC_KEYS_BASE64:}
+      jwt-public-key-base64: ${KNOWLEDGE_JWT_PUBLIC_KEY_BASE64:}
+      jwt-secret: ${KNOWLEDGE_JWT_SECRET:}
+      authorization:
+        # 与 system 共享 userId/tenantId 命名空间确认开关；reader 凭据按租户部署注入
+        shared-user-namespace: ${KNOWLEDGE_SHARED_USER_NAMESPACE:false}
+        base-url: ${KNOWLEDGE_AUTH_BASE_URL:}
+        timeout: 3s
+        reader-tokens: {}
+    ingest:
+      chunk-size: ${KNOWLEDGE_CHUNK_SIZE:800}
+      chunk-overlap: ${KNOWLEDGE_CHUNK_OVERLAP:120}
+      max-upload-size-mb: ${KNOWLEDGE_MAX_UPLOAD_MB:50}
+      max-content-chars: ${KNOWLEDGE_MAX_CONTENT_CHARS:400000}
+    storage:
+      bucket: ${KNOWLEDGE_STORAGE_BUCKET:knowledge}
+    search:
+      semantic-ratio: ${KNOWLEDGE_SEMANTIC_RATIO:0.6}
+      top-k: ${KNOWLEDGE_TOP_K:5}
+    embedding:
+      # 文本向量化：关闭时仅词法索引与检索
+      enabled: ${KNOWLEDGE_EMBEDDING_ENABLED:false}
+      base-url: ${KNOWLEDGE_EMBEDDING_BASE_URL:}
+      api-key: ${KNOWLEDGE_EMBEDDING_API_KEY:}
+      model: ${KNOWLEDGE_EMBEDDING_MODEL:}
+      dimensions: ${KNOWLEDGE_EMBEDDING_DIMENSIONS:1024}
+      batch-size: ${KNOWLEDGE_EMBEDDING_BATCH_SIZE:32}
+    chat:
+      # 智能问答：关闭时问答接口显式报错，检索不受影响
+      enabled: ${KNOWLEDGE_CHAT_ENABLED:false}
+      base-url: ${KNOWLEDGE_CHAT_BASE_URL:}
+      api-key: ${KNOWLEDGE_CHAT_API_KEY:}
+      model: ${KNOWLEDGE_CHAT_MODEL:}
+      history-size: ${KNOWLEDGE_CHAT_HISTORY_SIZE:6}
+      empty-context-strategy: ${KNOWLEDGE_EMPTY_CONTEXT_STRATEGY:fallback}
+    meilisearch:
+      # 知识分块索引引擎（独立于 system 六类资源索引配置 meilisearch.*）
+      enabled: ${KNOWLEDGE_MEILISEARCH_ENABLED:false}
+      url: ${KNOWLEDGE_MEILISEARCH_URL:http://localhost:7700}
+      api-key: ${KNOWLEDGE_MEILISEARCH_API_KEY:}
+      index-prefix: ${KNOWLEDGE_MEILISEARCH_INDEX_PREFIX:apex_}
+    reconcile-cron: ${KNOWLEDGE_RECONCILE_CRON:0 30 2 * * ?}
+
+# 配置加密密钥（恰好 32 字节；生产经环境变量注入，未配置启动即失败）
+security:
+  config:
+    encryption:
+      key: ${APEX_CONFIG_ENCRYPTION_KEY:}
+
+logging:
+  level:
+    org.springframework.web: INFO
+    org.springframework.security: INFO

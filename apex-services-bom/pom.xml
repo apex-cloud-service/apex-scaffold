@@ -41,9 +41,10 @@
         <module>../apex-office-service</module>
         <module>../apex-integration-service</module>
         <module>../apex-aggregation-service</module>
-        <!-- 两个可选运行模块，不扩大标准发布集合 -->
+        <!-- 可选运行模块，不扩大标准发布集合 -->
         <module>../apex-job-service</module>
         <module>../apex-masking-service</module>
+        <module>../apex-knowledge-service</module>
     </modules>
 
     <dependencyManagement>
@@ -111,6 +112,17 @@
             <dependency>
                 <groupId>com.apex.scaffold</groupId>
                 <artifactId>apex-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- 知识库业务库与运行模块（可选服务，知识库依赖） -->
+            <dependency>
+                <groupId>com.apex.scaffold</groupId>
+                <artifactId>apex-knowledge</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.apex.scaffold</groupId>
+                <artifactId>apex-knowledge-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- 办公领域/应用模块（办公服务依赖，Phase 5） -->

@@ -59,13 +59,13 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | `apex-services-bom` | 10 | 网关、六个业务 service、只读查询聚合 service，以及 job / masking 两个可选运行模块 |
 | `apex-applications-parent` | 2 | `apex-example` 示例应用和 `apex-boot-all` 组合装配 |
 | `apex-tools-parent` | 4 | `apex-license-tools`、`apex-generator`、`apex-tools-deployment`、`apex-tools-build` |
-| `apex-business-parent` | 0 | 项目专属业务库管理入口；第一阶段为空，不虚构业务子模块 |
+| `apex-business-parent` | 1 | 项目专属业务库聚合；当前仅含知识库 `apex-knowledge` |
 
-**聚合与继承不是同一关系**：七组均直接继承根 POM；22 个既有叶子的直接 parent 改为所属新分组。原有 13 个 `apex-services-bom` 子项目仍继承它，其中 `apex-api-contract` 聚合在 shared、`apex-integration` 聚合在 components、`apex-boot-all` 聚合在 applications，另外 10 个运行模块的聚合和继承归属均为 services。根 POM 仍保留统一版本、构建档位和质量门禁；分组 parent 不自动引入运行依赖或激活叶子打包插件。
+**聚合与继承不是同一关系**：七组均直接继承根 POM；22 个既有叶子的直接 parent 改为所属新分组。原有 13 个 `apex-services-bom` 子项目仍继承它，其中 `apex-api-contract` 聚合在 shared、`apex-integration` 聚合在 components、`apex-boot-all` 聚合在 applications，另外 11 个运行模块的聚合和继承归属均为 services。根 POM 仍保留统一版本、构建档位和质量门禁；分组 parent 不自动引入运行依赖或激活叶子打包插件。
 
 所有既有叶子目录仍位于仓库根级，分组通过 `../apex-xxx` 聚合同级目录，不存在 `apex-components-parent/apex-system/` 这样的嵌套源码路径。模块坐标、35 个原 JAR 的打包形态、业务接口、服务拓扑和端口不因分组而改变；分组不承诺构建提速或产物缩小。
 
-`apex-business-parent` 只管理未来项目业务 JAR 的模型、规则、用例、领域专属适配和业务配置；通用框架实现由 shared / components / starters 等支撑模块提供，不在 business 复制。业务仓储、Mapper / PO 仍留在本域 infrastructure 层。若另建独立运行模块，聚合并继承 `apex-services-bom`，不在 business 重复登记；第一阶段没有新增此类模块，也不自动进入八服务发布集合。
+`apex-business-parent` 只管理未来项目业务 JAR 的模型、规则、用例、领域专属适配和业务配置；通用框架实现由 shared / components / starters 等支撑模块提供，不在 business 复制。业务仓储、Mapper / PO 仍留在本域 infrastructure 层。若另建独立运行模块，聚合并继承 `apex-services-bom`，不在 business 重复登记；2026-11-14 起知识库以 `apex-knowledge`（business）+ `apex-knowledge-service`（services，可选模块）落地，也不进入八服务标准发布集合。
 
 以下按能力列出既有模块职责；分组不改变其生产依赖边界。
 
@@ -75,9 +75,9 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | 共享领域 | `apex-domain` | 基础实体、通用事件、端口与 Gateway 契约 |
 | 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration` | 按持久化、缓存、消息、远程调用和第三方集成拆分发布；`apex-infrastructure` 保留为旧坐标兼容聚合，不再承载实现源码 |
 | 跨服务契约 | `apex-api-contract` | 内部 API 接口和共享 DTO |
-| 服务父 POM | `apex-services-bom` | 聚合 10 个运行模块，保留现有依赖管理；仍为这 10 个模块及 api-contract / integration / boot-all 三个继承例外的 parent |
-| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration` | 各业务域的领域、应用与专属基础设施实现；`apex-integration` 含连接器与物联网设备两个子域 |
-| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service`、`apex-aggregation-service` | 网关、业务服务或只读查询聚合服务的启动、配置与装配 |
+| 服务父 POM | `apex-services-bom` | 聚合 11 个运行模块，保留现有依赖管理；仍为这 11 个模块及 api-contract / integration / boot-all 三个继承例外的 parent |
+| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration`、`apex-knowledge` | 各业务域的领域、应用与专属基础设施实现；`apex-integration` 含连接器与物联网设备两个子域；`apex-knowledge` 提供知识空间/文档摄取/混合检索/问答编排 |
+| 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service`、`apex-aggregation-service`、`apex-knowledge-service` | 网关、业务服务或只读查询聚合服务的启动、配置与装配；知识库服务为可选运行模块（不进标准发布包） |
 | 组合部署 | `apex-boot-all` | basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 |
 | 服务增强 | `apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter`、`apex-job-service`、`apex-masking-service` | XXL 执行器、多模式分布式事务（AT/TCC/SAGA/XA）、固定任务代理与脱敏服务 |
 | 对象存储 | `apex-storage-spring-boot-starter` | 仅内部依赖 common，提供五后端策略和自动装配 |
@@ -98,7 +98,8 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
         ├─ apex-integration-service → apex-integration（连接器 + 物联网设备）
         ├─ apex-aggregation-service → api-contract（只读跨源聚合：统一待办）
         ├─ apex-job-service      → system 任务管理接口
-        └─ apex-masking-service  → common 脱敏工具（可选）
+        ├─ apex-masking-service  → common 脱敏工具（可选）
+        └─ apex-knowledge-service → apex-knowledge（知识库摄取/检索/问答，可选）
 
 共享依赖：persistence/cache → domain、common；messaging → persistence、domain、common；remote → domain、common；infrastructure-integration → remote、domain、common；兼容聚合 infrastructure → 五个能力 JAR
 跨服务契约：api-contract → common
@@ -120,11 +121,12 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | `apex-aggregation-service` | `AggregationServiceApplication` | 8098 | 无数据库（只读跨源聚合） |
 | `apex-job-service` | `JobServiceApplication` | 8095 | 无独立数据库，固定代理 system |
 | `apex-masking-service` | `MaskingServiceApplication` | 8096 | 无持久化 |
+| `apex-knowledge-service` | `KnowledgeServiceApplication` | 8100 | `apex_knowledge`（可选模块） |
 | `apex-example` | `ExampleApplication` | 8080 | `apex_example` |
 
 system 的默认管理端口为 8083；workflow 自 2026-11-07 起默认业务端口为 8093，两者不再冲突，同机直跑无须调整端口。集成服务管理端口为 8097（避开任务代理 8095 与脱敏服务 8096）。查询聚合服务默认业务端口 8098，无独立管理端口；XXL 控制台默认宿主端口为 8099（避开 8097 与 8098）。example 与 gateway 也不能同时占用默认 8080。
 
-数据库由各服务分别管理。system 的迁移资源位于 `apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；integration 的迁移资源位于 `apex-integration/src/main/resources/db/migration/`；其他四个业务服务的迁移资源位于各自 service 模块。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
+数据库由各服务分别管理。system 的迁移资源位于 `apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；integration 的迁移资源位于 `apex-integration/src/main/resources/db/migration/`；其他四个业务服务与知识库的迁移资源位于各自 service 模块（知识库为 `apex-knowledge-service/src/main/resources/db/migration/`）。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
 
 <a id="快速开始"></a>
 

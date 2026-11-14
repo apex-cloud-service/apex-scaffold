@@ -16,5 +16,8 @@
     <name>Apex Project Business Parent</name>
     <description>项目业务库的聚合与构建管理入口，通用框架实现由其他模块提供</description>
 
-    <!-- 第一阶段无项目业务子模块；独立运行模块归属 services，不在此重复聚合。 -->
+    <!-- 项目专属业务库聚合；独立运行模块归属 services，不在此重复聚合。 -->
+    <modules>
+        <module>../apex-knowledge</module>
+    </modules>
 </project>

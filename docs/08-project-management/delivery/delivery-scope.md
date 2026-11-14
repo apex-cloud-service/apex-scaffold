@@ -27,17 +27,17 @@
 
 ## 2. 范围内的 Maven 模块
 
-根 POM 直接聚合七个管理组；第一阶段递归模块 42 个、含根 reactor 43 个项目（8 个 POM、35 个既有 JAR）。当前分组与父链见 [README 分组说明](../../../README.md#maven-分组与父链)，既有生产依赖边界不因 parent 分组而改变。
+根 POM 直接聚合七个管理组；第一阶段递归模块 42 个、含根 reactor 43 个项目（8 个 POM、35 个既有 JAR）；2026-11-14 新增知识库两模块后递归 44 个、reactor 45 个项目。当前分组与父链见 [README 分组说明](../../../README.md#maven-分组与父链)，既有生产依赖边界不因 parent 分组而改变。
 
 | 管理组 | 聚合范围 | 交付影响 |
 | --- | --- | --- |
 | `apex-shared-parent` | 9 个共享基础/领域/契约/设施 JAR | 新 parent 仅构建期，无可执行产物 |
 | `apex-components-parent` | 六个脚手架能力库 | 原有业务库与能力不变 |
 | `apex-starters-parent` | 四个存储/授权/任务/事务 starter | 原有普通依赖 JAR 不变 |
-| `apex-services-bom` | 10 个运行模块 | 标准发布仍为八服务，job/masking 仍可选 |
+| `apex-services-bom` | 11 个运行模块 | 标准发布仍为八服务，job/masking/knowledge 仍可选 |
 | `apex-applications-parent` | example、boot-all | 示例/组合装配行为不变，boot-all 保持薄 JAR |
 | `apex-tools-parent` | license-tools、generator、tools-deployment、tools-build | 不扩大工具交付或授权范围 |
-| `apex-business-parent` | 第一阶段为空 | 只建立项目业务 JAR 管理入口，没有新增业务库、服务或数据库 |
+| `apex-business-parent` | 知识库 `apex-knowledge`（2026-11-14 新增） | 项目专属业务库聚合；独立运行模块仍归 services |
 
 七组均继承根，22 个既有叶子直接 parent 迁移；13 个 services-bom 子继承不变。api-contract / integration / boot-all 分别聚合在 shared / components / applications，仍继承 services-bom，其余 10 个运行模块聚合与继承均在 services。所有叶子目录、资源和 target 仍在根级；分组 parent 不是运行服务，也不代表新增交付 JAR。
 
@@ -53,9 +53,10 @@
 | 兼容聚合 | `apex-infrastructure` | 作为依赖（旧坐标） |
 | 跨服务契约 | `apex-api-contract` | 作为依赖 |
 | 分组父 POM | 六个 `apex-*-parent` 与复用的 `apex-services-bom` | 仅构建期，不进可执行交付清单；Maven 构件/源码交付须保留所需 parent 链 |
-| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration` | 作为依赖 |
+| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-office`、`apex-file`、`apex-integration`、`apex-knowledge` | 作为依赖 |
 | 运行服务 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-office-service`、`apex-file-service`、`apex-integration-service`、`apex-aggregation-service` | **可执行 jar** |
 | 服务增强 | `apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter`、`apex-job-service`、`apex-masking-service` | jar（前两者为依赖，后两者可选部署） |
+| 知识库 | `apex-knowledge-service`（可选运行模块） | **不随标准交付包发布**（对齐 job/masking 可选口径，按需单独构建部署） |
 | 对象存储 | `apex-storage-spring-boot-starter` | 作为依赖 |
 | 授权 | `apex-license-spring-boot-starter` | 作为依赖 |
 | 授权工具 | `apex-license-tools` | **不发布**（卖方专属） |
@@ -64,7 +65,7 @@
 | 运维工具 | `apex-tools-deployment` | 以 **`tools/local-deployment.jar`** 随既有发布脚本交付，不作为业务运行服务 |
 | 构建管理 | `apex-tools-build` | **不发布**（模块注册表与构建/打包/部署编排入口，见 [构建发布管理模块方案](../plans/build-management-plan.md)） |
 
-> 发布脚本实际打包的服务清单为网关、六个业务服务与只读查询聚合服务（`SERVICES` 数组共 8 项），见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service` 与 `apex-masking-service` 需按需单独构建部署。分组 parent 不加入该数组，部署工具仍以 `tools/local-deployment.jar` 随包交付。
+> 发布脚本实际打包的服务清单为网关、六个业务服务与只读查询聚合服务（`SERVICES` 数组共 8 项），见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service`、`apex-masking-service` 与 `apex-knowledge-service` 需按需单独构建部署。分组 parent 不加入该数组，部署工具仍以 `tools/local-deployment.jar` 随包交付。
 
 源码或未来 Maven 构件交付须包含根及所需分组 parent POM；客户源码包剥离卖方 `apex-license-tools` 时同步 tools parent 的聚合清单，不能恢复卖方工具以满足构建。构建仍从总根加载固定环境后使用 `mvnd -pl <叶子列表> -am`。本节更新的是结构和范围，不代表新结构的构建、性能或运行验收已经通过；历史基线与旧数字保留在第 7 节记录。
 
@@ -86,6 +87,7 @@
 | 聚合服务 | `apex-aggregation-service` | 8098 | 未单独配置 | 只读聚合 workflow 与 office 内部待办，无 DB/迁移/事务 |
 | 任务代理 | `apex-job-service` | 8095 | — | 可选，固定 system 地址 |
 | 脱敏服务 | `apex-masking-service` | 8096 | — | 可选，无持久化 |
+| 知识库服务 | `apex-knowledge-service` | 8100 | — | 可选，独立 apex_knowledge 库 + Meilisearch 索引（宿主 8099 被 XXL 控制台占用） |
 
 > 工作流服务业务端口为 8093（2026-11-07 调整前为 8083，与 system 管理端口同号，靠 Compose 宿主映射规避）。
 
@@ -93,17 +95,19 @@
 
 ## 4. 数据库基线
 
-五个业务域各自独立数据库与独立 Flyway 版本链，**不可按全仓最大版本号统一编排**。
+六个业务域各自独立数据库与独立 Flyway 版本链，**不可按全仓最大版本号统一编排**。
 
 | 业务域 | 数据库 | 迁移目录 | 当前最新版本 |
 | --- | --- | --- | --- |
-| system | `apex_system` | [mysql](../../../apex-system/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-system/src/main/resources/db/migration/postgresql/) | V72 |
+| system | `apex_system` | [mysql](../../../apex-system/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-system/src/main/resources/db/migration/postgresql/) | V91（V91 为 2026-11-14 知识库菜单权限种子） |
 | auth | `apex_auth` | [mysql](../../../apex-auth-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-auth-service/src/main/resources/db/migration/postgresql/) | V59 |
 | workflow | `apex_workflow` | [mysql](../../../apex-workflow-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-workflow-service/src/main/resources/db/migration/postgresql/) | V5 |
 | file | `apex_file` | [mysql](../../../apex-file-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-file-service/src/main/resources/db/migration/postgresql/) | V6 |
-| office | `apex_office` | [mysql](../../../apex-office-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-office-service/src/main/resources/db/migration/postgresql/) | V7 |
+| office | `apex_office` | [mysql](../../../apex-office-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-office-service/src/main/resources/db/migration/postgresql/) | V10 |
+| integration | `apex_integration` | [mysql](../../../apex-integration/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-integration/src/main/resources/db/migration/postgresql/) | V3 |
+| knowledge | `apex_knowledge` | [mysql](../../../apex-knowledge-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-knowledge-service/src/main/resources/db/migration/postgresql/) | V1（2026-11-14 新增知识库域） |
 
-**基线注意**：上表按工作区当前文件统计。其中 system V70～V72 尚未提交到 Git（见 [风险登记册](./risk-register.md) R-01），以提交后的版本为准；已执行迁移禁止修改或重排，破坏 Flyway checksum 会导致存量环境启动失败。
+**基线注意**：上表按工作区当前文件统计（2026-11-14 核对，各域 MySQL 与 PostgreSQL 版本集合一致）；已执行迁移禁止修改或重排，破坏 Flyway checksum 会导致存量环境启动失败。
 
 ---
 

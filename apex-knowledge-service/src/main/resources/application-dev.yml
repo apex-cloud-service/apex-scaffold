@@ -1,0 +1,38 @@
+server:
+  port: 8100
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/apex_knowledge?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: root
+
+apex:
+  tenant:
+    enabled: false
+  knowledge:
+    security:
+      # 本地联调使用 HMAC 过渡密钥；生产必须走 RS256 公钥配置
+      jwt-secret: ${KNOWLEDGE_JWT_SECRET:dev-knowledge-hmac-secret-32-bytes-min!!}
+      authorization:
+        shared-user-namespace: true
+        base-url: ${KNOWLEDGE_AUTH_BASE_URL:https://localhost:8081}
+    meilisearch:
+      enabled: ${KNOWLEDGE_MEILISEARCH_ENABLED:true}
+      url: ${KNOWLEDGE_MEILISEARCH_URL:http://localhost:7700}
+      api-key: ${KNOWLEDGE_MEILISEARCH_API_KEY:masterKey}
+    embedding:
+      enabled: ${KNOWLEDGE_EMBEDDING_ENABLED:false}
+      base-url: ${KNOWLEDGE_EMBEDDING_BASE_URL:http://localhost:11434/v1}
+      api-key: ${KNOWLEDGE_EMBEDDING_API_KEY:ollama}
+      model: ${KNOWLEDGE_EMBEDDING_MODEL:nomic-embed-text}
+      dimensions: ${KNOWLEDGE_EMBEDDING_DIMENSIONS:768}
+    chat:
+      enabled: ${KNOWLEDGE_CHAT_ENABLED:false}
+      base-url: ${KNOWLEDGE_CHAT_BASE_URL:http://localhost:11434/v1}
+      api-key: ${KNOWLEDGE_CHAT_API_KEY:ollama}
+      model: ${KNOWLEDGE_CHAT_MODEL:qwen2.5:7b}
+
+logging:
+  level:
+    com.apex.scaffold.knowledge: DEBUG

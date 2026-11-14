@@ -37,6 +37,7 @@ k8s
 !apex-aggregation-service/target/
 !apex-job-service/target/
 !apex-masking-service/target/
+!apex-knowledge-service/target/
 !apex-gateway/target/apex-gateway-*.jar
 !apex-system-service/target/apex-system-service-*.jar
 !apex-auth-service/target/apex-auth-service-*.jar
@@ -47,3 +48,4 @@ k8s
 !apex-aggregation-service/target/apex-aggregation-service-*.jar
 !apex-job-service/target/apex-job-service-*.jar
 !apex-masking-service/target/apex-masking-service-*.jar
+!apex-knowledge-service/target/apex-knowledge-service-*.jar

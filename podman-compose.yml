@@ -190,6 +190,7 @@ services:
       ROUTE_MASKING_URI: ${ROUTE_MASKING_URI:-http://apex-masking-service:8096}
       ROUTE_INTEGRATION_URI: ${ROUTE_INTEGRATION_URI:-http://apex-integration-service:8094}
       ROUTE_AGGREGATION_URI: ${ROUTE_AGGREGATION_URI:-http://apex-aggregation-service:8098}
+      ROUTE_KNOWLEDGE_URI: ${ROUTE_KNOWLEDGE_URI:-http://apex-knowledge-service:8100}
     depends_on:
       security-key-check:
         condition: service_completed_successfully
@@ -626,6 +627,55 @@ services:
       timeout: 3s
       retries: 12
       start_period: 30s
+    restart: unless-stopped
+    networks: [apex-network]
+
+  # 知识库服务（可选 profile）：独立 apex_knowledge 库 + Meilisearch 索引 + 可选模型供应商。
+  # 索引/向量化/问答默认关闭，按需通过 KNOWLEDGE_* 环境变量启用（见 .env.example）。
+  apex-knowledge-service:
+    profiles: [knowledge]
+    build:
+      context: .
+      dockerfile: Containerfile
+      args:
+        BUILD_PROFILE: ${BUILD_PROFILE:-enterprise}
+        SERVICE_MODULE: apex-knowledge-service
+        SERVICE_PORT: "8100"
+        MANAGEMENT_PORT: "8100"
+        HEALTHCHECK_PORT: "8100"
+    image: apex-knowledge-service:${TAG:-latest}
+    ports:
+      - "127.0.0.1:${KNOWLEDGE_PORT:-8100}:8100"
+    environment:
+      KNOWLEDGE_PORT: "8100"
+      KNOWLEDGE_DB_URL: ${KNOWLEDGE_DB_URL:-jdbc:mysql://mysql:3306/apex_knowledge?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false}
+      KNOWLEDGE_DB_USERNAME: ${KNOWLEDGE_DB_USERNAME:-apex}
+      KNOWLEDGE_DB_PASSWORD: ${KNOWLEDGE_DB_PASSWORD:-}
+      KNOWLEDGE_MEILISEARCH_ENABLED: ${KNOWLEDGE_MEILISEARCH_ENABLED:-false}
+      KNOWLEDGE_MEILISEARCH_URL: ${KNOWLEDGE_MEILISEARCH_URL:-http://meilisearch:7700}
+      KNOWLEDGE_MEILISEARCH_API_KEY: ${KNOWLEDGE_MEILISEARCH_API_KEY:-}
+      KNOWLEDGE_EMBEDDING_ENABLED: ${KNOWLEDGE_EMBEDDING_ENABLED:-false}
+      KNOWLEDGE_EMBEDDING_BASE_URL: ${KNOWLEDGE_EMBEDDING_BASE_URL:-}
+      KNOWLEDGE_EMBEDDING_API_KEY: ${KNOWLEDGE_EMBEDDING_API_KEY:-}
+      KNOWLEDGE_EMBEDDING_MODEL: ${KNOWLEDGE_EMBEDDING_MODEL:-}
+      KNOWLEDGE_EMBEDDING_DIMENSIONS: ${KNOWLEDGE_EMBEDDING_DIMENSIONS:-1024}
+      KNOWLEDGE_CHAT_ENABLED: ${KNOWLEDGE_CHAT_ENABLED:-false}
+      KNOWLEDGE_CHAT_BASE_URL: ${KNOWLEDGE_CHAT_BASE_URL:-}
+      KNOWLEDGE_CHAT_API_KEY: ${KNOWLEDGE_CHAT_API_KEY:-}
+      KNOWLEDGE_CHAT_MODEL: ${KNOWLEDGE_CHAT_MODEL:-}
+      KNOWLEDGE_STORAGE_BUCKET: ${KNOWLEDGE_STORAGE_BUCKET:-knowledge}
+      KNOWLEDGE_JWT_PUBLIC_KEYS_BASE64: ${KNOWLEDGE_JWT_PUBLIC_KEYS_BASE64:-}
+      KNOWLEDGE_SHARED_USER_NAMESPACE: ${KNOWLEDGE_SHARED_USER_NAMESPACE:-false}
+      KNOWLEDGE_AUTH_BASE_URL: ${KNOWLEDGE_AUTH_BASE_URL:-}
+      APEX_INTERNAL_AUTH_ENABLED: ${APEX_INTERNAL_AUTH_ENABLED:-true}
+      APEX_INTERNAL_AUTH_SECRET: ${APEX_INTERNAL_AUTH_SECRET:?}
+      SW_AGENT_ENABLED: "false"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8100/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 60s
     restart: unless-stopped
     networks: [apex-network]
 

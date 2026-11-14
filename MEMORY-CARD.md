@@ -6,7 +6,7 @@
 
 ## 1. 一句话
 
-Spring Boot 3.5.15 / Java 21 / WebFlux 纯响应式 / DDD 的 Java 后端基座：**API 网关 + 六个业务服务 + 任务代理 + 可选脱敏 + 组合部署档**，业务代码以库模块复用，运行模块只负责启动与装配。仓库不含前端源码（前端独立仓 `apex-admin-web`）。
+Spring Boot 3.5.15 / Java 21 / WebFlux 纯响应式 / DDD 的 Java 后端基座：**API 网关 + 六个业务服务 + 任务代理 + 可选脱敏 + 可选知识库 + 组合部署档**，业务代码以库模块复用，运行模块只负责启动与装配。仓库不含前端源码（前端独立仓 `apex-admin-web`）。
 
 ## 2. 构建（唯一合法路径）
 
@@ -39,7 +39,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | `apex-boot-all` | 缺省 8080 | 单进程组合多库 | 复用组件迁移 |
 
 - 迁移**按服务归位**在业务库 / 运行模块的 `src/main/resources/db/migration/{mysql,postgresql}`。注意物理位置有历史遗留：system 迁移在 **`apex-system`**（不在 `-service`）、auth 迁移在 **`apex-auth-service`**（不在 `apex-auth`）、integration 迁移在 **`apex-integration`**（库模块，不在 `-service`）；新增时跟随现有位置，不要另起一套。
-- 规模：MySQL 135 + PostgreSQL 135 = **270 个已跟踪迁移**。
+- 规模：MySQL 137 + PostgreSQL 137 = **274 个已跟踪迁移**（knowledge 域 2026-11-14 增 V1，双方言配对）。
 - system 管理端口缺省 8083；workflow 业务端口 2026-11-07 起为 8093，两者不再冲突，同机直跑无须改端口。
 - 组合档 `apex-boot-all` 只装配不实现，无自有 `application.yml`；多实例部署必须显式选 MQ，否则 `apex.events.channel=auto` 退化为进程内派发。
 

@@ -84,6 +84,8 @@
     <logstash.version>7.4</logstash.version>
     <skywalking-toolkit.version>9.2.0</skywalking-toolkit.version>
     <meilisearch.version>0.17.1</meilisearch.version>
+    <!-- 知识库模块（apex-knowledge）第三方依赖：Tika 文档文本解析（pdf/office/html） -->
+    <tika.version>3.0.0</tika.version>
     <!-- 认证库模块（apex-auth）第三方依赖：TOTP 双因素认证 / AWS KMS 密钥管理 -->
     <totp.version>1.7.1</totp.version>
     <awssdk.version>2.20.26</awssdk.version>
@@ -617,6 +619,17 @@
         <groupId>com.meilisearch.sdk</groupId>
         <artifactId>meilisearch-java</artifactId>
         <version>${meilisearch.version}</version>
+      </dependency>
+      <!-- 知识库文档文本解析（Apache Tika，覆盖 pdf/office/html/txt） -->
+      <dependency>
+        <groupId>org.apache.tika</groupId>
+        <artifactId>tika-core</artifactId>
+        <version>${tika.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tika</groupId>
+        <artifactId>tika-parsers-standard-package</artifactId>
+        <version>${tika.version}</version>
       </dependency>
       <dependency>
         <groupId>com.apex.scaffold</groupId>

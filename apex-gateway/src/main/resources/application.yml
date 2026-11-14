@@ -206,6 +206,19 @@ spring:
                 name: maskingService
                 fallbackUri: forward:/__gateway/fallback
 
+        # ---- 知识库（可选运行模块）：空间/文档管理（admin-api）与检索/问答（api）。
+        # 💡 未注册 Nacos，使用 ROUTE_KNOWLEDGE_URI 固定地址兜底，口径与 job/masking 一致。
+        #    /api/v1/kb/chat/ask 为 SSE 流式端点，响应超时豁免与全局 SSE 口径一致。
+        - id: knowledge-domain
+          uri: ${ROUTE_KNOWLEDGE_URI:http://127.0.0.1:8100}
+          predicates:
+            - Path=/api/v1/kb/**,/admin-api/v1/kb/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: knowledgeService
+                fallbackUri: forward:/__gateway/fallback
+
         # ---- 开放平台路由组（/open-api/**，D2）：scope 断言 + 租户能力门禁见 OpenApiScopeGatewayFilter ----
         # metadata.open-api：capability=租户订阅能力（D4）；read/write-scopes=对应 HTTP 方法族的 scope 断言（any-of）。
         - id: open-api-file

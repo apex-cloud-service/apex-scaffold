@@ -1,6 +1,6 @@
 # AGENTS.md — Apex Scaffold
 
-本文件定义仓库的开发、验证和协作约束。项目使用 Java 21、Spring Boot、Spring WebFlux 和 DDD，当前运行架构为网关加六个业务服务（system/auth/workflow/file/office/integration）、只读查询聚合服务，以及任务代理和可选脱敏服务。修改前阅读目标模块的代码、POM、配置和测试，沿用现有模式；只完成任务需要的变更。
+本文件定义仓库的开发、验证和协作约束。项目使用 Java 21、Spring Boot、Spring WebFlux 和 DDD，当前运行架构为网关加六个业务服务（system/auth/workflow/file/office/integration）、只读查询聚合服务，以及任务代理、可选脱敏服务与可选知识库服务（system/auth/workflow/file/office/integration 七个业务库，2026-11-14 新增知识库）。修改前阅读目标模块的代码、POM、配置和测试，沿用现有模式；只完成任务需要的变更。
 
 项目介绍与运行指引见 [README.md](README.md)。版本与聚合模块以根 [pom.xml](pom.xml) 为准，构建环境以 [.sdkmanrc](.sdkmanrc) 为准。历史文档、注释中的迁移阶段名称不能替代当前实现。本文件是仓库协作约束的唯一权威来源；`.trae/rules/project_rules.md` 只是部分编辑器的本地镜像，不入版本库，也不得与本文件冲突。
 
@@ -25,7 +25,7 @@ mvnd -T4 -B clean verify
 
 ## 模块与物理边界
 
-根 POM 直接聚合七个管理组；第一阶段递归聚合 42 个模块，含根 POM 的全量 reactor 为 43 个项目（8 个 POM、35 个既有 JAR）。六个新分组 parent 与复用的 `apex-services-bom` 均直接继承根 POM。所有现有叶子目录仍在仓库根级，分组用 `../apex-xxx` 聚合同级目录，不移动源码、资源或 target；模块坐标、实际生产依赖、业务接口、服务与端口不变。后续新增项目以实际递归清单计数，不把 42 / 43 固定为永久门槛。
+根 POM 直接聚合七个管理组；第一阶段递归聚合 42 个模块，含根 POM 的全量 reactor 为 43 个项目（8 个 POM、35 个既有 JAR）。2026-11-14 新增知识库两模块（`apex-knowledge` + `apex-knowledge-service`）后递归模块 44 个、reactor 45 个项目（8 个 POM、37 个 JAR）。六个新分组 parent 与复用的 `apex-services-bom` 均直接继承根 POM。所有现有叶子目录仍在仓库根级，分组用 `../apex-xxx` 聚合同级目录，不移动源码、资源或 target；模块坐标、实际生产依赖、业务接口、服务与端口不变。后续新增项目以实际递归清单计数，不把 42 / 43 固定为永久门槛。
 
 ### Maven 分组与继承
 
@@ -34,10 +34,10 @@ mvnd -T4 -B clean verify
 | `apex-shared-parent` | 9 | common、共享 domain、api-contract、五个 infrastructure 能力 JAR 和旧坐标兼容 JAR |
 | `apex-components-parent` | 6 | system/auth/workflow/file/office/integration 六个脚手架能力库 |
 | `apex-starters-parent` | 4 | storage/license/job/seata starter |
-| `apex-services-bom` | 10 | 八个标准发布运行模块及 job/masking 两个可选运行模块 |
+| `apex-services-bom` | 11 | 八个标准发布运行模块及 job/masking/knowledge 三个可选运行模块 |
 | `apex-applications-parent` | 2 | example 与 boot-all 装配 |
 | `apex-tools-parent` | 4 | license-tools、generator、tools-deployment、tools-build |
-| `apex-business-parent` | 0 | 只管理项目专属业务 JAR 库；第一阶段为空，无业务源码或运行模块 |
+| `apex-business-parent` | 1 | 项目专属业务 JAR 库聚合；当前含知识库 `apex-knowledge`，无独立运行模块在此登记 |
 
 - 聚合、parent 继承、物理目录、生产依赖和运行部署是不同关系，完整模块映射见 [README 分组说明](README.md#maven-分组与父链)。
 - 第一阶段 22 个既有叶子的直接 parent 改为各自新分组；13 个 `apex-services-bom` 子项目保持继承。其中 api-contract 聚合在 shared、integration 聚合在 components、boot-all 聚合在 applications，10 个运行模块的聚合与继承均在 services；不为外观一致而消除三个例外或扩大服务 BOM 管理范围。
@@ -56,8 +56,8 @@ mvnd -T4 -B clean verify
 | 共享设施 | `apex-infrastructure-persistence`、`apex-infrastructure-cache`、`apex-infrastructure-messaging`、`apex-infrastructure-remote`、`apex-infrastructure-integration`：分别提供持久化、缓存、消息、远程调用和第三方集成能力；`apex-infrastructure` 仅保留旧坐标兼容，不再承载实现源码 |
 | 共享契约 | `apex-api-contract`：跨服务内部 API 与 DTO，无具体业务实体 |
 | 服务父 POM | `apex-services-bom`：聚合十个运行模块，保留其及 api-contract/integration/boot-all 三个例外的直接 parent 继承与原依赖管理 |
-| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office`、`apex-integration`：`apex-integration` 含 connector（连接器/租户凭据/出站调用/入站 webhook）与 device（设备注册/影子/遥测/命令/规则）两个包结构隔离的子域 |
-| 运行模块 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-file-service`、`apex-office-service`、`apex-integration-service`、`apex-aggregation-service`（只读查询聚合，无 DB/迁移/事务，仅通过 WebClient 聚合 workflow 与 office 的内部接口） |
+| 业务库 | `apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office`、`apex-integration`：`apex-integration` 含 connector（连接器/租户凭据/出站调用/入站 webhook）与 device（设备注册/影子/遥测/命令/规则）两个包结构隔离的子域；`apex-knowledge`：知识空间/文档摄取（Tika 解析/分块/向量化）/Meilisearch hybrid 检索/RAG 问答编排，能力级降级（索引/向量化/问答各自独立开关） |
+| 运行模块 | `apex-gateway`、`apex-system-service`、`apex-auth-service`、`apex-workflow-service`、`apex-file-service`、`apex-office-service`、`apex-integration-service`、`apex-aggregation-service`（只读查询聚合，无 DB/迁移/事务，仅通过 WebClient 聚合 workflow 与 office 的内部接口）、`apex-knowledge-service`（知识库可选运行模块，独立 apex_knowledge 库，端口 8100） |
 | 组合部署 | `apex-boot-all`：basic/示例/演示档单进程装配全部业务组件，仅装配不含业务实现 |
 | 服务增强 | `apex-job-spring-boot-starter`：默认禁用的 XXL 执行器；`apex-seata-spring-boot-starter`：默认禁用的多模式分布式事务（`apex.seata.mode` 选择 AT/TCC/SAGA/XA，缺省 AT）；`apex-job-service`：固定 system 代理；`apex-masking-service`：无持久化的脱敏接口 |
 | 对象存储 | `apex-storage-spring-boot-starter`：无业务域依赖的五后端存储自动装配 |
@@ -86,6 +86,7 @@ mvnd -T4 -B clean verify
 | `apex-workflow`、`apex-office` | common、domain |
 | `apex-file` | common、domain、storage-spring-boot-starter |
 | `apex-integration` | common、domain、infrastructure-persistence、infrastructure-remote；MQTT 客户端 hivemq-mqtt-client 为 optional |
+| `apex-knowledge` | common、infrastructure-persistence、storage-spring-boot-starter；Tika（文本解析）与 meilisearch-java（索引写入）为第三方依赖 |
 | `apex-storage-spring-boot-starter` | common |
 | `apex-system-service` | common、domain、api-contract、system、job-spring-boot-starter、seata-spring-boot-starter（能力由 system 装配） |
 | `apex-auth-service` | common、domain、api-contract、auth、infrastructure-cache、infrastructure-messaging、infrastructure-integration、job-spring-boot-starter、seata-spring-boot-starter |
@@ -94,6 +95,7 @@ mvnd -T4 -B clean verify
 | `apex-office-service` | common、domain、api-contract、office、job-spring-boot-starter、seata-spring-boot-starter |
 | `apex-integration-service` | common、domain、integration、job-spring-boot-starter、seata-spring-boot-starter |
 | `apex-aggregation-service` | common、api-contract |
+| `apex-knowledge-service` | common、knowledge |
 | `apex-job-service` | infrastructure-remote |
 | `apex-masking-service`、两个增强 starter | common |
 | `apex-gateway` | common |
@@ -106,7 +108,7 @@ mvnd -T4 -B clean verify
 
 ### 服务增强边界
 
-- 六个业务 service（system/auth/workflow/file/office/integration）均直接依赖 job 与 seata starter；job-service 仅直接内部依赖 infrastructure-remote，masking-service 与两个 starter 仅直接内部依赖 common。
+- 六个业务 service（system/auth/workflow/file/office/integration）均直接依赖 job 与 seata starter；job-service 仅直接内部依赖 infrastructure-remote，masking-service 与两个 starter 仅直接内部依赖 common；knowledge-service 仅直接内部依赖 common 与 knowledge（可选模块不接 job/seata）。
 - 集成服务与 `apex-integration` 的对外集成、设备接入一律使用 `WebClient`（HTTP），不引入 Feign；MQTT 客户端依赖 optional，classpath 无该依赖时零 Bean，生产由外部 EMQX 提供接入。
 - job-service 不迁移 system 数据所有权；只代理九个任务接口。XXL 仅接管配置的一个 system 任务及 workflow 超时扫描，中心 cron 人工同步。
 - 脱敏策略为启动配置，无 CRUD 或热刷新；租户来自已验证 JWT。
@@ -237,7 +239,7 @@ Mono.fromCallable(() -> repository.findById(id))
 - 配置变更核对对应服务的 `application*.yml`、`bootstrap.yml`、`.env.example` 与部署注入；必要时同步 [配置文档](docs/05-operations/configuration.md)。
 - Java 不自动加载 `.env`；部署 app.sh 只在 `APEX_ENV_FILE` 指定有效文件时 source；Compose `.env` 插值不等于全部变量注入容器。
 - 关闭 Nacos 时核对 config/discovery/register 开关；网关 `lb://` 路由同时改为明确 HTTP 地址。
-- system 默认业务端口 8082、管理端口 8083；workflow 默认业务端口 8093（2026-11-07 由 8083 调整，消除与 system 管理端口冲突）；集成服务默认业务端口 8094、管理端口 8097；只读查询聚合服务默认业务端口 8098。example 与 gateway 默认均为 8080。
+- system 默认业务端口 8082、管理端口 8083；workflow 默认业务端口 8093（2026-11-07 由 8083 调整，消除与 system 管理端口冲突）；集成服务默认业务端口 8094、管理端口 8097；只读查询聚合服务默认业务端口 8098；知识库服务默认业务端口 8100（XXL 控制台占用宿主 8099，故跳过）。example 与 gateway 默认均为 8080。
 - Compose 部署核对外部 `apex-observability` 网络、前端镜像、数据库/Redis 凭据、生产 CORS 和 auth JDBC/R2DBC TLS 配置，不把模板复制描述为可直接上线。
 - 已用于持久数据的加密密钥需要稳定保存，轮换配合迁移，不能每次启动随机重建。
 - 新增 Bash 脚本复用 [公共函数库](scripts/lib/common.sh)，使用其根目录、日志与安全查找函数，不重复手写排除规则。修改旧脚本只处理当前任务所需内容。
@@ -271,7 +273,7 @@ git diff --check
 - `remote-it`、`stress-tests` 等额外场景按对应配置准备依赖，不能用其结果替代默认完整门禁。
 - 完整通过标准为反应堆全部模块 `BUILD SUCCESS`，测试 `Failures: 0 / Errors: 0`。
 - 推荐 `-T4`，不要使用过高并行度如 `-T1C`。真实 Redis/HTTPS 的计时敏感测试可能因负载超时；出现此类失败应分析日志，必要时重跑或降低并行度，不改弱业务 SLA 来掩盖问题。
-- `*DualDatabaseMigrationIntegrationTest`（system / integration / office 三域）以 Testcontainers 拉起真实 MySQL 9 + PostgreSQL 15，属于默认 Failsafe 门禁。`-T4` 下多个模块同时拉容器可能因资源竞争出现 `ContainerLaunchException`/连接超时；此类失败属环境问题，单独重跑该模块（`mvnd -T1 -pl <module> integration-test -Dit.test='*DualDatabaseMigrationIntegrationTest'`）或整体降为 `-T1` 复核，不得据单次并发失败判定迁移脚本缺陷。
+- `*DualDatabaseMigrationIntegrationTest`（system / integration / office / knowledge 四域）以 Testcontainers 拉起真实 MySQL 9 + PostgreSQL 15，属于默认 Failsafe 门禁。`-T4` 下多个模块同时拉容器可能因资源竞争出现 `ContainerLaunchException`/连接超时；此类失败属环境问题，单独重跑该模块（`mvnd -T1 -pl <module> integration-test -Dit.test='*DualDatabaseMigrationIntegrationTest'`）或整体降为 `-T1` 复核，不得据单次并发失败判定迁移脚本缺陷。
 
 ### 已有架构检查的实际范围
 

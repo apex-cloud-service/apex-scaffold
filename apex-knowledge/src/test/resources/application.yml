@@ -1,0 +1,42 @@
+spring:
+  autoconfigure:
+    exclude: com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration
+  datasource:
+    url: jdbc:h2:mem:kbtest;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/basic-schema.sql
+  flyway:
+    enabled: false
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+apex:
+  tenant:
+    enabled: false
+  sql:
+    slow:
+      enabled: false
+  database:
+    type: mysql
+  knowledge:
+    storage:
+      bucket: test-kb
+    ingest:
+      chunk-size: 800
+      chunk-overlap: 120
+
+storage:
+  local:
+    enabled: true
+    base-path: target/test-uploads
+
+logging:
+  level:
+    com.apex.scaffold.knowledge: INFO

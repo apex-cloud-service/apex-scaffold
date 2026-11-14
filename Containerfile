@@ -107,6 +107,8 @@ COPY apex-aggregation-service/pom.xml apex-aggregation-service/
 COPY apex-boot-all/pom.xml apex-boot-all/
 COPY apex-tools-deployment/pom.xml apex-tools-deployment/
 COPY apex-tools-build/pom.xml apex-tools-build/
+COPY apex-knowledge/pom.xml apex-knowledge/
+COPY apex-knowledge-service/pom.xml apex-knowledge-service/
 
 COPY .sdkmanrc .
 COPY scripts/build/init-build-env.sh scripts/build/init-build-env.sh
