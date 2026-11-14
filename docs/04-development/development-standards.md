@@ -66,7 +66,7 @@ mvnd -T4 -B spotless:apply
 system 域的四层代码位于 `apex-system` 模块内，通过包结构分层（Java 包名沿用历史路径）：
 
 ```text
-apex-system/src/main/java/com/apex/scaffold/
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/
 ├── interfaces/          # RouterFunction、Handler、WebFilter、Web 配置
 ├── application/         # 用例编排、DTO、Assembler
 ├── domain/              # 实体、聚合、领域服务、仓储端口
@@ -76,13 +76,13 @@ apex-system/src/main/java/com/apex/scaffold/
 共享能力按职责拆分为独立模块：
 
 ```text
-apex-domain/                     # 跨域可复用的基础实体、事件与端口契约
-apex-infrastructure-persistence/ # MyBatis-Plus、租户与数据权限
-apex-infrastructure-cache/       # Redis、分布式锁、布隆过滤器
-apex-infrastructure-messaging/   # 消息与 Outbox
-apex-infrastructure-remote/      # 远程调用
-apex-infrastructure-integration/ # 第三方集成
-apex-common/                     # Result、异常、上下文、工具、公共注解
+apex-shared-parent/apex-domain/                     # 跨域可复用的基础实体、事件与端口契约
+apex-shared-parent/apex-infrastructure-persistence/ # MyBatis-Plus、租户与数据权限
+apex-shared-parent/apex-infrastructure-cache/       # Redis、分布式锁、布隆过滤器
+apex-shared-parent/apex-infrastructure-messaging/   # 消息与 Outbox
+apex-shared-parent/apex-infrastructure-remote/      # 远程调用
+apex-shared-parent/apex-infrastructure-integration/ # 第三方集成
+apex-shared-parent/apex-common/                     # Result、异常、上下文、工具、公共注解
 ```
 
 依赖方向：
@@ -107,7 +107,7 @@ interfaces → application → domain ← infrastructure
 
 ### 2.3 Maven 分组与模块创建
 
-根直接聚合 shared/components/starters/services/applications/tools/business 七组，递归 42 个模块、含根 reactor 43 个项目；35 个既有 JAR 不变。完整映射见 [README 分组表](../../README.md#maven-分组与父链)。七组 parent 均继承总根，负责配置管理和聚合，不代表生产依赖或物理嵌套。
+根直接聚合 shared/components/starters/services/applications/tools/business 七组，递归 44 个模块、含根 reactor 45 个项目；37 个 JAR 不变。完整映射见 [README 分组表](../../README.md#maven-分组与父链)。七组 parent 均继承总根，负责配置管理和聚合，不代表生产依赖；第二阶段起叶子物理嵌套于各分组父目录。
 
 第一阶段 22 个既有叶子直接 parent 迁移到各自新分组；原有 13 个 services-bom 子继承保留，其中 api-contract / integration / boot-all 分别聚合在 shared / components / applications，其 parent 仍是 `apex-services-bom`。10 个运行模块聚合并继承 services-bom。不得为了统一外观扩散服务 BOM 管理或调整实际依赖、插件执行和业务边界。
 
@@ -589,7 +589,7 @@ public enum UserStatus {
 mvnd javadoc:aggregate -DskipTests
 
 # 生成单模块 JavaDoc
-mvnd javadoc:javadoc -pl apex-domain -DskipTests
+mvnd javadoc:javadoc -pl :apex-domain -DskipTests
 # 输出目录：target/site/apidocs/
 
 # 注释问题扫描（必须全绿）
@@ -915,7 +915,7 @@ StepVerifier.create(authService.login(request))
 
 ```bash
 mvnd clean test jacoco:report
-mvnd -pl apex-system-service -am compile -DskipTests
+mvnd -pl :apex-system-service -am compile -DskipTests
 ```
 
 测试不得依赖真实生产凭证、真实用户数据或不可控的外部服务。
@@ -998,7 +998,7 @@ mvnd --version     # 输出应包含 Apache Maven Daemon (mvnd) 2.0.0-rc-3
 ```bash
 source scripts/build/init-build-env.sh
 # 定向快速验证：从总根选择叶子及其上游依赖
-mvnd -T4 -B -pl apex-system-service -am test
+mvnd -T4 -B -pl :apex-system-service -am test
 # 完整门禁
 mvnd -T4 -B clean verify
 ```

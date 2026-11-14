@@ -12,7 +12,7 @@
 
 | 编号 | 问题 | 现状证据 | 影响 |
 | --- | --- | --- | --- |
-| R-1 | 网关 `/open-api/**` 以原路径转发，四个业务域无承接路由，应用令牌到不了业务 Handler | 网关 [application.yml](../../../apex-gateway/src/main/resources/application.yml) 开放路由组仅配 CircuitBreaker；各服务 Router 无 `/open-api` 注册 | 开放平台不可用，D2/D4 端到端断裂 |
+| R-1 | 网关 `/open-api/**` 以原路径转发，四个业务域无承接路由，应用令牌到不了业务 Handler | 网关 [application.yml](../../../apex-services-bom/apex-gateway/src/main/resources/application.yml) 开放路由组仅配 CircuitBreaker；各服务 Router 无 `/open-api` 注册 | 开放平台不可用，D2/D4 端到端断裂 |
 | R-2 | 业务服务身份过滤器只认个人 `ACCESS` 令牌（`userId+tenantId`），不识别应用令牌 | file/office/workflow 各自 `IdentityRelayAuthenticationFilter`；system 走 `JwtAuthenticationFilter` | 即使补路由，应用令牌仍被 401 |
 | R-3 | 开放应用双注册表：system `oauth2_registered_client`（管理面写入）与 auth `auth_config`（签发面读取）互不相通 | system `OpenAppAdminService` 写前者；auth `OAuth2Service.client()` 读后者 | 经 `/api/v1/open-apps` 注册的应用根本无法取得令牌；`DISABLED` 已在签发侧拦截，但"注册即失效"仍在 |
 | R-4 | `apex-boot-all` 非完整装配：入口仅扫 bootall 包，业务库组件入口不携带 MapperScan/数据源/迁移链，协议层在运行模块 | `BootAllApplication` + 各库 `*ComponentAutoConfiguration`；装配测试不启动上下文 | "任意组合拔插"（G3）无实证形态 |
@@ -62,7 +62,7 @@
 | --- | --- |
 | G1 auth 内部 API | auth-service 新增签名保护的 `/internal/v1/open-apps` upsert / status / reset-secret（内部通道复用已上线的 `apex.internal-auth` 签名过滤器）；密钥只落 bcrypt 哈希，明文一次性返回 |
 | G2 system 管理面代理 | `OpenAppAdminService` 改为调 G1 端点（`apex.open-app.registry=auth` 开关，回退值 `local` 保留一个发布周期）；响应模型不变，前端无感 |
-| G3 存量迁移 | 一次性运维脚本（入 `scripts/utils/`，复用 [apex-tools-deployment](../../../apex-tools-deployment/pom.xml) 的执行形态）：读 `oauth2_registered_client` 中带 `openPlatform.*` 的行，逐条 upsert 到 auth；输出比对报告（条数、哈希校验、失败清单），脚本可重复执行 |
+| G3 存量迁移 | 一次性运维脚本（入 `scripts/utils/`，复用 [apex-tools-deployment](../../../apex-tools-parent/apex-tools-deployment/pom.xml) 的执行形态）：读 `oauth2_registered_client` 中带 `openPlatform.*` 的行，逐条 upsert 到 auth；输出比对报告（条数、哈希校验、失败清单），脚本可重复执行 |
 | G4 弃用与收口 | system 侧开放应用写路径标记 `@Deprecated` 并在文档标注迁移窗口；`InternalOpenAppRouter` 限流档查询改读 auth 源（TTL 缓存不变）；[开放平台接入契约](../../03-api/open-platform-integration.md) 更新存储归属与迁移说明 |
 
 ## 6. 批次 H：boot-all 真实隔离（R-4，依赖 D23）

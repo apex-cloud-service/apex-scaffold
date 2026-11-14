@@ -51,7 +51,7 @@
 
 全部命令在 `source scripts/build/init-build-env.sh` 通过（JDK 21.0.13 + mvnd 2.0.0-rc-3 校验）后执行：
 
-1. `mvnd -T4 -B -pl apex-common,apex-system,apex-gateway,apex-auth-service,apex-workflow-service,apex-office-service,apex-file-service -am test` —— 初次运行暴露 3 个实施缺陷（网关双构造器歧义、office 兼容构造器 NPE、测试轮次设计错误），逐一修复后全绿（见 §4）。
+1. `mvnd -T4 -B -pl :apex-common,:apex-system,:apex-gateway,:apex-auth-service,:apex-workflow-service,:apex-office-service,:apex-file-service -am test` —— 初次运行暴露 3 个实施缺陷（网关双构造器歧义、office 兼容构造器 NPE、测试轮次设计错误），逐一修复后全绿（见 §4）。
 2. `mvnd -T4 -B spotless:check` → 违规后对受影响 7 模块 `spotless:apply` → 复查通过。
 3. `git diff --check` —— 空白错误 0。
 4. `bash scripts/ci/check-doc-links.sh` —— 15 个断链全部来自 `.workbuddy/knowledge/README.md`（并行会话本地工具目录，非本批引入）；本批新增/修改文档链接 0 断裂。
@@ -82,7 +82,7 @@
 | 网关应用上下文启动失败（GatewayApplicationTest 3 errors：`No default constructor found`） | `GatewayJwtVerifierService` 增加第二构造器后未标注 `@Autowired`，Spring 无法选择 | 生产构造器补 `@Autowired` |
 | office 过滤器 7 个测试 NPE | 4 参兼容构造器向 6 参构造器传 `null` provider 后直接解引用 | `jwksFetcher == null ? null : getIfAvailable()` 空值保护 |
 | `JwksFetcherTest.refreshSemantics` 断言失败 | 测试轮次设计错误（第三轮命中 error 分支） | 修正为 成功→空→失败→恢复 四轮 |
-| `mvnd -pl <module> test`（无 `-am`）编译失败 | 本地仓库 apex-common 构件未 install，缺新类 | 统一带 `-am` 执行 |
+| `mvnd -pl <module> test`（无 `-am`）编译失败 | 本地仓库 :apex-common 构件未 install，缺新类 | 统一带 `-am` 执行 |
 
 ## 6. 未验证项与边界
 

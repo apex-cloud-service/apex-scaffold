@@ -131,7 +131,7 @@ rsvg-convert -w 1920 docs/diagrams/01_logical_architecture.svg > output.png
 
 **Web 页面使用**：
 ```html
-<img src="diagrams/01_logical_architecture.svg" alt="架构图" style="max-width: 100%;">
+<img src=""diagrams/01_logical_architecture.svg"" alt="架构图" style="max-width: 100%;">
 ```
 
 ### 2. 数据提取

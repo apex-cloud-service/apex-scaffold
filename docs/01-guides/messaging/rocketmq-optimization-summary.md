@@ -30,20 +30,20 @@
 
 | 组件 | 文件 | 功能 |
 |-----|------|------|
-| 生产者配置 | [RocketMqProducerConfig.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqProducerConfig.java) | 生产者增强配置（超时、重试、熔断、降级） |
-| 消费者配置 | [RocketMqConsumerConfig.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqConsumerConfig.java) | 消费者增强配置（并发、流控、幂等、DLQ） |
-| 生产者监控 | [MqProducerMetrics.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqProducerMetrics.java) | 生产者监控指标采集（4 个指标） |
-| 消费者监控 | [MqConsumerMetrics.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqConsumerMetrics.java) | 消费者监控指标采集（6 个指标） |
+| 生产者配置 | [RocketMqProducerConfig.java](../../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqProducerConfig.java) | 生产者增强配置（超时、重试、熔断、降级） |
+| 消费者配置 | [RocketMqConsumerConfig.java](../../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/config/RocketMqConsumerConfig.java) | 消费者增强配置（并发、流控、幂等、DLQ） |
+| 生产者监控 | [MqProducerMetrics.java](../../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqProducerMetrics.java) | 生产者监控指标采集（4 个指标） |
+| 消费者监控 | [MqConsumerMetrics.java](../../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/metrics/MqConsumerMetrics.java) | 消费者监控指标采集（6 个指标） |
 | 生产配置 | [rocketmq-prod.yml](../../../config/rocketmq-prod.yml) | 生产环境优化配置 |
 
 ### 2. 优化组件（4 个）
 
 | 组件 | 优化内容 |
 |-----|---------|
-| [MqProducerService.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqProducerService.java) | 增加超时控制、故障降级处理 |
-| [MqConsumerService.java](../../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java) | 增加配置集成、监控指标 |
+| [MqProducerService.java](../../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqProducerService.java) | 增加超时控制、故障降级处理 |
+| [MqConsumerService.java](../../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerService.java) | 增加配置集成、监控指标 |
 | [alert-rules.yml](../../../config/monitoring/prometheus/alert-rules.yml) | 新增 8 个 RocketMQ 告警规则 |
-| [application-prod.yml](../../../apex-system/src/main/resources/application-prod.yml) | 完善生产环境 RocketMQ 配置 |
+| [application-prod.yml](../../../apex-components-parent/apex-system/src/main/resources/application-prod.yml) | 完善生产环境 RocketMQ 配置 |
 
 ### 3. 技术文档（1 份）
 

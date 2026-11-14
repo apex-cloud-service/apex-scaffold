@@ -17,7 +17,7 @@
 
 Apex Scaffold 系统中存在多种数据流模式，根据业务场景选择合适的数据流方式，平衡一致性、性能和可用性。
 
-当前共享基础设施拆分为 persistence、cache、messaging、remote、integration 五个本地 JAR，旧 `apex-infrastructure` 仅为依赖五个能力 JAR 的兼容坐标；messaging 单向依赖 persistence，infrastructure-integration 单向依赖 remote，业务数据库和 Flyway 归属不变。第一阶段 Maven 结构为根聚合 7 个管理组、42 个后代、43 个 reactor 项目含根（8 个 POM 含根 + 35 个 JAR）；business 组为空，仅作为项目业务库管理入口，通用框架实现在其他组。所有既有叶子目录仍在仓库根，不改变生产依赖或数据流。聚合、parent 与生产 dependencies 是不同关系，分别见[七组聚合图](../diagrams/128_maven_module_groups.svg)、[parent 继承图](../diagrams/129_maven_parent_inheritance.svg)及[生产依赖图](../diagrams/95_module_dependency_graph.svg)。
+当前共享基础设施拆分为 persistence、cache、messaging、remote、integration 五个本地 JAR，旧 `apex-infrastructure` 仅为依赖五个能力 JAR 的兼容坐标；messaging 单向依赖 persistence，infrastructure-integration 单向依赖 remote，业务数据库和 Flyway 归属不变。Maven 结构为根聚合 7 个管理组、44 个后代、45 个 reactor 项目含根（8 个 POM 含根 + 37 个 JAR）；business 组聚合知识库 apex-knowledge，通用框架实现在其他组。第二阶段（2026-11-14）叶子物理位于各分组父目录，不改变生产依赖或数据流。聚合、parent 与生产 dependencies 是不同关系，分别见[七组聚合图](../diagrams/128_maven_module_groups.svg)、[parent 继承图](../diagrams/129_maven_parent_inheritance.svg)及[生产依赖图](../diagrams/95_module_dependency_graph.svg)。
 
 当前运行拓扑仍为网关 + 六个业务服务 + 只读查询聚合 + 任务代理 / 可选脱敏；aggregation 仅通过 WebClient 调用 workflow 与 office 的内部只读接口，无 DB、迁移或事务，HTTP 调用不等于 Maven 业务库依赖。office 站内信先以同一 JDBC 事务写入消息与收件人，提交后发送本实例 WebSocket 消息 ID 提示；票据、连接与提示不跨实例共享，HTTP/WS 网关地址必须指向同一实例，客户端通过 HTTP 收件箱/未读数补偿，不应将其视为持久化可靠消息投递。实现边界见[拆分方案](../08-project-management/plans/infrastructure-modularization-plan.md)、[系统当前运行拓扑](system-architecture.md#12-当前运行拓扑系统架构图)与[站内信协议](../05-operations/in-app-messaging.md)。62 / 61 为既有专题图，不因 Maven 分组重绘，也不证明额外业务 JAR、服务或数据库已新增。
 

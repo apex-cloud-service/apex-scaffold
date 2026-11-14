@@ -418,7 +418,7 @@ apex-scaffold                         总父 POM + 总聚合入口
 
 ### 6.1 模块注册表：继续扁平登记全部模块
 
-实际注册表位置是 [apex-tools-build/src/main/resources/build-manifest.yaml](../../../apex-tools-build/src/main/resources/build-manifest.yaml)，不是仓库根下的同名文件。
+实际注册表位置是 [apex-tools-build/src/main/resources/build-manifest.yaml](../../../apex-tools-parent/apex-tools-build/src/main/resources/build-manifest.yaml)，不是仓库根下的同名文件。
 
 推荐保留扁平结构及 `schema: 1`：
 
@@ -431,7 +431,7 @@ apex-scaffold                         总父 POM + 总聚合入口
 
 ### 6.2 注册表测试：递归读聚合树，不扩大到继承树
 
-[BuildManifestSyncTest.java](../../../apex-tools-build/src/test/java/com/apex/scaffold/tools/build/BuildManifestSyncTest.java) 的 `manifestModulesMatchRootPomDeclarations()` 当前仅读取根文件中的 `module` 文本并比较注册表 key。收拢根清单后必须修改，不能仅改断言预期为 7 项。
+[BuildManifestSyncTest.java](../../../apex-tools-parent/apex-tools-build/src/test/java/com/apex/scaffold/tools/build/BuildManifestSyncTest.java) 的 `manifestModulesMatchRootPomDeclarations()` 当前仅读取根文件中的 `module` 文本并比较注册表 key。收拢根清单后必须修改，不能仅改断言预期为 7 项。
 
 建议实现：
 
@@ -451,11 +451,11 @@ apex-scaffold                         总父 POM + 总聚合入口
 
 ### 6.3 编排入口和按模块构建
 
-实际入口是 [apex-tools-build/bin/apex.sh](../../../apex-tools-build/bin/apex.sh)。保留其相对根目录计算与现有叶子构建参数。
+实际入口是 [apex-tools-build/bin/apex.sh](../../../apex-tools-parent/apex-tools-build/bin/apex.sh)。保留其相对根目录计算与现有叶子构建参数。
 
 - `build --module`、`test --module`、`package` 仍从总根执行 `-pl <叶子列表> -am`。
-- 原有根级叶子路径不变，现有 `-pl apex-system-service -am` 等命令继续作为兼容目标。
-- 不把 `-pl apex-services-bom -am` 宣称为“构建该组全部服务”。Maven 3 的聚合关系不等于所选 parent 的下游依赖；`-am` 主要补齐上游所需项目。
+- 原有根级叶子路径不变，现有 `-pl :apex-system-service -am` 等命令继续作为兼容目标。
+- 不把 `-pl :apex-services-bom -am` 宣称为“构建该组全部服务”。Maven 3 的聚合关系不等于所选 parent 的下游依赖；`-am` 主要补齐上游所需项目。
 - 本阶段不新增 `--group` CLI。需要整组构建时，从根明确列出该组叶子并带 `-am`；以后可由聚合清单推导列表，但不另维护一份硬编码组清单。
 - 不把 `-f 分组/pom.xml` 当作跨组依赖未安装时也一定可用的替代方案；推荐从总根构建。现有工具链版本对应的 `-pl` / `-am` 行为在实施时验证，不假定不同 Maven 版本语义完全一致。
 - `status` 当前已将 `deliverable=none` 显示为“不产出可执行 JAR”。新增 parent 正确登记后应沿用该行为，只核对说明和显示结果，不为分组而强制重写逻辑。
@@ -542,7 +542,7 @@ Maven 聚合树、parent 继承树、物理目录树、生产依赖图、运行�
 | [架构总览](../../02-architecture/architecture-overview.md) | 当前模块基座、继承 / 聚合关系及图文一致性 |
 | [开发规范](../../04-development/development-standards.md) | 受影响的模块创建、parent、构建与验证步骤 |
 | [构建工具使用说明](../../04-development/build-tools-usage.md) | 模块登记、递归门禁、计数口径、保持从总根构建 |
-| [构建管理模块说明](../../../apex-tools-build/README.md) | 注册表与递归 reactor 一致；不再要求根直接 modules 与全部条目相等 |
+| [构建管理模块说明](../../../apex-tools-parent/apex-tools-build/README.md) | 注册表与递归 reactor 一致；不再要求根直接 modules 与全部条目相等 |
 | [交付范围](../delivery/delivery-scope.md) | 当前模块分类与构建 parent，不改变实际交付的八服务和部署工具 |
 | [配置说明](../../05-operations/configuration.md) | 核对路径来源和现有配置，不将分组名称当运行配置 |
 | [SVG 维护指南](../../04-development/svg-maintenance-guide.md) 与 [图表目录](../../diagrams/README.md) | 相关图源、生成与引用规范，更新失效的结构说明 |
@@ -582,13 +582,13 @@ Maven 聚合树、parent 继承树、物理目录树、生产依赖图、运行�
 
 现有叶子保持 `仓库根/apex-xxx`，所以业务测试日志仍位于根 `logs`，Sentinel 测试原生日志仍位于叶子 target。**不改成 `../../logs`，不写入分组 parent 目录。** 比较继承后的 argLine、execution 与系统属性，不能只看源 POM 文本。
 
-system 测试 [logback-test.xml](../../../apex-system/src/test/resources/logback-test.xml) 使用 `apex.log.dir` 或 `user.dir/logs` 下的 `test`，与生产配置的 `LOG_PATH` 优先链不同，应分别验证。未注入属性的 IDE 测试行为不能当作 Maven fork 的默认结果。
+system 测试 [logback-test.xml](../../../apex-components-parent/apex-system/src/test/resources/logback-test.xml) 使用 `apex.log.dir` 或 `user.dir/logs` 下的 `test`，与生产配置的 `LOG_PATH` 优先链不同，应分别验证。未注入属性的 IDE 测试行为不能当作 Maven fork 的默认结果。
 
 #### 运行日志与采集
 
 [app.sh](../../../scripts/deploy/service/app.sh) 从脚本位置定位仓库根并切换目录，shell `LOG_DIR` 取 `APEX_LOG_DIR`、`LOG_PATH` 或根 `logs/<service>`，再导出 `LOG_PATH`。`LOG_DIR` 不是 Java/Logback 自动识别的通用变量，PID / stdout 等也有自己的路径，不能混为一项。
 
-system [LogDirectoryConfigurer](../../../apex-system/src/main/java/com/apex/scaffold/LogDirectoryConfigurer.java) 通过物理 `pom.xml` 与 `apex-system/pom.xml` 向上定位根，不读取聚合或 parent 链。system 与其他现有生产 Logback 的目录来源包含 `LOG_PATH`、`apex.log.dir`、`APEX_LOG_DIR`、`user.dir/logs`，保留各自实际优先级；不将全部来源概括为 Maven 自动注入。
+system [LogDirectoryConfigurer](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/LogDirectoryConfigurer.java) 通过物理 `pom.xml` 与 `apex-system/pom.xml` 向上定位根，不读取聚合或 parent 链。system 与其他现有生产 Logback 的目录来源包含 `LOG_PATH`、`apex.log.dir`、`APEX_LOG_DIR`、`user.dir/logs`，保留各自实际优先级；不将全部来源概括为 Maven 自动注入。
 
 [Compose](../../../podman-compose.yml)、[基础设施 Compose](../../../podman-compose.infra.yml)、[Filebeat](../../../config/monitoring/filebeat/filebeat.yml) 与 [Alloy](../../../config/monitoring/alloy-config.alloy) 的链路保持：
 
@@ -605,7 +605,7 @@ system [LogDirectoryConfigurer](../../../apex-system/src/main/java/com/apex/scaf
 - `spring.application.name`、Nacos 标识、路由、端口、数据库归属、密钥键名不改成 parent 名称。
 - 现有 application YAML 的日志块主要管理级别 / 格式；不能把 `logging.pattern.file` 当文件路径。本次扫描未发现需要因 parent 改写的 `logging.file.path` 目录声明，测试中的显式设置独立判断。
 - Flyway、Mapper、basic schema、i18n、License classpath 资源及 `application*.yml` / `bootstrap.yml` / `logback*.xml` 保留原位置。
-- [system POM](../../../apex-system/pom.xml) 对 `apex-build.properties` 的资源过滤保留；继续核对 `@build.profile.id@` 和 `@project.version@` 的结果，不扩大到所有 YAML/XML。
+- [system POM](../../../apex-components-parent/apex-system/pom.xml) 对 `apex-build.properties` 的资源过滤保留；继续核对 `@build.profile.id@` 和 `@project.version@` 的结果，不扩大到所有 YAML/XML。
 - parent 不承载运行资源，不把叶子 `src/main/resources` 迁入 parent，不因发现同名配置而顺带删除。
 
 #### 存储、License 与其他文件
@@ -806,7 +806,7 @@ mvnd --version
 | 验证 | 执行方式或检查点 | 通过标准 |
 | --- | --- | --- |
 | POM 模型与 reactor | `mvnd -T4 -B validate`，检查模型与排序 | 第一阶段 42 个后代 + 根，共 43 个项目，包含空 business parent；无重复 / 缺失 / parent 解析错误；未来迁入按实际数量计算 |
-| 注册表与新增结构测试 | `mvnd -T4 -B -pl apex-tools-build -am test` | 递归注册表、路径 / 环 / 重复负面用例均通过 |
+| 注册表与新增结构测试 | `mvnd -T4 -B -pl :apex-tools-build -am test` | 递归注册表、路径 / 环 / 重复负面用例均通过 |
 | 叶子按需构建 | 分别选择 system-service、integration-service、aggregation-service、部署工具等并带 `-am` | 仍能从总根补齐所需依赖；不误构建全部组内兄弟模块 |
 | 有效模型等价 | 对全部叶子比较 profile 下的依赖坐标 / 版本 / scope / optional / exclusions、插件执行、资源过滤 | 第一阶段无非预期差异；parent 链变化明确列入白名单 |
 | 三档产物 | 使用 mvnd 分别按 basic / standard / enterprise 打包，检查选定服务及 basic 依赖裁剪 | 原先排除的能力未被 parent 重新带入；JAR 名称及打包类型保持 |
@@ -973,9 +973,9 @@ mvnd --version
 - [仓库协作与构建约束](../../../AGENTS.md)。
 - [根 POM](../../../pom.xml)。
 - [现有服务父 POM](../../../apex-services-bom/pom.xml)。
-- [模块注册表](../../../apex-tools-build/src/main/resources/build-manifest.yaml)。
-- [注册表同步测试](../../../apex-tools-build/src/test/java/com/apex/scaffold/tools/build/BuildManifestSyncTest.java)。
-- [统一构建编排入口](../../../apex-tools-build/bin/apex.sh)。
+- [模块注册表](../../../apex-tools-parent/apex-tools-build/src/main/resources/build-manifest.yaml)。
+- [注册表同步测试](../../../apex-tools-parent/apex-tools-build/src/test/java/com/apex/scaffold/tools/build/BuildManifestSyncTest.java)。
+- [统一构建编排入口](../../../apex-tools-parent/apex-tools-build/bin/apex.sh)。
 - [构建管理使用说明](../../04-development/build-tools-usage.md)。
 - [构建初始化脚本](../../../scripts/build/init-build-env.sh)。
 - [发布脚本](../../../scripts/release/release.sh)。

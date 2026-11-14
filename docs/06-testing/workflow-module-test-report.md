@@ -14,7 +14,7 @@
 ### 0.1 独立构建
 
 ```bash
-mvnd -pl apex-workflow-service -am package
+mvnd -pl :apex-workflow-service -am package
 ```
 
 结果：**BUILD SUCCESS**，产出可执行 jar `apex-workflow-service-1.3.1.jar`（经 `spring-boot-maven-plugin` repackage，原 jar 改为 `.original`）。
@@ -100,7 +100,7 @@ flowchart TD
 定向测试：
 
 ```bash
-mvnd -pl apex-common,apex-infrastructure,apex-workflow -am test
+mvnd -pl :apex-common,:apex-infrastructure,:apex-workflow -am test
 ```
 
 结果：`BUILD SUCCESS`，其中 `apex-infrastructure` 共运行 609 个测试，`apex-workflow` 测试全部通过，`apex-common` 中新增的 `ApexLambdaQueryWrapperTest` 3 个测试通过，`ConditionUtilTest` 通过。
@@ -152,9 +152,9 @@ mvnd test
 
 ```bash
 # 工作流服务全量测试
-mvnd -pl apex-workflow-service -am test
+mvnd -pl :apex-workflow-service -am test
 # 独立构建（含 repackage 可执行 jar）
-mvnd -pl apex-workflow-service -am package
+mvnd -pl :apex-workflow-service -am package
 # 迁移完整性（逐服务 Flyway 链，含工作流服务）
 bash scripts/test/check-migration-integrity.sh
 # 覆盖率报告

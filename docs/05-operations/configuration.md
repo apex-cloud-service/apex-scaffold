@@ -6,13 +6,13 @@
 
 ## 📁 配置文件位置
 
-当前配置入口为各运行模块的 `src/main/resources/application*.yml`；system 还加载 `apex-system/src/main/resources/` 中的配置。原 apex-interfaces 已退出 reactor。
+当前配置入口为各运行模块的 `src/main/resources/application*.yml`；system 还加载 `apex-components-parent/apex-system/src/main/resources/` 中的配置。原 apex-interfaces 已退出 reactor。
 
 服务增强配置详见 [XXL-JOB 接入](xxl-job-integration.md)、[数据脱敏](data-masking.md)、[Seata 接入](seata-integration.md)。任务代理默认 8095、脱敏默认 8096；中心通过 Compose `xxl-job` / `seata` profile 单独选择，业务执行器和 AT 仍须独立配置。脱敏使用 `masking` profile，启动前填写 JWT issuer、JWKS、audience 和允许租户。共享基础设施已拆分为 persistence、cache、messaging、remote、integration 五个能力 JAR，配置前缀和 Java 包名保持兼容；office 站内信的安全与路由变量见[站内信说明](in-app-messaging.md)。
 
 环境特定配置:
 - `application-dev.yml` - 开发环境
-- `application-it.yml` - 集成测试环境（仅 `apex-system/src/test/resources`，不参与运行态装配）
+- `application-it.yml` - 集成测试环境（仅 `apex-components-parent/apex-system/src/test/resources`，不参与运行态装配）
 - `application-prod.yml` - 生产环境
 
 通过 `spring.profiles.active` 激活对应环境:
@@ -52,7 +52,7 @@ Compose 强制注入 `APEX_DATA_ENCRYPTION_KEY`、`SECURITY_ENCRYPTION_KEY`、`C
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -B -pl apex-tools-deployment -am verify
+mvnd -B -pl :apex-tools-deployment -am verify
 bash scripts/utils/local-deployment.sh compose --env-file .env
 ```
 
@@ -60,7 +60,7 @@ bash scripts/utils/local-deployment.sh compose --env-file .env
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -B -pl apex-tools-deployment -am verify
+mvnd -B -pl :apex-tools-deployment -am verify
 bash scripts/utils/local-deployment.sh prepare --input /secure/auth_totp.json --output /secure/totp-review
 bash scripts/utils/local-deployment.sh rollback --bundle /secure/totp-review --output /secure/auth_totp-restored.json
 ```
@@ -196,7 +196,7 @@ apex:
 
 授权读取请求为 `GET {base-url}/auth/v1/authorization/users/{centerUserId}`，使用配置的 Bearer ACCESS Token。成功响应是 `Result`，`data` 包含中心租户/用户身份、权限编码和角色数据范围；客户端校验成功码与映射身份后转换为主应用身份。客户端超时为 3 秒，使用名为 `auth-center-permission` 的 Resilience4j 默认熔断器；当前没有为该熔断器提供独立配置项。
 
-中心默认监听 8081，HTTPS 入口须由实际部署提供；示例本地 HTTP 地址不能直接用于主应用远程授权配置。参见[认证接口路由契约](../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/AuthenticationRouter.java)、[认证接口集成测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java)和[业务时序](../architecture/business-flows.md)。
+中心默认监听 8081，HTTPS 入口须由实际部署提供；示例本地 HTTP 地址不能直接用于主应用远程授权配置。参见[认证接口路由契约](../../apex-services-bom/apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/AuthenticationRouter.java)、[认证接口集成测试源码](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java)和[业务时序](../architecture/business-flows.md)。
 
 ### RBAC权限配置
 
@@ -669,7 +669,7 @@ public Mono<Result> refreshCache(String key) {
 
 ### 多存储后端支持
 
-五种类型为 `local`、`minio`、`volcengine`、`aliyun-oss`、`qiniu`，默认 Local；云开关默认关闭，不进行故障降级。完整字段以 [file 主配置](../../apex-file-service/src/main/resources/application.yml)及[环境模板](../../.env.example)为准，接入、凭据、迁移与限制见[对象存储指南](object-storage-integration.md)。
+五种类型为 `local`、`minio`、`volcengine`、`aliyun-oss`、`qiniu`，默认 Local；云开关默认关闭，不进行故障降级。完整字段以 [file 主配置](../../apex-services-bom/apex-file-service/src/main/resources/application.yml)及[环境模板](../../.env.example)为准，接入、凭据、迁移与限制见[对象存储指南](object-storage-integration.md)。
 
 ```yaml
 storage:
@@ -753,7 +753,7 @@ spring:
 
 ### auth JDBC与R2DBC的TLS核验
 
-[主Compose](../../podman-compose.yml)中auth的 `SPRING_DATASOURCE_URL` 含 `useSSL=false`，按Spring环境绑定覆盖[auth prod配置](../../apex-auth-service/src/main/resources/application-prod.yml) JDBC URL的 `useSSL=true&requireSSL=true`。prod R2DBC URL则由 `DB_HOST`、`DB_PORT`、`DB_NAME` 拼接，设 `sslMode=REQUIRED`；主Compose没有 `SPRING_R2DBC_*` 注入。[JwtKeyRepositoryImpl](../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/JwtKeyRepositoryImpl.java)通过R2DBC `DatabaseClient`读写 `jwt_keys`，该配置存在实际消费链。
+[主Compose](../../podman-compose.yml)中auth的 `SPRING_DATASOURCE_URL` 含 `useSSL=false`，按Spring环境绑定覆盖[auth prod配置](../../apex-services-bom/apex-auth-service/src/main/resources/application-prod.yml) JDBC URL的 `useSSL=true&requireSSL=true`。prod R2DBC URL则由 `DB_HOST`、`DB_PORT`、`DB_NAME` 拼接，设 `sslMode=REQUIRED`；主Compose没有 `SPRING_R2DBC_*` 注入。[JwtKeyRepositoryImpl](../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/JwtKeyRepositoryImpl.java)通过R2DBC `DatabaseClient`读写 `jwt_keys`，该配置存在实际消费链。
 
 这是已确认的静态配置差异，尚未证实生产故障；本轮没有调整TLS策略。部署核验需记录实际运行profile、Compose override及远端/环境/本地配置源、最终DataSource和ConnectionFactory目标与TLS参数，再分别验证JDBC/R2DBC握手及业务访问；配置摘要应脱敏，不输出密码、令牌或密钥。未执行该运行核验前，不能据静态差异声称生产连接失败或双连接配置已一致。
 
@@ -1040,7 +1040,7 @@ spring:
 
 ### 日志与审计容量边界
 
-主应用日志配置位于各运行模块的 `src/main/resources/logback-spring.xml`，认证服务配置位于 `apex-auth-service/src/main/resources/logback-spring.xml`。控制台与文件输出使用有界 `AsyncAppender`：每个队列最多 1024 条，剩余容量低于 200 时可丢弃低级别事件，`neverBlock=true` 避免日志输出阻塞请求线程。队列满时 WARN/ERROR 也可能丢失；关闭时最多等待 2000ms 刷新，因此运行日志不能作为可靠审计存储。
+主应用日志配置位于各运行模块的 `src/main/resources/logback-spring.xml`，认证服务配置位于 `apex-services-bom/apex-auth-service/src/main/resources/logback-spring.xml`。控制台与文件输出使用有界 `AsyncAppender`：每个队列最多 1024 条，剩余容量低于 200 时可丢弃低级别事件，`neverBlock=true` 避免日志输出阻塞请求线程。队列满时 WARN/ERROR 也可能丢失；关闭时最多等待 2000ms 刷新，因此运行日志不能作为可靠审计存储。
 
 ### 内部服务调用签名（/internal/v1/**）
 
@@ -1211,13 +1211,13 @@ BENCH_MODE=virtual  ./scripts/bench/bench-vt.sh
 | `BENCH_SAMPLE_GUARD` | `true` | 关闭 IP 限流与 Sentinel 系统规则，避免 429/503 污染结果 |
 | `BENCH_TRACE_PINNED` | `false` | 为 `true` 时加 `-Djdk.tracePinnedThreads=full` 观察载体线程钉住 |
 | `BENCH_JAVA_OPTS` | 空 | 追加的 JVM 参数 |
-| `BENCH_JAR` | 自动挑选 | 默认取 `apex-system-service/target/apex-system-service-*.jar` |
+| `BENCH_JAR` | 自动挑选 | 默认取 `apex-services-bom/apex-system-service/target/apex-system-service-*.jar` |
 | `BENCH_PID` | 空 | `report` 模式下采集既有进程的池指标与 JFR 虚拟线程启动事件 |
 | `BENCH_OUTPUT_DIR` | `target/bench-vt/<时间戳>` | 产物目录 |
 
 前置条件与限制：
 
-- 需先打包可执行 JAR：`mvnd -T4 -B -pl apex-system-service -am package`；启动时 MySQL 与 Redis 必须可用，业务端口与管理端口不能被占用。
+- 需先打包可执行 JAR：`mvnd -T4 -B -pl :apex-system-service -am package`；启动时 MySQL 与 Redis 必须可用，业务端口与管理端口不能被占用。
 - `/api/v1/health` 实际只打到 `cache` 与 `event` 池（Redisson 查询、IP 限流与操作日志写入），`jdbc`、`storage`、`remote` 需换成有相应流量的业务接口才有意义；报告会把"采样窗口内完成数为 0"的池标注为不适用于该结论。
 - 判定虚拟线程生效看两点：该池在压测窗口内出现了 `jdk.VirtualThreadStart` 事件（线程名 `apex.<pool>-vt-*`，平台线程模式为 0），且 `apex_blocking_io_max_threads` 等于配置的 `max-concurrency`。`jcmd Thread.dump_to_file -format=text` 的文本格式不含虚拟线程栈（仅有总数汇总），不能用来数虚拟线程，因此证据取自 JFR。
 - 产物目录包含 `results.tsv`、`summary.md`、`wrk-<mode>.txt`、`prom-<mode>-{pre,mid}.txt`、`vt-start-<mode>.jfr`、`threads-<mode>.txt`（平台线程 Dump）、`jvm-args-<mode>.txt` 与 `service-<mode>.log`。
@@ -1244,7 +1244,7 @@ docker run -d --name apex-bench-redis -p 6379:6379 redis:7-alpine
 完整示例（16 并发上限、30 秒、200 连接，双轮对比）：
 
 ```bash
-mvnd -T4 -B -pl apex-system-service -am package
+mvnd -T4 -B -pl :apex-system-service -am package
 KEYCLOAK_ENABLED=false BENCH_POOLS="event,cache" BENCH_CONCURRENCY=16 \
 BENCH_JAVA_OPTS="-Dspring.flyway.enabled=true -Dspring.datasource.dynamic.p6spy=false \
   -Dspring.autoconfigure.exclude=org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration,org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration \
@@ -1275,7 +1275,7 @@ BENCH_JAVA_OPTS="-Dspring.flyway.enabled=true -Dspring.datasource.dynamic.p6spy=
 
 ### Q3: 如何加密敏感配置?
 
-项目不依赖 Jasypt，使用自研 `ConfigEncryptionService`（`apex-common/src/main/java/com/apex/scaffold/common/security/ConfigEncryptionService.java`）做配置字段的 AES-256-GCM 加解密，密钥通过 `security.config.encryption.key` 注入：
+项目不依赖 Jasypt，使用自研 `ConfigEncryptionService`（`apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/security/ConfigEncryptionService.java`）做配置字段的 AES-256-GCM 加解密，密钥通过 `security.config.encryption.key` 注入：
 
 ```yaml
 security:
@@ -1297,7 +1297,7 @@ security:
 
 本节补充前述auth TLS静态记录，保留其历史口径。[主Compose](../../podman-compose.yml)的公共环境锚点已注入 `DB_HOST=mysql`、`DB_PORT=3306`、`DB_USERNAME`、`DB_PASSWORD`，auth合并后另设 `DB_NAME=apex_auth`。没有显式 `SPRING_R2DBC_*` 不代表R2DBC目标错误：真实YAML合并与Spring Binder的离线契约已验证双客户端均指向 `mysql:3306/apex_auth`，用户名及凭据一致。JDBC URL仍由Compose覆盖为 `useSSL=false`，R2DBC仍从prod配置绑定 `sslMode=REQUIRED`；这一TLS静态差异保留，没有修改配置或证实生产故障。
 
-[AuthDataSourceConfigContractTest](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)使用SnakeYAML解析真实Compose合并锚点，移除宿主系统属性与环境源，再通过独立 `SystemEnvironmentPropertySource`、真实prod/application/bootstrap和Spring Binder验证7项；现存Surefire 7项加驱动3项共10项通过，无失败/错误/跳过。JDK固定17.0.12-oracle，mvnd2.0.0-rc-3及相关Spotless通过按本轮交付记录；本次文档收口只读复核Surefire和源码，未重跑Java或连接数据库。
+[AuthDataSourceConfigContractTest](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)使用SnakeYAML解析真实Compose合并锚点，移除宿主系统属性与环境源，再通过独立 `SystemEnvironmentPropertySource`、真实prod/application/bootstrap和Spring Binder验证7项；现存Surefire 7项加驱动3项共10项通过，无失败/错误/跳过。JDK固定17.0.12-oracle，mvnd2.0.0-rc-3及相关Spotless通过按本轮交付记录；本次文档收口只读复核Surefire和源码，未重跑Java或连接数据库。
 
 | 输入情况 | 已验证的属性绑定结果 | 解释边界 |
 | --- | --- | --- |
@@ -1312,7 +1312,7 @@ security:
 
 ## 2026-10-19 auth真实TLS握手补充
 
-继上述离线绑定核验后，[AuthMySqlTlsContractIntegrationTest](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMySqlTlsContractIntegrationTest.java)已使用真实Compose/prod属性及隔离MySQL8.0.46执行双驱动连接；仅替换隔离目标。Connector/J8.4.0、r2dbc-mysql1.4.2下，最终7项配置契约及3项TLS场景通过，失败、错误和跳过均0，auth-service Spotless通过。详见[保存证据](../06-testing/jdk21-unified-auth/20261016-p0/auth-mysql-tls-contract-20261019-2336-evidence.json)及[阶段报告](../06-testing/jdk21-unified-auth/20261016-p0/report.md)。
+继上述离线绑定核验后，[AuthMySqlTlsContractIntegrationTest](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMySqlTlsContractIntegrationTest.java)已使用真实Compose/prod属性及隔离MySQL8.0.46执行双驱动连接；仅替换隔离目标。Connector/J8.4.0、r2dbc-mysql1.4.2下，最终7项配置契约及3项TLS场景通过，失败、错误和跳过均0，auth-service Spotless通过。详见[保存证据](../06-testing/jdk21-unified-auth/20261016-p0/auth-mysql-tls-contract-20261019-2336-evidence.json)及[阶段报告](../06-testing/jdk21-unified-auth/20261016-p0/report.md)。
 
 | 隔离服务端条件 | 当前Compose JDBC useSSL=false | prod JDBC useSSL=true/requireSSL=true | prod R2DBC sslMode=REQUIRED |
 | --- | --- | --- | --- |
@@ -1328,12 +1328,12 @@ security:
 
 真实主Compose与临时override在podman-compose1.6.0的config渲染中已验证：仅覆盖auth DB_HOST/DB_NAME不会重写原显式SPRING_DATASOURCE_URL，JDBC仍指向mysql:3306/apex_auth，而R2DBC可由DB变量派生其他目标。需要同时核对最终JDBC/R2DBC URL与公共DB变量；显式覆盖双URL的合成测试可使目标对齐，但测试URL不含TLS策略，不应复制为生产模板。合并后公共凭据、安全变量、Redis/Nacos锚点保留，system DB目标不受auth覆盖影响。被测四个DB变量的同名非空宿主值优先于env文件。
 
-[现行 Java 等价测试](../../apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/ConfigPreflightTest.java)保留该4子场景覆盖。2026-10-20 Java/Shell 迁移后，独立离线工具的三组测试共27项通过，失败、错误和跳过均为0。仅使用临时合成输入及config渲染，未读取真实.env、启动服务或连接数据库。现有compose_check预检CLI仍只处理单主文件，不能据本次测试推断它已覆盖实际部署的多文件输入。
+[现行 Java 等价测试](../../apex-tools-parent/apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/ConfigPreflightTest.java)保留该4子场景覆盖。2026-10-20 Java/Shell 迁移后，独立离线工具的三组测试共27项通过，失败、错误和跳过均为0。仅使用临时合成输入及config渲染，未读取真实.env、启动服务或连接数据库。现有compose_check预检CLI仍只处理单主文件，不能据本次测试推断它已覆盖实际部署的多文件输入。
 
 旧Nacos链证据的gateway prod字面true描述已过时，当前为环境占位符；app.sh环境文件加载当前在62–66行。collector采集的shared_nacos/DB_HOST_PROD仍静态未知，远端Data ID、namespace/group/revision、实际加载及优先级没有运行证据。详见[本轮证据](../06-testing/jdk21-unified-auth/20261016-p0/compose-override-coverage-audit-20261019-evidence.json)。
 
 ## 2026-10-20 Spring Binder覆盖契约补充
 
-[auth配置契约测试](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)新增两项覆盖场景，总计9项通过，无失败、错误或跳过，Spotless检查通过。测试解析真实Compose合并后的环境变量，并使用真实application、prod及bootstrap配置进行隔离的Spring Binder绑定：仅覆盖DB_HOST/DB_NAME时，显式JDBC URL仍指向mysql:3306/apex_auth并保留useSSL=false，R2DBC则派生至覆盖目标并保留sslMode=REQUIRED；显式覆盖双URL时，两客户端目标对齐，合成凭据及JDBC的useSSL=true、requireSSL=true和R2DBC的sslMode=REQUIRED均保留。
+[auth配置契约测试](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)新增两项覆盖场景，总计9项通过，无失败、错误或跳过，Spotless检查通过。测试解析真实Compose合并后的环境变量，并使用真实application、prod及bootstrap配置进行隔离的Spring Binder绑定：仅覆盖DB_HOST/DB_NAME时，显式JDBC URL仍指向mysql:3306/apex_auth并保留useSSL=false，R2DBC则派生至覆盖目标并保留sslMode=REQUIRED；显式覆盖双URL时，两客户端目标对齐，合成凭据及JDBC的useSSL=true、requireSSL=true和R2DBC的sslMode=REQUIRED均保留。
 
 本轮仅验证离线配置绑定，未连接数据库、执行TLS握手、访问Nacos或启动应用；远端配置实际加载及优先级仍未知。生产部署仍须核对最终双URL、凭据与TLS策略。完整命令、失败尝试和结果见[绑定证据](../06-testing/jdk21-unified-auth/20261016-p0/auth-compose-binder-override-20261020-evidence.json)。

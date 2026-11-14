@@ -192,13 +192,13 @@ icon-approval         审批（文档+勾选）
 
 | 文本标签        | 替换为图标                               | 使用文件数 |
 | ----------- | ----------------------------------- | ----- |
-| `[Globe]`   | `<use href="#icon-cloud"/>`         | 6     |
-| `[Users]`   | `<use href="#icon-users"/>`         | 8     |
-| `[Shield]`  | `<use href="#icon-shield"/>`        | 5     |
-| `[Fire]`    | `<use href="#icon-firewall"/>`      | 3     |
-| `[Balance]` | `<use href="#icon-load-balancer"/>` | 2     |
-| `[Search]`  | `<use href="#icon-dns"/>`           | 1     |
-| `[CDN]`     | `<use href="#icon-cdn"/>`           | 2     |
+| `[Globe]`   | `<use href=""#icon-cloud""/>`         | 6     |
+| `[Users]`   | `<use href=""#icon-users""/>`         | 8     |
+| `[Shield]`  | `<use href=""#icon-shield""/>`        | 5     |
+| `[Fire]`    | `<use href=""#icon-firewall""/>`      | 3     |
+| `[Balance]` | `<use href=""#icon-load-balancer""/>` | 2     |
+| `[Search]`  | `<use href=""#icon-dns""/>`           | 1     |
+| `[CDN]`     | `<use href=""#icon-cdn""/>`           | 2     |
 
 示例替换（14\_network\_architecture.svg 第44行）：
 
@@ -207,7 +207,7 @@ icon-approval         审批（文档+勾选）
 <text x="70" y="130" class="zone-title">[Globe] 公网区域 (Internet)</text>
 
 <!-- 新代码 -->
-<use href="#icon-cloud" x="55" y="110" width="32" height="32" color="#2196f3"/>
+<use href=""#icon-cloud"" x="55" y="110" width="32" height="32" color="#2196f3"/>
 <text x="95" y="130" class="zone-title">公网区域 (Internet)</text>
 ```
 
@@ -483,7 +483,7 @@ background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
 <text x="70" y="130" class="zone-title">[Globe] 公网区域 (Internet)</text>
 
 <!-- 新代码 -->
-<use href="#icon-cloud" x="55" y="110" width="32" height="32" color="#2196f3"/>
+<use href=""#icon-cloud"" x="55" y="110" width="32" height="32" color="#2196f3"/>
 <text x="95" y="130" class="zone-title">公网区域 (Internet)</text>
 ```
 
@@ -501,7 +501,7 @@ background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
 
 ```xml
 <!-- 使用阴影滤镜 -->
-<use href="#icon-database" x="100" y="200" width="32" height="32" 
+<use href=""#icon-database"" x="100" y="200" width="32" height="32" 
      color="#d97706" filter="url(#icon-shadow)"/>
 ```
 

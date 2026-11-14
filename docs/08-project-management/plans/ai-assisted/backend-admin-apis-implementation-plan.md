@@ -151,7 +151,7 @@ DDD 全栈,3 张表 → 3 套 CRUD + 1 个统计端点 + 1 个测试连接端点
 
 **测试命令:**
 ```bash
-mvnd -pl apex-common,apex-domain,apex-application,apex-infrastructure,apex-interfaces -am test -P basic
+mvnd -pl :apex-common,:apex-domain,apex-application,:apex-infrastructure,apex-interfaces -am test -P basic
 ```
 
 **报告生成:**

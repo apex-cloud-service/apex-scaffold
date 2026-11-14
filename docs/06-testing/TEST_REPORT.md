@@ -103,7 +103,7 @@
 本次对核心模块执行定向测试并生成覆盖率报告：
 
 ```bash
-mvnd -q -pl apex-common,apex-domain,apex-application,apex-workflow,apex-infrastructure,apex-interfaces,apex-auth-center -am clean test
+mvnd -q -pl :apex-common,:apex-domain,apex-application,:apex-workflow,:apex-infrastructure,apex-interfaces,apex-auth-center -am clean test
 ```
 
 结果：**BUILD SUCCESS**，全部模块测试通过、零失败零错误。
@@ -173,7 +173,7 @@ mvnd test
 
 ### 定向核心模块测试
 ```bash
-mvnd -pl apex-common,apex-domain,apex-application,apex-workflow,apex-infrastructure,apex-interfaces,apex-auth-center -am clean test
+mvnd -pl :apex-common,:apex-domain,apex-application,:apex-workflow,:apex-infrastructure,apex-interfaces,apex-auth-center -am clean test
 ```
 
 ### 运行单元测试
@@ -204,7 +204,7 @@ mvnd clean test jacoco:report
 
 | 项目 | 结果 |
 |------|------|
-| `mvnd -pl apex-gateway -am verify` | ✅ BUILD SUCCESS |
+| `mvnd -pl :apex-gateway -am verify` | ✅ BUILD SUCCESS |
 | 单元 + 架构测试 | ✅ 64/64 通过（0 失败 / 0 错误 / 0 跳过） |
 | Spotless 格式检查 | ✅ 通过 |
 | PMD 静态检查 | ✅ 通过（0 违规） |
@@ -245,7 +245,7 @@ mvnd clean test jacoco:report
 
 | 项目 | 结果 |
 |------|------|
-| `mvnd -pl apex-api-contract -am verify` | ✅ BUILD SUCCESS |
+| `mvnd -pl :apex-api-contract -am verify` | ✅ BUILD SUCCESS |
 | 单元测试 | ✅ 20/20 通过（0 失败 / 0 错误 / 0 跳过） |
 | Spotless 格式检查 | ✅ 通过 |
 | PMD 静态检查 | ✅ 通过（0 违规） |
@@ -279,7 +279,7 @@ mvnd clean test jacoco:report
 ### 门禁结果（Phase 1 相关模块）
 
 ```bash
-mvnd -pl apex-gateway,apex-api-contract -am verify -DskipITs
+mvnd -pl :apex-gateway,:apex-api-contract -am verify -DskipITs
 mvnd test
 ```
 
@@ -394,7 +394,7 @@ mvnd -pl apex-auth-center -am verify
 - 存储 SPI：由 `DefaultStorageConfiguration` 按 profile 装配（Local/MinIO/VolcEngine）。
 - 单体残留清理：已删除 `apex-interfaces` `BaiduModerationProductionConfigValidator`、`apex-common` `StorageProvider`/`FileUrlUtil`、`apex-domain` `StorageType` 枚举及测试；移除 minio/ve-tos 死依赖；环境变量收敛为 `apex-file-service` 规范名（`FILE_MAX_SIZE_BYTES`/`STORAGE_PRESIGNED_URL_EXPIRE_SECONDS`/`STORAGE_LOCAL_ENABLED`/`STORAGE_VOLCENGINE_*`）。
 - 测试：`apex-file` 单测 63 项、`apex-file-service` 单测 23 项 + `FileHandlerIntegrationTest` 47 项（`-Premote-it` failsafe）。
-- 门禁：`mvnd -pl apex-file,apex-file-service -am test` → BUILD SUCCESS。
+- 门禁：`mvnd -pl :apex-file,:apex-file-service -am test` → BUILD SUCCESS。
 
 ---
 
@@ -455,7 +455,7 @@ APEX_SEATA_IT=true mvnd -B -f apex-seata-spring-boot-starter/pom.xml verify
 
 | 工程 | 命令 | 结果 |
 |------|------|------|
-| `apex-tools-deployment` | `mvnd -B -pl apex-tools-deployment -am clean test` | ✅ `BUILD SUCCESS`（`52.273 s`），**38 项 / 0 失败 / 0 错误 / 0 跳过**，`javac [debug release 21]` |
+| `:apex-tools-deployment` | `mvnd -B -pl :apex-tools-deployment -am clean test` | ✅ `BUILD SUCCESS`（`52.273 s`），**38 项 / 0 失败 / 0 错误 / 0 跳过**，`javac [debug release 21]` |
 
 > 说明：本轮升级期间曾存在临时工具工程 `scripts/ci/java`（`ci-java-tools`），它从未纳入版本管理、不在 reactor 内，也不参与 Spotless/PMD/JaCoCo 门禁，曾使 `check-doc-links.sh` 等已提交脚本依赖未入库产物。该工程已按仓库规范移除，相关脚本恢复为仓库内的 Bash/Python 实现；`scripts/ci` 下现存的已提交脚本仍可直接运行。下表不再保留其测试记录。
 

@@ -4,7 +4,7 @@
 
 ## 当前 Maven 分组（2026-11-13）
 
-根 POM 是总父与总聚合入口，直接声明 shared/components/starters/services/applications/tools/business 七组。第一阶段递归 42 个模块，含根 reactor 43 个项目（8 个 POM、35 个既有 JAR）；六个新 parent 没有业务源码、启动类、端口或可执行 JAR。完整清单见 [README 分组表](../../README.md#maven-分组与父链)，图见[聚合分组](../diagrams/128_maven_module_groups.svg)与[parent 继承](../diagrams/129_maven_parent_inheritance.svg)。
+根 POM 是总父与总聚合入口，直接声明 shared/components/starters/services/applications/tools/business 七组。递归 44 个模块，含根 reactor 45 个项目（8 个 POM、37 个 JAR）；第二阶段（2026-11-14）起叶子物理嵌套于各分组父目录。完整清单见 [README 分组表](../../README.md#maven-分组与父链)，图见[聚合分组](../diagrams/128_maven_module_groups.svg)与[parent 继承](../diagrams/129_maven_parent_inheritance.svg)。
 
 | 聚合组 | 当前范围 | 第一阶段直接 parent |
 | --- | --- | --- |
@@ -18,7 +18,7 @@
 
 22 个既有叶子变更直接 parent，原有 13 个 services-bom 子继承保留。七组均直接继承根 POM，统一版本、构建档位和质量门禁仍由根治理，services-bom 保留原有依赖管理；聚合边与继承边不同，不能把 api-contract / integration / boot-all 三个例外误画为已迁移。
 
-**物理与运行边界不变**：所有既有叶子仍在仓库根级，分组通过 `../<叶子>` 聚合，不存在 parent 目录下嵌套源码。35 个既有 JAR 的坐标与打包形态、服务接口、数据库所有权、资源和端口不因分组而变。parent 管理不是 compile 依赖，也不会产生新服务、日志目录或监控目标；本阶段不承诺构建性能提升，验证结果以实际执行记录为准。
+**物理与运行边界不变**：第二阶段（2026-11-14）叶子已物理嵌套于各分组父目录，分组以 `<module>apex-xxx</module>` 聚合同目录叶子。37 个 JAR 的坐标与打包形态、服务接口、数据库所有权、资源和端口不因分组与归位而变。parent 管理不是 compile 依赖，也不会产生新服务、日志目录或监控目标；本阶段不承诺构建性能提升，验证结果以实际执行记录为准。
 
 business 只承载未来项目专属模型、规则、用例、业务配置和领域适配；通用框架实现由其余支撑模块提供，不复制第二套安全、数据源、缓存、消息或日志框架。业务仓储、Mapper / PO 仍留在本域 infrastructure。独立运行模块应聚合并继承 services-bom，不在 business 重复登记、不自动进入八服务发布集合；后续数量据实际新增模块更新。
 
@@ -63,7 +63,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 └─────────────────────────────────────────┘
 ```
 
-> 注：`apex-common` 在微服务改造后作为 **共享 SDK** 独立复用，其内容受 [SDK 内容准入规则](../../apex-common/README.md#sdk-内容准入规则强制)约束（结果/异常/上下文/注解/纯工具可进，Redis/MQ/Storage 实现与业务实体禁入）。它直接继承 shared parent，版本治理最终来自根 POM；服务仍经 services-bom 获得已有依赖管理。
+> 注：`apex-common` 在微服务改造后作为 **共享 SDK** 独立复用，其内容受 [SDK 内容准入规则](../../apex-shared-parent/apex-common/README.md#sdk-内容准入规则强制)约束（结果/异常/上下文/注解/纯工具可进，Redis/MQ/Storage 实现与业务实体禁入）。它直接继承 shared parent，版本治理最终来自根 POM；服务仍经 services-bom 获得已有依赖管理。
 
 ## 微服务共享层
 

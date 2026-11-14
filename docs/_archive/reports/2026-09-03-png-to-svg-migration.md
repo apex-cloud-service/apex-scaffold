@@ -186,7 +186,7 @@ docs/diagrams/
 
 **HTML 语法**:
 ```html
-<img src="docs/diagrams/01_logical_architecture.svg" 
+<img src=""docs/diagrams/01_logical_architecture.svg"" 
      alt="DDD四层逻辑架构图" 
      width="100%">
 ```

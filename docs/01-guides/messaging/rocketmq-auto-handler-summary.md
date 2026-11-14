@@ -294,8 +294,8 @@ alertManager.resetCooldown("lag_user-group");
 |-----|------|
 | [rocketmq-auto-handler-guide.md](rocketmq-auto-handler-guide.md) | 完整使用指南（15,000+ 字） |
 | [rocketmq-production-optimization.md](rocketmq-production-optimization.md) | 生产优化报告 |
-| [application.yml](../../../apex-system/src/main/resources/application.yml) | 基础配置 |
-| [application-prod.yml](../../../apex-system/src/main/resources/application-prod.yml) | 生产配置 |
+| [application.yml](../../../apex-components-parent/apex-system/src/main/resources/application.yml) | 基础配置 |
+| [application-prod.yml](../../../apex-components-parent/apex-system/src/main/resources/application-prod.yml) | 生产配置 |
 
 ---
 

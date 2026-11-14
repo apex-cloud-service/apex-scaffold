@@ -15,7 +15,7 @@
 
 | 产物 | 模块 | 生成命令 | 校验 |
 | --- | --- | --- | --- |
-| 网关 | `apex-gateway` | `mvnd -pl apex-gateway -am package -P<档位>` | `java -jar` 可启动，8080 返回健康检查 |
+| 网关 | `:apex-gateway` | `mvnd -pl :apex-gateway -am package -P<档位>` | `java -jar` 可启动，8080 返回健康检查 |
 | 系统服务 | `apex-system-service` | 同上替换模块名 | 8082 业务端口、8083 管理端口 |
 | 认证服务 | `apex-auth-service` | 同上 | 8081 |
 | 工作流服务 | `apex-workflow-service` | 同上 | 8093 |

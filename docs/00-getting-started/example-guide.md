@@ -11,7 +11,7 @@ mysql -h 127.0.0.1 -u root -papex-root -e "CREATE DATABASE IF NOT EXISTS apex_ex
 
 # 2. 启动（统一构建环境）
 source ~/.sdkman/bin/sdkman-init.sh
-mvnd spring-boot:run -pl apex-example
+mvnd spring-boot:run -pl :apex-example
 
 # 3. 打开 API 文档
 open http://localhost:8080/doc.html
@@ -82,7 +82,7 @@ apex-example/src/main/java/com/apex/example/
 - `UserApiIntegrationTest`（10 例）：CRUD/分页/校验/错误码/脱敏/删除链路
 - `ExampleCapabilityIntegrationTest`（7 例）：缓存/幂等/审计/SSE/脱敏/导出
 
-运行：`mvnd -o verify -pl apex-example`（集成测试走 failsafe verify 阶段）
+运行：`mvnd -o verify -pl :apex-example`（集成测试走 failsafe verify 阶段）
 
 > 💡 测试环境以 Mock Redis 提供基础设施替身（`ExampleTestMockConfiguration`），
 > 验证的是「接入方式与响应结构」；真实行为请在本地 Redis 上启动应用验证。

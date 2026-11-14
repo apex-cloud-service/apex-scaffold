@@ -6,7 +6,7 @@
 >
 > **微服务化**：自 1.3.1 起工作流能力已独立为微服务 `apex-workflow-service`（端口 `8093`，独立库 `apex_workflow`）。
 > 对外接口契约保持不变，统一经网关（端口 `8080`）路由：`/admin-api/v1/workflows/**`、`/api/v1/workflows/**`、`/api/workflow/**`。
-> 独立服务构建：`mvnd -pl apex-workflow-service -am package`。
+> 独立服务构建：`mvnd -pl :apex-workflow-service -am package`。
 
 ## 1. 概述
 

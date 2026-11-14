@@ -240,7 +240,7 @@ open http://localhost:8765/test-mermaid-viewer.html
 如需更新 Mermaid 版本，修改 CDN 链接：
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/mermaid@VERSION/dist/mermaid.min.js"></script>
+<script src=""https://cdn.jsdelivr.net/npm/mermaid@VERSION/dist/mermaid.min.js""></script>
 ```
 
 ---

@@ -271,7 +271,7 @@ apex-application/src/main/java/com/apex/scaffold/application/dto/RegisterRequest
 cd /Users/work/apex-scaffold && sdk env
 
 # 编译单个模块
-mvnd clean compile -DskipTests -pl apex-infrastructure -am
+mvnd clean compile -DskipTests -pl :apex-infrastructure -am
 
 # 编译全部
 mvnd clean compile -DskipTests

@@ -1,12 +1,12 @@
 # Apex Scaffold 部署使用指南
 
-system 历史库升级至 V40 前须停写、备份并核对 `oauth2_authorization_consent`。MySQL 使用 [consent 前置修复](../../apex-system/src/main/resources/db/upgrade/mysql/consent_before_v40.sql)，通过 `mysql --default-character-set=utf8mb4` 在目标 system 库执行，禁止 `--force`，完成后再运行原 Flyway V40。脚本仅为缺失/空 ID 回填稳定值，保留已有非空 ID、业务键、权限与时间，先保护业务唯一键再换主键；MySQL DDL 隐式提交，失败后可重入，但必须保持停写。发现重复已有 ID、重复业务键或不支持结构时人工处理，不能删除记录或覆盖 ID。
+system 历史库升级至 V40 前须停写、备份并核对 `oauth2_authorization_consent`。MySQL 使用 [consent 前置修复](../../apex-components-parent/apex-system/src/main/resources/db/upgrade/mysql/consent_before_v40.sql)，通过 `mysql --default-character-set=utf8mb4` 在目标 system 库执行，禁止 `--force`，完成后再运行原 Flyway V40。脚本仅为缺失/空 ID 回填稳定值，保留已有非空 ID、业务键、权限与时间，先保护业务唯一键再换主键；MySQL DDL 隐式提交，失败后可重入，但必须保持停写。发现重复已有 ID、重复业务键或不支持结构时人工处理，不能删除记录或覆盖 ID。
 
-PostgreSQL V40 为无条件 DDL，使用 [事务前置修复](../../apex-system/src/main/resources/db/upgrade/postgresql/consent_before_v40.sql) 后，须通过 [psql 包装器](../../apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql) 执行原 V40，均用 `psql -X -v ON_ERROR_STOP=1 -d <system数据库> -f <脚本路径>`。部署时保留 `db/upgrade/postgresql/` 与 `db/migration/postgresql/` 的相对目录结构，包装器的 `\ir ../../migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql` 相对于包装器文件定位原 V40。隔离 PostgreSQL 已按该结构复制原始前置脚本、包装器与 V40，并实际用 `psql -f` 验证包含及重放。前置脚本遇到已有 `id` 非 `VARCHAR(100)` 时明确拒绝并回滚，须人工核对，不能自动转换。包装器事务内暂存 consent、执行原始 V40 并恢复 ID/数据/时间；异常整体回滚。只支持已审核的旧 V40 源字段齐全结构；其他表已部分重命名、非标准主键名、依赖外键/触发器/扩展列须先人工审阅，不能盲跑。包装器重入时跳过已重命名结构，不表示原 PostgreSQL V40 自身可重放。
+PostgreSQL V40 为无条件 DDL，使用 [事务前置修复](../../apex-components-parent/apex-system/src/main/resources/db/upgrade/postgresql/consent_before_v40.sql) 后，须通过 [psql 包装器](../../apex-components-parent/apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql) 执行原 V40，均用 `psql -X -v ON_ERROR_STOP=1 -d <system数据库> -f <脚本路径>`。部署时保留 `db/upgrade/postgresql/` 与 `db/migration/postgresql/` 的相对目录结构，包装器的 `\ir ../../migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql` 相对于包装器文件定位原 V40。隔离 PostgreSQL 已按该结构复制原始前置脚本、包装器与 V40，并实际用 `psql -f` 验证包含及重放。前置脚本遇到已有 `id` 非 `VARCHAR(100)` 时明确拒绝并回滚，须人工核对，不能自动转换。包装器事务内暂存 consent、执行原始 V40 并恢复 ID/数据/时间；异常整体回滚。只支持已审核的旧 V40 源字段齐全结构；其他表已部分重命名、非标准主键名、依赖外键/触发器/扩展列须先人工审阅，不能盲跑。包装器重入时跳过已重命名结构，不表示原 PostgreSQL V40 自身可重放。
 
 这些显式运维脚本不更新 Flyway 历史。历史有 failed V40 时，DBA 必须先审查失败 DDL 与备份，按组织流程协调 V40 执行及历史记录；禁止自动 `repair`、改 checksum 或直接标记成功。PostgreSQL 包装器手工执行完成也不能继续让 Flyway 再执行同一 V40；上线前必须完成历史对账。本路径只验证隔离合成库，未授权执行生产升级。
 
-MySQL V42 实际失败后的结构恢复使用 V42 离线恢复工具 [token-v42-recover.sh](../../scripts/utils/token-v42-recover.sh)（Java 实现，见 [TokenV42Recover.java](../../apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java)）。仅支持 MySQL 9.0，需 JDK 21 与 mysql CLI；先停止全部业务写入、Flyway 和其他 schema 变更，验证备份可恢复。工具从仓库根目录定位 `db/migration/mysql/V42__add_token_encryption.sql` 并核对其 SHA-256。以下命令在仓库根目录执行，数据库名及受保护的客户端配置路径按实际替换，`--mysql-command` 必须最后传入，认证信息不要写入命令行：
+MySQL V42 实际失败后的结构恢复使用 V42 离线恢复工具 [token-v42-recover.sh](../../scripts/utils/token-v42-recover.sh)（Java 实现，见 [TokenV42Recover.java](../../apex-tools-parent/apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java)）。仅支持 MySQL 9.0，需 JDK 21 与 mysql CLI；先停止全部业务写入、Flyway 和其他 schema 变更，验证备份可恢复。工具从仓库根目录定位 `db/migration/mysql/V42__add_token_encryption.sql` 并核对其 SHA-256。以下命令在仓库根目录执行，数据库名及受保护的客户端配置路径按实际替换，`--mysql-command` 必须最后传入，认证信息不要写入命令行：
 
 ```bash
 # 默认仅预检并打印计划
@@ -163,16 +163,16 @@ mvnd clean package -DskipTests -Penterprise     # 或 -Pbasic / -Pstandard
 每个微服务模块经 `spring-boot-maven-plugin` 重打包为**可执行 fat jar**（无 classifier，唯一 `*.jar`）：
 
 ```
-apex-gateway/target/apex-gateway-1.3.1.jar            # 网关（统一入口）
-apex-auth-service/target/apex-auth-service-1.3.1.jar  # 认证服务
-apex-system-service/target/apex-system-service-1.3.1.jar
-apex-workflow-service/target/apex-workflow-service-1.3.1.jar
-apex-office-service/target/apex-office-service-1.3.1.jar
-apex-file-service/target/apex-file-service-1.3.1.jar
-apex-example/target/apex-example-1.3.1.jar            # basic 档单体演示（非微服务）
+apex-services-bom/apex-gateway/target/apex-gateway-1.3.1.jar            # 网关（统一入口）
+apex-services-bom/apex-auth-service/target/apex-auth-service-1.3.1.jar  # 认证服务
+apex-services-bom/apex-system-service/target/apex-system-service-1.3.1.jar
+apex-services-bom/apex-workflow-service/target/apex-workflow-service-1.3.1.jar
+apex-services-bom/apex-office-service/target/apex-office-service-1.3.1.jar
+apex-services-bom/apex-file-service/target/apex-file-service-1.3.1.jar
+apex-applications-parent/apex-example/target/apex-example-1.3.1.jar            # basic 档单体演示（非微服务）
 ```
 
-> **务必使用各服务 target 目录下的可执行 jar**：其一端包含 Spring Boot 启动器，`java -jar apex-gateway/target/apex-gateway-1.3.1.jar` 即可运行对应微服务。
+> **务必使用各服务 target 目录下的可执行 jar**：其一端包含 Spring Boot 启动器，`java -jar apex-services-bom/apex-gateway/target/apex-gateway-1.3.1.jar` 即可运行对应微服务。
 > 验证产物档位：`cat <module>/target/classes/apex-build.properties`，`build.profile.id` 与构建档位一致。
 
 ### 3.4 验证产物可启动（冒烟）
@@ -180,7 +180,7 @@ apex-example/target/apex-example-1.3.1.jar            # basic 档单体演示（
 ```bash
 # 使用本地基础设施（podman-compose -f podman-compose.infra.yml up -d mysql redis）
 SPRING_PROFILES_ACTIVE=dev,standard \
-  java -jar apex-gateway/target/apex-gateway-1.3.1.jar
+  java -jar apex-services-bom/apex-gateway/target/apex-gateway-1.3.1.jar
 # 看到 "Started ... Application" 且 http://localhost:8080/api/v1/health 返回 UP 即通过
 ```
 
@@ -201,7 +201,7 @@ SPRING_PROFILES_ACTIVE=dev,standard \
 
 ```bash
 # 1. 上传可执行 jar 到服务器，例如 /opt/apex-scaffold/apex-auth-service.jar
-scp apex-auth-service/target/apex-auth-service-1.3.1.jar \
+scp apex-services-bom/apex-auth-service/target/apex-auth-service-1.3.1.jar \
     user@server:/opt/apex-scaffold/apex-auth-service.jar
 
 # 2. 注入环境变量并启动（前台，Ctrl+C 停止，调试用）
@@ -277,7 +277,7 @@ APEX_SERVICE_MODULE=apex-auth-service ./scripts/deploy/service/app.sh stop
 ```bash
 # 1. 放置产物与目录（以认证服务为例）
 sudo mkdir -p /opt/apex-scaffold/logs /etc/apex-scaffold /var/log/apex-scaffold
-sudo cp apex-auth-service/target/apex-auth-service-1.3.1.jar /opt/apex-scaffold/app.jar
+sudo cp apex-services-bom/apex-auth-service/target/apex-auth-service-1.3.1.jar /opt/apex-scaffold/app.jar
 sudo useradd -r -s /usr/sbin/nologin apex || true
 
 # 2. 创建环境变量文件（敏感值生产必改）
@@ -403,12 +403,12 @@ cp .env.example .env
 
 # 2. 构建离线 Java 21 工具并校验格式（启动前 security-key-check 复用同一 JAR）
 source scripts/build/init-build-env.sh
-mvnd -B -pl apex-tools-deployment -am verify
+mvnd -B -pl :apex-tools-deployment -am verify
 bash scripts/utils/local-deployment.sh compose --env-file .env
 
 # 发布包内的 security-key-check 默认挂载 tools/local-deployment.jar；
 # 直接使用仓库源码启动 Compose 时，需指向模块产物：
-export APEX_DEPLOY_TOOL_JAR="$PWD/apex-tools-deployment/target/local-deployment.jar"
+export APEX_DEPLOY_TOOL_JAR="$PWD/apex-tools-parent/apex-tools-deployment/target/local-deployment.jar"
 
 # 3. 先创建观测网络，再构建并启动应用栈
 podman-compose -p apex-infra -f podman-compose.infra.yml up -d skywalking-oap skywalking-ui elasticsearch kibana filebeat

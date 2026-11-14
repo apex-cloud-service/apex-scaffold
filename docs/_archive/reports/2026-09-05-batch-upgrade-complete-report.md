@@ -118,9 +118,9 @@ mv 01_logical_architecture.svg.before-icons 01_logical_architecture.svg
 
 ```xml
 <!-- 在SVG中使用图标 -->
-<use href="#icon-kubernetes" x="100" y="100" width="40" height="40"/>
-<use href="#icon-mysql" x="200" y="100" width="40" height="40"/>
-<use href="#icon-springboot" x="300" y="100" width="40" height="40"/>
+<use href=""#icon-kubernetes"" x="100" y="100" width="40" height="40"/>
+<use href=""#icon-mysql"" x="200" y="100" width="40" height="40"/>
+<use href=""#icon-springboot"" x="300" y="100" width="40" height="40"/>
 ```
 
 ### 可用图标列表
@@ -235,7 +235,7 @@ mv 01_logical_architecture.svg.before-icons 01_logical_architecture.svg
 ```xml
 <!-- 示例：在技术组件上添加品牌图标 -->
 <rect x="100" y="100" width="120" height="80" fill="white" stroke="#4f46e5"/>
-<use href="#icon-springboot" x="140" y="110" width="40" height="40"/>
+<use href=""#icon-springboot"" x="140" y="110" width="40" height="40"/>
 <text x="160" y="150" text-anchor="middle">Spring Boot</text>
 ```
 
@@ -243,10 +243,10 @@ mv 01_logical_architecture.svg.before-icons 01_logical_architecture.svg
 
 ```xml
 <!-- 调整尺寸 -->
-<use href="#icon-kubernetes" width="60" height="60"/>
+<use href=""#icon-kubernetes"" width="60" height="60"/>
 
 <!-- 某些图标支持颜色属性 -->
-<use href="#icon-cloud" color="#2563eb"/>
+<use href=""#icon-cloud"" color="#2563eb"/>
 ```
 
 ### 3. 组合使用图标

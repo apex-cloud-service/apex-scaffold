@@ -662,7 +662,7 @@ receivers:
     
     <div class="footer">
       <p>此邮件由 Alertmanager 自动发送</p>
-      <p>查看详情: <a href="{{ .ExternalURL }}">{{ .ExternalURL }}</a></p>
+      <p>查看详情: <a href=""{{ .ExternalURL }}"">{{ .ExternalURL }}</a></p>
     </div>
   </div>
 </body>

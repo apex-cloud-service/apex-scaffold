@@ -64,7 +64,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)思想,结合**响应式编程(Reac
 
 ### 1.2 当前运行拓扑（系统架构图）
 
-第一阶段 Maven 管理结构为 **7 个根级管理组、42 个后代、43 个 reactor 项目含根**：6 个新增 `packaging=pom` 分组加现有 `apex-services-bom`，共 8 个 POM 含根、35 个 JAR。shared / components / starters / services / applications / tools / business 分别聚合 9/6/4/10/2/4/0 个 JAR；所有既有叶子物理目录仍在仓库根，分组以 `../apex-xxx` 聚合同级目录，不改变坐标、生产依赖或运行拓扑。
+Maven 管理结构为 **7 个管理组、44 个后代、45 个 reactor 项目含根**：6 个新增 `packaging=pom` 分组加现有 `apex-services-bom`，共 8 个 POM 含根、37 个 JAR。shared / components / starters / services / applications / tools / business 分别聚合 9/6/4/11/2/4/1 个 JAR；第二阶段（2026-11-14）叶子物理位于各分组父目录之下，分组以 `<module>apex-xxx</module>` 聚合同目录叶子，不改变坐标、生产依赖或运行拓扑。
 
 22 个叶子调整直接 parent；api-contract / integration / boot-all 分别聚合到 shared / components / applications，却继续继承 services-bom，连同 10 个运行模块共 13 个 parent 不变。business 第一阶段为空，只管理项目业务库及业务专属配置 / 资源；通用框架实现在其他组，未来独立 `business-domain-service` 只归 services 聚合与继承，不重复登记到 business。管理 POM 不是新服务，不含业务实现、端口或可执行 JAR。
 
@@ -439,7 +439,7 @@ public interface UserRepository {
 
 ### 2.3 模块依赖关系
 
-全 35 个 JAR 的直接内部生产依赖见[95 依赖图](../diagrams/95_module_dependency_graph.svg)及[Mermaid 源](../diagrams/95_module_dependency_graph.mmd)，共 104 条内部 compile 边；第一阶段 42 个后代中的 7 个管理 POM（加根共 8 个 POM）不是生产 JAR，不画为 compile 节点。
+35 个既有 JAR（95 图尚未纳入知识库两模块的依赖边，其依赖见 AGENTS.md 依赖表）的直接内部生产依赖见[95 依赖图](../diagrams/95_module_dependency_graph.svg)及[Mermaid 源](../diagrams/95_module_dependency_graph.mmd)，共 104 条内部 compile 边；44 个后代中的 7 个管理 POM（加根共 8 个 POM）不是生产 JAR，不画为 compile 节点。
 
 | 边界 | 直接内部生产依赖要点 |
 | --- | --- |
@@ -727,7 +727,7 @@ public interface UserRepository {
 
 **迁移资源**：认证中心当前激活 `classpath:db/migration/mysql`；未激活的 `db/migration/auth/*/V51` 重复脚本已从当前工作区移除，不表示数据库迁移已执行。
 
-**验证依据**：[配置说明](../05-operations/configuration.md#认证中心统一授权)、[登录与授权时序](business-flows.md)、[统一授权 Handler 测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/UnifiedAuthorizationHandlerTest.java)。本 ADR 的状态不代表测试通过或已部署。
+**验证依据**：[配置说明](../05-operations/configuration.md#认证中心统一授权)、[登录与授权时序](business-flows.md)、[统一授权 Handler 测试源码](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/UnifiedAuthorizationHandlerTest.java)。本 ADR 的状态不代表测试通过或已部署。
 
 ### 历史决策摘要：采用 Spring WebFlux（正式编号 ADR-009）
 

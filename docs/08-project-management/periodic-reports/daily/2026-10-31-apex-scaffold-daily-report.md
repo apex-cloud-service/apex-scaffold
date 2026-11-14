@@ -25,7 +25,7 @@
 
 **未执行**。本次数据采集为只读，按约束未运行任何构建、测试或打包命令（全量 `clean verify` 耗时长且可能污染工作区）。以下为当日提交与文档中**已记录**的执行结果，非本次采集所产生：
 
-- 计划书 §42.33 记录：受影响反应堆 `mvnd -T4 -B -pl apex-gateway,apex-system,apex-workflow,apex-office-service,apex-auth-service -am verify` 于 2026-10-31 12:30:37 退出 0、BUILD SUCCESS，20 个反应堆项目全部成功；Surefire 汇总 4944 项（失败 0/错误 0/跳过 10），Failsafe 汇总 227 项（失败 0/错误 0/跳过 10），Spotless、PMD/p3c、JaCoCo 检查通过，`git diff --check` 干净。
+- 计划书 §42.33 记录：受影响反应堆 `mvnd -T4 -B -pl :apex-gateway,:apex-system,:apex-workflow,:apex-office-service,:apex-auth-service -am verify` 于 2026-10-31 12:30:37 退出 0、BUILD SUCCESS，20 个反应堆项目全部成功；Surefire 汇总 4944 项（失败 0/错误 0/跳过 10），Failsafe 汇总 227 项（失败 0/错误 0/跳过 10），Spotless、PMD/p3c、JaCoCo 检查通过，`git diff --check` 干净。
 - `docs/06-testing/jwt-unification/20261031-a1-a2/report.md` §4（对应未提交的 A1+A2）：受影响 7 模块 `test` BUILD SUCCESS、`spotless:check` 通过、`git diff --check` 干净、本批文档链接 0 断裂。
 - **未完成项**：同一报告 §4「clean verify 结果补记」正文仍为「待全量门禁完成后填写」，即 A1+A2 的全量门禁尚无结果记录。
 

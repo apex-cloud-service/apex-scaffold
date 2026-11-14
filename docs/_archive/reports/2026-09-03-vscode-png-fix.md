@@ -241,7 +241,7 @@ grep -n "\./diagrams" docs/README.md
 **不推荐做法** ❌:
 ```markdown
 ![图片描述](./docs/diagrams/image.png)
-<img src="file:///absolute/path/image.png">
+<img src=""file:///absolute/path/image.png"">
 ```
 
 ### 项目图片管理规范

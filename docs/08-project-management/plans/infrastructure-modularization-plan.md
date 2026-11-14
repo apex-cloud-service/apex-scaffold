@@ -71,8 +71,8 @@ TransactionalOutboxExecutor仍与业务写入共享同一JDBC事务和线程，�
 
 使用固定 JDK 17.0.12-oracle、mvnd 2.0.0-rc-3，每次命令先 source 构建初始化脚本；验证脚本入口为 [`scripts/test/verify-infrastructure-websocket.sh`](../../../scripts/test/verify-infrastructure-websocket.sh)，支持五能力针对性验证、office/gateway 针对性验证和完整 `clean verify`。本子任务不执行构建；以下 2026-10-14 记录属于迁移过程中的历史记录，不代表当前工作区或本次最终 `clean verify` 结果，最终结果以交付报告补写的主代理实测记录为准：
 
-- `mvnd -T4 -B -pl apex-infrastructure,apex-system-service,apex-auth-service,apex-job-service,apex-example -am test-compile -DskipTests`：BUILD SUCCESS，生产与测试源码编译通过，不代表执行测试。
-- `mvnd -T4 -B -pl apex-infrastructure-persistence,apex-infrastructure-cache,apex-infrastructure-messaging,apex-infrastructure-remote,apex-infrastructure-integration -am test`：BUILD SUCCESS。五能力依次执行 83、126、77、84、124 项测试，全部 Failures/Errors/Skipped 为 0；common 538 项、domain 9 项同样通过，原 test 阶段 JaCoCo 检查通过。
+- `mvnd -T4 -B -pl :apex-infrastructure,:apex-system-service,:apex-auth-service,:apex-job-service,:apex-example -am test-compile -DskipTests`：BUILD SUCCESS，生产与测试源码编译通过，不代表执行测试。
+- `mvnd -T4 -B -pl :apex-infrastructure-persistence,:apex-infrastructure-cache,:apex-infrastructure-messaging,:apex-infrastructure-remote,:apex-infrastructure-integration -am test`：BUILD SUCCESS。五能力依次执行 83、126、77、84、124 项测试，全部 Failures/Errors/Skipped 为 0；common 538 项、domain 9 项同样通过，原 test 阶段 JaCoCo 检查通过。
 - 五能力及 system 的 `spotless:check`：BUILD SUCCESS；修改过的八个扫描/格式脚本 `bash -n` 和 `git diff --check` 通过。
 - 迁移阶段曾执行 NoBoundedElasticArchGuardTest 并发现直接 boundedElastic 调用；该条仅为历史诊断记录，当前调用数量、修复状态和最终门禁结果须由主代理按当前代码重新验证，不得将其作为本次通过或失败结论。
 - 首轮编译暴露 cache 原先通过其他 SDK 间接获取 Guava；现已直接声明 Guava 并统一管理版本，不再依赖 MQ/微信的偶然传递关系。

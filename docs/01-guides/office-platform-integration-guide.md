@@ -96,7 +96,7 @@
 ```bash
 # Flyway 会在应用启动时自动执行迁移
 # 手动执行迁移（可选）
-mvnd -pl apex-office-service -am flyway:migrate
+mvnd -pl :apex-office-service -am flyway:migrate
 ```
 
 迁移文件：
@@ -110,7 +110,7 @@ mvnd -pl apex-office-service -am flyway:migrate
 ```bash
 # 加载环境变量并启动
 source config/office-platforms.env
-mvnd -pl apex-office-service -am spring-boot:run -Pdev
+mvnd -pl :apex-office-service -am spring-boot:run -Pdev
 ```
 
 或使用 Podman：

@@ -34,51 +34,51 @@ Apex Scaffold 是一个基于 Java 17、Spring Boot 3、WebFlux 的响应式多�
 **关键组件清单**:
 
 1. **JWT 认证体系**
-   - [JwtAuthenticationFilter](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/security/JwtAuthenticationFilter.java): JWT 认证过滤器，支持 Token 解析、黑名单校验、用户权限加载
-   - [JwtUtil](../../../apex-common/src/main/java/com/apex/scaffold/common/util/JwtUtil.java): JWT 工具类，支持 Token 签发和验证
-   - [TokenService](../../../apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenService.java): Token 领域服务，管理 Access Token 和 Refresh Token
-   - [TokenBlacklistService](../../../apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenBlacklistService.java): Token 黑名单服务
+   - [JwtAuthenticationFilter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/security/JwtAuthenticationFilter.java): JWT 认证过滤器，支持 Token 解析、黑名单校验、用户权限加载
+   - [JwtUtil](../../../apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/util/JwtUtil.java): JWT 工具类，支持 Token 签发和验证
+   - [TokenService](../../../apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenService.java): Token 领域服务，管理 Access Token 和 Refresh Token
+   - [TokenBlacklistService](../../../apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenBlacklistService.java): Token 黑名单服务
 
 2. **OAuth2 授权服务器**
-   - [OAuth2AuthorizationServiceImpl](../../../apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java): OAuth2 授权核心逻辑
-   - [OAuth2AuthorizationHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OAuth2AuthorizationHandler.java): 授权端点处理器
-   - [OAuth2ClientManagementService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2ClientManagementService.java): 客户端管理
-   - [OAuth2ResourceServerFilter](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/security/OAuth2ResourceServerFilter.java): 资源服务器过滤器
+   - [OAuth2AuthorizationServiceImpl](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java): OAuth2 授权核心逻辑
+   - [OAuth2AuthorizationHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OAuth2AuthorizationHandler.java): 授权端点处理器
+   - [OAuth2ClientManagementService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2ClientManagementService.java): 客户端管理
+   - [OAuth2ResourceServerFilter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/security/OAuth2ResourceServerFilter.java): 资源服务器过滤器
 
 3. **SSO 单点登录**
-   - [SsoAuthHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuthHandler.java): SSO 认证端点
-   - [SysSsoProviderService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/SysSsoProviderService.java): SSO 提供商管理
-   - [SsoProtocolAdapter](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SsoProtocolAdapter.java): 协议适配器接口
-   - [SamlProtocolAdapter](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java): SAML 协议适配器
-   - [OidcProtocolAdapter](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java): OIDC 协议适配器
+   - [SsoAuthHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuthHandler.java): SSO 认证端点
+   - [SysSsoProviderService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/SysSsoProviderService.java): SSO 提供商管理
+   - [SsoProtocolAdapter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SsoProtocolAdapter.java): 协议适配器接口
+   - [SamlProtocolAdapter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java): SAML 协议适配器
+   - [OidcProtocolAdapter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java): OIDC 协议适配器
 
 4. **Keycloak 集成**
-   - [KeycloakConfig](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/KeycloakConfig.java): Keycloak 配置类
-   - [OidcAuthenticationSuccessHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/security/OidcAuthenticationSuccessHandler.java): OIDC 认证成功处理器
-   - [KeycloakAdminHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/KeycloakAdminHandler.java): Keycloak 管理接口
+   - [KeycloakConfig](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/KeycloakConfig.java): Keycloak 配置类
+   - [OidcAuthenticationSuccessHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/security/OidcAuthenticationSuccessHandler.java): OIDC 认证成功处理器
+   - [KeycloakAdminHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/KeycloakAdminHandler.java): Keycloak 管理接口
 
 5. **RBAC 权限体系**
-   - [RbacMethodSecurityConfig](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/RbacMethodSecurityConfig.java): 方法级权限配置
-   - [RequirePermissionAspect](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/RequirePermissionAspect.java): 权限校验切面
-   - [DataScopeAspect](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java): 数据权限切面
-   - [RoleService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/RoleService.java): 角色管理服务
-   - [PermissionService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/PermissionService.java): 权限管理服务
-   - [MenuService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/MenuService.java): 菜单管理服务
+   - [RbacMethodSecurityConfig](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/RbacMethodSecurityConfig.java): 方法级权限配置
+   - [RequirePermissionAspect](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/RequirePermissionAspect.java): 权限校验切面
+   - [DataScopeAspect](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java): 数据权限切面
+   - [RoleService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/RoleService.java): 角色管理服务
+   - [PermissionService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/PermissionService.java): 权限管理服务
+   - [MenuService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/MenuService.java): 菜单管理服务
 
 6. **登录策略**
-   - [LoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/LoginStrategy.java): 登录策略接口
-   - [WeChatCodeLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatCodeLoginStrategy.java): 微信授权码登录
-   - [WeChatPhoneLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatPhoneLoginStrategy.java): 微信一键登录
-   - [SmsLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/SmsLoginStrategy.java): 短信验证码登录
-   - [ChuanglanSmsLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/ChuanglanSmsLoginStrategy.java): 创蓝短信登录
+   - [LoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/LoginStrategy.java): 登录策略接口
+   - [WeChatCodeLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatCodeLoginStrategy.java): 微信授权码登录
+   - [WeChatPhoneLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatPhoneLoginStrategy.java): 微信一键登录
+   - [SmsLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/SmsLoginStrategy.java): 短信验证码登录
+   - [ChuanglanSmsLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/ChuanglanSmsLoginStrategy.java): 创蓝短信登录
 
 7. **安全配置管理**
-   - [SecurityConfig](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityConfig.java): Spring Security 配置
-   - [SecurityProperties](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityProperties.java): 安全属性配置
-   - [AuthConfigHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/AuthConfigHandler.java): 认证配置管理接口
-   - [SysJwtConfigEntity](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysJwtConfigEntity.java): JWT 配置实体
-   - [SysSessionConfigEntity](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSessionConfigEntity.java): 会话配置实体
-   - [SysSecurityPolicyEntity](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSecurityPolicyEntity.java): 安全策略实体
+   - [SecurityConfig](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityConfig.java): Spring Security 配置
+   - [SecurityProperties](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityProperties.java): 安全属性配置
+   - [AuthConfigHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/AuthConfigHandler.java): 认证配置管理接口
+   - [SysJwtConfigEntity](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysJwtConfigEntity.java): JWT 配置实体
+   - [SysSessionConfigEntity](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSessionConfigEntity.java): 会话配置实体
+   - [SysSecurityPolicyEntity](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSecurityPolicyEntity.java): 安全策略实体
 
 #### 1.2.2 配置分布
 
@@ -2990,51 +2990,51 @@ Apex Scaffold 是一个基于 Java 17、Spring Boot 3、WebFlux 的响应式多�
 **关键组件清单**:
 
 1. **JWT 认证体系**
-   - [JwtAuthenticationFilter](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/security/JwtAuthenticationFilter.java): JWT 认证过滤器，支持 Token 解析、黑名单校验、用户权限加载
-   - [JwtUtil](../../../apex-common/src/main/java/com/apex/scaffold/common/util/JwtUtil.java): JWT 工具类，支持 Token 签发和验证
-   - [TokenService](../../../apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenService.java): Token 领域服务，管理 Access Token 和 Refresh Token
-   - [TokenBlacklistService](../../../apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenBlacklistService.java): Token 黑名单服务
+   - [JwtAuthenticationFilter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/security/JwtAuthenticationFilter.java): JWT 认证过滤器，支持 Token 解析、黑名单校验、用户权限加载
+   - [JwtUtil](../../../apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/util/JwtUtil.java): JWT 工具类，支持 Token 签发和验证
+   - [TokenService](../../../apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenService.java): Token 领域服务，管理 Access Token 和 Refresh Token
+   - [TokenBlacklistService](../../../apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain/service/TokenBlacklistService.java): Token 黑名单服务
 
 2. **OAuth2 授权服务器**
-   - [OAuth2AuthorizationServiceImpl](../../../apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java): OAuth2 授权核心逻辑
-   - [OAuth2AuthorizationHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OAuth2AuthorizationHandler.java): 授权端点处理器
-   - [OAuth2ClientManagementService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2ClientManagementService.java): 客户端管理
-   - [OAuth2ResourceServerFilter](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/security/OAuth2ResourceServerFilter.java): 资源服务器过滤器
+   - [OAuth2AuthorizationServiceImpl](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java): OAuth2 授权核心逻辑
+   - [OAuth2AuthorizationHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OAuth2AuthorizationHandler.java): 授权端点处理器
+   - [OAuth2ClientManagementService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2ClientManagementService.java): 客户端管理
+   - [OAuth2ResourceServerFilter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/security/OAuth2ResourceServerFilter.java): 资源服务器过滤器
 
 3. **SSO 单点登录**
-   - [SsoAuthHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuthHandler.java): SSO 认证端点
-   - [SysSsoProviderService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/SysSsoProviderService.java): SSO 提供商管理
-   - [SsoProtocolAdapter](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SsoProtocolAdapter.java): 协议适配器接口
-   - [SamlProtocolAdapter](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java): SAML 协议适配器
-   - [OidcProtocolAdapter](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java): OIDC 协议适配器
+   - [SsoAuthHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuthHandler.java): SSO 认证端点
+   - [SysSsoProviderService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/SysSsoProviderService.java): SSO 提供商管理
+   - [SsoProtocolAdapter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SsoProtocolAdapter.java): 协议适配器接口
+   - [SamlProtocolAdapter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java): SAML 协议适配器
+   - [OidcProtocolAdapter](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java): OIDC 协议适配器
 
 4. **Keycloak 集成**
-   - [KeycloakConfig](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/KeycloakConfig.java): Keycloak 配置类
-   - [OidcAuthenticationSuccessHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/security/OidcAuthenticationSuccessHandler.java): OIDC 认证成功处理器
-   - [KeycloakAdminHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/KeycloakAdminHandler.java): Keycloak 管理接口
+   - [KeycloakConfig](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/KeycloakConfig.java): Keycloak 配置类
+   - [OidcAuthenticationSuccessHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/security/OidcAuthenticationSuccessHandler.java): OIDC 认证成功处理器
+   - [KeycloakAdminHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/KeycloakAdminHandler.java): Keycloak 管理接口
 
 5. **RBAC 权限体系**
-   - [RbacMethodSecurityConfig](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/RbacMethodSecurityConfig.java): 方法级权限配置
-   - [RequirePermissionAspect](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/RequirePermissionAspect.java): 权限校验切面
-   - [DataScopeAspect](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java): 数据权限切面
-   - [RoleService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/RoleService.java): 角色管理服务
-   - [PermissionService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/PermissionService.java): 权限管理服务
-   - [MenuService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/MenuService.java): 菜单管理服务
+   - [RbacMethodSecurityConfig](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/RbacMethodSecurityConfig.java): 方法级权限配置
+   - [RequirePermissionAspect](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/RequirePermissionAspect.java): 权限校验切面
+   - [DataScopeAspect](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java): 数据权限切面
+   - [RoleService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/RoleService.java): 角色管理服务
+   - [PermissionService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/PermissionService.java): 权限管理服务
+   - [MenuService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/MenuService.java): 菜单管理服务
 
 6. **登录策略**
-   - [LoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/LoginStrategy.java): 登录策略接口
-   - [WeChatCodeLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatCodeLoginStrategy.java): 微信授权码登录
-   - [WeChatPhoneLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatPhoneLoginStrategy.java): 微信一键登录
-   - [SmsLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/SmsLoginStrategy.java): 短信验证码登录
-   - [ChuanglanSmsLoginStrategy](../../../apex-system/src/main/java/com/apex/scaffold/application/service/login/ChuanglanSmsLoginStrategy.java): 创蓝短信登录
+   - [LoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/LoginStrategy.java): 登录策略接口
+   - [WeChatCodeLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatCodeLoginStrategy.java): 微信授权码登录
+   - [WeChatPhoneLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/WeChatPhoneLoginStrategy.java): 微信一键登录
+   - [SmsLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/SmsLoginStrategy.java): 短信验证码登录
+   - [ChuanglanSmsLoginStrategy](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/login/ChuanglanSmsLoginStrategy.java): 创蓝短信登录
 
 7. **安全配置管理**
-   - [SecurityConfig](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityConfig.java): Spring Security 配置
-   - [SecurityProperties](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityProperties.java): 安全属性配置
-   - [AuthConfigHandler](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/AuthConfigHandler.java): 认证配置管理接口
-   - [SysJwtConfigEntity](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysJwtConfigEntity.java): JWT 配置实体
-   - [SysSessionConfigEntity](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSessionConfigEntity.java): 会话配置实体
-   - [SysSecurityPolicyEntity](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSecurityPolicyEntity.java): 安全策略实体
+   - [SecurityConfig](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityConfig.java): Spring Security 配置
+   - [SecurityProperties](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/config/SecurityProperties.java): 安全属性配置
+   - [AuthConfigHandler](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/AuthConfigHandler.java): 认证配置管理接口
+   - [SysJwtConfigEntity](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysJwtConfigEntity.java): JWT 配置实体
+   - [SysSessionConfigEntity](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSessionConfigEntity.java): 会话配置实体
+   - [SysSecurityPolicyEntity](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSecurityPolicyEntity.java): 安全策略实体
 
 #### 1.2.2 配置分布
 

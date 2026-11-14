@@ -749,7 +749,7 @@ mvnd spotless:apply
 mvnd javadoc:aggregate -DskipTests
 
 # 生成单模块 JavaDoc
-mvnd javadoc:javadoc -pl apex-domain -DskipTests
+mvnd javadoc:javadoc -pl :apex-domain -DskipTests
 
 # 输出目录：target/site/apidocs/
 ```

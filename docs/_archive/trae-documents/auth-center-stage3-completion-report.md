@@ -12,7 +12,7 @@
 ### 1. 核心服务实现（4个）
 
 #### 1.1 RoleService - 角色管理服务
-**文件**: [RoleService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/RoleService.java)
+**文件**: [RoleService.java](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/RoleService.java)
 
 **功能**:
 - ✅ 创建角色（编码唯一性校验）
@@ -30,7 +30,7 @@
 - 完整的中文JavaDoc注释
 
 #### 1.2 PermissionService - 权限管理服务
-**文件**: [PermissionService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/PermissionService.java)
+**文件**: [PermissionService.java](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/PermissionService.java)
 
 **功能**:
 - ✅ 创建权限（编码唯一性校验）
@@ -46,7 +46,7 @@
 - 权限编码格式：`{资源}:{操作}`（如 `user:read`）
 
 #### 1.3 SessionService - 会话管理服务
-**文件**: [SessionService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/SessionService.java)
+**文件**: [SessionService.java](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/SessionService.java)
 
 **功能**:
 - ✅ 创建会话（含设备信息）
@@ -66,7 +66,7 @@
 - 会话默认有效期24小时
 
 #### 1.4 AuthorizationService - 权限校验服务
-**文件**: [AuthorizationService.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/AuthorizationService.java)
+**文件**: [AuthorizationService.java](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/AuthorizationService.java)
 
 **功能**:
 - ✅ 检查用户是否拥有指定权限

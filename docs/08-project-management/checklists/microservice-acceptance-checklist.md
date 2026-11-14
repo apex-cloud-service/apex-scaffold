@@ -20,8 +20,8 @@
 - [x] 共享 domain/infrastructure 保留跨服务契约与设施，HTTP 日志改用 ApiCallObservation/ApiCallLogSink，业务日志实体留在 system。
 - [x] 全 reactor `compile -DskipTests`（含 example）18:19:24 BUILD SUCCESS。
 - [x] 本批迁移数量：application 281、domain 180、infrastructure 222，共 683 个文件（main 560、test 123，含资源，不含前批 interfaces）；801 个共享层/兄弟服务生产 Java 文件无 system 类型直接导入。
-- [x] 最终 `source scripts/build/init-build-env.sh && mvnd -T4 -B clean verify -pl '!apex-example'`：JDK 17.0.12-oracle/mvnd 2.0.0-rc-3；21:09:11 BUILD SUCCESS（12:34），当前 reactor Surefire/Failsafe XML 汇总 4853 tests、Failures 0、Errors 0、Skipped 3；Spotless/PMD/ArchUnit/JaCoCo 全通过，阈值和检查未削弱。BaseEntityTest 已补齐；本次修复 LoggingFilterTest 缺少 httpHandler 测试装配，7 个测试全通过；用户的 Logback business-summary 断言完整保留且该类 3 个测试全通过。
-- [x] `source scripts/build/init-build-env.sh && mvnd -T4 -B test-compile -pl apex-example -am`：21:10:28 BUILD SUCCESS（38.539s），example 及依赖模块生产/测试编译通过。
+- [x] 最终 `source scripts/build/init-build-env.sh && mvnd -T4 -B clean verify -pl '!:apex-example'`：JDK 17.0.12-oracle/mvnd 2.0.0-rc-3；21:09:11 BUILD SUCCESS（12:34），当前 reactor Surefire/Failsafe XML 汇总 4853 tests、Failures 0、Errors 0、Skipped 3；Spotless/PMD/ArchUnit/JaCoCo 全通过，阈值和检查未削弱。BaseEntityTest 已补齐；本次修复 LoggingFilterTest 缺少 httpHandler 测试装配，7 个测试全通过；用户的 Logback business-summary 断言完整保留且该类 3 个测试全通过。
+- [x] `source scripts/build/init-build-env.sh && mvnd -T4 -B test-compile -pl :apex-example -am`：21:10:28 BUILD SUCCESS（38.539s），example 及依赖模块生产/测试编译通过。
 - [x] 本轮修改文件的差异空白检查通过；全仓 `git diff --check` 仍有 workflow-monitor-guide、api-routes、configuration-inventory、TEST_REPORT 四份未在本轮修改文档的既有行尾空格，未覆盖用户内容。在线部署、启停、压测与混沌验收仍待运行环境取证。
 
 ## 17.1 功能与契约
@@ -73,7 +73,7 @@
 | 17.4 可观测与运维 | 2 | 2 | 0 | 0 |
 | **合计** | **9** | **8** | **0** | **0** |
 
-**结论**：代码/配置/脚本/文档层面 §17 交付物持续补齐。**Phase 5 办公服务独立化完成**（`apex-office`/`apex-office-service` + 独立 Flyway V1/V2 + 25 个测试类〔另有 1 个切片测试配置〕），17.1.4 由 `[ ]` 提升为 `[x]`（代码/测试）/`[~]`（在线）；**Phase 6 `apex-system-service` 骨架已完成并构建通过**（`mvnd -pl apex-system-service -am package` → 10 模块反应堆 BUILD SUCCESS），17.2.1 提升为 `[~]` 5/6；并新增模块边界守卫测试 `SystemServiceBoundaryTest`（DB-free，锁定「classpath 不混入兄弟服务入口 + 启动扫描装配完整」契约，`Tests run 3 / Failures 0 / Errors 0`）。**`ApiRouter`（2709 行）拆分已完成**（13+ 子域 Router + `RouterOpenApiConfig` 按模块 `@Bean` + `RouterOpenApiCoverageTest` 逐路径校验，全反应堆 `clean verify` 05:02 BUILD SUCCESS）。2026-10-12 已完成 system 领域/应用/专属基础设施物理迁移及库更名，兄弟服务无 system 生产依赖；本批实际门禁以第二批验证记录为准。剩余 `[~]` 为「产物已就绪、需在线环境执行运行时取证」，与 Phase 1/2 一贯口径一致（生产切流/压测/混沌属运维动作，不在代码交付物范围）。
+**结论**：代码/配置/脚本/文档层面 §17 交付物持续补齐。**Phase 5 办公服务独立化完成**（`:apex-office`/`:apex-office-service` + 独立 Flyway V1/V2 + 25 个测试类〔另有 1 个切片测试配置〕），17.1.4 由 `[ ]` 提升为 `[x]`（代码/测试）/`[~]`（在线）；**Phase 6 `:apex-system-service` 骨架已完成并构建通过**（`mvnd -pl :apex-system-service -am package` → 10 模块反应堆 BUILD SUCCESS），17.2.1 提升为 `[~]` 5/6；并新增模块边界守卫测试 `SystemServiceBoundaryTest`（DB-free，锁定「classpath 不混入兄弟服务入口 + 启动扫描装配完整」契约，`Tests run 3 / Failures 0 / Errors 0`）。**`ApiRouter`（2709 行）拆分已完成**（13+ 子域 Router + `RouterOpenApiConfig` 按模块 `@Bean` + `RouterOpenApiCoverageTest` 逐路径校验，全反应堆 `clean verify` 05:02 BUILD SUCCESS）。2026-10-12 已完成 system 领域/应用/专属基础设施物理迁移及库更名，兄弟服务无 system 生产依赖；本批实际门禁以第二批验证记录为准。剩余 `[~]` 为「产物已就绪、需在线环境执行运行时取证」，与 Phase 1/2 一贯口径一致（生产切流/压测/混沌属运维动作，不在代码交付物范围）。
 
 ---
 
@@ -91,7 +91,7 @@
 | 修复后的 `LicenseAutoConfigurationTest`（`enabled=false` 强制降级）通过 | ✅ | apex-license-spring-boot-starter `19 run / 0 fail` |
 | apex-interfaces（MySQL 在线 IT）、workflow / file 服务 JaCoCo 门禁通过 | ✅ | 各模块 SUCCESS |
 
-**2026-10-12 复跑确认（最新证据）**：`JAVA_HOME=/Users/eric/.sdkman/candidates/java/17.0.12-oracle mvnd -T4 -B clean verify -pl '!apex-example'` → `[INFO] BUILD SUCCESS`，反应堆 **18 模块全量 SUCCESS**（含 parent `Apex Scaffold`），总耗时 **05:02**，无 `Failures`/`Errors`（`grep 'Failures: [1-9]|Errors: [1-9]'` 无命中）。证据：`/tmp/mvnd_verify_current.log`。本次复跑在 `AccessLogService`（改用 `BlockingIoSchedulers.jdbc()`）、`RequestLoggingFilterTest`、`RouterOpenApiCoverageTest` 重构之后执行，确认当前工作树（含 587 文件未提交改动）通过全部门禁（Spotless/PMD(p3c)/ArchUnit/单测+failsafe IT/JaCoCo LINE≥0.60·BRANCH≥0.50）。`apex-system-service` JaCoCo 门禁沿用 §6-1c 决策：该模块为 Phase 6 骨架（唯一生产类 `SystemServiceApplication` 仅 `main()`），在 `apex-system-service/pom.xml` 为 `jacoco-maven-plugin` 显式排除启动类 `com/apex/scaffold/systemservice/SystemServiceApplication.class`，`jacoco:check` 输出 `Analyzed bundle 'apex-system-service' with 0 classes` → `All coverage checks have been met.`（详见 `microservice-phase5-6-extraction-design.md` §6-1c）。
+**2026-10-12 复跑确认（最新证据）**：`JAVA_HOME=/Users/eric/.sdkman/candidates/java/17.0.12-oracle mvnd -T4 -B clean verify -pl '!:apex-example'` → `[INFO] BUILD SUCCESS`，反应堆 **18 模块全量 SUCCESS**（含 parent `Apex Scaffold`），总耗时 **05:02**，无 `Failures`/`Errors`（`grep 'Failures: [1-9]|Errors: [1-9]'` 无命中）。证据：`/tmp/mvnd_verify_current.log`。本次复跑在 `AccessLogService`（改用 `BlockingIoSchedulers.jdbc()`）、`RequestLoggingFilterTest`、`RouterOpenApiCoverageTest` 重构之后执行，确认当前工作树（含 587 文件未提交改动）通过全部门禁（Spotless/PMD(p3c)/ArchUnit/单测+failsafe IT/JaCoCo LINE≥0.60·BRANCH≥0.50）。`:apex-system-service` JaCoCo 门禁沿用 §6-1c 决策：该模块为 Phase 6 骨架（唯一生产类 `SystemServiceApplication` 仅 `main()`），在 `:apex-system-service/pom.xml` 为 `jacoco-maven-plugin` 显式排除启动类 `com/apex/scaffold/systemservice/SystemServiceApplication.class`，`jacoco:check` 输出 `Analyzed bundle ':apex-system-service' with 0 classes` → `All coverage checks have been met.`（详见 `microservice-phase5-6-extraction-design.md` §6-1c）。
 
 **遗留的运行时取证项（`[~]`）不变**：混沌故障注入、K8s 摘除演练、P95 压测、监控栈上线、灰度 staging —— 均属在线运维动作，非代码交付物。
 

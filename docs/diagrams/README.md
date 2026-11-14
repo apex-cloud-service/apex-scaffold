@@ -144,12 +144,12 @@
 | 编号 | 图源 / SVG | 关系与适用边界 |
 | --- | --- | --- |
 | 95 | [Mermaid](95_module_dependency_graph.mmd) / [SVG](95_module_dependency_graph.svg) | **35 个 JAR 的直接内部生产依赖**。当前均为 compile scope；SVG 用逐模块邻接清单表示全部 104 条边，排除 parent、聚合、版本管理、传递依赖、HTTP 调用、test 与第三方依赖。aggregation 仅依赖 common / api-contract，不依赖 workflow / office 业务 JAR。 |
-| 128 | [Mermaid](128_maven_module_groups.mmd) / [SVG](128_maven_module_groups.svg) | **根 → 七管理组的 Maven 聚合**。6 个新 POM + 现有 services-bom，分组叶子为 9/6/4/10/2/4/0；42 个后代、43 个 reactor 项目含根、35 个 JAR、8 个 POM 含根。卡内清单不是展开的独立图节点。 |
+| 128 | [Mermaid](128_maven_module_groups.mmd) / [SVG](128_maven_module_groups.svg) | **根 → 七管理组的 Maven 聚合**。6 个新 POM + 现有 services-bom，分组叶子为 9/6/4/11/2/4/1；44 个后代、45 个 reactor 项目含根、37 个 JAR、8 个 POM 含根；叶子物理嵌套于分组父目录。卡内清单不是展开的独立图节点。 |
 | 129 | [Mermaid](129_maven_parent_inheritance.mmd) / [SVG](129_maven_parent_inheritance.svg) | **子项目 → 直接 parent**。22 个叶子迁移 parent，13 个保留 services-bom；api-contract / integration / boot-all 分别聚合在 shared / components / applications，直接 parent 仍为 services-bom。 |
 | 93 / 94 | [历史系统图](93_overall_system_architecture.svg) / [历史部署图](94_deployment_topology.svg) | 微服务化迁移前视图，旧模块、端口与单库口径保留为历史；不作为当前部署证据，也不因 Maven 分组重绘。当前运行拓扑见[系统架构 §1.2](../architecture/system-architecture.md#12-当前运行拓扑系统架构图)。 |
 | 107–127 | 下表 UML / ER / 流程图 | 第一阶段不改变类、表、业务状态机或时序；只核对与新管理分组有关的模块标签，不把管理 POM 画为领域类或运行服务。 |
 
-所有既有叶子物理目录仍位于仓库根，管理 POM 使用 `../apex-xxx` 聚合同级模块；生产坐标、JAR、依赖与服务拓扑不变。business 组第一阶段为空，只管理项目业务库及业务专属配置 / 资源，通用框架能力由其他组提供；未来独立 `business-domain-service` 只归 services 聚合与继承，不重复登记到 business。新增 N 个项目后须重新递归统计，不能沿用 42/43 的空 business 基线。
+第二阶段（2026-11-14）后所有叶子模块物理位于各自分组父目录之下，管理 POM 以 `<module>apex-xxx</module>` 聚合同目录叶子；生产坐标、JAR、依赖与服务拓扑不变。business 组聚合项目专属业务库 `apex-knowledge`；未来独立运行模块只归 services 聚合与继承，不重复登记到 business。新增 N 个项目后须重新递归统计，不能沿用 42/43 的历史基线。
 
 历史图不因本次分组改写：`01_logical_architecture.svg` 图内“Maven模块: 全仓 31 个”等脚注是**历史快照**，保留原图不动；当前模块数量、聚合与 parent 关系分别以 128、129 和本节口径为准。93 / 94 的旧模块、端口与单库口径同样只作历史视图。
 
@@ -226,7 +226,7 @@ mmdc -i docs/diagrams/107_uml_auth_center_domain.mmd \
 
 #### 校验状态
 
-- **第一阶段结构口径**：根聚合七管理组；42 个后代、43 个 reactor 项目含根、35 个 JAR、8 个 POM 含根（business 为空）。95 覆盖 35 个 JAR 的 104 条直接内部生产依赖，common 被 28 个 JAR 直接依赖、domain 被 19 个。
+- **第二阶段结构口径**：根聚合七管理组；44 个后代、45 个 reactor 项目含根、37 个 JAR、8 个 POM 含根，叶子物理嵌套于分组父目录。95 覆盖 35 个既有 JAR 的 104 条直接内部生产依赖（知识库两模块的边尚未纳入，依赖见 AGENTS.md 依赖表），common 被 28 个 JAR 直接依赖、domain 被 19 个。
 - **历史统计不作现状证明**：旧版 Handler / Service / Router / Repository / 表数量及全量 XML、Mermaid 渲染记录不是本次门禁结果；Maven 分组也不改变类或表的数量。93 / 94 的退役模块名是历史图内容，不应以全局替换清除。
 - **本次静态核对范围**：95 / 128 / 129 的 SVG XML 与源内容配对；本地 librsvg 测得文本包围盒无画布 / 所属卡片越界、无文本包围盒重叠。107 等 UML 未因 parent 分组重绘。**视觉验收未完成**（当前环境无法查看渲染图像）；文本几何检查不是视觉验收，更不是 Java 构建 / 启动或完整门禁结果。
 

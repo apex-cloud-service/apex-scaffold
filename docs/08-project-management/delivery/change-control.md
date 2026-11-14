@@ -127,7 +127,7 @@ Flyway 社区版不支持自动回滚。交付约定：
 | --- | --- | --- |
 | 对外 API | `/api/v1/**`、`/api/v2/**`、`/admin-api/v1/**`、`/auth/v1/**` | 变更需版本化或保持向后兼容 |
 | 内部服务 API | `/internal/v1/**` | 仅集群内直连，变更需同步调用方 |
-| 跨服务契约 | [apex-api-contract](../../../apex-api-contract/src/main/java/com/apex/scaffold/contract/) | Feign 接口与事件 DTO，需双方同步发布 |
+| 跨服务契约 | [apex-api-contract](../../../apex-shared-parent/apex-api-contract/src/main/java/com/apex/scaffold/contract/) | Feign 接口与事件 DTO，需双方同步发布 |
 | 管理端契约 | 前端独立仓库 | 菜单组件字段与 API 需与前端对齐 |
 
 ### 4.2 不兼容变更的判定

@@ -234,7 +234,7 @@ graph TB
 
 **HTML文档中嵌入**:
 ```html
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src=""https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js""></script>
 <script>
   mermaid.initialize({ startOnLoad: true });
 </script>

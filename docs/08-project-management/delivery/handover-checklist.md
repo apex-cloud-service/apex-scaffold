@@ -18,7 +18,7 @@
 - [ ] 已打 Git 标签 `v<版本>`，标签指向交付提交
 - [ ] `CHANGELOG.md` 已记录本次版本变更
 - [ ] 所有数据库迁移已提交（R-01）
-- [ ] `config/license/public.key` 与 `apex-common/src/main/resources/license/public.key` 已入库（R-03）
+- [ ] `config/license/public.key` 与 `apex-shared-parent/apex-common/src/main/resources/license/public.key` 已入库（R-03）
 
 ### 1.2 构建
 

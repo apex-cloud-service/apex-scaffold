@@ -470,7 +470,7 @@ chmod +x scripts/ops/maintenance/*.sh
 **解决**:
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -B -pl apex-tools-deployment -am verify
+mvnd -B -pl :apex-tools-deployment -am verify
 ```
 
 #### 问题 3: 脚本路径错误

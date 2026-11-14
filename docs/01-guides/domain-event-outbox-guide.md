@@ -21,7 +21,7 @@ Apex Scaffold 采用 **Transactional Outbox 模式** 实现领域事件的可靠
 
 ### 2.1 本地消息表
 
-Outbox 表 [sys_domain_event_outbox](../../apex-system/src/main/resources/db/migration/mysql/V1__init_schema.sql) 存储待投递的领域事件:
+Outbox 表 [sys_domain_event_outbox](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V1__init_schema.sql) 存储待投递的领域事件:
 
 ```sql
 CREATE TABLE IF NOT EXISTS `sys_domain_event_outbox` (
@@ -98,7 +98,7 @@ public Mono<User> createUser(CreateUserRequest request) {
 
 ### 3.1 DomainEventPublisher
 
-[DomainEventPublisherImpl](../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventPublisherImpl.java) 负责将事件写入 Outbox:
+[DomainEventPublisherImpl](../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventPublisherImpl.java) 负责将事件写入 Outbox:
 
 ```java
 @Primary
@@ -122,7 +122,7 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
 
 ### 3.2 DomainEventOutboxStore
 
-[DomainEventOutboxStore](../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxStore.java) 提供 Outbox 表的 CRUD 操作:
+[DomainEventOutboxStore](../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxStore.java) 提供 Outbox 表的 CRUD 操作:
 
 ```java
 @Repository
@@ -159,7 +159,7 @@ public class DomainEventOutboxStore {
 
 ### 3.3 DomainEventOutboxDispatcher
 
-[DomainEventOutboxDispatcher](../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxDispatcher.java) 后台定时扫描并投递事件:
+[DomainEventOutboxDispatcher](../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/DomainEventOutboxDispatcher.java) 后台定时扫描并投递事件:
 
 ```java
 @Component
@@ -268,7 +268,7 @@ public class UserService {
 
 ### 4.2 异步发布(可选)
 
-[EnhancedDomainEventPublisherImpl](../../apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/EnhancedDomainEventPublisherImpl.java) 支持多种发布策略:
+[EnhancedDomainEventPublisherImpl](../../apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/event/EnhancedDomainEventPublisherImpl.java) 支持多种发布策略:
 
 ```java
 @Component

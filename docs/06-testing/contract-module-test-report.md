@@ -9,7 +9,7 @@
 
 | 项目 | 结果 |
 |------|------|
-| 模块编译（`mvnd -pl apex-api-contract -am verify`） | ✅ BUILD SUCCESS |
+| 模块编译（`mvnd -pl :apex-api-contract -am verify`） | ✅ BUILD SUCCESS |
 | 单元测试（surefire） | ✅ 20/20 通过（0 失败 / 0 错误 / 0 跳过） |
 | Spotless 格式检查（spotless:check） | ✅ 通过（exit=0） |
 | PMD 静态检查（p3c-pmd-check） | ✅ 通过（0 违规，本轮已修复 1 处遗留） |
@@ -86,7 +86,7 @@
 
 ```bash
 # 单模块门禁（依赖 + 单测 + 覆盖率 + 格式 + 静态检查）
-mvnd -pl apex-api-contract -am verify
+mvnd -pl :apex-api-contract -am verify
 # 覆盖率报告
 #   位置：apex-api-contract/target/site/jacoco/index.html
 ```

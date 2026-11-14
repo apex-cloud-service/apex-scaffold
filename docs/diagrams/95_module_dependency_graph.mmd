@@ -1,6 +1,6 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 %% 直接内部生产依赖图（35 个 JAR 模块）· 数据源：各叶子 pom.xml 的 dependencies · v1.3.1
-%% 第一阶段 Maven 分组：42 个后代 / 43 个 reactor 项目含根；8 个 POM 不画为生产依赖节点。
+%% 第二阶段 Maven 分组：44 个后代 / 45 个 reactor 项目含根（叶子物理嵌套于分组父目录）；8 个 POM 不画为生产依赖节点。
 %% 与 95_module_dependency_graph.svg 语义配对维护；SVG 为手写邻接清单，不是 Mermaid 自动导出。
 %% 箭头由依赖方指向被依赖方；只列直接内部 compile 依赖（当前内部生产依赖均为 compile）。
 %% 不含 parent、modules、dependencyManagement、传递依赖、HTTP 调用、test 依赖或第三方依赖。

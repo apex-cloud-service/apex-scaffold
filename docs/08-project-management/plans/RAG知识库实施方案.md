@@ -180,7 +180,7 @@ apex:
 - 降级矩阵：{Meilisearch 启用/关闭} × {embedding 启用/关闭} × {chat 启用/关闭} 八象限至少覆盖关键四象限（全关、仅词法、词法+向量、全开）。
 - 真实模型调用测试放独立 profile（对齐 remote-it 思路），不混入默认门禁；计时敏感用例不得改弱 SLA 掩盖问题。
 - 验证命令：
-  - `mvnd -T4 -B -pl apex-knowledge-service -am test`
+  - `mvnd -T4 -B -pl :apex-knowledge-service -am test`
   - `mvnd -T4 -B spotless:check`
   - `mvnd -T4 -B clean verify`（完整门禁：反应堆全部模块 BUILD SUCCESS，测试 Failures 0 / Errors 0）
   - `git diff --check`

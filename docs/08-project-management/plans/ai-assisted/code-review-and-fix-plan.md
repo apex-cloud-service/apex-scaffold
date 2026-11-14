@@ -695,10 +695,10 @@ cloc apex-*/src/main/java
 cd /Users/work/apex-scaffold && sdk env
 
 # 编译单个模块
-mvnd clean compile -DskipTests -pl apex-infrastructure -am
+mvnd clean compile -DskipTests -pl :apex-infrastructure -am
 
 # 测试单个模块
-mvnd clean test -P basic -pl apex-infrastructure -am
+mvnd clean test -P basic -pl :apex-infrastructure -am
 
 # 生成 JavaDoc
 mvnd javadoc:aggregate -DskipTests

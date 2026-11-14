@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1590" viewBox="0 0 1600 1590" role="img" aria-labelledby="title desc">
-  <title id="title">Maven 直接 parent 继承关系（第一阶段）</title>
-  <desc id="desc">箭头子项目指向直接 parent，七个管理 POM 指向根。二十二个叶子迁移 parent，十个运行模块及 api-contract、integration、boot-all 共十三个保留 services-bom parent。business 第一阶段为空。</desc>
+  <title id="title">Maven 直接 parent 继承关系（第二阶段）</title>
+  <desc id="desc">箭头子项目指向直接 parent，七个管理 POM 指向根。二十二个叶子迁移 parent，十一个运行模块及 api-contract、integration、boot-all 共十四个保留 services-bom parent。business 聚合 apex-knowledge。</desc>
   <!-- Semantic pair: 129_maven_parent_inheritance.mmd; hand-maintained SVG, not Mermaid output. -->
   <defs>
     <style>
@@ -14,7 +14,7 @@
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#4f46e5"/></marker>
   </defs>
   <rect width="1600" height="1590" fill="#fff"/>
-  <text x="800" y="44" class="title">Maven 直接 parent 继承关系 · 第一阶段</text>
+  <text x="800" y="44" class="title">Maven 直接 parent 继承关系 · 第二阶段</text>
   <text x="800" y="74" class="sub">箭头：子项目 → 直接 parent；集合卡片不是单一模块。此图不画 &lt;modules&gt;、生产依赖或运行网络</text>
   <rect x="410" y="98" width="780" height="92" rx="12" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
   <text x="800" y="128" class="head" text-anchor="middle">apex-scaffold · 总父 POM</text>
@@ -75,10 +75,10 @@
   <text x="1090" y="736" class="head">apex-services-bom</text><text x="1090" y="764" class="meta">现有 POM · 保留依赖管理 · parent 为根</text>
   <path class="edge" d="M1310 808V777" marker-end="url(#arrow)"/><text x="1332" y="798" class="small">parent 不变</text>
   <rect x="1088" y="818" width="444" height="218" rx="9" fill="#fff" stroke="#c7d2fe"/>
-  <text x="1108" y="850" class="head">10 个运行模块保留 parent</text>
+  <text x="1108" y="850" class="head">11 个运行模块保留 parent</text>
   <text x="1108" y="884" class="code">apex-gateway + 六个业务 service</text>
   <text x="1108" y="918" class="code">apex-aggregation-service</text>
-  <text x="1108" y="952" class="code">apex-job-service / apex-masking-service</text>
+  <text x="1108" y="952" class="code">apex-job-service / apex-masking-service / apex-knowledge-service</text>
   <text x="1108" y="1001" class="small">聚合与继承均归 services-bom</text>
   <path class="edge" d="M1514 1054H1538V785H1450" marker-end="url(#arrow)"/>
   <rect x="1088" y="1054" width="426" height="184" rx="9" fill="#fff7ed" stroke="#d97706" stroke-width="2"/>
@@ -88,11 +88,11 @@
   <text x="1108" y="1188" class="code">apex-boot-all：聚合在 applications</text>
   <text x="1108" y="1220" class="small">parent 仍为 services-bom，不是 compile 边</text>
   <rect x="50" y="1300" width="1500" height="88" rx="12" fill="#fff7ed" stroke="#d97706" stroke-width="2" stroke-dasharray="7 5"/>
-  <text x="70" y="1336" class="head">apex-business-parent · 新增 POM · 直接 parent 为根 · 第一阶段无子模块</text>
+  <text x="70" y="1336" class="head">apex-business-parent · 新增 POM · 直接 parent 为根 · 聚合 apex-knowledge</text>
   <text x="70" y="1367" class="note">未来项目业务库继承 business-parent；独立 business-domain-service 只聚合 / 继承 services-bom。</text>
   <rect x="50" y="1416" width="1500" height="144" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="70" y="1450" class="head">继承核对口径</text>
   <text x="70" y="1480" class="note">22 个叶子迁移 parent = 8 + 5 + 4 + 1 + 4；13 个 services-bom 子项目保持 parent = 10 + 3。</text>
   <text x="70" y="1510" class="note">聚合（128）/ parent（本图）/ 生产 dependencies（95）是三种关系；dependencyManagement 不自动引入依赖。</text>
-  <text x="70" y="1540" class="note">现有叶子物理目录、坐标、Java 包、打包行为、生产依赖与运行拓扑不变。</text>
+  <text x="70" y="1540" class="note">第二阶段（2026-11-14）叶子物理位于各分组父目录；坐标、Java 包、打包行为、生产依赖与运行拓扑不变。</text>
 </svg>

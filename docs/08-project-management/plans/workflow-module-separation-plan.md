@@ -393,7 +393,7 @@ flowchart TD
 
 ### 9.4 构建与测试验证结果
 
-- 定向：`mvnd -pl apex-common,apex-infrastructure,apex-workflow -am test` → **BUILD SUCCESS**（`apex-infrastructure` 共 609 个测试全部通过）。
+- 定向：`mvnd -pl :apex-common,:apex-infrastructure,:apex-workflow -am test` → **BUILD SUCCESS**（`:apex-infrastructure` 共 609 个测试全部通过）。
 - 全工程：`mvnd test` → **BUILD SUCCESS**（`apex-common`、`apex-infrastructure`、`apex-workflow`、`apex-interfaces`、`apex-auth-center`、`apex-example` 全部模块测试及 JaCoCo 覆盖率检查通过）。
 - 覆盖率承接：`apex-workflow` 的 JaCoCo 规则已承接工作流类覆盖基线（service/query 0.85/0.65、scheduler 0.70/0.50）。
 - 详细测试记录见 [workflow-module-test-report.md](../../06-testing/workflow-module-test-report.md)。

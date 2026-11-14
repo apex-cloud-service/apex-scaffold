@@ -58,7 +58,7 @@ system 保存前与执行时均使用 `JobInvoker` 校验 `@ManagedJob` 方法�
 
 本轮完善后执行：
 
-- `mvnd -T4 -B -pl apex-system,apex-workflow -am test -Dtest=ManagedJobBehaviorTest,JobServiceTest,JobInvokerCompletionTest,JobInvokerTenantTest,JobSchedulerTenantTest,WorkflowTimeoutHandlerTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true`：system 29 项、workflow 5 项通过。随后新增 Spring 代理白名单行为用例，对 `ManagedJobBehaviorTest,JobSchedulerTenantTest` 再次定向执行，10 项通过（Failures: 0 / Errors: 0）。
+- `mvnd -T4 -B -pl :apex-system,:apex-workflow -am test -Dtest=ManagedJobBehaviorTest,JobServiceTest,JobInvokerCompletionTest,JobInvokerTenantTest,JobSchedulerTenantTest,WorkflowTimeoutHandlerTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true`：system 29 项、workflow 5 项通过。随后新增 Spring 代理白名单行为用例，对 `ManagedJobBehaviorTest,JobSchedulerTenantTest` 再次定向执行，10 项通过（Failures: 0 / Errors: 0）。
 - starter `test spotless:check -Djacoco.skip=true`：5 项通过，包括缺失/零值/负数任务 ID 拒绝、默认禁用与失败传播。
 - 格式化仅指定本次 Java 文件；system/workflow 模块全量 `spotless:check` 通过，`git diff --check` 通过，未全仓格式化。
 

@@ -362,7 +362,7 @@ class TenantIntegrationTest {
 ## 📚 参考资料
 
 - [AGENTS.md](../../AGENTS.md) - 多租户开发规范
-- [TenantIsolationArchTest.java](../../apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TenantIsolationArchTest.java) - 架构约束测试
+- [TenantIsolationArchTest.java](../../apex-shared-parent/apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TenantIsolationArchTest.java) - 架构约束测试
 - Flyway迁移 V14~V19 - 租户隔离相关迁移
 
 ---

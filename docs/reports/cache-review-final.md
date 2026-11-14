@@ -17,11 +17,11 @@
 
 | 完成项 | 说明 | 文件 |
 |-------|------|------|
-| ✅ 定时重建任务 | 每天凌晨 3 点自动重建 BloomFilter | [BloomFilterRebuildTask.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java) |
-| ✅ 监控指标采集 | Prometheus 指标完整采集 | [BloomFilterMetrics.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterMetrics.java) |
-| ✅ 分域容量配置 | 支持按业务域独立配置容量 | [BloomFilterNamespaceProperties.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java) |
-| ✅ 配置文件完善 | 开发/生产环境配置完整 | [application.yml](../../apex-system/src/main/resources/application.yml), [application-prod.yml](../../apex-system/src/main/resources/application-prod.yml) |
-| ✅ 单元测试补充 | 定时任务测试用例 | [BloomFilterRebuildTaskTest.java](../../apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java) |
+| ✅ 定时重建任务 | 每天凌晨 3 点自动重建 BloomFilter | [BloomFilterRebuildTask.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java) |
+| ✅ 监控指标采集 | Prometheus 指标完整采集 | [BloomFilterMetrics.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterMetrics.java) |
+| ✅ 分域容量配置 | 支持按业务域独立配置容量 | [BloomFilterNamespaceProperties.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java) |
+| ✅ 配置文件完善 | 开发/生产环境配置完整 | [application.yml](../../apex-components-parent/apex-system/src/main/resources/application.yml), [application-prod.yml](../../apex-components-parent/apex-system/src/main/resources/application-prod.yml) |
+| ✅ 单元测试补充 | 定时任务测试用例 | [BloomFilterRebuildTaskTest.java](../../apex-shared-parent/apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java) |
 
 ---
 
@@ -29,7 +29,7 @@
 
 ### 1.1 定时重建任务
 
-**文件**: [BloomFilterRebuildTask.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
+**文件**: [BloomFilterRebuildTask.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTask.java)
 
 **功能特性**：
 - ⏰ 默认每天凌晨 3 点执行（Cron 可配置）
@@ -65,7 +65,7 @@ apex:
 
 ### 1.2 监控指标采集
 
-**文件**: [BloomFilterMetrics.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterMetrics.java)
+**文件**: [BloomFilterMetrics.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/metrics/BloomFilterMetrics.java)
 
 **Prometheus 指标清单**：
 
@@ -118,7 +118,7 @@ apex:
 
 ### 1.3 分域容量配置
 
-**文件**: [BloomFilterNamespaceProperties.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java)
+**文件**: [BloomFilterNamespaceProperties.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/BloomFilterNamespaceProperties.java)
 
 **为什么需要分域配置**：
 - 不同业务域数据量差异巨大（用户 500 万 vs 配置项 1 万）
@@ -176,7 +176,7 @@ namespaces:
 
 ### 2.1 开发环境配置
 
-**文件**: [application.yml:856-880](../../apex-system/src/main/resources/application.yml)
+**文件**: [application.yml:856-880](../../apex-components-parent/apex-system/src/main/resources/application.yml)
 
 新增完整的 BloomFilter 配置：
 ```yaml
@@ -202,7 +202,7 @@ apex:
 
 ### 2.2 生产环境配置
 
-**文件**: [application-prod.yml:312-331](../../apex-system/src/main/resources/application-prod.yml)
+**文件**: [application-prod.yml:312-331](../../apex-components-parent/apex-system/src/main/resources/application-prod.yml)
 
 生产环境根据实际数据量调整：
 ```yaml
@@ -229,7 +229,7 @@ apex:
 
 ### 2.3 配置属性完善
 
-**文件**: [CacheProperties.java:136-176](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java)
+**文件**: [CacheProperties.java:136-176](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java)
 
 新增嵌套配置类：
 ```java
@@ -447,7 +447,7 @@ groups:
 | BloomFilterRebuildTaskTest | 4 | 100% | ✅ |
 | MultiLevelCacheServiceBloomFilterIntegrationTest | 4 | 框架 | ⚠️ |
 
-**新增测试**：[BloomFilterRebuildTaskTest.java](../../apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java)
+**新增测试**：[BloomFilterRebuildTaskTest.java](../../apex-shared-parent/apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/task/BloomFilterRebuildTaskTest.java)
 - ✅ 定时重建成功调用预热器
 - ✅ 预热器异常不导致任务失败
 - ✅ 手动重建返回正确状态

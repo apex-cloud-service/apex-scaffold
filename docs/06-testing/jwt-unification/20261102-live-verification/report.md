@@ -76,8 +76,8 @@
 # 真实 MQTT 验证（可选，未启动 broker 时测试自动跳过）
 docker run -d --rm --name emqx -p 1883:1883 emqx/emqx:5.8
 source scripts/build/init-build-env.sh
-mvnd -pl apex-integration test -Dtest='IotMqtt*Test,HttpConnectorLiveEndpointTest'
-mvnd -pl apex-system test -Dtest='TenantSqlRewriteDialectTest'
+mvnd -pl :apex-integration test -Dtest='IotMqtt*Test,HttpConnectorLiveEndpointTest'
+mvnd -pl :apex-system test -Dtest='TenantSqlRewriteDialectTest'
 ```
 
 ## 4. 仍未验证项（如实保留）

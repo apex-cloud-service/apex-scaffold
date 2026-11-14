@@ -82,7 +82,7 @@
 ### F1 🔴 office 审批记录解析是未完成实现
 
 - **Symptom**：远端平台审批详情被查询，但审批记录永远为空。
-- **Source**：`OfficeApprovalService.parseApprovalRecords` 直接 `return List.of()`（`apex-office/src/main/java/com/apex/scaffold/office/application/OfficeApprovalService.java` L329–333）。
+- **Source**：`OfficeApprovalService.parseApprovalRecords` 直接 `return List.of()`（`apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/application/OfficeApprovalService.java` L329–333）。
 - **Consequence**：`getApprovalDetail` 返回的 `process.records` 恒为空列表，审批详情页无法展示流转记录。这是能力缺口，不是代码风格问题。
 - **Remedy**：在 office 本域内实现真实解析（按各平台 ApprovalPort 返回结构映射 `ApprovalRecord`），并补齐测试覆盖。归属：office 应用层，无需跨域方案。
 

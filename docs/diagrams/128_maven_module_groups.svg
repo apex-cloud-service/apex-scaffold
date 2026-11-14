@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1390" viewBox="0 0 1600 1390" role="img" aria-labelledby="title desc">
-  <title id="title">Maven 七组聚合关系（第一阶段）</title>
-  <desc id="desc">根聚合七个管理 POM，六个新增和现有 services-bom。九、六、四、十、二、四、零个叶子 JAR，共三十五个 JAR、四十二个后代、含根四十三个 reactor 项目。箭头是 modules，不是 parent 或 compile。</desc>
+  <title id="title">Maven 七组聚合关系（第二阶段 · 物理归位后）</title>
+  <desc id="desc">根聚合七个管理 POM，六个新增和现有 services-bom。九、六、四、十一、二、四、一个叶子 JAR，共三十七个 JAR、四十四个后代、含根四十五个 reactor 项目，叶子物理嵌套于各分组父目录。箭头是 modules，不是 parent 或 compile。</desc>
   <!-- Semantic pair: 128_maven_module_groups.mmd; hand-maintained SVG, not Mermaid output. -->
   <defs>
     <style>
@@ -14,12 +14,12 @@
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#4f46e5"/></marker>
   </defs>
   <rect width="1600" height="1390" fill="#fff"/>
-  <text x="800" y="44" class="title">Maven 七组聚合关系 · 第一阶段</text>
-  <text x="800" y="74" class="sub">只画 &lt;modules&gt;：根 → 管理组；卡内为成员清单，不是物理目录树、parent 继承或生产依赖</text>
+  <text x="800" y="44" class="title">Maven 七组聚合关系 · 第二阶段</text>
+  <text x="800" y="74" class="sub">只画 &lt;modules&gt;：根 → 管理组；卡内为成员清单，第二阶段起与物理目录层级一致；不是 parent 继承或生产依赖</text>
   <rect x="440" y="98" width="720" height="92" rx="12" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
   <text x="800" y="128" class="head" text-anchor="middle">apex-scaffold · 总父 POM / 总聚合入口</text>
-  <text x="800" y="154" class="meta" text-anchor="middle">7 个直接管理组 · 42 个后代 · 43 个 reactor 项目含根</text>
-  <text x="800" y="179" class="meta" text-anchor="middle">8 个 POM 含根 + 35 个 JAR（business 第一阶段为空）</text>
+  <text x="800" y="154" class="meta" text-anchor="middle">7 个直接管理组 · 44 个后代 · 45 个 reactor 项目含根</text>
+  <text x="800" y="179" class="meta" text-anchor="middle">8 个 POM 含根 + 37 个 JAR（叶子物理嵌套于各分组父目录）</text>
   <!-- Bundled modules edges all originate from the root, not from another management group. -->
   <path class="edge" d="M800 190V218H24V990H800V1010" marker-end="url(#arrow)"/>
   <path class="edge" d="M24 218H1310M290 218V248M800 218V248M1310 218V248"/>
@@ -54,13 +54,13 @@
   <text x="1090" y="449" class="code">apex-job-spring-boot-starter</text>
   <text x="1090" y="493" class="code">apex-seata-spring-boot-starter</text>
   <rect x="50" y="636" width="480" height="326" rx="12" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
-  <text x="70" y="672" class="head">apex-services-bom</text><text x="70" y="701" class="meta">复用 POM · 10 个 JAR · 运行装配</text>
+  <text x="70" y="672" class="head">apex-services-bom</text><text x="70" y="701" class="meta">复用 POM · 11 个 JAR · 运行装配</text>
   <text x="70" y="737" class="code">apex-gateway</text><text x="70" y="764" class="code">apex-system-service / apex-auth-service</text>
   <text x="70" y="791" class="code">apex-workflow-service / apex-file-service</text>
   <text x="70" y="818" class="code">apex-office-service / apex-integration-service</text>
   <text x="70" y="845" class="code">apex-aggregation-service</text>
-  <text x="70" y="882" class="code">apex-job-service / apex-masking-service</text>
-  <text x="70" y="921" class="small">八个发布运行模块 + 两个可选运行模块</text>
+  <text x="70" y="882" class="code">apex-job-service / apex-masking-service / apex-knowledge-service</text>
+  <text x="70" y="921" class="small">八个发布运行模块 + 三个可选运行模块</text>
   <rect x="560" y="636" width="480" height="326" rx="12" fill="#ecfeff" stroke="#0891b2" stroke-width="2"/>
   <text x="580" y="672" class="head">apex-applications-parent</text><text x="580" y="701" class="meta">新增 POM · 2 个 JAR · 示例与组合装配</text>
   <text x="580" y="753" class="code">apex-example</text><text x="580" y="798" class="code">apex-boot-all</text>
@@ -71,14 +71,14 @@
   <text x="1090" y="753" class="code">apex-license-tools</text><text x="1090" y="798" class="code">apex-generator</text>
   <text x="1090" y="843" class="code">apex-tools-deployment</text><text x="1090" y="888" class="code">apex-tools-build</text>
   <rect x="50" y="1010" width="1500" height="156" rx="12" fill="#fff7ed" stroke="#d97706" stroke-width="2" stroke-dasharray="7 5"/>
-  <text x="70" y="1046" class="head">apex-business-parent · 新增 POM · 0 个子模块</text>
-  <text x="70" y="1076" class="note">只管理项目业务库及业务专属配置 / 资源；第一阶段为空，不制造业务 JAR、服务或数据库。</text>
+  <text x="70" y="1046" class="head">apex-business-parent · 新增 POM · 1 个子模块</text>
+  <text x="70" y="1076" class="note">聚合项目专属业务库 apex-knowledge（知识空间/文档摄取/混合检索/问答编排）。</text>
   <text x="70" y="1106" class="note">通用框架实现位于其他组，business 按需复用；后续业务库另行批准加入。</text>
   <text x="70" y="1136" class="note">未来独立 business-domain-service 仅聚合 / 继承 services-bom，不重复登记到 business。</text>
   <rect x="50" y="1194" width="1500" height="164" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
   <text x="70" y="1228" class="head">读图边界</text>
-  <text x="70" y="1258" class="note">6 个新增 POM + 现有 services-bom；全部既有叶子物理目录仍在仓库根，分组通过 ../apex-xxx 聚合同级模块。</text>
+  <text x="70" y="1258" class="note">6 个新增 POM + 现有 services-bom；第二阶段（2026-11-14）叶子物理位于各自分组父目录之下，管理 POM 以 module 聚合同目录叶子。</text>
   <text x="70" y="1288" class="note">聚合归属 ≠ 直接 parent：api-contract / integration / boot-all 保留 services-bom 继承；继承关系见 129。</text>
   <text x="70" y="1318" class="note">生产直接内部依赖见 95；运行拓扑见 docs/architecture/system-architecture.md。管理组不是新运行服务。</text>
-  <text x="70" y="1344" class="small">计数口径：根以下 7 个 POM + 35 个 JAR = 42 个后代；加根 POM = 43 个 reactor 项目。</text>
+  <text x="70" y="1344" class="small">计数口径：根以下 7 个 POM + 37 个 JAR = 44 个后代；加根 POM = 45 个 reactor 项目。</text>
 </svg>

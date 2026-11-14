@@ -190,7 +190,7 @@
 
 ### 成功编译的模块 ✅
 ```bash
-mvnd -pl apex-domain,apex-infrastructure,apex-application -am compile -DskipTests
+mvnd -pl :apex-domain,:apex-infrastructure,apex-application -am compile -DskipTests
 # BUILD SUCCESS
 ```
 

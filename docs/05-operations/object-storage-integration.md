@@ -10,11 +10,11 @@ Local 根目录下按桶隔离，拒绝路径穿越和符号链接。Local 没�
 
 ## 2. 接入与配置
 
-完整变量见[环境模板](../../.env.example)，运行配置见[file application.yml](../../apex-file-service/src/main/resources/application.yml)。Java 不自动读取 `.env`；直接部署应通过受控环境或外部 Spring 配置注入。Compose 仅注入其 `environment` 显式声明的变量，不能把插值当作全量注入。
+完整变量见[环境模板](../../.env.example)，运行配置见[file application.yml](../../apex-services-bom/apex-file-service/src/main/resources/application.yml)。Java 不自动读取 `.env`；直接部署应通过受控环境或外部 Spring 配置注入。Compose 仅注入其 `environment` 显式声明的变量，不能把插值当作全量注入。
 
 ### 独立消费者
 
-引入 `com.apex.scaffold:apex-storage-spring-boot-starter:1.3.1`，后续升级以本仓库 [starter POM](../../apex-storage-spring-boot-starter/pom.xml) 的实际版本为准。云 SDK 为 optional，消费者启用相应后端时需显式加入对应依赖：
+引入 `com.apex.scaffold:apex-storage-spring-boot-starter:1.3.1`，后续升级以本仓库 [starter POM](../../apex-starters-parent/apex-storage-spring-boot-starter/pom.xml) 的实际版本为准。云 SDK 为 optional，消费者启用相应后端时需显式加入对应依赖：
 
 | 后端 | SDK 坐标 | 本仓库版本 |
 | --- | --- | --- |
@@ -102,7 +102,7 @@ Local 上传返回的授权内容 URL 及 `/api/v1/file/url` 的 `expiresIn=0` �
 
 ### 数据库与历史归属
 
-file 数据库版本链独立，生产迁移位于 [file 迁移目录](../../apex-file-service/src/main/resources/db/migration/)。MySQL/PostgreSQL 配对 V4 增加文件和分片的 tenant_id、storage_type，历史值保留 NULL；V5 保存文件会话 total_chunks、chunk_size，无法核实的旧分片会话需重新初始化。不要修改已执行迁移、删除 Flyway 历史或把未知文件批量归给当前用户/默认租户。
+file 数据库版本链独立，生产迁移位于 [file 迁移目录](../../apex-services-bom/apex-file-service/src/main/resources/db/migration/)。MySQL/PostgreSQL 配对 V4 增加文件和分片的 tenant_id、storage_type，历史值保留 NULL；V5 保存文件会话 total_chunks、chunk_size，无法核实的旧分片会话需重新初始化。不要修改已执行迁移、删除 Flyway 历史或把未知文件批量归给当前用户/默认租户。
 
 迁移前备份 file 数据库、存储对象/卷及旧配置，并验证恢复流程。可信管理员根据旧业务记录、上传日志和对象清单核对 tenantId、userId、storageType、bucketName、实际对象键；无法证实的记录隔离，不能开放访问。回填应分批审计且可逆，不在本指南提供一条覆盖所有历史数据的 SQL。
 
@@ -134,7 +134,7 @@ source scripts/build/init-build-env.sh
 java -version
 mvnd --version
 # 受影响模块及依赖的快速单元/架构验证，不包含完整 Failsafe 门禁
-mvnd -T4 -B -pl apex-file-service,apex-storage-spring-boot-starter -am test
+mvnd -T4 -B -pl :apex-file-service,:apex-storage-spring-boot-starter -am test
 # 完整门禁（独立安排执行，准备测试所需外部环境）
 mvnd -T4 -B clean verify
 # 报告只汇总现存 XML，不执行测试

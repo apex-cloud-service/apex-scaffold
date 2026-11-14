@@ -1,7 +1,7 @@
 # 能力目录（中台能力运营）
 
 本页是中台"能力目录"的**文档侧呈现**，与代码侧单一数据源
-[CapabilityCatalog](../../apex-system/src/main/java/com/apex/scaffold/application/capability/CapabilityCatalog.java)
+[CapabilityCatalog](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/capability/CapabilityCatalog.java)
 以契约测试对齐（`CapabilityCatalogDocContractTest`：本页能力表与代码登记的能力编码、
 归属中心、提供组件、负责人、版本、消费方、SLO、生命周期及开放 scope 必须完全一致，任一侧变更未同步即测试失败）。
 
@@ -48,7 +48,7 @@
 - 一个组件可承载多个能力（如 `apex-integration` 同时提供
   `integration-connector` 与 `iot-device`，两者可独立订阅）。
 - 能力的开放 scope 登记在认证中心
-  [OpenAppScopes](../../apex-auth/src/main/java/com/apex/scaffold/auth/openplatform/OpenAppScopes.java)；
+  [OpenAppScopes](../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/openplatform/OpenAppScopes.java)；
   网关按路由元数据 `metadata.open-api.capability` 做租户订阅门禁，服务侧按同一
   `CapabilityGate` 判定做二次校验。
 

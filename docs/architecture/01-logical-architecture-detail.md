@@ -4,7 +4,7 @@
 > 项目基线：根 POM `1.3.1`，Java 21，Spring Boot 3.5.15\
 > 更新日期：2026-10-28
 
-> **⚠️ 模块演进说明**：原 `apex-system` 已承接原 `apex-system`（interfaces/application 源码已迁入）、`apex-auth`（原认证中心入口）等业务库模块。当前根 POM 直接聚合七个管理组，递归 42 个 Maven 模块、含根 43 个 reactor 项目；完整清单、分组与 parent 关系以根 [AGENTS.md](../../AGENTS.md)、[README 分组说明](../../README.md#maven-分组与父链) 和 [system-architecture.md](system-architecture.md) 为准，结构图见 [128 聚合分组](../diagrams/128_maven_module_groups.svg) 与 [129 parent 继承](../diagrams/129_maven_parent_inheritance.svg)。本文中出现的 `apex-system` 指代当前的 system 业务库（含 interfaces/application/domain/infrastructure 四层），不再指代已退役的独立 interfaces/application 模块。文内配图 `01_logical_architecture.svg` 是历史设计快照，其模块统计不代表当前 Maven 结构。
+> **⚠️ 模块演进说明**：原 `apex-system` 已承接原 `apex-system`（interfaces/application 源码已迁入）、`apex-auth`（原认证中心入口）等业务库模块。当前根 POM 直接聚合七个管理组，递归 44 个 Maven 模块、含根 45 个 reactor 项目（第二阶段叶子物理嵌套于分组父目录）；完整清单、分组与 parent 关系以根 [AGENTS.md](../../AGENTS.md)、[README 分组说明](../../README.md#maven-分组与父链) 和 [system-architecture.md](system-architecture.md) 为准，结构图见 [128 聚合分组](../diagrams/128_maven_module_groups.svg) 与 [129 parent 继承](../diagrams/129_maven_parent_inheritance.svg)。本文中出现的 `apex-system` 指代当前的 system 业务库（含 interfaces/application/domain/infrastructure 四层），不再指代已退役的独立 interfaces/application 模块。文内配图 `01_logical_architecture.svg` 是历史设计快照，其模块统计不代表当前 Maven 结构。
 
 ![Apex Scaffold DDD 四层逻辑架构图](../diagrams/01_logical_architecture.svg)
 

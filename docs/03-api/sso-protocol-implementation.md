@@ -13,10 +13,10 @@
 
 | 协议 | 文件 | 状态 | 实现完整度 |
 |------|------|------|-----------|
-| SAML 2.0 | [SamlProtocolAdapter.java](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java) | ✅ 完成 | 100% |
-| CAS | [CasProtocolAdapter.java](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/CasProtocolAdapter.java) | ✅ 完成 | 100% |
-| LDAP | [LdapProtocolAdapter.java](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/LdapProtocolAdapter.java) | ✅ 完成 | 100% |
-| OIDC | [OidcProtocolAdapter.java](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java) | ✅ 完成 | 100% |
+| SAML 2.0 | [SamlProtocolAdapter.java](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java) | ✅ 完成 | 100% |
+| CAS | [CasProtocolAdapter.java](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/CasProtocolAdapter.java) | ✅ 完成 | 100% |
+| LDAP | [LdapProtocolAdapter.java](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/LdapProtocolAdapter.java) | ✅ 完成 | 100% |
+| OIDC | [OidcProtocolAdapter.java](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java) | ✅ 完成 | 100% |
 
 ---
 

@@ -511,7 +511,7 @@ CI 环境必须遵循项目约定：
 - [Handler JavaDoc 检查脚本](../../../scripts/dev/check/check-handler-javadoc.sh)
 - [JavaDoc 扫描脚本](../../../scripts/dev/check/scan-javadoc-issues.sh)
 - [CI 覆盖率检查脚本](../../../scripts/ci/check-springdoc-coverage.sh)
-- [Router OpenAPI 覆盖测试](../../../apex-system/src/test/java/com/apex/scaffold/interfaces/config/RouterOpenApiCoverageTest.java)
+- [Router OpenAPI 覆盖测试](../../../apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/config/RouterOpenApiCoverageTest.java)
 - [项目开发约定](../../../AGENTS.md)
 
 ---

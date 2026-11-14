@@ -36,10 +36,10 @@
 ### 实施步骤
 
 1. **摸清远端详情结构**：读取各平台 `ApprovalPort` 实现与 `getApprovalDetail` 返回的 `Map` 内容，确认每个平台的记录字段（节点名、审批人、动作、时间、意见）。
-   - 涉及文件：`apex-office/src/main/java/com/apex/scaffold/office/**` 下 ApprovalPort 实现与客户端。
+   - 涉及文件：`apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/**` 下 ApprovalPort 实现与客户端。
 2. **确定映射规则**：按平台在 office 应用层编写结构化解析（建议每平台一个私有解析方法或策略，避免 `instanceof` 堆叠）；`ApprovalRecord` 字段缺失时置 null/空，不伪造值。
 3. **实现 `parseApprovalRecords`**：替换 `return List.of()`；解析异常捕获后返回空列表 + `log.warn`（沿用类内现有日志风格），不让单平台格式差异炸掉详情查询。
-4. **补测试**：在 `apex-office/src/test/.../OfficeApprovalServiceTest.java` 增加：
+4. **补测试**：在 `apex-components-parent/apex-office/src/test/.../OfficeApprovalServiceTest.java` 增加：
    - 各平台典型详情 → 记录正确解析；
    - 结构不符/字段缺失 → 空记录 + 不抛错；
    - `getApprovalDetail` 全链路（本地过程 + 远端详情 + 记录覆盖）。

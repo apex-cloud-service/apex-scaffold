@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Apex Scaffold 产品解决方案文档 · 角色与功能全景</title>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src=""https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js""></script>
 <script>
   mermaid.initialize({
     startOnLoad: true,
@@ -108,15 +108,15 @@
 
 <!-- ============================================================ 目录 -->
 <nav class="toc">
-  <a href="#s1">1. 产品概述与定位</a>
-  <a href="#s2">2. 总体架构（架构图）</a>
-  <a href="#s3">3. 各端与子系统全景</a>
-  <a href="#s4">4. 角色体系与权限模型</a>
-  <a href="#s5">5. 功能清单（按子系统）</a>
-  <a href="#s6">6. 关键业务流程（流程图 / 时序图）</a>
-  <a href="#s7">7. 平台级能力（治理 / 可观测 / 部署）</a>
-  <a href="#s8">8. 产品视角的空白点与设计建议</a>
-  <a href="#s9">9. 附录：术语表与路由前缀约定</a>
+  <a href=""#s1"">1. 产品概述与定位</a>
+  <a href=""#s2"">2. 总体架构（架构图）</a>
+  <a href=""#s3"">3. 各端与子系统全景</a>
+  <a href=""#s4"">4. 角色体系与权限模型</a>
+  <a href=""#s5"">5. 功能清单（按子系统）</a>
+  <a href=""#s6"">6. 关键业务流程（流程图 / 时序图）</a>
+  <a href=""#s7"">7. 平台级能力（治理 / 可观测 / 部署）</a>
+  <a href=""#s8"">8. 产品视角的空白点与设计建议</a>
+  <a href=""#s9"">9. 附录：术语表与路由前缀约定</a>
 </nav>
 
 <!-- ============================================================ 1 -->
@@ -227,8 +227,8 @@ flowchart TB
 </div>
 
 <h3>2.1 Maven 管理组与生产依赖（工程视角）</h3>
-<p>第一阶段根聚合 <b>7 个管理组、42 个后代、43 个 reactor 项目含根</b>，共 8 个 POM 含根 + 35 个 JAR。
-六个新分组 POM 加现有 services-bom，只降低根级管理复杂度，不减少 JAR，也不承诺构建提速。所有既有叶子物理目录仍在仓库根，生产依赖和运行拓扑不变。</p>
+<p>第二阶段（2026-11-14）根聚合 <b>7 个管理组、44 个后代、45 个 reactor 项目含根</b>，共 8 个 POM 含根 + 37 个 JAR，叶子物理嵌套于各分组父目录。
+六个新分组 POM 加现有 services-bom，只降低根级管理复杂度，不减少 JAR，也不承诺构建提速。叶子物理嵌套于各分组父目录，生产依赖和运行拓扑不变。</p>
 <table>
   <tr><th>管理组</th><th>第一阶段叶子 JAR</th><th>职责</th></tr>
   <tr><td>apex-shared-parent</td><td>9</td><td>common / domain / 契约、五个设施能力 JAR 与旧坐标兼容 JAR。</td></tr>
@@ -242,9 +242,9 @@ flowchart TB
 <p><b>聚合不等于 parent 或 compile：</b>22 个叶子迁移 parent；api-contract / integration / boot-all 分别聚合在 shared / components / applications，仍继承 services-bom。
 10 个运行模块与这 3 个例外共 13 个 parent 保持不变。未来独立 <code>business-domain-service</code> 只归 services 聚合和继承，不重复登记到 business。
 父 POM 不含业务代码或可执行 JAR，dependencyManagement 不自动引入生产依赖。</p>
-<p>精确结构分别见 <a href="../../diagrams/128_maven_module_groups.svg">七组聚合图</a>（<a href="../../diagrams/128_maven_module_groups.mmd">图源</a>）、
-<a href="../../diagrams/129_maven_parent_inheritance.svg">直接 parent 图</a>（<a href="../../diagrams/129_maven_parent_inheritance.mmd">图源</a>）与
-<a href="../../diagrams/95_module_dependency_graph.svg">35 JAR 直接内部生产依赖图</a>（<a href="../../diagrams/95_module_dependency_graph.mmd">图源</a>）。
+<p>精确结构分别见 <a href=""../../diagrams/128_maven_module_groups.svg"">七组聚合图</a>（<a href=""../../diagrams/128_maven_module_groups.mmd"">图源</a>）、
+<a href=""../../diagrams/129_maven_parent_inheritance.svg"">直接 parent 图</a>（<a href=""../../diagrams/129_maven_parent_inheritance.mmd"">图源</a>）与
+<a href=""../../diagrams/95_module_dependency_graph.svg"">35 JAR 直接内部生产依赖图</a>（<a href=""../../diagrams/95_module_dependency_graph.mmd"">图源</a>）。
 下面只是六业务库与运行装配的局部 compile 示例，完整生产边以 95 为准；shared 不反向依赖具体业务库。</p>
 
 <div class="diagram">

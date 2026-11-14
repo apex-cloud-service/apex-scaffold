@@ -477,7 +477,7 @@ apex-api-contract/src/main/java/com/apex/scaffold/contract/
 
 ### B. 路由注册机制
 
-业务路由由各域的 Router 以 `@Bean` 方式注册，返回 `RouterFunction<ServerResponse>`。例如，system 的菜单路由位于 [RbacRouter.java](../../apex-system/src/main/java/com/apex/scaffold/interfaces/router/RbacRouter.java)，workflow 的管理路由位于 [WorkflowRouter.java](../../apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/WorkflowRouter.java)。
+业务路由由各域的 Router 以 `@Bean` 方式注册，返回 `RouterFunction<ServerResponse>`。例如，system 的菜单路由位于 [RbacRouter.java](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/router/RbacRouter.java)，workflow 的管理路由位于 [WorkflowRouter.java](../../apex-services-bom/apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/WorkflowRouter.java)。
 
 **示例**：
 ```java
@@ -502,7 +502,7 @@ Handler 负责：
 2. 调用 Application 层 Service 执行业务逻辑
 3. 构建 `ServerResponse` 返回统一响应
 
-system 中继承 [BaseHandler](../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/BaseHandler.java) 的 Handler 复用其参数解析、响应构建和国际化能力；其他业务域沿用各自的 Handler 实现。
+system 中继承 [BaseHandler](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/BaseHandler.java) 的 Handler 复用其参数解析、响应构建和国际化能力；其他业务域沿用各自的 Handler 实现。
 
 ### D. 安全机制
 

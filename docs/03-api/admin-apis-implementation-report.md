@@ -430,7 +430,7 @@ SSO 模块使用适配器模式统一管理多种协议:
 
 ```bash
 # Domain/Infrastructure/Application 层编译成功
-mvnd -pl apex-domain,apex-infrastructure,apex-application -am compile -DskipTests
+mvnd -pl :apex-domain,:apex-infrastructure,apex-application -am compile -DskipTests
 # BUILD SUCCESS
 ```
 
@@ -438,7 +438,7 @@ mvnd -pl apex-domain,apex-infrastructure,apex-application -am compile -DskipTest
 
 ```bash
 # Spotless 代码格式化
-mvnd spotless:apply -pl apex-domain,apex-infrastructure,apex-application
+mvnd spotless:apply -pl :apex-domain,:apex-infrastructure,apex-application
 # BUILD SUCCESS
 ```
 

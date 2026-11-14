@@ -29,7 +29,7 @@
    - 创建 Flyway V57 迁移脚本(MySQL)
    - 13 张业务表完整设计
    - 12 个权限和4个菜单种子数据
-   - 文件: [`V57__add_office_platform_tables.sql`](../../apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql)
+   - 文件: [`V57__add_office_platform_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql)
 
 ### ⚠️ 未完成的工作 (70%)
 
@@ -320,7 +320,7 @@ Interfaces Layer (接口层)
 | 交付物 | 文件路径 | 状态 |
 |--------|---------|------|
 | 规划文档 | [`office-platform-enhancement-plan.md`](office-platform-enhancement-plan.md) | ✅ |
-| MySQL 迁移脚本 | [`V57__add_office_platform_tables.sql`](../../apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql) | ✅ |
+| MySQL 迁移脚本 | [`V57__add_office_platform_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql) | ✅ |
 | 总结文档 | [`office-platform-summary.md`](office-platform-summary.md) | ✅ |
 
 ### 待交付
@@ -398,7 +398,7 @@ Interfaces Layer (接口层)
 
 **参考文档**:
 - 规划文档: [`office-platform-enhancement-plan.md`](office-platform-enhancement-plan.md)
-- 数据库脚本: [`V57__add_office_platform_tables.sql`](../../apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql)
+- 数据库脚本: [`V57__add_office_platform_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql)
 - 前端需求: `apex-admin-web/docs/backend-development-tasks.html`
 
 **实施建议**:

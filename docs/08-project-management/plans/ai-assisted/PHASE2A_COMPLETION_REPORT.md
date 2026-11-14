@@ -604,10 +604,10 @@ mvnd clean test -P basic
 ### A. 文件路径速查
 
 **示例文件**:
-- [LoginRequest.java](../../../../apex-system/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
-- [UserPO.java](../../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
-- [RoleMapper.java](../../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/RoleMapper.java)
-- [UserService.java](../../../../apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java)
+- [LoginRequest.java](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/LoginRequest.java)
+- [UserPO.java](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java)
+- [RoleMapper.java](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/RoleMapper.java)
+- [UserService.java](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/UserService.java)
 
 **工具脚本**:
 - [batch-add-lombok.sh](../../../../scripts/batch-add-lombok.sh)

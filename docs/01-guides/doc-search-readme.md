@@ -45,7 +45,7 @@ cd /Users/work/apex-scaffold
 
 # 2. 构建离线运维工具 JAR（如尚未构建）
 source scripts/build/init-build-env.sh
-mvnd -B -pl apex-tools-deployment -am verify
+mvnd -B -pl :apex-tools-deployment -am verify
 
 # 3. 启动 HTTP 服务器（仅监听回环地址）
 $JAVA_HOME/bin/java -cp apex-tools-deployment/target/local-deployment.jar \

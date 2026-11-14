@@ -31,7 +31,7 @@
 
 **口径与差异说明**（与同期日报、上一版同名周报的出入，以实测为准）：
 
-1. **验证范围修正**：上一版同名周报称「全仓 `mvnd -T4 -B clean verify` 全模块 BUILD SUCCESS」。实际记录（`docs/02-architecture/jdk21-unified-auth-multitenancy-implementation-plan.md` §42.33）为**受影响 5 模块反应堆** `-pl apex-gateway,apex-system,apex-workflow,apex-office-service,apex-auth-service -am verify`，20 个反应堆项目；**全仓 clean verify 本周未执行**，本报告不据此声明全仓通过。
+1. **验证范围修正**：上一版同名周报称「全仓 `mvnd -T4 -B clean verify` 全模块 BUILD SUCCESS」。实际记录（`docs/02-architecture/jdk21-unified-auth-multitenancy-implementation-plan.md` §42.33）为**受影响 5 模块反应堆** `-pl :apex-gateway,:apex-system,:apex-workflow,:apex-office-service,:apex-auth-service -am verify`，20 个反应堆项目；**全仓 clean verify 本周未执行**，本报告不据此声明全仓通过。
 2. **测试文件计数修正**：上一版称「测试类 254 个」，按 `--name-only` 去重实测为 273 个（含新增 122 个）。差异源于统计范围（是否含 `IT`、资源与 fixture 文件），本报告采用路径含 `src/test/` 的全量口径。
 3. **日报覆盖缺口**：本周仅 10-31 存在 apex-scaffold 与 apex-admin-web 两份日报；10-26 无日报；10-27 至 10-29 的三份日报属「冷链管理系统 V2.0」范围，按范围不合并原则未纳入本文（另见 `2026-W43-cold-chain-park-supply-weekly-report.md` 的范围划分）。
 4. **前端页面基数未推断**：本周 `.vue` 改动 31 个、新增 10 个，当前总数 60 个；前期基数口径不一，不做增量推算。

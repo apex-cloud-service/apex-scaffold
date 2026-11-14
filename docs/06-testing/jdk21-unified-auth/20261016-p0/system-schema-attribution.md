@@ -28,14 +28,14 @@ MySQL/PG 的对象数分别为 96/81，列数为 1347/1156。列数净差 191 �
 
 | 对象 | 衍生列数 | MySQL 创建迁移及行 | PostgreSQL 对应情况 |
 | --- | ---: | --- | --- |
-| biometric_auth | 13 | [V55](../../../../apex-system/src/main/resources/db/migration/mysql/V55__biometric_auth.sql) 第2行 | [V55](../../../../apex-system/src/main/resources/db/migration/postgresql/V55__mysql_alignment_placeholder.sql) 第4行起仅注释占位 |
-| device_trust | 19 | [V56](../../../../apex-system/src/main/resources/db/migration/mysql/V56__device_trust.sql) 第2行 | [V56](../../../../apex-system/src/main/resources/db/migration/postgresql/V56__mysql_alignment_placeholder.sql) 第4行起仅注释占位 |
-| encryption_key | 10 | [V48](../../../../apex-system/src/main/resources/db/migration/mysql/V48__security_enhancements.sql) 第157行 | PG V48 修改客户端 secret 轮换字段 |
-| encryption_key_version | 8 | [V42](../../../../apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql) 第145行 | PG V42 为 office 平台表 |
-| ip_access_control | 12 | [V53](../../../../apex-system/src/main/resources/db/migration/mysql/V53__ip_access_control.sql) 第2行 | [V53](../../../../apex-system/src/main/resources/db/migration/postgresql/V53__mysql_alignment_placeholder.sql) 第4行起仅注释占位 |
+| biometric_auth | 13 | [V55](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V55__biometric_auth.sql) 第2行 | [V55](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V55__mysql_alignment_placeholder.sql) 第4行起仅注释占位 |
+| device_trust | 19 | [V56](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V56__device_trust.sql) 第2行 | [V56](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V56__mysql_alignment_placeholder.sql) 第4行起仅注释占位 |
+| encryption_key | 10 | [V48](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V48__security_enhancements.sql) 第157行 | PG V48 修改客户端 secret 轮换字段 |
+| encryption_key_version | 8 | [V42](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql) 第145行 | PG V42 为 office 平台表 |
+| ip_access_control | 12 | [V53](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V53__ip_access_control.sql) 第2行 | [V53](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V53__mysql_alignment_placeholder.sql) 第4行起仅注释占位 |
 | jwt_key_version | 9 | MySQL V48 第62行 | PG V48 无对应创建 |
 | login_history | 14 | MySQL V48 第95行 | PG V48 无对应创建 |
-| mfa_config | 12 | [V27](../../../../apex-system/src/main/resources/db/migration/mysql/V27__mfa_config.sql) 第2行 | [PG V27](../../../../apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql) 第6行创建文档表 |
+| mfa_config | 12 | [V27](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V27__mfa_config.sql) 第2行 | [PG V27](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V27__create_document_and_chart_tables.sql) 第6行创建文档表 |
 | oauth2_client_secret_history | 7 | MySQL V48 第80行 | PG V48 的轮换字段不能替代历史表 |
 | password_history | 5 | MySQL V48 第26行 | PG V48 无对应创建 |
 | security_audit_log | 12 | MySQL V48 第39行 | PG V48 无对应创建 |
@@ -44,17 +44,17 @@ MySQL/PG 的对象数分别为 96/81，列数为 1347/1156。列数净差 191 �
 | trusted_device | 14 | MySQL V48 第120行 | PG V48 无对应创建 |
 | v_token_health（视图） | 8 | MySQL V42 第129行；别名第131–138行 | PG V42 无对应创建 |
 
-双库版本功能对照依据：[PG V42 office 迁移](../../../../apex-system/src/main/resources/db/migration/postgresql/V42__add_office_platform_tables.sql)、[PG V48 客户端轮换迁移](../../../../apex-system/src/main/resources/db/migration/postgresql/V48__add_client_secret_rotation_tracking.sql)。扫描 system PG 的全部 61 个 `V*.sql`，未发现上述 15 个对象的可执行创建语句；V53/V55/V56 仅在注释中提及 MySQL 对应文件。缺失同时由最终 catalog 确认。占位脚本声称“既有迁移覆盖”不能代替实际 DDL，版本集合相同也不能证明能力齐全。
+双库版本功能对照依据：[PG V42 office 迁移](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V42__add_office_platform_tables.sql)、[PG V48 客户端轮换迁移](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V48__add_client_secret_rotation_tracking.sql)。扫描 system PG 的全部 61 个 `V*.sql`，未发现上述 15 个对象的可执行创建语句；V53/V55/V56 仅在注释中提及 MySQL 对应文件。缺失同时由最终 catalog 确认。占位脚本声称“既有迁移覆盖”不能代替实际 DDL，版本集合相同也不能证明能力齐全。
 
 ## 共有表的 26 项列漂移
 
 ### oauth2_authorization：16 项
 
-- [MySQL V42](../../../../apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql) 第14–21、23行：`access_token_hash`、`access_token_encrypted`、`access_token_iv`、`refresh_token_hash`、`refresh_token_encrypted`、`refresh_token_iv`、`token_family`、`previous_jti`、`rotation_count`，共9列。
-- [MySQL V48](../../../../apex-system/src/main/resources/db/migration/mysql/V48__security_enhancements.sql) 第145–148、150–151行：`device_id`、`device_fingerprint`、`client_ip`、`is_revoked`、`last_used_ip`、`is_encrypted`，共6列。
-- [MySQL V58](../../../../apex-system/src/main/resources/db/migration/mysql/V58__add_token_revocation_tracking.sql) 第3行：`revoked_reason`，共1列；[PG V58](../../../../apex-system/src/main/resources/db/migration/postgresql/V58__mysql_alignment_placeholder.sql) 仅注释占位。
+- [MySQL V42](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V42__add_token_encryption.sql) 第14–21、23行：`access_token_hash`、`access_token_encrypted`、`access_token_iv`、`refresh_token_hash`、`refresh_token_encrypted`、`refresh_token_iv`、`token_family`、`previous_jti`、`rotation_count`，共9列。
+- [MySQL V48](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V48__security_enhancements.sql) 第145–148、150–151行：`device_id`、`device_fingerprint`、`client_ip`、`is_revoked`、`last_used_ip`、`is_encrypted`，共6列。
+- [MySQL V58](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V58__add_token_revocation_tracking.sql) 第3行：`revoked_reason`，共1列；[PG V58](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V58__mysql_alignment_placeholder.sql) 仅注释占位。
 
-PG V42/V48 分别执行 office 平台建表和客户端轮换字段迁移，并未实施上列对应变更。[PG V47](../../../../apex-system/src/main/resources/db/migration/postgresql/V47__add_token_revocation_tracking.sql) 第3–7行已建立 `revoked_at`、`revoked_by`、`revoke_reason`、`last_used_at`、`use_count`；其中 `revoke_reason` 与新增的 `revoked_reason` 是不同列，不能按名称相似合并。`revoked_at` 与 `last_used_at` 双库均有，不计入列存在性差异。
+PG V42/V48 分别执行 office 平台建表和客户端轮换字段迁移，并未实施上列对应变更。[PG V47](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V47__add_token_revocation_tracking.sql) 第3–7行已建立 `revoked_at`、`revoked_by`、`revoke_reason`、`last_used_at`、`use_count`；其中 `revoke_reason` 与新增的 `revoked_reason` 是不同列，不能按名称相似合并。`revoked_at` 与 `last_used_at` 双库均有，不计入列存在性差异。
 
 ### sys_user：9 项
 
@@ -62,7 +62,7 @@ MySQL V48 第11–19行分别新增 `is_locked`、`lock_reason`、`locked_at`、
 
 ### off_sync_history：1 项
 
-[PG V42](../../../../apex-system/src/main/resources/db/migration/postgresql/V42__add_office_platform_tables.sql) 第130行建表、第143行定义 `update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`；功能对应的 [MySQL V57](../../../../apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql) 第124行建表、第125–138行只有14列，没有 `update_time`。这里必须按功能对应 PG V42/MySQL V57，而不是只比较同版本号。
+[PG V42](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V42__add_office_platform_tables.sql) 第130行建表、第143行定义 `update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`；功能对应的 [MySQL V57](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V57__add_office_platform_tables.sql) 第124行建表、第125–138行只有14列，没有 `update_time`。这里必须按功能对应 PG V42/MySQL V57，而不是只比较同版本号。
 
 ## 类型、默认值、可空性与索引
 
@@ -82,7 +82,7 @@ MySQL V48 第11–19行分别新增 `is_locked`、`lock_reason`、`locked_at`、
 | varchar(255) | varchar(100) | 1 | `sys_user.keycloak_sub` 的长度漂移 |
 | longblob | bytea | 1 | 容量和二进制绑定待验证 |
 
-长度漂移来自 [MySQL V51](../../../../apex-system/src/main/resources/db/migration/mysql/V51__add_keycloak_fields.sql) 第11行扩为255，而 [PG V37](../../../../apex-system/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql) 第21行为100，[PG V51](../../../../apex-system/src/main/resources/db/migration/postgresql/V51__mysql_alignment_placeholder.sql) 是占位。277项均可归入以上外观/结构类别，**不表示277项均已证明等价**。
+长度漂移来自 [MySQL V51](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V51__add_keycloak_fields.sql) 第11行扩为255，而 [PG V37](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V37__add_email_and_keycloak_sub_to_sys_user.sql) 第21行为100，[PG V51](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V51__mysql_alignment_placeholder.sql) 是占位。277项均可归入以上外观/结构类别，**不表示277项均已证明等价**。
 
 ### 默认值差异：208 项
 
@@ -95,7 +95,7 @@ MySQL V48 第11–19行分别新增 `is_locked`、`lock_reason`、`locked_at`、
 | 时间函数或精度 | 4 | Flyway installed_on 的 CURRENT_TIMESTAMP/now()，及 outbox 三列的 CURRENT_TIMESTAMP(6)/CURRENT_TIMESTAMP |
 | 字面默认值漂移 | 1 | `wf_workflow_definition.enabled`：ACTIVE/DRAFT |
 
-最后一项来自 [MySQL V40](../../../../apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql) 第54行重述默认值为 ACTIVE；[PG V20](../../../../apex-system/src/main/resources/db/migration/postgresql/V20__create_workflow_engine_tables.sql) 第12行是 DRAFT，[PG V40](../../../../apex-system/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql) 第50行仅改名，保留原默认值。此项属于真实字面漂移，不能归入 cast 噪声。
+最后一项来自 [MySQL V40](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V40__fix_schema_inconsistencies_based_on_po.sql) 第54行重述默认值为 ACTIVE；[PG V20](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V20__create_workflow_engine_tables.sql) 第12行是 DRAFT，[PG V40](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V40__fix_schema_inconsistencies_based_on_po.sql) 第50行仅改名，保留原默认值。此项属于真实字面漂移，不能归入 cast 噪声。
 
 ### 可空性差异：4 项
 
@@ -108,7 +108,7 @@ MySQL V48 第11–19行分别新增 `is_locked`、`lock_reason`、`locked_at`、
 | wf_workflow_definition.enabled | 54 | V20:12，NOT NULL | 50 |
 | wf_workflow_definition.node_definition | 40 | V20:11，NOT NULL | 44 |
 
-原定义见 [PG V31](../../../../apex-system/src/main/resources/db/migration/postgresql/V31__create_office_message_table.sql) 和 PG V20；完整逐项引用在 JSON 的 `nullability_classification.items`。
+原定义见 [PG V31](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V31__create_office_message_table.sql) 和 PG V20；完整逐项引用在 JSON 的 `nullability_classification.items`。
 
 ### 索引 signature 多重集合差异：27 个对象
 
@@ -130,7 +130,7 @@ MySQL V48 第11–19行分别新增 `is_locked`、`lock_reason`、`locked_at`、
 | sys_user | MySQL多email副本、is_locked、password_expires_at；PG多tenant_id副本；V48安全索引已定位，其他副本来源未知 |
 | sys_user_role | PG多tenant_id副本；具体历史来源未知 |
 
-六个 off_* 对象有明确迁移顺序原因：[MySQL V43](../../../../apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql) 第35行要求表列存在才执行，第53–59、66–67行调用时，表要到 V57 才创建；[PG V43](../../../../apex-system/src/main/resources/db/migration/postgresql/V43__performance_optimization_indexes.sql) 第3–20行执行时，PG V42 已创建这些表。MySQL 条件跳过后没有自动补执行这些 CALL。不能把重复索引签名抹平，也不能由库存差异推断实际性能。
+六个 off_* 对象有明确迁移顺序原因：[MySQL V43](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V43__performance_optimization_indexes.sql) 第35行要求表列存在才执行，第53–59、66–67行调用时，表要到 V57 才创建；[PG V43](../../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V43__performance_optimization_indexes.sql) 第3–20行执行时，PG V42 已创建这些表。MySQL 条件跳过后没有自动补执行这些 CALL。不能把重复索引签名抹平，也不能由库存差异推断实际性能。
 
 其他类别继续保留：column_order 73、column_generation 1155、index_raw_inventory 95、constraint_kind_counts 23、constraint_raw_inventory 95、history_checksum 56、history_script 12。它们不是本报告已逐条证明的功能缺陷；生成表达、约束语义、查询计划和业务影响保留未知。双库不同 SQL 的校验和不同不等于历史篡改。
 
@@ -140,13 +140,13 @@ MySQL V48 第11–19行分别新增 `is_locked`、`lock_reason`、`locked_at`、
 
 | 对象 | 直接证据 | 作用域与结论 |
 | --- | --- | --- |
-| mfa_config | [MfaConfig.java](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/MfaConfig.java) 第20行 `@Table`；[仓储](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/MfaConfigRepository.java) 第15行 ReactiveCrudRepository | auth 域使用，不证明 system-service 调用此表 |
-| biometric_auth | [BiometricAuth.java](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/BiometricAuth.java) 第20行；[仓储](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/BiometricAuthRepository.java) 第15行 | 同上 |
-| device_trust | [DeviceTrust.java](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/DeviceTrust.java) 第20行；[仓储](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/DeviceTrustRepository.java) 第16行 | 同上 |
-| ip_access_control | [IpAccessControl.java](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/IpAccessControl.java) 第20行；[仓储](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/IpAccessControlRepository.java) 第17、45、74行 | R2DBC 映射与直接DELETE语句；auth域 |
-| sys_user | [UserPO](../../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java) 第58行；[UserMapper](../../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/UserMapper.java) 第45行 BaseMapper | 九个安全差异列未发现显式映射/直接SQL引用 |
-| oauth2_authorization | [领域实体](../../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2AuthorizationEntity.java) 第13行注释 | 注释不是PO/Mapper证据；16个差异列未发现system生产Java/XML直接持久化引用 |
-| off_sync_history | [OffSyncHistoryPO](../../../../apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/po/OffSyncHistoryPO.java) 第84–85行；[Mapper](../../../../apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/mapper/OffSyncHistoryMapper.java) 第73行 | 继承 [BasePO](../../../../apex-common/src/main/java/com/apex/scaffold/common/persistence/po/BasePO.java) 第48行update_time映射，存在列依赖；不能据system历史库推断office新库缺列 |
+| mfa_config | [MfaConfig.java](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/MfaConfig.java) 第20行 `@Table`；[仓储](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/MfaConfigRepository.java) 第15行 ReactiveCrudRepository | auth 域使用，不证明 system-service 调用此表 |
+| biometric_auth | [BiometricAuth.java](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/BiometricAuth.java) 第20行；[仓储](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/BiometricAuthRepository.java) 第15行 | 同上 |
+| device_trust | [DeviceTrust.java](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/DeviceTrust.java) 第20行；[仓储](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/DeviceTrustRepository.java) 第16行 | 同上 |
+| ip_access_control | [IpAccessControl.java](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/IpAccessControl.java) 第20行；[仓储](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/IpAccessControlRepository.java) 第17、45、74行 | R2DBC 映射与直接DELETE语句；auth域 |
+| sys_user | [UserPO](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java) 第58行；[UserMapper](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/UserMapper.java) 第45行 BaseMapper | 九个安全差异列未发现显式映射/直接SQL引用 |
+| oauth2_authorization | [领域实体](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2AuthorizationEntity.java) 第13行注释 | 注释不是PO/Mapper证据；16个差异列未发现system生产Java/XML直接持久化引用 |
+| off_sync_history | [OffSyncHistoryPO](../../../../apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/po/OffSyncHistoryPO.java) 第84–85行；[Mapper](../../../../apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/off/infrastructure/persistence/mapper/OffSyncHistoryMapper.java) 第73行 | 继承 [BasePO](../../../../apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/persistence/po/BasePO.java) 第48行update_time映射，存在列依赖；不能据system历史库推断office新库缺列 |
 
 另外11个缺失对象（encryption_key、encryption_key_version、jwt_key_version、login_history、oauth2_client_secret_history、password_history、security_audit_log、token_rotation_history、token_security_event、trusted_device、v_token_health）未发现生产 Java/XML 直接表映射。未发现这15个对象及26个漂移列的直接 XML 持久化引用。`auth_mfa_config` 与 `mfa_config` 是不同对象，OAuth2 consent 也不是 authorization 表。
 

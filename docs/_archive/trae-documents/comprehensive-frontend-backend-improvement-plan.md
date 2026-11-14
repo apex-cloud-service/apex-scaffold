@@ -571,8 +571,8 @@ export interface UserInfo {
 ### 后端参考
 
 - 项目规范：[/Users/work/apex-scaffold/AGENTS.md](../../../AGENTS.md)
-- 最佳实践示例：[OfficeApprovalRouter](../../../apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/office/OfficeApprovalRouter.java)
-- SpringDoc 配置：[apex-interfaces/src/main/resources/application.yml](../../../apex-system/src/main/resources/application.yml)
+- 最佳实践示例：[OfficeApprovalRouter](../../../apex-services-bom/apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/office/OfficeApprovalRouter.java)
+- SpringDoc 配置：[apex-interfaces/src/main/resources/application.yml](../../../apex-components-parent/apex-system/src/main/resources/application.yml)
 
 ### 前端参考
 

@@ -29,7 +29,7 @@ Apex Scaffold 采用**共享数据库、共享 Schema、tenant_id 字段隔离**
 
 ### 2.1 ThreadLocal 存储
 
-[TenantContext](../../apex-common/src/main/java/com/apex/scaffold/common/context/TenantContext.java) 使用 `ThreadLocal<String>` 存储当前线程的租户 ID:
+[TenantContext](../../apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/context/TenantContext.java) 使用 `ThreadLocal<String>` 存储当前线程的租户 ID:
 
 ```java
 public final class TenantContext {
@@ -127,7 +127,7 @@ public static synchronized void initializeGlobalHooks() {
 
 ### 3.1 MyBatis-Plus 拦截器
 
-[DefaultTenantLineHandler](../../apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java) 实现 `TenantLineHandler` 接口,为 SQL 自动注入租户条件:
+[DefaultTenantLineHandler](../../apex-shared-parent/apex-infrastructure-persistence/src/main/java/com/apex/scaffold/infrastructure/persistence/datapermission/DefaultTenantLineHandler.java) 实现 `TenantLineHandler` 接口,为 SQL 自动注入租户条件:
 
 ```java
 @Override
@@ -242,7 +242,7 @@ apex:tenant:TENANT_B:user:123
 
 ### 4.2 多级缓存租户隔离
 
-[MultiLevelCacheService](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) 自动为缓存 key 添加租户前缀:
+[MultiLevelCacheService](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) 自动为缓存 key 添加租户前缀:
 
 ```java
 public <T> Mono<T> get(String key, Class<T> clazz) {
@@ -345,7 +345,7 @@ apex:
 
 ### 7.1 HTTP 请求租户装配
 
-[TenantAspect](../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/TenantAspect.java) 从请求头提取租户 ID:
+[TenantAspect](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/TenantAspect.java) 从请求头提取租户 ID:
 
 ```java
 @Aspect

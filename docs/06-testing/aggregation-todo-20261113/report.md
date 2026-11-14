@@ -49,7 +49,7 @@
 
 ### 2.2 压力测试（mvnd -Pstress-tests）
 
-`mvnd -T4 -B -pl apex-system,apex-aggregation-service -am test -Pstress-tests`（2026-11-13）：
+`mvnd -T4 -B -pl :apex-system,:apex-aggregation-service -am test -Pstress-tests`（2026-11-13）：
 
 | 测试类 | 用例数 | 结果 |
 | --- | ---: | --- |

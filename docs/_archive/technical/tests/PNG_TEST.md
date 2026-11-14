@@ -20,12 +20,12 @@
 ### 缩略图
 原缩略图 PNG 已不存在，使用现有 SVG 验证 HTML 图片显示（不代表原 PNG 尺寸或清晰度）：
 
-<img src="../../../diagrams/01_logical_architecture.svg" alt="逻辑架构 SVG 替代图" width="600">
+<img src=""../../../diagrams/01_logical_architecture.svg"" alt="逻辑架构 SVG 替代图" width="600">
 
 ### 高清图
 原高清图 PNG 已不存在，以下同样使用现有 SVG：
 
-<img src="../../../diagrams/01_logical_architecture.svg" alt="逻辑架构 SVG 替代图" width="600">
+<img src=""../../../diagrams/01_logical_architecture.svg"" alt="逻辑架构 SVG 替代图" width="600">
 
 ---
 

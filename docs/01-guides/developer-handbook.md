@@ -127,7 +127,7 @@ mvnd --version   # 应显示 2.0.0-rc-3
 podman-compose -f podman-compose.infra.yml up -d mysql redis
 
 # 2. 运行应用 (basic profile)
-mvnd -pl apex-system-service -am spring-boot:run -Pbasic
+mvnd -pl :apex-system-service -am spring-boot:run -Pbasic
 
 # 3. 访问应用
 # API: http://localhost:8082（system-service；网关为 8080）
@@ -473,7 +473,7 @@ public class UserRouter {
 # UserHandlerIntegrationTest.java
 
 # 5. 运行测试
-mvnd -pl apex-system -am test -Dtest=UserHandlerTest
+mvnd -pl :apex-system -am test -Dtest=UserHandlerTest
 ```
 
 ### 5.2 数据库迁移
@@ -490,7 +490,7 @@ CREATE TABLE IF NOT EXISTS sys_user_email (
 );
 
 # 2. 启动应用,Flyway 自动执行迁移
-mvnd -pl apex-system-service -am spring-boot:run
+mvnd -pl :apex-system-service -am spring-boot:run
 ```
 
 ### 5.3 代码生成
@@ -774,7 +774,7 @@ mvnd spotless:apply
 mvnd pmd:check
 
 # 启动应用
-mvnd -pl apex-system-service -am spring-boot:run
+mvnd -pl :apex-system-service -am spring-boot:run
 ```
 
 ---

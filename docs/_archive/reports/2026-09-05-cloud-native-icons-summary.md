@@ -137,15 +137,15 @@
 </defs>
 
 <!-- 在图表中使用图标 -->
-<use href="#icon-kubernetes" x="100" y="100" width="40" height="40"/>
-<use href="#icon-mysql" x="200" y="100" width="40" height="40"/>
+<use href=""#icon-kubernetes"" x="100" y="100" width="40" height="40"/>
+<use href=""#icon-mysql"" x="200" y="100" width="40" height="40"/>
 ```
 
 ### 方法2：使用外部引用
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg">
-  <use href="_templates/cloud-native-icons.svg#icon-kubernetes" x="100" y="100" width="40" height="40"/>
+  <use href=""_templates/cloud-native-icons.svg#icon-kubernetes"" x="100" y="100" width="40" height="40"/>
 </svg>
 ```
 

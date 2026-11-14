@@ -197,7 +197,7 @@
 
 ### 2.8 存储配置（五后端）
 
-当前字段已列入 `.env.example` 并由 Compose 显式注入 file 容器。完整厂商字段、默认值与认证限制见[对象存储接入指南](object-storage-integration.md)和[file 主配置](../../apex-file-service/src/main/resources/application.yml)。本节仅列关键变量，不能以历史总数代替模板核对。
+当前字段已列入 `.env.example` 并由 Compose 显式注入 file 容器。完整厂商字段、默认值与认证限制见[对象存储接入指南](object-storage-integration.md)和[file 主配置](../../apex-services-bom/apex-file-service/src/main/resources/application.yml)。本节仅列关键变量，不能以历史总数代替模板核对。
 
 | 环境变量 | 默认值 | 说明 | Profile | 必填 |
 |---------|--------|------|---------|------|

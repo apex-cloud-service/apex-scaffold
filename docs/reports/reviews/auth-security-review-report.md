@@ -66,7 +66,7 @@ CREATE TABLE oauth2_registered_client (
 
 **问题1: Token存储策略不安全**
 
-**位置**: [V25__oauth2_authorization_server_schema.sql](../../../apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql)
+**位置**: [V25__oauth2_authorization_server_schema.sql](../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_server_schema.sql)
 
 ```sql
 -- 当前设计: Token明文存储在数据库
@@ -108,7 +108,7 @@ ADD COLUMN revoke_reason VARCHAR(500) NULL COMMENT '撤销原因';
 
 #### ✅ 优点
 
-**位置**: [OAuth2AuthorizationServiceImpl.java](../../../apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java)
+**位置**: [OAuth2AuthorizationServiceImpl.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2AuthorizationServiceImpl.java)
 
 1. **PKCE验证**: 正确实现了S256和plain两种code_challenge方法
 2. **客户端验证**: 密钥使用BCrypt验证，安全性高
@@ -118,7 +118,7 @@ ADD COLUMN revoke_reason VARCHAR(500) NULL COMMENT '撤销原因';
 
 **问题3: Token刷新不轮换 (Refresh Token Rotation)**
 
-**位置**: [TokenServiceImpl.java:L206-L229](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java)
+**位置**: [TokenServiceImpl.java:L206-L229](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java)
 
 ```java
 @Override
@@ -272,7 +272,7 @@ private String generateRandomCode() {
 
 #### ✅ 优点
 
-**位置**: [TokenServiceImpl.java](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java)
+**位置**: [TokenServiceImpl.java](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java)
 
 1. **Token持久化**: 所有Token存储到数据库，支持追踪和撤销
 2. **租户隔离**: Token验证时强制检查tenantId一致性
@@ -352,7 +352,7 @@ public class JwtKeyRotationService {
 
 **问题7: Token生命周期管理缺陷**
 
-**位置**: [TokenServiceImpl.java:L73-L74](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java)
+**位置**: [TokenServiceImpl.java:L73-L74](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/TokenServiceImpl.java)
 
 ```java
 private static final long ACCESS_TOKEN_EXPIRE_MS = 2 * 60 * 60 * 1000L; // 2小时
@@ -400,7 +400,7 @@ public class TokenTtlStrategy {
 
 **问题8: 缺少登录失败锁定机制细节**
 
-**位置**: [AuthenticationApplicationService.java:L82-L89](../../../apex-auth/src/main/java/com/apex/scaffold/auth/application/service/AuthenticationApplicationService.java)
+**位置**: [AuthenticationApplicationService.java:L82-L89](../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/application/service/AuthenticationApplicationService.java)
 
 ```java
 boolean passwordMatches = passwordEncoder.matches(password, user.getPasswordHash());
@@ -530,7 +530,7 @@ public class PasswordPolicyService {
 
 #### ✅ 优点
 
-**位置**: [RequirePermission.java](../../../apex-common/src/main/java/com/apex/scaffold/common/annotation/RequirePermission.java)
+**位置**: [RequirePermission.java](../../../apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/annotation/RequirePermission.java)
 
 1. **注解驱动**: 使用@RequirePermission注解进行方法级权限控制
 2. **逻辑支持**: 支持AND/OR逻辑组合（预留扩展）
@@ -839,16 +839,16 @@ public class SecurityMonitoringService {
 5. **数据隔离**: 所有SSO会话按租户隔离
 
 **代码位置**:
-- 协议适配器: [SsoProtocolAdapter.java](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SsoProtocolAdapter.java)
-- SAML实现: [SamlProtocolAdapter.java](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java)
-- OIDC实现: [OidcProtocolAdapter.java](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
-- Handler: [SsoAuthHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuthHandler.java)
+- 协议适配器: [SsoProtocolAdapter.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SsoProtocolAdapter.java)
+- SAML实现: [SamlProtocolAdapter.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java)
+- OIDC实现: [OidcProtocolAdapter.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
+- Handler: [SsoAuthHandler.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/SsoAuthHandler.java)
 
 #### 🟠 中危问题
 
 **问题15: SSO会话配置存储在数据库明文**
 
-**位置**: [sys_sso_provider表](../../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+**位置**: [sys_sso_provider表](../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
 
 ```sql
 -- 当前设计
@@ -908,7 +908,7 @@ public class SsoConfigEncryptionService {
 
 **问题16: SAML断言存储在会话表**
 
-**位置**: [sys_sso_session表](../../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+**位置**: [sys_sso_session表](../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
 
 ```sql
 CREATE TABLE sys_sso_session (
@@ -958,7 +958,7 @@ public Mono<Map<String, Object>> handleSuccessfulAuth(
 
 **问题17: 缺少SAML响应重放攻击防护**
 
-**位置**: [SamlProtocolAdapter.java:L187-L232](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java)
+**位置**: [SamlProtocolAdapter.java:L187-L232](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java)
 
 **当前代码**:
 ```java
@@ -1072,7 +1072,7 @@ public class SamlProtocolAdapter implements SsoProtocolAdapter {
 
 **问题18: OIDC State参数未验证**
 
-**位置**: [OidcProtocolAdapter.java:L28-L52](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
+**位置**: [OidcProtocolAdapter.java:L28-L52](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
 
 **当前代码**:
 ```java
@@ -1196,7 +1196,7 @@ public class OidcProtocolAdapter implements SsoProtocolAdapter {
 
 **问题19: SSO会话过期清理机制缺失**
 
-**位置**: [SysSsoSessionService.java:L227-L242](../../../apex-system/src/main/java/com/apex/scaffold/application/service/SysSsoSessionService.java)
+**位置**: [SysSsoSessionService.java:L227-L242](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/SysSsoSessionService.java)
 
 **当前代码**:
 ```java
@@ -1341,7 +1341,7 @@ sso:
 
 **问题20: SAML签名验证算法固定**
 
-**位置**: [SamlProtocolAdapter.java:L574](../../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java)
+**位置**: [SamlProtocolAdapter.java:L574](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java)
 
 ```java
 Signature sig = Signature.getInstance("SHA256withRSA"); // 硬编码

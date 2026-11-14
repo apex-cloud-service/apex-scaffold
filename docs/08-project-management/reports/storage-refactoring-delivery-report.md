@@ -101,7 +101,7 @@ JDK 为 `17.0.12-oracle`，mvnd 为 `2.0.0-rc-3`。没有回退 Maven、禁用 S
 
 第二次执行：2026-10-14 21:09:29—21:19:20 +08:00，耗时 09:51，BUILD FAILURE；26 个 reactor 项目中 25 SUCCESS，仅 example FAILURE。system-service 格式门禁和 workflow-service 均成功。example 的生产 Redisson 配置仍按 `spring.profiles.active=dev` 属性触发，连接到需认证的 Redis 后报 NOAUTH；`@ActiveProfiles("test")` 不等同于覆盖该属性。最小修复仅在测试入口显式设置 `spring.profiles.active=test`，并将主候选 Redisson 测试 Bean 使用独立名称，未修改生产认证或 Redis 凭据。
 
-针对性 `mvnd -T4 -B -pl apex-example -am verify` 于 21:29:51 结束：example 17 个启用 IT 全部成功，3 个原有 IT skipped；命令因新测试注解的 Spotless 排版失败，已按给出的单行格式修正，未降低门禁。
+针对性 `mvnd -T4 -B -pl :apex-example -am verify` 于 21:29:51 结束：example 17 个启用 IT 全部成功，3 个原有 IT skipped；命令因新测试注解的 Spotless 排版失败，已按给出的单行格式修正，未降低门禁。
 
 第三次完整执行于 21:31:50 +08:00 开始，21:42:27 结束，耗时 10:35，退出码 0，BUILD SUCCESS；26 个 reactor 项目全部成功，包括 example、workflow-service 和 system-service。编译、Surefire、默认 Failsafe、Spotless、PMD/p3c、ArchUnit 及生效的 JaCoCo 检查均按既有配置完成。未运行额外 remote-it/stress-tests 场景。
 
@@ -121,7 +121,7 @@ JDK 为 `17.0.12-oracle`，mvnd 为 `2.0.0-rc-3`。没有回退 Maven、禁用 S
 
 ### 补充检查与报告来源
 
-存储 starter 的后续纯注释修改运行 `source scripts/build/init-build-env.sh && mvnd -B -pl apex-storage-spring-boot-starter spotless:check`，21:14:50 BUILD SUCCESS。注释不改变行为；不能把此命令说成完整回归。
+存储 starter 的后续纯注释修改运行 `source scripts/build/init-build-env.sh && mvnd -B -pl :apex-storage-spring-boot-starter spotless:check`，21:14:50 BUILD SUCCESS。注释不改变行为；不能把此命令说成完整回归。
 
 正式报告由 `TEST_REPORT_OUTPUT_DIR=docs/08-project-management/reports/storage-refactoring-tests bash scripts/test/generate-comprehensive-test-report.sh` 生成。脚本仅解析实际存在的 XML，不执行测试；无报告标记未执行或无可用报告，不自动记通过。Surefire/Failsafe 分开统计，JSON 保留来源路径和修改时间；覆盖率分别列单测与 IT，不相加。
 

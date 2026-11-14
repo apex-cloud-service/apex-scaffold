@@ -48,7 +48,7 @@
 - ✅ 生成历史记录
 
 **关键文件**:
-- Domain: [`GenDatasourceEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java), [`GenConfigEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java)
+- Domain: [`GenDatasourceEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java), [`GenConfigEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java)
 - Infrastructure: GenDatasourceRepositoryImpl, GenConfigRepositoryImpl
 - Application: CodeGenerationService, GenDatasourceService
 - Interfaces: ``CodeGeneratorRouter``
@@ -90,8 +90,8 @@
   - OIDC 1.0: Authorization Code Flow、ID Token验证、UserInfo访问
 
 **关键文件**:
-- Domain: [`SysSsoProviderEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java), [`SysSsoSessionEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java)
-- Application: [`SamlProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java), [`OidcProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
+- Domain: [`SysSsoProviderEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java), [`SysSsoSessionEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java)
+- Application: [`SamlProtocolAdapter`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java), [`OidcProtocolAdapter`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
 - Interfaces: SsoAdminRouter, SsoAuthRouter
 
 ### 数据库设计
@@ -347,8 +347,8 @@ interfaces → application → domain ← infrastructure
 ### 配置文件
 
 - [PMD排除规则](../../config/pmd-exclude.properties) - PMD检查排除配置
-- [数据库迁移脚本 V41-MySQL](../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
-- [数据库迁移脚本 V41-PostgreSQL](../../apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
+- [数据库迁移脚本 V41-MySQL](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+- [数据库迁移脚本 V41-PostgreSQL](../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
 - 数据库迁移脚本 V42-MySQL（目标不存在，无已核实替代文件；原路径：`../../apex-interfaces/src/main/resources/db/migration/mysql/V42__add_office_platform_tables.sql`）
 
 ---

@@ -50,7 +50,7 @@ Redis 不可用时，`UserRateLimitAspect` 读取 `apex.ratelimit.local-fallback
 
 ```bash
 source ./scripts/build/init-build-env.sh
-mvnd -pl apex-common,apex-infrastructure -am test
+mvnd -pl :apex-common,:apex-infrastructure -am test
 mvnd spotless:check
 ```
 

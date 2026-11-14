@@ -23,9 +23,9 @@
 ### 已完成部分 (5%)
 
 ✅ **Domain层实体类** (3个):
-- [`OffMessageEntity.java`](../../apex-office/src/main/java/com/apex/scaffold/office/off/domain/entity/OffMessageEntity.java)
-- [`OffMessageTemplateEntity.java`](../../apex-office/src/main/java/com/apex/scaffold/office/off/domain/entity/OffMessageTemplateEntity.java)
-- [`OffMessageRecipientEntity.java`](../../apex-office/src/main/java/com/apex/scaffold/office/off/domain/entity/OffMessageRecipientEntity.java)
+- [`OffMessageEntity.java`](../../apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/off/domain/entity/OffMessageEntity.java)
+- [`OffMessageTemplateEntity.java`](../../apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/off/domain/entity/OffMessageTemplateEntity.java)
+- [`OffMessageRecipientEntity.java`](../../apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/off/domain/entity/OffMessageRecipientEntity.java)
 
 ### 待完成部分 (95%)
 

@@ -38,7 +38,7 @@ P1 优先的原因：G1 使默认部署的纵深防御只剩一层，G6 使配�
 **验收条件**：
 - 单元/集成测试覆盖“开关为默认值时，携带 marker 头且租户未订阅 → 403”与“非开放路径 → 不触发能力查询”。
 - 四个服务的配置文件中不存在隐式关闭。
-- `mvnd -T4 -B -pl apex-common,apex-file-service,apex-workflow-service,apex-system-service,apex-office-service -am test` 通过。
+- `mvnd -T4 -B -pl :apex-common,:apex-file-service,:apex-workflow-service,:apex-system-service,:apex-office-service -am test` 通过。
 
 **影响面**：默认行为变化，依赖“服务侧不校验”的部署需显式关闭；升级说明中必须列出该变更。
 
@@ -79,7 +79,7 @@ P1 优先的原因：G1 使默认部署的纵深防御只剩一层，G6 使配�
 **验收条件**：
 - domain 包内无 application 包引用、无 Spring Data Redis 引用（由 G7 的新守卫强制）。
 - 无 fail-open 分支；对应分支有单元测试证明返回拒绝。
-- `mvnd -T4 -B -pl apex-auth -am test` 通过。
+- `mvnd -T4 -B -pl :apex-auth -am test` 通过。
 
 **影响面**：权限判定行为可能收紧，需与业务确认是否会误拒现有合法请求。此项依赖业务确认，因此排在 P1 之后。
 
@@ -96,7 +96,7 @@ P1 优先的原因：G1 使默认部署的纵深防御只剩一层，G6 使配�
 
 **验收条件**：
 - 全仓检索确认无残留引用。
-- `mvnd -T4 -B -pl apex-auth -am test` 通过。
+- `mvnd -T4 -B -pl :apex-auth -am test` 通过。
 - 文档中不再出现该类作为“当前实现”的描述。
 
 **影响面**：仅删除未被生产使用的代码；若复核发现调用方，改为“先修缓存键再保留”。
@@ -135,7 +135,7 @@ P1 优先的原因：G1 使默认部署的纵深防御只剩一层，G6 使配�
 **验收条件**：
 - 全仓仅存在一份 `Snapshot.parse` 实现。
 - 两侧客户端在同一输入下返回一致结果，由共用测试断言。
-- `mvnd -T4 -B -pl apex-common,apex-gateway -am test` 通过。
+- `mvnd -T4 -B -pl :apex-common,:apex-gateway -am test` 通过。
 
 **影响面**：重构网关与 common 的类结构，需保证配置键与外部行为不变。
 
@@ -171,7 +171,7 @@ P1 优先的原因：G1 使默认部署的纵深防御只剩一层，G6 使配�
 **验收条件**：
 - 文档表述与 POM 一致。
 - 新增核对测试在人为改动依赖时失败。
-- `mvnd -T4 -B -pl apex-example -am test` 通过。
+- `mvnd -T4 -B -pl :apex-example -am test` 通过。
 
 **影响面**：最小；只涉及示例模块与文档。
 

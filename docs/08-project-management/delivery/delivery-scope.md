@@ -27,7 +27,7 @@
 
 ## 2. 范围内的 Maven 模块
 
-根 POM 直接聚合七个管理组；第一阶段递归模块 42 个、含根 reactor 43 个项目（8 个 POM、35 个既有 JAR）；2026-11-14 新增知识库两模块后递归 44 个、reactor 45 个项目。当前分组与父链见 [README 分组说明](../../../README.md#maven-分组与父链)，既有生产依赖边界不因 parent 分组而改变。
+根 POM 直接聚合七个管理组；第一阶段递归模块 42 个；2026-11-14 新增知识库两模块后递归 44 个、reactor 45 个项目，同日第二阶段叶子物理嵌套于各分组父目录。当前分组与父链见 [README 分组说明](../../../README.md#maven-分组与父链)，既有生产依赖边界不因 parent 分组而改变。
 
 | 管理组 | 聚合范围 | 交付影响 |
 | --- | --- | --- |
@@ -67,7 +67,7 @@
 
 > 发布脚本实际打包的服务清单为网关、六个业务服务与只读查询聚合服务（`SERVICES` 数组共 8 项），见 [release.sh](../../../scripts/release/release.sh) 的 `SERVICES` 数组。`apex-job-service`、`apex-masking-service` 与 `apex-knowledge-service` 需按需单独构建部署。分组 parent 不加入该数组，部署工具仍以 `tools/local-deployment.jar` 随包交付。
 
-源码或未来 Maven 构件交付须包含根及所需分组 parent POM；客户源码包剥离卖方 `apex-license-tools` 时同步 tools parent 的聚合清单，不能恢复卖方工具以满足构建。构建仍从总根加载固定环境后使用 `mvnd -pl <叶子列表> -am`。本节更新的是结构和范围，不代表新结构的构建、性能或运行验收已经通过；历史基线与旧数字保留在第 7 节记录。
+源码或未来 Maven 构件交付须包含根及所需分组 parent POM；客户源码包剥离卖方 `:apex-license-tools` 时同步 tools parent 的聚合清单，不能恢复卖方工具以满足构建。构建仍从总根加载固定环境后使用 `mvnd -pl <叶子列表> -am`。本节更新的是结构和范围，不代表新结构的构建、性能或运行验收已经通过；历史基线与旧数字保留在第 7 节记录。
 
 ---
 
@@ -77,7 +77,7 @@
 
 | 服务 | 模块 | 业务端口 | 管理端口 | 说明 |
 | --- | --- | --- | --- | --- |
-| 网关 | `apex-gateway` | 8080 | 复用 8080 | 统一入口，路由见 [application.yml](../../../apex-gateway/src/main/resources/application.yml) |
+| 网关 | `apex-gateway` | 8080 | 复用 8080 | 统一入口，路由见 [application.yml](../../../apex-services-bom/apex-gateway/src/main/resources/application.yml) |
 | 认证服务 | `apex-auth-service` | 8081 | 未单独配置 | 服务 `/auth/v1/**`、`/oauth2/**`、`/.well-known/**` |
 | 系统服务 | `apex-system-service` | 8082 | 8083 | 系统管理、监控与其余接口兜底 |
 | 工作流服务 | `apex-workflow-service` | 8093 | 未单独配置 | 工作流引擎与审批（2026-11-07 起，原 8083 与 system 管理端口冲突已消除） |
@@ -99,13 +99,13 @@
 
 | 业务域 | 数据库 | 迁移目录 | 当前最新版本 |
 | --- | --- | --- | --- |
-| system | `apex_system` | [mysql](../../../apex-system/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-system/src/main/resources/db/migration/postgresql/) | V91（V91 为 2026-11-14 知识库菜单权限种子） |
-| auth | `apex_auth` | [mysql](../../../apex-auth-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-auth-service/src/main/resources/db/migration/postgresql/) | V64 |
-| workflow | `apex_workflow` | [mysql](../../../apex-workflow-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-workflow-service/src/main/resources/db/migration/postgresql/) | V6 |
-| file | `apex_file` | [mysql](../../../apex-file-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-file-service/src/main/resources/db/migration/postgresql/) | V7 |
-| office | `apex_office` | [mysql](../../../apex-office-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-office-service/src/main/resources/db/migration/postgresql/) | V10 |
-| integration | `apex_integration` | [mysql](../../../apex-integration/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-integration/src/main/resources/db/migration/postgresql/) | V3 |
-| knowledge | `apex_knowledge` | [mysql](../../../apex-knowledge-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-knowledge-service/src/main/resources/db/migration/postgresql/) | V1（2026-11-14 新增知识库域） |
+| system | `apex_system` | [mysql](../../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/) | V91（V91 为 2026-11-14 知识库菜单权限种子） |
+| auth | `apex_auth` | [mysql](../../../apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/) | V64 |
+| workflow | `apex_workflow` | [mysql](../../../apex-services-bom/apex-workflow-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-services-bom/apex-workflow-service/src/main/resources/db/migration/postgresql/) | V6 |
+| file | `apex_file` | [mysql](../../../apex-services-bom/apex-file-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-services-bom/apex-file-service/src/main/resources/db/migration/postgresql/) | V7 |
+| office | `apex_office` | [mysql](../../../apex-services-bom/apex-office-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-services-bom/apex-office-service/src/main/resources/db/migration/postgresql/) | V10 |
+| integration | `apex_integration` | [mysql](../../../apex-components-parent/apex-integration/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-components-parent/apex-integration/src/main/resources/db/migration/postgresql/) | V3 |
+| knowledge | `apex_knowledge` | [mysql](../../../apex-services-bom/apex-knowledge-service/src/main/resources/db/migration/mysql/) / [postgresql](../../../apex-services-bom/apex-knowledge-service/src/main/resources/db/migration/postgresql/) | V1（2026-11-14 新增知识库域） |
 
 **基线注意**：上表按工作区当前文件统计（2026-11-14 核对，各域 MySQL 与 PostgreSQL 版本集合一致，迁移均已提交入库）。已执行迁移禁止修改或重排，破坏 Flyway checksum 会导致存量环境启动失败。
 

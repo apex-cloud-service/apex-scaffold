@@ -15,19 +15,19 @@ Spring 4.3+ 对于单构造器的类会自动进行依赖注入，无需显式�
 
 #### ✅ 已修复文件（2 个）
 
-1. **[DataScopeAspect.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)**
+1. **[DataScopeAspect.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/aspect/DataScopeAspect.java)**
    - **位置**：第 85 行
    - **修复**：移除构造器上的 `@Autowired` 注解
    - **说明**：该类只有一个构造器，Spring 会自动注入依赖
 
-2. **[UserHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/UserHandler.java)**
+2. **[UserHandler.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/UserHandler.java)**
    - **位置**：第 80 行
    - **修复**：移除构造器上的 `@Autowired` 注解
    - **说明**：虽然该类有两个构造器，但第二个构造器是为了兼容性保留的，Spring 会优先选择参数最多的构造器
 
 #### ✅ 合理保留的情况（1 个）
 
-**[BlockingIoSchedulers.java](../../../apex-common/src/main/java/com/apex/scaffold/common/scheduler/BlockingIoSchedulers.java)**
+**[BlockingIoSchedulers.java](../../../apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/scheduler/BlockingIoSchedulers.java)**
 - **位置**：第 145 行
 - **注解**：`@Autowired(required = false)`
 - **说明**：该注解用于**可选依赖注入**，属于合理使用，无需修改

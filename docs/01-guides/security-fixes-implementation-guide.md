@@ -371,13 +371,13 @@ tail -f /var/log/apex-scaffold/application.log | grep "SECURITY_AUDIT"
 
 ```bash
 # 运行Token加密测试
-mvnd test -Dtest=TokenEncryptionServiceTest -pl apex-auth
+mvnd test -Dtest=TokenEncryptionServiceTest -pl :apex-auth
 
 # 运行配置加密测试
-mvnd test -Dtest=ConfigEncryptionServiceTest -pl apex-common
+mvnd test -Dtest=ConfigEncryptionServiceTest -pl :apex-common
 
 # 运行所有安全相关测试
-mvnd test -pl apex-auth,apex-common
+mvnd test -pl :apex-auth,:apex-common
 ```
 
 ### 集成测试

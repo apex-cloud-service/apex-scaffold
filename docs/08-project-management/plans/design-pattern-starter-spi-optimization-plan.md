@@ -285,7 +285,7 @@ public OfficeDocumentService(
 
 1. 若确认 `IdempotentApiAspect` 未生效，**首选最小修复**：参照 `OperationAuditAutoConfiguration` 的既有先例，把切面下沉到 `apex-common` 并由 `.imports` 装配，而不是等新 starter。理由是这条路径已被 `@OperationLog` 验证过，改动面小、可快速验证。
 2. 补一条“注解-切面可达性”架构测试（见 §3.1）。
-3. 验证：`mvnd -T4 -B -pl apex-office-service -am test`；新增一个集成测试，断言重复幂等键返回 `REPEAT_SUBMIT`，且缺少幂等键时按 `required=true` 被拒绝。
+3. 验证：`mvnd -T4 -B -pl :apex-office-service -am test`；新增一个集成测试，断言重复幂等键返回 `REPEAT_SUBMIT`，且缺少幂等键时按 `required=true` 被拒绝。
 
 ### 阶段 2：`apex-web-spring-boot-starter`（P1）
 

@@ -26,7 +26,7 @@ starter 支持通过 `apex.seata.mode` 选择 **AT（默认）/ TCC / SAGA / XA*
 
 ### 各模式前置条件
 
-- **AT**：业务库执行所属 Flyway 迁移生成 `undo_log`（见下节部署顺序第 2 条）；数据源必须为单 JDBC，动态路由数据源会被 [SeataAutoConfiguration.java](../../apex-seata-spring-boot-starter/src/main/java/com/apex/scaffold/seata/SeataAutoConfiguration.java) 直接拒绝；AT 代理要求真实 MySQL/PostgreSQL，H2 等测试库不在 Seata AT dbtype 支持列表，会报 `AT mode don't support the dbtype: h2`。
+- **AT**：业务库执行所属 Flyway 迁移生成 `undo_log`（见下节部署顺序第 2 条）；数据源必须为单 JDBC，动态路由数据源会被 [SeataAutoConfiguration.java](../../apex-starters-parent/apex-seata-spring-boot-starter/src/main/java/com/apex/scaffold/seata/SeataAutoConfiguration.java) 直接拒绝；AT 代理要求真实 MySQL/PostgreSQL，H2 等测试库不在 Seata AT dbtype 支持列表，会报 `AT mode don't support the dbtype: h2`。
 - **TCC**：业务类实现 Try/Confirm/Cancel 三段，用 `@LocalTCC` 标注接口、`@TwoPhaseBusinessAction` 标注 Try 方法；Confirm/Cancel 必须幂等、可重入。TCC 模式不包装数据源，分支注册由动作代理完成。
 - **SAGA**：先执行 SAGA 存储三表建表脚本，再提供状态机 JSON 定义。建表脚本随 starter 发布在 classpath：
   - MySQL：`sql/saga/mysql/seata_state_machine.sql`

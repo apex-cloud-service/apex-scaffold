@@ -260,7 +260,7 @@ apex-interfaces/src/main/resources/db/migration/
   2. 对确需多态的字段使用字段级 `@JsonTypeInfo` 或提供独立的 `secureFromJson` 方法；
   3. 同步更新 `JsonUtilTest` 断言为标准 JSON 行为 + 多态安全用例；
   4. 全量重跑 apex-common 测试。
-- **验收**: `mvn test -pl apex-common` 全绿；标准 JSON 序列化/反序列化正常；多态注入攻击被拒。
+- **验收**: `mvn test -pl :apex-common` 全绿；标准 JSON 序列化/反序列化正常；多态注入攻击被拒。
 
 #### A4. 通用代码中的 业务痕迹消除（P0 核心）
 
@@ -274,7 +274,7 @@ apex-interfaces/src/main/resources/db/migration/
   6. **`AlertEventTest.java`**：测试数据 `原社交业务项目`/`业务-gateway`/`业务-core` → `apex-service`/`apex-gateway`/`apex-core`；
   7. **`FileUrlUtilTest.java`**：排查并清除 业务相关测试数据（如有）；
   8. **`RemoteApiClientTest.java`**（infrastructure 测试）：排查并清除 业务相关断言。
-- **验收**: `mvn test -pl apex-common` 全绿；`mvn test -pl apex-infrastructure` 全绿；通用代码中 grep 业务关键词零命中。
+- **验收**: `mvn test -pl :apex-common` 全绿；`mvn test -pl :apex-infrastructure` 全绿；通用代码中 grep 业务关键词零命中。
 
 #### A5. 配置文件中的 业务痕迹消除（P0 核心）
 
@@ -338,7 +338,7 @@ apex-interfaces/src/main/resources/db/migration/
   5. **删除 `common/config/原算法配置类.java` + `原算法配置类Test.java`**（随业务代码剥离）；
   6. 同步删除对应测试（`EloServiceTest`、`DistributionServiceTest`、`WaterfallServiceTest`、`CheatDetectionServiceTest`、`GoldenEyeV2StrategyTest` 等全部业务测试）；
   7. 保留 4.4 清单所列通用文件。
-- **验收**: apex-domain 仅剩通用领域文件（数量约 60 个）；`mvn test -pl apex-domain` 全绿；grep 不到 battle/interest/elo/原偏好模型 等业务类名。
+- **验收**: :apex-domain 仅剩通用领域文件（数量约 60 个）；`mvn test -pl :apex-domain` 全绿；grep 不到 battle/interest/elo/原偏好模型 等业务类名。
 
 #### B2. apex-application 业务剥离
 
@@ -373,7 +373,7 @@ apex-interfaces/src/main/resources/db/migration/
   3. 删除 TOS 照片代理相关实现（`TosPhotoProxyHandler` 依赖的 infra 部分），保留通用 `StorageProvider` 抽象与 Local 实现，MinIO 保留为通用对象存储选项；
   4. `db/migration/V1__init.sql`、`V2__create_audit_log.sql` 保留（通用）；
   5. 保留 `ApiCallLogService`（通用，A4 已改指标名）。
-- **验收**: `mvn test -pl apex-infrastructure` 全绿；存储抽象可配置 Local/MinIO；无 FaceAnalysis 相关代码。
+- **验收**: `mvn test -pl :apex-infrastructure` 全绿；存储抽象可配置 Local/MinIO；无 FaceAnalysis 相关代码。
 
 #### B5. 数据库迁移重建（彻底消除 SQL 中的 业务）
 

@@ -4,7 +4,7 @@
 
 > 报告日期：2026-10-08 ｜ 执行环境：macOS（Java 17.0.12-oracle + Maven）
 > 涉及阶段：微服务改造执行计划 Phase 1.2（`docs/08-project-management/plans/microservice-migration-plan.md` §5.3 网关过滤器链）
-> 执行命令：`mvnd -pl apex-gateway -am verify`
+> 执行命令：`mvnd -pl :apex-gateway -am verify`
 >
 > 追加记录（2026-10-12）：本文档在 Phase 1.2 基线之上，补充网关熔断 / 限流 / 负载均衡 / 访问日志
 > 增强（迁移方案 §5.3、§15）的测试结论，详见 **第八节「熔断 · 限流 · 负载均衡 · 访问日志增强补充」**。
@@ -13,7 +13,7 @@
 
 | 项目 | 结果 |
 |------|------|
-| 模块编译（`mvnd -pl apex-gateway -am verify`） | ✅ BUILD SUCCESS |
+| 模块编译（`mvnd -pl :apex-gateway -am verify`） | ✅ BUILD SUCCESS |
 | 单元+架构测试（surefire） | ✅ 64/64 通过（0 失败 / 0 错误 / 0 跳过；Phase 1.2 基线） |
 | 单元+架构测试（surefire，增强补充后） | ✅ 94/94 通过（0 失败 / 0 错误 / 0 跳过） |
 | Spotless 格式检查（spotless:check） | ✅ 通过（exit=0） |
@@ -101,7 +101,7 @@
 
 ```bash
 # 全门禁（依赖 + 单测 + 架构 + 覆盖率 + 格式 + 静态检查）
-mvnd -pl apex-gateway -am verify
+mvnd -pl :apex-gateway -am verify
 # 覆盖率报告
 #   位置：apex-gateway/target/site/jacoco/index.html
 ```
@@ -157,6 +157,6 @@ mvnd -pl apex-gateway -am verify
 
 ```bash
 # 网关模块单测 + 架构（含新增约束）
-mvnd -pl apex-gateway -am test
+mvnd -pl :apex-gateway -am test
 # 本次结果：Tests run: 94, Failures: 0, Errors: 0, Skipped: 0（BUILD SUCCESS）
 ```

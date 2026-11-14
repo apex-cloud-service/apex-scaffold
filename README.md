@@ -45,7 +45,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 
 ## 模块结构
 
-根 POM 直接聚合七个管理组，递归聚合 42 个模块；含根 POM 的全量 reactor 为 43 个项目，其中 8 个为 `packaging=pom`、35 个为既有 JAR 模块。第一阶段只增加六个分组 parent，复用 `apex-services-bom`，不增加业务服务或项目业务库。后续新增模块按实际递归清单计数，不永久锁死 42 / 43。
+根 POM 直接聚合七个管理组，递归聚合 44 个模块；含根 POM 的全量 reactor 为 45 个项目，其中 8 个为 `packaging=pom`、37 个为 JAR 模块。第一阶段只增加六个分组 parent，复用 `apex-services-bom`；第二阶段（2026-11-14）完成叶子物理归位，不增加业务服务。后续新增模块放入所属分组并按实际递归清单计数，不永久锁死 44 / 45。
 
 ### Maven 分组与父链
 
@@ -56,14 +56,14 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 | `apex-shared-parent` | 9 | `apex-common`、`apex-domain`、`apex-api-contract`、五个 `apex-infrastructure-*` 能力 JAR 及旧坐标兼容 JAR `apex-infrastructure` |
 | `apex-components-parent` | 6 | 六个脚手架能力库：`apex-system`、`apex-auth`、`apex-workflow`、`apex-file`、`apex-office`、`apex-integration` |
 | `apex-starters-parent` | 4 | `apex-storage-spring-boot-starter`、`apex-license-spring-boot-starter`、`apex-job-spring-boot-starter`、`apex-seata-spring-boot-starter` |
-| `apex-services-bom` | 10 | 网关、六个业务 service、只读查询聚合 service，以及 job / masking 两个可选运行模块 |
+| `apex-services-bom` | 11 | 网关、六个业务 service、只读查询聚合 service，以及 job / masking / knowledge 三个可选运行模块 |
 | `apex-applications-parent` | 2 | `apex-example` 示例应用和 `apex-boot-all` 组合装配 |
 | `apex-tools-parent` | 4 | `apex-license-tools`、`apex-generator`、`apex-tools-deployment`、`apex-tools-build` |
 | `apex-business-parent` | 1 | 项目专属业务库聚合；当前仅含知识库 `apex-knowledge` |
 
 **聚合与继承不是同一关系**：七组均直接继承根 POM；22 个既有叶子的直接 parent 改为所属新分组。原有 13 个 `apex-services-bom` 子项目仍继承它，其中 `apex-api-contract` 聚合在 shared、`apex-integration` 聚合在 components、`apex-boot-all` 聚合在 applications，另外 11 个运行模块的聚合和继承归属均为 services。根 POM 仍保留统一版本、构建档位和质量门禁；分组 parent 不自动引入运行依赖或激活叶子打包插件。
 
-所有既有叶子目录仍位于仓库根级，分组通过 `../apex-xxx` 聚合同级目录，不存在 `apex-components-parent/apex-system/` 这样的嵌套源码路径。模块坐标、35 个原 JAR 的打包形态、业务接口、服务拓扑和端口不因分组而改变；分组不承诺构建提速或产物缩小。
+2026-11-14 第二阶段完成叶子物理归位：37 个叶子模块目录位于各自分组父目录之下（如 `apex-components-parent/apex-system`），分组通过 `<module>apex-xxx</module>` 聚合同目录叶子。模块坐标、35 个原 JAR 的打包形态、业务接口、服务拓扑和端口不因分组与归位而改变；分组不承诺构建提速或产物缩小。
 
 `apex-business-parent` 只管理未来项目业务 JAR 的模型、规则、用例、领域专属适配和业务配置；通用框架实现由 shared / components / starters 等支撑模块提供，不在 business 复制。业务仓储、Mapper / PO 仍留在本域 infrastructure 层。若另建独立运行模块，聚合并继承 `apex-services-bom`，不在 business 重复登记；2026-11-14 起知识库以 `apex-knowledge`（business）+ `apex-knowledge-service`（services，可选模块）落地，也不进入八服务标准发布集合。
 
@@ -126,7 +126,7 @@ WebFlux 不会使 JDBC、同步 Redis 或文件操作自动变为非阻塞。项
 
 system 的默认管理端口为 8083；workflow 自 2026-11-07 起默认业务端口为 8093，两者不再冲突，同机直跑无须调整端口。集成服务管理端口为 8097（避开任务代理 8095 与脱敏服务 8096）。查询聚合服务默认业务端口 8098，无独立管理端口；XXL 控制台默认宿主端口为 8099（避开 8097 与 8098）。example 与 gateway 也不能同时占用默认 8080。
 
-数据库由各服务分别管理。system 的迁移资源位于 `apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；integration 的迁移资源位于 `apex-integration/src/main/resources/db/migration/`；其他四个业务服务与知识库的迁移资源位于各自 service 模块（知识库为 `apex-knowledge-service/src/main/resources/db/migration/`）。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
+数据库由各服务分别管理。system 的迁移资源位于 `apex-components-parent/apex-system/src/main/resources/db/migration/`，由 system-service 从依赖 classpath 加载；integration 的迁移资源位于 `apex-components-parent/apex-integration/src/main/resources/db/migration/`；其他四个业务服务与知识库的迁移资源位于各自 service 模块（知识库为 `apex-services-bom/apex-knowledge-service/src/main/resources/db/migration/`）。迁移包含 MySQL、PostgreSQL 两套目录，实际选择由服务数据源及 Flyway 配置决定。
 
 <a id="快速开始"></a>
 
@@ -153,12 +153,12 @@ mvnd --version
 例如构建 system-service 及其依赖：
 
 ```bash
-mvnd -T4 -B -pl apex-system-service -am clean package -Pbasic -DskipTests
+mvnd -T4 -B -pl :apex-system-service -am clean package -Pbasic -DskipTests
 ```
 
-这是便于本地运行的打包命令，跳过测试，不代表通过质量门禁。默认产物为 `apex-system-service/target/apex-system-service-1.3.1.jar`；其他服务也使用各自模块名与项目版本，不附加版本档位后缀。
+这是便于本地运行的打包命令，跳过测试，不代表通过质量门禁。默认产物为 `apex-services-bom/apex-system-service/target/apex-system-service-1.3.1.jar`；其他服务也使用各自模块名与项目版本，不附加版本档位后缀。
 
-分组后仍从总根使用 `-pl <叶子列表> -am`，叶子路径不变。`-pl apex-services-bom -am` 不表示构建该组全部服务；整组构建应明确列出叶子，不能用 parent 选择或 `-f 分组/pom.xml` 假定跨组依赖均在 reactor 中。
+分组后仍从总根使用 `-pl :<artifactId 列表> -am`（冒号按坐标匹配，与两级物理目录解耦）。`-pl :apex-services-bom -am` 不表示构建该组全部服务；整组构建应明确列出叶子 artifactId，不能用 parent 选择或 `-f 分组/pom.xml` 假定跨组依赖均在 reactor 中。
 
 ### 3. 准备运行配置
 
@@ -181,7 +181,7 @@ APEX_SERVICE_MODULE=apex-system-service \
 也可在已导出运行环境变量的 shell 中直接运行 JAR：
 
 ```bash
-java -jar apex-system-service/target/apex-system-service-1.3.1.jar \
+java -jar apex-services-bom/apex-system-service/target/apex-system-service-1.3.1.jar \
   --spring.profiles.active=dev,basic
 ```
 
@@ -229,7 +229,7 @@ export ROUTE_JOB_URI=http://127.0.0.1:8095
 export ROUTE_MASKING_URI=http://127.0.0.1:8096
 ```
 
-这些是网关下游地址；workflow 使用其默认业务端口 8093。路由前缀以 [网关配置](apex-gateway/src/main/resources/application.yml) 和各业务 Router 为准，包含 `/auth/v1/`、`/api/v1/`、`/admin-api/v1/`、OAuth2 及 well-known 路径。
+这些是网关下游地址；workflow 使用其默认业务端口 8093。路由前缀以 [网关配置](apex-services-bom/apex-gateway/src/main/resources/application.yml) 和各业务 Router 为准，包含 `/auth/v1/`、`/api/v1/`、`/admin-api/v1/`、OAuth2 及 well-known 路径。
 
 ### Podman Compose
 

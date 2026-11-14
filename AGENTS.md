@@ -25,7 +25,7 @@ mvnd -T4 -B clean verify
 
 ## 模块与物理边界
 
-根 POM 直接聚合七个管理组；第一阶段递归聚合 42 个模块，含根 POM 的全量 reactor 为 43 个项目（8 个 POM、35 个既有 JAR）。2026-11-14 新增知识库两模块（`apex-knowledge` + `apex-knowledge-service`）后递归模块 44 个、reactor 45 个项目（8 个 POM、37 个 JAR）。六个新分组 parent 与复用的 `apex-services-bom` 均直接继承根 POM。所有现有叶子目录仍在仓库根级，分组用 `../apex-xxx` 聚合同级目录，不移动源码、资源或 target；模块坐标、实际生产依赖、业务接口、服务与端口不变。后续新增项目以实际递归清单计数，不把 42 / 43 固定为永久门槛。
+根 POM 直接聚合七个管理组；递归聚合 44 个模块，含根 POM 的全量 reactor 为 45 个项目（8 个 POM、37 个 JAR）。2026-11-14 完成第二阶段物理归位：37 个叶子模块目录已从仓库根级移入各自分组父目录之下（如 `apex-components-parent/apex-system`），分组 POM 以 `<module>apex-xxx</module>` 聚合同目录叶子，不再使用 `../apex-xxx` 跨目录聚合；模块坐标、实际生产依赖、业务接口、服务与端口不变。后续新增项目放入所属分组父目录并登记，以实际递归清单计数，不把 44 / 45 固定为永久门槛。
 
 ### Maven 分组与继承
 
@@ -41,11 +41,12 @@ mvnd -T4 -B clean verify
 
 - 聚合、parent 继承、物理目录、生产依赖和运行部署是不同关系，完整模块映射见 [README 分组说明](README.md#maven-分组与父链)。
 - 第一阶段 22 个既有叶子的直接 parent 改为各自新分组；13 个 `apex-services-bom` 子项目保持继承。其中 api-contract 聚合在 shared、integration 聚合在 components、boot-all 聚合在 applications，10 个运行模块的聚合与继承均在 services；不为外观一致而消除三个例外或扩大服务 BOM 管理范围。
+- 第二阶段（2026-11-14）37 个叶子目录已物理移入所属分组父目录之下；三个例外叶子按聚合归属落位，`relativePath` 跨两级指向 `../../apex-services-bom/pom.xml`，其余叶子使用默认 `../pom.xml`。
 - 根保留统一版本、构建档位与质量门禁；分组 parent 只管理配置与聚合，不自动注入整套设施依赖或激活 Boot repackage / Shade。叶子依赖、scope、optional、exclusions 和打包行为仍按各 POM 保留。
 - business 只实现项目专属模型、规则、用例、领域端口、业务适配及配置；通用框架由 shared / components / starters 等支撑模块提供，不能复制安全、数据源、缓存、消息、日志或调度框架。领域专属仓储、Mapper / PO 留在业务库 infrastructure 层。
 - 新业务库直接继承并聚合到 business；若新建独立运行模块，其唯一 parent 与聚合归属为 services，不在 business 重复登记。不自动装配全部项目业务或扩大八服务发布清单，具体模块与运行形态须另行确认。
 - 新增模块只在所属分组 `<modules>` 登记一次，根只登记顶层分组；同步注册表和容器 POM 收集清单、相关测试与有效文档。注册表对齐从根沿 `<modules>` 递归得到的全部后代项目（含空 parent、不含总根），不是根直接七项或 `<parent>` 继承树。
-- 构建仍从总根加载固定环境后使用 `mvnd -pl <叶子列表> -am`；选择 parent 加 `-am` 不等于构建其全部聚合叶子。构件安装或未来发布须包含根与所需 parent POM；分组不授权远程发布，也不承诺性能提升。
+- 构建仍从总根加载固定环境后使用 `mvnd -pl :<artifactId 列表> -am`（冒号按坐标匹配，与两级物理目录解耦）；选择 parent 加 `-am` 不等于构建其全部聚合叶子。构件安装或未来发布须包含根与所需 parent POM；分组不授权远程发布，也不承诺性能提升。
 
 以下按既有能力列出模块职责，不改变生产依赖边界。
 
@@ -119,7 +120,7 @@ mvnd -T4 -B clean verify
 `apex-system` 已承接原 interfaces/application 源码、资源和测试，以及 system 专属 domain/infrastructure。Java 包名保持不变：
 
 ```text
-apex-system/src/main/java/com/apex/scaffold/
+apex-components-parent/apex-system/src/main/java/com/apex/scaffold/
 ├── interfaces/      Router、Handler、安全配置与接口适配
 ├── application/     用例、应用服务、DTO、Assembler
 ├── domain/          system 领域模型、服务与仓储端口
@@ -159,13 +160,13 @@ apex-system/src/main/java/com/apex/scaffold/
 - 常规业务 JSON 响应沿用 `Result<T>`：`code`、`msg`、`data`、`traceId`。`ResultCode.SUCCESS` 为 **0**，不是 HTTP 200。
 - OAuth2、JWKS、文件流、健康检查等已有协议响应保持原契约，不强行改为业务包装。
 - 业务异常使用现有 `BusinessException` / `ResultCode`，技术异常交给已有 WebFlux 异常边界；认证与授权异常沿用安全处理器。不要吞掉错误或把失败转换成无依据的成功。
-- 新增面向用户的消息同步维护所属模块的 i18n 资源。system 资源位于 `apex-system/src/main/resources/i18n/`，不得使用旧 interfaces 模块路径。
+- 新增面向用户的消息同步维护所属模块的 i18n 资源。system 资源位于 `apex-components-parent/apex-system/src/main/resources/i18n/`，不得使用旧 interfaces 模块路径。
 - DTO 字段和序列化方式保持接口兼容。分页存在多份 `PageResponse`：system/file 版本已新增派生 `hasNext`，字段集与 common 一致；common 还额外提供 `records` 访问器（`list` 的序列化别名），system/file 不引入。修改前检查实际使用类型、序列化结果和契约测试，不假定全仓字段统一。
 - 日期/时间格式遵循目标 DTO 与序列化配置，不擅自切换字符串、毫秒时间戳或时区语义。
 
 ## 阻塞 I/O 与事务
 
-JDBC、MyBatis-Plus、同步 Redis/Redisson、文件 I/O、同步存储 SDK 和同步 HTTP 客户端必须隔离到 [BlockingIoSchedulers](apex-common/src/main/java/com/apex/scaffold/common/scheduler/BlockingIoSchedulers.java)。
+JDBC、MyBatis-Plus、同步 Redis/Redisson、文件 I/O、同步存储 SDK 和同步 HTTP 客户端必须隔离到 [BlockingIoSchedulers](apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/scheduler/BlockingIoSchedulers.java)。
 
 | 调度器 | 用途 |
 | --- | --- |
@@ -205,12 +206,12 @@ Mono.fromCallable(() -> repository.findById(id))
 
 | 业务域 | 生产迁移目录 |
 | --- | --- |
-| system | `apex-system/src/main/resources/db/migration/{mysql,postgresql}/` |
-| auth | `apex-auth-service/src/main/resources/db/migration/{mysql,postgresql}/` |
-| workflow | `apex-workflow-service/src/main/resources/db/migration/{mysql,postgresql}/` |
-| file | `apex-file-service/src/main/resources/db/migration/{mysql,postgresql}/` |
-| office | `apex-office-service/src/main/resources/db/migration/{mysql,postgresql}/` |
-| integration | `apex-integration/src/main/resources/db/migration/{mysql,postgresql}/` |
+| system | `apex-components-parent/apex-system/src/main/resources/db/migration/{mysql,postgresql}/` |
+| auth | `apex-services-bom/apex-auth-service/src/main/resources/db/migration/{mysql,postgresql}/` |
+| workflow | `apex-services-bom/apex-workflow-service/src/main/resources/db/migration/{mysql,postgresql}/` |
+| file | `apex-services-bom/apex-file-service/src/main/resources/db/migration/{mysql,postgresql}/` |
+| office | `apex-services-bom/apex-office-service/src/main/resources/db/migration/{mysql,postgresql}/` |
+| integration | `apex-components-parent/apex-integration/src/main/resources/db/migration/{mysql,postgresql}/` |
 
 - system-service 通过 system 依赖加载生产迁移；各域的数据库和版本链独立，不能按全仓最大版本分配新版本。
 - 命名使用 `V{版本号}__{描述}.sql`。先读取所属域当前脚本，再追加版本，不修改、删除、重排已经执行的历史迁移。
@@ -255,7 +256,7 @@ Mono.fromCallable(() -> repository.findById(id))
 
 ```bash
 # 受影响模块及其依赖的单元/架构测试
-mvnd -T4 -B -pl apex-system-service -am test
+mvnd -T4 -B -pl :apex-system-service -am test
 
 # 格式检查；应用格式化前检查差异范围
 mvnd -T4 -B spotless:check

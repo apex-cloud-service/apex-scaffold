@@ -15,7 +15,7 @@
 已成功将 BloomFilter 集成到多级缓存的关键路径：
 
 #### 集成位置 1: 缓存读取入口
-**文件**: [MultiLevelCacheService.java:142-157](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
+**文件**: [MultiLevelCacheService.java:142-157](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
 
 ```java
 public <T> Mono<T> get(String key, Class<T> clazz) {
@@ -37,7 +37,7 @@ public <T> Mono<T> get(String key, Class<T> clazz) {
 - ✅ O(k) 时间复杂度，k 为哈希函数个数（常数级）
 
 #### 集成位置 2: 缓存回源写入
-**文件**: [MultiLevelCacheService.java:281-311](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
+**文件**: [MultiLevelCacheService.java:281-311](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
 
 ```java
 public <T> Mono<T> getWithLoader(String key, Class<T> clazz, Supplier<Mono<T>> loader, Duration ttl) {
@@ -70,7 +70,7 @@ public <T> Mono<T> getWithLoader(String key, Class<T> clazz, Supplier<Mono<T>> l
 
 ### 1.2 命名空间隔离设计
 
-**实现**: [MultiLevelCacheService.java:173-184](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
+**实现**: [MultiLevelCacheService.java:173-184](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
 
 ```java
 private String extractNamespace(String key) {
@@ -99,7 +99,7 @@ private String extractNamespace(String key) {
 
 ### 1.3 配置属性完善
 
-**文件**: [CacheProperties.java:112-135](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java)
+**文件**: [CacheProperties.java:112-135](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java)
 
 新增配置类：
 ```java
@@ -135,7 +135,7 @@ apex:
 
 ### 2.1 预热服务架构
 
-**文件**: [CachePrewarmService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CachePrewarmService.java)
+**文件**: [CachePrewarmService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CachePrewarmService.java)
 
 **核心特性**：
 1. **策略模式设计**：通过 `CachePrewarmStrategy` 接口实现可插拔预热策略
@@ -150,7 +150,7 @@ apex:
 
 ### 2.2 与 BloomFilter 预热的协同
 
-**文件**: [BloomFilterCacheWarmer.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/loader/BloomFilterCacheWarmer.java)
+**文件**: [BloomFilterCacheWarmer.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/loader/BloomFilterCacheWarmer.java)
 
 **预热时机对比**：
 
@@ -170,7 +170,7 @@ apex:
 
 ### 3.1 Write-Through 策略
 
-**文件**: [MultiLevelCacheService.java:214-232](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
+**文件**: [MultiLevelCacheService.java:214-232](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java)
 
 ```java
 public <T> Mono<Boolean> set(String key, T value, Duration ttl) {
@@ -343,7 +343,7 @@ public class CachePrewarmService implements ApplicationRunner {
 
 ### 7.1 集成测试场景
 
-新增测试文件：[MultiLevelCacheServiceBloomFilterIntegrationTest.java](../../apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceBloomFilterIntegrationTest.java)
+新增测试文件：[MultiLevelCacheServiceBloomFilterIntegrationTest.java](../../apex-shared-parent/apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceBloomFilterIntegrationTest.java)
 
 **需要补充的测试场景**：
 

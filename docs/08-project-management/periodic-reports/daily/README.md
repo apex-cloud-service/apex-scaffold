@@ -27,7 +27,7 @@
 | 2026-11-10 | all-projects | 中台整改 G1–G8 与能力治理收尾 | [2026-11-10-all-projects-daily-report.md](./2026-11-10-all-projects-daily-report.md) |
 | 2026-11-11 | all-projects | 文档与代码一致性收口 | [2026-11-11-all-projects-daily-report.md](./2026-11-11-all-projects-daily-report.md) |
 | 2026-11-12 | all-projects | 查询聚合能力落地 | [2026-11-12-all-projects-daily-report.md](./2026-11-12-all-projects-daily-report.md) |
-| 2026-11-14 | all-projects | 分组重构收尾核验 | [2026-11-14-all-projects-daily-report.md](./2026-11-14-all-projects-daily-report.md) |
+| 2026-11-14 | all-projects | 知识库落地与模块归位 | [2026-11-14-all-projects-daily-report.md](./2026-11-14-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 

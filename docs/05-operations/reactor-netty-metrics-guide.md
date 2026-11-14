@@ -48,14 +48,14 @@ podman-compose -f podman-compose.infra.yml up -d redis
 
 ```bash
 cd /Users/work/apex-scaffold
-mvnd spring-boot:run -pl apex-gateway
+mvnd spring-boot:run -pl :apex-gateway
 ```
 
 后台运行：
 
 ```bash
 cd /Users/work/apex-scaffold
-nohup mvnd spring-boot:run -pl apex-gateway > app.log 2>&1 &
+nohup mvnd spring-boot:run -pl :apex-gateway > app.log 2>&1 &
 tail -f app.log
 ```
 

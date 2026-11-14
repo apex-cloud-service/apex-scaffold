@@ -156,7 +156,7 @@ sequenceDiagram
     AC-->>C: 200 空响应体
 ```
 
-登录、登出和刷新接口的验证用例见[认证接口集成测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java)；测试使用模拟应用服务,不代表真实数据库种子或部署联调。
+登录、登出和刷新接口的验证用例见[认证接口集成测试源码](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java)；测试使用模拟应用服务,不代表真实数据库种子或部署联调。
 
 <a id="三权限校验与统一授权流程"></a>
 

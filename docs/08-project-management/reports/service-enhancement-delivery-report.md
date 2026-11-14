@@ -96,9 +96,9 @@ curl -H "Authorization: Bearer ${MASKING_ACCESS_TOKEN}" \
 | 第四轮完整verify（此前阶段） | 未完成；当时完成聚合`test`（见下行），不作为完整门禁通过证据 |
 | 多模式扩展后完整verify第一轮 | 失败：job-service 四项 PMD 违规，system SQL 首行注释契约失败；已提取认证前缀/ID正则常量、拆分URI校验，并为八个新增迁移补齐注释 |
 | 多模式扩展后完整verify第二轮 | 失败：system 的 JobInvoker 括号字符串与 JobScheduler 复合条件共三项 PMD 违规；已提取括号常量与外部调度接管判断 |
-| 修复后定向格式与PMD复验 | `mvnd -T4 -B -pl apex-system,apex-job-service spotless:apply` 与对应 `pmd:check` 均 **BUILD SUCCESS**；随后重新运行全仓 `clean verify` |
+| 修复后定向格式与PMD复验 | `mvnd -T4 -B -pl :apex-system,:apex-job-service spotless:apply` 与对应 `pmd:check` 均 **BUILD SUCCESS**；随后重新运行全仓 `clean verify` |
 | 多模式扩展后完整verify第三轮（最终本轮） | 已停止，未取得全 reactor BUILD SUCCESS：apex-example 的 ExampleCapabilityIntegrationTest 启动时连接 `127.0.0.1:3306/apex_example_test` 被拒绝，Druid 持续重试；需准备测试MySQL后重新执行完整门禁。system 1532项单测0失败0错误、3项Keycloak测试跳过；auth-service 双服务授权集成测试5项通过，格式/PMD/覆盖率与Failsafe verify已执行；SeataAtIntegrationTest因条件缺失跳过1项。阶段性通过不替代全仓门禁 |
-| 聚合 `mvnd -T4 -B -pl apex-job-service,apex-masking-service,apex-job-spring-boot-starter,apex-seata-spring-boot-starter -am test` | **BUILD SUCCESS**，Failures: 0 / Errors: 0；含 common/domain/infrastructure(489项)/四新模块 |
+| 聚合 `mvnd -T4 -B -pl :apex-job-service,:apex-masking-service,:apex-job-spring-boot-starter,:apex-seata-spring-boot-starter -am test` | **BUILD SUCCESS**，Failures: 0 / Errors: 0；含 common/domain/infrastructure(489项)/四新模块 |
 | job-service 修复复验 | `/actuator/health` 先报401（安全链默认拒绝）→放行探针；再报503（共享设施传递Redis/邮件健康指示器DOWN）→启动类排除无状态代理未用的自动配置；最终7项测试、`spotless:check`通过 |
 | job starter第三轮 | 8项测试0失败0错误，已通过JaCoCo检查 |
 | seata starter 多模式单元测试 | `SeataModeTest`（9项，模式绑定与按模式装配）+ `SeataTransactionExecutorTest`（7项）+ `SeataSafetyTest`（8项），合计24项，Failures: 0 / Errors: 0；离线装配，不触发TM/RM netty初始化 |

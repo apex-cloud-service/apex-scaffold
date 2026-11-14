@@ -10,7 +10,7 @@
 
 ## 2026-10-19 consent V40 前置修复复验
 
-本轮已交付 [MySQL 前置修复](../../../../apex-system/src/main/resources/db/upgrade/mysql/consent_before_v40.sql)、[PostgreSQL 前置修复](../../../../apex-system/src/main/resources/db/upgrade/postgresql/consent_before_v40.sql)及 [PostgreSQL 原 V40 事务包装器](../../../../apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql)，操作入口与限制见[部署指南](../../../05-operations/deployment.md)。资源位于 `db/upgrade`，不进入 Flyway 自动迁移扫描；本轮未修改历史 V40、基线或旧失败证据。
+本轮已交付 [MySQL 前置修复](../../../../apex-components-parent/apex-system/src/main/resources/db/upgrade/mysql/consent_before_v40.sql)、[PostgreSQL 前置修复](../../../../apex-components-parent/apex-system/src/main/resources/db/upgrade/postgresql/consent_before_v40.sql)及 [PostgreSQL 原 V40 事务包装器](../../../../apex-components-parent/apex-system/src/main/resources/db/upgrade/postgresql/run_v40_with_consent_backup.sql)，操作入口与限制见[部署指南](../../../05-operations/deployment.md)。资源位于 `db/upgrade`，不进入 Flyway 自动迁移扫描；本轮未修改历史 V40、基线或旧失败证据。
 
 前置修复仅为缺失或空 ID 生成 `legacy:` 加 SHA-256，输入采用 UTF-8 长度与十六进制编码，区分分隔符拼接歧义。已有非空 ID、权限与已有时间保持不变，业务复合唯一性在切换主键前保护。MySQL 支持部分加列及无主键结构恢复；PostgreSQL 使用事务与排他表锁。PostgreSQL 原 V40 无存在性守卫，不能在补列后直接重跑；包装器在同一事务暂存 consent、执行原 V40、恢复数据，失败整体回滚。
 
@@ -23,7 +23,7 @@
 | PostgreSQL 原文件包含 | `podman cp` 按 `db/upgrade` / `db/migration` 相对结构复制三份原文件并逐一校验容器内 SHA-256；`psql -f` 实际执行原包装器 `\ir` 及重放，数据快照保持一致 |
 | PostgreSQL 故障恢复 | 提交前注入除零，数据快照与原字段均回滚保留；该负例单独展开 V40 全文后经 stdin 执行，只证明事务回滚，不作为原文件包含证据 |
 | PostgreSQL 已有 id 类型 | `VARCHAR(50)`、`VARCHAR(101)`、`TEXT`、`BIGINT` 四类真实负例均在回填前明确拒绝；数据、原主键与无 created_at 状态保持，事务回滚通过 |
-| Java 定向验证 | 加载 Oracle 17.0.12 / mvnd 2.0.0-rc-3 后执行 `mvnd -T4 -B -pl apex-system -am -Dtest=OAuth2AuthorizationConsentRepositoryImplTest -Dsurefire.failIfNoSpecifiedTests=false test`，相关 reactor 成功，仓储 5 项测试无失败、错误或跳过；未运行全仓 verify |
+| Java 定向验证 | 加载 Oracle 17.0.12 / mvnd 2.0.0-rc-3 后执行 `mvnd -T4 -B -pl :apex-system -am -Dtest=OAuth2AuthorizationConsentRepositoryImplTest -Dsurefire.failIfNoSpecifiedTests=false test`，相关 reactor 成功，仓储 5 项测试无失败、错误或跳过；未运行全仓 verify |
 | 隔离清理 | 唯一容器、`network none`、tmpfs；finally 删除容器及匿名卷，证据中两库清理均为 true |
 
 本轮原文件包含独立[新证据](consent-v40-repair-cd38593bac32-evidence.json) SHA-256：`71fc8aa09dcda8efd968db7f20817b0b40a159c6b71d1105830b1460cf26acff`，状态为 `passed_with_postgresql_upgrade_limitation`（限制是 Flyway 历史与原 V40 非幂等，不再是未测相对包含）。实际执行：`python3 -B scripts/test/verify_consent_v40_upgrade.py`；包装器命令：`podman exec apex-consent-v40-d3e2edf3106e psql -X -U postgres -d postgres -v ON_ERROR_STOP=1 -At -f /tmp/consent-upgrade/upgrade/postgresql/run_v40_with_consent_backup.sql`。Python 定向命令为 `python3 -B -m unittest scripts/test/test_consent_v40_upgrade.py scripts/test/test_auth_v45_dynamic_probe_20261018.py`，37 项通过；上表 Java 定向命令本轮再次执行成功，5 项无失败/错误/跳过。
@@ -45,7 +45,7 @@
 | 资产 | 行为及限制 |
 | --- | --- |
 | [构建初始化脚本](../../../../scripts/build/init-build-env.sh) | SDKMAN 初始化、项目环境加载、Java/mvnd 命令失败均非零退出；固定 Java 路径与版本，严格解析完整 mvnd 版本 token；全部通过后才输出成功 |
-| [构建检查测试](../../../../apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/InitBuildEnvTest.java) | 临时 HOME 和模拟命令，覆盖直接执行、source、条件 source；包含真实格式 banner 与 JLine 警告，不是 Java 集成验证 |
+| [构建检查测试](../../../../apex-tools-parent/apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/InitBuildEnvTest.java) | 临时 HOME 和模拟命令，覆盖直接执行、source、条件 source；包含真实格式 banner 与 JLine 警告，不是 Java 集成验证 |
 | [采集工具](../../../../scripts/ci/source-archive/scripts/ci/collect_upgrade_baseline.py.source) | stdlib，从根 POM 模块扫描 main/test Java、所属域双库版本迁移及显式配置白名单；排除构建目录与符号链接，只记录元数据，不输出配置正文 |
 | [采集工具测试](../../../../scripts/ci/source-archive/scripts/test/test_collect_upgrade_baseline.py.source) | 构建目录、符号链接、零字节、hash 稳定、双库版本差异保留、配置正文不泄露、Git 重命名与输出失败反例 |
 | [方案](../../../02-architecture/jdk21-unified-auth-multitenancy-implementation-plan.md) | 更新为已批准执行、P0 未准出，保留评审阶段历史口径 |
@@ -295,7 +295,7 @@ git diff --check
 | MySQL，127.0.0.1:13317 | `apex_reg_a119e67144b444eda161e2bb227f89e9` | 61 条，V1–V61 | 通过 | 0 | 0 条 | 61 条有序且状态 applied |
 | PostgreSQL 17.11，127.0.0.1:41187，public | `apex_reg_4547f75e60664165892a25c64c5db0c8` | 61 条，V1–V61 | 通过 | 0 | 0 条 | 61 条有序且状态 applied |
 
-日志第 1134–1138、1216–1223 行直接记录迁移、validate 与第二次无需迁移；pending=0、第二次执行数=0、有序 applied 则由[双库测试](../../../../apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java)第 62–69 行断言及实际通过 XML 共同支持。测试还检查选定配置、权限与角色关联、菜单、工作流/OAuth2 字段、种子微信社交绑定回填；空库种子数据上的回填断言不能作为存量真实业务升级验收。
+日志第 1134–1138、1216–1223 行直接记录迁移、validate 与第二次无需迁移；pending=0、第二次执行数=0、有序 applied 则由[双库测试](../../../../apex-components-parent/apex-system/src/test/java/com/apex/scaffold/interfaces/test/SystemDualDatabaseMigrationIntegrationTest.java)第 62–69 行断言及实际通过 XML 共同支持。测试还检查选定配置、权限与角色关联、菜单、工作流/OAuth2 字段、种子微信社交绑定回填；空库种子数据上的回填断言不能作为存量真实业务升级验收。
 
 本轮未重新导出最终完整 schema 或逐条 Flyway history/checksum，不填造最终表数、约束数或 checksum。原 [MySQL 快照](mysql-schema-evidence.json)及 [PostgreSQL 快照](postgresql-schema-evidence.json)仍是失败时现场，不能拿其结构替代新库 V61；其 hash 已固定到新证据中。现有静态清单也仍为原采集时间点，不能自动当成修复后重新采集。
 
@@ -896,13 +896,13 @@ P0最优先完成已有表/SQL清单的逐项审阅、处置保存与关联复�
 
 ### V58实现、测试与生产边界
 
-已实际阅读[MySQL V58](../../../../apex-auth-service/src/main/resources/db/migration/mysql/V58__create_reactive_mfa_config.sql)、[PostgreSQL V58](../../../../apex-auth-service/src/main/resources/db/migration/postgresql/V58__create_reactive_mfa_config.sql)、[MfaConfig实体](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/MfaConfig.java)、[仓储](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/MfaConfigRepository.java)与[迁移测试](../../../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMfaMigrationIntegrationTest.java)。12列与驼峰/下划线映射一致；AUTO_INCREMENT/BIGSERIAL支持无ID插入；DATETIME/TIMESTAMP对应LocalDateTime；两个枚举均可容纳于VARCHAR(20)，secret/backup_codes保持nullable TEXT字符串契约。MySQL唯一键(tenant_id,user_id,type)为(64+64+20)×4=592字节，低于767及3072字节索引键上限，未见该长度导致的明显兼容缺陷。user_id单列索引与tenant前缀索引契合既有查询。
+已实际阅读[MySQL V58](../../../../apex-services-bom/apex-auth-service/src/main/resources/db/migration/mysql/V58__create_reactive_mfa_config.sql)、[PostgreSQL V58](../../../../apex-services-bom/apex-auth-service/src/main/resources/db/migration/postgresql/V58__create_reactive_mfa_config.sql)、[MfaConfig实体](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/domain/model/MfaConfig.java)、[仓储](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/MfaConfigRepository.java)与[迁移测试](../../../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMfaMigrationIntegrationTest.java)。12列与驼峰/下划线映射一致；AUTO_INCREMENT/BIGSERIAL支持无ID插入；DATETIME/TIMESTAMP对应LocalDateTime；两个枚举均可容纳于VARCHAR(20)，secret/backup_codes保持nullable TEXT字符串契约。MySQL唯一键(tenant_id,user_id,type)为(64+64+20)×4=592字节，低于767及3072字节索引键上限，未见该长度导致的明显兼容缺陷。user_id单列索引与tenant前缀索引契合既有查询。
 
 原执行GREEN为**25项=AuthMfaMigrationIntegrationTest 4项真实双库用例（MySQL/PostgreSQL各空库升级与兼容手工表）+MfaServiceImplTest 21项服务单测**，0失败/错误/跳过。本轮未复跑。测试显式指定auth filesystem迁移，V44–V57的14次迁移后升级V58至15次，验证validate、pending=0、再次迁移0、脚本重放、默认值、跨租户同用户/type及真实R2dbcRepositoryFactory的生成ID、字符串/枚举读写与删除。未覆盖同租户重复键拒绝、最大长度值或所有生产配置，因此不扩大这些断言。
 
 CREATE TABLE IF NOT EXISTS只保留兼容手工表，不能修复未知列、identity或旧UNIQUE(user_id,type)，也不自动复制system数据。fixture的MySQL手工表采用TIMESTAMP而正式V58为DATETIME，支持该fixture保留与读取，不证明所有手工时间类型等价。opaque测试字符串只证明持久化，不证明真实TOTP加解密、HTTP流程、短信/邮件或生产密钥配置。既有无tenant仓储方法未由本修复审计。
 
-[auth POM](../../../../apex-auth/pom.xml)生产R2DBC驱动有MySQL/H2；[auth-service POM](../../../../apex-auth-service/pom.xml)的PostgreSQL JDBC驱动不能替代R2DBC驱动。PostgreSQL R2DBC经apex-system的test依赖进入本测试classpath，不能进入生产装配结论；须落实生产驱动与目标profile后另行验证真实启动。
+[auth POM](../../../../apex-components-parent/apex-auth/pom.xml)生产R2DBC驱动有MySQL/H2；[auth-service POM](../../../../apex-services-bom/apex-auth-service/pom.xml)的PostgreSQL JDBC驱动不能替代R2DBC驱动。PostgreSQL R2DBC经apex-system的test依赖进入本测试classpath，不能进入生产装配结论；须落实生产驱动与目标profile后另行验证真实启动。
 
 **旧18:21:52的31/31 clean verify发生在V58证据之前**；保留5050 tests、2 skips及PMD261次告警，但不承接新增迁移。V58仅有上述原执行定向结果及单文件Spotless记录，无新的全仓clean verify/PMD结论。P0仍未准出，Java21未切换。
 
@@ -1425,15 +1425,15 @@ Nacos开关不能按单个文件外推：五业务service bootstrap的config/dis
 
 ### 网关真实YAML修复及局部验证
 
-已核对[网关prod源码](../../../../apex-gateway/src/main/resources/application-prod.yml)：config.enabled、discovery.enabled、discovery.register-enabled分别使用 `${NACOS_CONFIG_ENABLED:true}`、`${NACOS_DISCOVERY_ENABLED:true}`、`${NACOS_REGISTER_ENABLED:true}`。方案第32节及本报告前节“字面true”是修复前时点记录；当前默认仍true，但可分别由环境占位符供值。
+已核对[网关prod源码](../../../../apex-services-bom/apex-gateway/src/main/resources/application-prod.yml)：config.enabled、discovery.enabled、discovery.register-enabled分别使用 `${NACOS_CONFIG_ENABLED:true}`、`${NACOS_DISCOVERY_ENABLED:true}`、`${NACOS_REGISTER_ENABLED:true}`。方案第32节及本报告前节“字面true”是修复前时点记录；当前默认仍true，但可分别由环境占位符供值。
 
-[GatewayNacosConfigContractTest](../../../../apex-gateway/src/test/java/com/apex/scaffold/gateway/GatewayNacosConfigContractTest.java)使用YamlPropertySourceLoader加载真实application-prod/application/bootstrap，移除StandardEnvironment宿主systemProperties和systemEnvironment，再注入合成环境源；八种独立布尔组合加无变量默认共9项。配置代理记录 **RED 7失败 → GREEN 9通过**，加既有GatewayRouteProfileConfigTest 3项，共 **12通过**，相关reactor Spotless通过，固定Oracle17.0.12/mvnd2.0.0-rc-3正确，未执行clean verify。
+[GatewayNacosConfigContractTest](../../../../apex-services-bom/apex-gateway/src/test/java/com/apex/scaffold/gateway/GatewayNacosConfigContractTest.java)使用YamlPropertySourceLoader加载真实application-prod/application/bootstrap，移除StandardEnvironment宿主systemProperties和systemEnvironment，再注入合成环境源；八种独立布尔组合加无变量默认共9项。配置代理记录 **RED 7失败 → GREEN 9通过**，加既有GatewayRouteProfileConfigTest 3项，共 **12通过**，相关reactor Spotless通过，固定Oracle17.0.12/mvnd2.0.0-rc-3正确，未执行clean verify。
 
 本次只读核对现存Surefire：Nacos契约9项，0失败/错误/跳过，0.213s；路由3项，0失败/错误/跳过，0.726s。XML记载java.home为 `/Users/eric/.sdkman/candidates/java/17.0.12-oracle`、java.version为17.0.12。RED、mvnd版本和Spotless结论按配置代理交付记录，本次未重跑；局部属性求值不代表Spring启动、真实Nacos客户端/远端覆盖或生产部署验证。
 
 ### auth双连接TLS静态差异与待核验项
 
-已核对[主Compose](../../../../podman-compose.yml)、[auth prod](../../../../apex-auth-service/src/main/resources/application-prod.yml)和[JwtKeyRepositoryImpl](../../../../apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/JwtKeyRepositoryImpl.java)。Compose auth的 `SPRING_DATASOURCE_URL` 含 `useSSL=false`，覆盖prod JDBC URL的 `useSSL=true&requireSSL=true`；prod R2DBC按DB_HOST/DB_PORT/DB_NAME拼接URL并设 `sslMode=REQUIRED`，主Compose无 `SPRING_R2DBC_*`。JwtKeyRepositoryImpl实际注入DatabaseClient并读写jwt_keys，R2DBC存在消费链。
+已核对[主Compose](../../../../podman-compose.yml)、[auth prod](../../../../apex-services-bom/apex-auth-service/src/main/resources/application-prod.yml)和[JwtKeyRepositoryImpl](../../../../apex-components-parent/apex-auth/src/main/java/com/apex/scaffold/auth/infrastructure/repository/JwtKeyRepositoryImpl.java)。Compose auth的 `SPRING_DATASOURCE_URL` 含 `useSSL=false`，覆盖prod JDBC URL的 `useSSL=true&requireSSL=true`；prod R2DBC按DB_HOST/DB_PORT/DB_NAME拼接URL并设 `sslMode=REQUIRED`，主Compose无 `SPRING_R2DBC_*`。JwtKeyRepositoryImpl实际注入DatabaseClient并读写jwt_keys，R2DBC存在消费链。
 
 该差异已静态确认，未证实生产故障；本轮未修改TLS策略。剩余核验是实际运行profile、Compose override和远端/环境/本地属性源、最终DataSource/ConnectionFactory及双连接目标、TLS握手和业务访问。已同步[配置文档](../../../05-operations/configuration.md)的独立Nacos开关、默认值分层和TLS说明。没有启动Spring、Nacos或数据库，没有执行Java或完整门禁；P0仍未准出、Java21未切换，生产升级/Flyway历史协调仍未验收。
 
@@ -1465,9 +1465,9 @@ Nacos开关不能按单个文件外推：五业务service bootstrap的config/dis
 
 ### auth真实Compose锚点、环境源与Binder契约
 
-已核对[AuthDataSourceConfigContractTest](../../../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)：SnakeYAML读取真实主Compose并解析YAML合并锚点，移除宿主系统属性和环境源，再注入隔离 `SystemEnvironmentPropertySource`；真实prod/application/bootstrap由YamlPropertySourceLoader加载，通过Spring Binder绑定DataSourceProperties与R2dbcProperties，不创建数据库连接。
+已核对[AuthDataSourceConfigContractTest](../../../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)：SnakeYAML读取真实主Compose并解析YAML合并锚点，移除宿主系统属性和环境源，再注入隔离 `SystemEnvironmentPropertySource`；真实prod/application/bootstrap由YamlPropertySourceLoader加载，通过Spring Binder绑定DataSourceProperties与R2dbcProperties，不创建数据库连接。
 
-现存Surefire为 **7项、0失败/错误/跳过、0.797s**；[驱动可用性测试](../../../../apex-auth/src/test/java/com/apex/scaffold/auth/infrastructure/persistence/R2dbcDriverAvailabilityTest.java)为 **3项、0失败/错误/跳过、0.284s**，共10项通过。XML确认java.home为 `/Users/eric/.sdkman/candidates/java/17.0.12-oracle`、java.version为17.0.12；mvnd2.0.0-rc-3正确及相关reactor Spotless通过按本轮交付记录，本次未重跑。没有连接DB，不将驱动发现/属性绑定解释为应用启动。
+现存Surefire为 **7项、0失败/错误/跳过、0.797s**；[驱动可用性测试](../../../../apex-components-parent/apex-auth/src/test/java/com/apex/scaffold/auth/infrastructure/persistence/R2dbcDriverAvailabilityTest.java)为 **3项、0失败/错误/跳过、0.284s**，共10项通过。XML确认java.home为 `/Users/eric/.sdkman/candidates/java/17.0.12-oracle`、java.version为17.0.12；mvnd2.0.0-rc-3正确及相关reactor Spotless通过按本轮交付记录，本次未重跑。没有连接DB，不将驱动发现/属性绑定解释为应用启动。
 
 当前[Compose](../../../../podman-compose.yml)公共DB_HOST=mysql、DB_PORT=3306、DB_USERNAME/DB_PASSWORD已由锚点注入，auth另设DB_NAME=apex_auth。双客户端目标均为 `mysql:3306/apex_auth`，用户与凭据一致；前节“没有SPRING_R2DBC_*”只描述显式键缺省，不能延伸为当前目标错误。JDBC `useSSL=false` 与R2DBC `sslMode=REQUIRED` 的静态差异仍真实存在，本轮没有配置改动。
 
@@ -1489,11 +1489,11 @@ PG定向25项测试及覆盖独立复算已完成。实际执行 `bash scripts/c
 
 ### auth双驱动真实TLS矩阵
 
-[真实TLS证据](auth-mysql-tls-contract-20261019-2336-evidence.json) SHA-256为 `4e0a64b92786e2676e9e3b8f3f95afed8f91b05a458662745015d962a298a0ab`；[集成测试](../../../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMySqlTlsContractIntegrationTest.java)最终源码SHA-256为 `1196a05634b7db3a91d3616e857e834fd383d86ed3efcb33e3b8dbf0fd65ec23`。使用Oracle17.0.12、mvnd2.0.0-rc-3、MySQL8.0.46、Connector/J8.4.0及r2dbc-mysql1.4.2。最终格式化后重新编译执行的命令如下。
+[真实TLS证据](auth-mysql-tls-contract-20261019-2336-evidence.json) SHA-256为 `4e0a64b92786e2676e9e3b8f3f95afed8f91b05a458662745015d962a298a0ab`；[集成测试](../../../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthMySqlTlsContractIntegrationTest.java)最终源码SHA-256为 `1196a05634b7db3a91d3616e857e834fd383d86ed3efcb33e3b8dbf0fd65ec23`。使用Oracle17.0.12、mvnd2.0.0-rc-3、MySQL8.0.46、Connector/J8.4.0及r2dbc-mysql1.4.2。最终格式化后重新编译执行的命令如下。
 
 ```bash
 source scripts/build/init-build-env.sh &&
-APEX_AUTH_MYSQL_TLS_IT=true mvnd -T4 -B -pl apex-auth-service -am \
+APEX_AUTH_MYSQL_TLS_IT=true mvnd -T4 -B -pl :apex-auth-service -am \
   -Dtest=AuthDataSourceConfigContractTest \
   -Dsurefire.failIfNoSpecifiedTests=false \
   -Dit.test=AuthMySqlTlsContractIntegrationTest \
@@ -1523,7 +1523,7 @@ APEX_AUTH_MYSQL_TLS_IT=true mvnd -T4 -B -pl apex-auth-service -am \
 
 [本轮证据](compose-override-coverage-audit-20261019-evidence.json)记录只读复算、配置来源hash、26项测试和验证限制。原verified_union与独立并集复算一致：22份合格证据、845次覆盖、去重500项、分母586、剩86（MySQL70、PG16），来源与冻结baseline一致。既有PG partial_diagnostic中的7项constraint已计分、16项trigger仍未计分；新V19与PG行为证据不增加计分。未发现可直接认定为真实旧版本的制品或替代完整升级验收的history。
 
-新增[多文件渲染测试](../../../../apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/ConfigPreflightTest.java)含4子场景，单跑1项通过23.495s。随后实际执行：
+新增[多文件渲染测试](../../../../apex-tools-parent/apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/ConfigPreflightTest.java)含4子场景，单跑1项通过23.495s。随后实际执行：
 
 ```bash
 /tmp/apex-p0-python-20261019/bin/python -B -m unittest -v \
@@ -1545,12 +1545,12 @@ collector实测138来源、23路由、474配置disposition；shared_nacos/DB_HOS
 
 恢复回归仅actual_v42_failure完成dry-run、apply和重入；clean_predecessor的apply在90秒超时，余29项未执行。39个场景条目中完整完成38个，整体partial_failure。保留首轮汇总超时及就绪检查失败记录，不能以本轮覆盖前轮31场景成功，也不追认为本轮完整恢复成功。隔离MySQL8.0.46容器全部清理、卷集合不变；只用合成fixture，样例保留不证明token加密转换。命令和逐观察结果见JSON，未修复Flyway history。
 
-[Binder新证据](auth-compose-binder-override-20261020-evidence.json) SHA-256为 `7659543289388464aaa9bc57fcd952f3741cb2c5c188d4a17c37fbed99f64e64`。[AuthDataSourceConfigContractTest](../../../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)保留原7项新增2项，最终9 tests、0 failures/errors/skipped、2.818s。Oracle17.0.12、mvnd2.0.0-rc-3，先清理漂移daemon，目标格式调整后Spotless和定向测试均通过。
+[Binder新证据](auth-compose-binder-override-20261020-evidence.json) SHA-256为 `7659543289388464aaa9bc57fcd952f3741cb2c5c188d4a17c37fbed99f64e64`。[AuthDataSourceConfigContractTest](../../../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/AuthDataSourceConfigContractTest.java)保留原7项新增2项，最终9 tests、0 failures/errors/skipped、2.818s。Oracle17.0.12、mvnd2.0.0-rc-3，先清理漂移daemon，目标格式调整后Spotless和定向测试均通过。
 
 ```bash
 source scripts/build/init-build-env.sh &&
-mvnd -T4 -B -pl apex-auth-service spotless:check &&
-mvnd -T4 -B -pl apex-auth-service -am \
+mvnd -T4 -B -pl :apex-auth-service spotless:check &&
+mvnd -T4 -B -pl :apex-auth-service -am \
   -Dtest=AuthDataSourceConfigContractTest \
   -Dsurefire.failIfNoSpecifiedTests=false test
 ```
@@ -1617,7 +1617,7 @@ mvnd -T4 -B -pl apex-auth-service -am \
 实际构建命令（同一shell先激活固定环境）：
 
 ```bash
-source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-system -am test-compile failsafe:integration-test failsafe:verify spotless:check -Dskip.unit.tests=true -Djacoco.skip=true -Dit.test=SystemDualDatabaseMigrationIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false
+source scripts/build/init-build-env.sh && mvnd -T4 -B -pl :apex-system -am test-compile failsafe:integration-test failsafe:verify spotless:check -Dskip.unit.tests=true -Djacoco.skip=true -Dit.test=SystemDualDatabaseMigrationIntegrationTest -Dfailsafe.failIfNoSpecifiedTests=false
 ```
 
 工具链为 Oracle JDK `17.0.12-oracle`、mvnd `2.0.0-rc-3`、Flyway `10.15.0`，先以正确环境执行 `mvnd --stop`。10个选中reactor项目均BUILD SUCCESS，wall time 02:55 min；test-compile实际执行，上游生产/测试类为up to date，system重新编译237个测试源码（release 17），不宣称clean rebuild。10个项目的Spotless check成功。
@@ -1662,7 +1662,7 @@ JAR 候选位于各模块 `target/` 和 `target/project-local-repo/`，版本均
 实际使用Oracle JDK17.0.12-oracle与mvnd2.0.0-rc-3，每条构建命令先在当前shell加载初始化脚本。最终格式化后回归命令为：
 
 ```bash
-source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-system,apex-office-service,apex-workflow-service -am -Dtest=NotificationServiceIsolationTest,NotificationBroadcastListenerTest,NotificationSseHandlerTest,MonitorDashboardHandlerTest,NoBoundedElasticArchGuardTest,OfficeCalendarRouterTest,OfficeRouterRegressionTest,OfficeCalendarHandlerTest,WorkflowQueryServiceTest,WorkflowServiceTest,WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test
+source scripts/build/init-build-env.sh && mvnd -T4 -B -pl :apex-system,:apex-office-service,:apex-workflow-service -am -Dtest=NotificationServiceIsolationTest,NotificationBroadcastListenerTest,NotificationSseHandlerTest,MonitorDashboardHandlerTest,NoBoundedElasticArchGuardTest,OfficeCalendarRouterTest,OfficeRouterRegressionTest,OfficeCalendarHandlerTest,WorkflowQueryServiceTest,WorkflowServiceTest,WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test
 ```
 
 最终执行日志位于本机临时路径 `/tmp/apex-o-base-final-tests-20261021.log`，SHA-256为 `7b97c17938659b03d9ee7cb880d036ab879546abfc23d3f1e95fbf1629174b16`；2026-10-21T17:20:09+08:00结束，BUILD SUCCESS。临时日志未作为持久证据入库，清理后需重新执行，不把hash当作日志内容替代物。
@@ -1681,7 +1681,7 @@ WorkflowDatabaseHttpIntegrationTest本次由Surefire显式选中，不代表完�
 定向格式检查首先因spotlessFiles误用glob而失败（`Dangling meta character '*'`）；改正为正则后暴露实际排版差异，再仅对12个相关文件执行apply/check：
 
 ```bash
-source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-infrastructure-messaging,apex-system,apex-office-service,apex-workflow '-DspotlessFiles=.*(NotificationService|NotificationBroadcastListener|NotificationServiceIsolationTest|NotificationBroadcastListenerTest|NotificationSseHandler|NotificationSseHandlerTest|MonitorDashboardHandler|MonitorDashboardHandlerTest|OfficeCalendarRouter|OfficeCalendarRouterTest|WorkflowQueryService|WorkflowQueryServiceTest)\.java' spotless:apply spotless:check
+source scripts/build/init-build-env.sh && mvnd -T4 -B -pl :apex-infrastructure-messaging,:apex-system,:apex-office-service,:apex-workflow '-DspotlessFiles=.*(NotificationService|NotificationBroadcastListener|NotificationServiceIsolationTest|NotificationBroadcastListenerTest|NotificationSseHandler|NotificationSseHandlerTest|MonitorDashboardHandler|MonitorDashboardHandlerTest|OfficeCalendarRouter|OfficeCalendarRouterTest|WorkflowQueryService|WorkflowQueryServiceTest)\.java' spotless:apply spotless:check
 ```
 
 四模块共12文件检查成功，9文件发生格式整理。日志 `/tmp/apex-o-base-format-green-20261021.log`，SHA-256为 `659e3c1af9359392326aeb60f3abfb7af835d7138254a59146f779562da2ed63`，结束于2026-10-21T17:17:53+08:00。没有全量格式化其他用户修改；源码完成后git diff --check退出0。
@@ -1704,7 +1704,7 @@ workflow已独立验证RS256 JWT，要求exp、ACCESS类型、正userId及非空
 最终组合定向回归实际命令为：
 
 ```bash
-source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-workflow-service -am -Dtest=WorkflowServiceTest,WorkflowQueryServiceTest,IdentityRelayAuthenticationFilterTest,WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test
+source scripts/build/init-build-env.sh && mvnd -T4 -B -pl :apex-workflow-service -am -Dtest=WorkflowServiceTest,WorkflowQueryServiceTest,IdentityRelayAuthenticationFilterTest,WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test
 ```
 
 组合首跑共95项、2失败：旧WorkflowDatabaseHttpIntegrationTest使用身份头登录，两个预期200的请求实际返回401。将该测试改为真实RS256签名后，最终组合BUILD SUCCESS，结果如下；不与RED、单类GREEN或此前87项重复相加。
@@ -1753,7 +1753,7 @@ P0未准出，O-BASE/P4尚未整体完成，Java21未切换；D01–D07决策未
 主代理实际执行命令：
 
 ```bash
-source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-workflow-service -am -Dtest=WorkflowQueryServiceTest,WorkflowServiceTest,WorkflowDatabaseHttpIntegrationTest,IdentityRelayAuthenticationFilterTest,WorkflowHandlerIntegrationTest,WorkflowRouterRegressionTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test
+source scripts/build/init-build-env.sh && mvnd -T4 -B -pl :apex-workflow-service -am -Dtest=WorkflowQueryServiceTest,WorkflowServiceTest,WorkflowDatabaseHttpIntegrationTest,IdentityRelayAuthenticationFilterTest,WorkflowHandlerIntegrationTest,WorkflowRouterRegressionTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test
 ```
 
 日志`/tmp/apex-workflow-isolation-combined-20261021.log`为BUILD SUCCESS，166项Failures/Errors/Skipped均0；嵌套服务套件去重，不与分批GREEN或历史95项重复相加。
@@ -1808,10 +1808,10 @@ source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-workflow-service 
 
 | 实际命令（初始化后） | 结果 | 临时日志 |
 | --- | --- | --- |
-| `mvnd -T4 -B -pl apex-workflow-service -am -Dtest=WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test` | RED：10项，3失败、0错误、0跳过；退出1 | `/tmp/apex-workflow-repository-red-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am -Dtest=WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test` | RED：10项，3失败、0错误、0跳过；退出1 | `/tmp/:apex-workflow-repository-red-20261021.log` |
 | 同上命令，最小修复后 | GREEN：10项，失败/错误/跳过均0；BUILD SUCCESS，退出0 | `/tmp/apex-workflow-repository-green-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow-service -am test` | 773项，失败/错误/跳过均0；BUILD SUCCESS，退出0 | `/tmp/apex-workflow-repository-alltest-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow,apex-workflow-service '-DspotlessFiles=.*(TaskRepositoryImpl\|TaskPoConverter\|TimeoutTaskScanAdapter\|WorkflowDatabaseHttpIntegrationTest)\.java' spotless:apply spotless:check` | 限定4个Java文件，2个格式调整、2个已干净；检查通过，退出0 | `/tmp/apex-workflow-repository-spotless-green-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am test` | 773项，失败/错误/跳过均0；BUILD SUCCESS，退出0 | `/tmp/:apex-workflow-repository-alltest-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow,:apex-workflow-service '-DspotlessFiles=.*(TaskRepositoryImpl\|TaskPoConverter\|TimeoutTaskScanAdapter\|WorkflowDatabaseHttpIntegrationTest)\.java' spotless:apply spotless:check` | 限定4个Java文件，2个格式调整、2个已干净；检查通过，退出0 | `/tmp/:apex-workflow-repository-spotless-green-20261021.log` |
 
 上表Spotless代码内的竖线为Markdown表格转义，实际shell参数用正则竖线。首次使用`**/文件名`被插件按正则解析而失败，未通过检查；更正后成功，原失败保存在`/tmp/apex-workflow-repository-spotless-20261021.log`。
 
@@ -1833,10 +1833,10 @@ source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-workflow-service 
 
 | 实际命令（初始化后） | 结果 | 本机日志 |
 | --- | --- | --- |
-| `mvnd -T4 -B -pl apex-workflow-service -am test -Dtest=WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | RED：13项、2失败、0错误、0跳过；旧快照影响行数实际1及竞争后假成功，退出1 | `/tmp/apex-workflow-concurrency-red-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am test -Dtest=WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | RED：13项、2失败、0错误、0跳过；旧快照影响行数实际1及竞争后假成功，退出1 | `/tmp/:apex-workflow-concurrency-red-20261021.log` |
 | 同上，修复并增加合法路径后 | GREEN：14项，失败/错误/跳过均0，BUILD SUCCESS，退出0 | `/tmp/apex-workflow-concurrency-green-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow-service -am test` | 773项，失败/错误/跳过均0，BUILD SUCCESS，退出0 | `/tmp/apex-workflow-concurrency-alltest-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow,apex-workflow-service '-DspotlessFiles=.*(Task\|TaskRepository\|TaskRepositoryImpl\|WorkflowService\|WorkflowServiceTest\|WorkflowDatabaseHttpIntegrationTest)\.java' spotless:apply spotless:check` | 仅6个本批Java文件，2个格式调整，检查通过，退出0 | `/tmp/apex-workflow-concurrency-spotless-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am test` | 773项，失败/错误/跳过均0，BUILD SUCCESS，退出0 | `/tmp/:apex-workflow-concurrency-alltest-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow,:apex-workflow-service '-DspotlessFiles=.*(Task\|TaskRepository\|TaskRepositoryImpl\|WorkflowService\|WorkflowServiceTest\|WorkflowDatabaseHttpIntegrationTest)\.java' spotless:apply spotless:check` | 仅6个本批Java文件，2个格式调整，检查通过，退出0 | `/tmp/:apex-workflow-concurrency-spotless-20261021.log` |
 
 表格中竖线是Markdown转义，shell中使用正则竖线。773项模块汇总为common539、domain9、api-contract30、job starter11、seata starter24、workflow107、workflow-service53；与定向14项不重复累计。普通test未包含该IntegrationTest，故单独选中；完整test未跳过JaCoCo，但不代表全仓verify通过。日志在本机/tmp，非持久归档。
 
@@ -1848,15 +1848,15 @@ source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-workflow-service 
 
 ## 2026-10-22 workflow多步事务原子性故障注入
 
-本轮对应计划42.12，仅新增[WorkflowAtomicityIntegrationTest](../../../../apex-workflow-service/src/test/java/com/apex/scaffold/workflowservice/interfaces/handler/WorkflowAtomicityIntegrationTest.java)及维护现有计划/报告，保留既有工作区改动，不改生产代码。测试使用独立H2 MySQL mode数据库、真实仓储及Mapper，每例重建种子，事后移除CHECK约束，无测试事务、sleep或disabled。断言要求业务Mono报错且任务、实例、审批记录的完整行及数量与操作前一致；使用assertAll同时报告错误信号与数据库残留，不将半成功写成合法期望。
+本轮对应计划42.12，仅新增[WorkflowAtomicityIntegrationTest](../../../../apex-services-bom/apex-workflow-service/src/test/java/com/apex/scaffold/workflowservice/interfaces/handler/WorkflowAtomicityIntegrationTest.java)及维护现有计划/报告，保留既有工作区改动，不改生产代码。测试使用独立H2 MySQL mode数据库、真实仓储及Mapper，每例重建种子，事后移除CHECK约束，无测试事务、sleep或disabled。断言要求业务Mono报错且任务、实例、审批记录的完整行及数量与操作前一致；使用assertAll同时报告错误信号与数据库残留，不将半成功写成合法期望。
 
 所有构建先在当前shell执行`source scripts/build/init-build-env.sh`，使用Oracle JDK17.0.12-oracle、mvnd2.0.0-rc-3。执行日期为2026-10-22，以下日志文件名按本轮要求保留20261021。
 
 | 实际命令（初始化后） | 结果 | 本机日志 |
 | --- | --- | --- |
-| `mvnd -T4 -B -pl apex-workflow-service -am -Dtest=WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test` | 基线14项通过，失败/错误/跳过均0，BUILD SUCCESS，退出0 | `/tmp/apex-workflow-atomicity-baseline-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow-service '-DspotlessFiles=.*WorkflowAtomicityIntegrationTest\.java' spotless:apply spotless:check` | 仅新测试1文件格式化，检查通过，BUILD SUCCESS，退出0 | 终端输出 |
-| `mvnd -T4 -B -pl apex-workflow-service -am -Dtest=WorkflowDatabaseHttpIntegrationTest,WorkflowAtomicityIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test` | 共20项：既有14项通过，新增6项全部失败；错误0、跳过0，BUILD FAILURE，退出1 | `/tmp/apex-workflow-atomicity-tests-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am -Dtest=WorkflowDatabaseHttpIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test` | 基线14项通过，失败/错误/跳过均0，BUILD SUCCESS，退出0 | `/tmp/:apex-workflow-atomicity-baseline-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service '-DspotlessFiles=.*WorkflowAtomicityIntegrationTest\.java' spotless:apply spotless:check` | 仅新测试1文件格式化，检查通过，BUILD SUCCESS，退出0 | 终端输出 |
+| `mvnd -T4 -B -pl :apex-workflow-service -am -Dtest=WorkflowDatabaseHttpIntegrationTest,WorkflowAtomicityIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test` | 共20项：既有14项通过，新增6项全部失败；错误0、跳过0，BUILD FAILURE，退出1 | `/tmp/:apex-workflow-atomicity-tests-20261021.log` |
 
 以下每项独立运行，原任务为PENDING、version=0、complete_time=null、固定update_time；原实例RUNNING。三项约束故障均为真实H2 SQLState 23513，通过DataIntegrityViolationException传播。日志中`ATOMICITY`行保存操作前后完整快照。
 
@@ -1881,7 +1881,7 @@ source scripts/build/init-build-env.sh && mvnd -T4 -B -pl apex-workflow-service 
 
 ## 2026-10-22 workflow多步同步事务原子性修复
 
-本轮对应计划42.13，承接并保留42.12六项失败证据。新增领域端口[WorkflowTaskTransaction](../../../../apex-workflow/src/main/java/com/apex/scaffold/workflow/domain/repository/WorkflowTaskTransaction.java)，以同步Operations描述任务及实例读取/写入；[JdbcWorkflowTaskTransaction](../../../../apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/repository/JdbcWorkflowTaskTransaction.java)使用同一DataSource的JdbcTransactionManager和TransactionTemplate实现真实同步事务，复用TaskRepositoryImpl及ProcessInstanceRepositoryImpl抽取的同步SQL方法。没有新增依赖或system耦合，领域不引用具体仓储/MyBatis。
+本轮对应计划42.13，承接并保留42.12六项失败证据。新增领域端口[WorkflowTaskTransaction](../../../../apex-components-parent/apex-workflow/src/main/java/com/apex/scaffold/workflow/domain/repository/WorkflowTaskTransaction.java)，以同步Operations描述任务及实例读取/写入；[JdbcWorkflowTaskTransaction](../../../../apex-components-parent/apex-workflow/src/main/java/com/apex/scaffold/workflow/infrastructure/persistence/repository/JdbcWorkflowTaskTransaction.java)使用同一DataSource的JdbcTransactionManager和TransactionTemplate实现真实同步事务，复用TaskRepositoryImpl及ProcessInstanceRepositoryImpl抽取的同步SQL方法。没有新增依赖或system耦合，领域不引用具体仓储/MyBatis。
 
 WorkflowService的rejectTask、rollbackToNode、delegateTask在Mono.deferContextual订阅边界获取非空可信tenant，显式传入事务；Mono.fromRunnable包裹整个事务并subscribeOn(BlockingIoSchedulers.jdbc())，同步回调内不切线程。查询、tenant/id/PENDING/version任务CAS、关联实例校验及后续写入在同一事务完成。关联缺失、任务CAS或关键实例更新/子任务插入非1行均抛错，先前写入整体回滚；delegate原任务保持PENDING，仅竞争并递增版本。没有给Mono方法添加JDBC事务注解，没有引入no-op响应式事务或生产请求链block。Handler既有then/defer事件链继续仅在业务成功后执行。
 
@@ -1891,11 +1891,11 @@ WorkflowService的rejectTask、rollbackToNode、delegateTask在Mono.deferContext
 
 | 实际命令（初始化后） | 结果 | 本机日志 |
 | --- | --- | --- |
-| `mvnd -T4 -B -pl apex-workflow-service -am test -Dtest=WorkflowAtomicityIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | 修复前RED：6项、6失败、0错误/跳过，BUILD FAILURE | `/tmp/apex-workflow-transaction-red-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow-service -am test -Dtest=WorkflowAtomicityIntegrationTest,WorkflowDatabaseHttpIntegrationTest,WorkflowServiceTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | 最终GREEN：原子性9项、数据库HTTP14项、服务单元79项，失败/错误/跳过均0，BUILD SUCCESS | `/tmp/apex-workflow-transaction-green-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow-service -am test` | 783项全部通过，失败/错误/跳过均0，BUILD SUCCESS | `/tmp/apex-workflow-transaction-regression-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow-service -am test -Dtest=WorkflowHandlerIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | Handler集成48项通过，含业务失败原样传播且查询/事件发布器无交互的参数化断言，BUILD SUCCESS | `/tmp/apex-workflow-transaction-handler-20261021.log` |
-| `mvnd -T4 -B -pl apex-workflow,apex-workflow-service spotless:apply spotless:check '-DspotlessFiles=.*(WorkflowService\|WorkflowTaskTransaction\|JdbcWorkflowTaskTransaction\|TaskRepositoryImpl\|ProcessInstanceRepositoryImpl\|WorkflowServiceTest\|WorkflowAtomicityIntegrationTest\|WorkflowDatabaseHttpIntegrationTest)\.java'` | 仅8个本批Java文件，定向格式及检查通过，BUILD SUCCESS | `/tmp/apex-workflow-transaction-spotless-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am test -Dtest=WorkflowAtomicityIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | 修复前RED：6项、6失败、0错误/跳过，BUILD FAILURE | `/tmp/:apex-workflow-transaction-red-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am test -Dtest=WorkflowAtomicityIntegrationTest,WorkflowDatabaseHttpIntegrationTest,WorkflowServiceTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | 最终GREEN：原子性9项、数据库HTTP14项、服务单元79项，失败/错误/跳过均0，BUILD SUCCESS | `/tmp/:apex-workflow-transaction-green-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am test` | 783项全部通过，失败/错误/跳过均0，BUILD SUCCESS | `/tmp/:apex-workflow-transaction-regression-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow-service -am test -Dtest=WorkflowHandlerIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true` | Handler集成48项通过，含业务失败原样传播且查询/事件发布器无交互的参数化断言，BUILD SUCCESS | `/tmp/:apex-workflow-transaction-handler-20261021.log` |
+| `mvnd -T4 -B -pl :apex-workflow,:apex-workflow-service spotless:apply spotless:check '-DspotlessFiles=.*(WorkflowService\|WorkflowTaskTransaction\|JdbcWorkflowTaskTransaction\|TaskRepositoryImpl\|ProcessInstanceRepositoryImpl\|WorkflowServiceTest\|WorkflowAtomicityIntegrationTest\|WorkflowDatabaseHttpIntegrationTest)\.java'` | 仅8个本批Java文件，定向格式及检查通过，BUILD SUCCESS | `/tmp/:apex-workflow-transaction-spotless-20261021.log` |
 
 表格竖线为Markdown转义，shell中使用正则竖线。普通test模块汇总：common539、domain9、api-contract30、job starter11、seata starter24、workflow117、workflow-service53，总783；与定向测试不重复累计。普通test未包含上述IntegrationTest，故显式通过Surefire选中；普通test未跳过JaCoCo，定向测试显式跳过JaCoCo，不代表完整Failsafe/PMD/JaCoCo或全仓verify通过。日志仅在本机/tmp，非持久归档。
 
@@ -1936,7 +1936,7 @@ WorkflowService的rejectTask、rollbackToNode、delegateTask在Mono.deferContext
 
 ### 真实MQ基础设施补验（2026-10-22 15:48）
 
-新增[MqConsumerBrokerIntegrationTest](../../../../apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerBrokerIntegrationTest.java)，真实producer经RocketMQ broker投递，消费回调调用生产MqConsumerService，Redis保存幂等状态，PostgreSQL记录JDBC副作用。每轮独立topic、consumer group、tenant和schema；副作用表不设tenant/message唯一约束，避免数据库约束掩盖handler重复执行。三项分别验证正常持久化、同租户同messageId第二次消费成功但只保留首次副作用、跨租户相同messageId分别落库。
+新增[MqConsumerBrokerIntegrationTest](../../../../apex-shared-parent/apex-infrastructure-messaging/src/test/java/com/apex/scaffold/infrastructure/mq/service/MqConsumerBrokerIntegrationTest.java)，真实producer经RocketMQ broker投递，消费回调调用生产MqConsumerService，Redis保存幂等状态，PostgreSQL记录JDBC副作用。每轮独立topic、consumer group、tenant和schema；副作用表不设tenant/message唯一约束，避免数据库约束掩盖handler重复执行。三项分别验证正常持久化、同租户同messageId第二次消费成功但只保留首次副作用、跨租户相同messageId分别落库。
 
 执行命令（仓库根目录，数据库为隔离验收库）：
 
@@ -1947,7 +1947,7 @@ export APEX_REAL_MQ_INFRA_IT=true \
   APEX_MQ_REDIS=redis://127.0.0.1:41979 \
   APEX_MQ_JDBC_URL=jdbc:postgresql://127.0.0.1:41932/mq_acceptance \
   APEX_MQ_DB_USER=postgres &&
-mvnd -T4 -B -pl apex-infrastructure-messaging -am \
+mvnd -T4 -B -pl :apex-infrastructure-messaging -am \
   test-compile failsafe:integration-test failsafe:verify \
   -Dit.test=MqConsumerBrokerIntegrationTest \
   -Dfailsafe.failIfNoSpecifiedTests=false \
@@ -1964,7 +1964,7 @@ mvnd -T4 -B -pl apex-infrastructure-messaging -am \
 
 本轮恢复隔离NameServer：旧命令`mqnamesrv -p 41976`未提供可用监听，备用`-c /dev/stdin`因Illegal seek失败；改用容器内普通配置文件，未恢复被删除的宿主配置，未删除旧容器。确认Broker注册为AcceptanceCluster / acceptance-broker / BID 0 / 127.0.0.1:41911 / V5_3_1 / ACTIVATED=true。数据库为隔离PostgreSQL库mq_acceptance，Redis为41979端口。
 
-[UserMessageBrokerIntegrationTest](../../../../apex-system/src/test/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageBrokerIntegrationTest.java)使用生产UserMessageListener、MyBatis仓储、租户插件及填充组件。修复测试夹具中的NameServer属性源、消费容器名称与同名Spring singleton注册，以满足ORDERLY回调；未修改生产代码。每轮独立topic/group/tenant/schema，通过消费成功Hook、Redis SUCCESS和欢迎消息/注册审计行数断言验证实际副作用。
+[UserMessageBrokerIntegrationTest](../../../../apex-components-parent/apex-system/src/test/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageBrokerIntegrationTest.java)使用生产UserMessageListener、MyBatis仓储、租户插件及填充组件。修复测试夹具中的NameServer属性源、消费容器名称与同名Spring singleton注册，以满足ORDERLY回调；未修改生产代码。每轮独立topic/group/tenant/schema，通过消费成功Hook、Redis SUCCESS和欢迎消息/注册审计行数断言验证实际副作用。
 
 | 测试类 | Tests | Failures | Errors | Skipped |
 | --- | ---: | ---: | ---: | ---: |
@@ -1983,7 +1983,7 @@ export APEX_REAL_MQ_INFRA_IT=true APEX_REAL_MQ_IT=true \
 export APEX_MQ_DB_USER="$(podman exec apex-mq-db-20261022 sh -c 'printf %s "${POSTGRES_USER:-postgres}"')" \
   APEX_MQ_DB_PASSWORD="$(podman exec apex-mq-db-20261022 sh -c 'printf %s "${POSTGRES_PASSWORD:-}"')" &&
 export APEX_MQ_JDBC_URL="jdbc:postgresql://127.0.0.1:41932/$(podman exec apex-mq-db-20261022 sh -c 'printf %s "$POSTGRES_DB"')" &&
-mvnd -T4 -B -pl apex-infrastructure-messaging,apex-system -am \
+mvnd -T4 -B -pl :apex-infrastructure-messaging,:apex-system -am \
   test-compile failsafe:integration-test failsafe:verify \
   -Dskip.unit.tests=true -Djacoco.skip=true \
   -Dit.test=MqConsumerBrokerIntegrationTest,UserMessageBrokerIntegrationTest \
@@ -2006,7 +2006,7 @@ mvnd -T4 -B -pl apex-infrastructure-messaging,apex-system -am \
 
 故障注入先证明原缺陷：在真实PostgreSQL的sys_operation_log增加仅拒绝“用户注册: 故障注入”的约束，向真实RocketMQ发送注册消息。原实现先提交欢迎消息，再在审计写入失败，Redis状态为FAILED，但欢迎消息残留1条；RED日志为`/tmp/apex-mq-registration-red.log`，测试1项、Failures=1、Errors=0、Skipped=0。
 
-修复新增[UserRegistrationTransaction](../../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/UserRegistrationTransaction.java)，由同一TransactionTemplate在BlockingIoSchedulers.jdbc()中执行两个同步Mapper插入；UserMessageListener的注册分支调用该事务，保留租户上下文恢复和Redis幂等状态语义。修复后真实Broker测试4项、UserMessageListenerTest 6项、LayeringArchTest与NoBoundedElasticArchGuardTest合计7项均通过，失败/错误/跳过均0。绿色日志分别为`/tmp/apex-mq-registration-all-green.log`、`/tmp/apex-mq-registration-green.log`、`/tmp/apex-user-registration-architecture.log`；定向Spotless日志为`/tmp/apex-user-registration-spotless.log`。
+修复新增[UserRegistrationTransaction](../../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/repository/UserRegistrationTransaction.java)，由同一TransactionTemplate在BlockingIoSchedulers.jdbc()中执行两个同步Mapper插入；UserMessageListener的注册分支调用该事务，保留租户上下文恢复和Redis幂等状态语义。修复后真实Broker测试4项、UserMessageListenerTest 6项、LayeringArchTest与NoBoundedElasticArchGuardTest合计7项均通过，失败/错误/跳过均0。绿色日志分别为`/tmp/apex-mq-registration-all-green.log`、`/tmp/apex-mq-registration-green.log`、`/tmp/apex-user-registration-architecture.log`；定向Spotless日志为`/tmp/apex-user-registration-spotless.log`。
 
 实际验证命令均先执行`source scripts/build/init-build-env.sh`，使用固定JDK17.0.12-oracle和mvnd，并为loopback连接设置`-DsocksNonProxyHosts=localhost|127.*|[::1]`；真实Broker验证使用隔离RocketMQ、Redis 41979与PostgreSQL 41932。新增代码后的全仓clean verify已执行：首轮日志`/tmp/apex-full-verify-registration-20261022.log`因UserRegistrationTransaction缺少@author触发ClassMustHaveAuthorRule，按邻近类惯例补齐Apex Team后独占完整重跑。最终日志`/tmp/apex-full-verify-registration-retry-20261022.log`在2026-10-22 21:55:22记录BUILD SUCCESS，31个反应堆项目全部SUCCESS；本轮真实MQ基础设施3项、system消费4项的Failsafe XML均为Failures=0、Errors=0、Skipped=0。Seata AT、office双库布尔迁移与auth MySQL TLS各1项条件跳过，另行补验，不能算该轮通过。全目录XML扫描发现未纳入本轮reactor的apex-interfaces目录中的旧失败报告，时间早于本轮且不在reactor，不能混入本轮统计。未验证注册事务的MySQL行为、完整应用启动、Flyway、Redis与数据库跨资源原子性、崩溃恢复、DLQ或可靠消息闭环；未commit/push。
 
@@ -2014,9 +2014,9 @@ mvnd -T4 -B -pl apex-infrastructure-messaging,apex-system -am \
 
 ### Auth TLS、Office双库与Seata AT条件项补验（2026-10-22）
 
-Auth：启用`APEX_AUTH_MYSQL_TLS_IT=true`，使用固定构建环境执行`mvnd -T4 -B -pl apex-auth-service -am -Dit.test=AuthMySqlTlsContractIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false verify`。真实MySQL的tls、no-tls、tls-required三场景实际执行3项，Failures/Errors/Skipped均0，2026-10-22 22:04:44 BUILD SUCCESS；日志`/tmp/apex-auth-tls-followup-20261022.log`。验证生产配置绑定及真实JDBC/R2DBC驱动TLS策略，不证明生产证书身份校验或完整Auth应用启动。
+Auth：启用`APEX_AUTH_MYSQL_TLS_IT=true`，使用固定构建环境执行`mvnd -T4 -B -pl :apex-auth-service -am -Dit.test=AuthMySqlTlsContractIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false verify`。真实MySQL的tls、no-tls、tls-required三场景实际执行3项，Failures/Errors/Skipped均0，2026-10-22 22:04:44 BUILD SUCCESS；日志`/tmp/:apex-auth-tls-followup-20261022.log`。验证生产配置绑定及真实JDBC/R2DBC驱动TLS策略，不证明生产证书身份校验或完整Auth应用启动。
 
-Office首轮真实MySQL/PostgreSQL运行2项均失败，日志`/tmp/apex-office-real-db-followup-20261022.log`。失败位于跨租户workflow_code插入应抛异常的旧断言；核对两种数据库V3迁移及WorkflowDualDatabaseIntegrationTest，当前契约明确允许跨租户同键。仅修复OfficeWorkflowBooleanIntegrationTest并将方法命名改为TenantWorkflowKeys：显式断言跨租户定义/实例同键成功，同租户重复必须触发SQLState 23完整性错误，COMPLETED/REJECTED/TERMINATED且未删除的实例仍占用同租户业务键。未修改历史迁移或生产逻辑。修复后首轮2项均通过，但verify因测试文件格式失败，日志`/tmp/apex-office-real-db-retry-20261022.log`；定向Spotless apply命令未实际匹配文件；按Spotless差异手工补齐格式，第二次verify仍有一处换行不符（日志`/tmp/apex-office-real-db-final-20261022.log`，双库2项仍通过），继续按精确差异修正。最终定向verify于2026-10-22 22:33:44 BUILD SUCCESS，日志`/tmp/apex-office-real-db-confirmed-20261022.log`；最新Failsafe XML确认MySQL/PostgreSQL共2项，Failures/Errors/Skipped均0，耗时7.766秒，Spotless/PMD/JaCoCo等该次verify门禁通过。命令为`mvnd -T4 -B -pl apex-office-service -am -Dit.test=OfficeWorkflowBooleanIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false -Dapex.office.real-db=true -Dapex.office.mysql.container=apex-contract-mysql-20261022 -Dapex.office.postgresql.container=apex-mq-db-20261022 verify`，先加载固定构建环境。验证四布尔列V3→V4规范化、默认0、拒绝NULL、0/1更新及当前workflow租户唯一键；不是生产存量升级或完整Office服务启动。
+Office首轮真实MySQL/PostgreSQL运行2项均失败，日志`/tmp/:apex-office-real-db-followup-20261022.log`。失败位于跨租户workflow_code插入应抛异常的旧断言；核对两种数据库V3迁移及WorkflowDualDatabaseIntegrationTest，当前契约明确允许跨租户同键。仅修复OfficeWorkflowBooleanIntegrationTest并将方法命名改为TenantWorkflowKeys：显式断言跨租户定义/实例同键成功，同租户重复必须触发SQLState 23完整性错误，COMPLETED/REJECTED/TERMINATED且未删除的实例仍占用同租户业务键。未修改历史迁移或生产逻辑。修复后首轮2项均通过，但verify因测试文件格式失败，日志`/tmp/:apex-office-real-db-retry-20261022.log`；定向Spotless apply命令未实际匹配文件；按Spotless差异手工补齐格式，第二次verify仍有一处换行不符（日志`/tmp/:apex-office-real-db-final-20261022.log`，双库2项仍通过），继续按精确差异修正。最终定向verify于2026-10-22 22:33:44 BUILD SUCCESS，日志`/tmp/:apex-office-real-db-confirmed-20261022.log`；最新Failsafe XML确认MySQL/PostgreSQL共2项，Failures/Errors/Skipped均0，耗时7.766秒，Spotless/PMD/JaCoCo等该次verify门禁通过。命令为`mvnd -T4 -B -pl :apex-office-service -am -Dit.test=OfficeWorkflowBooleanIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false -Dapex.office.real-db=true -Dapex.office.mysql.container=:apex-contract-mysql-20261022 -Dapex.office.postgresql.container=:apex-mq-db-20261022 verify`，先加载固定构建环境。验证四布尔列V3→V4规范化、默认0、拒绝NULL、0/1更新及当前workflow租户唯一键；不是生产存量升级或完整Office服务启动。
 
 Seata AT：Office verify成功后独占执行`APEX_SEATA_IT_MYSQL_CONTAINER=apex-contract-mysql-20261022 APEX_SEATA_IT_TC_IMAGE=docker.io/apache/seata-server:2.2.0 bash scripts/test/verify-seata-at.sh`（该脚本已于后续改造中删除，现由 `SeataRealCluster` 扩展在测试进程内编排同一环境，入口为 `APEX_SEATA_IT=true mvnd -B -f apex-seata-spring-boot-starter/pom.xml verify`）。脚本以真实TC 2.2.0、两个隔离MySQL库和两个HTTP分支验证全局提交与故障回滚；2026-10-22 22:34:34 BUILD SUCCESS，日志`/tmp/apex-seata-at-followup-20261022.log`。最新SeataAtIntegrationTest XML为1项、Failures/Errors/Skipped均0、耗时3.381秒；starter单元测试24项均通过。脚本报告本次隔离TC、双测试库及账号已清理，串联命令自然退出0；共享测试MySQL及既有MQ基础设施不删除。日志仍包含ConfigurationProvider加载诊断及PMD阶段aktStatus诊断，不将BUILD SUCCESS描述为日志无ERROR；未抑制门禁。本结果仅证明该AT测试场景，不替代TCC/SAGA/XA、生产部署或完整跨服务业务链验收。
 
@@ -2030,9 +2030,9 @@ Seata AT：Office verify成功后独占执行`APEX_SEATA_IT_MYSQL_CONTAINER=apex
 
 范围：完成tenant+consumer+eventId的消费幂等作用域，不改变Redis与业务数据库的资源边界。MqConsumerService强制传入实际消费组，三维分别UTF-8 Base64URL无填充编码，两个生产listener使用与RocketMQ注解一致的消费组常量，所有受影响调用与测试同步迁移。空consumer及空白tenant在Redis访问前拒绝；原TTL、CAS及FAILED重试策略保持不变。
 
-RED：固定Oracle17.0.12-oracle/mvnd2.0.0-rc-3，每次先`source scripts/build/init-build-env.sh`，执行`mvnd -T4 -B -pl apex-infrastructure-messaging -am '-Dtest=MqConsumerServiceTest#shouldRejectBlankTenantBeforeRedisAccess' -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test`，1项断言失败、0错误、0跳过，日志`/tmp/apex-mq-scope-red.log`；再以`shouldNotSuppressAnotherConsumerOfSameEvent`替换方法选择器复现跨consumer抑制，1项断言失败、0错误、0跳过，日志`/tmp/apex-mq-scope-core-red.log`。修复后GREEN三类测试共34项通过，日志`/tmp/apex-mq-scope-green.log`。
+RED：固定Oracle17.0.12-oracle/mvnd2.0.0-rc-3，每次先`source scripts/build/init-build-env.sh`，执行`mvnd -T4 -B -pl :apex-infrastructure-messaging -am '-Dtest=MqConsumerServiceTest#shouldRejectBlankTenantBeforeRedisAccess' -Dsurefire.failIfNoSpecifiedTests=false -Djacoco.skip=true test`，1项断言失败、0错误、0跳过，日志`/tmp/:apex-mq-scope-red.log`；再以`shouldNotSuppressAnotherConsumerOfSameEvent`替换方法选择器复现跨consumer抑制，1项断言失败、0错误、0跳过，日志`/tmp/:apex-mq-scope-core-red.log`。修复后GREEN三类测试共34项通过，日志`/tmp/:apex-mq-scope-green.log`。
 
-定向verify：启用`APEX_REAL_MQ_INFRA_IT=true`与`APEX_REAL_MQ_IT=true`，使用既有真实RocketMQ、Redis、PostgreSQL测试设施及本地非敏感连接配置；执行`mvnd -T4 -B -pl apex-system -am -Dtest=MqConsumerServiceTest,NotificationBroadcastListenerTest,UserMessageListenerTest -Dit.test=MqConsumerBrokerIntegrationTest,UserMessageBrokerIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false -Djacoco.skip=true '-DspotlessFiles=.*(MqConsumerService|NotificationBroadcastListener|UserMessageListener|MqConsumerServiceTest|NotificationBroadcastListenerTest|UserMessageListenerTest|MqConsumerBrokerIntegrationTest|UserMessageBrokerIntegrationTest)\.java' verify`。2026-10-23 06:51:05完成，10个reactor项目BUILD SUCCESS；messaging单测28项、system单测6项，真实基础设施IT3项及用户消费IT4项，Failures/Errors/Skipped均0。日志`/tmp/apex-mq-scope-verify.log`。真实测试覆盖两个consumer对同事件各产生一次JDBC副作用、同consumer重复抑制、租户隔离及原有用户注册失败回滚。限定范围Spotless及PMD check通过，PMD仍有maximum Iterations exceeded诊断；未描述为无ERROR日志。
+定向verify：启用`APEX_REAL_MQ_INFRA_IT=true`与`APEX_REAL_MQ_IT=true`，使用既有真实RocketMQ、Redis、PostgreSQL测试设施及本地非敏感连接配置；执行`mvnd -T4 -B -pl :apex-system -am -Dtest=MqConsumerServiceTest,NotificationBroadcastListenerTest,UserMessageListenerTest -Dit.test=MqConsumerBrokerIntegrationTest,UserMessageBrokerIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false -Dfailsafe.failIfNoSpecifiedTests=false -Djacoco.skip=true '-DspotlessFiles=.*(MqConsumerService|NotificationBroadcastListener|UserMessageListener|MqConsumerServiceTest|NotificationBroadcastListenerTest|UserMessageListenerTest|MqConsumerBrokerIntegrationTest|UserMessageBrokerIntegrationTest)\.java' verify`。2026-10-23 06:51:05完成，10个reactor项目BUILD SUCCESS；messaging单测28项、system单测6项，真实基础设施IT3项及用户消费IT4项，Failures/Errors/Skipped均0。日志`/tmp/:apex-mq-scope-verify.log`。真实测试覆盖两个consumer对同事件各产生一次JDBC副作用、同consumer重复抑制、租户隔离及原有用户注册失败回滚。限定范围Spotless及PMD check通过，PMD仍有maximum Iterations exceeded诊断；未描述为无ERROR日志。
 
 边界：显式跳过JaCoCo，未运行全仓clean verify或完整应用部署E2E。新旧幂等键不互认，未验证生产滚动升级、历史幂等状态迁移或安全混部，发布前必须明确停消费、在途排空与重复事件处置。Redis/DB一致性、崩溃恢复、租约续期/fencing、DLQ租户归属及Outbox可靠消息闭环不据此关闭。未commit/push，未删除既有容器。
 
@@ -2046,9 +2046,9 @@ RED：固定Oracle17.0.12-oracle/mvnd2.0.0-rc-3，每次先`source scripts/build
 
 RED：DeadLetterQueueProcessorTest为14项、3失败、0错误、0跳过，复现旧租户未被消息租户覆盖、空上下文没有安装租户及非法租户仍进入业务处理器。UserMessageDlqHandlerTest补齐append Mock后为3项、1失败、0错误、0跳过，证明缺租户仍写入Outbox。首次GREEN尝试中空白属性被RocketMQ的putUserProperty提前拒绝，改用Mock模拟非法消息属性，保留全部非法输入断言。
 
-GREEN：每次先`source scripts/build/init-build-env.sh`，使用Oracle17.0.12-oracle和mvnd2.0.0-rc-3，执行`mvnd -T4 -B -pl apex-infrastructure-messaging -am -Dtest=DeadLetterQueueProcessorTest,UserMessageDlqHandlerTest -Dsurefire.failIfNoSpecifiedTests=false test`，17项全部通过、无跳过。该次旧JaCoCo执行数据存在类不匹配告警，未作为干净覆盖率结论。
+GREEN：每次先`source scripts/build/init-build-env.sh`，使用Oracle17.0.12-oracle和mvnd2.0.0-rc-3，执行`mvnd -T4 -B -pl :apex-infrastructure-messaging -am -Dtest=DeadLetterQueueProcessorTest,UserMessageDlqHandlerTest -Dsurefire.failIfNoSpecifiedTests=false test`，17项全部通过、无跳过。该次旧JaCoCo执行数据存在类不匹配告警，未作为干净覆盖率结论。
 
-干净门禁：执行`mvnd -T4 -B -pl apex-infrastructure-messaging -am clean verify`；首次因本批两处排版被Spotless阻断，仅对四个本批文件执行spotless:apply后重跑相同命令，5个reactor项目全部BUILD SUCCESS。common单测539项、domain单测9项、persistence单测83项，均Failures/Errors/Skipped=0；messaging单测115项、跳过10项（MessageOutboxDialectTest四项及DomainEventOutboxDialectTest六项），Failsafe五项、跳过三项（MqConsumerBrokerIntegrationTest），Failures/Errors均0。条件跳过不计通过。本轮未传jacoco.skip，覆盖率检查及Spotless通过；PMD check通过，但仍输出maximum Iterations exceeded诊断，不宣称扫描无错误日志。本轮是五项目范围门禁，不是全仓回归。
+干净门禁：执行`mvnd -T4 -B -pl :apex-infrastructure-messaging -am clean verify`；首次因本批两处排版被Spotless阻断，仅对四个本批文件执行spotless:apply后重跑相同命令，5个reactor项目全部BUILD SUCCESS。common单测539项、domain单测9项、persistence单测83项，均Failures/Errors/Skipped=0；messaging单测115项、跳过10项（MessageOutboxDialectTest四项及DomainEventOutboxDialectTest六项），Failsafe五项、跳过三项（MqConsumerBrokerIntegrationTest），Failures/Errors均0。条件跳过不计通过。本轮未传jacoco.skip，覆盖率检查及Spotless通过；PMD check通过，但仍输出maximum Iterations exceeded诊断，不宣称扫描无错误日志。本轮是五项目范围门禁，不是全仓回归。
 
 边界：未执行真实Broker重试转DLQ再入持久化Outbox的验收，未证明tenantId及原Topic属性在Broker转投过程中保留。可信生产者身份、头体租户一致性、重复重放及可靠消息闭环不据此关闭；无Handler时ACK丢弃策略保持既有契约。P0未准出，Java21未切换，D01–D07不代定；未commit/push，未删除既有容器。
 
@@ -2058,7 +2058,7 @@ GREEN：每次先`source scripts/build/init-build-env.sh`，使用Oracle17.0.12-
 
 执行前核查：`source scripts/build/init-build-env.sh`确认JDK 17.0.12-oracle、mvnd 2.0.0-rc-3加载正常，未漂移。核查此前报告中提及的podman基础设施容器（`apex-mq-namesrv-20261022`、`apex-mq-redis-20261022`、`apex-mq-db-20261022`、`apex-mq-broker-20261024`、`apex-mq-ns-20261024`）均为`Up`状态，端口映射正常，数据卷未受影响。
 
-命令：`mvnd -T4 -B clean verify`，完整日志`/tmp/apex-reverify-20261024-run2.log`（28971行）。首次尝试（日志`/tmp/apex-reverify-20261024.log`）在`apex-infrastructure-cache`的`InFlightRequestMergeTest.shouldRemoveEntryAfterCompletion`出现1项断言失败（`expected: 0, but was: 1`）；该测试与对应源码`InFlightRequestMerge.java`均为未跟踪新文件（`git status`显示`??`，无历史可比对）。单独重跑同一测试5次（`mvnd -pl apex-infrastructure-cache test -Dtest=InFlightRequestMergeTest`）全部4/4通过，判定为`-T4`并行构建下4模块同时编译测试的CPU争用导致`delayElement(10ms)`计时敏感断言偶发flake，非真实回归，与项目规则记录的计时敏感测试flake模式一致；未修改任何源码。
+命令：`mvnd -T4 -B clean verify`，完整日志`/tmp/:apex-reverify-20261024-run2.log`（28971行）。首次尝试（日志`/tmp/:apex-reverify-20261024.log`）在`:apex-infrastructure-cache`的`InFlightRequestMergeTest.shouldRemoveEntryAfterCompletion`出现1项断言失败（`expected: 0, but was: 1`）；该测试与对应源码`InFlightRequestMerge.java`均为未跟踪新文件（`git status`显示`??`，无历史可比对）。单独重跑同一测试5次（`mvnd -pl :apex-infrastructure-cache test -Dtest=InFlightRequestMergeTest`）全部4/4通过，判定为`-T4`并行构建下4模块同时编译测试的CPU争用导致`delayElement(10ms)`计时敏感断言偶发flake，非真实回归，与项目规则记录的计时敏感测试flake模式一致；未修改任何源码。
 
 结果：2026-10-24 16:29:07 BUILD SUCCESS，31个reactor模块全部SUCCESS（apex-system 9分20秒、apex-auth-service 5分46秒、apex-workflow-service 5分6秒为耗时最长的三个模块），总耗时17:54 min。全局统计（按每行"Tests run/Failures/Errors/Skipped"文本累加，含测试类级与模块汇总级重复计数）：run=10778，fail=0，err=0，skip=42；按模块汇总行去重后真实跳过21项，明细与此前各轮定向补验记录完全吻合：
 - `MessageOutboxDialectTest`（4项）+`DomainEventOutboxDialectTest`（6项）：方言矩阵条件跳过
@@ -2086,13 +2086,13 @@ GREEN：每次先`source scripts/build/init-build-env.sh`，使用Oracle17.0.12-
 
 ### 真实Broker端到端验证：消费耗尽重试→原生死信转发→DLQ处理器写回Outbox（2026-10-24）
 
-范围：补齐42.19及43节反复记录的"未执行真实Broker端到端验证"边界，实际执行`UserMessageBrokerIntegrationTest`（[测试源码](../../../../apex-system/src/test/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageBrokerIntegrationTest.java)）全部5项真实Broker用例，核心目标是验证"消费失败耗尽重试→RocketMQ Broker真实原生转发死信→`DeadLetterQueueProcessor`+`UserMessageDlqHandler`写回`sys_message_outbox`"完整闭环，并确认`tenantId`、原始`topic`在Broker转投过程中原样保留。
+范围：补齐42.19及43节反复记录的"未执行真实Broker端到端验证"边界，实际执行`UserMessageBrokerIntegrationTest`（[测试源码](../../../../apex-components-parent/apex-system/src/test/java/com/apex/scaffold/infrastructure/mq/listener/UserMessageBrokerIntegrationTest.java)）全部5项真实Broker用例，核心目标是验证"消费失败耗尽重试→RocketMQ Broker真实原生转发死信→`DeadLetterQueueProcessor`+`UserMessageDlqHandler`写回`sys_message_outbox`"完整闭环，并确认`tenantId`、原始`topic`在Broker转投过程中原样保留。
 
 基础设施恢复：`podman ps`核查发现此前记录为`Up`的5个容器（`apex-mq-namesrv-20261022`、`apex-mq-redis-20261022`、`apex-mq-db-20261022`、`apex-mq-broker-20261024`、`apex-mq-ns-20261024`）在本轮启动时均为`Exited`。核对容器创建参数后确认`apex-mq-ns-20261024`+`apex-mq-broker-20261024`为同批配套（容器名`namesrv`在自定义podman网络`apex-mq-net`内可被broker解析），执行`podman start`恢复四个所需容器（namesrv、broker、redis、postgres）为`Up`。`apex-mq-broker-20261024`容器Entrypoint为占位`sleep 3600`，内部RocketMQ broker进程未运行，需手动以`sh bin/mqbroker -n namesrv:9876 -c conf/broker.conf`启动。
 
 网络问题与修复：首次手动启动broker后，从宿主机执行测试在`sendOrderly`阶段全部5项均报`RemotingSendRequestException: send request to </10.89.4.3:10911> failed`。核查`podman port`/`podman inspect`确认根因：broker容器的`10911`/`10912`（RocketMQ客户端服务端口）未映射到宿主机，仅`47911`/`47912`两个与RocketMQ无关的预留端口有`127.0.0.1`映射；broker以默认配置启动时向namesrv注册的是容器内部网络IP（`10.89.4.3:10911`），namesrv将该地址原样下发给宿主机客户端，宿主机进程无法路由到podman内部网络IP。修复方式：停止broker进程，在`broker.conf`追加`brokerIP1 = 127.0.0.1`、`listenPort = 47911`、`haListenPort = 47912`，让broker复用已映射到宿主机的端口并上报宿主机可达地址，重启后日志确认`The broker[broker-a, 127.0.0.1:47911] boot success`。
 
-执行：`source scripts/build/init-build-env.sh`加载JDK 17.0.12-oracle、mvnd 2.0.0-rc-3后，设置`APEX_REAL_MQ_IT=true`、`APEX_MQ_NAMESRV=127.0.0.1:41981`、`APEX_MQ_REDIS=redis://127.0.0.1:41979`、`APEX_MQ_JDBC_URL=jdbc:postgresql://127.0.0.1:41932/mq_acceptance`、`APEX_MQ_DB_USER=postgres`、`APEX_MQ_DB_PASSWORD=''`，执行`mvnd -T1 -B -pl apex-system -am -Dtest=UserMessageBrokerIntegrationTest -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false test`，完整日志保存于`/tmp/apex-real-mq-it-20261024-v2.log`。结果：8个依赖模块（common、license-starter、domain、infrastructure-persistence/cache/messaging/remote/integration）全部SUCCESS，`apex-system`模块`Tests run: 5, Failures: 0, Errors: 0, Skipped: 0`，耗时37.33s，reactor整体`BUILD SUCCESS`。
+执行：`source scripts/build/init-build-env.sh`加载JDK 17.0.12-oracle、mvnd 2.0.0-rc-3后，设置`APEX_REAL_MQ_IT=true`、`APEX_MQ_NAMESRV=127.0.0.1:41981`、`APEX_MQ_REDIS=redis://127.0.0.1:41979`、`APEX_MQ_JDBC_URL=jdbc:postgresql://127.0.0.1:41932/mq_acceptance`、`APEX_MQ_DB_USER=postgres`、`APEX_MQ_DB_PASSWORD=''`，执行`mvnd -T1 -B -pl :apex-system -am -Dtest=UserMessageBrokerIntegrationTest -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false test`，完整日志保存于`/tmp/:apex-real-mq-it-20261024-v2.log`。结果：8个依赖模块（common、license-starter、domain、infrastructure-persistence/cache/messaging/remote/integration）全部SUCCESS，`:apex-system`模块`Tests run: 5, Failures: 0, Errors: 0, Skipped: 0`，耗时37.33s，reactor整体`BUILD SUCCESS`。
 
 关键用例`exhaustedReconsumeProducesNaturalDeadLetterPersistedToOutbox`真实日志证据：消息`240882140243A64011101015AEECF79137F8251A69D77A2F4A990002`（租户`f-21563dcd80684b0b855604b0eb8dfdba`）故障注入触发消费失败后，经真实Broker顺序重试4轮（`reconsumeTimes:0→1→2→3`）耗尽，被Broker原生转发至`%DLQ%apex_user_it_group_21563dcd80684b0b855604b0eb8dfdba`；`DeadLetterQueueProcessor`收到后日志确认"[DLQ] 收到死信消息...reconsumeTimes: 4"，交由`UserMessageDlqHandler`处理，日志确认"死信消息已重新写入Outbox"及"[DLQ] 死信消息处理成功"。另一独立故障注入场景（租户`e-21563dcd80684b0b855604b0eb8dfdba`）同样触发`DataIntegrityViolationException`（check constraint `registration_failure_injection`）并进入消费失败路径，验证了测试用例内多租户故障注入场景互不干扰。5项测试断言（含tenantId、原topic在Broker转投后保留的断言）均无失败。
 
@@ -2114,7 +2114,7 @@ GREEN：每次先`source scripts/build/init-build-env.sh`，使用Oracle17.0.12-
 
 执行：`podman-compose -f podman-compose.yml --profile rocketmq up -d rocketmq-namesrv rocketmq-broker`解析整份compose文件时因顶层`APEX_DATA_ENCRYPTION_KEY`等五个YAML锚点必填密钥变量未设置而报`required variable ... is missing a value`；该校验是既有安全机制（防止业务服务用默认值启动），与本次改动无关，不应绕过设计本身，故在shell临时`export`五个仅用于满足解析期校验的占位值（`rocketmq-namesrv`/`rocketmq-broker`两个service的`environment`块未引用这些变量，不影响其实际配置）后重新执行，创建全新容器`apex-scaffold_rocketmq-namesrv_1`、`apex-scaffold_rocketmq-broker_1`。日志确认`The broker[broker-a, 127.0.0.1:10911] boot success`，`podman exec`确认自动生成的配置文件含`brokerIP1=127.0.0.1`，证明`podman-compose.yml`文件本身（非仅`infra.yml`）在真实重建流程下同样生效。
 
-随后以该新建容器为Broker端点，`source scripts/build/init-build-env.sh`后另行显式导出`JAVA_HOME=/Users/eric/.sdkman/candidates/java/17.0.12-oracle`（核查发现`~/.sdkman/candidates/java/current`符号链接当前漂移至GraalVM 21，`sdk env`回显声明版本但未真正切换shell的`JAVA_HOME`/`PATH`，与AGENTS.md"禁止依赖current"的记录一致，显式指定绝对路径后`java -version`/`mvnd --version`确认均为17.0.12-oracle），设置`APEX_REAL_MQ_IT=true`、`APEX_MQ_NAMESRV=127.0.0.1:9876`、`APEX_MQ_REDIS=redis://127.0.0.1:41979`、`APEX_MQ_JDBC_URL=jdbc:postgresql://127.0.0.1:41932/mq_acceptance`等复用既有手动Redis/PostgreSQL测试容器，执行`mvnd -T1 -B -pl apex-system -am -Dtest=UserMessageBrokerIntegrationTest test`，日志`/tmp/apex-real-mq-it-20261024-compose-verify.log`。结果：`Tests run: 5, Failures: 0, Errors: 0, Skipped: 0`，`BUILD SUCCESS`；日志中出现的`dlq_failure_injection`/`registration_failure_injection`相关`ERROR`行是测试用例故障注入断言的预期产物，非真实失败。证明固化进`podman-compose.yml`的网络修复在全新创建、未经任何手动干预的容器上，完整支撑了消费失败耗尽重试→Broker真实原生死信转发→`UserMessageDlqHandler`写回Outbox的端到端闭环，不止是broker启动成功这一项。
+随后以该新建容器为Broker端点，`source scripts/build/init-build-env.sh`后另行显式导出`JAVA_HOME=/Users/eric/.sdkman/candidates/java/17.0.12-oracle`（核查发现`~/.sdkman/candidates/java/current`符号链接当前漂移至GraalVM 21，`sdk env`回显声明版本但未真正切换shell的`JAVA_HOME`/`PATH`，与AGENTS.md"禁止依赖current"的记录一致，显式指定绝对路径后`java -version`/`mvnd --version`确认均为17.0.12-oracle），设置`APEX_REAL_MQ_IT=true`、`APEX_MQ_NAMESRV=127.0.0.1:9876`、`APEX_MQ_REDIS=redis://127.0.0.1:41979`、`APEX_MQ_JDBC_URL=jdbc:postgresql://127.0.0.1:41932/mq_acceptance`等复用既有手动Redis/PostgreSQL测试容器，执行`mvnd -T1 -B -pl :apex-system -am -Dtest=UserMessageBrokerIntegrationTest test`，日志`/tmp/:apex-real-mq-it-20261024-compose-verify.log`。结果：`Tests run: 5, Failures: 0, Errors: 0, Skipped: 0`，`BUILD SUCCESS`；日志中出现的`dlq_failure_injection`/`registration_failure_injection`相关`ERROR`行是测试用例故障注入断言的预期产物，非真实失败。证明固化进`podman-compose.yml`的网络修复在全新创建、未经任何手动干预的容器上，完整支撑了消费失败耗尽重试→Broker真实原生死信转发→`UserMessageDlqHandler`写回Outbox的端到端闭环，不止是broker启动成功这一项。
 
 验证后执行`podman stop`+`podman rm`清理`apex-scaffold_rocketmq-namesrv_1`/`apex-scaffold_rocketmq-broker_1`两个隔离验证容器，确认清理完整（`podman ps -a`无残留）。清理过程中发现既有手动容器`apex-mq-broker-20261024`已于验证窗口期内变为`Exited`——核查确认该容器`Entrypoint`固定为占位`sleep 3600`（内部真正运行的RocketMQ broker进程是此前另行手动以`sh bin/mqbroker`启动，依附于该容器生命周期），启动于17:14:57，整一小时后于19:10:18自然到期退出，与本轮`podman stop`/`rm`命令（仅针对`apex-scaffold_rocketmq-*`命名的容器）无关，纯属时间窗口重叠；该容器内此前手动启动的broker进程随容器退出已同步终止，未恢复，留待用户确认是否需要重新拉起。
 
@@ -2128,7 +2128,7 @@ GREEN：每次先`source scripts/build/init-build-env.sh`，使用Oracle17.0.12-
 | --- | --- |
 | 定向单测/集成：GeneratorTaskServiceTest 13、GeneratorWizardServiceTest 18、GeneratorTaskSchedulerTest 9、GeneratorServicesTest 4、GenTaskMapperSqlContractTest 4、TenantEntityTest 20、PasswordRecoveryHandlerIntegrationTest 9、GatewayRouteProfileConfigTest 3、OfficeFlywayMigrationTest 5 | 全部 Failures 0 / Errors 0，BUILD SUCCESS；JDK 21.0.13.0+9-tem + mvnd 2.0.0-rc-3 固定环境 |
 | apex-workflow 全模块 test | 164 项，Failures 0 / Errors 0 |
-| `mvnd -T4 -B -pl apex-gateway,apex-system,apex-workflow,apex-office-service,apex-auth-service -am verify`，2026-10-31 12:30:37 +08:00 自然退出 0 | 20 个反应堆项目全部 SUCCESS；Surefire 汇总 4944 项（失败/错误 0，跳过 10 为 messaging 真实 MQ 门控）；Failsafe 汇总 227 项（失败/错误 0，跳过 10：system 5 含真实 Seata TC 门控、messaging 3 真实 MQ、office-service 1、auth-service 1 TLS 门控）；Spotless、PMD/p3c、JaCoCo 通过；`git diff --check` 无空白错误 |
+| `mvnd -T4 -B -pl :apex-gateway,:apex-system,:apex-workflow,:apex-office-service,:apex-auth-service -am verify`，2026-10-31 12:30:37 +08:00 自然退出 0 | 20 个反应堆项目全部 SUCCESS；Surefire 汇总 4944 项（失败/错误 0，跳过 10 为 messaging 真实 MQ 门控）；Failsafe 汇总 227 项（失败/错误 0，跳过 10：system 5 含真实 Seata TC 门控、messaging 3 真实 MQ、office-service 1、auth-service 1 TLS 门控）；Spotless、PMD/p3c、JaCoCo 通过；`git diff --check` 无空白错误 |
 | 前端 vue-tsc --noEmit / vitest run / npm run build | 类型检查通过；44/44 通过（含新增 generator.test.ts 7 项、message.test.ts 扩展 3 项）；生产构建成功 |
 
 边界：受影响反应堆 verify 不等于全仓 clean verify（未含 file/example/generator/tools 等无关模块）；surefire/failsafe 汇总数为各模块 TEST-*.xml 直接求和，未与插件逐行输出二次核对；调度器租户桥接修复未在真实企业档 MySQL/PostgreSQL 环境联调；前端新页面与真实后端联调未执行；V71 注释前缀保留不改。P0未准出；未commit/push。

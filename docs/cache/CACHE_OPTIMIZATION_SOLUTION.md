@@ -57,14 +57,14 @@ Apex Scaffold 采用 Spring WebFlux + Caffeine + Redisson 的多级缓存架构�
 
 | 组件 | 路径 | 职责 |
 |---|---|---|
-| `MultiLevelCacheService` | [apex-infrastructure/.../cache/service/MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 多级缓存核心服务：L1+L2 读写、回源、空值标记、Single-Flight |
-| `LocalCacheService` | [apex-infrastructure/.../cache/service/LocalCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) | L1 Caffeine 实现，带独立 TTL 跟踪 |
-| `CacheServiceImpl` | [apex-infrastructure/.../cache/service/CacheServiceImpl.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java) | L2 Redis 单层缓存（实现 `CacheService` 接口） |
-| `CacheConsistencyService` | [apex-infrastructure/.../cache/service/CacheConsistencyService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) | 一致性服务，带 TTL jitter、空值标记、Single-Flight |
-| `InFlightRequestMerge` | [apex-infrastructure/.../cache/support/InFlightRequestMerge.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) | Single-Flight 请求合并器（进程内） |
-| `CacheLockAspect` + `@CacheLock` | [apex-infrastructure/.../cache/aspect/CacheLockAspect.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 基于 Redisson 的分布式锁切面 |
-| `MultiLevelCacheConfig` | [apex-infrastructure/.../cache/config/MultiLevelCacheConfig.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfig.java) | Caffeine CacheManager 配置 |
-| `CacheProperties` | [apex-infrastructure/.../cache/config/CacheProperties.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 读降级配置（`apex.cache.read-degradation`） |
+| `MultiLevelCacheService` | [apex-infrastructure/.../cache/service/MultiLevelCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 多级缓存核心服务：L1+L2 读写、回源、空值标记、Single-Flight |
+| `LocalCacheService` | [apex-infrastructure/.../cache/service/LocalCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/LocalCacheService.java) | L1 Caffeine 实现，带独立 TTL 跟踪 |
+| `CacheServiceImpl` | [apex-infrastructure/.../cache/service/CacheServiceImpl.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheServiceImpl.java) | L2 Redis 单层缓存（实现 `CacheService` 接口） |
+| `CacheConsistencyService` | [apex-infrastructure/.../cache/service/CacheConsistencyService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java) | 一致性服务，带 TTL jitter、空值标记、Single-Flight |
+| `InFlightRequestMerge` | [apex-infrastructure/.../cache/support/InFlightRequestMerge.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java) | Single-Flight 请求合并器（进程内） |
+| `CacheLockAspect` + `@CacheLock` | [apex-infrastructure/.../cache/aspect/CacheLockAspect.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 基于 Redisson 的分布式锁切面 |
+| `MultiLevelCacheConfig` | [apex-infrastructure/.../cache/config/MultiLevelCacheConfig.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/MultiLevelCacheConfig.java) | Caffeine CacheManager 配置 |
+| `CacheProperties` | [apex-infrastructure/.../cache/config/CacheProperties.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 读降级配置（`apex.cache.read-degradation`） |
 
 ### 2.2 现有防护机制评估
 
@@ -103,7 +103,7 @@ return Mono.fromCallable(() -> {
 
 **影响**：批量写入相同 TTL 的 key 时，所有 key 在同一时刻过期，可能引发缓存雪崩。
 
-**对比**：`CacheConsistencyService.put()` 已应用 ±10% jitter（[CacheConsistencyService.java#L118](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java#L118)），但 `MultiLevelCacheService` 未对齐。
+**对比**：`CacheConsistencyService.put()` 已应用 ±10% jitter（[CacheConsistencyService.java#L118](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/CacheConsistencyService.java#L118)），但 `MultiLevelCacheService` 未对齐。
 
 #### 缺陷 2：`MultiLevelCacheService.setEmptyMarker()` 未应用 jitter
 
@@ -484,7 +484,7 @@ private String resolveFilterName(String key) {
 - 终态语义明确（成功/空值/错误）
 - `doFinally` 精确移除条目，避免误删
 
-详见 [InFlightRequestMerge.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java)。
+详见 [InFlightRequestMerge.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/support/InFlightRequestMerge.java)。
 
 ### 5.2 分布式锁增强（多实例场景）
 
@@ -1088,10 +1088,10 @@ public class CacheMetricsCollector {
 
 | 步骤 | 文件 | 改动 |
 |---|---|---|
-| 1.1 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `set()` 与 `setEmptyMarker()` 应用 TTL jitter；新增 `jitter()` 工具方法 |
-| 1.2 | [CacheProperties.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 新增 `jitter`、`empty`、`lock` 配置组 |
-| 1.3 | [application.yml](../../apex-system/src/main/resources/application.yml) | 补充 `apex.cache.jitter.factor`、`apex.cache.empty.ttl`、`apex.cache.empty.jitter-factor` 默认值 |
-| 1.4 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | L2 操作增加 `onErrorResume` 处理 Redis 异常，切到 L1-only 模式 |
+| 1.1 | [MultiLevelCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `set()` 与 `setEmptyMarker()` 应用 TTL jitter；新增 `jitter()` 工具方法 |
+| 1.2 | [CacheProperties.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/config/CacheProperties.java) | 新增 `jitter`、`empty`、`lock` 配置组 |
+| 1.3 | [application.yml](../../apex-components-parent/apex-system/src/main/resources/application.yml) | 补充 `apex.cache.jitter.factor`、`apex.cache.empty.ttl`、`apex.cache.empty.jitter-factor` 默认值 |
+| 1.4 | [MultiLevelCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | L2 操作增加 `onErrorResume` 处理 Redis 异常，切到 L1-only 模式 |
 
 ### Phase 2：缓存穿透防护
 
@@ -1100,17 +1100,17 @@ public class CacheMetricsCollector {
 | 2.1 | `apex-infrastructure/.../cache/bloom/BloomFilterService.java` | 新建布隆过滤器服务 |
 | 2.2 | `apex-infrastructure/.../cache/bloom/BloomFilterInitializer.java` | 新建启动期预热器 |
 | 2.3 | `apex-infrastructure/.../cache/bloom/BloomFilterDataProvider.java` | 新建数据提供者接口 |
-| 2.4 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 前置接入布隆过滤器 |
-| 2.5 | [application.yml](../../apex-system/src/main/resources/application.yml) | 新增 `apex.cache.bloom.*` 配置（容量、误判率、各域开关） |
+| 2.4 | [MultiLevelCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 前置接入布隆过滤器 |
+| 2.5 | [application.yml](../../apex-components-parent/apex-system/src/main/resources/application.yml) | 新增 `apex.cache.bloom.*` 配置（容量、误判率、各域开关） |
 
 ### Phase 3：缓存击穿增强
 
 | 步骤 | 文件 | 改动 |
 |---|---|---|
 | 3.1 | `apex-infrastructure/.../cache/support/LogicalExpiryWrapper.java` | 新建逻辑过期包装器 |
-| 3.2 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 叠加分布式锁（多实例互斥） |
+| 3.2 | [MultiLevelCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | `getWithLoader()` 叠加分布式锁（多实例互斥） |
 | 3.3 | `apex-infrastructure/.../cache/service/HotKeyCacheService.java` | 新建超热点 key 服务（逻辑过期 + 异步刷新） |
-| 3.4 | [CacheLockAspect.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 增加自旋重试工具方法（供 `MultiLevelCacheService` 复用） |
+| 3.4 | [CacheLockAspect.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/aspect/CacheLockAspect.java) | 增加自旋重试工具方法（供 `MultiLevelCacheService` 复用） |
 
 ### Phase 4：缓存雪崩防护
 
@@ -1119,16 +1119,16 @@ public class CacheMetricsCollector {
 | 4.1 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmService.java` | 新建预热服务 |
 | 4.2 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmRunner.java` | 新建启动后预热触发器 |
 | 4.3 | `apex-infrastructure/.../cache/prewarmer/CachePrewarmDataProvider.java` | 新建数据提供者接口 |
-| 4.4 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | Redis 故障降级到 L1-only 模式（已在 Phase 1.4 完成） |
-| 4.5 | [application.yml](../../apex-system/src/main/resources/application.yml) | 新增 `apex.cache.prewarm.*` 配置 |
+| 4.4 | [MultiLevelCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | Redis 故障降级到 L1-only 模式（已在 Phase 1.4 完成） |
+| 4.5 | [application.yml](../../apex-components-parent/apex-system/src/main/resources/application.yml) | 新增 `apex.cache.prewarm.*` 配置 |
 
 ### Phase 5：监控告警
 
 | 步骤 | 文件 | 改动 |
 |---|---|---|
 | 5.1 | `apex-infrastructure/.../cache/metrics/CacheMetricsCollector.java` | 新建缓存指标采集器 |
-| 5.2 | [MultiLevelCacheService.java](../../apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 在各关键节点埋点（命中/未命中/回源/降级） |
-| 5.3 | [application.yml](../../apex-system/src/main/resources/application.yml) | 告警阈值配置（接入现有 Sentinel/钉钉告警） |
+| 5.2 | [MultiLevelCacheService.java](../../apex-shared-parent/apex-infrastructure-cache/src/main/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheService.java) | 在各关键节点埋点（命中/未命中/回源/降级） |
+| 5.3 | [application.yml](../../apex-components-parent/apex-system/src/main/resources/application.yml) | 告警阈值配置（接入现有 Sentinel/钉钉告警） |
 
 ### Phase 6：测试验证
 
@@ -1139,7 +1139,7 @@ public class CacheMetricsCollector {
 | 6.3 | `CachePrewarmServiceTest.java` | 预热服务测试 |
 | 6.4 | `HotKeyCacheServiceTest.java` | 逻辑过期 + 异步刷新测试 |
 | 6.5 | `CacheChaosTest.java` | 雪崩场景集成测试（Redis 故障、批量过期） |
-| 6.6 | 扩展 [MultiLevelCacheServiceStampedeTest.java](../../apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceStampedeTest.java) | 覆盖分布式锁 + Single-Flight 组合 |
+| 6.6 | 扩展 [MultiLevelCacheServiceStampedeTest.java](../../apex-shared-parent/apex-infrastructure-cache/src/test/java/com/apex/scaffold/infrastructure/cache/service/MultiLevelCacheServiceStampedeTest.java) | 覆盖分布式锁 + Single-Flight 组合 |
 
 ### Phase 7：文档输出
 
@@ -1190,10 +1190,10 @@ cd /Users/work/apex-scaffold
 sdk env
 
 # 编译验证
-mvnd -pl apex-infrastructure -am compile -DskipTests
+mvnd -pl :apex-infrastructure -am compile -DskipTests
 
 # 单元测试
-mvnd -pl apex-infrastructure -am test -Dtest='com.apex.scaffold.infrastructure.cache.**'
+mvnd -pl :apex-infrastructure -am test -Dtest='com.apex.scaffold.infrastructure.cache.**'
 
 # 代码格式
 mvnd spotless:check
@@ -1202,7 +1202,7 @@ mvnd spotless:check
 mvnd pmd:check
 
 # 架构测试（确保分层依赖、租户隔离、阻塞调度器隔离）
-mvnd -pl apex-infrastructure -am test -Dtest='*ArchTest'
+mvnd -pl :apex-infrastructure -am test -Dtest='*ArchTest'
 ```
 
 ---

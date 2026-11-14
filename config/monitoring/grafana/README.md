@@ -7,7 +7,7 @@
 Sentinel 治理与安全防护指标。
 
 > **指标口径说明**：接口指标来自项目自定义的 `apex_api_*`（由
-> `apex-system/src/main/java/com/apex/scaffold/interfaces/filter/MetricsWebFilter.java`
+> `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/filter/MetricsWebFilter.java`
 > 上报），不是 Spring MVC 的 `http_server_requests_*`。WebFlux 部署以本大盘为准。
 
 ## 快速开始

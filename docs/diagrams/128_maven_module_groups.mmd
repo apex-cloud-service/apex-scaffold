@@ -1,15 +1,15 @@
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#4f46e5','fontFamily':'sans-serif'}}}%%
-%% 第一阶段 Maven 聚合关系：根 -> 管理组（<modules>），不是 parent 或 compile 依赖。
-%% 卡内成员为聚合清单，未将 42 个后代展开为 42 个节点。与同名手写 SVG 语义配对维护。
+%% 第二阶段 Maven 聚合与物理归位：根 -> 管理组（<modules>），不是 parent 或 compile 依赖。
+%% 卡内成员为聚合清单，未将 44 个后代展开为 44 个节点。与同名手写 SVG 语义配对维护。
 flowchart TB
-    ROOT["apex-scaffold · 总父 POM / 总聚合入口<br/>7 个直接管理组 · 42 个后代 · 43 个 reactor 项目含根<br/>8 个 POM 含根 + 35 个 JAR；business 第一阶段为空"]
+    ROOT["apex-scaffold · 总父 POM / 总聚合入口<br/>7 个直接管理组 · 44 个后代 · 45 个 reactor 项目含根<br/>8 个 POM 含根 + 37 个 JAR；叶子物理嵌套于各分组父目录"]
     SHARED["apex-shared-parent · 新增 POM · 9 个 JAR<br/>apex-common / apex-domain / apex-api-contract<br/>apex-infrastructure-persistence / apex-infrastructure-cache<br/>apex-infrastructure-messaging / apex-infrastructure-remote<br/>apex-infrastructure-integration / apex-infrastructure"]
     COMPONENTS["apex-components-parent · 新增 POM · 6 个 JAR<br/>apex-system / apex-auth / apex-workflow<br/>apex-file / apex-office / apex-integration<br/>六个脚手架能力库，不是项目业务 business 组"]
     STARTERS["apex-starters-parent · 新增 POM · 4 个 JAR<br/>apex-storage-spring-boot-starter<br/>apex-license-spring-boot-starter<br/>apex-job-spring-boot-starter<br/>apex-seata-spring-boot-starter"]
-    SERVICES["apex-services-bom · 复用 POM · 10 个 JAR<br/>apex-gateway / apex-system-service / apex-auth-service<br/>apex-workflow-service / apex-file-service / apex-office-service<br/>apex-integration-service / apex-aggregation-service<br/>apex-job-service / apex-masking-service<br/>八个发布运行模块 + 两个可选运行模块"]
+    SERVICES["apex-services-bom · 复用 POM · 11 个 JAR<br/>apex-gateway / apex-system-service / apex-auth-service<br/>apex-workflow-service / apex-file-service / apex-office-service<br/>apex-integration-service / apex-aggregation-service<br/>apex-job-service / apex-masking-service / apex-knowledge-service<br/>八个发布运行模块 + 三个可选运行模块"]
     APPLICATIONS["apex-applications-parent · 新增 POM · 2 个 JAR<br/>apex-example / apex-boot-all<br/>示例应用与组合装配"]
     TOOLS["apex-tools-parent · 新增 POM · 4 个 JAR<br/>apex-license-tools / apex-generator<br/>apex-tools-deployment / apex-tools-build<br/>卖方签发、生成、离线运维、构建管理"]
-    BUSINESS["apex-business-parent · 新增 POM · 0 个子模块<br/>只管理项目业务库及业务专属配置 / 资源；第一阶段为空<br/>通用框架实现位于其他组，business 按需复用<br/>未来 business-domain-service 仅归 services，不重复聚合到 business"]
+    BUSINESS["apex-business-parent · 新增 POM · 1 个 JAR<br/>apex-knowledge：知识空间/文档摄取/混合检索/问答编排<br/>通用框架实现位于其他组，business 按需复用<br/>未来独立运行模块仅归 services，不重复聚合到 business"]
     ROOT -->|modules| SHARED
     ROOT -->|modules| COMPONENTS
     ROOT -->|modules| STARTERS
@@ -17,4 +17,4 @@ flowchart TB
     ROOT -->|modules| APPLICATIONS
     ROOT -->|modules| TOOLS
     ROOT -->|modules| BUSINESS
-    NOTE["所有既有叶子物理目录仍在仓库根；分组以 ../apex-xxx 聚合同级模块。<br/>6 个新 POM + 现有 services-bom；不新增业务 JAR、服务或数据库。<br/>聚合归属 ≠ 直接 parent：api-contract / integration / boot-all 保留 services-bom parent，详见 129。<br/>本图不画生产依赖或运行网络；生产依赖见 95，运行拓扑见系统架构文档。"]
+    NOTE["第二阶段（2026-11-14）所有叶子物理位于各自分组父目录之下；管理 POM 以 <module>apex-xxx</module> 聚合同目录叶子。<br/>6 个新 POM + 现有 services-bom；不新增业务服务或数据库（可选知识库运行模块已登记于 services）。<br/>聚合归属 ≠ 直接 parent：api-contract / integration / boot-all 保留 services-bom parent，详见 129。<br/>本图不画生产依赖或运行网络；生产依赖见 95，运行拓扑见系统架构文档。"]

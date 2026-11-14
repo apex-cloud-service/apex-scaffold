@@ -15,9 +15,9 @@
 
 | 原 Python 工具 | Java/Shell 替代 | 测试 |
 | --- | --- | --- |
-| `apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py`（218 行，deployment.md 引用的活跃运维工具） | [TokenV42Recover.java](../../apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java) + [token-v42-recover.sh](../../scripts/utils/token-v42-recover.sh)（apex-tools-deployment 模块 Shade JAR） | TokenV42RecoverTest 9 项 |
-| `scripts/test/test_token_v42_recovery.py` | [TokenV42RecoverTest.java](../../apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/TokenV42RecoverTest.java) | 同上（8 组断言逐条移植） |
-| `scripts/test/test_consent_v40_upgrade.py` 资源断言部分 | [ConsentV40UpgradeTest.java](../../apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/ConsentV40UpgradeTest.java) | 2 项 |
+| `apex-system/src/main/resources/db/upgrade/mysql/token_v42_recover.py`（218 行，deployment.md 引用的活跃运维工具） | [TokenV42Recover.java](../../apex-tools-parent/apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java) + [token-v42-recover.sh](../../scripts/utils/token-v42-recover.sh)（apex-tools-deployment 模块 Shade JAR） | TokenV42RecoverTest 9 项 |
+| `scripts/test/test_token_v42_recovery.py` | [TokenV42RecoverTest.java](../../apex-tools-parent/apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/TokenV42RecoverTest.java) | 同上（8 组断言逐条移植） |
+| `scripts/test/test_consent_v40_upgrade.py` 资源断言部分 | [ConsentV40UpgradeTest.java](../../apex-tools-parent/apex-tools-deployment/src/test/java/com/apex/scaffold/tools/deployment/ConsentV40UpgradeTest.java) | 2 项 |
 | `scripts/ci/collect_route_dispositions.py`、`collect_table_authority.py`、`review_table_authority_candidates.py` 及对应测试（前段批次） | 临时工具工程 `scripts/ci/java` 下 RouteDispositions / TableAuthority / TableAuthorityReview（DispositionToolsTest 11 项；该工程未入库，已移除，能力入口见 §4 第 3 条） | 见 §3 |
 | `scripts/ci/collect_gateway_config.py`、`collect_p0_dependency_disposition.py` 及对应测试（前段批次） | 同一临时工具工程的 GatewayConfig / P0DependencyDisposition（5 + 3 项；已随该工程移除） | 5 + 3 项 |
 
@@ -42,7 +42,7 @@
 | 验证项 | 命令 | 结果 |
 | --- | --- | --- |
 | canonical CI 工具全量门禁 | `mvnd -B -f scripts/ci/java/pom.xml verify`（该临时工程已移除） | 当时记录为 **51 tests, Failures: 0, Errors: 0, BUILD SUCCESS**（含 ArchiveIntegrityTest 28 归档、DispositionToolsTest 11、GatewayConfigTest 5、P0DependencyDispositionTest 3 等）；工程未入库，该结果不可复现 |
-| 部署/运维模块全量门禁 | `mvnd -B -pl apex-tools-deployment -am verify` | **38 tests, Failures: 0, Errors: 0, BUILD SUCCESS**（TokenV42RecoverTest 9、ConsentV40UpgradeTest 2、LocalDeploymentTest 8、InitBuildEnvTest 13、ConfigPreflightTest 6） |
+| 部署/运维模块全量门禁 | `mvnd -B -pl :apex-tools-deployment -am verify` | **38 tests, Failures: 0, Errors: 0, BUILD SUCCESS**（TokenV42RecoverTest 9、ConsentV40UpgradeTest 2、LocalDeploymentTest 8、InitBuildEnvTest 13、ConfigPreflightTest 6） |
 | V42 恢复工具端到端冒烟 | `bash scripts/utils/token-v42-recover.sh ...` | 非法库名 exit 2、`--force=true` exit 2 且未创建 Client、stub 非 8.0 exit 1，与原 Python 行为一致 |
 | V42 恢复工具真实 MySQL 8.0 容器重验 | `bash` 容器装置 + `token-v42-recover.sh` | **31/31 场景通过**（3 恢复正向 + 28 拒绝），MySQL 8.0.46、`--network none`、`/var/lib/mysql` tmpfs，详见 §3.1 |
 | 文档链接 | `scripts/ci/check-doc-links.sh` | 663 份 Markdown、3047 条链接、**断链 0**（修复前 36 个指向已删 Python 的断链，已全部重定向至归档副本或 Java 替代实现） |
@@ -53,7 +53,7 @@
 
 ### 3.1 V42 恢复工具真实容器重验（Java 实现）
 
-用真实 MySQL 8.0.46 容器对 Java 版 [TokenV42Recover.java](../../apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java) 重跑原 Python 验收的全部 31 个场景，逐条复刻 [verify_token_v42_recovery.py.source](../../scripts/ci/source-archive/scripts/test/verify_token_v42_recovery.py.source) 的断言。
+用真实 MySQL 8.0.46 容器对 Java 版 [TokenV42Recover.java](../../apex-tools-parent/apex-tools-deployment/src/main/java/com/apex/scaffold/tools/deployment/TokenV42Recover.java) 重跑原 Python 验收的全部 31 个场景，逐条复刻 [verify_token_v42_recovery.py.source](../../scripts/ci/source-archive/scripts/test/verify_token_v42_recovery.py.source) 的断言。
 
 - **容器隔离**：`podman create --network none --pull=never --tmpfs /var/lib/mysql:rw -e MYSQL_ALLOW_EMPTY_PASSWORD=yes localhost/mysql:8.0`；证据记录 `isolation=none`、tmpfs 挂载与 `SELECT VERSION()` 实际返回值。
 - **调用路径**：经 `scripts/utils/token-v42-recover.sh` → deployment Shade JAR → `TokenV42Recover`，即生产运维入口，而非直接跑测试桩。
@@ -105,5 +105,5 @@
 ## 5. 历史失败与未执行事项
 
 - 未创建 Git commit、未推送；工作区其他历史修改保持原样。
-- 以下保留环境恢复前两轮全仓 `mvnd -T4 -B clean verify` 的**历史失败**；最新全仓门禁已通过，见 §4.1。首轮在 `apex-system` 的容器集成测试失败，Testcontainers 报连接无响应。验证 Podman Unix socket `/_ping` 返回 OK 后，显式设置 Podman 连接、停止 mvnd daemon 重跑：Testcontainers 已识别 Podman socket，但拉取 `testcontainers/ryuk:0.8.1` 返回 HTTP 500 `connection refused`；双库集成测试引用的两个既有 Podman 容器不存在。重跑另有 `JobServiceStartupTest.startsWithoutExternalDependencies` 的 5 秒请求超时；随后以 `mvnd -T1 -B -pl apex-job-service -am -Dtest=JobServiceStartupTest -Dsurefire.failIfNoSpecifiedTests=false test` 独立复跑，**3 tests，Failures 0，Errors 0，BUILD SUCCESS**，仅说明该超时未在独立复跑中复现。确认环境阻塞后停止该轮，未跳过容器测试或放宽超时；不能记为全仓门禁通过。两轮日志分别位于 `/tmp/apex-full-verify-20261021-1040.log`、`/tmp/apex-full-verify-podman-20261021.log`（临时诊断日志，不是冻结验收证据）。
+- 以下保留环境恢复前两轮全仓 `mvnd -T4 -B clean verify` 的**历史失败**；最新全仓门禁已通过，见 §4.1。首轮在 `:apex-system` 的容器集成测试失败，Testcontainers 报连接无响应。验证 Podman Unix socket `/_ping` 返回 OK 后，显式设置 Podman 连接、停止 mvnd daemon 重跑：Testcontainers 已识别 Podman socket，但拉取 `testcontainers/ryuk:0.8.1` 返回 HTTP 500 `connection refused`；双库集成测试引用的两个既有 Podman 容器不存在。重跑另有 `JobServiceStartupTest.startsWithoutExternalDependencies` 的 5 秒请求超时；随后以 `mvnd -T1 -B -pl :apex-job-service -am -Dtest=JobServiceStartupTest -Dsurefire.failIfNoSpecifiedTests=false test` 独立复跑，**3 tests，Failures 0，Errors 0，BUILD SUCCESS**，仅说明该超时未在独立复跑中复现。确认环境阻塞后停止该轮，未跳过容器测试或放宽超时；不能记为全仓门禁通过。两轮日志分别位于 `/tmp/:apex-full-verify-20261021-1040.log`、`/tmp/:apex-full-verify-podman-20261021.log`（临时诊断日志，不是冻结验收证据）。
 - 九个运维脚本曾迁移至临时工具工程 `scripts/ci/java`，该工程记录过 `mvnd -B -f scripts/ci/java/pom.xml verify` 为 **69 tests，Failures 0，Errors 0，BUILD SUCCESS**；该工程从未纳入版本管理，已移除，结果不可复现。真实 Seata TC 双库及两个独立数据库迁移脚本的运行验收仍未执行。

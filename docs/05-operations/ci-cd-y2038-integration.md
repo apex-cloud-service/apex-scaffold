@@ -62,7 +62,7 @@ apex-system/src/main/resources/db/migration/mysql/V25__oauth2_authorization_serv
 
 **本地单独执行**:
 ```bash
-mvnd -B -pl apex-infrastructure-persistence -am test -Dtest=TimeFieldArchTest
+mvnd -B -pl :apex-infrastructure-persistence -am test -Dtest=TimeFieldArchTest
 ```
 
 **测试规则**:
@@ -121,10 +121,10 @@ bash scripts/dev/check/check-flyway-timestamp-usage.sh
 
 ```bash
 # 运行所有架构测试
-mvnd -pl apex-infrastructure test -Dtest=*ArchTest
+mvnd -pl :apex-infrastructure test -Dtest=*ArchTest
 
 # 仅运行时间字段测试
-mvnd -pl apex-infrastructure test -Dtest=TimeFieldArchTest
+mvnd -pl :apex-infrastructure test -Dtest=TimeFieldArchTest
 ```
 
 ## CI/CD 执行流程
@@ -225,7 +225,7 @@ private LocalDateTime createTime;
 # 完整的提交前检查流程
 mvnd spotless:check                                          # 代码格式
 bash scripts/dev/check/check-flyway-timestamp-usage.sh       # 数据库脚本
-mvnd -pl apex-infrastructure test -Dtest=TimeFieldArchTest   # 架构测试
+mvnd -pl :apex-infrastructure test -Dtest=TimeFieldArchTest   # 架构测试
 mvnd -P basic clean test                                     # 单元测试
 ```
 
@@ -313,7 +313,7 @@ private Long expireAt;       // 会触发 ArchUnit 测试失败
 - **开发规范**: [AGENTS.md#持久化、迁移与租户隔离](../../AGENTS.md#持久化迁移与租户隔离)
 - **Y2038 分析报告**: [Y2038-timestamp-analysis-report.md](../_archive/trae-documents/Y2038-timestamp-analysis-report.md)
 - **检查脚本**: [check-flyway-timestamp-usage.sh](../../scripts/dev/check/check-flyway-timestamp-usage.sh)
-- **架构测试**: [TimeFieldArchTest.java](../../apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java)
+- **架构测试**: [TimeFieldArchTest.java](../../apex-shared-parent/apex-infrastructure-persistence/src/test/java/com/apex/scaffold/arch/TimeFieldArchTest.java)
 - **CI/CD 配置**: [ci-cd.yml](../../.github/workflows/ci-cd.yml)
 
 ---

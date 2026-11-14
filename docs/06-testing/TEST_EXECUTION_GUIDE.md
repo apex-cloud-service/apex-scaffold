@@ -23,13 +23,13 @@ mvn clean test
 
 ```bash
 # 仅运行 Domain 层测试
-mvn test -pl apex-domain
+mvn test -pl :apex-domain
 
 # 仅运行 Application 层测试
 mvn test -pl apex-application
 
 # 仅运行 Web 层集成测试
-mvn test -pl apex-web
+mvn test -pl :apex-web
 ```
 
 ### 运行特定测试类

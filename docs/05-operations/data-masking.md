@@ -2,7 +2,7 @@
 
 ## 能力与边界
 
-公共实现位于 [apex-common](../../apex-common/src/main/java/com/apex/scaffold/common/masking/JsonFieldMasker.java)，独立入口位于 [apex-masking-service](../../apex-masking-service/pom.xml)。两者共用 `DataMaskUtil`，支持姓名、手机号、邮箱、身份证格式、银行卡、地址和自定义首尾保留规则，也保留 IPv4、URL 和 GENERAL 类型。
+公共实现位于 [apex-common](../../apex-shared-parent/apex-common/src/main/java/com/apex/scaffold/common/masking/JsonFieldMasker.java)，独立入口位于 [apex-masking-service](../../apex-services-bom/apex-masking-service/pom.xml)。两者共用 `DataMaskUtil`，支持姓名、手机号、邮箱、身份证格式、银行卡、地址和自定义首尾保留规则，也保留 IPv4、URL 和 GENERAL 类型。
 
 脱敏用于限制展示与输出，不是加密、匿名化或证件真实性认证。规则仍保留部分可识别信息；调用方必须按用途配置最小保留范围。仅配置的精确字段名会脱敏，未配置字段原样保留，不会自动识别所有敏感内容。
 
@@ -81,7 +81,7 @@ apex:
             type: EMAIL
 ```
 
-这些地址和租户仅为配置结构示例。规则在启动时绑定并复制为不可变集合，通过配置发布与重启管理固定版本；没有数据库 CRUD、在线修改接口、热刷新或审批工作流。默认 v1 字段见 [application.yml](../../apex-masking-service/src/main/resources/application.yml)。Spring 配置映射可能合并版本和字段，发布时应核对最终配置，不能将覆盖文件误认为删除所有默认字段。
+这些地址和租户仅为配置结构示例。规则在启动时绑定并复制为不可变集合，通过配置发布与重启管理固定版本；没有数据库 CRUD、在线修改接口、热刷新或审批工作流。默认 v1 字段见 [application.yml](../../apex-services-bom/apex-masking-service/src/main/resources/application.yml)。Spring 配置映射可能合并版本和字段，发布时应核对最终配置，不能将覆盖文件误认为删除所有默认字段。
 
 ## API 与安全
 
@@ -110,7 +110,7 @@ Handler 不记录请求或异常原文，请求 DTO 的 `toString()` 固定为 r
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -T4 -B -pl apex-common -am install
+mvnd -T4 -B -pl :apex-common -am install
 mvnd -T4 -B -f apex-masking-service/pom.xml verify
 ```
 
@@ -119,7 +119,7 @@ mvnd -T4 -B -f apex-masking-service/pom.xml verify
 2026-10-13 本轮实际验证：
 
 - 首轮公共安全测试观察到原实现非法手机号泄漏、Unicode 截断和日志短值泄漏，随后实现修复；JSON 与服务测试先运行，因缺少实现失败后补实现。
-- `mvnd -T4 -B -pl apex-common -am spotless:apply verify` 最终 BUILD SUCCESS：538 tests，Failures 0 / Errors 0 / Skipped 0；Spotless 与 JaCoCo 检查通过，PMD check 通过。p3c 仍输出内部 `maximum Iterations exceeded` 日志，不能据此声称静态分析穷尽全部路径。
+- `mvnd -T4 -B -pl :apex-common -am spotless:apply verify` 最终 BUILD SUCCESS：538 tests，Failures 0 / Errors 0 / Skipped 0；Spotless 与 JaCoCo 检查通过，PMD check 通过。p3c 仍输出内部 `maximum Iterations exceeded` 日志，不能据此声称静态分析穷尽全部路径。
 - `mvnd -B -f apex-masking-service/pom.xml spotless:apply verify` BUILD SUCCESS：6 tests，Failures 0 / Errors 0 / Skipped 0；Spotless、PMD 和 JaCoCo 检查通过，并生成可执行 jar。
 - 公共测试覆盖非法/短输入、Unicode、普通 ObjectMapper、getter、CUSTOM、null、非字符串拒绝、JSON 副本及非文本遮盖、fingerprint 精确值。
 - 服务测试覆盖无认证、scope、租户头伪造、租户隔离、规则覆盖拒绝、未知版本、错误不回显、规则列表隔离和 256KB 上限；本机临时 JWKS + RSA 测试验证有效签名及错误签名、issuer、audience、过期拒绝。

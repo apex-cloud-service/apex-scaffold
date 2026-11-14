@@ -59,7 +59,7 @@ apex-scaffold/
 1. **`.gitignore` 公钥规则先行**（安全项）：`*.key` 全局忽略 + `!apex-common/.../public.key` 白名单是唯一放行规则。若先移动后改规则，任何非 `git mv` 的移动方式（如 shell `mv` + `git add`）都会导致公钥静默漏出版本控制。必须在移动前先把白名单改为新路径（新旧行并存，移动稳定后再删旧行）。
 2. **`apex-tools-build` 三处布局契约测试必须与结构调整 lockstep**：`MavenModuleInventory.java:75` 硬断言"模块目录 = 仓库根直下"、`BuildManifestSyncTest.java:256` 硬编码 `apex-example/pom.xml`、`BuildPathContractTest.java:37/56-58` 锁定根 POM argLine 与 fork 工作目录契约。不改测试，`mvnd verify` 必红；改了实现不改测试也一样红。这是好消息——门禁会强制同步，不会漏改。
 3. **根 POM 日志路径必须同步改**：`pom.xml:1156/1178` 的 `-Dapex.log.dir=${project.basedir}/../logs` 依赖"叶子在根级一级"假设，移动后会写到分组父目录下（`apex-xxx-parent/logs`）。必须改为 `${project.basedir}/../../logs`（所有测试执行模块统一在两级深度，纯路径算术、零语义风险），并与 `BuildPathContractTest` 同批改。
-4. **执行期间统一用根级全量命令跑门禁**：B1 之后所有 `-pl apex-xxx`（裸路径形式）立即失效，执行过程中的验证一律用 `mvnd -T4 -B clean verify` 等根级命令，不得依赖 AGENTS.md 里的单模块命令（它们本身在 B6 才被改写）。
+4. **执行期间统一用根级全量命令跑门禁**：B1 之后所有 `-pl :apex-xxx`（裸路径形式）立即失效，执行过程中的验证一律用 `mvnd -T4 -B clean verify` 等根级命令，不得依赖 AGENTS.md 里的单模块命令（它们本身在 B6 才被改写）。
 
 ### 1.3 目标布局
 
@@ -169,7 +169,7 @@ apex-scaffold/
 | 文件 | 改动 |
 | --- | --- |
 | `.github/workflows/ci-cd.yml` | L169 `apex-example/src/main/resources/db/init.sql` 加前缀；L211-218 八服务矩阵保持 artifactId、build args 追加 `MODULE_PATH`；L285-292 release 附件路径 8 行两级化 |
-| `.github/workflows/doc-link-check.yml` | L51 `-pl apex-tools-deployment` → `-pl :apex-tools-deployment` |
+| `.github/workflows/doc-link-check.yml` | L51 `-pl :apex-tools-deployment` → `-pl :apex-tools-deployment` |
 | `.github/workflows/release.yml` / `doc-consistency-check.yml` | 无直接路径，随被调脚本修复间接恢复 |
 | `security-scan.yml` / `frontend-ci.yml` | 不失效（frontend 指向的 `apex-admin-web/**` 不在本次移动清单） |
 

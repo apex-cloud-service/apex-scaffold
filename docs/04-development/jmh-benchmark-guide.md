@@ -22,7 +22,7 @@ Apex Scaffold 从 v1.2.0 开始集成 JMH (Java Microbenchmark Harness) 用于�
 `mvnd package` **不会**产出 `target/benchmarks.jar`；实际运行入口是该类的 `main()`）:
 ```bash
 # 编译测试类（-DskipTests 只跳过执行、不跳过编译）
-mvnd -pl apex-common -am test-compile
+mvnd -pl :apex-common -am test-compile
 
 # 运行：在 IDE 中直接运行 DataMaskBenchmark#main，
 # 或自行临时添加 shade/jmh-maven-plugin 配置后再 `java -jar`；
@@ -55,7 +55,7 @@ redis-server
 **运行方式**（同上：`benchmarks.jar` 不由当前构建产出，经 `RedisBenchmark#main` 运行）:
 ```bash
 # 编译测试类
-mvnd -pl apex-infrastructure-cache -am test-compile
+mvnd -pl :apex-infrastructure-cache -am test-compile
 
 # 运行：在 IDE 中直接运行 RedisBenchmark#main
 ```
@@ -261,7 +261,7 @@ DataMaskBenchmark.testMaskEmail  thrpt   15   987654.321 ±  9876.543  ops/s
 benchmark:
   stage: test
   script:
-    - mvnd clean package -pl apex-common -am -DskipTests
+    - mvnd clean package -pl :apex-common -am -DskipTests
     - java -jar apex-common/target/benchmarks.jar -rf json -rff benchmark-results.json
   artifacts:
     reports:

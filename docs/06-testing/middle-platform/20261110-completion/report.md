@@ -85,7 +85,7 @@
 ```bash
 source scripts/build/init-build-env.sh
 mvnd -T4 -B \
-  -pl apex-common,apex-gateway,apex-system,apex-system-service,apex-file-service,apex-workflow-service,apex-office-service \
+  -pl :apex-common,:apex-gateway,:apex-system,:apex-system-service,:apex-file-service,:apex-workflow-service,:apex-office-service \
   -am test
 ```
 
@@ -166,8 +166,8 @@ Outbox 双库方言用例没有执行，不得视为通过。该定向命令不�
 
 以下验证在本报告主体统计完成后补跑，用于覆盖租户套餐 fail-closed 修复和运维脚本收尾，不改变第 8 节的生产验收结论：
 
-- 租户套餐定向测试：实际执行 `mvnd -T4 -B -pl apex-system -am -Dtest=TenantPackageServiceTest,TenantPackageRepositoryImplTest -Dsurefire.failIfNoSpecifiedTests=false test`，反应堆 12 个模块 `BUILD SUCCESS`；`apex-system` 共 17 个测试、0 失败、0 错误、0 跳过，完成时间 `2026-11-10T21:10:56+08:00`，日志 `/tmp/apex-tenant-package-test-20261110.log`。
-- Javadoc 补强后的定向回归：实际执行 `mvnd -T4 -B -pl apex-auth,apex-system -am -Dtest=ResourcePermissionServiceTest,FlywayMigrationVersionTest -Dsurefire.failIfNoSpecifiedTests=false test`，13 个 Reactor 模块 `BUILD SUCCESS`；`ResourcePermissionServiceTest` 13 项、`FlywayMigrationVersionTest` 6 项，合计 19 个测试、0 失败、0 错误、0 跳过，完成时间 `2026-11-10T22:16:44+08:00`。
+- 租户套餐定向测试：实际执行 `mvnd -T4 -B -pl :apex-system -am -Dtest=TenantPackageServiceTest,TenantPackageRepositoryImplTest -Dsurefire.failIfNoSpecifiedTests=false test`，反应堆 12 个模块 `BUILD SUCCESS`；`:apex-system` 共 17 个测试、0 失败、0 错误、0 跳过，完成时间 `2026-11-10T21:10:56+08:00`，日志 `/tmp/:apex-tenant-package-test-20261110.log`。
+- Javadoc 补强后的定向回归：实际执行 `mvnd -T4 -B -pl :apex-auth,:apex-system -am -Dtest=ResourcePermissionServiceTest,FlywayMigrationVersionTest -Dsurefire.failIfNoSpecifiedTests=false test`，13 个 Reactor 模块 `BUILD SUCCESS`；`ResourcePermissionServiceTest` 13 项、`FlywayMigrationVersionTest` 6 项，合计 19 个测试、0 失败、0 错误、0 跳过，完成时间 `2026-11-10T22:16:44+08:00`。
 - Bash 语法检查：本轮修改和新增的 12 个脚本全部通过 `bash -n`。
 - 文档链接检查：扫描 Markdown 745 个、HTML 17 个、本地链接 3,784 条，断裂 0 条。
 - Javadoc 静态检查：`test-check-javadoc-comments.sh` 输出 `PASS`；`scan-javadoc-issues.sh` 报告缺类级 Javadoc、缺 `@author`、缺 `@since`、可能缺方法级 Javadoc 均为 0。

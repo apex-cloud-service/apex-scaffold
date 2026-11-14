@@ -72,5 +72,5 @@ OAuth2 端点和 Token 接口的元数据位于 `OAuth2EndpointRouter`、`OAuth2
 ## 参考
 
 - [SpringDoc 注解模板](springdoc-annotation-templates.md)
-- [统一授权 Handler 测试源码](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/UnifiedAuthorizationHandlerTest.java)
+- [统一授权 Handler 测试源码](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/UnifiedAuthorizationHandlerTest.java)
 - [OpenAPI 规范](https://swagger.io/specification/)

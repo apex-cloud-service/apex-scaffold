@@ -151,7 +151,7 @@
 ### R2 仓库卫生清理(P3/F7,低风险)
 
 - 删除根目录 `:-` 文件与空的 `apex-interfaces/`、`apex-application/` 目录;`backups/`、`_tmp/`、根 `target/` 属本地忽略物,确认无引用后一并清除。
-- 验证:`git status` 干净、`mvnd -T4 -B -pl apex-tools-build -am test` 不受影响。
+- 验证:`git status` 干净、`mvnd -T4 -B -pl :apex-tools-build -am test` 不受影响。
 
 ### R3 协议层归属口径成文(P1/F1 修订处置,低风险)
 

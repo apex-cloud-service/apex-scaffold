@@ -1,9 +1,9 @@
 # 构建发布管理模块使用说明（apex-tools-build）
 
 > **适用版本**: 1.3.1 起（模块 `@since 1.3.2` 注释口径，随 1.3.1 代码基线交付）
-> **模块位置**: `apex-tools-build/`
+> **模块位置**: `apex-tools-parent/apex-tools-build/`
 > **方案设计**: [构建发布管理模块方案](../08-project-management/plans/build-management-plan.md)
-> **模块简介**: [apex-tools-build/README.md](../../apex-tools-build/README.md)
+> **模块简介**: [apex-tools-parent/apex-tools-build/README.md](../../apex-tools-parent/apex-tools-build/README.md)
 
 本文是 `apex-tools-build` 的完整操作手册：从环境准备到编译、测试、打包、发布，再到四种运行时的部署与故障排查，逐步给出可复制执行的命令与判定标准。命令均在**仓库根目录**执行。
 
@@ -31,10 +31,10 @@
 
 | 组成 | 路径 | 作用 |
 | --- | --- | --- |
-| 模块注册表 | `apex-tools-build/src/main/resources/build-manifest.yaml` | 全部模块的**单一事实来源**：分类、交付口径、端口、显式启动类 |
-| 防漂移门禁 | `apex-tools-build/src/test/java/.../BuildManifestSyncTest.java` | 校验扁平注册表与根 POM 递归 `<modules>` 集合、各模块 POM、`release.sh` 四方一致；完整门禁由 `verify` 承载 |
-| 统一编排入口 | `apex-tools-build/bin/apex.sh` | 编译/构建/打包/发布/镜像/部署的命令行入口 |
-| 模块 POM | `apex-tools-build/pom.xml` | 薄 jar，零生产依赖（仅 test scope 的 SnakeYAML/JUnit） |
+| 模块注册表 | `apex-tools-parent/apex-tools-build/src/main/resources/build-manifest.yaml` | 全部模块的**单一事实来源**：分类、交付口径、端口、显式启动类 |
+| 防漂移门禁 | `apex-tools-parent/apex-tools-build/src/test/java/.../BuildManifestSyncTest.java` | 校验扁平注册表与根 POM 递归 `<modules>` 集合、各模块 POM、`release.sh` 四方一致；完整门禁由 `verify` 承载 |
+| 统一编排入口 | `apex-tools-parent/apex-tools-build/bin/apex.sh` | 编译/构建/打包/发布/镜像/部署的命令行入口 |
+| 模块 POM | `apex-tools-parent/apex-tools-build/pom.xml` | 薄 jar，零生产依赖（仅 test scope 的 SnakeYAML/JUnit） |
 
 ### 1.2 它解决的问题
 
@@ -59,9 +59,9 @@ Maven reactor 内的模块**无法编排包含它自己的那次构建**。因�
 
 ### 1.4 当前分组与递归范围
 
-根 POM 直接声明 shared/components/starters/services/applications/tools/business 七组，递归聚合 42 个模块；含根全量 reactor 为 43 个项目（8 个 POM、35 个既有 JAR）。本模块聚合并继承 `apex-tools-parent`。完整映射见 [README 分组表](../../README.md#maven-分组与父链)，图见[聚合分组](../diagrams/128_maven_module_groups.svg)与[parent 继承](../diagrams/129_maven_parent_inheritance.svg)。
+根 POM 直接声明 shared/components/starters/services/applications/tools/business 七组，递归聚合 44 个模块；含根全量 reactor 为 45 个项目（8 个 POM、37 个 JAR，第二阶段叶子嵌套于分组父目录）。本模块聚合并继承 `apex-tools-parent`。完整映射见 [README 分组表](../../README.md#maven-分组与父链)，图见[聚合分组](../diagrams/128_maven_module_groups.svg)与[parent 继承](../diagrams/129_maven_parent_inheritance.svg)。
 
-六个新 parent 只承载管理与聚合，现有叶子仍在仓库根级。22 个既有叶子迁移直接 parent；原有 13 个 services-bom 子继承不变，其中 api-contract / integration / boot-all 分别聚合在 shared / components / applications，另 10 个运行模块聚合在 services。聚合、继承、物理目录和生产依赖不可混用。
+六个新 parent 只承载管理与聚合；第二阶段（2026-11-14）起叶子物理嵌套于分组父目录（两级布局由 MavenModuleInventory 门禁锁定）。22 个既有叶子迁移直接 parent；原有 13 个 services-bom 子继承不变，其中 api-contract / integration / boot-all 分别聚合在 shared / components / applications，另 11 个运行模块聚合在 services。聚合、继承、物理目录和生产依赖不可混用。
 
 `apex-business-parent` 第一阶段为空，只管理未来项目业务 JAR 库；框架实现由其他支撑模块提供。新独立运行模块归 services，不重复聚合在 business，也不自动加入八服务发布集合。后续模块数以实际递归清单为准，不永久硬编码 42 / 43。
 
@@ -85,7 +85,7 @@ Maven reactor 内的模块**无法编排包含它自己的那次构建**。因�
 **第 1 步：确认 SDKMAN 与工具链**
 
 ```bash
-./apex-tools-build/bin/apex.sh env
+./apex-tools-parent/apex-tools-build/bin/apex.sh env
 ```
 
 预期输出：
@@ -111,7 +111,7 @@ mvnd --version
 **第 2 步：确认模块状态**
 
 ```bash
-./apex-tools-build/bin/apex.sh status
+./apex-tools-parent/apex-tools-build/bin/apex.sh status
 ```
 
 输出包含 JDK/mvnd 版本、全部递归注册模块（第一阶段 42 项，不含总根）的交付口径与端口，以及可执行产物的存在性。分组 parent 没有端口，`deliverable=none` 显示为“不产出可执行 JAR”；可执行 JAR 首次未构建属正常，不把 parent 当作待启动服务。
@@ -150,7 +150,7 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 ## 3. 命令总览速查表
 
 ```bash
-./apex-tools-build/bin/apex.sh <子命令> [参数]
+./apex-tools-parent/apex-tools-build/bin/apex.sh <子命令> [参数]
 ```
 
 | 子命令 | 用途 | 典型用法 |
@@ -179,9 +179,9 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 ### 4.1 整仓构建
 
 ```bash
-./apex-tools-build/bin/apex.sh build              # 默认 standard 档
-./apex-tools-build/bin/apex.sh build -Pbasic      # basic 档
-./apex-tools-build/bin/apex.sh build -Penterprise # enterprise 档
+./apex-tools-parent/apex-tools-build/bin/apex.sh build              # 默认 standard 档
+./apex-tools-parent/apex-tools-build/bin/apex.sh build -Pbasic      # basic 档
+./apex-tools-parent/apex-tools-build/bin/apex.sh build -Penterprise # enterprise 档
 ```
 
 行为：委托 `scripts/build/build.sh`，等价于 `mvnd -o clean package -P<档位> -DskipTests`（离线优先，失败自动回退在线）。
@@ -191,8 +191,8 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 ### 4.2 按模块增量构建
 
 ```bash
-./apex-tools-build/bin/apex.sh build --module apex-system-service
-./apex-tools-build/bin/apex.sh build --module apex-system,apex-auth --with-tests
+./apex-tools-parent/apex-tools-build/bin/apex.sh build --module apex-system-service
+./apex-tools-parent/apex-tools-build/bin/apex.sh build --module apex-system,apex-auth --with-tests
 ```
 
 行为：`mvnd clean package -Pstandard -pl <模块列表> -am [-DskipTests]`。
@@ -203,19 +203,19 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -T4 -B -pl apex-system-service -am clean package -Pstandard -DskipTests
+mvnd -T4 -B -pl :apex-system-service -am clean package -Pstandard -DskipTests
 ```
 
-**不新增 `--group`**：`-pl apex-services-bom -am` 不表示构建 services 组全部叶子；需要整组时从总根明确列出叶子并带 `-am`。不以 `-f 分组/pom.xml` 代替总根构建并假定跨组未安装依赖均可解析。分组不改变生产依赖或保证构建提速。
+**不新增 `--group`**：`-pl :apex-services-bom -am` 不表示构建 services 组全部叶子；需要整组时从总根明确列出叶子并带 `-am`。不以 `-f 分组/pom.xml` 代替总根构建并假定跨组未安装依赖均可解析。分组不改变生产依赖或保证构建提速。
 
 ### 4.3 测试
 
 ```bash
 # 快速测试（单模块 + 其依赖链）
-./apex-tools-build/bin/apex.sh test --module apex-tools-build
+./apex-tools-parent/apex-tools-build/bin/apex.sh test --module apex-tools-build
 
 # 整仓快速测试
-./apex-tools-build/bin/apex.sh test
+./apex-tools-parent/apex-tools-build/bin/apex.sh test
 ```
 
 > `test` **不包含** Failsafe 集成测试（`*IntegrationTest`、`*E2ETest`、`FlywayMigrationStartupTest`）与 Spotless/PMD/JaCoCo 门禁。需要完整门禁时用 `verify`。
@@ -223,13 +223,13 @@ mvnd -T4 -B -pl apex-system-service -am clean package -Pstandard -DskipTests
 ### 4.4 完整回归门禁
 
 ```bash
-./apex-tools-build/bin/apex.sh verify
+./apex-tools-parent/apex-tools-build/bin/apex.sh verify
 ```
 
 等价于 `mvnd -T4 -B clean verify`，包含单元测试、Failsafe 集成测试、Spotless 格式、PMD/p3c 静态检查、JaCoCo 覆盖率（父 POM 默认行 60% / 分支 50%，实际范围以有效配置为准）以及注册表一致性测试。新增 POM-only 项目没有业务测试报告，不代表业务测试通过；耗时与执行范围按实际结果记录。可保存日志：
 
 ```bash
-./apex-tools-build/bin/apex.sh verify > /tmp/verify.log 2>&1; echo "exit=$?"
+./apex-tools-parent/apex-tools-build/bin/apex.sh verify > /tmp/verify.log 2>&1; echo "exit=$?"
 ```
 
 **通过判定标准**（不能只看退出码）：
@@ -247,7 +247,7 @@ grep -cE "Tests run:.*Failures: [1-9]|Tests run:.*Errors: [1-9]" /tmp/verify.log
 ```bash
 git diff --check                                        # 空白错误
 source scripts/build/init-build-env.sh
-mvnd -T4 -B -pl apex-tools-build spotless:check          # 本模块格式（约 2 秒）
+mvnd -T4 -B -pl :apex-tools-build spotless:check          # 本模块格式（约 2 秒）
 ```
 
 ---
@@ -257,7 +257,7 @@ mvnd -T4 -B -pl apex-tools-build spotless:check          # 本模块格式（约
 ### 5.1 只打包服务 JAR（不组装交付包）
 
 ```bash
-./apex-tools-build/bin/apex.sh package -Pstandard
+./apex-tools-parent/apex-tools-build/bin/apex.sh package -Pstandard
 ```
 
 行为：
@@ -271,8 +271,8 @@ mvnd -T4 -B -pl apex-tools-build spotless:check          # 本模块格式（约
 ### 5.2 产出完整交付包
 
 ```bash
-./apex-tools-build/bin/apex.sh release standard
-./apex-tools-build/bin/apex.sh release enterprise 1.3.1
+./apex-tools-parent/apex-tools-build/bin/apex.sh release standard
+./apex-tools-parent/apex-tools-build/bin/apex.sh release enterprise 1.3.1
 ```
 
 行为：
@@ -309,16 +309,16 @@ cd dist && shasum -a 256 -c apex-scaffold-1.3.1-standard.zip.sha256
 
 ```bash
 # 单模块（默认 prebuilt 模式，复用宿主已构建的 fat jar）
-./apex-tools-build/bin/apex.sh image build --module apex-gateway
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-gateway
 
 # 全部发布服务
-./apex-tools-build/bin/apex.sh image build --all
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --all
 
 # 指定引擎与镜像引用
-./apex-tools-build/bin/apex.sh image build --module apex-gateway --engine docker --tag apex-gateway:v1.3.1
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-gateway --engine docker --tag apex-gateway:v1.3.1
 
 # source 分支仅列作已有选项，不用于第一阶段验收：当前容器内仍调用系统 mvn
-# ./apex-tools-build/bin/apex.sh image build --module apex-gateway --mode source
+# ./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-gateway --mode source
 ```
 
 | 参数 | 取值 | 说明 |
@@ -336,8 +336,8 @@ cd dist && shasum -a 256 -c apex-scaffold-1.3.1-standard.zip.sha256
 K8s 清单使用 `apex-scaffold:latest`（单体聚合形态，对应 `apex-example` 模块）。example 不在八服务 `package` 集合内，需单独构建，并确认 `.containerignore` 已放行 example 目标 JAR；这属于可选示例镜像范围，不可用八服务验收替代：
 
 ```bash
-./apex-tools-build/bin/apex.sh build --module apex-example
-./apex-tools-build/bin/apex.sh image build --module apex-example --tag apex-scaffold
+./apex-tools-parent/apex-tools-build/bin/apex.sh build --module apex-example
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-example --tag apex-scaffold
 ```
 
 ### 6.3 推送到镜像仓库
@@ -345,16 +345,16 @@ K8s 清单使用 `apex-scaffold:latest`（单体聚合形态，对应 `apex-exam
 远程集群节点无法读取本地引擎的镜像存储，必须先推送：
 
 ```bash
-./apex-tools-build/bin/apex.sh image push \
+./apex-tools-parent/apex-tools-build/bin/apex.sh image push \
   --module apex-example --tag apex-scaffold \
   --registry harbor.example.com/apex
 
 # 批量推送全部发布服务
-./apex-tools-build/bin/apex.sh image push --all --registry harbor.example.com/apex
+./apex-tools-parent/apex-tools-build/bin/apex.sh image push --all --registry harbor.example.com/apex
 
 # 也可用环境变量提供 registry
 export APEX_IMAGE_REGISTRY=harbor.example.com/apex
-./apex-tools-build/bin/apex.sh image push --module apex-gateway
+./apex-tools-parent/apex-tools-build/bin/apex.sh image push --module apex-gateway
 ```
 
 推送后需把 `k8s/deployment.yaml` 的 `image:` 改为推送到仓库的完整引用（见 [k8s/README.md](../../k8s/README.md)）。
@@ -366,7 +366,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 `deploy` 必须显式选择运行时：`apex.sh deploy <运行时> <动作> [参数]`。**没有缺省运行时**，避免误操作真实环境。
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy            # 无参数时打印用法（退出码 1）
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy            # 无参数时打印用法（退出码 1）
 ```
 
 ### 7.1 运行时一：java -jar
@@ -376,7 +376,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 1 步：前置检查**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy java-jar precheck apex-system-service
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar precheck apex-system-service
 ```
 
 校验 `java` 可用 + 模块 `target/` 下存在可执行 JAR（排除辅助 classifier）。缺失时先 `apex.sh build --module <模块>`。
@@ -385,7 +385,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 
 ```bash
 # 语法：deploy java-jar <动作> [模块] [环境] [档位]
-./apex-tools-build/bin/apex.sh deploy java-jar start apex-system-service dev basic
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar start apex-system-service dev basic
 ```
 
 实际激活的 Spring profile 为 `<环境>,<档位>`（如 `dev,basic`）。模块缺省为 `apex-gateway`。
@@ -393,16 +393,16 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 3 步：确认状态**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy java-jar status apex-system-service
-./apex-tools-build/bin/apex.sh deploy java-jar health apex-system-service   # 单模块 readiness
-./apex-tools-build/bin/apex.sh deploy java-jar logs apex-system-service
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar status apex-system-service
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar health apex-system-service   # 单模块 readiness
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar logs apex-system-service
 ```
 
 **第 4 步：停止/重启**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy java-jar restart apex-system-service prod enterprise
-./apex-tools-build/bin/apex.sh deploy java-jar stop apex-system-service
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar restart apex-system-service prod enterprise
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar stop apex-system-service
 ```
 
 前台调试（Ctrl+C 停止）：`deploy java-jar console apex-gateway dev basic`。
@@ -430,15 +430,15 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 1 步：前置检查**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy podman-compose precheck
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose precheck
 ```
 
-检查：podman 守护可达、根目录 `.env` 存在、`tools/local-deployment.jar` 存在（缺失时**自动**执行 `mvnd -pl apex-tools-deployment -am package -DskipTests` 并复制到 `tools/`）。
+检查：podman 守护可达、根目录 `.env` 存在、`tools/local-deployment.jar` 存在（缺失时**自动**执行 `mvnd -pl :apex-tools-deployment -am package -DskipTests` 并复制到 `tools/`）。
 
 **第 2 步：启动基础设施**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy podman-compose infra
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose infra
 ```
 
 行为：`pull-infra-images.sh` 拉取 9 个基础设施镜像（失败重试 4 次）→ `podman-compose -f podman-compose.infra.yml up -d`。
@@ -448,13 +448,13 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 3 步：启动主栈**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy podman-compose up
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose up
 ```
 
 委托 `scripts/deploy/start.sh`（`podman-compose -f podman-compose.yml up -d --build`），并注入优雅停机治理变量（`APEX_GOVERNANCE_SHUTDOWN_TIMEOUT=90s`、`APEX_STOP_GRACE_PERIOD=105s`）。参数透传，如启用可选 profile：
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy podman-compose up --profile rocketmq
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose up --profile rocketmq
 ```
 
 可用 profile：`masking`、`xxl-job`、`seata`、`keycloak`、`rocketmq`。
@@ -462,8 +462,8 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 4 步：确认状态与健康**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy podman-compose status
-./apex-tools-build/bin/apex.sh deploy podman-compose health
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose status
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose health
 ```
 
 `health` 依次探测 8 个发布服务的 `/actuator/health/readiness`，任一未就绪即退出码 1。**端口取注册表**：workflow 探测 8093（容器内与宿主一致），system 探测 8083，integration 探测 8097，aggregation 探测 8098。
@@ -471,7 +471,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 5 步：停止**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy podman-compose down
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose down
 ```
 
 委托 `scripts/deploy/stop.sh`（`down --timeout 105`，覆盖 90 秒优雅停机预算）。
@@ -481,12 +481,12 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 与 Podman Compose **使用同一份 compose 文件**（已核对兼容：仅用到 `network_mode: none` 与 `read_only: true`，Docker 均支持；服务已显式声明 `dockerfile: Containerfile`）。命令形式完全对称：
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy docker-compose precheck
-./apex-tools-build/bin/apex.sh deploy docker-compose infra
-./apex-tools-build/bin/apex.sh deploy docker-compose up
-./apex-tools-build/bin/apex.sh deploy docker-compose status
-./apex-tools-build/bin/apex.sh deploy docker-compose health
-./apex-tools-build/bin/apex.sh deploy docker-compose down
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose precheck
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose infra
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose up
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose status
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose health
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose down
 ```
 
 **与 Podman 路线的差异**（脚本已内置，无需手工处理）：
@@ -504,7 +504,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 1 步：前置检查（fail-closed）**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy k8s precheck
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s precheck
 ```
 
 检查项：
@@ -527,8 +527,8 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 3 步：构建并推送镜像**
 
 ```bash
-./apex-tools-build/bin/apex.sh image build --module apex-example --tag apex-scaffold
-./apex-tools-build/bin/apex.sh image push --module apex-example --tag apex-scaffold --registry <仓库地址>
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-example --tag apex-scaffold
+./apex-tools-parent/apex-tools-build/bin/apex.sh image push --module apex-example --tag apex-scaffold --registry <仓库地址>
 ```
 
 然后把 `deployment.yaml` 的 `image: apex-scaffold:latest` 改为推送后的完整引用。
@@ -536,9 +536,9 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 4 步：部署**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy k8s apply            # 基础清单
-./apex-tools-build/bin/apex.sh deploy k8s apply --pdb      # 同时应用 PDB
-./apex-tools-build/bin/apex.sh deploy k8s apply --canary   # 同时应用金丝雀（先改 canary 镜像）
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply            # 基础清单
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply --pdb      # 同时应用 PDB
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply --canary   # 同时应用金丝雀（先改 canary 镜像）
 ```
 
 `apply` 会依次应用清单，并执行 `kubectl rollout status deployment/apex-scaffold --timeout=300s` 等待滚动更新完成。
@@ -546,14 +546,14 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 **第 5 步：确认状态**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy k8s status   # deploy/pods/svc/ingress/hpa
-./apex-tools-build/bin/apex.sh deploy k8s health   # rollout status + pods
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s status   # deploy/pods/svc/ingress/hpa
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s health   # rollout status + pods
 ```
 
 **第 6 步：下线（高风险，需显式确认）**
 
 ```bash
-./apex-tools-build/bin/apex.sh deploy k8s down --yes
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s down --yes
 ```
 
 > ⚠️ `down` 会删除已应用的对象，**包括 `apex-secrets`**。不加 `--yes` 会被拒绝（退出码 1）。按需追加 `--pdb`/`--canary` 一并删除。
@@ -568,34 +568,34 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 
 ```bash
 # ① 环境就绪
-./apex-tools-build/bin/apex.sh env
+./apex-tools-parent/apex-tools-build/bin/apex.sh env
 
 # ② 完整门禁（必须先通过，耗时按实际环境记录）
-./apex-tools-build/bin/apex.sh verify
+./apex-tools-parent/apex-tools-build/bin/apex.sh verify
 
 # ③ 提交并确认工作区干净（release 会强校验）
 git status --porcelain      # 应为空
 
 # ④ 产出交付包 + 校验和
-./apex-tools-build/bin/apex.sh release standard
+./apex-tools-parent/apex-tools-build/bin/apex.sh release standard
 cd dist && shasum -a 256 -c apex-scaffold-1.3.1-standard.zip.sha256 && cd ..
 
 # ⑤ 镜像构建与推送
-./apex-tools-build/bin/apex.sh image build --all --engine docker --tag ""   # 或逐个 --module
-./apex-tools-build/bin/apex.sh image push --all --engine docker --registry harbor.example.com/apex
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --all --engine docker --tag ""   # 或逐个 --module
+./apex-tools-parent/apex-tools-build/bin/apex.sh image push --all --engine docker --registry harbor.example.com/apex
 
 # ⑥ 部署前置检查
-./apex-tools-build/bin/apex.sh deploy docker-compose precheck
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose precheck
 
 # ⑦ 基础设施 → 主栈
-./apex-tools-build/bin/apex.sh deploy docker-compose infra
-./apex-tools-build/bin/apex.sh deploy docker-compose up
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose infra
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose up
 
 # ⑧ 健康验证（失败即退出码 1，可直接作为发布门禁）
-./apex-tools-build/bin/apex.sh deploy docker-compose health
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose health
 
 # ⑨ 查看状态
-./apex-tools-build/bin/apex.sh deploy docker-compose status
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose status
 ```
 
 K8s 路线把 ⑥⑦⑧ 替换为 `deploy k8s precheck → apply → health`。
@@ -615,7 +615,7 @@ K8s 路线把 ⑥⑦⑧ 替换为 `deploy k8s precheck → apply → health`。
 注册表 `build-manifest.yaml` 是交付口径的单一事实来源，与根 POM **递归聚合后代集合**对齐（第一阶段 42 项，含七个管理组、不含总根）。新增/删除/改名模块时同步：
 
 1. 所属分组 POM 的 `<modules>`（路径相对该 POM，例如 `../apex-xxx`）；根 `<modules>` 只登记顶层组；
-2. `apex-tools-build/src/main/resources/build-manifest.yaml`（保留扁平记录；不要求等于根直接七项或照抄其顺序）；
+2. `apex-tools-parent/apex-tools-build/src/main/resources/build-manifest.yaml`（保留扁平记录；不要求等于根直接七项或照抄其顺序）；
 3. 模块自身 parent / `relativePath`、打包插件与显式 `mainClass`（如适用）；
 4. `Containerfile` 显式 POM 收集清单及相关结构测试，目标服务 prebuilt JAR 放行规则（如适用）；
 5. `scripts/release/release.sh` 的 `SERVICES` 数组（仅发布服务集合变化时，parent 不加入）；
@@ -655,8 +655,8 @@ modules:
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -T4 -B -pl apex-tools-build -am test     # 递归聚合、结构负面用例与交付口径一致性
-./apex-tools-build/bin/apex.sh status          # 渲染验证
+mvnd -T4 -B -pl :apex-tools-build -am test     # 递归聚合、结构负面用例与交付口径一致性
+./apex-tools-parent/apex-tools-build/bin/apex.sh status          # 渲染验证
 ```
 
 ---
@@ -665,7 +665,7 @@ mvnd -T4 -B -pl apex-tools-build -am test     # 递归聚合、结构负面用�
 
 | 现象 | 原因 | 处理 |
 | --- | --- | --- |
-| `command not found: mvnd` | 未加载 SDKMAN 环境 | `./apex-tools-build/bin/apex.sh env` 或 `source scripts/build/init-build-env.sh` |
+| `command not found: mvnd` | 未加载 SDKMAN 环境 | `./apex-tools-parent/apex-tools-build/bin/apex.sh env` 或 `source scripts/build/init-build-env.sh` |
 | `JDK 版本不符合要求` | `java/current` 链接漂移 | `sdk env`；必要时 `mvnd --stop` 后重试 |
 | `BUILD FAILURE` 且报 `mainClass 在 POM 与注册表之间不一致` | 改了 POM 未同步注册表 | 按 §9 同步，或改回 POM |
 | `BUILD FAILURE` 且报递归模块与注册表不一致 | 分组 `<modules>` 或注册表漏项/多项、重复登记等 | 核对所属分组聚合路径及完整注册表，不只核对根七项 |
@@ -685,10 +685,10 @@ mvnd -T4 -B -pl apex-tools-build -am test     # 递归聚合、结构负面用�
 **通用排查顺序**：
 
 ```bash
-./apex-tools-build/bin/apex.sh status     # 环境与产物
-./apex-tools-build/bin/apex.sh deploy <运行时> precheck   # 部署前置
+./apex-tools-parent/apex-tools-build/bin/apex.sh status     # 环境与产物
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy <运行时> precheck   # 部署前置
 # 查看日志
-./apex-tools-build/bin/apex.sh deploy java-jar logs <模块>
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy java-jar logs <模块>
 podman-compose -f podman-compose.yml logs -f apex-gateway
 kubectl -n apex-scaffold logs -l app=apex-scaffold --tail=100
 ```
@@ -729,7 +729,7 @@ kubectl -n apex-scaffold logs -l app=apex-scaffold --tail=100
 ## 附录 A：文件清单
 
 ```text
-apex-tools-build/
+apex-tools-parent/apex-tools-build/
 ├── pom.xml                                      # 薄 jar，零生产依赖
 ├── README.md                                    # 模块简介与命令手册
 ├── bin/

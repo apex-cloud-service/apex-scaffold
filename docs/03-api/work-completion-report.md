@@ -44,7 +44,7 @@
 - ✅ 生成历史记录
 
 **关键文件**:
-- Domain: [`GenDatasourceEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java), [`GenConfigEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java)
+- Domain: [`GenDatasourceEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenDatasourceEntity.java), [`GenConfigEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/GenConfigEntity.java)
 - Application: `CodeGenerationService`, `GenDatasourceService`
 - Interfaces: ``CodeGeneratorRouter``
 
@@ -105,15 +105,15 @@
 - ✅ Logout 端点
 
 **关键文件**:
-- Domain: [`SysSsoProviderEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java), [`SysSsoSessionEntity`](../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java)
-- Application: [`SamlProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java), [`OidcProtocolAdapter`](../../apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
+- Domain: [`SysSsoProviderEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoProviderEntity.java), [`SysSsoSessionEntity`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/SysSsoSessionEntity.java)
+- Application: [`SamlProtocolAdapter`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/SamlProtocolAdapter.java), [`OidcProtocolAdapter`](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/support/sso/OidcProtocolAdapter.java)
 - Interfaces: `SsoAdminRouter`, `SsoAuthRouter`
 
 ### 4. 数据库设计 (100%)
 
 **Flyway 迁移脚本**:
-- ✅ MySQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
-- ✅ PostgreSQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
+- ✅ MySQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V41__add_generator_auth_sso_office_tables.sql)
+- ✅ PostgreSQL: [`V41__add_generator_auth_sso_office_tables.sql`](../../apex-components-parent/apex-system/src/main/resources/db/migration/postgresql/V41__add_generator_auth_sso_office_tables.sql)
 
 **数据库表** (11张):
 - 代码生成器: `gen_datasource`, `gen_config`, `gen_template`, `gen_history`
@@ -133,7 +133,7 @@
 
 **PMD 配置优化**:
 - ✅ 创建 [`pmd-exclude.properties`](../../config/pmd-exclude.properties) 排除规则文件
-- ✅ 更新 [`apex-infrastructure/pom.xml`](../../apex-infrastructure/pom.xml) PMD 配置
+- ✅ 更新 [`apex-infrastructure/pom.xml`](../../apex-shared-parent/apex-infrastructure/pom.xml) PMD 配置
 - ✅ 排除 MapStruct 自动生成类
 - ✅ 排除 OAuth2* 标准命名类
 - ✅ 排除历史遗留 Mapper 接口 JavaDoc 缺失

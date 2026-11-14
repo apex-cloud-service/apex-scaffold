@@ -28,7 +28,7 @@
 ## 🏗️ 架构层次分析
 
 ### 1. Handler 层（接口层）
-**文件**: [OAuth2ClientManagementHandler.java](../../../apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OAuth2ClientManagementHandler.java)
+**文件**: [OAuth2ClientManagementHandler.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/OAuth2ClientManagementHandler.java)
 
 **功能**:
 - ✅ 6 个完整的 RESTful API 端点
@@ -49,7 +49,7 @@
 ```
 
 ### 2. Service 层（应用层）
-**文件**: [OAuth2ClientManagementService.java](../../../apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2ClientManagementService.java)
+**文件**: [OAuth2ClientManagementService.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/OAuth2ClientManagementService.java)
 
 **核心方法**:
 - ✅ `createClient()` - 创建客户端，自动密码加密（BCrypt）
@@ -68,8 +68,8 @@
 - ✅ 参数校验: 空值判断、条件更新
 
 ### 3. DTO 层（数据传输对象）
-**请求 DTO**: [OAuth2ClientRequest.java](../../../apex-system/src/main/java/com/apex/scaffold/application/dto/OAuth2ClientRequest.java)\
-**响应 DTO**: [OAuth2ClientResponse.java](../../../apex-system/src/main/java/com/apex/scaffold/application/dto/OAuth2ClientResponse.java)
+**请求 DTO**: [OAuth2ClientRequest.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/OAuth2ClientRequest.java)\
+**响应 DTO**: [OAuth2ClientResponse.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/dto/OAuth2ClientResponse.java)
 
 **字段覆盖**:
 - ✅ 基础信息: clientId, clientName, clientSecret
@@ -81,7 +81,7 @@
 - ✅ 令牌配置: accessTokenTimeToLive, refreshTokenTimeToLive
 
 ### 4. Repository 层（仓储层）
-**文件**: [OAuth2RegisteredClientRepositoryImpl.java](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/repository/OAuth2RegisteredClientRepositoryImpl.java)
+**文件**: [OAuth2RegisteredClientRepositoryImpl.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/repository/OAuth2RegisteredClientRepositoryImpl.java)
 
 **CRUD 支持**:
 - ✅ `save()` - 保存/更新
@@ -91,8 +91,8 @@
 - ✅ `deleteById()` - 删除
 
 ### 5. Entity 层（领域实体）
-**实体**: [OAuth2RegisteredClientEntity.java](../../../apex-system/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2RegisteredClientEntity.java)\
-**PO**: [OAuth2RegisteredClientPO.java](../../../apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/OAuth2RegisteredClientPO.java)
+**实体**: [OAuth2RegisteredClientEntity.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/model/entity/OAuth2RegisteredClientEntity.java)\
+**PO**: [OAuth2RegisteredClientPO.java](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/OAuth2RegisteredClientPO.java)
 
 ---
 
@@ -101,7 +101,7 @@
 除了需求文档中的功能外，代码库还实现了以下增强功能：
 
 ### 1. 客户端密钥轮换 (Secret Rotation)
-**Service**: [OAuth2ClientSecretRotationService](../../../apex-system/src/main/java/com/apex/scaffold/application/service/impl/OAuth2ClientSecretRotationServiceImpl.java)
+**Service**: [OAuth2ClientSecretRotationService](../../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service/impl/OAuth2ClientSecretRotationServiceImpl.java)
 
 **功能特性**:
 - ✅ 支持多版本密钥共存（新旧密钥过渡期）
@@ -115,7 +115,7 @@ rotateOAuth2ClientSecret() - 轮换密钥（支持新旧密钥并存）
 ```
 
 ### 2. 完整的单元测试
-**测试文件**: [OAuth2ClientManagementServiceTest.java](../../../apex-system/src/test/java/com/apex/scaffold/application/service/OAuth2ClientManagementServiceTest.java)
+**测试文件**: [OAuth2ClientManagementServiceTest.java](../../../apex-components-parent/apex-system/src/test/java/com/apex/scaffold/application/service/OAuth2ClientManagementServiceTest.java)
 
 **测试覆盖**:
 - ✅ 创建客户端测试

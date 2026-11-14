@@ -90,7 +90,7 @@ apex-tools-build/
 
 ```bash
 source scripts/build/init-build-env.sh
-mvnd -pl apex-tools-build -am test          # 新模块单测(必带 -am)
+mvnd -pl :apex-tools-build -am test          # 新模块单测(必带 -am)
 mvnd -T4 -B spotless:check                   # 含新模块格式门禁
 ./apex-tools-build/bin/apex.sh env           # 冒烟:环境校验
 ./apex-tools-build/bin/apex.sh status        # 冒烟:注册表渲染
@@ -106,11 +106,11 @@ git diff --check
 
 | 验证项 | 结果 |
 | --- | --- |
-| `mvnd -pl apex-tools-build -am test` | BUILD SUCCESS;Tests run: 4, Failures: 0, Errors: 0(注册表 vs 根 POM/打包插件/mainClass/release.sh SERVICES 四项一致性) |
-| `mvnd -pl apex-tools-build spotless:check` | 首查 1 个文件格式违规,`spotless:apply` 后复检通过 |
+| `mvnd -pl :apex-tools-build -am test` | BUILD SUCCESS;Tests run: 4, Failures: 0, Errors: 0(注册表 vs 根 POM/打包插件/mainClass/release.sh SERVICES 四项一致性) |
+| `mvnd -pl :apex-tools-build spotless:check` | 首查 1 个文件格式违规,`spotless:apply` 后复检通过 |
 | `apex.sh help` / `env` / `status` | 通过;status 正确渲染 35 模块注册表、交付口径与 target 产物状态 |
 | `apex.sh deploy precheck` | 通过;`tools/local-deployment.jar` 缺失时自动构建 `apex-tools-deployment` 并补齐(实测补建 3.0MB jar) |
-| `apex.sh build --module apex-common` | BUILD SUCCESS(-pl -am 路径实测) |
+| `apex.sh build --module :apex-common` | BUILD SUCCESS(-pl -am 路径实测) |
 | `apex.sh release standard`(前置检查) | 正确拦截未提交工作区并退出码 1;未知命令退出码 1、help 退出码 0 |
 | 文档链接门禁 `check-doc-links.sh` | 732 文件 / 3501 链接 / 断裂 0(修正 README 相对层级一处后) |
 | `git diff --check` | 通过 |

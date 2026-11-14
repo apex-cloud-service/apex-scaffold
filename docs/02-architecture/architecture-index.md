@@ -146,8 +146,8 @@
 | [业务流程与统一授权时序](../architecture/business-flows.md) | 当前主应用 JWT 身份认证与 HTTPS 远程授权链路；Mermaid 尚未重新渲染 |
 | [统一授权 ADR](../architecture/system-architecture.md) | ADR-AUTH-CENTER-001，独立容器、显式映射和失败拒绝策略 |
 | [统一授权配置](../05-operations/configuration.md#认证中心统一授权) | 默认关闭、HTTPS、读取账号 Token、0–30 秒 TTL、3 秒超时与默认熔断 |
-| [认证接口路由契约](../../apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/AuthenticationRouter.java) | 登录、Refresh Token 轮换、登出空响应体 |
-| [认证接口集成测试](../../apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java) | 登录、登出、刷新与异常响应的 WebFlux 测试源码；不代表本次已执行 |
+| [认证接口路由契约](../../apex-services-bom/apex-auth-service/src/main/java/com/apex/scaffold/authservice/interfaces/router/AuthenticationRouter.java) | 登录、Refresh Token 轮换、登出空响应体 |
+| [认证接口集成测试](../../apex-services-bom/apex-auth-service/src/test/java/com/apex/scaffold/authservice/interfaces/handler/AuthenticationHandlerIntegrationTest.java) | 登录、登出、刷新与异常响应的 WebFlux 测试源码；不代表本次已执行 |
 | [SpringDoc 审计](../03-api/springdoc-annotation-audit.md) | 主应用与认证中心范围，区分 Handler 注解、Router 元数据和运行时 OpenAPI |
 | [安全过滤器链 SVG](../diagrams/84_security_filter_chain.svg) | 既有安全链图，本轮未重绘或验证 |
 | [认证中心架构 SVG](../diagrams/85_auth_center_architecture.svg) | 既有认证中心图，主应用与认证中心独立 Spring ApplicationContext |
