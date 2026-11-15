@@ -87,10 +87,15 @@ apex:
 
 | 接口 | 权限 | 说明 |
 | --- | --- | --- |
-| `POST /api/v1/masking/batch` | `masking:apply` scope | 按租户授权版本脱敏 |
-| `GET /api/v1/masking/rules` | `masking:rules` scope | 仅列出当前租户可访问版本及字段规则，不输出租户授权名单 |
+| `POST /api/v1/masking/batch` | OAuth2 令牌需 `masking:apply` scope；登录令牌需 ACCESS 声明 | 按租户授权版本脱敏 |
+| `GET /api/v1/masking/rules` | OAuth2 令牌需 `masking:rules` scope；登录令牌需 ACCESS 声明 | 仅列出当前租户可访问版本及字段规则，不输出租户授权名单 |
 
-Spring Security 使用 `SCOPE_` authority 映射 scope。JWT 通过 JWKS 验证签名，并校验 issuer、audience 与默认时间约束。租户只读取已认证令牌的非空字符串 `tenant_id` claim；`X-Tenant-Id`、请求 JSON 或透传头不能覆盖它。未知版本或未授权租户执行请求返回 403。规则列表对没有授权版本的已认证租户返回空集合。
+JWT 通过 JWKS 验证签名与有效期，并按令牌家族校验：
+
+- **认证中心 OAuth2 令牌**（携带 `token_use`）：校验 issuer、audience，且 `scope` 需含对应操作值（`masking:apply` / `masking:rules`，缺省返回 403）。
+- **统一认证登录令牌**（携带 `tokenType=ACCESS`，统一认证收口后的管理后台登录链路）：不携带 iss/aud/scope 声明，按 `tokenType` 校验并由租户白名单约束。
+
+租户只读取已认证令牌的非空字符串 `tenant_id`（OAuth2）或 `tenantId`（登录）claim；`X-Tenant-Id`、请求 JSON 或透传头不能覆盖它。未知版本或未授权租户执行请求返回 403。规则列表对没有授权版本的已认证租户返回空集合。
 
 请求示例（发送时另附有效 `Authorization: Bearer ...`）：
 

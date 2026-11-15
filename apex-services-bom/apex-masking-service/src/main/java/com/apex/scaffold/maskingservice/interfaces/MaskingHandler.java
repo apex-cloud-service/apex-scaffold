@@ -5,6 +5,7 @@ import com.apex.scaffold.common.masking.JsonFieldMasker;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.maskingservice.config.MaskingProperties;
+import com.apex.scaffold.maskingservice.config.MaskingSecurityConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +21,7 @@ import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -94,7 +96,8 @@ public class MaskingHandler {
             saveRequest = false,
             saveResponse = false)
     public Mono<ServerResponse> batch(ServerRequest request) {
-        return tenant().flatMap(tenant -> request.bodyToMono(MaskingRequest.class)
+        return requireCapability("masking:apply")
+                .then(tenant().flatMap(tenant -> request.bodyToMono(MaskingRequest.class)
                         .switchIfEmpty(Mono.error(new IllegalArgumentException("请求不能为空")))
                         .flatMap(input -> {
                             if (!validator.validate(input).isEmpty()) {
@@ -111,7 +114,7 @@ public class MaskingHandler {
                             return ServerResponse.ok()
                                     .bodyValue(
                                             Result.success(Map.of("version", input.version(), "documents", documents)));
-                        }))
+                        })))
                 .onErrorResume(
                         AccessDeniedException.class, error -> failure(HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN))
                 .onErrorResume(
@@ -158,13 +161,14 @@ public class MaskingHandler {
             saveRequest = false,
             saveResponse = false)
     public Mono<ServerResponse> rules(ServerRequest request) {
-        return tenant().flatMap(tenant -> {
+        return requireCapability("masking:rules")
+                .then(tenant().flatMap(tenant -> {
                     var versions = properties.versions().entrySet().stream()
                             .filter(entry -> entry.getValue().tenants().contains(tenant))
                             .collect(java.util.stream.Collectors.toMap(
                                     Map.Entry::getKey, entry -> entry.getValue().fields()));
                     return ServerResponse.ok().bodyValue(Result.success(versions));
-                })
+                }))
                 .onErrorResume(
                         AccessDeniedException.class, error -> failure(HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN));
     }
@@ -179,10 +183,44 @@ public class MaskingHandler {
                     if (!(context.getAuthentication() instanceof JwtAuthenticationToken token)) {
                         return Mono.empty();
                     }
-                    Object tenant = token.getToken().getClaims().get("tenant_id");
+                    var claims = token.getToken().getClaims();
+                    Object tenant = claims.get("tenant_id") != null ? claims.get("tenant_id") : claims.get("tenantId");
                     return tenant instanceof String value && !value.isBlank() ? Mono.just(value) : Mono.empty();
                 })
                 .switchIfEmpty(Mono.error(new AccessDeniedException("缺少受信任租户")));
+    }
+
+    /**
+     * 按令牌家族校验操作能力：OAuth2 令牌要求 scope，登录令牌要求 ACCESS 声明。
+     * @param scope OAuth2 令牌要求具备的 scope 值
+     * @return 校验通过返回空 Mono
+     */
+    private Mono<Void> requireCapability(String scope) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .flatMap(authentication -> {
+                    if (!(authentication instanceof JwtAuthenticationToken token)) {
+                        return Mono.error(new AccessDeniedException("Forbidden"));
+                    }
+                    var claims = token.getToken().getClaims();
+                    if (claims.get(MaskingSecurityConfig.OAUTH2_TOKEN_USE_CLAIM) != null) {
+                        Object raw = claims.get("scope");
+                        java.util.List<String> scopes = raw instanceof String value
+                                ? java.util.List.of(value.split("\\s+"))
+                                : (raw instanceof java.util.Collection<?> collection
+                                        ? collection.stream()
+                                                .map(String::valueOf)
+                                                .toList()
+                                        : java.util.List.of());
+                        return scopes.contains(scope)
+                                ? Mono.<Void>empty()
+                                : Mono.error(new AccessDeniedException("缺少 scope: " + scope));
+                    }
+                    return MaskingSecurityConfig.LOGIN_ACCESS_TYPE.equals(
+                                    claims.get(MaskingSecurityConfig.LOGIN_TOKEN_TYPE_CLAIM))
+                            ? Mono.<Void>empty()
+                            : Mono.error(new AccessDeniedException("缺少 ACCESS 令牌声明"));
+                });
     }
 
     /**

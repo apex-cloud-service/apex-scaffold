@@ -6,7 +6,6 @@ import static org.springframework.security.test.web.reactive.server.SecurityMock
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -53,8 +52,9 @@ class MaskingApiTest {
     }
 
     @Test
-    void requiresAuthenticationAndScope() {
+    void requiresAuthenticationAndRecognizableTokenFamily() {
         client.post().uri("/api/v1/masking/batch").exchange().expectStatus().isUnauthorized();
+        // 无家族声明的令牌（既非 OAuth2 也非登录令牌）按未识别处理
         client.mutateWith(mockJwt())
                 .post()
                 .uri("/api/v1/masking/batch")
@@ -162,12 +162,36 @@ class MaskingApiTest {
     }
 
     private WebTestClient authorized(String tenant) {
-        return client.mutateWith(mockJwt()
-                .jwt(jwt -> {
-                    if (tenant != null) jwt.claim("tenant_id", tenant);
-                })
-                .authorities(
-                        new SimpleGrantedAuthority("SCOPE_masking:apply"),
-                        new SimpleGrantedAuthority("SCOPE_masking:rules")));
+        return client.mutateWith(mockJwt().jwt(jwt -> {
+            jwt.claim("tokenType", "ACCESS");
+            if (tenant != null) jwt.claim("tenantId", tenant);
+        }));
+    }
+
+    private WebTestClient oauth2Client(String tenant, boolean withScope) {
+        return client.mutateWith(mockJwt().jwt(jwt -> {
+            jwt.claim("token_use", "access");
+            if (tenant != null) jwt.claim("tenant_id", tenant);
+            if (withScope) jwt.claim("scope", "masking:apply masking:rules");
+        }));
+    }
+
+    @Test
+    void oauth2FamilyRequiresConfiguredScope() {
+        oauth2Client("tenant-a", false)
+                .get()
+                .uri("/api/v1/masking/rules")
+                .exchange()
+                .expectStatus()
+                .isForbidden();
+        oauth2Client("tenant-a", true)
+                .get()
+                .uri("/api/v1/masking/rules")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.data.v1.phone.type")
+                .isEqualTo("PHONE");
     }
 }
