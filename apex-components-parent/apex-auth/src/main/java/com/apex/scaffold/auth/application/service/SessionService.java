@@ -38,9 +38,10 @@ public class SessionService {
     private static final int DEFAULT_SESSION_HOURS = 24;
 
     /**
-     * 最大并发会话数
+     * 最大并发会话数（默认 5，部署可经 auth-center.session.max-concurrent 覆盖；下限 1）
      */
-    private static final int MAX_CONCURRENT_SESSIONS = 5;
+    @org.springframework.beans.factory.annotation.Value("${auth-center.session.max-concurrent:5}")
+    private int maxConcurrentSessions = 5;
 
     /**
      * 创建会话
@@ -94,9 +95,9 @@ public class SessionService {
      */
     private Mono<Void> checkConcurrentSessions(Long userId, String tenantId) {
         return sessionRepository.findActiveByUserId(userId, tenantId).count().flatMap(count -> {
-            if (count >= MAX_CONCURRENT_SESSIONS) {
-                return Mono.error(
-                        new BusinessException(ResultCode.FORBIDDEN, "超过最大并发会话数限制: " + MAX_CONCURRENT_SESSIONS));
+            int limit = Math.max(1, maxConcurrentSessions);
+            if (count >= limit) {
+                return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "超过最大并发会话数限制: " + limit));
             }
             return Mono.empty();
         });

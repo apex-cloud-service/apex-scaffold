@@ -68,6 +68,10 @@ public class AuthenticationApplicationService {
     /** JWT 密钥材料服务（签发/解析 MFA 挑战凭据，RS256）。 */
     private final com.apex.scaffold.auth.domain.service.JwtKeyMaterialService jwtKeyMaterialService;
 
+    /** 未声明租户的登录请求使用的默认租户编码；部署租户编码非 default 时经 auth-center.login.default-tenant 覆盖。 */
+    @org.springframework.beans.factory.annotation.Value("${auth-center.login.default-tenant:default}")
+    private String defaultLoginTenant;
+
     /** 租户认证期状态校验端口（统一认证收口 A6，登录前置；未配置时适配器跳过）。 */
     private final com.apex.scaffold.auth.domain.service.TenantStatusPort tenantStatusPort;
 
@@ -86,7 +90,7 @@ public class AuthenticationApplicationService {
     public Mono<LoginResponse> login(LoginRequest request, String clientIp) {
         String username = request.getUsername();
         String password = request.getPassword();
-        String tenantId = request.getTenantId() != null ? request.getTenantId() : "default";
+        String tenantId = request.getTenantId() != null ? request.getTenantId() : defaultLoginTenant;
         String deviceId = request.getDeviceId();
         String clientType = request.getClientType();
 
