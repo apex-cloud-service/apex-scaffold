@@ -179,9 +179,9 @@ public class OfficeApplicationService {
      * @return 租户标识
      */
     private Mono<String> tenant() {
-        return Mono.defer(() -> Mono.justOrEmpty(TenantContext.currentTenantId())
+        return TenantContext.currentTenantIdReactive()
                 .filter(value -> !value.isBlank())
-                .switchIfEmpty(denied()));
+                .switchIfEmpty(denied());
     }
 
     /**

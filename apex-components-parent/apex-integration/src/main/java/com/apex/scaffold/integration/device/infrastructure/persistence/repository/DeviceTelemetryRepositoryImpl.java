@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
@@ -46,7 +47,7 @@ public class DeviceTelemetryRepositoryImpl implements DeviceTelemetryRepository 
     @Override
     public Mono<PageResponse<DeviceTelemetry>> page(
             String tenantId, Long deviceId, String deviceKey, int pageNum, int pageSize) {
-        return Mono.fromCallable(() -> {
+        return Mono.fromCallable(() -> TenantContext.callWithTenant(tenantId, () -> {
                     Page<DeviceTelemetryPO> page = new Page<>(pageNum, pageSize);
                     mapper.selectPage(
                             page,
@@ -59,7 +60,7 @@ public class DeviceTelemetryRepositoryImpl implements DeviceTelemetryRepository 
                             page.getTotal(),
                             pageNum,
                             pageSize);
-                })
+                }))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

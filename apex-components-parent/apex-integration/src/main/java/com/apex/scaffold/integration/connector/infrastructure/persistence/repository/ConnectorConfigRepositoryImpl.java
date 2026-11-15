@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.connector.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
@@ -53,7 +54,7 @@ public class ConnectorConfigRepositoryImpl implements ConnectorConfigRepository 
     @Override
     public Mono<PageResponse<ConnectorDefinition>> page(
             String tenantId, String connectorType, int pageNum, int pageSize) {
-        return Mono.fromCallable(() -> {
+        return Mono.fromCallable(() -> TenantContext.callWithTenant(tenantId, () -> {
                     Page<ConnectorConfigPO> page = new Page<>(pageNum, pageSize);
                     mapper.selectPage(
                             page,
@@ -66,7 +67,7 @@ public class ConnectorConfigRepositoryImpl implements ConnectorConfigRepository 
                             page.getTotal(),
                             pageNum,
                             pageSize);
-                })
+                }))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

@@ -129,6 +129,46 @@ public final class TenantContext {
     }
 
     /**
+     * 在指定租户上下文中执行同步调用（阻塞 I/O 边界使用）。
+     *
+     * <p>JDBC/MyBatis 的租户行拦截器读取 ThreadLocal；切换到 {@code BlockingIoSchedulers}
+     * 后原请求线程的 ThreadLocal 已恢复，必须在 callable 内显式安装租户，执行完毕后恢复原值。
+     * @param tenantId 租户标识
+     * @param supplier 同步逻辑
+     * @param <T> 返回类型
+     * @return 同步逻辑的执行结果
+     */
+    public static <T> T callWithTenant(String tenantId, java.util.function.Supplier<T> supplier) {
+        if (tenantId == null || tenantId.isBlank()) {
+            return supplier.get();
+        }
+        String previous = install(tenantId);
+        try {
+            return supplier.get();
+        } finally {
+            restore(previous);
+        }
+    }
+
+    /**
+     * 在响应式链中读取当前租户：优先取 Reactor Context，回退到调用线程的 ThreadLocal。
+     *
+     * <p>业务层在 {@code Mono#defer}/{@code flatMap} 内读取租户时必须使用本方法：
+     * 请求过滤器写入的是 Reactor Context，而 {@link #currentTenantId()} 只读当线程的
+     * ThreadLocal；阻塞调度器切换线程后 ThreadLocal 已恢复，直接读取会丢失租户。
+     * @return 租户 ID（两处均未装配时为空）
+     */
+    public static Mono<String> currentTenantIdReactive() {
+        return Mono.deferContextual(context -> {
+            String tenantId = context.getOrDefault(REACTOR_CONTEXT_KEY, null);
+            if (tenantId == null || tenantId.isBlank()) {
+                tenantId = TENANT_ID.get();
+            }
+            return tenantId == null || tenantId.isBlank() ? Mono.empty() : Mono.just(tenantId);
+        });
+    }
+
+    /**
      * 释放当前请求的租户上下文。
      *
      * <p>必须在请求处理完成后调用，防止线程池复用导致跨租户数据泄漏。</p>

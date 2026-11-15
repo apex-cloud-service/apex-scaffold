@@ -395,13 +395,25 @@ public class OfficeRepositoryImpl implements OfficeRepository {
      * @throws BusinessException 租户校验失败时返回 FORBIDDEN
      */
     private <T> Mono<T> scoped(String tenantId, java.util.concurrent.Callable<T> operation) {
-        return Mono.defer(() -> {
-            if (tenantId == null
-                    || tenantId.isBlank()
-                    || !TenantContext.currentTenantId().filter(tenantId::equals).isPresent()) {
-                return Mono.error(new BusinessException(ResultCode.FORBIDDEN));
+        return Mono.deferContextual(context -> {
+            String trusted = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+            if (trusted == null || trusted.isBlank()) {
+                trusted = TenantContext.currentTenantId().orElse(null);
             }
-            return Mono.fromCallable(operation).subscribeOn(BlockingIoSchedulers.jdbc());
+            if (tenantId == null || tenantId.isBlank() || !tenantId.equals(trusted)) {
+                return Mono.<T>error(new BusinessException(ResultCode.FORBIDDEN));
+            }
+            String scopedTenant = tenantId;
+            return Mono.fromCallable(() -> TenantContext.callWithTenant(scopedTenant, () -> {
+                        try {
+                            return operation.call();
+                        } catch (RuntimeException error) {
+                            throw error;
+                        } catch (Exception error) {
+                            throw new IllegalStateException(error);
+                        }
+                    }))
+                    .subscribeOn(BlockingIoSchedulers.jdbc());
         });
     }
 }

@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.infrastructure.persistence.repository;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.dto.PageResponse;
 import com.apex.scaffold.common.persistence.util.ConditionUtil;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
@@ -47,7 +48,7 @@ public class DeviceRuleRepositoryImpl implements DeviceRuleRepository {
             String tenantId, String keyword, Boolean enabled, int pageNum, int pageSize) {
         int safePageNum = Math.max(1, pageNum);
         int safePageSize = Math.min(Math.max(1, pageSize), 100);
-        return Mono.fromCallable(() -> {
+        return Mono.fromCallable(() -> TenantContext.callWithTenant(tenantId, () -> {
                     LambdaQueryWrapper<DeviceRulePO> wrapper =
                             ConditionUtil.lambda(DeviceRulePO.class).eq(DeviceRulePO::getTenantId, tenantId);
                     if (keyword != null && !keyword.isBlank()) {
@@ -63,7 +64,7 @@ public class DeviceRuleRepositoryImpl implements DeviceRuleRepository {
                             .map(this::toEntity)
                             .toList();
                     return PageResponse.of(records, total == null ? 0L : total, safePageNum, safePageSize);
-                })
+                }))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 

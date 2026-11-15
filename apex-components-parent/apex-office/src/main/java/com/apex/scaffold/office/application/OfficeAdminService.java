@@ -245,8 +245,8 @@ public class OfficeAdminService {
      * @throws BusinessException 租户上下文为空时返回 FORBIDDEN
      */
     private Mono<String> tenant() {
-        return Mono.defer(() -> Mono.justOrEmpty(TenantContext.currentTenantId())
+        return TenantContext.currentTenantIdReactive()
                 .filter(value -> !value.isBlank())
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.FORBIDDEN))));
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.FORBIDDEN)));
     }
 }

@@ -53,7 +53,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
 
     @Override
     public Mono<PageResponse<Device>> page(String tenantId, String status, int pageNum, int pageSize) {
-        return Mono.fromCallable(() -> {
+        return Mono.fromCallable(() -> TenantContext.callWithTenant(tenantId, () -> {
                     Page<DevicePO> page = new Page<>(pageNum, pageSize);
                     mapper.selectPage(
                             page,
@@ -66,7 +66,7 @@ public class DeviceRepositoryImpl implements DeviceRepository {
                             page.getTotal(),
                             pageNum,
                             pageSize);
-                })
+                }))
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
