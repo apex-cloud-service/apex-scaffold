@@ -6,6 +6,7 @@ import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.knowledge.application.assembler.KnowledgeAssembler;
 import com.apex.scaffold.knowledge.application.dto.KbAskRequest;
+import com.apex.scaffold.knowledge.application.dto.KbChatErrorPayload;
 import com.apex.scaffold.knowledge.application.dto.KbConversationDTO;
 import com.apex.scaffold.knowledge.application.dto.KbMessageDTO;
 import com.apex.scaffold.knowledge.config.KnowledgeProperties;
@@ -84,8 +85,11 @@ public class KnowledgeChatAppService {
     /**
      * 发起问答，返回 SSE 事件流。
      *
-     * <p>会话建立阶段的错误（租户缺失、会话不存在）以 HTTP 错误传播；
-     * 流式阶段的错误转为 {@code error} SSE 事件，保证前端收到明确失败信号。
+     * <p>会话建立阶段的错误（租户缺失、会话不存在）作为响应式错误交由调用方处理；
+     * HTTP Handler 将其转换为 HTTP 200 的 {@code error} SSE，不是 HTTP 错误响应。
+     * 流式阶段的错误在本服务内转为 {@code error} SSE；两阶段 data 均为
+     * {@code {code:string,message:string}} JSON，技术异常不对外透传。
+     * 安全链及权限切面仍在调用前拒绝访问，保持既有 HTTP 401/403。
      *
      * @param userId 当前用户 ID
      * @param request 问答请求
@@ -358,14 +362,7 @@ public class KnowledgeChatAppService {
     }
 
     private ServerSentEvent<String> errorEvent(Throwable error) {
-        Integer code = error instanceof BusinessException business ? business.getCode() : ResultCode.ERROR.getCode();
-        String message = error instanceof BusinessException business ? business.getMessage() : "问答服务暂时不可用，请稍后重试";
-        try {
-            return sse(
-                    "error", objectMapper.writeValueAsString(Map.of("code", String.valueOf(code), "message", message)));
-        } catch (Exception e) {
-            return sse("error", "{\"code\":\"-1\",\"message\":\"internal error\"}");
-        }
+        return sse("error", KbChatErrorPayload.from(error).toJson(objectMapper));
     }
 
     private String truncateTitle(String question) {

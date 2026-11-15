@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.knowledge.application.assembler.KnowledgeAssembler;
 import com.apex.scaffold.knowledge.application.dto.KbAskRequest;
 import com.apex.scaffold.knowledge.config.KnowledgeProperties;
@@ -191,6 +192,73 @@ class KnowledgeChatAppServiceTest {
 
         assertThat(events).isNotNull();
         assertThat(events.getLast().event()).isEqualTo("error");
+    }
+
+    @Test
+    void businessStreamFailurePreservesCodeAndEscapedSafeMessage() {
+        assertStreamError(
+                new BusinessException(ResultCode.PARAM_ERROR, "问题包含\"引号\"\n请调整\\内容"),
+                new ObjectMapper(),
+                "400",
+                "问题包含\"引号\"\n请调整\\内容");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullAndEmptySource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"  \t\n"})
+    void emptyBusinessMessageUsesChineseFallback(String message) {
+        assertStreamError(
+                new BusinessException(ResultCode.PARAM_ERROR, message), new ObjectMapper(), "400", "问答服务暂时不可用，请稍后重试");
+    }
+
+    @Test
+    void missingBusinessCodeUsesSystemCode() {
+        assertStreamError(new BusinessException((Integer) null, "请调整提问"), new ObjectMapper(), "-1", "请调整提问");
+    }
+
+    @Test
+    void technicalStreamFailureDoesNotExposeCause() {
+        assertStreamError(
+                new IllegalStateException("upstream-secret", new RuntimeException("private details")),
+                new ObjectMapper(),
+                "-1",
+                "问答服务暂时不可用，请稍后重试");
+    }
+
+    @Test
+    void errorSerializationFailureUsesStableChineseJson() throws Exception {
+        ObjectMapper mapper = org.mockito.Mockito.mock(ObjectMapper.class);
+        when(mapper.writeValueAsString(any()))
+                .thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("serializer private details") {});
+        assertStreamError(new BusinessException(ResultCode.PARAM_ERROR, "请调整提问"), mapper, "-1", "问答服务暂时不可用，请稍后重试");
+    }
+
+    private void assertStreamError(Throwable error, ObjectMapper mapper, String code, String message) {
+        when(conversationRepository.findMessages(anyLong(), anyInt())).thenReturn(Mono.error(error));
+        KnowledgeChatAppService subject = new KnowledgeChatAppService(
+                conversationRepository,
+                searchService,
+                chatPort,
+                new KnowledgeProperties(),
+                new KnowledgeAssembler(),
+                mapper);
+        StepVerifier.create(subject.ask(1L, new KbAskRequest(null, null, "提问")))
+                .assertNext(event -> {
+                    assertThat(event.event()).isEqualTo("error");
+                    try {
+                        var json = new ObjectMapper().readTree(event.data());
+                        assertThat(json.isObject()).isTrue();
+                        assertThat(json.size()).isEqualTo(2);
+                        assertThat(json.get("code").isTextual()).isTrue();
+                        assertThat(json.get("code").textValue()).isEqualTo(code);
+                        assertThat(json.get("message").isTextual()).isTrue();
+                        assertThat(json.get("message").textValue()).isEqualTo(message);
+                    } catch (com.fasterxml.jackson.core.JsonProcessingException failure) {
+                        throw new AssertionError("error SSE data must be JSON", failure);
+                    }
+                })
+                .verifyComplete();
+        verify(chatPort, never()).streamChat(anyString(), anyList(), anyString());
     }
 
     @Test

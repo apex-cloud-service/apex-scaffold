@@ -35,6 +35,12 @@ CREATE TABLE IF NOT EXISTS kb_document (
     source_type  VARCHAR(20)   NOT NULL DEFAULT 'UPLOAD',
     content_type VARCHAR(255),
     object_key   VARCHAR(500),
+    storage_provider VARCHAR(64),
+    storage_bucket VARCHAR(255),
+    object_owned TINYINT NOT NULL DEFAULT 0,
+    index_endpoint VARCHAR(500),
+    index_name VARCHAR(255),
+    index_required TINYINT NOT NULL DEFAULT 0,
     file_size    BIGINT,
     content_text TEXT,
     parse_status VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
@@ -101,3 +107,51 @@ CREATE TABLE IF NOT EXISTS kb_message (
 );
 CREATE INDEX IF NOT EXISTS idx_kb_message_conversation ON kb_message (conversation_id, id);
 CREATE INDEX IF NOT EXISTS idx_kb_message_tenant ON kb_message (tenant_id);
+
+CREATE TABLE IF NOT EXISTS kb_document_work (
+    id BIGINT NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(64) NOT NULL,
+    document_id BIGINT NOT NULL,
+    owner VARCHAR(64),
+    generation BIGINT NOT NULL DEFAULT 0,
+    kind VARCHAR(20),
+    lease_until TIMESTAMP,
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0,
+    UNIQUE (tenant_id, document_id)
+);
+CREATE INDEX IF NOT EXISTS idx_kb_work_lease ON kb_document_work (tenant_id, lease_until, document_id);
+
+CREATE TABLE IF NOT EXISTS kb_document_cleanup (
+    id BIGINT NOT NULL PRIMARY KEY,
+    tenant_id VARCHAR(64) NOT NULL,
+    document_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    mode VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    storage_provider VARCHAR(64),
+    storage_bucket VARCHAR(255),
+    object_key VARCHAR(500),
+    object_required TINYINT NOT NULL DEFAULT 0,
+    object_removed TINYINT NOT NULL DEFAULT 0,
+    index_endpoint VARCHAR(500),
+    index_name VARCHAR(255),
+    index_required TINYINT NOT NULL DEFAULT 0,
+    index_confirmed TINYINT NOT NULL DEFAULT 0,
+    owner VARCHAR(64),
+    generation BIGINT NOT NULL DEFAULT 0,
+    lease_until TIMESTAMP,
+    attempts INT NOT NULL DEFAULT 0,
+    error_message VARCHAR(500),
+    next_retry_at TIMESTAMP,
+    next_review_at TIMESTAMP,
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0,
+    UNIQUE (tenant_id, document_id)
+);
+CREATE INDEX IF NOT EXISTS idx_kb_cleanup_retry ON kb_document_cleanup (tenant_id, status, next_retry_at, document_id);
+CREATE INDEX IF NOT EXISTS idx_kb_cleanup_review ON kb_document_cleanup (tenant_id, mode, next_review_at, document_id);
+CREATE INDEX IF NOT EXISTS idx_kb_document_cleanup_scan ON kb_document (tenant_id, deleted, id);
+CREATE INDEX IF NOT EXISTS idx_kb_chunk_cleanup ON kb_chunk (tenant_id, document_id, deleted);

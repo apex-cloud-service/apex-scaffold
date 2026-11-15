@@ -16,7 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * 知识库域双库迁移回归（Testcontainers 真实 MySQL 9 + PostgreSQL 15）。
  *
- * <p>校验 V1 迁移在两方言下均能从空库完成建表，且五张 kb_* 表与
+ * <p>校验 V1与新增V2迁移在两方言下均能从空库完成，七张kb_*表、定位快照及清理认领字段与
  * flyway_schema_history 全部就位。默认 Failsafe 门禁包含本测试；
  * 并发容器资源竞争导致的启动失败按 AGENTS.md 口径单模块重跑或降并行复核。
  *
@@ -35,7 +35,7 @@ class KnowledgeDualDatabaseMigrationIntegrationTest {
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:15");
 
     /**
-     * 对 MySQL 空库执行 V1 迁移并验证五表就位。
+     * 对 MySQL 空库执行V1/V2迁移并验证七表与清理定位/认领字段。
      */
     @Test
     void mysqlMigrationCreatesKnowledgeTables() throws Exception {
@@ -58,11 +58,14 @@ class KnowledgeDualDatabaseMigrationIntegrationTest {
                         "kb_chunk",
                         "kb_conversation",
                         "kb_message",
+                        "kb_document_work",
+                        "kb_document_cleanup",
                         "flyway_schema_history");
+        assertCleanupColumns(dataSource);
     }
 
     /**
-     * 对 PostgreSQL 空库执行 V1 迁移并验证五表就位。
+     * 对 PostgreSQL 空库执行V1/V2迁移并验证七表与清理定位/认领字段。
      */
     @Test
     void postgresMigrationCreatesKnowledgeTables() {
@@ -85,7 +88,28 @@ class KnowledgeDualDatabaseMigrationIntegrationTest {
                         "kb_chunk",
                         "kb_conversation",
                         "kb_message",
+                        "kb_document_work",
+                        "kb_document_cleanup",
                         "flyway_schema_history");
+        assertCleanupColumns(dataSource);
+    }
+
+    private void assertCleanupColumns(DataSource dataSource) {
+        try (var connection = dataSource.getConnection();
+                var statement = connection.createStatement();
+                var rs = statement.executeQuery(
+                        "SELECT storage_provider,storage_bucket,object_owned,index_endpoint,index_name,index_required"
+                                + " FROM kb_document WHERE 1=0")) {
+            assertThat(rs.getMetaData().getColumnCount()).isEqualTo(6);
+            try (var cleanup = connection.createStatement();
+                    var columns = cleanup.executeQuery("SELECT"
+                            + " tenant_id,document_id,mode,status,owner,generation,lease_until,attempts,next_retry_at,next_review_at"
+                            + " FROM kb_document_cleanup WHERE 1=0")) {
+                assertThat(columns.getMetaData().getColumnCount()).isEqualTo(10);
+            }
+        } catch (Exception error) {
+            throw new IllegalStateException("清理凭证迁移字段校验失败", error);
+        }
     }
 
     /**

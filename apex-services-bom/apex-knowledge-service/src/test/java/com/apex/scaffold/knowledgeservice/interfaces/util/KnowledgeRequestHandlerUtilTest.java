@@ -95,6 +95,63 @@ class KnowledgeRequestHandlerUtilTest {
     }
 
     @Test
+    void buildErrorEventPreservesBusinessCodeAndEscapedMessage() throws Exception {
+        var event = util.buildErrorEvent(new BusinessException(ResultCode.PARAM_ERROR, "请调整\"提问\"\n内容\\格式"));
+        assertErrorEvent(event, "400", "请调整\"提问\"\n内容\\格式");
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullAndEmptySource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"  \t\n"})
+    void buildErrorEventUsesFallbackForEmptyBusinessMessage(String message) throws Exception {
+        assertErrorEvent(
+                util.buildErrorEvent(new BusinessException(ResultCode.PARAM_ERROR, message)), "400", "问答服务暂时不可用，请稍后重试");
+    }
+
+    @Test
+    void buildErrorEventDoesNotExposeTechnicalThrowableOrBusinessCause() throws Exception {
+        assertErrorEvent(
+                util.buildErrorEvent(new IllegalStateException(
+                        "private upstream", new BusinessException(ResultCode.PARAM_ERROR, "private cause"))),
+                "-1",
+                "问答服务暂时不可用，请稍后重试");
+        assertErrorEvent(util.buildErrorEvent(new AssertionError("private technical detail")), "-1", "问答服务暂时不可用，请稍后重试");
+        assertErrorEvent(util.buildErrorEvent(null), "-1", "问答服务暂时不可用，请稍后重试");
+    }
+
+    @Test
+    void buildErrorEventUsesSystemCodeWhenBusinessCodeIsNull() throws Exception {
+        assertErrorEvent(util.buildErrorEvent(new BusinessException((Integer) null, "请调整提问")), "-1", "请调整提问");
+    }
+
+    @Test
+    void buildErrorEventSerializationFailureStillReturnsStableJson() throws Exception {
+        var mapper = org.mockito.Mockito.mock(com.fasterxml.jackson.databind.ObjectMapper.class);
+        org.mockito.Mockito.when(mapper.writeValueAsString(org.mockito.ArgumentMatchers.any()))
+                .thenThrow(new com.fasterxml.jackson.core.JsonProcessingException("private serialization details") {});
+        try (var json = org.mockito.Mockito.mockStatic(com.apex.scaffold.common.util.JsonUtil.class)) {
+            json.when(com.apex.scaffold.common.util.JsonUtil::getObjectMapper).thenReturn(mapper);
+            assertErrorEvent(
+                    util.buildErrorEvent(new BusinessException(ResultCode.PARAM_ERROR, "请调整提问")),
+                    "-1",
+                    "问答服务暂时不可用，请稍后重试");
+        }
+    }
+
+    private void assertErrorEvent(
+            org.springframework.http.codec.ServerSentEvent<String> event, String code, String message)
+            throws Exception {
+        assertThat(event.event()).isEqualTo("error");
+        var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(event.data());
+        assertThat(json.isObject()).isTrue();
+        assertThat(json.size()).isEqualTo(2);
+        assertThat(json.get("code").isTextual()).isTrue();
+        assertThat(json.get("code").textValue()).isEqualTo(code);
+        assertThat(json.get("message").isTextual()).isTrue();
+        assertThat(json.get("message").textValue()).isEqualTo(message);
+    }
+
+    @Test
     void safeParsersHandleInvalidInput() {
         assertThat(KnowledgeRequestHandlerUtil.safeParseLong("42")).isEqualTo(42L);
         assertThat(KnowledgeRequestHandlerUtil.safeParseLong("abc")).isNull();

@@ -6,211 +6,124 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.knowledge.config.KnowledgeProperties;
 import com.apex.scaffold.knowledge.domain.gateway.DocumentParserPort;
 import com.apex.scaffold.knowledge.domain.gateway.EmbeddingPort;
-import com.apex.scaffold.knowledge.domain.gateway.KnowledgeChunkRepository;
+import com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentLifecyclePort;
 import com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentRepository;
 import com.apex.scaffold.knowledge.domain.gateway.KnowledgeSpaceRepository;
 import com.apex.scaffold.knowledge.domain.gateway.KnowledgeVectorIndexPort;
 import com.apex.scaffold.knowledge.domain.model.IndexedChunk;
 import com.apex.scaffold.knowledge.domain.model.KnowledgeChunk;
 import com.apex.scaffold.knowledge.domain.model.KnowledgeDocument;
+import com.apex.scaffold.knowledge.domain.model.KnowledgeDocumentLease;
 import com.apex.scaffold.knowledge.domain.model.KnowledgeSpace;
 import com.apex.scaffold.knowledge.domain.service.ChunkingService;
 import com.apex.scaffold.knowledge.support.EmbeddingCache;
 import com.apex.scaffold.storage.StorageRegistry;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
- * 摄取管线编排服务：解析 → 分块 → 向量化 → 索引，失败路径显式落库。
+ * 摄取管线编排服务：解析 → 分块 → 向量化 → 索引。
  *
- * <p>状态机推进规则：解析失败标记 {@code PARSE_FAILED} 并终止；索引失败标记
- * {@code INDEX_FAILED}（分块已入库，可重建）；embedding 未启用时仅写词法索引。
- * 管线吞掉最终错误转为状态落库与日志，保证触发方（上传/校准 Job）不被拖垮。
+ * <p>独立订阅从可信 TenantContext 捕获租户，数据库租约串行协调摄取/重建/删除。
+ * 每次状态与分块写均验证 fencing token 及未删除主档；索引任务成功确认后才标记 INDEXED。
+ * 远程超时或取消不能证明任务不会迟到，删除 tombstone 长期定向复核实现最终收敛。
  *
  * @author Apex Team
  * @since 1.3.2
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class IngestionService {
 
     private final KnowledgeDocumentRepository documentRepository;
-
-    private final KnowledgeChunkRepository chunkRepository;
-
     private final KnowledgeSpaceRepository spaceRepository;
-
     private final DocumentParserPort parserPort;
-
     private final EmbeddingPort embeddingPort;
-
     private final KnowledgeVectorIndexPort vectorIndexPort;
-
     private final ChunkingService chunkingService;
-
     private final KnowledgeProperties properties;
-
     private final StorageRegistry storageRegistry;
-
     private final EmbeddingCache embeddingCache;
+    private final KnowledgeDocumentLifecyclePort lifecycle;
+    private final KnowledgeDocumentLeaseRunner leaseRunner;
 
     /**
-     * 构建摄取编排服务。
+     * 认领后执行摄取；缺少可信租户直接拒绝，不使用公共租户或 0 回退。
+     * 认领冲突返回完成信号；管线错误只尝试写仍有效且未删除的主档，不恢复已删除文档。
      *
-     * @param documentRepository 文档仓储
-     * @param chunkRepository 分块仓储
-     * @param spaceRepository 空间仓储
-     * @param parserPort 解析端口
-     * @param embeddingPort 向量化端口
-     * @param vectorIndexPort 索引端口
-     * @param chunkingService 分块服务
-     * @param properties 运行配置
-     * @param storageRegistry 存储注册表
-     * @param embeddingCache 向量缓存
-     */
-    public IngestionService(
-            KnowledgeDocumentRepository documentRepository,
-            KnowledgeChunkRepository chunkRepository,
-            KnowledgeSpaceRepository spaceRepository,
-            DocumentParserPort parserPort,
-            EmbeddingPort embeddingPort,
-            KnowledgeVectorIndexPort vectorIndexPort,
-            ChunkingService chunkingService,
-            KnowledgeProperties properties,
-            StorageRegistry storageRegistry,
-            EmbeddingCache embeddingCache) {
-        this.documentRepository = documentRepository;
-        this.chunkRepository = chunkRepository;
-        this.spaceRepository = spaceRepository;
-        this.parserPort = parserPort;
-        this.embeddingPort = embeddingPort;
-        this.vectorIndexPort = vectorIndexPort;
-        this.chunkingService = chunkingService;
-        this.properties = properties;
-        this.storageRegistry = storageRegistry;
-        this.embeddingCache = embeddingCache;
-    }
-
-    /**
-     * 执行全量摄取（幂等：重复触发先清理旧分块再重建）。
-     *
-     * @param documentId 文档 ID
-     * @return 完成信号（失败已落库并记录日志，不向触发方传播）
+     * @param documentId 待摄取文档 ID
+     * @return 摄取结束或认领冲突时的完成信号；租户缺失与不可恢复错误发出错误
      */
     public Mono<Void> ingest(Long documentId) {
-        return documentRepository
-                .findById(documentId)
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "知识文档不存在: " + documentId)))
-                .flatMap(this::runPipeline)
-                .onErrorResume(error -> markFailed(documentId, error).then(Mono.empty()));
+        return TenantContext.currentTenantIdReactive()
+                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "可信租户上下文缺失")))
+                .flatMap(tenant -> lifecycle
+                        .claimIngestion(documentId)
+                        .flatMap(lease -> Mono.usingWhen(
+                                Mono.just(lease),
+                                owned -> leaseRunner
+                                        .run(
+                                                owned,
+                                                documentRepository
+                                                        .findById(documentId)
+                                                        .switchIfEmpty(Mono.error(
+                                                                new BusinessException(ResultCode.NOT_FOUND, "知识文档不存在")))
+                                                        .flatMap(document -> runPipeline(owned, document)))
+                                        .onErrorResume(error -> markFailed(owned, error)),
+                                lifecycle::release,
+                                (owned, error) -> lifecycle.release(owned),
+                                lifecycle::release))
+                        .contextWrite(TenantContext.withTenant(tenant)));
     }
 
-    /**
-     * 管线主体：解析（可跳过）→ 分块入库 → 向量化 → 索引 → 状态收敛。
-     *
-     * @param document 文档
-     * @return 完成信号
-     */
-    private Mono<Void> runPipeline(KnowledgeDocument document) {
+    private Mono<Void> runPipeline(KnowledgeDocumentLease lease, KnowledgeDocument document) {
         boolean parseNeeded =
                 document.getContentText() == null || document.getContentText().isEmpty();
-        Mono<KnowledgeDocument> parsed = parseNeeded ? parseAndPersist(document) : Mono.just(document);
-        return parsed.flatMap(this::chunkAndPersist)
-                .flatMap(docWithChunks -> indexChunks(docWithChunks.getKey(), docWithChunks.getValue()))
-                .then();
+        Mono<KnowledgeDocument> parsed = parseNeeded ? parseAndPersist(lease, document) : Mono.just(document);
+        return parsed.flatMap(doc -> chunkAndIndex(lease, doc));
     }
 
-    /**
-     * 解析文档正文并持久化（UPLOAD 来源走对象存储下载，MANUAL 来源已有正文直接跳过）。
-     *
-     * @param document 文档
-     * @return 更新后的文档
-     */
-    private Mono<KnowledgeDocument> parseAndPersist(KnowledgeDocument document) {
-        return documentRepository
-                .update(KnowledgeDocument.builder()
-                        .id(document.getId())
-                        .title(document.getTitle())
-                        .sourceType(document.getSourceType())
-                        .contentType(document.getContentType())
-                        .objectKey(document.getObjectKey())
-                        .fileSize(document.getFileSize())
-                        .contentText(null)
-                        .parseStatus(KnowledgeDocument.ParseStatus.PARSING)
-                        .parseError(null)
-                        .chunkCount(document.getChunkCount())
-                        .indexStatus(document.getIndexStatus())
-                        .build())
+    private Mono<KnowledgeDocument> parseAndPersist(KnowledgeDocumentLease lease, KnowledgeDocument document) {
+        document.setParseStatus(KnowledgeDocument.ParseStatus.PARSING);
+        document.setParseError(null);
+        return lifecycle
+                .persistDocument(lease, document)
                 .then(parseText(document))
-                .flatMap(parsed -> documentRepository.update(KnowledgeDocument.builder()
-                        .id(document.getId())
-                        .title(document.getTitle())
-                        .sourceType(document.getSourceType())
-                        .contentType(document.getContentType())
-                        .objectKey(document.getObjectKey())
-                        .fileSize(document.getFileSize())
-                        .contentText(parsed.text())
-                        .parseStatus(KnowledgeDocument.ParseStatus.PARSED)
-                        .parseError(null)
-                        .chunkCount(document.getChunkCount())
-                        .indexStatus(document.getIndexStatus())
-                        .build()));
+                .flatMap(parsed -> {
+                    document.setContentText(parsed.text());
+                    document.setParseStatus(KnowledgeDocument.ParseStatus.PARSED);
+                    return lifecycle.persistDocument(lease, document);
+                });
     }
 
-    /**
-     * 分块入库并更新主档分块数。
-     *
-     * @param document 已解析文档
-     * @return 文档 + 分块列表
-     */
-    private Mono<java.util.AbstractMap.SimpleEntry<KnowledgeDocument, List<KnowledgeChunk>>> chunkAndPersist(
-            KnowledgeDocument document) {
+    private Mono<Void> chunkAndIndex(KnowledgeDocumentLease lease, KnowledgeDocument document) {
         List<KnowledgeChunk> chunks = chunkingService.chunk(document.getContentText());
-        return chunkRepository
-                .replaceByDocument(document.getId(), chunks)
-                .then(documentRepository.update(KnowledgeDocument.builder()
-                        .id(document.getId())
-                        .title(document.getTitle())
-                        .sourceType(document.getSourceType())
-                        .contentType(document.getContentType())
-                        .objectKey(document.getObjectKey())
-                        .fileSize(document.getFileSize())
-                        .contentText(document.getContentText())
-                        .parseStatus(document.getParseStatus())
-                        .parseError(null)
-                        .chunkCount(chunks.size())
-                        .indexStatus(KnowledgeDocument.IndexStatus.PENDING)
-                        .build()))
-                .map(updated -> new java.util.AbstractMap.SimpleEntry<>(updated, chunks));
+        return lifecycle
+                .replaceChunks(lease, chunks)
+                .flatMap(count -> {
+                    if (count != chunks.size()) {
+                        return Mono.error(new IllegalStateException("分块写入数量不符"));
+                    }
+                    document.setChunkCount(count);
+                    document.setParseError(null);
+                    document.setIndexStatus(
+                            properties.getMeilisearch().isEnabled()
+                                    ? KnowledgeDocument.IndexStatus.PENDING
+                                    : KnowledgeDocument.IndexStatus.NONE);
+                    return lifecycle.persistDocument(lease, document);
+                })
+                .flatMap(updated -> indexChunks(lease, updated, chunks));
     }
 
-    /**
-     * 向量化（带缓存）并写入索引；embedding 未启用时仅词法索引。
-     *
-     * @param document 文档
-     * @param chunks 分块列表
-     * @return 完成信号
-     */
-    private Mono<Void> indexChunks(KnowledgeDocument document, List<KnowledgeChunk> chunks) {
-        if (chunks.isEmpty()) {
-            return documentRepository
-                    .update(KnowledgeDocument.builder()
-                            .id(document.getId())
-                            .title(document.getTitle())
-                            .sourceType(document.getSourceType())
-                            .contentType(document.getContentType())
-                            .objectKey(document.getObjectKey())
-                            .fileSize(document.getFileSize())
-                            .contentText(document.getContentText())
-                            .parseStatus(document.getParseStatus())
-                            .parseError(null)
-                            .chunkCount(0)
-                            .indexStatus(KnowledgeDocument.IndexStatus.INDEXED)
-                            .build())
-                    .then();
+    private Mono<Void> indexChunks(
+            KnowledgeDocumentLease lease, KnowledgeDocument document, List<KnowledgeChunk> chunks) {
+        if (!properties.getMeilisearch().isEnabled()) {
+            return Mono.empty();
         }
         boolean embeddingEnabled = properties.getEmbedding().isEnabled();
         Mono<List<float[]>> vectors = embeddingEnabled ? embedWithCache(chunks) : Mono.just(List.of());
@@ -224,7 +137,7 @@ public class IngestionService {
                         .chunkId(chunk.getId())
                         .documentId(document.getId())
                         .spaceId(document.getSpaceId())
-                        .tenantId(TenantContext.currentTenantId().orElse("0"))
+                        .tenantId(lease.tenantId())
                         .seq(chunk.getSeq())
                         .content(chunk.getContent())
                         .contentHash(chunk.getContentHash())
@@ -235,35 +148,27 @@ public class IngestionService {
                         .updateTime(document.getUpdateTime())
                         .build());
             }
-            KnowledgeDocument.IndexStatus status = embeddingEnabled
-                    ? KnowledgeDocument.IndexStatus.INDEXED
-                    : KnowledgeDocument.IndexStatus.INDEXED_LEXICAL;
-            return vectorIndexPort
-                    .ensureIndex(embeddingEnabled, properties.getEmbedding().getDimensions())
-                    .then(vectorIndexPort.upsertChunks(indexed))
-                    .then(documentRepository.update(KnowledgeDocument.builder()
-                            .id(document.getId())
-                            .title(document.getTitle())
-                            .sourceType(document.getSourceType())
-                            .contentType(document.getContentType())
-                            .objectKey(document.getObjectKey())
-                            .fileSize(document.getFileSize())
-                            .contentText(document.getContentText())
-                            .parseStatus(document.getParseStatus())
-                            .parseError(null)
-                            .chunkCount(chunks.size())
-                            .indexStatus(status)
-                            .build()))
+            String endpoint = properties.getMeilisearch().getUrl();
+            String indexName = properties.getMeilisearch().getIndexPrefix() + "kb_chunks";
+            return lifecycle
+                    .recordIndexTarget(lease, endpoint, indexName)
+                    .then(vectorIndexPort.ensureIndex(
+                            embeddingEnabled, properties.getEmbedding().getDimensions()))
+                    .then(Mono.defer(() -> lifecycle.recordIndexTarget(lease, endpoint, indexName)))
+                    .then(vectorIndexPort.deleteDocumentChunks(endpoint, indexName, lease.tenantId(), document.getId()))
+                    .then(Mono.defer(() -> lifecycle.recordIndexTarget(lease, endpoint, indexName)))
+                    .then(Mono.defer(() -> vectorIndexPort.upsertChunks(indexed)))
+                    .then(Mono.defer(() -> {
+                        document.setIndexStatus(
+                                embeddingEnabled
+                                        ? KnowledgeDocument.IndexStatus.INDEXED
+                                        : KnowledgeDocument.IndexStatus.INDEXED_LEXICAL);
+                        return lifecycle.persistDocument(lease, document);
+                    }))
                     .then();
         });
     }
 
-    /**
-     * 加载文档所属空间（索引文档需要空间名称展示）。
-     *
-     * @param document 文档
-     * @return 空间模型
-     */
     private Mono<KnowledgeSpace> loadSpace(KnowledgeDocument document) {
         return spaceRepository
                 .findById(document.getSpaceId())
@@ -273,100 +178,62 @@ public class IngestionService {
                         .build()));
     }
 
-    /**
-     * 带缓存的批量向量化：命中缓存的分块不调用供应商。
-     *
-     * @param chunks 分块
-     * @return 与分块顺序一致的向量列表
-     */
     private Mono<List<float[]>> embedWithCache(List<KnowledgeChunk> chunks) {
         List<float[]> cached = new ArrayList<>(chunks.size());
-        List<Integer> missIndexes = new ArrayList<>();
+        List<Integer> misses = new ArrayList<>();
         for (int i = 0; i < chunks.size(); i++) {
             float[] vector = embeddingCache.get(chunks.get(i).getContentHash());
-            if (vector != null) {
-                cached.add(vector);
-            } else {
-                cached.add(null);
-                missIndexes.add(i);
-            }
+            cached.add(vector);
+            if (vector == null) misses.add(i);
         }
-        if (missIndexes.isEmpty()) {
-            return Mono.just(cached);
-        }
-        List<String> texts = missIndexes.stream()
-                .map(index -> chunks.get(index).getContent())
-                .toList();
+        if (misses.isEmpty()) return Mono.just(cached);
         return embeddingPort
-                .embed(texts)
-                .doOnNext(vectors -> {
-                    for (int i = 0; i < missIndexes.size(); i++) {
+                .embed(misses.stream().map(i -> chunks.get(i).getContent()).toList())
+                .map(vectors -> {
+                    if (vectors.size() != misses.size()) throw new IllegalStateException("向量响应数量不符");
+                    for (int i = 0; i < misses.size(); i++) {
                         float[] vector = vectors.get(i);
-                        embeddingCache.put(chunks.get(missIndexes.get(i)).getContentHash(), vector);
-                        cached.set(missIndexes.get(i), vector);
+                        embeddingCache.put(chunks.get(misses.get(i)).getContentHash(), vector);
+                        cached.set(misses.get(i), vector);
                     }
-                })
-                .thenReturn(cached);
-    }
-
-    /**
-     * 从对象存储下载并解析正文（UPLOAD 来源）。
-     *
-     * @param document 文档
-     * @return 解析结果
-     */
-    private Mono<com.apex.scaffold.knowledge.domain.model.ParsedDocument> parseText(KnowledgeDocument document) {
-        return storageRegistry
-                .defaultStorage()
-                .download(properties.getStorage().getBucket(), document.getObjectKey())
-                .switchIfEmpty(Mono.error(new BusinessException(ResultCode.STORAGE_ERROR, "对象不存在或已被清理")))
-                .flatMap(stream -> parserPort.parse(document.getTitle(), document.getContentType(), () -> stream));
-    }
-
-    /**
-     * 管线失败收敛：解析失败标记 PARSE_FAILED，其余标记 INDEX_FAILED。
-     *
-     * @param documentId 文档 ID
-     * @param error 失败原因
-     * @return 完成信号
-     */
-    private Mono<Void> markFailed(Long documentId, Throwable error) {
-        log.error("知识文档摄取失败: documentId={}", documentId, error);
-        String message = truncate(error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage());
-        return documentRepository
-                .findById(documentId)
-                .flatMap(document -> {
-                    boolean parseFailure = document.getParseStatus() == KnowledgeDocument.ParseStatus.PENDING
-                            || document.getParseStatus() == KnowledgeDocument.ParseStatus.PARSING;
-                    return documentRepository
-                            .update(KnowledgeDocument.builder()
-                                    .id(document.getId())
-                                    .title(document.getTitle())
-                                    .sourceType(document.getSourceType())
-                                    .contentType(document.getContentType())
-                                    .objectKey(document.getObjectKey())
-                                    .fileSize(document.getFileSize())
-                                    .contentText(document.getContentText())
-                                    .parseStatus(
-                                            parseFailure
-                                                    ? KnowledgeDocument.ParseStatus.FAILED
-                                                    : document.getParseStatus())
-                                    .parseError(message)
-                                    .chunkCount(document.getChunkCount())
-                                    .indexStatus(
-                                            parseFailure
-                                                    ? document.getIndexStatus()
-                                                    : KnowledgeDocument.IndexStatus.FAILED)
-                                    .build())
-                            .then();
-                })
-                .onErrorResume(markError -> {
-                    log.error("摄取失败状态落库失败: documentId={}", documentId, markError);
-                    return Mono.empty();
+                    return cached;
                 });
     }
 
-    private String truncate(String message) {
-        return message.length() <= 500 ? message : message.substring(0, 500) + "…";
+    private Mono<com.apex.scaffold.knowledge.domain.model.ParsedDocument> parseText(KnowledgeDocument document) {
+        return Mono.defer(() -> {
+            var storage = document.isLocationSnapshot()
+                    ? storageRegistry.require(document.getStorageProvider())
+                    : storageRegistry.defaultStorage();
+            String bucket = document.isLocationSnapshot()
+                    ? document.getStorageBucket()
+                    : properties.getStorage().getBucket();
+            return storage.withDownload(
+                            bucket,
+                            document.getObjectKey(),
+                            stream -> parserPort.parse(document.getTitle(), document.getContentType(), () -> stream))
+                    .switchIfEmpty(Mono.error(new BusinessException(ResultCode.STORAGE_ERROR, "对象不存在或已被清理")));
+        });
+    }
+
+    private Mono<Void> markFailed(KnowledgeDocumentLease lease, Throwable error) {
+        log.warn(
+                "知识文档摄取失败: documentId={}, errorType={}",
+                lease.documentId(),
+                error.getClass().getSimpleName());
+        return documentRepository
+                .findById(lease.documentId())
+                .flatMap(document -> {
+                    boolean parseFailure = document.getParseStatus() == KnowledgeDocument.ParseStatus.PENDING
+                            || document.getParseStatus() == KnowledgeDocument.ParseStatus.PARSING;
+                    if (parseFailure) document.setParseStatus(KnowledgeDocument.ParseStatus.FAILED);
+                    else document.setIndexStatus(KnowledgeDocument.IndexStatus.FAILED);
+                    document.setParseError(parseFailure ? "文档解析失败，请检查文件格式后重试" : "索引未完成，请检查供应商配置后重试");
+                    return lifecycle.persistDocument(lease, document).then();
+                })
+                .onErrorResume(markError -> {
+                    log.warn("摄取失败状态未写入（文档已删除或认领失效）: documentId={}", lease.documentId());
+                    return Mono.empty();
+                });
     }
 }

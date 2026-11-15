@@ -1,79 +1,67 @@
 package com.apex.scaffold.knowledge.application.job;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.knowledge.application.service.IngestionService;
-import com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentRepository;
+import com.apex.scaffold.knowledge.config.KnowledgeProperties;
+import com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentLifecyclePort;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * 知识摄取校准 Job：每日扫描滞留/失败的文档重新入管线。
- *
- * <p>覆盖三类滞留：解析中中断（PARSING）、解析失败（FAILED/PENDING）与索引失败
- * （PENDING/FAILED）。仅扫描更新时间早于 15 分钟前的记录，避免与进行中的摄取
- * 并发踩踏；单文档失败不影响批次推进。与 system 的 SearchIndexReconciliationJob
- * 保持同一模式：调度线程上阻塞订阅响应式管线。
+ * 摄取校准仅从专属 work 投影获取租户，再以显式租户条件查询滞留主档。
+ * ingest 的数据库租约协调并发，不以15分钟阈值作为互斥锁；解析恢复独立于索引开关。
  *
  * @author Apex Team
  * @since 1.3.2
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "apex.knowledge.meilisearch", name = "enabled", havingValue = "true")
+@RequiredArgsConstructor
 public class KnowledgeIndexReconciliationJob {
 
-    /** 单轮扫描上限，防止失败风暴。 */
-    private static final int BATCH_LIMIT = 100;
-
-    /** 滞留判定阈值（分钟）：晚于该时间的记录视为仍在处理中。 */
-    private static final int STALE_MINUTES = 15;
-
-    private final KnowledgeDocumentRepository documentRepository;
-
+    private final KnowledgeDocumentLifecyclePort lifecycle;
     private final IngestionService ingestionService;
+    private final KnowledgeProperties properties;
 
-    /**
-     * 构建校准 Job。
-     *
-     * @param documentRepository 文档仓储
-     * @param ingestionService 摄取编排服务
-     */
-    public KnowledgeIndexReconciliationJob(
-            KnowledgeDocumentRepository documentRepository, IngestionService ingestionService) {
-        this.documentRepository = documentRepository;
-        this.ingestionService = ingestionService;
+    /** 默认每日02:30，调度线程桥接阻塞订阅；数据库I/O已由仓储隔离。 */
+    @Scheduled(cron = "${apex.knowledge.reconcile-cron:0 30 2 * * ?}")
+    public void reconcile() {
+        runOnce().block();
     }
 
     /**
-     * 每日 02:30 执行校准扫描。
+     * 执行一轮摄取校准：按专属工作投影的租户扫描滞留文档并重新触发摄取。
+     *
+     * <p>仅处理超过 15 分钟且处于指定解析/索引状态的记录；单文档失败记录日志后继续，
+     * 不以无租户上下文扫描业务表。
+     *
+     * @return 本轮校准结束的完成信号；单项错误已被隔离
      */
-    @Scheduled(cron = "${apex.knowledge.reconcile-cron:0 30 2 * * ?}")
-    public void reconcile() {
-        LocalDateTime threshold = LocalDateTime.now().minusMinutes(STALE_MINUTES);
-        log.info("知识摄取校准开始: threshold={}", threshold);
-        Long parsedCount = documentRepository
-                .findIdsByStatusAndUpdatedBefore(List.of("PENDING", "PARSING", "FAILED"), threshold, BATCH_LIMIT)
-                .flatMapMany(Flux::fromIterable)
-                .concatMap(id -> ingestionService.ingest(id).onErrorResume(error -> {
-                    log.warn("校准摄取失败（继续批次）: documentId={}", id, error);
-                    return Mono.empty();
-                }))
-                .count()
-                .block();
-        Long indexedCount = documentRepository
-                .findIdsByIndexStatusAndUpdatedBefore(List.of("PENDING", "FAILED"), threshold, BATCH_LIMIT)
-                .flatMapMany(Flux::fromIterable)
-                .concatMap(id -> ingestionService.ingest(id).onErrorResume(error -> {
-                    log.warn("校准索引重建失败（继续批次）: documentId={}", id, error);
-                    return Mono.empty();
-                }))
-                .count()
-                .block();
-        log.info("知识摄取校准完成: parseScanned={}, indexScanned={}", parsedCount, indexedCount);
+    public Mono<Void> runOnce() {
+        Mono<List<String>> tenants = properties.getCleanup().getTenantIds().isEmpty()
+                ? lifecycle.scanTaskTenants(1000)
+                : Mono.just(properties.getCleanup().getTenantIds());
+        return tenants.flatMapMany(Flux::fromIterable)
+                .distinct()
+                .concatMap(tenant -> lifecycle
+                        .scanIngestion(
+                                tenant,
+                                LocalDateTime.now().minusMinutes(15),
+                                properties.getCleanup().getBatchSize())
+                        .flatMapMany(Flux::fromIterable)
+                        .concatMap(id -> Mono.defer(() -> ingestionService.ingest(id))
+                                .onErrorResume(error -> {
+                                    log.warn("知识摄取校准失败: tenantId={}, documentId={}", tenant, id);
+                                    return Mono.empty();
+                                })
+                                .then(Mono.delay(properties.getCleanup().getItemDelay())))
+                        .contextWrite(TenantContext.withTenant(tenant)))
+                .then();
     }
 }

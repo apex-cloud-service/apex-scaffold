@@ -1,224 +1,172 @@
 package com.apex.scaffold.knowledge.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
+import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.knowledge.config.KnowledgeProperties;
-import com.apex.scaffold.knowledge.domain.gateway.DocumentParserPort;
-import com.apex.scaffold.knowledge.domain.gateway.EmbeddingPort;
-import com.apex.scaffold.knowledge.domain.gateway.KnowledgeChunkRepository;
-import com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentRepository;
-import com.apex.scaffold.knowledge.domain.gateway.KnowledgeSpaceRepository;
-import com.apex.scaffold.knowledge.domain.gateway.KnowledgeVectorIndexPort;
-import com.apex.scaffold.knowledge.domain.model.IndexedChunk;
-import com.apex.scaffold.knowledge.domain.model.KnowledgeDocument;
-import com.apex.scaffold.knowledge.domain.model.KnowledgeSpace;
-import com.apex.scaffold.knowledge.domain.model.ParsedDocument;
+import com.apex.scaffold.knowledge.domain.gateway.*;
+import com.apex.scaffold.knowledge.domain.model.*;
 import com.apex.scaffold.knowledge.domain.service.ChunkingService;
 import com.apex.scaffold.knowledge.support.EmbeddingCache;
-import com.apex.scaffold.storage.ObjectStorage;
 import com.apex.scaffold.storage.StorageRegistry;
-import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+import reactor.test.StepVerifier;
 
-/**
- * 摄取管线编排单元测试：状态机推进与降级路径。
- *
- * @author Apex Team
- * @since 1.3.2
- */
 @ExtendWith(MockitoExtension.class)
 class IngestionServiceTest {
+    @Mock
+    KnowledgeDocumentRepository documents;
 
     @Mock
-    private KnowledgeDocumentRepository documentRepository;
+    KnowledgeSpaceRepository spaces;
 
     @Mock
-    private KnowledgeChunkRepository chunkRepository;
+    DocumentParserPort parser;
 
     @Mock
-    private KnowledgeSpaceRepository spaceRepository;
+    EmbeddingPort embeddings;
 
     @Mock
-    private DocumentParserPort parserPort;
+    KnowledgeVectorIndexPort index;
 
     @Mock
-    private EmbeddingPort embeddingPort;
+    StorageRegistry storage;
 
     @Mock
-    private KnowledgeVectorIndexPort vectorIndexPort;
+    KnowledgeDocumentLifecyclePort lifecycle;
 
-    @Mock
-    private StorageRegistry storageRegistry;
+    KnowledgeProperties properties;
+    IngestionService service;
+    KnowledgeDocument document;
+    final KnowledgeDocumentLease lease = new KnowledgeDocumentLease(
+            "trusted-tenant", 1L, "owner", 1, "INGEST", LocalDateTime.now().plusMinutes(2));
 
-    @Mock
-    private ObjectStorage objectStorage;
-
-    @Mock
-    private InputStream inputStream;
-
-    /**
-     * 构建被测服务。
-     *
-     * @param embeddingEnabled 是否启用向量化
-     * @return 摄取编排服务
-     */
-    private IngestionService service(boolean embeddingEnabled) {
-        KnowledgeProperties properties = new KnowledgeProperties();
-        properties.getEmbedding().setEnabled(embeddingEnabled);
-        properties.getEmbedding().setDimensions(4);
-        lenient().when(storageRegistry.defaultStorage()).thenReturn(objectStorage);
-        lenient().when(objectStorage.download(anyString(), anyString())).thenReturn(Mono.just(inputStream));
-        return new IngestionService(
-                documentRepository,
-                chunkRepository,
-                spaceRepository,
-                parserPort,
-                embeddingPort,
-                vectorIndexPort,
+    @BeforeEach
+    void setUp() {
+        properties = new KnowledgeProperties();
+        properties.getMeilisearch().setEnabled(true);
+        service = new IngestionService(
+                documents,
+                spaces,
+                parser,
+                embeddings,
+                index,
                 new ChunkingService(100, 10),
                 properties,
-                storageRegistry,
-                new EmbeddingCache(64));
-    }
-
-    /**
-     * 构建待摄取的 UPLOAD 文档。
-     *
-     * @return 文档模型
-     */
-    private KnowledgeDocument uploadDocument() {
-        return KnowledgeDocument.builder()
+                storage,
+                new EmbeddingCache(64),
+                lifecycle,
+                new KnowledgeDocumentLeaseRunner(lifecycle, properties));
+        document = KnowledgeDocument.builder()
                 .id(1L)
                 .spaceId(2L)
-                .title("测试文档")
-                .sourceType(KnowledgeDocument.SourceType.UPLOAD)
-                .contentType("application/pdf")
-                .objectKey("kb/x")
-                .parseStatus(KnowledgeDocument.ParseStatus.PENDING)
-                .indexStatus(KnowledgeDocument.IndexStatus.NONE)
-                .chunkCount(0)
-                .build();
-    }
-
-    /**
-     * 更新仓储回显入参，空间查询返回默认空间，索引端口全部放行。
-     */
-    private void stubReposEchoUpdate() {
-        when(documentRepository.update(any(KnowledgeDocument.class)))
-                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(documentRepository.findById(anyLong())).thenReturn(Mono.just(uploadDocument()));
-        when(chunkRepository.replaceByDocument(anyLong(), anyList())).thenReturn(Mono.just(1));
-        // 生产实现 update 会从库回读完整 PO（spaceId 等字段不丢）；测试桩以 any() 匹配模拟该语义
-        lenient()
-                .when(spaceRepository.findById(org.mockito.ArgumentMatchers.any()))
-                .thenReturn(
-                        Mono.just(KnowledgeSpace.builder().id(2L).name("默认空间").build()));
-        lenient().when(vectorIndexPort.ensureIndex(anyBoolean(), anyInt())).thenReturn(Mono.empty());
-        lenient().when(vectorIndexPort.upsertChunks(anyList())).thenReturn(Mono.empty());
-    }
-
-    @Test
-    void uploadDocumentIsParsedChunkedAndLexicallyIndexedWhenEmbeddingDisabled() {
-        IngestionService ingestion = service(false);
-        stubReposEchoUpdate();
-        when(parserPort.parse(anyString(), anyString(), any()))
-                .thenReturn(Mono.just(new ParsedDocument("知识正文内容", "application/pdf")));
-
-        ingestion.ingest(1L).block();
-
-        ArgumentCaptor<KnowledgeDocument> updates = ArgumentCaptor.forClass(KnowledgeDocument.class);
-        verify(documentRepository, org.mockito.Mockito.atLeastOnce()).update(updates.capture());
-        assertThat(updates.getAllValues())
-                .extracting(KnowledgeDocument::getIndexStatus)
-                .contains(KnowledgeDocument.IndexStatus.INDEXED_LEXICAL);
-        verify(vectorIndexPort).ensureIndex(false, 4);
-        ArgumentCaptor<List<IndexedChunk>> chunks = ArgumentCaptor.forClass(List.class);
-        verify(vectorIndexPort).upsertChunks(chunks.capture());
-        assertThat(chunks.getValue())
-                .allSatisfy(chunk -> assertThat(chunk.getEmbedding()).isNull());
-    }
-
-    @Test
-    void uploadDocumentIsVectorIndexedWhenEmbeddingEnabled() {
-        IngestionService ingestion = service(true);
-        stubReposEchoUpdate();
-        when(parserPort.parse(anyString(), anyString(), any()))
-                .thenReturn(Mono.just(new ParsedDocument("知识正文内容", "application/pdf")));
-        when(embeddingPort.embed(anyList())).thenReturn(Mono.just(List.of(new float[] {0.1f, 0.2f, 0.3f, 0.4f})));
-
-        ingestion.ingest(1L).block();
-
-        verify(vectorIndexPort).ensureIndex(true, 4);
-        ArgumentCaptor<List<IndexedChunk>> chunks = ArgumentCaptor.forClass(List.class);
-        verify(vectorIndexPort).upsertChunks(chunks.capture());
-        assertThat(chunks.getValue().get(0).getEmbedding()).isNotNull();
-        ArgumentCaptor<KnowledgeDocument> updates = ArgumentCaptor.forClass(KnowledgeDocument.class);
-        verify(documentRepository, org.mockito.Mockito.atLeastOnce()).update(updates.capture());
-        assertThat(updates.getAllValues())
-                .extracting(KnowledgeDocument::getIndexStatus)
-                .contains(KnowledgeDocument.IndexStatus.INDEXED);
-    }
-
-    @Test
-    void parseFailureMarksDocumentFailedWithoutIndexing() {
-        IngestionService ingestion = service(false);
-        when(documentRepository.update(any(KnowledgeDocument.class)))
-                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        when(documentRepository.findById(anyLong())).thenReturn(Mono.just(uploadDocument()));
-        when(parserPort.parse(anyString(), anyString(), any()))
-                .thenReturn(Mono.error(new IllegalStateException("无法解析加密 PDF")));
-
-        ingestion.ingest(1L).block();
-
-        ArgumentCaptor<KnowledgeDocument> updates = ArgumentCaptor.forClass(KnowledgeDocument.class);
-        verify(documentRepository, org.mockito.Mockito.atLeastOnce()).update(updates.capture());
-        KnowledgeDocument last = updates.getAllValues().getLast();
-        assertThat(last.getParseStatus()).isEqualTo(KnowledgeDocument.ParseStatus.FAILED);
-        assertThat(last.getParseError()).contains("无法解析");
-        org.mockito.Mockito.verifyNoInteractions(vectorIndexPort);
-    }
-
-    @Test
-    void manualDocumentSkipsParsing() {
-        IngestionService ingestion = service(false);
-        when(documentRepository.update(any(KnowledgeDocument.class)))
-                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
-        KnowledgeDocument manual = KnowledgeDocument.builder()
-                .id(3L)
-                .spaceId(2L)
-                .title("在线录入")
+                .title("文档")
                 .sourceType(KnowledgeDocument.SourceType.MANUAL)
+                .contentText("知识正文内容")
                 .contentType("text/plain")
-                .contentText("在线录入的正文")
                 .parseStatus(KnowledgeDocument.ParseStatus.PARSED)
                 .indexStatus(KnowledgeDocument.IndexStatus.PENDING)
                 .chunkCount(0)
                 .build();
-        when(documentRepository.findById(anyLong())).thenReturn(Mono.just(manual));
-        when(chunkRepository.replaceByDocument(anyLong(), anyList())).thenReturn(Mono.just(1));
+    }
+
+    private void stub() {
+        when(lifecycle.claimIngestion(1L)).thenReturn(Mono.just(lease));
+        when(documents.findById(1L)).thenReturn(Mono.just(document));
+        when(lifecycle.persistDocument(eq(lease), any())).thenAnswer(i -> Mono.just(i.getArgument(1)));
+        when(lifecycle.replaceChunks(eq(lease), anyList())).thenAnswer(i -> {
+            List<KnowledgeChunk> chunks = i.getArgument(1);
+            chunks.forEach(c -> c.setId(101L));
+            return Mono.just(chunks.size());
+        });
         lenient()
-                .when(spaceRepository.findById(org.mockito.ArgumentMatchers.any()))
-                .thenReturn(
-                        Mono.just(KnowledgeSpace.builder().id(2L).name("默认空间").build()));
+                .when(spaces.findById(2L))
+                .thenReturn(Mono.just(KnowledgeSpace.builder().id(2L).name("空间").build()));
+        lenient()
+                .when(lifecycle.recordIndexTarget(eq(lease), anyString(), anyString()))
+                .thenReturn(Mono.empty());
+        lenient().when(index.ensureIndex(anyBoolean(), anyInt())).thenReturn(Mono.empty());
+        lenient()
+                .when(index.deleteDocumentChunks(anyString(), anyString(), anyString(), anyLong()))
+                .thenReturn(Mono.empty());
+        lenient().when(index.upsertChunks(anyList())).thenReturn(Mono.empty());
+        when(lifecycle.release(lease)).thenReturn(Mono.empty());
+    }
 
-        ingestion.ingest(3L).block();
+    @Test
+    void trustedReactiveTenantIsUsedAndTaskConfirmationPrecedesIndexedState() {
+        stub();
+        StepVerifier.create(service.ingest(1L).contextWrite(TenantContext.withTenant("trusted-tenant")))
+                .verifyComplete();
+        ArgumentCaptor<List<IndexedChunk>> captor = ArgumentCaptor.forClass(List.class);
+        verify(index).upsertChunks(captor.capture());
+        assertThat(captor.getValue()).allSatisfy(c -> {
+            assertThat(c.getTenantId()).isEqualTo("trusted-tenant");
+            assertThat(c.getChunkId()).isEqualTo(101L);
+        });
+        assertThat(document.getIndexStatus()).isEqualTo(KnowledgeDocument.IndexStatus.INDEXED_LEXICAL);
+        verifyNoInteractions(parser);
+    }
 
-        org.mockito.Mockito.verifyNoInteractions(parserPort);
-        verify(vectorIndexPort).ensureIndex(false, 4);
+    @Test
+    void missingTenantRejectsBeforeClaimWithoutZeroFallback() {
+        TenantContext.clear();
+        StepVerifier.create(service.ingest(1L))
+                .expectError(com.apex.scaffold.common.exception.BusinessException.class)
+                .verify();
+        verifyNoInteractions(lifecycle, index, documents);
+    }
+
+    @Test
+    void disabledIndexOnlyPersistsChunksNotFalseIndexed() {
+        properties.getMeilisearch().setEnabled(false);
+        stub();
+        StepVerifier.create(service.ingest(1L).contextWrite(TenantContext.withTenant("trusted-tenant")))
+                .verifyComplete();
+        assertThat(document.getIndexStatus()).isEqualTo(KnowledgeDocument.IndexStatus.NONE);
+        verifyNoInteractions(index);
+    }
+
+    @Test
+    void deleteDuringEmbeddingRejectsLateIndexAndDatabaseWrites() {
+        properties.getEmbedding().setEnabled(true);
+        stub();
+        AtomicBoolean deleted = new AtomicBoolean();
+        Sinks.One<List<float[]>> waiting = Sinks.one();
+        when(embeddings.embed(anyList())).thenReturn(waiting.asMono());
+        when(lifecycle.recordIndexTarget(eq(lease), anyString(), anyString()))
+                .thenAnswer(i -> deleted.get() ? Mono.error(new IllegalStateException("文档已删除")) : Mono.empty());
+        when(documents.findById(1L)).thenAnswer(i -> deleted.get() ? Mono.empty() : Mono.just(document));
+        StepVerifier.create(service.ingest(1L).contextWrite(TenantContext.withTenant("trusted-tenant")))
+                .then(() -> {
+                    deleted.set(true);
+                    waiting.tryEmitValue(List.of(new float[] {1, 2}));
+                })
+                .verifyComplete();
+        verify(index, never()).upsertChunks(anyList());
+        verify(lifecycle, times(1)).persistDocument(eq(lease), any());
+    }
+
+    @Test
+    void unknownIndexTaskCannotMarkIndexed() {
+        stub();
+        when(index.upsertChunks(anyList())).thenReturn(Mono.error(new IllegalStateException("task状态未知")));
+        StepVerifier.create(service.ingest(1L).contextWrite(TenantContext.withTenant("trusted-tenant")))
+                .verifyComplete();
+        assertThat(document.getIndexStatus()).isEqualTo(KnowledgeDocument.IndexStatus.FAILED);
+        verify(lifecycle, times(3))
+                .recordIndexTarget(lease, properties.getMeilisearch().getUrl(), "apex_kb_chunks");
     }
 }

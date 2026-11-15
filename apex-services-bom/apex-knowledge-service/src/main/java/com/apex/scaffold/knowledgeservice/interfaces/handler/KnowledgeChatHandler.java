@@ -20,6 +20,9 @@ import reactor.core.publisher.Mono;
  * <p>问答为 SSE 流式端点：响应以 {@code text/event-stream} 承载
  * citations/delta/done/error 四类事件；30s 全局响应超时由网关对
  * {@code Accept: text/event-stream} 的豁免处理（与站内通知流同口径）。
+ * Handler 内的校验、会话建立及流式失败仍为 HTTP 200 SSE，error data 始终为
+ * {@code {code:string,message:string}} JSON；业务消息保留，技术错误使用中文兜底。
+ * Handler 外的安全链与权限切面拒绝保持既有 HTTP 401/403，不转换为 SSE。
  *
  * @author Apex Team
  * @version 1.3.2
@@ -46,8 +49,7 @@ public class KnowledgeChatHandler {
                 .currentUser()
                 .zipWith(requestUtil.handleRequestBody(request, KbAskRequest.class))
                 .flatMapMany(tuple -> chatAppService.ask(tuple.getT1().userId(), tuple.getT2()))
-                .onErrorResume(error ->
-                        Flux.just(ServerSentEvent.builder("处理失败").event("error").build()))
+                .onErrorResume(error -> Flux.just(requestUtil.buildErrorEvent(error)))
                 .as(events -> ServerResponse.ok()
                         .contentType(MediaType.TEXT_EVENT_STREAM)
                         .body(

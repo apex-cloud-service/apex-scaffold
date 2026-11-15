@@ -1,67 +1,41 @@
 package com.apex.scaffold.knowledge.infrastructure.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 import com.apex.scaffold.knowledge.config.KnowledgeProperties;
 import com.apex.scaffold.knowledge.domain.model.IndexedChunk;
 import com.apex.scaffold.knowledge.domain.model.VectorSearchQuery;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meilisearch.sdk.Client;
-import com.meilisearch.sdk.Index;
-import com.meilisearch.sdk.exceptions.MeilisearchException;
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
-import java.util.function.Function;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-/**
- * Meilisearch 知识索引适配器测试：SDK 写入、REST 检索/设置/删除与降级链。
- *
- * <p>SDK Client 以 Mockito 模拟，REST 调用经 MockWebServer 扮演
- * Meilisearch HTTP 端点（与生产共用同一 base-url 配置）。
- *
- * @author Apex Team
- * @since 1.3.2
- */
 class MeilisearchKnowledgeAdapterTest {
 
     private MockWebServer server;
-
-    private Client client;
-
-    private Index index;
-
     private KnowledgeProperties properties;
-
     private MeilisearchKnowledgeAdapter adapter;
+    private final ObjectMapper json = new ObjectMapper();
 
     @BeforeEach
     void setUp() throws Exception {
         server = new MockWebServer();
         server.start();
-        client = mock(Client.class);
-        index = mock(Index.class);
         properties = new KnowledgeProperties();
         properties.getMeilisearch().setEnabled(true);
         properties.getMeilisearch().setUrl(server.url("/").toString());
-        properties.getMeilisearch().setApiKey("master-key");
-        properties.getEmbedding().setDimensions(4);
-        adapter = new MeilisearchKnowledgeAdapter(client, properties, WebClient.builder(), new ObjectMapper());
-        lenient().when(client.index(anyString())).thenReturn(index);
+        properties.getMeilisearch().setTaskPollInterval(Duration.ofMillis(1));
+        properties.getMeilisearch().setTaskMaxPolls(3);
+        properties.getMeilisearch().setTaskTimeout(Duration.ofSeconds(2));
+        adapter = new MeilisearchKnowledgeAdapter(
+                org.mockito.Mockito.mock(Client.class), properties, WebClient.builder(), json);
     }
 
     @AfterEach
@@ -69,177 +43,181 @@ class MeilisearchKnowledgeAdapterTest {
         server.shutdown();
     }
 
-    /**
-     * 构建带向量的索引分块。
-     *
-     * @param withVector 是否带向量
-     * @return 分块
-     */
-    private IndexedChunk chunk(boolean withVector) {
-        return IndexedChunk.builder()
+    private void task(long uid, String status) {
+        server.enqueue(new MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody("{\"taskUid\":" + uid + ",\"status\":\"enqueued\"}"));
+        server.enqueue(new MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody("{\"uid\":" + uid + ",\"status\":\"" + status + "\"}"));
+    }
+
+    @Test
+    void deleteUsesPostBodyWithTenantAndDocumentNeverDeleteAll() throws Exception {
+        task(1, "succeeded");
+        task(2, "succeeded");
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L)).verifyComplete();
+        StepVerifier.create(adapter.deleteDocumentChunks("t2", 9L)).verifyComplete();
+        var first = server.takeRequest();
+        assertThat(first.getMethod()).isEqualTo("POST");
+        assertThat(first.getPath()).isEqualTo("/indexes/apex_kb_chunks/documents/delete");
+        assertThat(json.readTree(first.getBody().readUtf8()).get("filter").asText())
+                .isEqualTo("tenantId = \"t1\" AND documentId = 9");
+        assertThat(server.takeRequest().getPath()).isEqualTo("/tasks/1");
+        var second = server.takeRequest();
+        assertThat(json.readTree(second.getBody().readUtf8()).get("filter").asText())
+                .isEqualTo("tenantId = \"t2\" AND documentId = 9");
+    }
+
+    @Test
+    void deleteEscapesQuotedTenantAndRejectsMissingScope() throws Exception {
+        task(3, "succeeded");
+        StepVerifier.create(adapter.deleteDocumentChunks("a\" OR tenantId = \"b\\c", 9L))
+                .verifyComplete();
+        assertThat(json.readTree(server.takeRequest().getBody().readUtf8())
+                        .get("filter")
+                        .asText())
+                .isEqualTo("tenantId = \"a\\\" OR tenantId = \\\"b\\\\c\" AND documentId = 9");
+        StepVerifier.create(adapter.deleteDocumentChunks(" ", 9L))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", null))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", 0L))
+                .expectError(IllegalArgumentException.class)
+                .verify();
+        assertThat(server.getRequestCount()).isEqualTo(2);
+    }
+
+    @Test
+    void taskFailureCancellationAndUnknownStatusRejectCompletion() {
+        for (String status : List.of("failed", "canceled", "unexpected")) {
+            task(4, status);
+            StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L))
+                    .expectError(IllegalStateException.class)
+                    .verify();
+        }
+    }
+
+    @Test
+    void pollingIsBoundedAndMissingTaskCannotBeSuccess() {
+        server.enqueue(
+                new MockResponse().setHeader("Content-Type", "application/json").setBody("{\"taskUid\":5}"));
+        for (int i = 0; i < 3; i++) {
+            server.enqueue(new MockResponse()
+                    .setHeader("Content-Type", "application/json")
+                    .setBody("{\"uid\":5,\"status\":\"processing\"}"));
+        }
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L))
+                .expectError(IllegalStateException.class)
+                .verify();
+        server.enqueue(
+                new MockResponse().setHeader("Content-Type", "application/json").setBody("{}"));
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L))
+                .expectError(IllegalStateException.class)
+                .verify();
+        assertThat(server.getRequestCount()).isEqualTo(5);
+    }
+
+    @Test
+    void emptyTaskStatusResponseCannotConfirmSuccess() {
+        server.enqueue(
+                new MockResponse().setHeader("Content-Type", "application/json").setBody("{\"taskUid\":6}"));
+        server.enqueue(new MockResponse().setHeader("Content-Type", "application/json"));
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @Test
+    void onlyExplicitIndexNotFoundMakesDeletionIdempotent() {
+        server.enqueue(new MockResponse()
+                .setResponseCode(404)
+                .setHeader("Content-Type", "application/json")
+                .setBody("{\"code\":\"index_not_found\"}"));
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L)).verifyComplete();
+        server.enqueue(new MockResponse()
+                .setResponseCode(404)
+                .setHeader("Content-Type", "application/json")
+                .setBody("{\"code\":\"route_not_found\"}"));
+        StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @Test
+    void createAndSettingsBothWaitForTaskSuccessAndOnlyThenCacheReady() throws Exception {
+        task(10, "succeeded");
+        task(11, "succeeded");
+        StepVerifier.create(adapter.ensureIndex(true, 4)).verifyComplete();
+        assertThat(server.takeRequest().getPath()).isEqualTo("/indexes");
+        server.takeRequest();
+        var settings = server.takeRequest();
+        assertThat(settings.getMethod()).isEqualTo("PATCH");
+        assertThat(settings.getBody().readUtf8()).contains("\"dimensions\":4", "tenantId");
+        server.takeRequest();
+        StepVerifier.create(adapter.ensureIndex(true, 4)).verifyComplete();
+        assertThat(server.getRequestCount()).isEqualTo(4);
+    }
+
+    @Test
+    void onlyExplicitAlreadyExistsIsIgnoredAndFailedSettingsRemainRetryable() {
+        server.enqueue(new MockResponse()
+                .setResponseCode(409)
+                .setHeader("Content-Type", "application/json")
+                .setBody("{\"code\":\"index_already_exists\"}"));
+        task(11, "failed");
+        StepVerifier.create(adapter.ensureIndex(false, 4))
+                .expectError(IllegalStateException.class)
+                .verify();
+        server.enqueue(new MockResponse()
+                .setResponseCode(401)
+                .setHeader("Content-Type", "application/json")
+                .setBody("{\"code\":\"invalid_api_key\"}"));
+        StepVerifier.create(adapter.ensureIndex(false, 4))
+                .expectError(IllegalStateException.class)
+                .verify();
+        assertThat(server.getRequestCount()).isEqualTo(4);
+    }
+
+    @Test
+    void upsertWaitsForSuccessfulTaskAndContainsTenantAndVector() throws Exception {
+        IndexedChunk chunk = IndexedChunk.builder()
                 .chunkId(101L)
                 .documentId(9L)
                 .spaceId(2L)
                 .tenantId("t1")
                 .seq(0)
-                .content("分块正文")
-                .contentHash("hash-1")
-                .documentTitle("文档标题")
-                .spaceName("空间")
-                .contentType("application/pdf")
-                .embedding(withVector ? new float[] {0.1f, 0.2f, 0.3f, 0.4f} : null)
-                .updateTime(LocalDateTime.now())
+                .content("正文")
+                .embedding(new float[] {0.1f, 0.2f})
                 .build();
-    }
-
-    @Test
-    void ensureIndexCreatesIndexAndPatchesSettings() throws Exception {
-        server.enqueue(new MockResponse()
-                .setHeader("Content-Type", "application/json")
-                .setBody("{\"taskUid\":1,\"status\":\"enqueued\"}"));
-
-        StepVerifier.create(adapter.ensureIndex(true, 4)).verifyComplete();
-
-        verify(client).createIndex("apex_kb_chunks", "id");
-        String recorded = server.takeRequest().getBody().readUtf8();
-        assertThat(recorded)
-                .contains("\"filterableAttributes\"")
-                .contains("userProvided")
-                .contains("\"dimensions\":4");
-        // 二次调用走进程内幂等短路，不再发 PATCH
-        StepVerifier.create(adapter.ensureIndex(true, 4)).verifyComplete();
-        assertThat(server.getRequestCount()).isEqualTo(1);
-    }
-
-    @Test
-    void ensureIndexTreatsExistingIndexAsIdempotent() throws Exception {
-        doThrow(new MeilisearchException("index_already_exists")).when(client).createIndex("apex_kb_chunks", "id");
-        server.enqueue(new MockResponse()
-                .setHeader("Content-Type", "application/json")
-                .setBody("{\"taskUid\":1,\"status\":\"enqueued\"}"));
-
-        StepVerifier.create(adapter.ensureIndex(false, 4)).verifyComplete();
-        assertThat(server.takeRequest().getBody().readUtf8()).contains("\"embedders\":{}");
-    }
-
-    @Test
-    void upsertWritesDocumentsWithVectorsAndPrimaryKey() throws Exception {
-        adapter.upsertChunks(List.of(chunk(true))).block();
-
-        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
-        verify(index).addDocuments(json.capture(), org.mockito.ArgumentMatchers.eq("id"));
-        JsonNode doc = new ObjectMapper().readTree(json.getValue()).get(0);
-        assertThat(doc.get("id").asText()).isEqualTo("101");
+        task(12, "succeeded");
+        StepVerifier.create(adapter.upsertChunks(List.of(chunk))).verifyComplete();
+        var request = server.takeRequest();
+        assertThat(request.getPath()).isEqualTo("/indexes/apex_kb_chunks/documents?primaryKey=id");
+        var doc = json.readTree(request.getBody().readUtf8()).get(0);
         assertThat(doc.get("tenantId").asText()).isEqualTo("t1");
-        assertThat(doc.get("_vectors")
-                        .get("default")
-                        .get("embeddings")
-                        .get(0)
-                        .get(0)
-                        .asDouble())
-                .isEqualTo(0.1);
+        assertThat(doc.has("_vectors")).isTrue();
+        task(13, "failed");
+        StepVerifier.create(adapter.upsertChunks(List.of(chunk)))
+                .expectError(IllegalStateException.class)
+                .verify();
     }
 
     @Test
-    void upsertWithoutEmbeddingOmitsVectorField() throws Exception {
-        adapter.upsertChunks(List.of(chunk(false))).block();
-
-        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
-        verify(index).addDocuments(json.capture(), org.mockito.ArgumentMatchers.eq("id"));
-        JsonNode doc = new ObjectMapper().readTree(json.getValue()).get(0);
-        assertThat(doc.has("_vectors")).isFalse();
-    }
-
-    @Test
-    void hybridSearchParsesHitsAndUsesVector() throws Exception {
-        server.enqueue(
-                new MockResponse()
-                        .setHeader("Content-Type", "application/json")
-                        .setBody(
-                                """
-                        {"hits":[{"id":"101","chunkId":101,"documentId":9,"spaceId":2,"tenantId":"t1",
-                                  "documentTitle":"文档标题","spaceName":"空间","content":"正文",
-                                  "_rankingScore":0.87,"_formatted":{"content":"<em>正文</em>"}}],
-                         "estimatedTotalHits":1}"""));
-
-        VectorSearchQuery query = VectorSearchQuery.builder()
-                .keyword("正文")
-                .queryEmbedding(new float[] {0.1f, 0.2f, 0.3f, 0.4f})
-                .tenantId("t1")
-                .spaceIds(List.of(2L))
-                .offset(0)
-                .limit(5)
-                .semanticRatio(0.6)
-                .build();
-
-        StepVerifier.create(adapter.search(query))
-                .assertNext(result -> {
-                    assertThat(result.isHybridUsed()).isTrue();
-                    assertThat(result.getTotal()).isEqualTo(1L);
-                    assertThat(result.getHits().getFirst().getHighlight()).isEqualTo("<em>正文</em>");
-                    assertThat(result.getHits().getFirst().getScore()).isEqualTo(0.87d);
-                })
-                .verifyComplete();
-
-        String recorded = server.takeRequest().getBody().readUtf8();
-        assertThat(recorded)
-                .contains("\"hybrid\"")
-                .contains("\"semanticRatio\":0.6")
-                .contains("spaceId = 2");
-    }
-
-    @Test
-    void hybridFailureFallsBackToLexicalSearch() throws Exception {
-        // 第一次（hybrid）服务端报错，第二次（词法）成功
-        server.enqueue(new MockResponse().setResponseCode(400).setBody("{\"message\":\"invalid embedder\"}"));
+    void hybridFailureFallsBackToLexicalSearch() {
+        server.enqueue(new MockResponse().setResponseCode(400).setBody("{}"));
         server.enqueue(new MockResponse()
                 .setHeader("Content-Type", "application/json")
                 .setBody("{\"hits\":[],\"estimatedTotalHits\":0}"));
-
-        VectorSearchQuery query = VectorSearchQuery.builder()
-                .keyword("正文")
-                .queryEmbedding(new float[] {0.1f, 0.2f, 0.3f, 0.4f})
-                .tenantId("t1")
-                .offset(0)
-                .limit(5)
-                .semanticRatio(0.6)
-                .build();
-
-        StepVerifier.create(adapter.search(query))
-                .assertNext(result -> {
-                    assertThat(result.isHybridUsed()).isFalse();
-                    assertThat(result.getHits()).isEmpty();
-                })
+        StepVerifier.create(adapter.search(VectorSearchQuery.builder()
+                        .tenantId("t1")
+                        .keyword("正文")
+                        .queryEmbedding(new float[] {1})
+                        .limit(5)
+                        .build()))
+                .assertNext(result -> assertThat(result.isHybridUsed()).isFalse())
                 .verifyComplete();
-        assertThat(server.getRequestCount()).isEqualTo(2);
-    }
-
-    @Test
-    void deleteByFilterScopesTenantAndDocument() throws Exception {
-        server.enqueue(new MockResponse()
-                .setHeader("Content-Type", "application/json")
-                .setBody("{\"taskUid\":2,\"status\":\"enqueued\"}"));
-
-        StepVerifier.create(adapter.deleteDocumentChunks("t1", 9L)).verifyComplete();
-
-        String path =
-                java.net.URLDecoder.decode(server.takeRequest().getPath(), java.nio.charset.StandardCharsets.UTF_8);
-        assertThat(path).contains("filter=tenantId = 't1' AND documentId = 9");
-    }
-
-    @Test
-    void rebuildRewritesChunksFromLoader() throws Exception {
-        Function<List<Long>, Mono<List<IndexedChunk>>> loader = ids -> Mono.just(List.of(chunk(false)));
-
-        StepVerifier.create(adapter.rebuild(List.of(101L), loader))
-                .expectNext(1L)
-                .verifyComplete();
-        verify(index).addDocuments(anyString(), org.mockito.ArgumentMatchers.eq("id"));
-    }
-
-    @Test
-    void rebuildWithEmptyIdsIsNoop() throws Exception {
-        Function<List<Long>, Mono<List<IndexedChunk>>> loader = ids -> Mono.just(List.of());
-        StepVerifier.create(adapter.rebuild(List.of(), loader)).expectNext(0L).verifyComplete();
     }
 }

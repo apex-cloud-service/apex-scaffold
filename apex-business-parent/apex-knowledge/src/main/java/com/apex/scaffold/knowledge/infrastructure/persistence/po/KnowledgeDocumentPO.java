@@ -42,6 +42,24 @@ public class KnowledgeDocumentPO extends BasePO {
     /** 对象存储键。 */
     private String objectKey;
 
+    /** 上传对象所在存储提供商（如 local/s3），历史记录可能为空。 */
+    private String storageProvider;
+
+    /** 上传对象所在桶名，历史记录可能为空。 */
+    private String storageBucket;
+
+    /** 对象是否由知识域独占（1=是），历史未确认时不得自动删除。 */
+    private Integer objectOwned;
+
+    /** 索引端点快照，用于定位原索引目标。 */
+    private String indexEndpoint;
+
+    /** 索引名快照，用于定向清理与重建。 */
+    private String indexName;
+
+    /** 是否存在必须确认的索引清理（1=是）。 */
+    private Integer indexRequired;
+
     /** 对象大小（字节）。 */
     private Long fileSize;
 

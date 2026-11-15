@@ -80,7 +80,7 @@ public class KnowledgeCapabilityFallbackConfiguration {
 
             @Override
             public Mono<Void> deleteDocumentChunks(String tenantId, Long documentId) {
-                return Mono.empty();
+                return Mono.error(new IllegalStateException("知识索引未启用，不能确认清理完成"));
             }
 
             @Override

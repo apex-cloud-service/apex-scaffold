@@ -40,6 +40,16 @@ public class KnowledgeDocument {
     /** 对象存储键（bucket 内唯一）。 */
     private String objectKey;
 
+    /** 上传时绑定的稳定提供商和桶；历史空值不能以当前配置推断删除目标。 */
+    private String storageProvider;
+
+    private String storageBucket;
+    private boolean locationSnapshot;
+    private String indexEndpoint;
+    private String indexName;
+    private boolean indexRequired;
+    private boolean deleted;
+
     /** 对象大小（字节）。 */
     private Long fileSize;
 

@@ -57,7 +57,22 @@ public class KnowledgeDocumentRouter {
                 path = "/admin-api/v1/kb/documents/{docId}/reindex",
                 method = RequestMethod.POST,
                 beanClass = KnowledgeDocumentHandler.class,
-                beanMethod = "reindex")
+                beanMethod = "reindex"),
+        @RouterOperation(
+                path = "/admin-api/v1/kb/document-cleanups",
+                method = RequestMethod.GET,
+                beanClass = KnowledgeDocumentHandler.class,
+                beanMethod = "cleanupPage"),
+        @RouterOperation(
+                path = "/admin-api/v1/kb/document-cleanups/{docId}",
+                method = RequestMethod.GET,
+                beanClass = KnowledgeDocumentHandler.class,
+                beanMethod = "cleanupDetail"),
+        @RouterOperation(
+                path = "/admin-api/v1/kb/document-cleanups/{docId}/retry",
+                method = RequestMethod.POST,
+                beanClass = KnowledgeDocumentHandler.class,
+                beanMethod = "retryCleanup")
     })
     public RouterFunction<ServerResponse> knowledgeDocumentRoutes(KnowledgeDocumentHandler handler) {
         return RouterFunctions.route()
@@ -67,6 +82,9 @@ public class KnowledgeDocumentRouter {
                 .GET("/admin-api/v1/kb/documents", handler::page)
                 .DELETE("/admin-api/v1/kb/documents/{docId}", handler::delete)
                 .POST("/admin-api/v1/kb/documents/{docId}/reindex", handler::reindex)
+                .GET("/admin-api/v1/kb/document-cleanups", handler::cleanupPage)
+                .GET("/admin-api/v1/kb/document-cleanups/{docId}", handler::cleanupDetail)
+                .POST("/admin-api/v1/kb/document-cleanups/{docId}/retry", handler::retryCleanup)
                 .build();
     }
 }

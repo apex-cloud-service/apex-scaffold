@@ -41,6 +41,36 @@ public class KnowledgeProperties {
     /** Meilisearch 索引引擎配置（知识分块索引，独立于 system 六类资源索引）。 */
     private Meilisearch meilisearch = new Meilisearch();
 
+    /** 清理与工作认领配置，独立于Meilisearch能力开关。 */
+    private Cleanup cleanup = new Cleanup();
+
+    /** 清理任务按租户顺序扫描，所有时长使用Spring Duration绑定（如20s/2m）。 */
+    @Data
+    public static class Cleanup {
+        /** 是否自动扫描新删除与上传补偿，默认开启；禁用不等于清理完成。 */
+        private boolean enabled = true;
+        /** 扫描租户范围；空仅取专属任务表租户投影，不绕过共享拦截器扫描主档。 */
+        private List<String> tenantIds = List.of();
+        /** 每租户每轮最多认领数，默认50，仓储再限制至1000。 */
+        private int batchSize = 50;
+        /** 快速自动重试次数上限；DELETE tombstone长期复核不受此上限影响。 */
+        private int maxAttempts = 10;
+        /** UPLOAD/INGEST/CLEANUP工作租约，默认2分钟；过期owner不可继续写库。 */
+        private Duration leaseDuration = Duration.ofMinutes(2);
+        /** 活跃管线续租间隔，默认20秒，应明显短于租约。 */
+        private Duration heartbeatInterval = Duration.ofSeconds(20);
+        /** 首次失败重试等待，默认1分钟；乘尝试次数，最多60倍。 */
+        private Duration retryDelay = Duration.ofMinutes(1);
+        /** 长期tombstone定向复核周期，默认24小时；不物理删除凭证。 */
+        private Duration tombstoneReviewInterval = Duration.ofHours(24);
+        /** 同轮相邻文档最小等待，默认100毫秒，避免清理/摄取失败风暴。 */
+        private Duration itemDelay = Duration.ofMillis(100);
+        /** 历史softdeleted主档仅索引清理开关，默认关闭，不自动删历史object。 */
+        private boolean legacyIndexEnabled = false;
+        /** 历史索引清理必须显式配置租户范围，空范围不执行。 */
+        private List<String> legacyTenantIds = List.of();
+    }
+
     /** 摄取管线参数。 */
     @Data
     public static class Ingest {
@@ -126,5 +156,13 @@ public class KnowledgeProperties {
         private String indexPrefix = "apex_";
         /** 批量写入条数。 */
         private int batchSize = 100;
+        /** task轮询间隔，默认200毫秒。 */
+        private Duration taskPollInterval = Duration.ofMillis(200);
+        /** 每任务最多轮询150次，达到上限拒绝成功。 */
+        private int taskMaxPolls = 150;
+        /** 任务确认总等待上限，默认30秒，超时保持未知而非完成。 */
+        private Duration taskTimeout = Duration.ofSeconds(30);
+        /** 单个Meilisearch HTTP请求超时，默认10秒。 */
+        private Duration requestTimeout = Duration.ofSeconds(10);
     }
 }

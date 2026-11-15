@@ -64,6 +64,9 @@ class KnowledgeDocumentAppServiceTest {
 
     private KnowledgeDocumentAppService service;
 
+    @Mock
+    private com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentLifecyclePort lifecycle;
+
     @BeforeEach
     void setUpService() {
         KnowledgeProperties properties = new KnowledgeProperties();
@@ -71,11 +74,35 @@ class KnowledgeDocumentAppServiceTest {
                 documentRepository,
                 spaceRepository,
                 chunkRepository,
-                vectorIndexPort,
                 properties,
                 storageRegistry,
                 ingestionService,
-                new KnowledgeAssembler());
+                new KnowledgeAssembler(),
+                lifecycle,
+                new KnowledgeDocumentLeaseRunner(lifecycle, properties));
+        lenient().when(objectStorage.type()).thenReturn("local");
+        lenient()
+                .when(lifecycle.reserveUpload(
+                        anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(Mono.just(new com.apex.scaffold.knowledge.domain.model.KnowledgeDocumentLease(
+                        "t1",
+                        5L,
+                        "owner",
+                        1,
+                        "UPLOAD",
+                        java.time.LocalDateTime.now().plusMinutes(2))));
+        lenient().when(lifecycle.bindUploadedKey(any(), anyString())).thenReturn(Mono.empty());
+        lenient().when(lifecycle.abortUpload(any())).thenReturn(Mono.just(true));
+        lenient().when(lifecycle.registerUpload(any(), any())).thenAnswer(invocation -> {
+            KnowledgeDocument doc = invocation.getArgument(1);
+            doc.setId(5L);
+            return Mono.just(doc);
+        });
+        lenient().when(lifecycle.requestReindex(anyLong())).thenAnswer(invocation -> {
+            KnowledgeDocument doc = parsedDocument();
+            doc.setIndexStatus(KnowledgeDocument.IndexStatus.PENDING);
+            return Mono.just(doc);
+        });
         lenient().when(storageRegistry.defaultStorage()).thenReturn(objectStorage);
         lenient()
                 .when(objectStorage.upload(anyString(), anyString(), any(), anyString()))
@@ -158,14 +185,13 @@ class KnowledgeDocumentAppServiceTest {
 
     @Test
     void registerUploadPersistsObjectKey() {
-        when(documentRepository.insert(any(KnowledgeDocument.class))).thenAnswer(this::copyWithGeneratedId);
 
         StepVerifier.create(service.registerUpload(2L, "手册.pdf", "application/pdf", "内容".getBytes()))
                 .assertNext(dto -> assertThat(dto.parseStatus()).isEqualTo("PENDING"))
                 .verifyComplete();
 
         ArgumentCaptor<KnowledgeDocument> inserted = ArgumentCaptor.forClass(KnowledgeDocument.class);
-        verify(documentRepository).insert(inserted.capture());
+        verify(lifecycle).registerUpload(any(), inserted.capture());
         assertThat(inserted.getValue().getObjectKey()).startsWith("kb/");
         assertThat(inserted.getValue().getFileSize()).isEqualTo("内容".getBytes().length);
     }
@@ -195,42 +221,58 @@ class KnowledgeDocumentAppServiceTest {
     }
 
     @Test
-    void deleteRemovesChunksThenIndexThenDocument() {
-        KnowledgeDocument document = parsedDocument();
-        when(documentRepository.findById(1L)).thenReturn(Mono.just(document));
-        when(chunkRepository.deleteByDocument(1L)).thenReturn(Mono.just(true));
-        when(vectorIndexPort.deleteDocumentChunks("t1", 1L)).thenReturn(Mono.empty());
-        when(documentRepository.deleteById(1L)).thenReturn(Mono.just(true));
-
+    void deleteAcceptsPersistentIntentWithoutCallingRemoteResources() {
+        when(lifecycle.acceptDelete(1L, "http://localhost:7700", "apex_kb_chunks"))
+                .thenReturn(Mono.just(true));
         StepVerifier.create(service.delete(1L)).expectNext(true).verifyComplete();
-
-        verify(chunkRepository).deleteByDocument(1L);
-        verify(vectorIndexPort).deleteDocumentChunks("t1", 1L);
+        org.mockito.Mockito.verifyNoInteractions(vectorIndexPort, chunkRepository);
     }
 
     @Test
-    void deleteProceedsWhenIndexCleanupFails() {
-        KnowledgeDocument document = parsedDocument();
-        when(documentRepository.findById(1L)).thenReturn(Mono.just(document));
-        when(chunkRepository.deleteByDocument(1L)).thenReturn(Mono.just(true));
-        when(vectorIndexPort.deleteDocumentChunks("t1", 1L)).thenReturn(Mono.error(new IllegalStateException("索引不可用")));
-        when(documentRepository.deleteById(1L)).thenReturn(Mono.just(true));
+    void deleteIntentFailureIsNotReportedAsAccepted() {
+        when(lifecycle.acceptDelete(1L, "http://localhost:7700", "apex_kb_chunks"))
+                .thenReturn(Mono.error(new IllegalStateException("数据库失败")));
+        StepVerifier.create(service.delete(1L))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
 
-        StepVerifier.create(service.delete(1L)).expectNext(true).verifyComplete();
+    @Test
+    void uploadRegistrationFailureCompensatesExclusiveObjectAndKeepsCredential() {
+        org.mockito.Mockito.doReturn(Mono.error(new IllegalStateException("登记失败")))
+                .when(lifecycle)
+                .registerUpload(any(), any());
+        when(objectStorage.delete(anyString(), anyString())).thenReturn(Mono.error(new IllegalStateException("存储不可用")));
+        when(lifecycle.failUpload(any(), anyString(), org.mockito.ArgumentMatchers.eq(false)))
+                .thenReturn(Mono.empty());
+        StepVerifier.create(service.registerUpload(2L, "手册.pdf", "application/pdf", new byte[] {1}))
+                .expectError()
+                .verify();
+        verify(objectStorage).delete(org.mockito.ArgumentMatchers.eq("knowledge"), anyString());
+        verify(lifecycle)
+                .failUpload(
+                        any(), org.mockito.ArgumentMatchers.contains("补偿未确认"), org.mockito.ArgumentMatchers.eq(false));
+    }
+
+    @Test
+    void cancellationAfterRegistrationCommitDoesNotCompensateRegisteredObject() {
+        org.mockito.Mockito.doReturn(Mono.<KnowledgeDocument>never())
+                .when(lifecycle)
+                .registerUpload(any(), any());
+        org.mockito.Mockito.doReturn(Mono.just(false)).when(lifecycle).abortUpload(any());
+        StepVerifier.create(service.registerUpload(2L, "手册.pdf", "application/pdf", new byte[] {1}))
+                .thenAwait(java.time.Duration.ofMillis(20))
+                .thenCancel()
+                .verify();
+        org.mockito.Mockito.verify(objectStorage, org.mockito.Mockito.never()).delete(anyString(), anyString());
     }
 
     @Test
     void reindexResetsStatusesAndTriggersIngestion() {
-        KnowledgeDocument document = parsedDocument();
-        when(documentRepository.findById(1L)).thenReturn(Mono.just(document));
-
         StepVerifier.create(service.reindex(1L))
                 .assertNext(dto -> assertThat(dto.parseStatus()).isEqualTo("PARSED"))
                 .verifyComplete();
-
-        ArgumentCaptor<KnowledgeDocument> updated = ArgumentCaptor.forClass(KnowledgeDocument.class);
-        verify(documentRepository).update(updated.capture());
-        assertThat(updated.getValue().getIndexStatus()).isEqualTo(KnowledgeDocument.IndexStatus.PENDING);
+        verify(lifecycle).requestReindex(1L);
         verify(ingestionService).ingest(1L);
     }
 

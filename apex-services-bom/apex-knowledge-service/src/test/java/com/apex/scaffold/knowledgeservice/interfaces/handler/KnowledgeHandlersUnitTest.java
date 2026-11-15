@@ -74,8 +74,12 @@ class KnowledgeHandlersUnitTest {
         KnowledgeRequestHandlerUtil requestUtil = new KnowledgeRequestHandlerUtil(
                 Validation.buildDefaultValidatorFactory().getValidator());
         KnowledgeSpaceHandler spaceHandler = new KnowledgeSpaceHandler(spaceAppService, requestUtil);
-        KnowledgeDocumentHandler documentHandler =
-                new KnowledgeDocumentHandler(documentAppService, requestUtil, properties);
+        KnowledgeDocumentHandler documentHandler = new KnowledgeDocumentHandler(
+                documentAppService,
+                requestUtil,
+                properties,
+                org.mockito.Mockito.mock(
+                        com.apex.scaffold.knowledge.application.service.KnowledgeDocumentCleanupService.class));
         KnowledgeSearchHandler searchHandler =
                 new KnowledgeSearchHandler(searchAppService, spaceAppService, requestUtil);
         KnowledgeChatHandler chatHandler = new KnowledgeChatHandler(chatAppService, requestUtil);

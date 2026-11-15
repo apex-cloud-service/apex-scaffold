@@ -1,6 +1,5 @@
 package com.apex.scaffold.knowledge.infrastructure.search;
 
-import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.knowledge.config.KnowledgeProperties;
 import com.apex.scaffold.knowledge.domain.gateway.KnowledgeVectorIndexPort;
 import com.apex.scaffold.knowledge.domain.model.IndexedChunk;
@@ -10,8 +9,6 @@ import com.apex.scaffold.knowledge.domain.model.VectorSearchResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meilisearch.sdk.Client;
-import com.meilisearch.sdk.Index;
-import com.meilisearch.sdk.exceptions.MeilisearchException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,11 +27,10 @@ import reactor.core.publisher.Mono;
 /**
  * Meilisearch 知识分块索引适配器。
  *
- * <p>写入与索引管理走 SDK（{@code addDocuments} / {@code createIndex}）；
- * 设置（embedders、过滤字段）、按过滤删除与检索走 REST 直调——hybrid 检索参数
- * （{@code vector} + {@code hybrid.semanticRatio}）在 {@code meilisearch-java 0.17.1}
- * 的 SearchRequest 中未完整暴露，REST 直调是 P0 spike 的兜底结论。检索失败且
- * 携带查询向量时自动降级为一次词法检索，避免旧版本服务端阻塞知识检索。
+ * <p>创建、设置、写入、删除与hybrid检索均走REST，写操作取得taskUid后有界轮询成功确认。
+ * 删除严格使用POST documents/delete JSON filter，租户值验证与转义，不调用delete-all。
+ * SDK客户端保留原装配构造边界；REST参数避免SDK 0.17.1未完整暴露的hybrid参数。
+ * 检索带查询向量失败时最多降级一次词法检索，不把写入失败转换为成功。
  *
  * @author Apex Team
  * @since 1.3.2
@@ -48,8 +43,6 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
     private static final String INDEX_SUFFIX = "kb_chunks";
 
     private static final String EMBEDDER_NAME = "default";
-
-    private final Client client;
 
     private final KnowledgeProperties.Meilisearch config;
 
@@ -71,7 +64,6 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
      */
     public MeilisearchKnowledgeAdapter(
             Client client, KnowledgeProperties properties, WebClient.Builder builder, ObjectMapper objectMapper) {
-        this.client = client;
         this.config = properties.getMeilisearch();
         this.objectMapper = objectMapper;
         this.restClient = builder.baseUrl(stripTrailingSlash(config.getUrl()))
@@ -81,25 +73,21 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
 
     @Override
     public Mono<Void> ensureIndex(boolean embeddingEnabled, int dimensions) {
-        // 进程内幂等：已就绪则直接返回，避免每次摄取重复 PATCH 设置。
-        if (indexEnsured.get()) {
-            return Mono.empty();
-        }
-        return Mono.fromCallable(() -> {
-                    try {
-                        client.createIndex(indexName(), "id");
-                        log.info("知识索引已创建: {}", indexName());
-                    } catch (MeilisearchException e) {
-                        // index_already_exists：幂等场景，忽略
-                        log.debug("知识索引已存在，跳过创建: {}", indexName());
-                    }
-                    return true;
-                })
-                .subscribeOn(BlockingIoSchedulers.remote())
-                .flatMap(created -> patchSettings(embeddingEnabled, dimensions))
-                .doOnSuccess(v -> indexEnsured.set(true))
-                .doOnError(e -> indexEnsured.set(false))
-                .then();
+        return Mono.defer(() -> {
+            if (indexEnsured.get()) {
+                return Mono.empty();
+            }
+            return submit(
+                            restClient
+                                    .post()
+                                    .uri("/indexes")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .bodyValue(Map.of("uid", indexName(), "primaryKey", "id")),
+                            "index_already_exists")
+                    .then(patchSettings(embeddingEnabled, dimensions))
+                    .doOnSuccess(v -> indexEnsured.set(true))
+                    .doOnError(e -> indexEnsured.set(false));
+        });
     }
 
     @Override
@@ -114,15 +102,23 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
 
     @Override
     public Mono<Void> deleteDocumentChunks(String tenantId, Long documentId) {
-        String filter = "tenantId = '" + tenantId + "' AND documentId = " + documentId;
-        return restClient
-                .delete()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/indexes/{index}/documents")
-                        .queryParam("filter", filter)
-                        .build(indexName()))
-                .exchangeToMono(this::acceptTaskResponse)
-                .then();
+        return deleteDocumentChunks(config.getUrl(), indexName(), tenantId, documentId);
+    }
+
+    @Override
+    public Mono<Void> deleteDocumentChunks(String endpoint, String index, String tenantId, Long documentId) {
+        return Mono.defer(() -> {
+            requireTarget(endpoint, index);
+            requireDocumentId(documentId);
+            String filter = "tenantId = " + quotedTenant(tenantId) + " AND documentId = " + documentId;
+            return submit(
+                    restClient
+                            .post()
+                            .uri("/indexes/{index}/documents/delete", index)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(Map.of("filter", filter)),
+                    "index_not_found");
+        });
     }
 
     @Override
@@ -190,7 +186,7 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
      * @return Meilisearch filter 表达式
      */
     private String buildFilter(VectorSearchQuery query) {
-        StringBuilder filter = new StringBuilder("tenantId = '" + query.getTenantId() + "'");
+        StringBuilder filter = new StringBuilder("tenantId = " + quotedTenant(query.getTenantId()));
         if (query.getSpaceIds() != null && !query.getSpaceIds().isEmpty()) {
             List<String> spaceFilters =
                     query.getSpaceIds().stream().map(id -> "spaceId = " + id).toList();
@@ -245,33 +241,39 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
         } else {
             settings.put("embedders", Map.of());
         }
-        return restClient
-                .patch()
-                .uri("/indexes/{index}/settings", indexName())
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(settings)
-                .retrieve()
-                .bodyToMono(String.class)
-                .then();
+        return submit(
+                restClient
+                        .patch()
+                        .uri("/indexes/{index}/settings", indexName())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(settings),
+                null);
     }
 
     /**
-     * 单批写入索引文档（SDK 同步调用隔离到 remote 调度器）。
+     * 单批REST写入并取得taskUid，等待成功确认；网络超时不转换为成功。
      *
      * @param batch 分块批次
      * @return 完成信号
      */
     private Mono<Void> upsertBatch(List<IndexedChunk> batch) {
-        return Mono.fromCallable(() -> {
-                    List<Map<String, Object>> documents =
-                            batch.stream().map(this::toDocument).toList();
-                    String json = objectMapper.writeValueAsString(documents);
-                    Index index = client.index(indexName());
-                    index.addDocuments(json, "id");
-                    return true;
-                })
-                .subscribeOn(BlockingIoSchedulers.remote())
-                .then();
+        return Mono.defer(() -> {
+            for (IndexedChunk chunk : batch) {
+                quotedTenant(chunk.getTenantId());
+                requireDocumentId(chunk.getDocumentId());
+                requireDocumentId(chunk.getChunkId());
+            }
+            return submit(
+                    restClient
+                            .post()
+                            .uri(uriBuilder -> uriBuilder
+                                    .path("/indexes/{index}/documents")
+                                    .queryParam("primaryKey", "id")
+                                    .build(indexName()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(batch.stream().map(this::toDocument).toList()),
+                    null);
+        });
     }
 
     /**
@@ -300,19 +302,106 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
     }
 
     /**
-     * 统一接受 2xx 任务响应；非 2xx 转换为携带状态与响应体的异常。
+     * 取得合法taskUid后有界确认；仅明确允许的幂等错误码忽略，通用错误不得吞掉。
      *
-     * @param response 客户端响应
-     * @return 2xx 时完成，否则发出错误
+     * @param request 待提交REST写请求
+     * @param allowedCode 操作专属幂等码，创建允许index_already_exists，删除允许index_not_found
+     * @return 任务成功确认或明确幂等缺失/已存在时完成
      */
-    private Mono<Void> acceptTaskResponse(ClientResponse response) {
-        if (response.statusCode().is2xxSuccessful()) {
-            return response.bodyToMono(String.class).then();
+    private Mono<Void> submit(WebClient.RequestHeadersSpec<?> request, String allowedCode) {
+        return request.exchangeToMono(response -> response.bodyToMono(String.class)
+                        .defaultIfEmpty("")
+                        .flatMap(body -> {
+                            JsonNode node = readJson(body);
+                            if (!response.statusCode().is2xxSuccessful()) {
+                                String code = node.path("code").asText();
+                                if (allowedCode != null && allowedCode.equals(code)) {
+                                    return Mono.<Long>empty();
+                                }
+                                return Mono.error(new IllegalStateException("Meilisearch 请求失败: status="
+                                        + response.statusCode().value() + ", code=" + code));
+                            }
+                            JsonNode uid = node.get("taskUid");
+                            if (uid == null || !uid.isIntegralNumber() || !uid.canConvertToLong() || uid.asLong() < 0) {
+                                return Mono.error(new IllegalStateException("Meilisearch 缺少有效taskUid"));
+                            }
+                            return Mono.just(uid.asLong());
+                        }))
+                .timeout(config.getRequestTimeout())
+                .flatMap(uid -> pollTask(uid, 0, allowedCode).timeout(config.getTaskTimeout()))
+                .then();
+    }
+
+    private Mono<Void> pollTask(long uid, int poll, String allowedCode) {
+        return restClient
+                .get()
+                .uri("/tasks/{uid}", uid)
+                .exchangeToMono(response -> {
+                    if (!response.statusCode().is2xxSuccessful()) {
+                        return response.releaseBody()
+                                .then(Mono.<JsonNode>error(
+                                        new IllegalStateException("Meilisearch task状态无法确认: taskUid=" + uid)));
+                    }
+                    return response.bodyToMono(String.class)
+                            .switchIfEmpty(Mono.error(new IllegalStateException("Meilisearch task状态响应为空")))
+                            .map(this::readJson);
+                })
+                .timeout(config.getRequestTimeout())
+                .flatMap(task -> {
+                    if (!task.path("uid").isIntegralNumber() || task.path("uid").asLong(-1) != uid) {
+                        return Mono.error(new IllegalStateException("Meilisearch taskUid不匹配"));
+                    }
+                    String status = task.path("status").asText();
+                    if ("succeeded".equals(status)) {
+                        return Mono.empty();
+                    }
+                    if ("failed".equals(status)
+                            && allowedCode != null
+                            && allowedCode.equals(
+                                    task.path("error").path("code").asText())) {
+                        return Mono.empty();
+                    }
+                    if ("enqueued".equals(status) || "processing".equals(status)) {
+                        if (poll + 1 >= config.getTaskMaxPolls()) {
+                            return Mono.error(new IllegalStateException("Meilisearch task轮询上限: taskUid=" + uid));
+                        }
+                        return Mono.delay(config.getTaskPollInterval()).then(pollTask(uid, poll + 1, allowedCode));
+                    }
+                    return Mono.error(
+                            new IllegalStateException("Meilisearch task未成功: taskUid=" + uid + ", status=" + status));
+                });
+    }
+
+    private JsonNode readJson(String body) {
+        try {
+            return objectMapper.readTree(body);
+        } catch (Exception error) {
+            throw new IllegalStateException("Meilisearch 响应格式无效", error);
         }
-        return response.bodyToMono(String.class)
-                .defaultIfEmpty("")
-                .flatMap(body -> Mono.error(new IllegalStateException(
-                        "Meilisearch 任务请求失败: status=" + response.statusCode().value() + ", body=" + body)));
+    }
+
+    private String quotedTenant(String tenantId) {
+        if (tenantId == null
+                || tenantId.isBlank()
+                || tenantId.length() > 64
+                || tenantId.chars().anyMatch(Character::isISOControl)) {
+            throw new IllegalArgumentException("可信租户ID无效");
+        }
+        return "\"" + tenantId.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
+
+    private void requireDocumentId(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("文档或分块ID无效");
+        }
+    }
+
+    private void requireTarget(String endpoint, String index) {
+        if (!stripTrailingSlash(config.getUrl()).equals(stripTrailingSlash(endpoint))
+                || index == null
+                || !index.matches("[A-Za-z0-9_-]+")) {
+            throw new IllegalStateException("历史索引目标与当前配置不兼容，需恢复原目标配置");
+        }
     }
 
     /**
@@ -342,6 +431,9 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
      * @return 批次列表
      */
     private <T> List<List<T>> partition(List<T> items, int size) {
+        if (size <= 0) {
+            throw new IllegalArgumentException("索引批大小必须为正整数");
+        }
         List<List<T>> batches = new ArrayList<>();
         for (int start = 0; start < items.size(); start += size) {
             batches.add(items.subList(start, Math.min(start + size, items.size())));

@@ -34,6 +34,7 @@ class KnowledgeRepositoryTest {
     private final KnowledgeChunkRepository chunkRepository;
 
     private final KbConversationRepository conversationRepository;
+    private final com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentLifecyclePort lifecycle;
 
     /**
      * 构造器注入仓储（spring.test.constructor.autowire.mode=all，禁用字段 @Autowired）。
@@ -47,11 +48,13 @@ class KnowledgeRepositoryTest {
             KnowledgeSpaceRepository spaceRepository,
             KnowledgeDocumentRepository documentRepository,
             KnowledgeChunkRepository chunkRepository,
-            KbConversationRepository conversationRepository) {
+            KbConversationRepository conversationRepository,
+            com.apex.scaffold.knowledge.domain.gateway.KnowledgeDocumentLifecyclePort lifecycle) {
         this.spaceRepository = spaceRepository;
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.conversationRepository = conversationRepository;
+        this.lifecycle = lifecycle;
     }
 
     @BeforeEach
@@ -129,8 +132,8 @@ class KnowledgeRepositoryTest {
                         .contentHash("hash-1")
                         .tokenEstimate(3)
                         .build());
-        assertThat(chunkRepository.replaceByDocument(doc.getId(), chunks).block())
-                .isEqualTo(2);
+        var lease = lifecycle.claimIngestion(doc.getId()).block();
+        assertThat(lifecycle.replaceChunks(lease, chunks).block()).isEqualTo(2);
         assertThat(chunkRepository.findByDocument(doc.getId()).block()).hasSize(2);
         assertThat(chunkRepository.countByDocument(doc.getId()).block()).isEqualTo(2L);
 
@@ -145,13 +148,17 @@ class KnowledgeRepositoryTest {
                 .contentHash("hash-2")
                 .tokenEstimate(5)
                 .build());
-        assertThat(chunkRepository.replaceByDocument(doc.getId(), replaced).block())
-                .isEqualTo(1);
+        assertThat(lifecycle.replaceChunks(lease, replaced).block()).isEqualTo(1);
         assertThat(chunkRepository.findByDocument(doc.getId()).block()).hasSize(1);
 
-        assertThat(chunkRepository.deleteByDocument(doc.getId()).block()).isTrue();
+        lifecycle.release(lease).block();
+        assertThat(lifecycle
+                        .acceptDelete(doc.getId(), "http://meili", "kb_chunks")
+                        .block())
+                .isTrue();
+        var cleanupLease = lifecycle.claimCleanup("tenant-1", doc.getId()).block();
+        lifecycle.deleteChunks(cleanupLease).block();
         assertThat(chunkRepository.findByDocument(doc.getId()).block()).isEmpty();
-        assertThat(documentRepository.deleteById(doc.getId()).block()).isTrue();
         assertThat(documentRepository.findById(doc.getId()).block()).isNull();
     }
 

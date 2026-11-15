@@ -3,7 +3,9 @@ package com.apex.scaffold.knowledgeservice.interfaces.util;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.apex.scaffold.common.util.JsonUtil;
 import com.apex.scaffold.common.util.TraceIdUtil;
+import com.apex.scaffold.knowledge.application.dto.KbChatErrorPayload;
 import com.apex.scaffold.knowledgeservice.interfaces.security.AuthenticatedUser;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -12,6 +14,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -24,6 +27,8 @@ import reactor.core.publisher.Mono;
  * <p>身份只取自已验证的 Spring Security 上下文（{@link AuthenticatedUser}），
  * 不读取 X-User-Id / X-Tenant-Id 等中继头；业务错误统一转换为
  * {@code Result{code,msg,traceId}} JSON 响应（HTTP 400 承载业务错误码）。
+ * 问答 SSE 为独立协议：error data 使用 {@code {code:string,message:string}} JSON，
+ * 不套用常规 Result，也不改变安全链及权限切面的 HTTP 拒绝边界。
  *
  * @author Apex Team
  * @version 1.3.2
@@ -104,6 +109,22 @@ public class KnowledgeRequestHandlerUtil {
         return ServerResponse.status(500)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(result);
+    }
+
+    /**
+     * 构建问答 SSE 错误事件，不改变既有 HTTP 200 流式响应契约。
+     *
+     * <p>业务异常保留安全消息，技术异常及空白消息使用中文兜底；日志保留异常栈，
+     * 不读取或记录请求、认证令牌。安全链及权限切面的拒绝不进入本方法。
+     *
+     * @param throwable 异常，可为空
+     * @return data 为 code/message 字符串字段 JSON 的 error 事件
+     */
+    public ServerSentEvent<String> buildErrorEvent(Throwable throwable) {
+        log.error("知识问答请求处理失败", throwable);
+        return ServerSentEvent.builder(KbChatErrorPayload.from(throwable).toJson(JsonUtil.getObjectMapper()))
+                .event("error")
+                .build();
     }
 
     /**
