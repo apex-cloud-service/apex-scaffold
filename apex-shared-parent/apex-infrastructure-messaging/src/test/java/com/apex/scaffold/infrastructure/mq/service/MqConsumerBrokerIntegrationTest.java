@@ -77,7 +77,7 @@ class MqConsumerBrokerIntegrationTest {
         Config config = new Config();
         config.useSingleServer().setAddress(required("APEX_MQ_REDIS"));
         redis = Redisson.create(config);
-        service = new MqConsumerService(redis);
+        service = new MqConsumerService(redis, 30L);
         for (String group : GROUPS) {
             startConsumer(group);
         }

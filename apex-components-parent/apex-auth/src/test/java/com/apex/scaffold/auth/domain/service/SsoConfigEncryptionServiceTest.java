@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -34,15 +33,20 @@ class SsoConfigEncryptionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SsoConfigEncryptionService(redisTemplate);
+        service = new SsoConfigEncryptionService(redisTemplate, null);
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+    }
+
+    /** 以显式主密钥重建被测服务（等价于配置 apex.security.sso.encryption.master-key）。 */
+    private void useMasterKey(String masterKey) {
+        service = new SsoConfigEncryptionService(redisTemplate, masterKey);
     }
 
     @Test
     @DisplayName("加密和解密 - 成功往返")
     void testEncryptAndDecrypt_SuccessfulRoundTrip() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String plainText = "my-client-secret-12345";
 
@@ -85,7 +89,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("加密 - 从环境变量获取主密钥")
     void testEncrypt_WithMasterKeyFromEnv() {
         String masterKey = Base64.getEncoder().encodeToString(new byte[32]);
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String plainText = "sensitive-data";
 
@@ -143,7 +147,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("解密 - 成功")
     void testDecrypt_Success() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String plainText = "original-secret";
 
@@ -156,7 +160,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("解密 - 无效格式")
     void testDecrypt_InvalidFormat() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String invalidEncrypted = "invalid-format-without-colon";
 
@@ -169,7 +173,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("解密 - 无效Base64")
     void testDecrypt_InvalidBase64() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String invalidEncrypted = "invalid!!!:base64!!!";
 
@@ -289,7 +293,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("加密长文本 - 成功")
     void testEncrypt_LongText() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String longText = "A".repeat(1000);
 
@@ -302,7 +306,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("加密特殊字符 - 成功")
     void testEncrypt_SpecialCharacters() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String specialChars = "!@#$%^&*()_+-=[]{}|;:'\",.<>?/~`中文字符";
 
@@ -315,7 +319,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("加密UTF-8字符 - 成功")
     void testEncrypt_Utf8Characters() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String utf8Text = "你好世界 🌍 こんにちは Привет";
 
@@ -328,7 +332,7 @@ class SsoConfigEncryptionServiceTest {
     @DisplayName("加密多次 - 每次生成不同密文")
     void testEncrypt_MultipleTimes_DifferentCiphertext() {
         String masterKey = "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=";
-        ReflectionTestUtils.setField(service, "masterKeyFromEnv", masterKey);
+        useMasterKey(masterKey);
 
         String plainText = "same-plain-text";
 

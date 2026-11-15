@@ -6,6 +6,7 @@ import com.apex.scaffold.infrastructure.event.DomainEventOutboxDispatcher;
 import com.apex.scaffold.infrastructure.event.DomainEventOutboxStore;
 import com.apex.scaffold.infrastructure.event.DomainEventPublisherImpl;
 import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -85,6 +86,14 @@ public class AuthCenterEventConfig {
      *
      * @param domainEventOutboxStore Outbox 存储
      * @param applicationEventPublisher Spring 本地事件发布器
+     * @param batchSize 单批最大事件数，默认 50
+     * @param maxAttempts 最大投递次数，默认 8
+     * @param lockTimeoutSeconds 处理锁超时秒数，默认 120
+     * @param parallelism 单实例投递并行度，默认 4
+     * @param retentionEnabled 是否启用保留策略清理，默认 true
+     * @param retentionDeliveredHours DELIVERED 记录保留小时数，默认 168
+     * @param retentionDeadDays DEAD 记录保留天数，默认 7
+     * @param retentionBatchSize 保留策略清理单批删除行数上限，默认 5000
      * @return DomainEventOutboxDispatcher 实例
      */
     @Bean
@@ -94,8 +103,27 @@ public class AuthCenterEventConfig {
             havingValue = "true",
             matchIfMissing = true)
     public DomainEventOutboxDispatcher domainEventOutboxDispatcher(
-            DomainEventOutboxStore domainEventOutboxStore, ApplicationEventPublisher applicationEventPublisher) {
-        return new DomainEventOutboxDispatcher(domainEventOutboxStore, applicationEventPublisher);
+            DomainEventOutboxStore domainEventOutboxStore,
+            ApplicationEventPublisher applicationEventPublisher,
+            @Value("${apex.events.outbox.batch-size:50}") int batchSize,
+            @Value("${apex.events.outbox.max-attempts:8}") int maxAttempts,
+            @Value("${apex.events.outbox.lock-timeout-seconds:120}") int lockTimeoutSeconds,
+            @Value("${apex.events.outbox.parallelism:4}") int parallelism,
+            @Value("${apex.events.outbox.retention-enabled:true}") boolean retentionEnabled,
+            @Value("${apex.events.outbox.retention-delivered-hours:168}") int retentionDeliveredHours,
+            @Value("${apex.events.outbox.retention-dead-days:7}") int retentionDeadDays,
+            @Value("${apex.events.outbox.retention-batch-size:5000}") int retentionBatchSize) {
+        return new DomainEventOutboxDispatcher(
+                domainEventOutboxStore,
+                applicationEventPublisher,
+                batchSize,
+                maxAttempts,
+                lockTimeoutSeconds,
+                parallelism,
+                retentionEnabled,
+                retentionDeliveredHours,
+                retentionDeadDays,
+                retentionBatchSize);
     }
 
     /**

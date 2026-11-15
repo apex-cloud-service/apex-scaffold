@@ -47,8 +47,8 @@ public class AccountDeletionService {
     private final CacheConsistencyPort cacheConsistencyPort;
     private final AuthTicketService authTicketService;
 
-    @Value("${jwt.refresh-token-expire:" + DEFAULT_REVOCATION_TTL_MS + "}")
-    private long revocationTtlMs = DEFAULT_REVOCATION_TTL_MS;
+    /** 身份吊销标记的保留时间（毫秒）。 */
+    private final long revocationTtlMs;
 
     /**
      * 创建账号注销服务。
@@ -61,6 +61,7 @@ public class AccountDeletionService {
      * @param tokenService 令牌服务
      * @param cacheConsistencyPort 缓存一致性端口
      * @param authTicketService 认证票据服务
+     * @param revocationTtlMs 身份吊销标记的保留时间（毫秒），默认 604800000（7 天），与 refresh token 寿命一致
      */
     public AccountDeletionService(
             UserService userService,
@@ -70,7 +71,8 @@ public class AccountDeletionService {
             TokenBlacklistService tokenBlacklistService,
             TokenService tokenService,
             CacheConsistencyPort cacheConsistencyPort,
-            AuthTicketService authTicketService) {
+            AuthTicketService authTicketService,
+            @Value("${jwt.refresh-token-expire:" + DEFAULT_REVOCATION_TTL_MS + "}") long revocationTtlMs) {
         this.userService = userService;
         this.subscriptionRepository = subscriptionRepository;
         this.smsVerificationCoordinator = smsVerificationCoordinator;
@@ -79,6 +81,7 @@ public class AccountDeletionService {
         this.tokenService = tokenService;
         this.cacheConsistencyPort = cacheConsistencyPort;
         this.authTicketService = authTicketService;
+        this.revocationTtlMs = revocationTtlMs;
     }
 
     /**

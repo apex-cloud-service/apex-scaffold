@@ -94,8 +94,7 @@ public class AntiReplayAspect {
     private static final String NONCE_VALUE = "1";
 
     /** Nonce 在 Redis 中的过期时间（秒），从配置中读取，默认 360 秒（6 分钟） */
-    @Value("${apex.security.anti-replay.nonce-ttl-seconds:360}")
-    private long nonceTtlSeconds;
+    private final long nonceTtlSeconds;
 
     /** 请求头名称：时间戳 */
     private static final String HEADER_TIMESTAMP = "X-Timestamp";
@@ -114,11 +113,15 @@ public class AntiReplayAspect {
      *
      * @param redisTemplate 响应式 Redis 字符串模板
      * @param securityMetricsRecorder 安全指标记录器
+     * @param nonceTtlSeconds Nonce 在 Redis 中的过期时间（秒），默认 360 秒（6 分钟）
      */
     public AntiReplayAspect(
-            ReactiveStringRedisTemplate redisTemplate, SecurityMetricsRecorder securityMetricsRecorder) {
+            ReactiveStringRedisTemplate redisTemplate,
+            SecurityMetricsRecorder securityMetricsRecorder,
+            @Value("${apex.security.anti-replay.nonce-ttl-seconds:360}") long nonceTtlSeconds) {
         this.redisTemplate = redisTemplate;
         this.securityMetricsRecorder = securityMetricsRecorder;
+        this.nonceTtlSeconds = nonceTtlSeconds;
     }
 
     /**

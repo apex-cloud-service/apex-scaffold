@@ -47,71 +47,6 @@ public class NettyConfig {
     private static final int DEFAULT_MIN_COMPRESSION_SIZE = 1024;
 
     /**
-     * 是否启用响应压缩
-     *
-     * <p>通过 {@code server.netty.compression.enabled} 配置，默认开启。
-     * 生产环境建议保持开启以减少带宽消耗。
-     */
-    @Value("${server.netty.compression.enabled:true}")
-    private boolean compressionEnabled;
-
-    /**
-     * 响应压缩级别（0-9）
-     *
-     * <p>通过 {@code server.netty.compression.level} 配置，默认 6。
-     * <ul>
-     *   <li>0：不压缩</li>
-     *   <li>1-3：速度优先，压缩率较低</li>
-     *   <li>4-6：平衡模式（推荐）</li>
-     *   <li>7-9：压缩率优先，消耗更多CPU</li>
-     * </ul>
-     */
-    @Value("${server.netty.compression.level:6}")
-    private int compressionLevel;
-
-    /**
-     * 触发压缩的最小响应体大小（字节）
-     *
-     * <p>通过 {@code server.netty.compression.min-response-size} 配置，默认 1KB。
-     * 小于此值的响应不进行压缩，避免对小响应产生无意义的压缩开销。
-     */
-    @Value("${server.netty.compression.min-response-size:1024}")
-    private int minCompressionResponseSize;
-
-    /**
-     * 连接无入站数据时允许等待的秒数。
-     *
-     * <p>默认值保持历史的 30 秒。真实数据库诊断或管理模拟接口可能在完整请求体到达后执行
-     * 较长时间，此时可通过 {@code server.netty.read-timeout-seconds} 临时增大窗口，避免 Netty
-     * 在业务响应生成前关闭连接。</p>
-     */
-    @Value("${server.netty.read-timeout-seconds:30}")
-    private int readTimeoutSeconds;
-
-    /**
-     * 单次响应写入允许等待的秒数。
-     *
-     * <p>通过 {@code server.netty.write-timeout-seconds} 配置，默认保持历史值 60 秒。</p>
-     */
-    @Value("${server.netty.write-timeout-seconds:60}")
-    private int writeTimeoutSeconds;
-
-    /**
-     * 连接读空闲事件的检测秒数。
-     *
-     * <p>通过 {@code server.netty.idle-timeout-seconds} 配置，默认保持历史值 20 秒。</p>
-     */
-    @Value("${server.netty.idle-timeout-seconds:20}")
-    private int idleTimeoutSeconds;
-
-    /** Netty 服务器端连接建立超时（毫秒），从配置中读取，默认 5000 */
-    @Value("${server.netty.connect-timeout-millis:5000}")
-    private int connectTimeoutMillis;
-
-    /** 构造 Netty 配置类 */
-    public NettyConfig() {}
-
-    /**
      * 配置 Netty 服务器参数
      *
      * <p>应用 TCP 优化参数并启用响应压缩功能。压缩仅对大于 {@code minCompressionResponseSize}
@@ -124,10 +59,24 @@ public class NettyConfig {
      *   <li>已压缩的二进制格式（图片、视频等）不会被重复压缩</li>
      * </ul>
      *
+     * @param compressionEnabled 是否启用响应压缩，默认 true
+     * @param compressionLevel 响应压缩级别（0-9），默认 6
+     * @param minCompressionResponseSize 触发压缩的最小响应体大小（字节），默认 1024（1KB）
+     * @param readTimeoutSeconds 连接无入站数据时允许等待的秒数，默认 30
+     * @param writeTimeoutSeconds 单次响应写入允许等待的秒数，默认 60
+     * @param idleTimeoutSeconds 连接读空闲事件的检测秒数，默认 20
+     * @param connectTimeoutMillis Netty 服务器端连接建立超时（毫秒），默认 5000
      * @return WebServerFactoryCustomizer 自定义器
      */
     @Bean
-    public WebServerFactoryCustomizer<NettyReactiveWebServerFactory> nettyServerCustomizer() {
+    public WebServerFactoryCustomizer<NettyReactiveWebServerFactory> nettyServerCustomizer(
+            @Value("${server.netty.compression.enabled:true}") boolean compressionEnabled,
+            @Value("${server.netty.compression.level:6}") int compressionLevel,
+            @Value("${server.netty.compression.min-response-size:1024}") int minCompressionResponseSize,
+            @Value("${server.netty.read-timeout-seconds:30}") int readTimeoutSeconds,
+            @Value("${server.netty.write-timeout-seconds:60}") int writeTimeoutSeconds,
+            @Value("${server.netty.idle-timeout-seconds:20}") int idleTimeoutSeconds,
+            @Value("${server.netty.connect-timeout-millis:5000}") int connectTimeoutMillis) {
         return factory -> {
             int processors = Runtime.getRuntime().availableProcessors();
             int actualMinSize = Math.max(minCompressionResponseSize, DEFAULT_MIN_COMPRESSION_SIZE);

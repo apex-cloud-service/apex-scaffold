@@ -18,6 +18,7 @@ public interface TenantStatusPort {
      * 校验租户可登录性。
      *
      * @param tenantCode 登录请求声明的租户编码
+     * @return 校验通过时为空完成；拒绝登录时以错误信号抛出
      * @throws com.apex.scaffold.common.exception.BusinessException 拒绝登录时抛出，
      *         错误码为 {@code UNAUTHORIZED} 或 {@code FORBIDDEN}
      */

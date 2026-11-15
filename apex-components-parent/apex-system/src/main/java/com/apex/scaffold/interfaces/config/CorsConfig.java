@@ -65,18 +65,6 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
-    /** 允许的来源域名列表，多个用逗号分隔 */
-    @Value("${cors.allowed-origins:}")
-    private List<String> allowedOrigins;
-
-    /**
-     * 是否允许所有来源域名
-     *
-     * <p>生产环境建议设为 false，仅允许 {@link #allowedOrigins} 中配置的特定域名。
-     */
-    @Value("${cors.allow-all-origins:false}")
-    private boolean allowAllOrigins;
-
     /**
      * 创建 CORS Web 过滤器
      *
@@ -95,11 +83,15 @@ public class CorsConfig {
      *   <li>禁止公开暴露敏感响应头（如 Set-Cookie）。</li>
      * </ul>
      *
+     * @param allowedOrigins 允许的来源域名列表，多个用逗号分隔，默认空列表
+     * @param allowAllOrigins 是否允许所有来源域名，默认 false（生产环境建议保持 false）
      * @return {@link CorsWebFilter} 实例
      * @throws IllegalStateException 生产环境未配置明确的允许来源域名
      */
     @Bean
-    public CorsWebFilter corsWebFilter() {
+    public CorsWebFilter corsWebFilter(
+            @Value("${cors.allowed-origins:}") List<String> allowedOrigins,
+            @Value("${cors.allow-all-origins:false}") boolean allowAllOrigins) {
         CorsConfiguration config = new CorsConfiguration();
 
         if (allowAllOrigins) {

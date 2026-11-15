@@ -29,7 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * {@link MqConsumerService.ProcessingResult} 的单元测试类
@@ -55,8 +54,7 @@ class MqConsumerServiceTest {
     @BeforeEach
     void setUp() {
         TenantContext.setTenantId("tenant-a");
-        service = new MqConsumerService(redissonClient);
-        ReflectionTestUtils.setField(service, "idempotentTtlMinutes", 30L);
+        service = new MqConsumerService(redissonClient, 30L);
         lenient().doReturn(bucket).when(redissonClient).getBucket(anyString(), eq(StringCodec.INSTANCE));
     }
 
@@ -241,11 +239,11 @@ class MqConsumerServiceTest {
     @Test
     @DisplayName("非法TTL应使用默认值")
     void shouldUseDefaultTtlWhenConfiguredTtlIsInvalid() {
-        ReflectionTestUtils.setField(service, "idempotentTtlMinutes", 0L);
+        MqConsumerService serviceWithInvalidTtl = new MqConsumerService(redissonClient, 0L);
         when(bucket.setIfAbsent(anyString(), any(Duration.class))).thenReturn(true);
         when(bucket.compareAndSet(anyString(), eq("SUCCESS"))).thenReturn(true);
 
-        service.processMessageWithResult("consumer-a", "msg-1", "payload", message -> true);
+        serviceWithInvalidTtl.processMessageWithResult("consumer-a", "msg-1", "payload", message -> true);
 
         verify(bucket).setIfAbsent(anyString(), eq(Duration.ofMinutes(30)));
         verify(bucket).expire(Duration.ofMinutes(30));

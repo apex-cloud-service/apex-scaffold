@@ -11,7 +11,6 @@ import io.r2dbc.spi.ConnectionFactory;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import javax.sql.DataSource;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class DatabaseConfigService {
 
     private static final String CONNECTION_PARAMETER_SEPARATOR = "&";
@@ -56,8 +54,20 @@ public class DatabaseConfigService {
 
     private final DataSource dataSource;
 
-    @Value("${spring.datasource.url:}")
-    private String currentDatasourceUrl;
+    /** 当前数据源 URL（只读，默认空串）。 */
+    private final String currentDatasourceUrl;
+
+    /**
+     * 创建数据库配置应用服务。
+     *
+     * @param dataSource 应用主数据源，用于查询当前数据库信息
+     * @param currentDatasourceUrl 当前数据源 URL（{@code spring.datasource.url}），默认空串
+     */
+    public DatabaseConfigService(
+            DataSource dataSource, @Value("${spring.datasource.url:}") String currentDatasourceUrl) {
+        this.dataSource = dataSource;
+        this.currentDatasourceUrl = currentDatasourceUrl;
+    }
 
     /**
      * 测试数据库连接（R2DBC 响应式实现）。

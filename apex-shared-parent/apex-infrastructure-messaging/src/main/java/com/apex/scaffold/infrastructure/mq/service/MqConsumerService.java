@@ -13,7 +13,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RBucket;
@@ -67,7 +66,6 @@ import org.springframework.stereotype.Service;
  * @since 1.0.0
  */
 @Service
-@RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(RocketMQTemplate.class)
 @ConditionalOnBean(RocketMQTemplate.class)
@@ -104,8 +102,7 @@ public class MqConsumerService {
      *
      * <p>可通过配置 {@code mq.consumer.idempotent-ttl-minutes} 自定义。
      */
-    @Value("${mq.consumer.idempotent-ttl-minutes:30}")
-    private long idempotentTtlMinutes;
+    private final long idempotentTtlMinutes;
 
     /**
      * 关闭标记
@@ -114,6 +111,19 @@ public class MqConsumerService {
 
     /** 当前正在处理的消息数量。 */
     private final AtomicInteger inFlight = new AtomicInteger();
+
+    /**
+     * 构造 MQ 消费者服务。
+     *
+     * @param redissonClient Redisson 客户端，用于分布式幂等控制
+     * @param idempotentTtlMinutes 幂等性记录 TTL（分钟），默认 30；非正数时回退默认值
+     */
+    public MqConsumerService(
+            RedissonClient redissonClient,
+            @Value("${mq.consumer.idempotent-ttl-minutes:30}") long idempotentTtlMinutes) {
+        this.redissonClient = redissonClient;
+        this.idempotentTtlMinutes = idempotentTtlMinutes;
+    }
 
     /**
      * 停止接收新消息。

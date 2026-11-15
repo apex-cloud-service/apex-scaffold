@@ -69,7 +69,7 @@ class OpenApiExportTest {
      * @return 完整的 OpenAPI 文档
      */
     private OpenAPI buildOpenApi() {
-        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         io.swagger.v3.oas.models.Paths paths = new io.swagger.v3.oas.models.Paths();
         for (RouterOperation route : documentedOperations()) {
             PathItem pathItem = paths.computeIfAbsent(route.path(), ignored -> new PathItem());

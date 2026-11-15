@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * 自适应限流管理器压力测试
@@ -30,11 +29,7 @@ class AdaptiveRateLimiterStressTest {
      */
     @BeforeEach
     void setUp() {
-        limiter = new AdaptiveRateLimiter();
-        ReflectionTestUtils.setField(limiter, "cpuThreshold", 0.7);
-        ReflectionTestUtils.setField(limiter, "memoryThreshold", 0.85);
-        ReflectionTestUtils.setField(limiter, "threadThreshold", 0.8);
-        ReflectionTestUtils.setField(limiter, "degradeFactor", 0.2);
+        limiter = new AdaptiveRateLimiter(0.7, 0.85, 0.8, 0.2);
         limiter.reset();
     }
 
@@ -112,9 +107,8 @@ class AdaptiveRateLimiterStressTest {
         int normalQps = limiter.getAllowedQps("adaptive-test", baseQps);
         assertThat(normalQps).isBetween(10, baseQps);
 
-        // 模拟高负载：将 cpuThreshold 设得很低（0.05），强制触发降级
-        limiter.reset();
-        ReflectionTestUtils.setField(limiter, "cpuThreshold", 0.01);
+        // 模拟高负载：将 cpuThreshold 设得很低（0.01），强制触发降级
+        limiter = new AdaptiveRateLimiter(0.01, 0.85, 0.8, 0.2);
 
         int degradedQps = limiter.getAllowedQps("adaptive-test", baseQps);
         // 降级后的 QPS 应小于 baseQps（但不低于 MIN_QPS=10）
@@ -139,17 +133,11 @@ class AdaptiveRateLimiterStressTest {
     @Test
     @DisplayName("多实例隔离 - 3 个独立 AdaptiveRateLimiter 互不干扰")
     void multipleInstancesIsolation() {
-        AdaptiveRateLimiter limiterA = new AdaptiveRateLimiter();
-        ReflectionTestUtils.setField(limiterA, "cpuThreshold", 0.7);
-        ReflectionTestUtils.setField(limiterA, "degradeFactor", 0.2);
+        AdaptiveRateLimiter limiterA = new AdaptiveRateLimiter(0.7, 0.85, 0.8, 0.2);
 
-        AdaptiveRateLimiter limiterB = new AdaptiveRateLimiter();
-        ReflectionTestUtils.setField(limiterB, "cpuThreshold", 0.01);
-        ReflectionTestUtils.setField(limiterB, "degradeFactor", 0.9);
+        AdaptiveRateLimiter limiterB = new AdaptiveRateLimiter(0.01, 0.85, 0.8, 0.9);
 
-        AdaptiveRateLimiter limiterC = new AdaptiveRateLimiter();
-        ReflectionTestUtils.setField(limiterC, "cpuThreshold", 0.7);
-        ReflectionTestUtils.setField(limiterC, "degradeFactor", 0.2);
+        AdaptiveRateLimiter limiterC = new AdaptiveRateLimiter(0.7, 0.85, 0.8, 0.2);
 
         int qpsA = limiterA.getAllowedQps("cat-a", 1000);
         int qpsB = limiterB.getAllowedQps("cat-b", 1000);

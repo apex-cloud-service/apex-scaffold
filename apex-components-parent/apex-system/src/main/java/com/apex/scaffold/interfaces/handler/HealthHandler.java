@@ -50,22 +50,27 @@ import reactor.core.publisher.Mono;
 @Tag(name = "系统监控", description = "系统健康检查和状态查询接口")
 public class HealthHandler extends BaseHandler {
 
-    /**
-     * 构造方法，注入 MessageUtils
-     *
-     * @param messageUtils 国际化消息工具实例，由 Spring 容器注入
-     */
-    protected HealthHandler(MessageUtils messageUtils) {
-        super(messageUtils);
-    }
-
     /** 应用名称（读配置，兜底默认值与应用名 apex-scaffold 保持一致） */
-    @Value("${spring.application.name:apex-scaffold}")
-    private String applicationName;
+    private final String applicationName;
 
     /** 应用版本（读配置，三档构建时由 apex-build.properties 注入） */
-    @Value("${apex.version:1.2.0}")
-    private String applicationVersion;
+    private final String applicationVersion;
+
+    /**
+     * 构造方法，注入 MessageUtils 与应用元信息
+     *
+     * @param messageUtils 国际化消息工具实例，由 Spring 容器注入
+     * @param applicationName 应用名称，默认 apex-scaffold
+     * @param applicationVersion 应用版本，默认 1.2.0
+     */
+    protected HealthHandler(
+            MessageUtils messageUtils,
+            @Value("${spring.application.name:apex-scaffold}") String applicationName,
+            @Value("${apex.version:1.2.0}") String applicationVersion) {
+        super(messageUtils);
+        this.applicationName = applicationName;
+        this.applicationVersion = applicationVersion;
+    }
 
     /**
      * 健康检查接口

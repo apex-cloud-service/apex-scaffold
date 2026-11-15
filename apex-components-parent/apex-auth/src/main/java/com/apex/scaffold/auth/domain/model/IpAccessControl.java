@@ -99,6 +99,8 @@ public class IpAccessControl {
 
     /**
      * 判断是否已过期
+     *
+     * @return 已设置过期时间且当前时间晚于该时间时为true
      */
     public boolean isExpired() {
         return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
@@ -106,6 +108,8 @@ public class IpAccessControl {
 
     /**
      * 判断是否有效（启用且未过期）
+     *
+     * @return 已启用且未过期时为true
      */
     public boolean isActive() {
         return Boolean.TRUE.equals(enabled) && !isExpired();
@@ -113,6 +117,9 @@ public class IpAccessControl {
 
     /**
      * 判断IP是否匹配（支持CIDR格式）
+     *
+     * @param targetIp 待匹配的客户端IP
+     * @return 精确匹配、CIDR匹配或通配匹配成功时为true；IP地址或目标IP为空时为false
      */
     public boolean matches(String targetIp) {
         if (ipAddress == null || targetIp == null) {

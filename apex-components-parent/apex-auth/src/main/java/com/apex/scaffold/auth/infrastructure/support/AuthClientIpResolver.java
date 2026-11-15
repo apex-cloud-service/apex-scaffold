@@ -14,7 +14,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
  * 认证域客户端 IP 安全解析器。
  *
  * <p>根据 TCP 直连地址、{@code X-Forwarded-For} 与 {@code X-Real-IP} 解析真实客户端地址。
- * 为防止客户端伪造转发头，只有当直连地址命中 {@link AuthTrustedProxyProperties#getTrustedProxyCidrs()}
+ * 为防止客户端伪造转发头，只有当直连地址命中 {@link AuthTrustedProxyProperties#trustedProxyCidrs}
  * 配置的可信代理网段时才会采信转发头。</p>
  *
  * <p>{@code X-Forwarded-For} 按代理链从右向左检查，跳过所有可信代理，第一个非可信地址

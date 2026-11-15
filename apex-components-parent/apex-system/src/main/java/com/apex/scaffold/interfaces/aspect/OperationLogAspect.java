@@ -87,24 +87,19 @@ public class OperationLogAspect {
     private final UserService userService;
 
     /** 是否启用操作日志记录，由 {@code operation-log.enabled} 配置控制。 */
-    @Value("${operation-log.enabled:true}")
-    private boolean operationLogEnabled;
+    private final boolean operationLogEnabled;
 
     /** 是否记录请求参数内容，由 {@code operation-log.log-params} 配置控制。 */
-    @Value("${operation-log.log-params:true}")
-    private boolean logParams;
+    private final boolean logParams;
 
     /** 是否记录响应结果内容，由 {@code operation-log.log-result} 配置控制。 */
-    @Value("${operation-log.log-result:true}")
-    private boolean logResult;
+    private final boolean logResult;
 
     /** 请求参数最大截断长度，超过此长度的参数内容会被截断。 */
-    @Value("${operation-log.max-param-length:2000}")
-    private int maxParamLength;
+    private final int maxParamLength;
 
     /** 响应结果最大截断长度，超过此长度的响应内容会被截断。 */
-    @Value("${operation-log.max-result-length:2000}")
-    private int maxResultLength;
+    private final int maxResultLength;
 
     /**
      * 构造操作日志切面
@@ -112,12 +107,29 @@ public class OperationLogAspect {
      * @param operationLogService 操作日志服务
      * @param userService         用户服务，用于解析操作人信息
      * @param objectMapper        Jackson ObjectMapper
+     * @param operationLogEnabled 是否启用操作日志记录，默认 true
+     * @param logParams           是否记录请求参数内容，默认 true
+     * @param logResult           是否记录响应结果内容，默认 true
+     * @param maxParamLength      请求参数最大截断长度，默认 2000
+     * @param maxResultLength     响应结果最大截断长度，默认 2000
      */
     public OperationLogAspect(
-            OperationLogService operationLogService, UserService userService, ObjectMapper objectMapper) {
+            OperationLogService operationLogService,
+            UserService userService,
+            ObjectMapper objectMapper,
+            @Value("${operation-log.enabled:true}") boolean operationLogEnabled,
+            @Value("${operation-log.log-params:true}") boolean logParams,
+            @Value("${operation-log.log-result:true}") boolean logResult,
+            @Value("${operation-log.max-param-length:2000}") int maxParamLength,
+            @Value("${operation-log.max-result-length:2000}") int maxResultLength) {
         this.operationLogService = operationLogService;
         this.userService = userService;
         this.objectMapper = objectMapper;
+        this.operationLogEnabled = operationLogEnabled;
+        this.logParams = logParams;
+        this.logResult = logResult;
+        this.maxParamLength = maxParamLength;
+        this.maxResultLength = maxResultLength;
     }
 
     /**

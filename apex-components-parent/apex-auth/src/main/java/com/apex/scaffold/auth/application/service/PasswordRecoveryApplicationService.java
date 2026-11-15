@@ -49,7 +49,7 @@ import reactor.core.publisher.Mono;
  *   <li>验证码与确认令牌只存 SHA-256 摘要、绑定恢复单用途、短期 TTL，验证码重复校验计入失败次数；</li>
  *   <li>并发确认通过确认令牌原子消费与恢复单条件跃迁双重保证最多一次成功；</li>
  *   <li>撤销会话失败不能伪称全端退出，响应中返回 {@code PENDING} 并记录可追踪日志。</li>
- * </ul></p>
+ * </ul>
  *
  * @author Apex Security Team
  * @since 1.0.0
@@ -115,6 +115,10 @@ public class PasswordRecoveryApplicationService {
      *
      * <p>按 IP 与联系方式双维度限流；账号不存在时返回同形态占位恢复单，
      * 命中多个账号时落人工恢复单，均不投递验证码。</p>
+     *
+     * @param request 找回申请请求（恢复通道与联系方式）
+     * @param clientIp 客户端IP，用于来源限流，可为null
+     * @return 找回申请响应；账号不存在时为同形态占位恢复单
      */
     public Mono<PasswordRecoveryInitiateResponse> initiate(PasswordRecoveryInitiateRequest request, String clientIp) {
         String channel =
@@ -154,6 +158,9 @@ public class PasswordRecoveryApplicationService {
      *
      * <p>验证码原子消费，一次有效；失败计入失败次数，达到上限后恢复单作废。
      * 所有无效场景返回统一的通用错误，不区分具体原因。</p>
+     *
+     * @param request 验证码校验请求（恢复单ID与验证码）
+     * @return 校验响应，包含一次性确认令牌及其有效期
      */
     public Mono<PasswordRecoveryVerifyResponse> verify(PasswordRecoveryVerifyRequest request) {
         String recoveryId = trim(request.getRecoveryId());
@@ -196,6 +203,9 @@ public class PasswordRecoveryApplicationService {
      *
      * <p>确认令牌原子消费保证并发下最多一次成功；密码重设与恢复单终结均使用条件更新；
      * 撤销失败时返回 {@code sessionRevocation=PENDING}，不伪称全端退出。</p>
+     *
+     * @param request 确认重设请求（恢复单ID、确认令牌与新密码）
+     * @return 确认响应，包含重设状态与会话撤销状态
      */
     public Mono<PasswordRecoveryConfirmResponse> confirm(PasswordRecoveryConfirmRequest request) {
         String recoveryId = trim(request.getRecoveryId());

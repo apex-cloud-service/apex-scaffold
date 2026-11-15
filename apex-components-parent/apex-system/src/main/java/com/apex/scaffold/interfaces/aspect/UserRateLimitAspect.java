@@ -93,8 +93,7 @@ public class UserRateLimitAspect {
      * <p>通过配置项 {@code apex.ratelimit.local-fallback.enabled} 控制，
      * 默认开启。当 Redis 不可用时，自动降级到本地限流。
      */
-    @Value("${apex.ratelimit.local-fallback.enabled:true}")
-    private boolean localFallbackEnabled = true;
+    private final boolean localFallbackEnabled;
 
     /**
      * 本地降流算法类型
@@ -104,16 +103,24 @@ public class UserRateLimitAspect {
      *
      * @since 3.2.0
      */
-    @Value("${apex.ratelimit.local-fallback.algorithm:SLIDING_WINDOW}")
-    private RateLimitAlgorithm localFallbackAlgorithm = RateLimitAlgorithm.SLIDING_WINDOW;
+    private final RateLimitAlgorithm localFallbackAlgorithm;
 
     /**
      * 构造用户级别限流切面
      *
      * @param redissonClient Redisson 客户端
+     * @param localFallbackEnabled 是否启用本地限流降级，默认 true
+     * @param localFallbackAlgorithm 本地降流算法类型，默认 SLIDING_WINDOW（
+     *     TOKEN_BUCKET、LEAKY_BUCKET、SLIDING_WINDOW）
      */
-    public UserRateLimitAspect(RedissonClient redissonClient) {
+    public UserRateLimitAspect(
+            RedissonClient redissonClient,
+            @Value("${apex.ratelimit.local-fallback.enabled:true}") boolean localFallbackEnabled,
+            @Value("${apex.ratelimit.local-fallback.algorithm:SLIDING_WINDOW}")
+                    RateLimitAlgorithm localFallbackAlgorithm) {
         this.redissonClient = redissonClient;
+        this.localFallbackEnabled = localFallbackEnabled;
+        this.localFallbackAlgorithm = localFallbackAlgorithm;
     }
 
     /**

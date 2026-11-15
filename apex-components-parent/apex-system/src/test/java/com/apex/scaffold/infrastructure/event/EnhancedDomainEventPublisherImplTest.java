@@ -28,7 +28,7 @@ class EnhancedDomainEventPublisherImplTest {
         domainEventBus = mock(DomainEventBus.class);
         applicationEventPublisher = mock(ApplicationEventPublisher.class);
         publisher = new EnhancedDomainEventPublisherImpl(
-                domainEventBus, applicationEventPublisher, mock(RocketMQTemplate.class));
+                domainEventBus, applicationEventPublisher, mock(RocketMQTemplate.class), "apex-domain-event", true);
     }
 
     @Test

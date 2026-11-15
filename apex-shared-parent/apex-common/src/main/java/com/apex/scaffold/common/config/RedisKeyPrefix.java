@@ -29,8 +29,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class RedisKeyPrefix {
 
-    @Value("${apex.redis.key-prefix:}")
-    private String prefix;
+    private final String prefix;
+
+    /**
+     * 构造 Redis Key 前缀管理器。
+     *
+     * @param prefix 版本前缀，默认空字符串表示不追加前缀、保持向后兼容
+     */
+    public RedisKeyPrefix(@Value("${apex.redis.key-prefix:}") String prefix) {
+        this.prefix = prefix;
+    }
 
     /**
      * 为原始 Key 追加版本前缀。

@@ -483,14 +483,19 @@
 | POST | `/admin-api/v1/kb/manual-documents` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.registerManual` | 在线录入纯文本文档（`kb:doc:upload`） |
 | GET | `/admin-api/v1/kb/documents` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.page` | 文档分页（`kb:doc:read`） |
 | GET | `/admin-api/v1/kb/documents/{docId}` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.detail` | 文档详情含分块预览（`kb:doc:read`） |
-| DELETE | `/admin-api/v1/kb/documents/{docId}` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.delete` | 删除文档并同步清理分块与索引（`kb:doc:delete`） |
+| DELETE | `/admin-api/v1/kb/documents/{docId}` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.delete` | 接受删除意图并隐藏文档，后台清理对象、分块与索引（`kb:doc:delete`；布尔成功不等于全部资源已清理） |
 | POST | `/admin-api/v1/kb/documents/{docId}/reindex` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.reindex` | 手动重建索引（`kb:doc:reindex`） |
+| GET | `/admin-api/v1/kb/document-cleanups` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.cleanupPage` | 当前租户删除清理记录分页，page/size（`kb:doc:read`） |
+| GET | `/admin-api/v1/kb/document-cleanups/{docId}` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.cleanupDetail` | 删除清理状态与安全错误摘要（`kb:doc:read`） |
+| POST | `/admin-api/v1/kb/document-cleanups/{docId}/retry` | `KnowledgeDocumentRouter` | `KnowledgeDocumentHandler.retryCleanup` | 接受清理重试，布尔结果不表示完成（`kb:doc:delete`） |
 | GET | `/api/v1/kb/spaces` | `KnowledgeSearchRouter` | `KnowledgeSearchHandler.spaces` | 可用空间列表（登录即可） |
 | GET | `/api/v1/kb/search` | `KnowledgeSearchRouter` | `KnowledgeSearchHandler.search` | 混合检索（`kb:search:query`；hybrid 优先、词法兜底） |
 | POST | `/api/v1/kb/chat/ask` | `KnowledgeChatRouter` | `KnowledgeChatHandler.ask` | SSE 流式问答（`kb:chat:ask`；事件 citations/delta/done/error） |
 | GET | `/api/v1/kb/chat/conversations` | `KnowledgeChatRouter` | `KnowledgeChatHandler.conversations` | 当前用户会话分页（登录即可） |
 | GET | `/api/v1/kb/chat/conversations/{conversationId}/messages` | `KnowledgeChatRouter` | `KnowledgeChatHandler.messages` | 会话消息（归属用户校验） |
 | DELETE | `/api/v1/kb/chat/conversations/{conversationId}` | `KnowledgeChatRouter` | `KnowledgeChatHandler.deleteConversation` | 删除会话（归属用户校验） |
+
+问答流的错误事件统一为 `event: error` 与 JSON data `{code: string, message: string}`，业务消息按已有业务异常口径展示，技术异常使用安全中文兜底，不外泄内部原因。身份/请求校验/会话建立等进入 Handler 错误恢复的失败也采用该结构，HTTP 仍为 200 SSE；安全链或权限切面在进入 Handler 前拒绝时仍返回 401/403，不转换为成功流。
 
 ## 3. 独立认证中心路由
 

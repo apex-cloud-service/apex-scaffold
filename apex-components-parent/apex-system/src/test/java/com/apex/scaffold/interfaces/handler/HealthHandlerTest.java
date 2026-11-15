@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -40,7 +39,6 @@ class HealthHandlerTest {
     @Mock
     private MessageUtils messageUtils;
 
-    @InjectMocks
     private HealthHandler healthHandler;
 
     /**
@@ -48,6 +46,7 @@ class HealthHandlerTest {
      */
     @BeforeEach
     void setUp() {
+        healthHandler = new HealthHandler(messageUtils, "apex-scaffold", "1.2.0");
         when(messageUtils.get(any(Locale.class), any())).thenReturn("");
     }
 

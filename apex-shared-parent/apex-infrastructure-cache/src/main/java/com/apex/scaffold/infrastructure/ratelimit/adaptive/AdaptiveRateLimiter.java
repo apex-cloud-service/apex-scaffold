@@ -86,30 +86,40 @@ public class AdaptiveRateLimiter {
     private final ThreadMXBean threadBean;
 
     /** CPU 使用率阈值（超过此值时启动自适应降级） */
-    @Value("${apex.ratelimit.adaptive.cpu-threshold:0.7}")
-    private double cpuThreshold;
+    private final double cpuThreshold;
 
     /** 内存使用率阈值 */
-    @Value("${apex.ratelimit.adaptive.memory-threshold:0.85}")
-    private double memoryThreshold;
+    private final double memoryThreshold;
 
     /** 线程使用率阈值（当前线程数/可用线程数） */
-    @Value("${apex.ratelimit.adaptive.thread-threshold:0.8}")
-    private double threadThreshold;
+    private final double threadThreshold;
 
     /** 自适应限流降级系数（负载超限时 QPS = baseQPS × (1 - factor)） */
-    @Value("${apex.ratelimit.adaptive.degrade-factor:0.2}")
-    private double degradeFactor;
+    private final double degradeFactor;
 
     /**
      * 构造自适应限流管理器
+     *
+     * @param cpuThreshold    CPU 使用率阈值（0.0~1.0），默认 0.7，超过后启动自适应降级
+     * @param memoryThreshold 堆内存使用率阈值（0.0~1.0），默认 0.85
+     * @param threadThreshold 线程使用率阈值（0.0~1.0），默认 0.8
+     * @param degradeFactor   降级系数（0.0~1.0），默认 0.2；负载超限时 QPS 按
+     *                        {@code baseQPS × (1 - factor)} 下调
      */
-    public AdaptiveRateLimiter() {
+    public AdaptiveRateLimiter(
+            @Value("${apex.ratelimit.adaptive.cpu-threshold:0.7}") double cpuThreshold,
+            @Value("${apex.ratelimit.adaptive.memory-threshold:0.85}") double memoryThreshold,
+            @Value("${apex.ratelimit.adaptive.thread-threshold:0.8}") double threadThreshold,
+            @Value("${apex.ratelimit.adaptive.degrade-factor:0.2}") double degradeFactor) {
         this.osBean = (com.sun.management.OperatingSystemMXBean)
                 ManagementFactory.getPlatformMXBean(com.sun.management.OperatingSystemMXBean.class);
         this.osBeanBasic = ManagementFactory.getOperatingSystemMXBean();
         this.memoryBean = ManagementFactory.getMemoryMXBean();
         this.threadBean = ManagementFactory.getThreadMXBean();
+        this.cpuThreshold = cpuThreshold;
+        this.memoryThreshold = memoryThreshold;
+        this.threadThreshold = threadThreshold;
+        this.degradeFactor = degradeFactor;
     }
 
     /**

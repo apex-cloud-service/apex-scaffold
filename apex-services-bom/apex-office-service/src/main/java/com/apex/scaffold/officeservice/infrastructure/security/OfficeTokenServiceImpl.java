@@ -86,12 +86,10 @@ public class OfficeTokenServiceImpl implements TokenService {
     private static final long DEFAULT_REFRESH_TOKEN_EXPIRE_MS = 604800000L;
 
     /** AccessToken 过期时间（毫秒），默认 2 小时。 */
-    @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}")
-    private long accessTokenExpireTime;
+    private final long accessTokenExpireTime;
 
     /** RefreshToken 过期时间（毫秒），默认 7 天。 */
-    @Value("${jwt.refresh-token-expire:" + DEFAULT_REFRESH_TOKEN_EXPIRE_MS + "}")
-    private long refreshTokenExpireTime;
+    private final long refreshTokenExpireTime;
 
     private final ReactiveStringRedisTemplate redisTemplate;
 
@@ -102,17 +100,23 @@ public class OfficeTokenServiceImpl implements TokenService {
     /**
      * 构造方法，注入办公服务 Token 管理所需的依赖。
      *
-     * @param redisTemplate        响应式 Redis 客户端
-     * @param redisKeyPrefix       Redis Key 版本前缀管理器
-     * @param tokenBlacklistService Token 黑名单服务
+     * @param redisTemplate          响应式 Redis 客户端
+     * @param redisKeyPrefix         Redis Key 版本前缀管理器
+     * @param tokenBlacklistService  Token 黑名单服务
+     * @param accessTokenExpireTime  AccessToken 过期时间（毫秒）
+     * @param refreshTokenExpireTime RefreshToken 过期时间（毫秒）
      */
     public OfficeTokenServiceImpl(
             ReactiveStringRedisTemplate redisTemplate,
             RedisKeyPrefix redisKeyPrefix,
-            TokenBlacklistService tokenBlacklistService) {
+            TokenBlacklistService tokenBlacklistService,
+            @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}") long accessTokenExpireTime,
+            @Value("${jwt.refresh-token-expire:" + DEFAULT_REFRESH_TOKEN_EXPIRE_MS + "}") long refreshTokenExpireTime) {
         this.redisTemplate = redisTemplate;
         this.redisKeyPrefix = redisKeyPrefix;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.accessTokenExpireTime = accessTokenExpireTime;
+        this.refreshTokenExpireTime = refreshTokenExpireTime;
     }
 
     /**

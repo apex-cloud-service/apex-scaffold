@@ -21,7 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,7 +59,6 @@ class OperationLogAspectTest {
     @Mock
     private ObjectMapper objectMapper;
 
-    @InjectMocks
     private OperationLogAspect aspect;
 
     private MockedStatic<TraceIdUtil> traceIdUtilMockedStatic;
@@ -71,11 +69,7 @@ class OperationLogAspectTest {
      */
     @BeforeEach
     void setUp() {
-        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "operationLogEnabled", true);
-        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "logParams", true);
-        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "logResult", true);
-        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "maxParamLength", 2000);
-        org.springframework.test.util.ReflectionTestUtils.setField(aspect, "maxResultLength", 2000);
+        aspect = new OperationLogAspect(operationLogService, userService, objectMapper, true, true, true, 2000, 2000);
         traceIdUtilMockedStatic = mockStatic(TraceIdUtil.class);
         traceIdUtilMockedStatic.when(TraceIdUtil::getTraceId).thenReturn(TEST_TRACE_ID);
     }

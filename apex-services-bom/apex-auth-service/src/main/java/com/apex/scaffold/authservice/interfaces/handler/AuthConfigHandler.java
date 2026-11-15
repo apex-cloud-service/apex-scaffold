@@ -660,7 +660,7 @@ public class AuthConfigHandler {
      *
      * <p><b>示例请求：</b>
      * <pre>
-     * GET /api/auth-configs/effective?configType=PASSWORD_POLICY&configKey=password.min_length&tenantId=default
+     * GET /api/auth-configs/effective?configType=PASSWORD_POLICY&amp;configKey=password.min_length&amp;tenantId=default
      * </pre>
      *
      * @param request HTTP请求

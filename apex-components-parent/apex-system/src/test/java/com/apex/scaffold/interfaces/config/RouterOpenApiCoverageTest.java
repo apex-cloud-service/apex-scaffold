@@ -355,7 +355,7 @@ class RouterOpenApiCoverageTest {
     @Test
     void shouldDocumentBearerAuthenticationAccordingToSecurityWhitelist() {
         SpringDocConfig config = new SpringDocConfig();
-        OpenAPI openApi = config.apexOpenApi();
+        OpenAPI openApi = config.apexOpenApi("apex-scaffold", "1.2.0");
         openApi.setPaths(new Paths()
                 .addPathItem(
                         "/api/v1/auth/login",
@@ -402,7 +402,7 @@ class RouterOpenApiCoverageTest {
      */
     @Test
     void shouldEnrichEveryDocumentedOperationWithCompleteResponseMetadata() {
-        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         Paths paths = new Paths();
         for (RouterOperation route : documentedOperations()) {
             PathItem pathItem = paths.computeIfAbsent(route.path(), ignored -> new PathItem());
@@ -528,7 +528,7 @@ class RouterOpenApiCoverageTest {
      * @return 已定制的 OpenAPI 文档
      */
     private OpenAPI customizedOpenApi() {
-        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         Paths paths = new Paths();
         for (RouterOperation route : documentedOperations()) {
             PathItem pathItem = paths.computeIfAbsent(route.path(), ignored -> new PathItem());

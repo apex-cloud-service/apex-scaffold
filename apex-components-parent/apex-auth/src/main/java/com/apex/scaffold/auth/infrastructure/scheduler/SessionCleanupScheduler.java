@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * <p>执行策略：
  * <ul>
  *   <li>执行频率：每小时执行一次（可配置）</li>
- *   <li>清理范围：expiresAt < 当前时间的会话记录</li>
+ *   <li>清理范围：expiresAt &lt; 当前时间的会话记录</li>
  *   <li>批量删除：避免大事务，使用响应式批处理</li>
  *   <li>日志记录：记录每次清理的会话数量和耗时</li>
  * </ul>
@@ -46,7 +46,7 @@ public class SessionCleanupScheduler {
      *
      * <p>执行流程：
      * <ol>
-     *   <li>查询所有 expiresAt < 当前时间的会话</li>
+     *   <li>查询所有 expiresAt &lt; 当前时间的会话</li>
      *   <li>批量删除过期会话</li>
      *   <li>记录清理数量和耗时</li>
      *   <li>异常情况下记录错误日志但不中断调度</li>

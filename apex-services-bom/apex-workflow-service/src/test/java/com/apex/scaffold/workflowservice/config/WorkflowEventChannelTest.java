@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Test;
 @DisplayName("工作流事件通道选择测试")
 class WorkflowEventChannelTest {
 
+    /** 契约约定的事件主题。 */
+    private static final String TOPIC = "apex-workflow-events";
+
     private final WorkflowEventConfig config = new WorkflowEventConfig();
 
     private EventChannelProperties props(String channel) {
@@ -48,35 +51,35 @@ class WorkflowEventChannelTest {
     @Test
     @DisplayName("AUTO + 有 MQ + Outbox 启用 → MQ 实现")
     void autoWithMqResolvesRemote() {
-        var publisher = config.workflowEventPublisher(props("auto"), mq(true), bus(), true);
+        var publisher = config.workflowEventPublisher(props("auto"), mq(true), bus(), true, TOPIC);
         assertThat(publisher).isInstanceOf(MqWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("AUTO + 无 MQ → 本地实现（组合拓扑退化）")
     void autoWithoutMqResolvesLocal() {
-        var publisher = config.workflowEventPublisher(props("auto"), mq(false), bus(), true);
+        var publisher = config.workflowEventPublisher(props("auto"), mq(false), bus(), true, TOPIC);
         assertThat(publisher).isInstanceOf(LocalWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("AUTO + 有 MQ 但 Outbox 关闭 → 本地实现")
     void autoWithMqButOutboxDisabledResolvesLocal() {
-        var publisher = config.workflowEventPublisher(props("auto"), mq(true), bus(), false);
+        var publisher = config.workflowEventPublisher(props("auto"), mq(true), bus(), false, TOPIC);
         assertThat(publisher).isInstanceOf(LocalWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("LOCAL 强制：即使有 MQ 也用本地派发")
     void localForcesLocal() {
-        var publisher = config.workflowEventPublisher(props("local"), mq(true), bus(), true);
+        var publisher = config.workflowEventPublisher(props("local"), mq(true), bus(), true, TOPIC);
         assertThat(publisher).isInstanceOf(LocalWorkflowEventPublisher.class);
     }
 
     @Test
     @DisplayName("REMOTE 强制：有 MQ 用 MQ 实现")
     void remoteForcesMq() {
-        var publisher = config.workflowEventPublisher(props("remote"), mq(true), bus(), true);
+        var publisher = config.workflowEventPublisher(props("remote"), mq(true), bus(), true, TOPIC);
         assertThat(publisher).isInstanceOf(MqWorkflowEventPublisher.class);
     }
 

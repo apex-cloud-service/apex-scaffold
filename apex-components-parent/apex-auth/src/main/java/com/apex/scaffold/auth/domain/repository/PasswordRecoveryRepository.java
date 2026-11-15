@@ -35,15 +35,37 @@ public interface PasswordRecoveryRepository {
     /**
      * 条件状态跃迁：仅当当前状态等于 fromStatus 时更新为 toStatus，
      * 返回是否由本次调用完成跃迁（并发下最多一次成功）。
+     *
+     * @param id 恢复单主键
+     * @param fromStatus 期望的当前状态
+     * @param toStatus 目标状态
+     * @return 本次调用完成状态跃迁时为true
      */
     Mono<Boolean> transition(String id, String fromStatus, String toStatus);
 
-    /** 递增验证码校验失败次数，返回递增后的次数。 */
+    /**
+     * 递增验证码校验失败次数，返回递增后的次数。
+     *
+     * @param id 恢复单主键
+     * @return 递增后的验证码校验失败次数
+     */
     Mono<Integer> incrementAttemptCount(String id);
 
-    /** 统计指定联系方式摘要在窗口内的申请次数，用于申请侧限流。 */
+    /**
+     * 统计指定联系方式摘要在窗口内的申请次数，用于申请侧限流。
+     *
+     * @param contactHash 联系方式摘要
+     * @param since 统计起始时间
+     * @return 窗口内的申请次数
+     */
     Mono<Long> countRecentByContactHash(String contactHash, LocalDateTime since);
 
-    /** 统计指定来源 IP 摘要在窗口内的申请次数，用于申请侧限流。 */
+    /**
+     * 统计指定来源 IP 摘要在窗口内的申请次数，用于申请侧限流。
+     *
+     * @param requestIpHash 来源IP摘要
+     * @param since 统计起始时间
+     * @return 窗口内的申请次数
+     */
     Mono<Long> countRecentByIpHash(String requestIpHash, LocalDateTime since);
 }

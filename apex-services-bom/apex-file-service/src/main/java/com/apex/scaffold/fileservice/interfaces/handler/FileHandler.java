@@ -77,11 +77,9 @@ public class FileHandler {
 
     private final RequestHandlerUtil requestHandlerUtil;
 
-    @Value("${file.upload.max-size-bytes:10485760}")
-    private long maxFileSize;
+    private final long maxFileSize;
 
-    @Value("${file.upload.enabled:true}")
-    private boolean uploadEnabled;
+    private final boolean uploadEnabled;
 
     /**
      * 男性性别编码。
@@ -129,18 +127,28 @@ public class FileHandler {
      */
     private static final String EXT_TXT = ".txt";
 
-    @Value("${storage.bucket-name:apex}")
-    private String defaultBucketName;
+    private final String defaultBucketName;
 
     /**
      * 构造文件处理器。
      *
      * @param fileService        文件服务
      * @param requestHandlerUtil 请求处理工具
+     * @param maxFileSize        上传文件大小上限（字节）
+     * @param uploadEnabled      是否启用文件上传
+     * @param defaultBucketName  未指定桶时的默认桶名
      */
-    public FileHandler(FileService fileService, RequestHandlerUtil requestHandlerUtil) {
+    public FileHandler(
+            FileService fileService,
+            RequestHandlerUtil requestHandlerUtil,
+            @Value("${file.upload.max-size-bytes:10485760}") long maxFileSize,
+            @Value("${file.upload.enabled:true}") boolean uploadEnabled,
+            @Value("${storage.bucket-name:apex}") String defaultBucketName) {
         this.fileService = fileService;
         this.requestHandlerUtil = requestHandlerUtil;
+        this.maxFileSize = maxFileSize;
+        this.uploadEnabled = uploadEnabled;
+        this.defaultBucketName = defaultBucketName;
     }
 
     /**

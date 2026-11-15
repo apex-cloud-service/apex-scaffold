@@ -60,22 +60,16 @@ import org.springframework.stereotype.Component;
 @ConditionalOnClass(RocketMQAutoConfiguration.class)
 @ConditionalOnProperty(name = "apex.mq.consumer.enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnProperty(name = "apex.mq.dlq.enabled", havingValue = "true", matchIfMissing = true)
-@lombok.RequiredArgsConstructor
 public class DeadLetterQueueProcessor {
-
-    /** 死信队列消费者组后缀 */
-    private static final String DLQ_CONSUMER_GROUP_SUFFIX = "-dlq-consumer";
 
     /** 死信 Topic 前缀（RocketMQ 规范：%DLQ% + 消费组名） */
     private static final String DLQ_TOPIC_PREFIX = "%DLQ%";
 
     /** RocketMQ NameServer 地址 */
-    @Value("${rocketmq.name-server:}")
-    private String nameServer;
+    private final String nameServer;
 
     /** 死信处理器自身的消费者组名，可通过 {@code apex.mq.dlq.consumer-group} 覆盖。 */
-    @Value("${apex.mq.dlq.consumer-group:apex-dlq-processor-dlq-consumer}")
-    private String dlqConsumerGroup = "apex-dlq-processor" + DLQ_CONSUMER_GROUP_SUFFIX;
+    private final String dlqConsumerGroup;
 
     /** DLQ 处理器是否已启动 */
     private volatile boolean started = false;
@@ -106,6 +100,22 @@ public class DeadLetterQueueProcessor {
     /** 消费者监控指标（用于死信告警与统计） */
     @Nullable
     private final MqConsumerMetrics consumerMetrics;
+
+    /**
+     * 构造死信队列处理器。
+     *
+     * @param nameServer RocketMQ NameServer 地址，默认空字符串表示未配置（处理器不启动）
+     * @param dlqConsumerGroup 死信处理器自身的消费者组名，默认 {@code apex-dlq-processor-dlq-consumer}
+     * @param consumerMetrics 消费者监控指标
+     */
+    public DeadLetterQueueProcessor(
+            @Value("${rocketmq.name-server:}") String nameServer,
+            @Value("${apex.mq.dlq.consumer-group:apex-dlq-processor-dlq-consumer}") String dlqConsumerGroup,
+            MqConsumerMetrics consumerMetrics) {
+        this.nameServer = nameServer;
+        this.dlqConsumerGroup = dlqConsumerGroup;
+        this.consumerMetrics = consumerMetrics;
+    }
 
     /**
      * 注册死信处理器。

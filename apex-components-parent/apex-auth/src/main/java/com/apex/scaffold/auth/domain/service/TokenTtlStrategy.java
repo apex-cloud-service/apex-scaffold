@@ -235,10 +235,20 @@ public class TokenTtlStrategy {
         private final boolean isDowngraded;
         private final String reason;
 
+        /**
+         * 获取访问令牌有效期秒数。
+         *
+         * @return 访问令牌 TTL（秒）
+         */
         public long getAccessTokenTtlSeconds() {
             return accessTokenTtl.getSeconds();
         }
 
+        /**
+         * 获取刷新令牌有效期秒数。
+         *
+         * @return 刷新令牌 TTL（秒）
+         */
         public long getRefreshTokenTtlSeconds() {
             return refreshTokenTtl.getSeconds();
         }

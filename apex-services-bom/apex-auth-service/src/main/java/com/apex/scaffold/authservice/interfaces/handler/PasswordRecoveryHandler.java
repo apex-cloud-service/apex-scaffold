@@ -46,6 +46,9 @@ public class PasswordRecoveryHandler {
      * 发起密码找回申请。
      *
      * <p>按 IP 与联系方式双维度限流；对账号存在与否保持同一响应形态。</p>
+     *
+     * @param request 服务器请求，请求体为 {@link PasswordRecoveryInitiateRequest}；远端地址用于限流
+     * @return 统一响应，{@code data} 为恢复单ID与验证码有效期
      */
     @Operation(operationId = "initiatePasswordRecovery", summary = "发起密码找回申请")
     @ApiResponse(
@@ -74,6 +77,9 @@ public class PasswordRecoveryHandler {
 
     /**
      * 校验验证码并获取一次性确认令牌。
+     *
+     * @param request 服务器请求，请求体为 {@link PasswordRecoveryVerifyRequest}
+     * @return 统一响应，{@code data} 为一次性确认令牌
      */
     @Operation(operationId = "verifyPasswordRecovery", summary = "校验找回验证码")
     @ApiResponse(
@@ -101,6 +107,9 @@ public class PasswordRecoveryHandler {
      * 确认重设密码并撤销全部会话。
      *
      * <p>撤销失败时响应中 sessionRevocation=PENDING，不伪称全端退出。</p>
+     *
+     * @param request 服务器请求，请求体为 {@link PasswordRecoveryConfirmRequest}
+     * @return 统一响应，{@code data} 为会话撤销状态
      */
     @Operation(operationId = "confirmPasswordRecovery", summary = "确认重设密码")
     @ApiResponse(

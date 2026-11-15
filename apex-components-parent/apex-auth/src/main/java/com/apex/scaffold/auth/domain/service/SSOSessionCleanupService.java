@@ -292,6 +292,8 @@ public class SSOSessionCleanupService {
 
     /**
      * 获取会话清理统计信息
+     *
+     * @return 各类会话存储待清理数量的统计
      */
     public Mono<CleanupStatistics> getCleanupStatistics() {
         return Mono.zip(
@@ -333,6 +335,11 @@ public class SSOSessionCleanupService {
         private final Long loginFailures;
         private final Long tempPermissions;
 
+        /**
+         * 汇总各会话存储的待清理数量。
+         *
+         * @return 各类待清理项之和
+         */
         public Long getTotal() {
             return samlAssertions
                     + oidcStates

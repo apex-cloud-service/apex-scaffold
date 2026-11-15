@@ -33,6 +33,7 @@ public interface AuditLogService {
      * @param action 操作描述
      * @param resourceId 资源ID（可为null）
      * @param entity 关联实体对象（可为null）
+     * @return 审计日志保存完成信号（空完成）
      */
     default Mono<Void> log(
             String eventType, String userId, String tenantId, String action, String resourceId, Object entity) {

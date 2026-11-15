@@ -8,7 +8,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -47,7 +46,6 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SsoConfigEncryptionService {
 
     private static final String ENCRYPTION_ALGORITHM = "AES/GCM/NoPadding";
@@ -58,10 +56,22 @@ public class SsoConfigEncryptionService {
 
     private static final String REDIS_MASTER_KEY = "sso:encryption:master_key";
 
-    @Value("${apex.security.sso.encryption.master-key:#{null}}")
-    private String masterKeyFromEnv;
-
     private final ReactiveRedisTemplate<String, String> redisTemplate;
+
+    private final String masterKeyFromEnv;
+
+    /**
+     * 构造 SSO 配置加密服务。
+     *
+     * @param redisTemplate    响应式 Redis 客户端
+     * @param masterKeyFromEnv 主密钥（Base64 编码的 AES-256 密钥），未配置时为 null
+     */
+    public SsoConfigEncryptionService(
+            ReactiveRedisTemplate<String, String> redisTemplate,
+            @Value("${apex.security.sso.encryption.master-key:#{null}}") String masterKeyFromEnv) {
+        this.redisTemplate = redisTemplate;
+        this.masterKeyFromEnv = masterKeyFromEnv;
+    }
 
     /**
      * 加密敏感配置字段

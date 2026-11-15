@@ -38,7 +38,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@lombok.RequiredArgsConstructor
 public class RedisDataCleanupRunner implements ApplicationRunner {
 
     /** 清理完成标记 Key，避免重复执行 */
@@ -53,8 +52,19 @@ public class RedisDataCleanupRunner implements ApplicationRunner {
     private final RedissonClient redissonClient;
 
     /** 是否在启动时执行清理，默认 true */
-    @Value("${apex.redis.cleanup-on-startup:true}")
-    private boolean cleanupOnStartup;
+    private final boolean cleanupOnStartup;
+
+    /**
+     * 构造启动清理器。
+     *
+     * @param redissonClient Redisson 客户端
+     * @param cleanupOnStartup 是否在启动时执行清理，默认 true
+     */
+    public RedisDataCleanupRunner(
+            RedissonClient redissonClient, @Value("${apex.redis.cleanup-on-startup:true}") boolean cleanupOnStartup) {
+        this.redissonClient = redissonClient;
+        this.cleanupOnStartup = cleanupOnStartup;
+    }
 
     /**
      * 应用启动后执行 Redis 旧格式数据清理。

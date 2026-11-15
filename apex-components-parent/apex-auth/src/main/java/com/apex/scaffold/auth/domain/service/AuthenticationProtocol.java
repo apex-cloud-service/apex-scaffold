@@ -19,15 +19,13 @@ import reactor.core.publisher.Mono;
  *
  * <h2>使用示例</h2>
  * <pre>{@code
- * AuthenticationProtocol protocol = new JwtAuthenticationProtocol();
+ * AuthenticationProtocol protocol = ...;
  * AuthenticationResult result = protocol.authenticate(request).block();
  * }</pre>
  *
  * @author Apex Team
  * @version 1.0.0
  * @since 1.3.1
- * @see JwtAuthenticationProtocol
- * @see OAuth2AuthenticationProtocol
  */
 public interface AuthenticationProtocol {
 
@@ -75,6 +73,7 @@ public interface AuthenticationProtocol {
      * <p>撤销Token，清理会话信息
      *
      * @param token Token字符串
+     * @return 登出完成信号（空完成）
      */
     Mono<Void> logout(String token);
 }

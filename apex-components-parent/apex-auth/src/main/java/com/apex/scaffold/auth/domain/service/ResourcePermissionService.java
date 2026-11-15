@@ -171,6 +171,11 @@ public class ResourcePermissionService {
 
     /**
      * 检查是否为资源所有者
+     *
+     * @param userId 用户ID
+     * @param resourceType 资源类型
+     * @param resourceId 资源ID
+     * @return 该用户是否为资源所有者；未登记所有者时为false
      */
     public Mono<Boolean> isResourceOwner(String userId, String resourceType, String resourceId) {
         return isResourceOwner(userId, resourceType, resourceId, null);
@@ -185,6 +190,11 @@ public class ResourcePermissionService {
 
     /**
      * 设置资源所有者
+     *
+     * @param resourceType 资源类型
+     * @param resourceId 资源ID
+     * @param ownerId 所有者用户ID
+     * @return 写入完成信号（空完成）
      */
     public Mono<Void> setResourceOwner(String resourceType, String resourceId, String ownerId) {
         return setResourceOwner(resourceType, resourceId, ownerId, null);
@@ -197,6 +207,7 @@ public class ResourcePermissionService {
      * @param resourceId 资源标识，参与缓存键构造
      * @param ownerId 所有者用户标识
      * @param tenantId 租户标识，{@code null} 表示不带租户隔离维度
+     * @return 写入完成信号（空完成）
      */
     public Mono<Void> setResourceOwner(String resourceType, String resourceId, String ownerId, String tenantId) {
         return permissionStore.saveOwner(resourceType, resourceId, ownerId, tenantId);
@@ -220,6 +231,7 @@ public class ResourcePermissionService {
      * @param resourceId 资源ID
      * @param targetUserId 目标用户ID
      * @param permissions 权限集合（READ/WRITE/DELETE/MANAGE）
+     * @return 授权写入完成信号（空完成）
      */
     public Mono<Void> grantPermission(
             String resourceType, String resourceId, String targetUserId, Set<String> permissions) {
@@ -234,6 +246,7 @@ public class ResourcePermissionService {
      * @param targetUserId 目标用户ID
      * @param permissions 权限集合（READ/WRITE/DELETE/MANAGE）
      * @param tenantId 租户ID，null表示默认作用域
+     * @return 授权写入完成信号（空完成）
      */
     public Mono<Void> grantPermission(
             String resourceType, String resourceId, String targetUserId, Set<String> permissions, String tenantId) {
@@ -254,6 +267,11 @@ public class ResourcePermissionService {
 
     /**
      * 撤销资源权限
+     *
+     * @param resourceType 资源类型
+     * @param resourceId 资源ID
+     * @param targetUserId 目标用户ID
+     * @return 撤销完成信号（空完成）
      */
     public Mono<Void> revokePermission(String resourceType, String resourceId, String targetUserId) {
         return revokePermission(resourceType, resourceId, targetUserId, null);
@@ -266,6 +284,7 @@ public class ResourcePermissionService {
      * @param resourceId 资源ID
      * @param targetUserId 目标用户ID
      * @param tenantId 租户ID，null表示默认作用域
+     * @return 撤销完成信号（空完成）
      */
     public Mono<Void> revokePermission(String resourceType, String resourceId, String targetUserId, String tenantId) {
         log.info("撤销资源权限: type={}, resourceId={}, targetUserId={}", resourceType, resourceId, targetUserId);
@@ -275,6 +294,10 @@ public class ResourcePermissionService {
 
     /**
      * 获取资源的所有授权用户
+     *
+     * @param resourceType 资源类型
+     * @param resourceId 资源ID
+     * @return 授权条目流；未授权时为空流
      */
     public Flux<ResourcePermissionGrant> getResourcePermissions(String resourceType, String resourceId) {
         return getResourcePermissions(resourceType, resourceId, null);
@@ -304,6 +327,7 @@ public class ResourcePermissionService {
      * @param targetUserId 目标用户ID
      * @param permissions 权限集合
      * @param durationSeconds 有效期（秒）
+     * @return 临时授权写入完成信号（空完成）
      */
     public Mono<Void> grantTemporaryPermission(
             String resourceType,
@@ -323,6 +347,7 @@ public class ResourcePermissionService {
      * @param permissions 权限集合
      * @param durationSeconds 有效期（秒）
      * @param tenantId 租户ID，null表示默认作用域
+     * @return 临时授权写入完成信号（空完成）
      */
     public Mono<Void> grantTemporaryPermission(
             String resourceType,

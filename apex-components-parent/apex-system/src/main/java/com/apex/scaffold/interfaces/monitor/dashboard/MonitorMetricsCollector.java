@@ -155,20 +155,20 @@ public class MonitorMetricsCollector {
     /** RocketMQ 模板（可能未接入）。 */
     private final ObjectProvider<RocketMQTemplate> rocketMqTemplateProvider;
 
-    @Value("${spring.application.name:apex-scaffold}")
-    private String applicationName;
+    /** 应用名称（读配置，兜底默认值与应用名 apex-scaffold 保持一致）。 */
+    private final String applicationName;
 
-    @Value("${apex.version:1.2.0}")
-    private String applicationVersion;
+    /** 应用版本（三档构建时由 apex-build.properties 注入，兜底默认值随发布版本同步）。 */
+    private final String applicationVersion;
 
-    @Value("${skywalking.collector-backend:${SW_AGENT_COLLECTOR_BACKEND_SERVICES:}}")
-    private String skywalkingBackend;
+    /** SkyWalking OAP 后端地址，未配置时链路追踪状态降级。 */
+    private final String skywalkingBackend;
 
-    @Value("${trace.sampling-rate:1.0}")
-    private float samplingRate;
+    /** 链路采样率（0.0-1.0），默认 1.0。 */
+    private final float samplingRate;
 
-    @Value("${rocketmq.name-server:}")
-    private String rocketMqNameServer;
+    /** RocketMQ NameServer 地址，未配置时按未接入处理。 */
+    private final String rocketMqNameServer;
 
     /** 业务趋势聚合：指标键 → 最近 10 分钟每分钟累计值（key=epoch 分钟）。 */
     private final Map<String, Deque<BusinessBucket>> businessTrends = new ConcurrentHashMap<>();
@@ -199,14 +199,29 @@ public class MonitorMetricsCollector {
      * @param meterRegistry Micrometer 指标注册表
      * @param circuitBreakerRegistryProvider 熔断器注册表提供器
      * @param rocketMqTemplateProvider RocketMQ 模板提供器
+     * @param applicationName 应用名称，默认 apex-scaffold
+     * @param applicationVersion 应用版本，默认 1.2.0
+     * @param skywalkingBackend SkyWalking OAP 后端地址，默认空串（未接入）
+     * @param samplingRate 链路采样率（0.0-1.0），默认 1.0
+     * @param rocketMqNameServer RocketMQ NameServer 地址，默认空串（未接入）
      */
     public MonitorMetricsCollector(
             MeterRegistry meterRegistry,
             ObjectProvider<CircuitBreakerRegistry> circuitBreakerRegistryProvider,
-            ObjectProvider<RocketMQTemplate> rocketMqTemplateProvider) {
+            ObjectProvider<RocketMQTemplate> rocketMqTemplateProvider,
+            @Value("${spring.application.name:apex-scaffold}") String applicationName,
+            @Value("${apex.version:1.2.0}") String applicationVersion,
+            @Value("${skywalking.collector-backend:${SW_AGENT_COLLECTOR_BACKEND_SERVICES:}}") String skywalkingBackend,
+            @Value("${trace.sampling-rate:1.0}") float samplingRate,
+            @Value("${rocketmq.name-server:}") String rocketMqNameServer) {
         this.meterRegistry = meterRegistry;
         this.circuitBreakerRegistryProvider = circuitBreakerRegistryProvider;
         this.rocketMqTemplateProvider = rocketMqTemplateProvider;
+        this.applicationName = applicationName;
+        this.applicationVersion = applicationVersion;
+        this.skywalkingBackend = skywalkingBackend;
+        this.samplingRate = samplingRate;
+        this.rocketMqNameServer = rocketMqNameServer;
     }
 
     /* ==================== 概览 ==================== */

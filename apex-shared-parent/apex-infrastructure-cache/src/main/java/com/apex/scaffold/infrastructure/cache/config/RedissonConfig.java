@@ -107,28 +107,24 @@ public class RedissonConfig {
 
     private final RedissonProperties redissonProperties;
 
-    @Value("${spring.data.redis.host:127.0.0.1}")
-    private String redisHost;
-
-    @Value("${spring.data.redis.port:6379}")
-    private int redisPort;
-
-    @Value("${spring.data.redis.password:}")
-    private String redisPassword;
-
-    @Value("${spring.data.redis.database:0}")
-    private int redisDatabase;
-
     /**
      * 创建 Redisson 客户端 Bean
      *
      * <p>配置 Redisson 单机模式连接参数，包括看门狗超时、命令超时、重试策略等。
      * 该方法仅在非 dev 环境下生效（通过 {@code @ConditionalOnProperty} 控制）。
      *
+     * @param redisHost Redis 主机，默认 {@code 127.0.0.1}
+     * @param redisPort Redis 端口，默认 {@code 6379}
+     * @param redisPassword Redis 密码，默认空字符串表示无密码
+     * @param redisDatabase Redis 数据库编号，默认 {@code 0}
      * @return 配置好的 RedissonClient 实例
      */
     @Bean(destroyMethod = "shutdown")
-    public RedissonClient redissonClient() {
+    public RedissonClient redissonClient(
+            @Value("${spring.data.redis.host:127.0.0.1}") String redisHost,
+            @Value("${spring.data.redis.port:6379}") int redisPort,
+            @Value("${spring.data.redis.password:}") String redisPassword,
+            @Value("${spring.data.redis.database:0}") int redisDatabase) {
         Config config = new Config();
 
         // 配置单机模式

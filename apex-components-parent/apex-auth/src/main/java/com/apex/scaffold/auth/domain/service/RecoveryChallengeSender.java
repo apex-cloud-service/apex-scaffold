@@ -19,6 +19,7 @@ public interface RecoveryChallengeSender {
      * @param channel 恢复通道（EMAIL / SMS）
      * @param contact 已验证联系方式（明文，仅在投递边界使用，不落库不进日志）
      * @param code    一次性验证码明文（仅在本边界使用，不写日志）
+     * @return 投递完成信号（空完成）；投递失败以错误信号向外传播
      */
     Mono<Void> send(String channel, String contact, String code);
 }

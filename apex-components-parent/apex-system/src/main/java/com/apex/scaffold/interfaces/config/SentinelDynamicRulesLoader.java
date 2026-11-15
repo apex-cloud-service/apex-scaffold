@@ -122,8 +122,8 @@ public class SentinelDynamicRulesLoader {
     private static final String RULES_KEY_DEGRADE = "degradeRules";
     private static final String RULES_KEY_SYSTEM = "systemRules";
 
-    @Value("${apex.sentinel.rules-file:classpath:config/sentinel/sentinel-rules.json}")
-    private String rulesFilePath;
+    /** 规则文件路径，默认 {@code classpath:config/sentinel/sentinel-rules.json}。 */
+    private final String rulesFilePath;
 
     /**
      * 获取规则文件路径（供文件监听器使用）
@@ -142,10 +142,15 @@ public class SentinelDynamicRulesLoader {
      *
      * @param objectMapper JSON 序列化工具
      * @param resourceLoader Spring 资源加载器
+     * @param rulesFilePath 规则文件路径，默认 {@code classpath:config/sentinel/sentinel-rules.json}
      */
-    public SentinelDynamicRulesLoader(ObjectMapper objectMapper, ResourceLoader resourceLoader) {
+    public SentinelDynamicRulesLoader(
+            ObjectMapper objectMapper,
+            ResourceLoader resourceLoader,
+            @Value("${apex.sentinel.rules-file:classpath:config/sentinel/sentinel-rules.json}") String rulesFilePath) {
         this.objectMapper = objectMapper;
         this.resourceLoader = resourceLoader;
+        this.rulesFilePath = rulesFilePath;
     }
 
     /**

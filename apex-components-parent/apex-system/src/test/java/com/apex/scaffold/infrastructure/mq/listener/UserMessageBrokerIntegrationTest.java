@@ -24,7 +24,6 @@ import com.baomidou.mybatisplus.extension.plugins.inner.TenantLineInnerIntercept
 import com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.sql.DriverManager;
 import java.time.Duration;
@@ -167,15 +166,13 @@ class UserMessageBrokerIntegrationTest {
         redis = Redisson.create(config);
         // 生产装配中死信处理器先于业务监听器就绪：先创建处理器并完成处理器注册，再构造监听器
         // （其构造期即回调声明消费组映射），最后统一启动，避免登记回调遇到尚未创建的处理器。
-        dlqProcessor = new DeadLetterQueueProcessor(null);
-        inject(dlqProcessor, "nameServer", required("APEX_MQ_NAMESRV"));
-        inject(dlqProcessor, "dlqConsumerGroup", DLQ_PROCESSOR_GROUP);
+        dlqProcessor = new DeadLetterQueueProcessor(required("APEX_MQ_NAMESRV"), DLQ_PROCESSOR_GROUP, null);
         dlqHandler = new UserMessageDlqHandler(
                 dlqProcessor, new MessageOutboxServiceImpl(outboxMapper), TOPIC, CONSUMER_GROUP);
         dlqHandler.register();
         // 注册事件不访问 UserRepository/CacheService；实际执行的依赖均使用生产实现。
         UserMessageListener listener = new UserMessageListener(
-                new MqConsumerService(redis),
+                new MqConsumerService(redis, 30L),
                 null,
                 new UserRegistrationTransaction(
                         sessions.getMapper(SystemMessageMapper.class),
@@ -530,12 +527,6 @@ class UserMessageBrokerIntegrationTest {
     private static void registerContainerBean(
             GenericApplicationContext applicationContext, String beanName, Object bean) {
         applicationContext.getBeanFactory().registerSingleton(beanName, bean);
-    }
-
-    private static void inject(Object target, String fieldName, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
     }
 
     private static String required(String name) {

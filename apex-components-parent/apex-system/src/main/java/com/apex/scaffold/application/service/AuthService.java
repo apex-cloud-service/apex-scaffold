@@ -77,8 +77,7 @@ public class AuthService {
     private static final long TOKEN_BLACKLIST_TTL_MS = 7200000L;
 
     /** AccessToken 过期时间（毫秒），默认 2 小时。expiresIn 由此值 / 1000 计算。 */
-    @Value("${jwt.access-token-expire:7200000}")
-    private long accessTokenExpireMs;
+    private final long accessTokenExpireMs;
 
     /** Redis 登录失败 IP 计数器键前缀 */
     private static final String LOGIN_FAIL_IP_PREFIX = "login:fail:ip:";
@@ -153,6 +152,7 @@ public class AuthService {
      * @param captchaService 图形验证码服务
      * @param loginLogService 登录日志服务
      * @param userAssembler 用户组装器
+     * @param accessTokenExpireMs AccessToken 过期时间（毫秒），默认 7200000（2 小时）
      */
     public AuthService(
             TokenService tokenService,
@@ -167,7 +167,8 @@ public class AuthService {
             LoginProtectionProperties loginProtectionProperties,
             CaptchaService captchaService,
             LoginLogService loginLogService,
-            UserAssembler userAssembler) {
+            UserAssembler userAssembler,
+            @Value("${jwt.access-token-expire:7200000}") long accessTokenExpireMs) {
         this.tokenService = tokenService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.userService = userService;
@@ -181,6 +182,7 @@ public class AuthService {
         this.captchaService = captchaService;
         this.loginLogService = loginLogService;
         this.userAssembler = userAssembler;
+        this.accessTokenExpireMs = accessTokenExpireMs;
     }
 
     /**

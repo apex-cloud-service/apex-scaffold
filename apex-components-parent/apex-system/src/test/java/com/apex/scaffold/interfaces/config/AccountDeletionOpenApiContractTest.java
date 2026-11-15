@@ -64,7 +64,7 @@ class AccountDeletionOpenApiContractTest {
     @Test
     void shouldEnrichAccountDeletionSchemasExamplesAndResponses() throws Exception {
         List<RouterOperation> routes = deletionRoutes();
-        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         openApi.setPaths(toOpenApiPaths(routes));
 
         new SpringDocConfig().openApiCustomizer().customise(openApi);

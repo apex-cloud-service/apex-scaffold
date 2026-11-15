@@ -11,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,7 +30,6 @@ import org.springframework.stereotype.Component;
  * @since 3.2.0
  */
 @Component
-@RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "apex.events.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 @Slf4j
 public class DomainEventOutboxDispatcher {
@@ -45,36 +43,28 @@ public class DomainEventOutboxDispatcher {
     private final ApplicationEventPublisher eventPublisher;
 
     /** 单批最大事件数。 */
-    @Value("${apex.events.outbox.batch-size:50}")
-    private int batchSize;
+    private final int batchSize;
 
     /** 最大投递次数。 */
-    @Value("${apex.events.outbox.max-attempts:8}")
-    private int maxAttempts;
+    private final int maxAttempts;
 
     /** 处理锁超时秒数。 */
-    @Value("${apex.events.outbox.lock-timeout-seconds:120}")
-    private int lockTimeoutSeconds;
+    private final int lockTimeoutSeconds;
 
     /** 单实例 Outbox 投递并行度。 */
-    @Value("${apex.events.outbox.parallelism:4}")
-    private int parallelism;
+    private final int parallelism;
 
     /** 是否启用 Outbox 保留策略清理。 */
-    @Value("${apex.events.outbox.retention-enabled:true}")
-    private boolean retentionEnabled;
+    private final boolean retentionEnabled;
 
     /** DELIVERED 记录保留小时数。 */
-    @Value("${apex.events.outbox.retention-delivered-hours:168}")
-    private int retentionDeliveredHours;
+    private final int retentionDeliveredHours;
 
     /** DEAD 记录保留天数。 */
-    @Value("${apex.events.outbox.retention-dead-days:7}")
-    private int retentionDeadDays;
+    private final int retentionDeadDays;
 
     /** 保留策略清理单批删除行数上限。 */
-    @Value("${apex.events.outbox.retention-batch-size:5000}")
-    private int retentionBatchSize;
+    private final int retentionBatchSize;
 
     /** 保留策略清理最大批次数（单次清理总量上限 = batchSize × maxBatches）。 */
     private static final int RETENTION_MAX_BATCHES = 20;
@@ -84,6 +74,43 @@ public class DomainEventOutboxDispatcher {
 
     /** 有界批次共享的投递执行器。 */
     private volatile ExecutorService deliveryExecutor;
+
+    /**
+     * 构造领域事件 Outbox 投递器。
+     *
+     * @param outboxStore Outbox 存储
+     * @param eventPublisher Spring 本地事件发布器
+     * @param batchSize 单批最大事件数，默认 50
+     * @param maxAttempts 最大投递次数，默认 8，达到后记录进入 DEAD
+     * @param lockTimeoutSeconds 处理锁超时秒数，默认 120
+     * @param parallelism 单实例投递并行度，默认 4，实际取值不小于 1
+     * @param retentionEnabled 是否启用保留策略清理，默认 true
+     * @param retentionDeliveredHours DELIVERED 记录保留小时数，默认 168（7 天）
+     * @param retentionDeadDays DEAD 记录保留天数，默认 7
+     * @param retentionBatchSize 保留策略清理单批删除行数上限，默认 5000
+     */
+    public DomainEventOutboxDispatcher(
+            DomainEventOutboxStore outboxStore,
+            ApplicationEventPublisher eventPublisher,
+            @Value("${apex.events.outbox.batch-size:50}") int batchSize,
+            @Value("${apex.events.outbox.max-attempts:8}") int maxAttempts,
+            @Value("${apex.events.outbox.lock-timeout-seconds:120}") int lockTimeoutSeconds,
+            @Value("${apex.events.outbox.parallelism:4}") int parallelism,
+            @Value("${apex.events.outbox.retention-enabled:true}") boolean retentionEnabled,
+            @Value("${apex.events.outbox.retention-delivered-hours:168}") int retentionDeliveredHours,
+            @Value("${apex.events.outbox.retention-dead-days:7}") int retentionDeadDays,
+            @Value("${apex.events.outbox.retention-batch-size:5000}") int retentionBatchSize) {
+        this.outboxStore = outboxStore;
+        this.eventPublisher = eventPublisher;
+        this.batchSize = batchSize;
+        this.maxAttempts = maxAttempts;
+        this.lockTimeoutSeconds = lockTimeoutSeconds;
+        this.parallelism = parallelism;
+        this.retentionEnabled = retentionEnabled;
+        this.retentionDeliveredHours = retentionDeliveredHours;
+        this.retentionDeadDays = retentionDeadDays;
+        this.retentionBatchSize = retentionBatchSize;
+    }
 
     /**
      * 领取并投递一批领域事件。

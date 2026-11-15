@@ -50,6 +50,10 @@ public class ResourcePermissionAspect {
 
     /**
      * 环绕通知：资源权限检查
+     *
+     * @param joinPoint 被拦截方法的连接点
+     * @return 目标方法的执行结果；目标方法返回Mono时原样返回，否则包装为Mono
+     * @throws Throwable 声明用于兼容连接点执行的异常签名；捕获后以错误信号返回
      */
     @Around("@annotation(com.apex.scaffold.common.annotation.RequireResourcePermission)")
     public Object checkResourcePermission(ProceedingJoinPoint joinPoint) throws Throwable {

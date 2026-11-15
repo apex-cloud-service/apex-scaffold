@@ -49,6 +49,7 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
+     * @return 启用完成信号（空完成）
      */
     Mono<Void> enableBiometric(Long id, String operator);
 
@@ -57,6 +58,7 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
+     * @return 禁用完成信号（空完成）
      */
     Mono<Void> disableBiometric(Long id, String operator);
 
@@ -65,6 +67,7 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
+     * @return 删除完成信号（空完成）
      */
     Mono<Void> deleteBiometric(Long id, String operator);
 
@@ -93,6 +96,7 @@ public interface BiometricAuthService {
      *
      * @param id 认证配置ID
      * @param operator 操作人
+     * @return 解锁完成信号（空完成）
      */
     Mono<Void> unlockBiometric(Long id, String operator);
 

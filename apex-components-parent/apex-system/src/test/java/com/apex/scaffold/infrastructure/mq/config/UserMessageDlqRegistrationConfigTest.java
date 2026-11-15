@@ -35,7 +35,9 @@ class UserMessageDlqRegistrationConfigTest {
     @Test
     @DisplayName("死信处理器存在时应装配真实转发回调并登记消费组映射")
     void shouldAssembleForwardingRegistrarWhenProcessorPresent() {
-        runner.withBean(DeadLetterQueueProcessor.class, () -> new DeadLetterQueueProcessor(null))
+        runner.withBean(
+                        DeadLetterQueueProcessor.class,
+                        () -> new DeadLetterQueueProcessor("", "apex-dlq-processor-dlq-consumer", null))
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     @SuppressWarnings("unchecked")

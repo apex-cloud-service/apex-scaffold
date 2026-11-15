@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.test.StepVerifier;
 
 /**
@@ -44,9 +43,7 @@ class MqWorkflowEventPublisherTest {
     @BeforeEach
     void setUp() {
         rocketMQTemplate = mock(RocketMQTemplate.class);
-        publisher = new MqWorkflowEventPublisher(rocketMQTemplate);
-        // @Value 注入字段在单元测试中需手动设置
-        ReflectionTestUtils.setField(publisher, "workflowEventTopic", TOPIC);
+        publisher = new MqWorkflowEventPublisher(rocketMQTemplate, TOPIC);
     }
 
     @Test

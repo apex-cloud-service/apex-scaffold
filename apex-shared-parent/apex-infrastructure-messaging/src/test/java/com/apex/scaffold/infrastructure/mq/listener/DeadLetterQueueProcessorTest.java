@@ -35,6 +35,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 @DisplayName("DeadLetterQueueProcessor 死信队列处理器测试")
 class DeadLetterQueueProcessorTest {
 
+    /** 生产默认的死信消费者组名（{@code apex.mq.dlq.consumer-group} 缺省值）。 */
+    private static final String DEFAULT_DLQ_CONSUMER_GROUP = "apex-dlq-processor-dlq-consumer";
+
     /** 被测处理器 */
     private DeadLetterQueueProcessor processor;
 
@@ -43,8 +46,7 @@ class DeadLetterQueueProcessorTest {
      */
     @BeforeEach
     void setUp() {
-        processor = new DeadLetterQueueProcessor(null);
-        ReflectionTestUtils.setField(processor, "nameServer", "localhost:9876");
+        processor = new DeadLetterQueueProcessor("localhost:9876", DEFAULT_DLQ_CONSUMER_GROUP, null);
     }
 
     @AfterEach
@@ -294,8 +296,8 @@ class DeadLetterQueueProcessorTest {
     @Test
     @DisplayName("NameServer未配置时不启动消费者")
     void shouldNotStartWhenNameServerBlank() {
-        DeadLetterQueueProcessor noNameServerProcessor = new DeadLetterQueueProcessor(null);
-        ReflectionTestUtils.setField(noNameServerProcessor, "nameServer", "");
+        DeadLetterQueueProcessor noNameServerProcessor =
+                new DeadLetterQueueProcessor("", DEFAULT_DLQ_CONSUMER_GROUP, null);
         noNameServerProcessor.start();
         // 不应抛出异常
         assertThat(true).isTrue();
@@ -334,8 +336,8 @@ class DeadLetterQueueProcessorTest {
     @Test
     @DisplayName("NameServer未配置时注册处理器不启动消费者")
     void shouldNotStartWhenHandlerRegisteredWithNameServerBlank() {
-        DeadLetterQueueProcessor noNameServerProcessor = new DeadLetterQueueProcessor(null);
-        ReflectionTestUtils.setField(noNameServerProcessor, "nameServer", "");
+        DeadLetterQueueProcessor noNameServerProcessor =
+                new DeadLetterQueueProcessor("", DEFAULT_DLQ_CONSUMER_GROUP, null);
 
         noNameServerProcessor.start();
         noNameServerProcessor.registerHandler("apex-photo-moderation", msg -> true);
@@ -360,22 +362,23 @@ class DeadLetterQueueProcessorTest {
     void shouldUseConfiguredDlqConsumerGroup() throws Exception {
         java.util.concurrent.atomic.AtomicReference<String> capturedGroup =
                 new java.util.concurrent.atomic.AtomicReference<>();
-        ReflectionTestUtils.setField(processor, "dlqConsumerGroup", "it-dlq-processor-group");
-        processor.registerHandler("cfg-topic", "cfg-consumer-group", msg -> true);
+        DeadLetterQueueProcessor configuredProcessor =
+                new DeadLetterQueueProcessor("localhost:9876", "it-dlq-processor-group", null);
+        configuredProcessor.registerHandler("cfg-topic", "cfg-consumer-group", msg -> true);
 
         try (MockedConstruction<DefaultMQPushConsumer> construction = mockConstruction(
                 DefaultMQPushConsumer.class,
                 (mock, context) ->
                         capturedGroup.set((String) context.arguments().get(0)))) {
-            processor.start();
+            configuredProcessor.start();
 
             assertThat(capturedGroup.get()).isEqualTo("it-dlq-processor-group");
         }
 
         java.util.concurrent.atomic.AtomicReference<String> defaultGroup =
                 new java.util.concurrent.atomic.AtomicReference<>();
-        DeadLetterQueueProcessor defaultProcessor = new DeadLetterQueueProcessor(null);
-        ReflectionTestUtils.setField(defaultProcessor, "nameServer", "localhost:9876");
+        DeadLetterQueueProcessor defaultProcessor =
+                new DeadLetterQueueProcessor("localhost:9876", DEFAULT_DLQ_CONSUMER_GROUP, null);
         defaultProcessor.registerHandler("cfg-topic", "cfg-consumer-group", msg -> true);
 
         try (MockedConstruction<DefaultMQPushConsumer> construction = mockConstruction(
@@ -394,7 +397,7 @@ class DeadLetterQueueProcessorTest {
     @DisplayName("处理死信消息时应累加死信指标")
     void shouldRecordDlqMetricWhenDeadLetterProcessed() {
         MqConsumerMetrics metrics = mock(MqConsumerMetrics.class);
-        processor = new DeadLetterQueueProcessor(metrics);
+        processor = new DeadLetterQueueProcessor("localhost:9876", DEFAULT_DLQ_CONSUMER_GROUP, metrics);
         processor.registerHandler("apex-photo-moderation", msg -> true);
 
         MessageExt message = createMessageExt("apex-photo-moderation", "msg-metric-001");
@@ -410,7 +413,7 @@ class DeadLetterQueueProcessorTest {
     @DisplayName("未注册处理器时也应累加死信指标")
     void shouldRecordDlqMetricWhenNoHandlerRegistered() {
         MqConsumerMetrics metrics = mock(MqConsumerMetrics.class);
-        processor = new DeadLetterQueueProcessor(metrics);
+        processor = new DeadLetterQueueProcessor("localhost:9876", DEFAULT_DLQ_CONSUMER_GROUP, metrics);
 
         MessageExt message = createMessageExt("unknown-topic", "msg-metric-002");
         processor.processDeadLetter(message);

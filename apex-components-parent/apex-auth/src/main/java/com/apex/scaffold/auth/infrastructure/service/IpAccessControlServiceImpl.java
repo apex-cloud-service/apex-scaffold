@@ -39,9 +39,9 @@ public class IpAccessControlServiceImpl implements IpAccessControlService {
      * 检查IP是否被允许访问
      *
      * 策略优先级：
-     * 1. 黑名单匹配 -> 拒绝
-     * 2. 白名单存在 && 白名单不匹配 -> 拒绝
-     * 3. 其他情况 -> 允许
+     * 1. 黑名单匹配 -&gt; 拒绝
+     * 2. 白名单存在 &amp;&amp; 白名单不匹配 -&gt; 拒绝
+     * 3. 其他情况 -&gt; 允许
      *
      * @param ipAddress 客户端IP地址
      * @param tenantId 租户ID

@@ -49,6 +49,7 @@ public interface IpAccessControlService {
      *
      * @param ipAddress IP地址或CIDR
      * @param tenantId 租户ID
+     * @return 移除完成信号（空完成）
      */
     Mono<Void> removeFromWhitelist(String ipAddress, String tenantId);
 
@@ -57,6 +58,7 @@ public interface IpAccessControlService {
      *
      * @param ipAddress IP地址或CIDR
      * @param tenantId 租户ID
+     * @return 移除完成信号（空完成）
      */
     Mono<Void> removeFromBlacklist(String ipAddress, String tenantId);
 
@@ -89,6 +91,7 @@ public interface IpAccessControlService {
      * @param ruleId 规则ID
      * @param tenantId 租户ID
      * @param operator 操作员
+     * @return 启用完成信号（空完成）
      */
     @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> enableRule(Long ruleId, String tenantId, String operator);
@@ -99,6 +102,7 @@ public interface IpAccessControlService {
      * @param ruleId 规则ID
      * @param tenantId 租户ID
      * @param operator 操作员
+     * @return 禁用完成信号（空完成）
      */
     @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> disableRule(Long ruleId, String tenantId, String operator);
@@ -109,6 +113,7 @@ public interface IpAccessControlService {
      * @param ruleId 规则ID
      * @param tenantId 租户ID
      * @param operator 操作员
+     * @return 删除完成信号（空完成）
      */
     @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> deleteRule(Long ruleId, String tenantId, String operator);

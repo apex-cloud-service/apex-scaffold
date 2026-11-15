@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.ReactiveSetOperations;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -68,9 +67,8 @@ class OfficeTokenServiceImplTest {
         when(setOperations.add(anyString(), org.mockito.ArgumentMatchers.<String>any()))
                 .thenReturn(Mono.just(1L));
         when(setOperations.remove(anyString(), anyString())).thenReturn(Mono.just(1L));
-        service = new OfficeTokenServiceImpl(redisTemplate, redisKeyPrefix, tokenBlacklistService);
-        ReflectionTestUtils.setField(service, "accessTokenExpireTime", 7200000L);
-        ReflectionTestUtils.setField(service, "refreshTokenExpireTime", 604800000L);
+        service =
+                new OfficeTokenServiceImpl(redisTemplate, redisKeyPrefix, tokenBlacklistService, 7200000L, 604800000L);
     }
 
     private String refreshToken(String subject, String sid) {

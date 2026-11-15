@@ -6,7 +6,6 @@ import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.util.JsonUtil;
 import com.apex.scaffold.domain.event.DomainEventBus;
 import com.apex.scaffold.domain.service.DomainEventPublisher;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.apache.rocketmq.spring.support.RocketMQHeaders;
@@ -61,7 +60,6 @@ import reactor.util.context.ContextView;
  */
 @Component
 @ConditionalOnBean(RocketMQTemplate.class)
-@RequiredArgsConstructor
 @Slf4j
 public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
     /** 领域事件总线 */
@@ -74,12 +72,32 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
     private final RocketMQTemplate rocketMQTemplate;
 
     /** 领域事件主题名称 */
-    @Value("${apex.mq.domain-event-topic:apex-domain-event}")
-    private String domainEventTopic;
+    private final String domainEventTopic;
 
     /** 是否启用分布式事件发布 */
-    @Value("${apex.mq.domain-event-enabled:true}")
-    private boolean domainEventEnabled;
+    private final boolean domainEventEnabled;
+
+    /**
+     * 构造增强版领域事件发布器。
+     *
+     * @param domainEventBus 领域事件总线
+     * @param applicationEventPublisher Spring 应用事件发布器
+     * @param rocketMQTemplate RocketMQ 模板，用于分布式事件发布
+     * @param domainEventTopic 领域事件主题名称，默认 {@code apex-domain-event}
+     * @param domainEventEnabled 是否启用分布式事件发布，默认 true
+     */
+    public EnhancedDomainEventPublisherImpl(
+            DomainEventBus domainEventBus,
+            ApplicationEventPublisher applicationEventPublisher,
+            RocketMQTemplate rocketMQTemplate,
+            @Value("${apex.mq.domain-event-topic:apex-domain-event}") String domainEventTopic,
+            @Value("${apex.mq.domain-event-enabled:true}") boolean domainEventEnabled) {
+        this.domainEventBus = domainEventBus;
+        this.applicationEventPublisher = applicationEventPublisher;
+        this.rocketMQTemplate = rocketMQTemplate;
+        this.domainEventTopic = domainEventTopic;
+        this.domainEventEnabled = domainEventEnabled;
+    }
 
     /**
      * 默认发布方法（异步模式）

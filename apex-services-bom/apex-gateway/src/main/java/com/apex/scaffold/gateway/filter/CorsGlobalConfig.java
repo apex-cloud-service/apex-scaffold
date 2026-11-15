@@ -36,25 +36,21 @@ public class CorsGlobalConfig implements Ordered {
     /** 过滤器顺序：需要早于 JWT 验签与路由，放行预检不进入业务链 */
     public static final int ORDER = -100;
 
-    /** 允许的来源域名列表（逗号分隔，映射自 {@code cors.allowed-origins}） */
-    @Value("${cors.allowed-origins:}")
-    private List<String> allowedOrigins;
-
-    /** 是否允许所有来源域名 */
-    @Value("${cors.allow-all-origins:false}")
-    private boolean allowAllOrigins;
-
     /**
      * 创建网关级 CORS 过滤器.
      *
      * <p>策略：开发环境允许所有来源；生产环境仅允许显式配置的域名。
      * 允许携带凭证，暴露链路追踪 / 令牌续期响应头。
      *
+     * @param allowedOrigins 允许的来源域名列表（逗号分隔，映射自 {@code cors.allowed-origins}）
+     * @param allowAllOrigins 是否允许所有来源域名
      * @return {@link CorsWebFilter} 实例
      * @throws IllegalStateException 生产环境允许所有来源但未配置具体域名时抛出
      */
     @Bean
-    public CorsWebFilter gatewayCorsWebFilter() {
+    public CorsWebFilter gatewayCorsWebFilter(
+            @Value("${cors.allowed-origins:}") List<String> allowedOrigins,
+            @Value("${cors.allow-all-origins:false}") boolean allowAllOrigins) {
         CorsConfiguration config = new CorsConfiguration();
 
         if (allowAllOrigins) {

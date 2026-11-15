@@ -55,6 +55,7 @@ public interface DeviceTrustService {
      * @param deviceId 设备ID
      * @param ip 当前IP地址
      * @param location 当前位置
+     * @return 更新完成信号（空完成）
      */
     @SuppressWarnings("PMD.AbstractMethodOrInterfaceMethodMustUseJavadocRule")
     Mono<Void> updateDeviceUsage(String userId, String tenantId, String deviceId, String ip, String location);
@@ -64,6 +65,7 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
+     * @return 提升完成信号（空完成）
      */
     Mono<Void> upgradeTrustLevel(Long deviceId, String operator);
 
@@ -72,6 +74,7 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
+     * @return 降低完成信号（空完成）
      */
     Mono<Void> downgradeTrustLevel(Long deviceId, String operator);
 
@@ -80,6 +83,7 @@ public interface DeviceTrustService {
      *
      * @param deviceId 设备ID
      * @param operator 操作人
+     * @return 撤销完成信号（空完成）
      */
     Mono<Void> revokeDeviceTrust(Long deviceId, String operator);
 
@@ -146,6 +150,7 @@ public interface DeviceTrustService {
      * @param deviceId 设备ID
      * @param days 延长天数
      * @param operator 操作人
+     * @return 延长完成信号（空完成）
      */
     Mono<Void> extendDeviceTrust(Long deviceId, int days, String operator);
 }

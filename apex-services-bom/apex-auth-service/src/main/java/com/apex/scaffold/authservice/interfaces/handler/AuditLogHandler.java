@@ -771,7 +771,7 @@ public class AuditLogHandler {
      *
      * <p><b>示例URL：</b>
      * <pre>
-     * GET /api/audit-logs/users/1001/login-failures?tenantId=default&startTime=2026-09-25T10:00:00
+     * GET /api/audit-logs/users/1001/login-failures?tenantId=default&amp;startTime=2026-09-25T10:00:00
      * </pre>
      *
      * @param request HTTP请求

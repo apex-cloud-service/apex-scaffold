@@ -22,6 +22,7 @@ public record UnifiedAuthorizationResponse(
         @Schema(description = "有效权限编码", example = "[\"user:read\"]", requiredMode = Schema.RequiredMode.REQUIRED)
                 List<String> permissions,
         @Schema(description = "有效角色及数据范围", requiredMode = Schema.RequiredMode.REQUIRED) List<Role> roles) {
+    /** 紧凑构造器：将权限与角色复制为不可变列表，避免调用方后续修改影响快照。 */
     public UnifiedAuthorizationResponse {
         permissions = List.copyOf(permissions);
         roles = List.copyOf(roles);

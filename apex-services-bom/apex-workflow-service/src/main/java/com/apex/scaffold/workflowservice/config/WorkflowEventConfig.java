@@ -58,6 +58,7 @@ public class WorkflowEventConfig {
      * @param properties    事件通道配置（{@code apex.events.channel}）
      * @param mqTemplate    RocketMQ 模板（可能不存在）
      * @param outboxEnabled Outbox 开关（远程能力判据之一）
+     * @param workflowEventTopic 工作流事件主题名称
      * @return 唯一的事件发布器
      */
     @Bean
@@ -66,12 +67,13 @@ public class WorkflowEventConfig {
             EventChannelProperties properties,
             ObjectProvider<RocketMQTemplate> mqTemplate,
             org.springframework.context.ApplicationEventPublisher applicationEventPublisher,
-            @Value("${" + OUTBOX_ENABLED_PREFIX + ".enabled:true}") boolean outboxEnabled) {
+            @Value("${" + OUTBOX_ENABLED_PREFIX + ".enabled:true}") boolean outboxEnabled,
+            @Value("${apex.mq.workflow-event-topic:apex-workflow-events}") String workflowEventTopic) {
         RocketMQTemplate template = mqTemplate.getIfAvailable();
         boolean remoteCapable = outboxEnabled && template != null;
         EventChannelMode effective = properties.channelMode().resolve(remoteCapable);
         if (effective == EventChannelMode.REMOTE && template != null) {
-            return new MqWorkflowEventPublisher(template);
+            return new MqWorkflowEventPublisher(template, workflowEventTopic);
         }
         return new LocalWorkflowEventPublisher(applicationEventPublisher);
     }

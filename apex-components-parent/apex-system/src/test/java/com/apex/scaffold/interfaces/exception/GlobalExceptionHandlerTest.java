@@ -89,10 +89,13 @@ class GlobalExceptionHandlerTest {
     @Test
     void shouldKeepMonitorAlertAndDeliveryFailureSafe() {
         var alertService = mock(com.apex.scaffold.interfaces.service.AlertService.class);
-        var monitor =
-                new ExceptionMonitor(alertService, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
-        org.springframework.test.util.ReflectionTestUtils.setField(monitor, "maxExceptionTypes", 100);
-        org.springframework.test.util.ReflectionTestUtils.setField(monitor, "exceptionThreshold", 1);
+        var monitor = new ExceptionMonitor(
+                alertService,
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry(),
+                1,
+                5,
+                100,
+                "apex-scaffold");
         when(alertService.sendAlert(any())).thenReturn(Mono.error(new IllegalStateException("token=delivery-secret")));
         var logger = (Logger) LoggerFactory.getLogger(ExceptionMonitor.class);
         var level = logger.getLevel();

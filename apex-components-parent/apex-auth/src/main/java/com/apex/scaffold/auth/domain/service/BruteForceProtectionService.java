@@ -78,6 +78,7 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param clientIp 客户端IP
+     * @return 允许登录时为空完成；账户或IP被锁定时以错误信号拒绝
      */
     public Mono<Void> checkLoginAllowed(String username, String clientIp) {
         return Mono.zip(isUserLocked(username), isIpLocked(clientIp)).flatMap(tuple -> {
@@ -124,6 +125,7 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param clientIp 客户端IP
+     * @return 失败计数与审计记录完成信号（空完成）
      */
     public Mono<Void> recordLoginFailure(String username, String clientIp) {
         log.info("记录登录失败: username={}, ip={}", username, clientIp);
@@ -143,6 +145,7 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param clientIp 客户端IP
+     * @return 清除失败计数完成信号（空完成）
      */
     public Mono<Void> recordLoginSuccess(String username, String clientIp) {
         log.info("记录登录成功，清除失败计数: username={}, ip={}", username, clientIp);
@@ -159,6 +162,7 @@ public class BruteForceProtectionService {
      *
      * @param username 用户名
      * @param operatorId 操作员ID
+     * @return 解锁与审计记录完成信号（空完成）
      */
     public Mono<Void> unlockUser(String username, String operatorId) {
         log.info("管理员解锁用户: username={}, operator={}", username, operatorId);
@@ -176,6 +180,7 @@ public class BruteForceProtectionService {
      *
      * @param clientIp IP地址
      * @param operatorId 操作员ID
+     * @return 解锁与审计记录完成信号（空完成）
      */
     public Mono<Void> unlockIp(String clientIp, String operatorId) {
         log.info("管理员解锁IP: ip={}, operator={}", clientIp, operatorId);

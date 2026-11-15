@@ -13,10 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 
 /**
@@ -41,7 +39,6 @@ class LoginResponseHelperTest {
     @Mock
     private DomainEventPublisher domainEventPublisher;
 
-    @InjectMocks
     private LoginResponseHelper loginResponseHelper;
 
     private UserEntity user;
@@ -52,6 +49,8 @@ class LoginResponseHelperTest {
      */
     @BeforeEach
     void setUp() {
+        loginResponseHelper = new LoginResponseHelper(userAssembler, domainEventPublisher, 7200000L);
+
         user = new UserEntity();
         user.setId(1L);
         user.setOpenId("test_openid");
@@ -67,10 +66,6 @@ class LoginResponseHelperTest {
         loginResponse.setUserInfo(userInfo);
         loginResponse.setOpenId("test_openid");
         loginResponse.setUnionId("test_unionid");
-
-        // @Value 注入的字段在 Mockito @InjectMocks 下不会被赋值，需显式注入，
-        // 否则 accessTokenExpireMs 默认为 0，导致 expiresIn(=accessTokenExpireMs/1000) 断言失败。
-        ReflectionTestUtils.setField(loginResponseHelper, "accessTokenExpireMs", 7200000L);
     }
 
     /**

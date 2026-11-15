@@ -60,10 +60,20 @@ public class UnifiedAuditService {
     private final java.util.concurrent.atomic.AtomicLong dropped = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong failed = new java.util.concurrent.atomic.AtomicLong();
 
+    /**
+     * 获取因告警信号量已满而丢弃的审计事件计数。
+     *
+     * @return 累计丢弃数量
+     */
     public long getDroppedCount() {
         return dropped.get();
     }
 
+    /**
+     * 获取发送失败的审计事件计数。
+     *
+     * @return 累计失败数量
+     */
     public long getFailedCount() {
         return failed.get();
     }
@@ -339,17 +349,17 @@ public class UnifiedAuditService {
      * 事件类型枚举
      */
     public enum EventType {
-        // 认证事件
+        /** 认证事件 */
         AUTHENTICATION,
-        // 授权事件
+        /** 授权事件 */
         AUTHORIZATION,
-        // OAuth2事件
+        /** OAuth2事件 */
         OAUTH2,
-        // SSO事件
+        /** SSO事件 */
         SSO,
-        // 安全事件
+        /** 安全事件 */
         SECURITY,
-        // 系统事件
+        /** 系统事件 */
         SYSTEM
     }
 

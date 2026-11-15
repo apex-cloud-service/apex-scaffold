@@ -156,8 +156,7 @@ public class JwtAuthenticationFilter implements WebFilter {
     private final TokenVerifier tokenVerifier;
 
     /** AccessToken 过期时间（毫秒） */
-    @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}")
-    private long accessTokenExpireMs;
+    private final long accessTokenExpireMs;
 
     /**
      * AccessToken 续期阈值（毫秒）：当 Token 剩余有效期小于此值时自动生成新 Token。
@@ -165,8 +164,7 @@ public class JwtAuthenticationFilter implements WebFilter {
      * <p>默认值为 {@value #DEFAULT_RENEWAL_THRESHOLD_MS}（30 分钟），
      * 即可配置为 {@code 0} 完全禁用滑动刷新。</p>
      */
-    @Value("${jwt.access-token-renew-threshold:" + DEFAULT_RENEWAL_THRESHOLD_MS + "}")
-    private long renewalThresholdMs;
+    private final long renewalThresholdMs;
 
     /** 用户角色本地缓存，键为 userId，值为角色权限列表，TTL 60秒避免频繁查库 */
     private final Cache<Long, List<SimpleGrantedAuthority>> userRolesCache = Caffeine.newBuilder()
@@ -184,6 +182,8 @@ public class JwtAuthenticationFilter implements WebFilter {
      * @param roleRepository        角色仓储，用于根据用户ID查询用户角色列表
      * @param unifiedAuthorizationService 统一授权服务，用于权限校验，可为空
      * @param tokenVerifier         统一令牌验签器（认证中心 RS256 + 主应用 HS256 双算法）
+     * @param accessTokenExpireMs   AccessToken 过期时间（毫秒）
+     * @param renewalThresholdMs    AccessToken 续期阈值（毫秒），0 表示禁用滑动刷新
      */
     public JwtAuthenticationFilter(
             TokenBlacklistService tokenBlacklistService,
@@ -192,7 +192,10 @@ public class JwtAuthenticationFilter implements WebFilter {
             UserRepository userRepository,
             RoleRepository roleRepository,
             com.apex.scaffold.application.service.UnifiedAuthorizationService unifiedAuthorizationService,
-            TokenVerifier tokenVerifier) {
+            TokenVerifier tokenVerifier,
+            @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}") long accessTokenExpireMs,
+            @Value("${jwt.access-token-renew-threshold:" + DEFAULT_RENEWAL_THRESHOLD_MS + "}")
+                    long renewalThresholdMs) {
         this.unifiedAuthorizationService = unifiedAuthorizationService;
         this.tokenBlacklistService = tokenBlacklistService;
         this.tokenService = tokenService;
@@ -200,6 +203,8 @@ public class JwtAuthenticationFilter implements WebFilter {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.tokenVerifier = tokenVerifier;
+        this.accessTokenExpireMs = accessTokenExpireMs;
+        this.renewalThresholdMs = renewalThresholdMs;
     }
 
     /**

@@ -34,14 +34,6 @@ import org.springframework.util.AntPathMatcher;
 @Configuration
 public class SpringDocConfig {
 
-    /** 应用名称（兜底默认值与应用名 apex-scaffold 保持一致） */
-    @Value("${spring.application.name:apex-scaffold}")
-    private String applicationName;
-
-    /** 应用版本（三档构建时由 apex-build.properties 注入；兜底默认值随发布版本同步） */
-    @Value("${apex.version:1.2.0}")
-    private String applicationVersion;
-
     private static final String LOCAL_SERVER_URL = "http://localhost:8080";
     private static final String PROD_SERVER_URL = "https://api.apex-scaffold.com";
     private static final String BEARER_AUTH = "BearerAuth";
@@ -52,10 +44,14 @@ public class SpringDocConfig {
      *
      * <p>配置Swagger文档的全局信息，包括标题、版本、联系方式、服务器地址等。
      *
+     * @param applicationName 应用名称，默认 apex-scaffold
+     * @param applicationVersion 应用版本（三档构建时由 apex-build.properties 注入），默认 1.2.0
      * @return 全局OpenAPI配置对象
      */
     @Bean
-    public OpenAPI apexOpenApi() {
+    public OpenAPI apexOpenApi(
+            @Value("${spring.application.name:apex-scaffold}") String applicationName,
+            @Value("${apex.version:1.2.0}") String applicationVersion) {
         return new OpenAPI()
                 .info(new Info()
                         .title("Apex Scaffold API 文档")

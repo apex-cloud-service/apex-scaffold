@@ -7,13 +7,13 @@ import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.common.annotation.UserRateLimit;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.util.ratelimit.algorithm.RateLimitAlgorithm;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -37,7 +37,6 @@ import reactor.core.publisher.Mono;
 @DisplayName("UserRateLimitAspect 用户级别限流切面测试")
 class UserRateLimitAspectTest {
 
-    @InjectMocks
     private UserRateLimitAspect aspect;
 
     @Mock
@@ -62,6 +61,7 @@ class UserRateLimitAspectTest {
      */
     @BeforeEach
     void setUp() {
+        aspect = new UserRateLimitAspect(redissonClient, true, RateLimitAlgorithm.SLIDING_WINDOW);
         when(joinPoint.getSignature()).thenReturn(signature);
     }
 
@@ -122,7 +122,7 @@ class UserRateLimitAspectTest {
     @Test
     @DisplayName("Redisson 缺失时应降级到本地限流")
     void shouldFallbackToLocalRateLimitWhenRedissonIsMissing() throws Throwable {
-        UserRateLimitAspect localAspect = new UserRateLimitAspect(null);
+        UserRateLimitAspect localAspect = new UserRateLimitAspect(null, true, RateLimitAlgorithm.SLIDING_WINDOW);
         when(annotation.prefix()).thenReturn("sms");
         when(annotation.key()).thenReturn("test");
         when(annotation.rate()).thenReturn(1.0);

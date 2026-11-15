@@ -3,7 +3,6 @@ package com.apex.scaffold.workflowservice.infrastructure.event;
 import com.apex.scaffold.common.event.AbstractDomainEvent;
 import com.apex.scaffold.common.scheduler.BlockingIoSchedulers;
 import com.apex.scaffold.common.util.JsonUtil;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -40,7 +39,6 @@ import reactor.core.publisher.Mono;
  * @see LocalWorkflowEventPublisher
  * @see RocketMQTemplate
  */
-@RequiredArgsConstructor
 @Slf4j
 public class MqWorkflowEventPublisher implements WorkflowEventPublisher {
 
@@ -48,8 +46,20 @@ public class MqWorkflowEventPublisher implements WorkflowEventPublisher {
     private final RocketMQTemplate rocketMQTemplate;
 
     /** 工作流事件主题名称（契约固定为 apex-workflow-events） */
-    @Value("${apex.mq.workflow-event-topic:apex-workflow-events}")
-    private String workflowEventTopic;
+    private final String workflowEventTopic;
+
+    /**
+     * 构造基于 RocketMQ 的工作流事件发布器。
+     *
+     * @param rocketMQTemplate   RocketMQ 模板
+     * @param workflowEventTopic 工作流事件主题名称
+     */
+    public MqWorkflowEventPublisher(
+            RocketMQTemplate rocketMQTemplate,
+            @Value("${apex.mq.workflow-event-topic:apex-workflow-events}") String workflowEventTopic) {
+        this.rocketMQTemplate = rocketMQTemplate;
+        this.workflowEventTopic = workflowEventTopic;
+    }
 
     /**
      * 发布工作流领域事件到 RocketMQ。

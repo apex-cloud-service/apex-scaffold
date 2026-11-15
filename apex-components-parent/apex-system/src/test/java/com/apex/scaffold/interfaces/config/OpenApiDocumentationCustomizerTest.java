@@ -133,7 +133,7 @@ class OpenApiDocumentationCustomizerTest {
         io.swagger.v3.oas.models.Operation detail = operation("adminGetUser");
         detail.addParametersItem(new Parameter().name("userId").in("path").schema(new StringSchema()));
         io.swagger.v3.oas.models.Operation list = operation("adminListUsers");
-        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         openApi.setPaths(new Paths()
                 .addPathItem("/admin-api/v1/users/{userId}", new PathItem().get(detail))
                 .addPathItem("/admin-api/v1/users", new PathItem().get(list)));
@@ -180,7 +180,7 @@ class OpenApiDocumentationCustomizerTest {
     @Test
     void shouldDocumentFormRequest() {
         io.swagger.v3.oas.models.Operation validation = operation("validateMobile");
-        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         openApi.setPaths(new Paths().addPathItem("/api/v1/auth/cl/validate-mobile", new PathItem().post(validation)));
 
         new SpringDocConfig().openApiCustomizer().customise(openApi);
@@ -299,7 +299,7 @@ class OpenApiDocumentationCustomizerTest {
                                                             .schema(new Schema<>()
                                                                     .$ref("#/components/schemas/Result")))));
         }
-        OpenAPI api = new SpringDocConfig().apexOpenApi();
+        OpenAPI api = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         api.setPaths(new Paths()
                 .addPathItem("/oauth2/token", new PathItem().post(token))
                 .addPathItem("/oauth2/introspect", new PathItem().post(introspect))
@@ -353,7 +353,7 @@ class OpenApiDocumentationCustomizerTest {
     @Test
     void shouldKeepDiscoveryAsNativeJson() {
         var discovery = operation("oauth2Discovery");
-        OpenAPI api = new SpringDocConfig().apexOpenApi();
+        OpenAPI api = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         api.setPaths(new Paths().addPathItem("/.well-known/oauth-authorization-server", new PathItem().get(discovery)));
 
         new SpringDocConfig().openApiCustomizer().customise(api);
@@ -369,7 +369,7 @@ class OpenApiDocumentationCustomizerTest {
         var rebuild = operation("rebuildSearchIndex");
         var sso = operation("handleSsoCallback");
         var keycloak = operation("syncKeycloakUser");
-        OpenAPI api = new SpringDocConfig().apexOpenApi();
+        OpenAPI api = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         api.setPaths(new Paths()
                 .addPathItem("/api/v1/search", new PathItem().get(search))
                 .addPathItem("/admin-api/v1/search/rebuild", new PathItem().post(rebuild))
@@ -427,7 +427,7 @@ class OpenApiDocumentationCustomizerTest {
      * @return OpenAPI 文档
      */
     private OpenAPI openApi(String path, PathItem pathItem) {
-        OpenAPI openApi = new SpringDocConfig().apexOpenApi();
+        OpenAPI openApi = new SpringDocConfig().apexOpenApi("apex-scaffold", "1.2.0");
         openApi.setPaths(new Paths().addPathItem(path, pathItem));
         return openApi;
     }

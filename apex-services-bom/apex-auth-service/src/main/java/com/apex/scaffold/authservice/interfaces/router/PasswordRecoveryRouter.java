@@ -45,7 +45,9 @@ public class PasswordRecoveryRouter {
     private final PasswordRecoveryHandler passwordRecoveryHandler;
 
     /**
-     * 密码找回路由定义。
+     * 密码找回路由定义：注册申请、校验、确认三个 POST 端点。
+     *
+     * @return 密码找回路由函数
      */
     @Bean
     @RouterOperations({

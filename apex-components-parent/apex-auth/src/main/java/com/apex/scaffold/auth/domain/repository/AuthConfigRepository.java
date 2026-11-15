@@ -30,10 +30,23 @@ public interface AuthConfigRepository {
      */
     Mono<AuthConfigEntity> update(AuthConfigEntity config);
 
-    /** 开放应用单行CAS更新；版本冲突不得覆盖并发管理操作。 */
+    /**
+     * 开放应用单行CAS更新；版本冲突不得覆盖并发管理操作。
+     *
+     * @param config 待更新的配置实体
+     * @param expectedVersion 期望的当前版本号
+     * @return 更新后的配置实体
+     */
     Mono<AuthConfigEntity> updateOpenApp(AuthConfigEntity config, int expectedVersion);
 
-    /** 在数据库中分页读取OAuth客户端，页码从0开始。 */
+    /**
+     * 在数据库中分页读取OAuth客户端，页码从0开始。
+     *
+     * @param tenantId 租户ID
+     * @param page 页码，从0开始
+     * @param size 每页数量
+     * @return OAuth2客户端配置流
+     */
     Flux<AuthConfigEntity> findOAuth2Clients(String tenantId, int page, int size);
 
     /**
@@ -41,6 +54,7 @@ public interface AuthConfigRepository {
      *
      * @param id 配置ID
      * @param tenantId 租户ID
+     * @return 删除完成信号（空完成）
      */
     Mono<Void> deleteById(Long id, String tenantId);
 

@@ -67,7 +67,6 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @Service
-@lombok.RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
 
     private static final String JSON_START_BRACE = "{";
@@ -98,12 +97,10 @@ public class TokenServiceImpl implements TokenService {
     private static final long DEFAULT_REFRESH_TOKEN_EXPIRE_MS = 604800000L;
 
     /** AccessToken 过期时间（毫秒），默认 2 小时 */
-    @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}")
-    private long accessTokenExpireTime;
+    private final long accessTokenExpireTime;
 
     /** RefreshToken 过期时间（毫秒），默认 7 天 */
-    @Value("${jwt.refresh-token-expire:" + DEFAULT_REFRESH_TOKEN_EXPIRE_MS + "}")
-    private long refreshTokenExpireTime;
+    private final long refreshTokenExpireTime;
 
     /** Token 黑名单服务，用于使特定 Token 主动失效 */
     private final TokenBlacklistService tokenBlacklistService;
@@ -113,6 +110,28 @@ public class TokenServiceImpl implements TokenService {
 
     /** Redis Key 版本前缀管理器 */
     private final RedisKeyPrefix redisKeyPrefix;
+
+    /**
+     * 构造 Token 服务实现。
+     *
+     * @param accessTokenExpireTime  AccessToken 过期时间（毫秒），默认 7200000（2 小时）
+     * @param refreshTokenExpireTime RefreshToken 过期时间（毫秒），默认 604800000（7 天）
+     * @param tokenBlacklistService  Token 黑名单服务
+     * @param redissonClient         Redisson 客户端
+     * @param redisKeyPrefix         Redis Key 版本前缀管理器
+     */
+    public TokenServiceImpl(
+            @Value("${jwt.access-token-expire:" + DEFAULT_ACCESS_TOKEN_EXPIRE_MS + "}") long accessTokenExpireTime,
+            @Value("${jwt.refresh-token-expire:" + DEFAULT_REFRESH_TOKEN_EXPIRE_MS + "}") long refreshTokenExpireTime,
+            TokenBlacklistService tokenBlacklistService,
+            RedissonClient redissonClient,
+            RedisKeyPrefix redisKeyPrefix) {
+        this.accessTokenExpireTime = accessTokenExpireTime;
+        this.refreshTokenExpireTime = refreshTokenExpireTime;
+        this.tokenBlacklistService = tokenBlacklistService;
+        this.redissonClient = redissonClient;
+        this.redisKeyPrefix = redisKeyPrefix;
+    }
 
     /**
      * 构建带版本前缀的 AccessToken Redis Key。

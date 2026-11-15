@@ -38,7 +38,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
-import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -121,8 +120,8 @@ class AuthServiceTest {
                 loginProtectionProperties,
                 captchaService,
                 loginLogService,
-                userAssembler);
-        ReflectionTestUtils.setField(authService, "accessTokenExpireMs", 7200000L);
+                userAssembler,
+                7200000L);
         lenient()
                 .when(loginLogService.record(any(com.apex.scaffold.domain.model.entity.LoginLogEntity.class)))
                 .thenReturn(Mono.empty());

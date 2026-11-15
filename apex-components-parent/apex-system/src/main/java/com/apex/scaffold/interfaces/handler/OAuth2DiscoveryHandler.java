@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -73,7 +72,6 @@ import reactor.core.publisher.Mono;
 @SuppressWarnings({"checkstyle:TypeName", "PMD.ClassNamingShouldBeCamelRule"})
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @Tag(name = "OAuth2服务发现", description = "OAuth2授权服务器元数据发现端点,符合RFC 8414规范")
 public class OAuth2DiscoveryHandler {
 
@@ -82,8 +80,16 @@ public class OAuth2DiscoveryHandler {
      *
      * <p>从配置文件读取，默认8080
      */
-    @Value("${server.port:8080}")
-    private int serverPort;
+    private final int serverPort;
+
+    /**
+     * 创建 OAuth2 服务发现处理器。
+     *
+     * @param serverPort 服务器端口，默认 8080
+     */
+    public OAuth2DiscoveryHandler(@Value("${server.port:8080}") int serverPort) {
+        this.serverPort = serverPort;
+    }
 
     /**
      * OAuth2服务器元数据发现

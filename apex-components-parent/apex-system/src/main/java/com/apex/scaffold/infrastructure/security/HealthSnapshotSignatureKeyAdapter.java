@@ -3,7 +3,6 @@ package com.apex.scaffold.infrastructure.security;
 import com.apex.scaffold.domain.service.HealthSnapshotSignatureKeyPort;
 import com.apex.scaffold.infrastructure.config.OperationsHealthProperties;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class HealthSnapshotSignatureKeyAdapter implements HealthSnapshotSignatureKeyPort {
 
     /** 明确视为未配置的模板值前缀。 */
@@ -41,8 +39,24 @@ public class HealthSnapshotSignatureKeyAdapter implements HealthSnapshotSignatur
 
     private final Environment environment;
 
-    @Value("${apex.security.data-encryption-key:}")
-    private String dataEncryptionKey;
+    /** 数据加密密钥（{@code apex.security.data-encryption-key}），未配置时回退值。 */
+    private final String dataEncryptionKey;
+
+    /**
+     * 创建体检快照签名密钥实现。
+     *
+     * @param properties 运维健康配置属性，优先提供签名密钥
+     * @param environment Spring 环境，用于日志输出当前 profile
+     * @param dataEncryptionKey 数据加密密钥（Base64 编码 32 字节），默认空串表示未配置
+     */
+    public HealthSnapshotSignatureKeyAdapter(
+            OperationsHealthProperties properties,
+            Environment environment,
+            @Value("${apex.security.data-encryption-key:}") String dataEncryptionKey) {
+        this.properties = properties;
+        this.environment = environment;
+        this.dataEncryptionKey = dataEncryptionKey;
+    }
 
     @Override
     public String currentSecret() {

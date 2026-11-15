@@ -34,7 +34,8 @@ class SentinelDynamicRulesLoaderTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        loader = new SentinelDynamicRulesLoader(objectMapper, new DefaultResourceLoader());
+        loader = new SentinelDynamicRulesLoader(
+                objectMapper, new DefaultResourceLoader(), "classpath:config/sentinel/sentinel-rules.json");
     }
 
     @Test
@@ -80,8 +81,8 @@ class SentinelDynamicRulesLoaderTest {
         Path rulesFile = tempDir.resolve("test-rules.json");
         Files.writeString(rulesFile, jsonContent);
 
-        // 通过反射设置文件路径
-        setRulesFilePath(loader, "file:" + rulesFile.toAbsolutePath());
+        // 通过构造器设置文件路径
+        loader = newLoader("file:" + rulesFile.toAbsolutePath());
 
         // When
         loader.loadRules();
@@ -98,7 +99,7 @@ class SentinelDynamicRulesLoaderTest {
     @DisplayName("文件不存在时应优雅降级，不影响启动")
     void shouldGracefullyHandleMissingFile() {
         // Given
-        setRulesFilePath(loader, "file:/nonexistent/path/rules.json");
+        loader = newLoader("file:/nonexistent/path/rules.json");
 
         // When & Then: 不应抛出异常
         loader.loadRules();
@@ -126,7 +127,7 @@ class SentinelDynamicRulesLoaderTest {
 
         Path rulesFile = tempDir.resolve("flow-rules.json");
         Files.writeString(rulesFile, jsonContent);
-        setRulesFilePath(loader, "file:" + rulesFile.toAbsolutePath());
+        loader = newLoader("file:" + rulesFile.toAbsolutePath());
 
         // When
         loader.loadRules();
@@ -141,15 +142,9 @@ class SentinelDynamicRulesLoaderTest {
     }
 
     /**
-     * 通过反射设置 rulesFilePath 字段
+     * 使用指定规则文件路径创建加载器
      */
-    private void setRulesFilePath(SentinelDynamicRulesLoader loader, String path) {
-        try {
-            var field = SentinelDynamicRulesLoader.class.getDeclaredField("rulesFilePath");
-            field.setAccessible(true);
-            field.set(loader, path);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set rulesFilePath", e);
-        }
+    private SentinelDynamicRulesLoader newLoader(String path) {
+        return new SentinelDynamicRulesLoader(objectMapper, new DefaultResourceLoader(), path);
     }
 }

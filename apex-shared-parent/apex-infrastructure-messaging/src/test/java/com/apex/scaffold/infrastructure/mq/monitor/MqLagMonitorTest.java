@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * {@link MqLagMonitor} 的单元测试。
@@ -43,8 +42,8 @@ class MqLagMonitorTest {
 
     @BeforeEach
     void setUp() {
-        monitor = new MqLagMonitor(new SimpleMeterRegistry(), alertManager, adminClient);
-        ReflectionTestUtils.setField(monitor, "nameServer", "localhost:9876");
+        monitor = new MqLagMonitor(
+                new SimpleMeterRegistry(), alertManager, adminClient, 10000L, 50000L, true, "localhost:9876");
     }
 
     @Test

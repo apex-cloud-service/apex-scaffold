@@ -11,6 +11,7 @@ import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.repository.RoleRepository;
 import com.apex.scaffold.domain.repository.UserRepository;
 import com.apex.scaffold.domain.service.TokenBlacklistService;
+import com.apex.scaffold.domain.service.TokenService;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -23,7 +24,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -70,17 +70,35 @@ class JwtAuthenticationFilterTest {
     @Mock
     private TokenVerifier tokenVerifier;
 
-    @InjectMocks
+    @Mock
+    private TokenService tokenService;
+
     private JwtAuthenticationFilter filter;
+
+    /** 测试使用的访问令牌有效期（毫秒），与生产默认值一致。 */
+    private static final long TEST_ACCESS_TOKEN_EXPIRE_MS = 7200000L;
+
+    /** 测试使用的续期阈值（毫秒），与生产默认值一致。 */
+    private static final long TEST_RENEWAL_THRESHOLD_MS = 1800000L;
 
     private static final String VALID_TOKEN = "valid-token-value";
     private static final String TEST_OPEN_ID = "test-open-id";
 
     /**
-     * 设置{@code up}。
+     * 初始化过滤器与消息桩：显式构造以覆盖新增的令牌有效期配置参数。
      */
     @BeforeEach
     void setUp() {
+        filter = new JwtAuthenticationFilter(
+                tokenBlacklistService,
+                tokenService,
+                messageUtils,
+                userRepository,
+                roleRepository,
+                null,
+                tokenVerifier,
+                TEST_ACCESS_TOKEN_EXPIRE_MS,
+                TEST_RENEWAL_THRESHOLD_MS);
         when(messageUtils.get(any(Locale.class), any())).thenReturn("");
     }
 
@@ -95,7 +113,15 @@ class JwtAuthenticationFilterTest {
                                 .withProperty("apex.features.auth-center-permission", "true"),
                         null);
         JwtAuthenticationFilter central = new JwtAuthenticationFilter(
-                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified, tokenVerifier);
+                tokenBlacklistService,
+                tokenService,
+                messageUtils,
+                userRepository,
+                roleRepository,
+                unified,
+                tokenVerifier,
+                7200000L,
+                1800000L);
         UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
         user.setId(7L);
         user.setTenantId("main");
@@ -140,7 +166,15 @@ class JwtAuthenticationFilterTest {
         when(unified.enabled()).thenReturn(true);
         when(unified.roles(7L)).thenReturn(Mono.error(new IllegalStateException("Unavailable")));
         JwtAuthenticationFilter central = new JwtAuthenticationFilter(
-                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified, tokenVerifier);
+                tokenBlacklistService,
+                tokenService,
+                messageUtils,
+                userRepository,
+                roleRepository,
+                unified,
+                tokenVerifier,
+                7200000L,
+                1800000L);
         UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
         user.setId(7L);
         user.setTenantId("main");
@@ -742,7 +776,15 @@ class JwtAuthenticationFilterTest {
                                 .withProperty("apex.features.auth-center-permission", "true"),
                         null);
         JwtAuthenticationFilter real = new JwtAuthenticationFilter(
-                tokenBlacklistService, null, messageUtils, userRepository, roleRepository, unified, supplier);
+                tokenBlacklistService,
+                tokenService,
+                messageUtils,
+                userRepository,
+                roleRepository,
+                unified,
+                supplier,
+                7200000L,
+                1800000L);
         UserEntity user = UserEntity.create(TEST_OPEN_ID, "reader");
         user.setId(95302L);
         user.setTenantId("default");

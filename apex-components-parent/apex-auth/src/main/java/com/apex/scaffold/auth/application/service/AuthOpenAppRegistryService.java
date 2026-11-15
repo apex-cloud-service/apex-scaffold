@@ -177,6 +177,7 @@ public class AuthOpenAppRegistryService {
      * 删除开放应用。
      *
      * @param clientId 应用标识
+     * @return 删除完成信号（空完成）
      * @throws BusinessException 应用不存在时抛出
      */
     public Mono<Void> delete(String clientId) {
@@ -184,7 +185,12 @@ public class AuthOpenAppRegistryService {
                 tenant -> required(clientId, tenant).flatMap(entity -> repository.deleteById(entity.getId(), tenant)));
     }
 
-    /** 相同源行和内容可重入；不覆盖已被管理面修改的目标。 */
+    /**
+     * 相同源行和内容可重入；不覆盖已被管理面修改的目标。
+     *
+     * @param request 导入请求（注册信息、密钥哈希与来源指纹）
+     * @return 导入后的注册信息；响应中的clientSecret为空，不回传明文密钥
+     */
     public Mono<OpenAppRegistrationResponse> importApp(OpenAppImportRequest request) {
         return tenant(tenant -> Mono.defer(() -> {
             if (request == null || !validator.validate(request).isEmpty()) {

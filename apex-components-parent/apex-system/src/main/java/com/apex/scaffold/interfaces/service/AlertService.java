@@ -26,12 +26,10 @@ import reactor.core.publisher.Mono;
 public class AlertService {
 
     /** 钉钉webhook地址 */
-    @Value("${alert.dingding.webhook:}")
-    private String dingdingWebhook;
+    private final String dingdingWebhook;
 
     /** 钉钉secret */
-    @Value("${alert.dingding.secret:}")
-    private String dingdingSecret;
+    private final String dingdingSecret;
 
     /** Web客户端 */
     private final WebClient webClient;
@@ -40,9 +38,16 @@ public class AlertService {
      * 构造函数
      *
      * @param webClientBuilder Web客户端构建器
+     * @param dingdingWebhook 钉钉 webhook 地址，默认空串表示未配置（不发送告警）
+     * @param dingdingSecret 钉钉 secret，默认空串表示未配置
      */
-    public AlertService(WebClient.Builder webClientBuilder) {
+    public AlertService(
+            WebClient.Builder webClientBuilder,
+            @Value("${alert.dingding.webhook:}") String dingdingWebhook,
+            @Value("${alert.dingding.secret:}") String dingdingSecret) {
         this.webClient = webClientBuilder.build();
+        this.dingdingWebhook = dingdingWebhook;
+        this.dingdingSecret = dingdingSecret;
     }
 
     /**

@@ -228,6 +228,7 @@ public class PasswordPolicyService {
      *
      * @param userId 用户ID
      * @param passwordHash 密码哈希
+     * @return 写入完成信号（空完成）
      */
     public Mono<Void> addPasswordToHistory(String userId, String passwordHash) {
         if (!com.apex.scaffold.common.util.PasswordUtil.isBcryptHash(passwordHash)) {
@@ -334,6 +335,11 @@ public class PasswordPolicyService {
         private final int score;
         private final List<String> errors;
 
+        /**
+         * 将强度分数映射为中文等级文案。
+         *
+         * @return 极强/强/中等/弱之一
+         */
         public String getStrengthLevel() {
             if (score >= SCORE_THRESHOLD_VERY_STRONG) {
                 return "极强";

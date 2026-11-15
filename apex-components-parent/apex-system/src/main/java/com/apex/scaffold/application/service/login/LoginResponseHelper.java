@@ -8,7 +8,6 @@ import com.apex.scaffold.domain.model.entity.UserEntity;
 import com.apex.scaffold.domain.service.DomainEventPublisher;
 import java.time.Duration;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -41,7 +40,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class LoginResponseHelper {
 
     /** Bearer Token 类型标识，符合 RFC 6750 规范 */
@@ -51,8 +49,7 @@ public class LoginResponseHelper {
     private static final long EVENT_PUBLISH_TIMEOUT_SECONDS = 3;
 
     /** AccessToken 过期时间（毫秒），默认 2 小时。expiresIn 由此值 / 1000 计算。 */
-    @Value("${jwt.access-token-expire:7200000}")
-    private long accessTokenExpireMs;
+    private final long accessTokenExpireMs;
 
     /**
      * 用户实体到登录响应对象的转换器。
@@ -63,6 +60,22 @@ public class LoginResponseHelper {
 
     /** 领域事件发布器，用于发布用户登录和注册领域事件 */
     private final DomainEventPublisher domainEventPublisher;
+
+    /**
+     * 创建登录响应构建器。
+     *
+     * @param userAssembler 用户实体到登录响应对象的转换器
+     * @param domainEventPublisher 领域事件发布器
+     * @param accessTokenExpireMs AccessToken 过期时间（毫秒），默认 7200000（2 小时）
+     */
+    public LoginResponseHelper(
+            UserAssembler userAssembler,
+            DomainEventPublisher domainEventPublisher,
+            @Value("${jwt.access-token-expire:7200000}") long accessTokenExpireMs) {
+        this.userAssembler = userAssembler;
+        this.domainEventPublisher = domainEventPublisher;
+        this.accessTokenExpireMs = accessTokenExpireMs;
+    }
 
     /**
      * 构建登录响应（不带手机号）

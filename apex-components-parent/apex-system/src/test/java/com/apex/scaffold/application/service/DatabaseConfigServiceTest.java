@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
 class DatabaseConfigServiceTest {
-    private final DatabaseConfigService service = new DatabaseConfigService(null);
+    private final DatabaseConfigService service = new DatabaseConfigService(null, "");
 
     @Test
     void shouldGenerateTemplatesWithoutPassword() {
@@ -63,7 +63,7 @@ class DatabaseConfigServiceTest {
         appender.start();
         logger.addAppender(appender);
         try {
-            StepVerifier.create(new DatabaseConfigService(dataSource).getCurrentDatabaseInfo())
+            StepVerifier.create(new DatabaseConfigService(dataSource, "").getCurrentDatabaseInfo())
                     .assertNext(result -> assertThat(result.getType()).isEqualTo("Unknown"))
                     .verifyComplete();
             assertThat(appender.list).hasSize(1);

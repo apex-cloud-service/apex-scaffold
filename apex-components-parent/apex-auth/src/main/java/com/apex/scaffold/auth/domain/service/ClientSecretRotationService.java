@@ -216,6 +216,7 @@ public class ClientSecretRotationService {
      * 清理过期的旧密钥（超过宽限期）
      *
      * @param clientId 客户端ID
+     * @return 清理完成信号（空完成）；未达宽限期时直接完成
      */
     public Mono<Void> cleanupExpiredSecrets(String clientId) {
         String createdKey = REDIS_CLIENT_SECRET_PREFIX + clientId + REDIS_SECRET_CREATED;

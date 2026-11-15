@@ -60,6 +60,7 @@ public interface MfaService {
      * @param userId 用户ID
      * @param type 要禁用的MFA类型
      * @param tenantId 租户ID
+     * @return 禁用完成信号（空完成）
      */
     Mono<Void> disableMfa(String userId, MfaConfig.MfaType type, String tenantId);
 
@@ -80,6 +81,7 @@ public interface MfaService {
      * @param userId 用户ID
      * @param type MFA类型
      * @param tenantId 租户ID
+     * @return 验证码下发完成信号（空完成）
      */
     Mono<Void> sendMfaCode(String userId, MfaConfig.MfaType type, String tenantId);
 
@@ -127,6 +129,7 @@ public interface MfaService {
      * @param type 要解锁的MFA类型
      * @param operator 执行解锁操作的运维人员标识
      * @param tenantId 租户ID
+     * @return 解锁完成信号（空完成）
      */
     Mono<Void> unlockMfa(String userId, MfaConfig.MfaType type, String operator, String tenantId);
 

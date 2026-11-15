@@ -47,6 +47,11 @@ public class AuthenticationRouter {
 
     private final AuthenticationHandler authenticationHandler;
 
+    /**
+     * 注册认证相关路由：登录、登出、刷新与 MFA 二步验证。
+     *
+     * @return 认证路由函数
+     */
     @RouterOperations({
         @RouterOperation(
                 path = "/auth/v1/login",
@@ -217,11 +222,6 @@ public class AuthenticationRouter {
                                     @ApiResponse(responseCode = "403", description = "账户禁用或锁定")
                                 }))
     })
-    /**
-     * 注册认证相关路由。
-     *
-     * @return 路由函数
-     */
     @Bean
     public RouterFunction<ServerResponse> authenticationRoutes() {
         return route().POST(

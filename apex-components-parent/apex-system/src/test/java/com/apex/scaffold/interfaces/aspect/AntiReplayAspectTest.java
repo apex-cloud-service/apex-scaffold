@@ -14,10 +14,10 @@ import com.apex.scaffold.interfaces.monitor.SecurityMetricsRecorder;
 import java.time.Duration;
 import java.time.Instant;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -45,7 +45,6 @@ import reactor.core.publisher.Mono;
 @DisplayName("AntiReplayAspect 防重放攻击切面测试")
 class AntiReplayAspectTest {
 
-    @InjectMocks
     private AntiReplayAspect aspect;
 
     @Mock
@@ -65,6 +64,11 @@ class AntiReplayAspectTest {
 
     private static final String TEST_RESULT = "success";
     private static final String TEST_NONCE = "550e8400-e29b-41d4-a716-446655440000";
+
+    @BeforeEach
+    void setUp() {
+        aspect = new AntiReplayAspect(redisTemplate, securityMetricsRecorder, 360L);
+    }
 
     @Test
     void samplesRepeatedRejectionsWithoutDroppingMetrics() throws Throwable {

@@ -30,7 +30,14 @@ public interface PasswordRecoveryAccountDirectory {
      */
     Mono<Resolution> resolveByPhone(String phone);
 
-    /** 以显式 userId + tenantId 条件更新密码哈希，返回是否更新成功。 */
+    /**
+     * 以显式 userId + tenantId 条件更新密码哈希，返回是否更新成功。
+     *
+     * @param userId 目标账号用户标识
+     * @param tenantId 目标账号所属租户
+     * @param passwordHash 新密码哈希
+     * @return 条件匹配且成功更新一行时为true
+     */
     Mono<Boolean> updatePasswordHash(Long userId, String tenantId, String passwordHash);
 
     /**

@@ -17,29 +17,49 @@ import java.util.Map;
  */
 public final class BootAllDomains {
 
-    /** 域定义。 */
+    /** 域定义：编码用于配置键与日志，默认端口与独立部署保持一致。 */
     public enum Domain {
+        /** 系统管理域，默认端口 8082。 */
         SYSTEM("system", 8082),
+        /** 认证中心域，默认端口 8081。 */
         AUTH("auth", 8081),
+        /** 工作流域，默认端口 8093。 */
         WORKFLOW("workflow", 8093),
+        /** 文件域，默认端口 8085。 */
         FILE("file", 8085),
+        /** 办公平台域，默认端口 8084。 */
         OFFICE("office", 8084),
+        /** 集成与物联网域，默认端口 8094。 */
         INTEGRATION("integration", 8094);
 
         private final String code;
         private final int defaultPort;
 
+        /**
+         * 绑定域编码与默认端口。
+         *
+         * @param code 域编码（配置键与日志使用）
+         * @param defaultPort 独立部署时的默认业务端口
+         */
         Domain(String code, int defaultPort) {
             this.code = code;
             this.defaultPort = defaultPort;
         }
 
-        /** 返回域编码（用于配置键与日志）。 */
+        /**
+         * 返回域编码（用于配置键与日志）。
+         *
+         * @return 小写域编码
+         */
         public String code() {
             return code;
         }
 
-        /** 返回域默认业务端口。 */
+        /**
+         * 返回域默认业务端口。
+         *
+         * @return 独立部署默认端口
+         */
         public int defaultPort() {
             return defaultPort;
         }

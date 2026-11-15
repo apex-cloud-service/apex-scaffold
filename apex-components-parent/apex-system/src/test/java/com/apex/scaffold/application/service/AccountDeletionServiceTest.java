@@ -91,7 +91,8 @@ class AccountDeletionServiceTest {
                 tokenBlacklistService,
                 tokenService,
                 cacheConsistencyPort,
-                authTicketService);
+                authTicketService,
+                604_800_000L);
 
         user = new UserEntity();
         user.setId(USER_ID);

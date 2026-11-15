@@ -8,7 +8,6 @@ import com.apex.scaffold.interfaces.security.OidcAuthenticationSuccessHandler;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import com.apex.scaffold.interfaces.util.ResponseUtil;
 import java.util.Locale;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -88,7 +87,6 @@ import reactor.core.publisher.Mono;
 @Configuration
 @Profile("!it & !it-local")
 @EnableWebFluxSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     /** 内部调用声明目标租户的请求头，与共享租户透传约定一致。 */
@@ -98,8 +96,7 @@ public class SecurityConfig {
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     /** 是否启用 RBAC 细粒度角色授权（basic 版本关闭，仅保留 JWT 认证）。 */
-    @Value("${apex.features.rbac:true}")
-    private boolean rbacEnabled;
+    private final boolean rbacEnabled;
 
     /** JWT 认证过滤器，用于验证请求中的 JWT Token */
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -117,8 +114,35 @@ public class SecurityConfig {
     private final ObjectProvider<OidcAuthenticationSuccessHandler> oidcAuthenticationSuccessHandlerProvider;
 
     /** Keycloak 启用开关 */
-    @Value("${keycloak.enabled:false}")
-    private boolean keycloakEnabled;
+    private final boolean keycloakEnabled;
+
+    /**
+     * 创建响应式安全配置。
+     *
+     * @param jwtAuthenticationFilter JWT 认证过滤器
+     * @param oauth2ResourceServerFilter OAuth2 资源服务器过滤器
+     * @param messageUtils 国际化消息工具
+     * @param securityProperties 安全配置属性（管理端路径与角色）
+     * @param oidcAuthenticationSuccessHandlerProvider Keycloak OIDC 认证成功处理器提供器
+     * @param rbacEnabled 是否启用 RBAC 细粒度角色授权，默认 true
+     * @param keycloakEnabled 是否启用 Keycloak OIDC 登录，默认 false
+     */
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            OAuth2ResourceServerFilter oauth2ResourceServerFilter,
+            MessageUtils messageUtils,
+            SecurityProperties securityProperties,
+            ObjectProvider<OidcAuthenticationSuccessHandler> oidcAuthenticationSuccessHandlerProvider,
+            @Value("${apex.features.rbac:true}") boolean rbacEnabled,
+            @Value("${keycloak.enabled:false}") boolean keycloakEnabled) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.oauth2ResourceServerFilter = oauth2ResourceServerFilter;
+        this.messageUtils = messageUtils;
+        this.securityProperties = securityProperties;
+        this.oidcAuthenticationSuccessHandlerProvider = oidcAuthenticationSuccessHandlerProvider;
+        this.rbacEnabled = rbacEnabled;
+        this.keycloakEnabled = keycloakEnabled;
+    }
 
     /**
      * 配置安全过滤器链

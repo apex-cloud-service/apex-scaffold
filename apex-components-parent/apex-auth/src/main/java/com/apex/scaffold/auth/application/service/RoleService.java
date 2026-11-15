@@ -47,6 +47,12 @@ public class RoleService {
                 .doOnSuccess(r -> log.info("角色创建成功: id={}, code={}", r.getId(), r.getCode()));
     }
 
+    /**
+     * 按主键查询角色。
+     *
+     * @param id 角色主键
+     * @return 角色实体；不存在时以 {@link ResultCode#NOT_FOUND} 业务异常结束
+     */
     public Mono<RoleEntity> getRoleById(Long id) {
         return roleRepository
                 .findById(id)
@@ -66,10 +72,22 @@ public class RoleService {
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "角色不存在")));
     }
 
+    /**
+     * 查询租户下全部角色。
+     *
+     * @param tenantId 租户标识
+     * @return 角色实体流；无数据时为空流
+     */
     public Flux<RoleEntity> getRolesByTenantId(String tenantId) {
         return roleRepository.findByTenantId(tenantId);
     }
 
+    /**
+     * 查询租户下已启用角色。
+     *
+     * @param tenantId 租户标识
+     * @return 已启用角色流；无数据时为空流
+     */
     public Flux<RoleEntity> getEnabledRoles(String tenantId) {
         return roleRepository.findEnabledByTenantId(tenantId);
     }
@@ -106,6 +124,7 @@ public class RoleService {
      * 删除角色
      *
      * @param id 角色ID
+     * @return 删除完成信号（空完成）
      */
     public Mono<Void> deleteRole(Long id) {
         return roleRepository
@@ -124,6 +143,7 @@ public class RoleService {
      *
      * @param roleId 角色ID
      * @param permissionIds 权限ID集合
+     * @return 分配完成信号（空完成）
      */
     public Mono<Void> assignPermissionsToRole(Long roleId, Set<Long> permissionIds) {
         return roleRepository
@@ -145,6 +165,7 @@ public class RoleService {
      * @param userId 用户ID
      * @param roleIds 角色ID集合
      * @param tenantId 租户ID
+     * @return 分配完成信号（空完成）
      */
     public Mono<Void> assignRolesToUser(Long userId, Set<Long> roleIds, String tenantId) {
         return roleRepository
@@ -164,6 +185,7 @@ public class RoleService {
      * @param userId 用户ID
      * @param roleIds 角色ID集合
      * @param tenantId 租户ID
+     * @return 移除完成信号（空完成）
      */
     public Mono<Void> removeRolesFromUser(Long userId, Set<Long> roleIds, String tenantId) {
         return roleRepository
@@ -191,6 +213,7 @@ public class RoleService {
      *
      * @param roleId 角色ID
      * @param permissionIds 权限ID集合
+     * @return 分配完成信号（空完成）
      */
     public Mono<Void> assignPermissions(Long roleId, Set<Long> permissionIds) {
         return assignPermissionsToRole(roleId, permissionIds);

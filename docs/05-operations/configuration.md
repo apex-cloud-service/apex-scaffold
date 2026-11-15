@@ -839,7 +839,15 @@ apex:
 | `apex.knowledge.ingest.max-upload-size-mb` | `KNOWLEDGE_MAX_UPLOAD_MB` | 50 | 单文件上传上限 |
 | `apex.knowledge.storage.bucket` | `KNOWLEDGE_STORAGE_BUCKET` | knowledge | 文档对象桶（复用五后端存储配置 `storage.*`） |
 | `apex.knowledge.search.semantic-ratio/top-k` | `KNOWLEDGE_SEMANTIC_RATIO` / `KNOWLEDGE_TOP_K` | 0.6 / 5 | hybrid 语义占比与问答引用条数 |
-| `apex.knowledge.reconcile-cron` | `KNOWLEDGE_RECONCILE_CRON` | `0 30 2 * * ?` | 摄取校准 Job（每日 02:30，扫滞留/失败文档） |
+| `apex.knowledge.reconcile-cron` | `KNOWLEDGE_RECONCILE_CRON` | `0 30 2 * * ?` | 摄取校准 Job；租户范围来自知识工作记录，不以无租户上下文扫描业务表 |
+| `apex.knowledge.meilisearch.task-poll-interval/task-max-polls/task-timeout/request-timeout` | 可按 Spring 配置绑定 | 200ms / 150 / 30s / 10s | 索引写操作轮询任务至 succeeded；超时或未知结果不算清理完成 |
+| `apex.knowledge.cleanup.enabled/scan-interval` | 可按 Spring 配置绑定 | true / 30s | 持久化删除清理任务扫描，独立于 Meilisearch 能力开关 |
+| `apex.knowledge.cleanup.tenant-ids` | 可按 Spring 配置绑定 | 空列表 | 空时仅使用专属清理/工作记录中的持久租户投影；显式列表限定处理范围 |
+| `apex.knowledge.cleanup.batch-size/max-attempts/item-delay` | 可按 Spring 配置绑定 | 50 / 10 / 100ms | 单租户扫描上限、失败自动尝试上限及项间间隔 |
+| `apex.knowledge.cleanup.lease-duration/heartbeat-interval` | 可按 Spring 配置绑定 | 2m / 20s | 上传、摄取与清理工作的数据库租约及心跳；过期所有者不能更新主档或分块 |
+| `apex.knowledge.cleanup.retry-delay` | 可按 Spring 配置绑定 | 1m | 失败退避按尝试次数线性增加，倍率上限 60；达到上限后保留记录供人工处理 |
+| `apex.knowledge.cleanup.tombstone-review-interval` | 可按 Spring 配置绑定 | 24h | 已确认清理的删除凭证仍保留并定向复核索引，处理晚到写入，不物理清除凭证 |
+| `apex.knowledge.cleanup.legacy-index-enabled/legacy-tenant-ids` | 可按 Spring 配置绑定 | false / 空列表 | 历史软删除索引导入默认关闭，启用须显式指定租户；不自动删除未知存储位置的历史对象 |
 
 网关路由：`knowledge-domain`（`ROUTE_KNOWLEDGE_URI`，默认 `http://127.0.0.1:8100`，可选服务固定地址口径）。菜单与权限种子在 system 域 V91 迁移（权限码 `kb:*`）。
 

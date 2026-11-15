@@ -35,6 +35,8 @@ import org.junit.jupiter.api.Test;
  *       {@code @WebFluxTest} 切片测试的 {@code WebTestClient} 字段——该上下文无法
  *       构造器解析该 Bean，属框架约束而非代码选择。其余 {@code @Resource} 按违规处理。</li>
  *   <li>Mockito 的 {@code @InjectMocks} 不属于 Spring 注入，不参与匹配。</li>
+ *   <li>字段级 {@code @Value} 同样视为字段注入并禁止；构造器参数或 {@code @Bean} 方法参数上的
+ *       {@code @Value} 属于受支持的配置注入方式，不参与匹配。</li>
  * </ul>
  *
  * @author Apex Team
@@ -58,6 +60,10 @@ class NoAutowiredArchTest {
     private static final String[] FORBIDDEN_IN_TEST = {
         "@Autowired", "@Inject", "@org.springframework.beans.factory.annotation.Autowired"
     };
+
+    /** 字段声明正则：用于识别 {@code @Value} 是否直接标注字段（字段注入）。 */
+    private static final java.util.regex.Pattern FIELD_DECLARATION = java.util.regex.Pattern.compile(
+            "^\\s*(?:private|protected|public)\\s+(?!static)[\\w<>\\[\\], .?]+\\s+\\w+\\s*(?:;|=)");
 
     /**
      * 断言生产代码中不存在被禁止的依赖注入注解。
@@ -190,6 +196,27 @@ class NoAutowiredArchTest {
     }
 
     /**
+     * 判定 {@code @Value} 是否落在字段上（字段注入）。
+     *
+     * <p>构造器参数与 {@code @Bean} 方法参数中的 {@code @Value} 是受支持的配置注入方式；
+     * 仅当注解脱开后紧跟字段声明时判为违规。
+     *
+     * @param lines 净代码行
+     * @param annotationIndex {@code @Value} 所在行索引
+     * @return 字段注入时为 true
+     */
+    private static boolean isFieldLevelValue(String[] lines, int annotationIndex) {
+        for (int j = annotationIndex + 1; j < Math.min(annotationIndex + 6, lines.length); j++) {
+            String next = stripLineComment(lines[j]).trim();
+            if (next.isEmpty() || next.startsWith("@")) {
+                continue;
+            }
+            return FIELD_DECLARATION.matcher(lines[j]).find();
+        }
+        return false;
+    }
+
+    /**
      * 判定 {@code @Resource} 是否属于允许的切片场景：文件为 {@code @WebFluxTest} 且
      * 紧随其后的字段声明为 {@code WebTestClient}。
      */
@@ -253,6 +280,9 @@ class NoAutowiredArchTest {
                         violations.add(new Violation(relativePath, i + 1, line.trim(), annotation));
                         break;
                     }
+                }
+                if (matchesAnnotation(line, "@Value") && isFieldLevelValue(lines, i)) {
+                    violations.add(new Violation(relativePath, i + 1, line.trim(), "@Value(字段注入)"));
                 }
             }
         } catch (IOException ignored) {

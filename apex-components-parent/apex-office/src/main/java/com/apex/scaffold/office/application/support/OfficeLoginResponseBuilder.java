@@ -33,8 +33,16 @@ public class OfficeLoginResponseBuilder {
     private static final String NEXT_ACTION_AUTHENTICATED = "AUTHENTICATED";
 
     /** AccessToken 过期时间（毫秒），默认 2 小时。expiresIn 由此值 / 1000 计算。 */
-    @Value("${jwt.access-token-expire:7200000}")
-    private long accessTokenExpireMs;
+    private final long accessTokenExpireMs;
+
+    /**
+     * 构造办公平台登录响应构建器。
+     *
+     * @param accessTokenExpireMs AccessToken 过期时间（毫秒）
+     */
+    public OfficeLoginResponseBuilder(@Value("${jwt.access-token-expire:7200000}") long accessTokenExpireMs) {
+        this.accessTokenExpireMs = accessTokenExpireMs;
+    }
 
     /**
      * 构建办公平台登录响应

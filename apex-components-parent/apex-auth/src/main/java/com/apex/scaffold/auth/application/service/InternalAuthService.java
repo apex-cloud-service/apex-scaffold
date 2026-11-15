@@ -77,10 +77,20 @@ public class InternalAuthService {
     /** Token 仓储（撤销流增量查询，平台级受控入口） */
     private final com.apex.scaffold.auth.domain.repository.TokenRepository tokenRepository;
 
-    /** 撤销流响应体：增量记录 + 下一游标。 */
+    /**
+     * 撤销流响应体：增量记录 + 下一游标。
+     *
+     * @param revocations 本批撤销记录
+     * @param cursor 下一游标（epoch 毫秒）
+     */
     public record TokenRevocationFeed(java.util.List<Entry> revocations, long cursor) {
 
-        /** 单条撤销记录。 */
+        /**
+         * 单条撤销记录。
+         *
+         * @param jti 令牌唯一标识
+         * @param revokedAt 撤销时间（epoch 毫秒）
+         */
         public record Entry(String jti, long revokedAt) {}
     }
 

@@ -43,25 +43,19 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 public class WebClientConfig {
 
-    /** 连接超时时间（毫秒），从配置中读取，默认 5000 */
-    @Value("${server.webclient.connect-timeout-millis:5000}")
-    private int connectTimeout;
-
-    /** 读取超时时间（毫秒），从配置中读取，默认 10000 */
-    @Value("${server.webclient.read-timeout-millis:10000}")
-    private int readTimeout;
-
-    /** 写入超时时间（毫秒），从配置中读取，默认 10000 */
-    @Value("${server.webclient.write-timeout-millis:10000}")
-    private int writeTimeout;
-
     /**
      * 创建 WebClient.Builder
      *
+     * @param connectTimeout 连接超时时间（毫秒），默认 5000
+     * @param readTimeout 读取超时时间（毫秒），默认 10000
+     * @param writeTimeout 写入超时时间（毫秒），默认 10000
      * @return WebClient.Builder实例
      */
     @Bean
-    public WebClient.Builder webClientBuilder() {
+    public WebClient.Builder webClientBuilder(
+            @Value("${server.webclient.connect-timeout-millis:5000}") int connectTimeout,
+            @Value("${server.webclient.read-timeout-millis:10000}") int readTimeout,
+            @Value("${server.webclient.write-timeout-millis:10000}") int writeTimeout) {
         log.info(
                 "初始化 WebClient 配置，connectTimeout: {}ms, readTimeout: {}ms, writeTimeout: {}ms",
                 connectTimeout,

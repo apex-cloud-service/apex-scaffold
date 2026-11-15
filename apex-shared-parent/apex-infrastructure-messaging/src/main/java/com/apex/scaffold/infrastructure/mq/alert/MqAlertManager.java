@@ -53,26 +53,19 @@ public class MqAlertManager {
     private final MeterRegistry meterRegistry;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Value("${apex.mq.alert.lag-warning-threshold:10000}")
-    private long lagWarningThreshold;
+    private final long lagWarningThreshold;
 
-    @Value("${apex.mq.alert.lag-critical-threshold:50000}")
-    private long lagCriticalThreshold;
+    private final long lagCriticalThreshold;
 
-    @Value("${apex.mq.alert.dlq-warning-rate:1}")
-    private double dlqWarningRate;
+    private final double dlqWarningRate;
 
-    @Value("${apex.mq.alert.dlq-critical-rate:10}")
-    private double dlqCriticalRate;
+    private final double dlqCriticalRate;
 
-    @Value("${apex.mq.alert.send-fail-rate-threshold:0.05}")
-    private double sendFailRateThreshold;
+    private final double sendFailRateThreshold;
 
-    @Value("${apex.mq.alert.consume-fail-rate-threshold:0.1}")
-    private double consumeFailRateThreshold;
+    private final double consumeFailRateThreshold;
 
-    @Value("${apex.mq.alert.cooldown-ms:300000}")
-    private long cooldownMs;
+    private final long cooldownMs;
 
     private final Map<String, Long> lastAlertTime = new ConcurrentHashMap<>();
     private final Map<String, AtomicLong> alertCount = new ConcurrentHashMap<>();
@@ -87,10 +80,35 @@ public class MqAlertManager {
      *
      * @param meterRegistry Micrometer 指标注册表
      * @param eventPublisher 应用事件发布器
+     * @param lagWarningThreshold 消息积压告警阈值（条），默认 10000
+     * @param lagCriticalThreshold 消息积压严重告警阈值（条），默认 50000
+     * @param dlqWarningRate 死信消息速率告警阈值（msg/s），默认 1
+     * @param dlqCriticalRate 死信消息速率严重告警阈值（msg/s），默认 10
+     * @param sendFailRateThreshold 消息发送失败率告警阈值（0.0~1.0），默认 0.05，
+     *                              达到两倍判定为 ERROR
+     * @param consumeFailRateThreshold 消息消费失败率告警阈值（0.0~1.0），默认 0.1，
+     *                                 达到两倍判定为 ERROR
+     * @param cooldownMs 同类告警冷却时间（毫秒），默认 300000（5 分钟）
      */
-    public MqAlertManager(MeterRegistry meterRegistry, ApplicationEventPublisher eventPublisher) {
+    public MqAlertManager(
+            MeterRegistry meterRegistry,
+            ApplicationEventPublisher eventPublisher,
+            @Value("${apex.mq.alert.lag-warning-threshold:10000}") long lagWarningThreshold,
+            @Value("${apex.mq.alert.lag-critical-threshold:50000}") long lagCriticalThreshold,
+            @Value("${apex.mq.alert.dlq-warning-rate:1}") double dlqWarningRate,
+            @Value("${apex.mq.alert.dlq-critical-rate:10}") double dlqCriticalRate,
+            @Value("${apex.mq.alert.send-fail-rate-threshold:0.05}") double sendFailRateThreshold,
+            @Value("${apex.mq.alert.consume-fail-rate-threshold:0.1}") double consumeFailRateThreshold,
+            @Value("${apex.mq.alert.cooldown-ms:300000}") long cooldownMs) {
         this.meterRegistry = meterRegistry;
         this.eventPublisher = eventPublisher;
+        this.lagWarningThreshold = lagWarningThreshold;
+        this.lagCriticalThreshold = lagCriticalThreshold;
+        this.dlqWarningRate = dlqWarningRate;
+        this.dlqCriticalRate = dlqCriticalRate;
+        this.sendFailRateThreshold = sendFailRateThreshold;
+        this.consumeFailRateThreshold = consumeFailRateThreshold;
+        this.cooldownMs = cooldownMs;
 
         // 注册告警计数器
         this.lagAlertCounter =

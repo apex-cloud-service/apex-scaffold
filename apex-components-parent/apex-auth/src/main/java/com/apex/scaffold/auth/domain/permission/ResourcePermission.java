@@ -98,6 +98,11 @@ public class ResourcePermission {
 
     /**
      * 检查权限是否匹配
+     *
+     * @param resourceType 待匹配的资源类型
+     * @param resourceId 待匹配的资源标识
+     * @param action 待匹配的操作
+     * @return 资源类型、资源标识与操作均与当前权限一致时为true；权限字段为null表示该维度不限制
      */
     public boolean matches(String resourceType, String resourceId, String action) {
         if (this.resourceType != null && !this.resourceType.equals(resourceType)) {

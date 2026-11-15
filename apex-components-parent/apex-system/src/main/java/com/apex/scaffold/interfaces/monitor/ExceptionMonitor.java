@@ -68,30 +68,40 @@ public class ExceptionMonitor {
     private final AtomicLong totalAlertCount = new AtomicLong();
 
     /** 异常告警阈值，超过该次数触发告警 */
-    @Value("${alert.exception.threshold:10}")
-    private int exceptionThreshold;
+    private final int exceptionThreshold;
 
     /** 告警窗口时间（分钟），在该时间窗口内统计异常次数 */
-    @Value("${alert.exception.window:5}")
-    private int alertWindowMinutes;
+    private final int alertWindowMinutes;
 
     /** 最大监控的异常类型数量，防止内存泄露 */
-    @Value("${alert.exception.max-types:100}")
-    private int maxExceptionTypes;
+    private final int maxExceptionTypes;
 
     /** 告警服务名（读配置，兜底默认值与应用名 apex-scaffold 保持一致） */
-    @Value("${spring.application.name:apex-scaffold}")
-    private String serviceName;
+    private final String serviceName;
 
     /**
      * 构造函数
      *
      * @param alertService 告警服务
      * @param meterRegistry Micrometer 指标注册表
+     * @param exceptionThreshold 异常告警阈值（次），默认 10
+     * @param alertWindowMinutes 告警窗口时间（分钟），默认 5
+     * @param maxExceptionTypes 最大监控的异常类型数量，默认 100
+     * @param serviceName 告警服务名，默认 apex-scaffold
      */
-    public ExceptionMonitor(AlertService alertService, MeterRegistry meterRegistry) {
+    public ExceptionMonitor(
+            AlertService alertService,
+            MeterRegistry meterRegistry,
+            @Value("${alert.exception.threshold:10}") int exceptionThreshold,
+            @Value("${alert.exception.window:5}") int alertWindowMinutes,
+            @Value("${alert.exception.max-types:100}") int maxExceptionTypes,
+            @Value("${spring.application.name:apex-scaffold}") String serviceName) {
         this.alertService = alertService;
         this.meterRegistry = meterRegistry;
+        this.exceptionThreshold = exceptionThreshold;
+        this.alertWindowMinutes = alertWindowMinutes;
+        this.maxExceptionTypes = maxExceptionTypes;
+        this.serviceName = serviceName;
         registerMetrics();
     }
 

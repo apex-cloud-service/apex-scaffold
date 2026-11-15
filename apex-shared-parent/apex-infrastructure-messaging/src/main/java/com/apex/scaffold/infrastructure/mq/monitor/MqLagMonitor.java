@@ -61,33 +61,41 @@ public class MqLagMonitor {
     private final DefaultMQAdminExt adminClient;
     private volatile boolean adminStarted;
 
+    private final long warningThreshold;
+
+    private final long criticalThreshold;
+
+    private final boolean autoScaleEnabled;
+
+    private final String nameServer;
+
     /**
      * 构造积压监控器，未提供专属 Admin 客户端时使用默认客户端。
      *
      * @param meterRegistry Micrometer 指标注册表
      * @param alertManager MQ 告警管理器
      * @param adminClient 专属 RocketMQ Admin 客户端，未装配时为 null
+     * @param warningThreshold 积压警告阈值（条），默认 10000
+     * @param criticalThreshold 积压严重阈值（条），默认 50000，达到后触发告警与自动扩容
+     * @param autoScaleEnabled 是否启用积压自动扩容，默认 true
+     * @param nameServer RocketMQ NameServer 地址，默认空字符串
      */
     public MqLagMonitor(
             MeterRegistry meterRegistry,
             MqAlertManager alertManager,
-            @Qualifier("mqLagAdminClient") @Nullable DefaultMQAdminExt adminClient) {
+            @Qualifier("mqLagAdminClient") @Nullable DefaultMQAdminExt adminClient,
+            @Value("${apex.mq.monitor.lag.warning-threshold:10000}") long warningThreshold,
+            @Value("${apex.mq.monitor.lag.critical-threshold:50000}") long criticalThreshold,
+            @Value("${apex.mq.monitor.auto-scale.enabled:true}") boolean autoScaleEnabled,
+            @Value("${rocketmq.name-server:}") String nameServer) {
         this.meterRegistry = meterRegistry;
         this.alertManager = alertManager;
         this.adminClient = adminClient != null ? adminClient : new DefaultMQAdminExt();
+        this.warningThreshold = warningThreshold;
+        this.criticalThreshold = criticalThreshold;
+        this.autoScaleEnabled = autoScaleEnabled;
+        this.nameServer = nameServer;
     }
-
-    @Value("${apex.mq.monitor.lag.warning-threshold:10000}")
-    private long warningThreshold;
-
-    @Value("${apex.mq.monitor.lag.critical-threshold:50000}")
-    private long criticalThreshold;
-
-    @Value("${apex.mq.monitor.auto-scale.enabled:true}")
-    private boolean autoScaleEnabled;
-
-    @Value("${rocketmq.name-server:}")
-    private String nameServer;
 
     /**
      * 注册消费者到监控器

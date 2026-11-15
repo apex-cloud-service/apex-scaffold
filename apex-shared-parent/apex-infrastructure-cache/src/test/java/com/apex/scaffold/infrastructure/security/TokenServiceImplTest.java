@@ -18,7 +18,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -62,7 +61,6 @@ class TokenServiceImplTest {
     @Mock
     private RSet<String> sessionsSet;
 
-    @InjectMocks
     private TokenServiceImpl tokenService;
 
     private Claims mockClaims;
@@ -73,7 +71,11 @@ class TokenServiceImplTest {
     @BeforeEach
     void setUp() {
         mockClaims = mock(Claims.class);
-        // RedisKeyPrefix 在测试中返回原始 key，不做版本前缀包装（lenient，并非所有测试都使用）
+        // 过期时间取生产默认配置值（AccessToken 2 小时、RefreshToken 7 天，毫秒）
+        tokenService =
+                new TokenServiceImpl(7200000L, 604800000L, tokenBlacklistService, redissonClient, redisKeyPrefix);
+        // RedisKeyPrefix 在测试中返回原始 key，不做版本前缀包装
+        // （lenient 桩，并非所有测试都使用）
         lenient().when(redisKeyPrefix.wrap(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         // 会话索引 Set 的通用桩（lenient，仅多会话用例触达；doReturn 规避 getSet 泛型推断）
         lenient().doReturn(sessionsSet).when(redissonClient).getSet(anyString(), any());
