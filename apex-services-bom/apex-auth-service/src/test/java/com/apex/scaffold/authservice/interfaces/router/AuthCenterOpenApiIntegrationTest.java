@@ -427,10 +427,11 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
                 .exchange()
                 .expectStatus()
                 .isUnauthorized();
+        // 重放检测已撤销该用户全部令牌，登出授权边界需使用重新登录后的新访问令牌。
+        String access = login().path("accessToken").asText();
         client.post()
                 .uri("/auth/v1/logout/91002")
-                .headers(headers ->
-                        headers.setBearerAuth(refreshed.path("accessToken").asText()))
+                .headers(headers -> headers.setBearerAuth(access))
                 .exchange()
                 .expectStatus()
                 .isForbidden()
@@ -439,8 +440,7 @@ class AuthCenterOpenApiIntegrationTest extends EmbeddedRedisBootTestSupport {
         client.post()
                 .uri("/auth/v1/logout/91001?tenantId=other")
                 .header("X-Tenant-Id", "other")
-                .headers(headers ->
-                        headers.setBearerAuth(refreshed.path("accessToken").asText()))
+                .headers(headers -> headers.setBearerAuth(access))
                 .exchange()
                 .expectStatus()
                 .isOk()

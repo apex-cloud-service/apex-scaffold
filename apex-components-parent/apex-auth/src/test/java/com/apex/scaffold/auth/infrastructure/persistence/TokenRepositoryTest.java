@@ -27,8 +27,10 @@ class TokenRepositoryTest {
     private static final LocalDateTime TIME = LocalDateTime.of(2026, 1, 1, 0, 0);
     private final TokenMapper mapper = mock(TokenMapper.class);
     private final UserMapper users = mock(UserMapper.class);
+    private final javax.sql.DataSource dataSource = new org.springframework.jdbc.datasource.DriverManagerDataSource(
+            "jdbc:h2:mem:token_mock_transactions", "sa", "");
     private final TokenRepositoryImpl repository =
-            new TokenRepositoryImpl(mapper, Mappers.getMapper(TokenConverter.class), users);
+            new TokenRepositoryImpl(mapper, Mappers.getMapper(TokenConverter.class), users, dataSource);
 
     @AfterEach
     void clearTenant() {
@@ -185,10 +187,11 @@ class TokenRepositoryTest {
     @ParameterizedTest
     @ValueSource(strings = {"success", "zero", "error"})
     void saveSetsDefaultsReturnsGeneratedIdAndPropagatesWriteFailures(String outcome) {
-        when(users.selectCount(any(Wrapper.class))).thenAnswer(invocation -> {
+        when(users.selectOne(any(Wrapper.class))).thenAnswer(invocation -> {
             scoped(invocation.getArgument(0));
             condition(invocation.getArgument(0), "id", "=", 9L);
-            return 1L;
+            assertThat(((Wrapper<?>) invocation.getArgument(0)).getSqlSegment()).contains("FOR UPDATE");
+            return UserPO.builder().id(9L).tenantId(TENANT).status(1).build();
         });
         DataAccessResourceFailureException failure = new DataAccessResourceFailureException("insert failed");
         when(mapper.insert(any(TokenPO.class))).thenAnswer(invocation -> {
@@ -225,13 +228,19 @@ class TokenRepositoryTest {
     @ParameterizedTest
     @ValueSource(strings = {"success", "zero", "error"})
     void updateScopesWriteAndHandlesConflicts(String outcome) {
-        when(users.selectCount(any(Wrapper.class))).thenAnswer(invocation -> {
+        when(users.selectOne(any(Wrapper.class))).thenAnswer(invocation -> {
             scoped(invocation.getArgument(0));
             condition(invocation.getArgument(0), "id", "=", 9L);
-            return 1L;
+            assertThat(((Wrapper<?>) invocation.getArgument(0)).getSqlSegment()).contains("FOR UPDATE");
+            return UserPO.builder().id(9L).tenantId(TENANT).status(1).build();
         });
         when(mapper.selectOne(any(Wrapper.class)))
-                .thenReturn(TokenPO.builder().id(7L).tenantId(TENANT).revoked(0).build());
+                .thenReturn(TokenPO.builder()
+                        .id(7L)
+                        .tenantId(TENANT)
+                        .userId(9L)
+                        .revoked(0)
+                        .build());
         DataAccessResourceFailureException failure = new DataAccessResourceFailureException("update failed");
         when(mapper.update(any(TokenPO.class), any(Wrapper.class))).thenAnswer(invocation -> {
             TokenPO po = invocation.getArgument(0);
@@ -306,14 +315,14 @@ class TokenRepositoryTest {
 
     @Test
     void foreignUserCannotCreateOrUpdate() {
-        when(users.selectCount(any(Wrapper.class))).thenAnswer(invocation -> {
+        when(users.selectOne(any(Wrapper.class))).thenAnswer(invocation -> {
             scoped(invocation.getArgument(0));
             condition(invocation.getArgument(0), "id", "=", 9L);
-            return 0L;
+            return null;
         });
-        TokenEntity input =
-                TokenEntity.builder().id(7L).tenantId(TENANT).userId(9L).build();
+        TokenEntity input = TokenEntity.builder().tenantId(TENANT).userId(9L).build();
         businessError(repository.save(input), ResultCode.FORBIDDEN);
+        input.setId(7L);
         businessError(repository.update(input), ResultCode.FORBIDDEN);
         verifyNoInteractions(mapper);
     }
@@ -321,12 +330,13 @@ class TokenRepositoryTest {
     @ParameterizedTest
     @ValueSource(strings = {"missing", "revoked"})
     void updateRejectsMissingOrRevokedToken(String state) {
-        when(users.selectCount(any(Wrapper.class))).thenReturn(1L);
+        when(users.selectOne(any(Wrapper.class)))
+                .thenReturn(UserPO.builder().id(9L).tenantId(TENANT).status(1).build());
         when(mapper.selectOne(any(Wrapper.class)))
                 .thenReturn(
                         state.equals("missing")
                                 ? null
-                                : TokenPO.builder().id(7L).revoked(1).build());
+                                : TokenPO.builder().id(7L).userId(9L).revoked(1).build());
         businessError(
                 repository.update(
                         TokenEntity.builder().id(7L).tenantId(TENANT).userId(9L).build()),
@@ -337,6 +347,8 @@ class TokenRepositoryTest {
     @ParameterizedTest
     @ValueSource(strings = {"success", "zero", "error"})
     void revokeByUserIdScopesStateTransition(String outcome) {
+        when(users.selectOne(any(Wrapper.class)))
+                .thenReturn(UserPO.builder().id(9L).tenantId(TENANT).build());
         DataAccessResourceFailureException failure = new DataAccessResourceFailureException("transition failed");
         when(mapper.update(isNull(), any(Wrapper.class))).thenAnswer(invocation -> {
             UpdateWrapper<?> query = invocation.getArgument(1);
@@ -361,6 +373,10 @@ class TokenRepositoryTest {
     @ParameterizedTest
     @ValueSource(strings = {"success", "zero", "error"})
     void revokeByTokenScopesStateTransition(String outcome) {
+        when(mapper.selectList(any(Wrapper.class)))
+                .thenReturn(List.of(TokenPO.builder().userId(9L).build()));
+        when(users.selectList(any(Wrapper.class)))
+                .thenReturn(List.of(UserPO.builder().id(9L).tenantId(TENANT).build()));
         DataAccessResourceFailureException failure = new DataAccessResourceFailureException("transition failed");
         when(mapper.update(isNull(), any(Wrapper.class))).thenAnswer(invocation -> {
             UpdateWrapper<?> query = invocation.getArgument(1);
@@ -393,6 +409,108 @@ class TokenRepositoryTest {
         });
         value(repository.deleteExpiredTokens(), (long) count);
         verify(mapper).delete(any(Wrapper.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"rotated", "replay", "manual", "cas-zero"})
+    void rotationScopesCasAndReturnsCommittedClassification(String state) {
+        var expiry = LocalDateTime.of(2030, 1, 1, 0, 0);
+        TokenEntity expected = TokenEntity.builder()
+                .id(7L)
+                .tenantId(TENANT)
+                .userId(9L)
+                .jti("old")
+                .tokenHash("old-hash")
+                .tokenType("REFRESH")
+                .expiresAt(expiry)
+                .build();
+        TokenPO current = TokenPO.builder()
+                .id(7L)
+                .tenantId(TENANT)
+                .userId(9L)
+                .jti("old")
+                .tokenType("REFRESH")
+                .tokenHash("old-hash")
+                .expiresAt(expiry)
+                .revoked(state.equals("replay") || state.equals("manual") ? 1 : 0)
+                .revokeReason(state.equals("replay") ? "token_refresh" : "manual")
+                .tokenFamily("family")
+                .build();
+        when(users.selectOne(any(Wrapper.class))).thenAnswer(invocation -> {
+            Wrapper<?> query = invocation.getArgument(0);
+            scoped(query);
+            condition(query, "id", "=", 9L);
+            assertThat(query.getSqlSegment()).contains("FOR UPDATE");
+            return UserPO.builder().id(9L).status(1).tenantId(TENANT).build();
+        });
+        when(mapper.selectOne(any(Wrapper.class))).thenAnswer(invocation -> {
+            Wrapper<?> query = invocation.getArgument(0);
+            scoped(query);
+            condition(query, "user_id", "=", 9L);
+            condition(query, "jti", "=", "old");
+            condition(query, "token_type", "=", "REFRESH");
+            assertThat(query.getSqlSegment()).contains("FOR UPDATE");
+            return current;
+        });
+        when(mapper.update(isNull(), any(Wrapper.class))).thenAnswer(invocation -> {
+            Wrapper<?> query = invocation.getArgument(1);
+            scoped(query);
+            condition(query, "user_id", "=", 9L);
+            condition(query, "revoked", "=", 0);
+            if (!state.equals("replay")) {
+                condition(query, "id", "=", 7L);
+                condition(query, "jti", "=", "old");
+                condition(query, "token_hash", "=", "old-hash");
+                condition(query, "expires_at", "=", expiry);
+                condition(query, "token_type", "=", "REFRESH");
+                assertThat(query.getSqlSegment()).contains("expires_at >");
+            }
+            return state.equals("cas-zero") ? 0 : 1;
+        });
+        when(mapper.insert(any(TokenPO.class))).thenAnswer(invocation -> {
+            TokenPO po = invocation.getArgument(0);
+            po.setId(po.getTokenType().equals("ACCESS") ? 8L : 9L);
+            return 1;
+        });
+        TokenEntity access = TokenEntity.builder()
+                .tenantId(TENANT)
+                .userId(9L)
+                .tokenType("ACCESS")
+                .jti("new-access")
+                .expiresAt(expiry)
+                .tokenFamily("prepared")
+                .build();
+        TokenEntity refresh = TokenEntity.builder()
+                .tenantId(TENANT)
+                .userId(9L)
+                .tokenType("REFRESH")
+                .jti("new-refresh")
+                .expiresAt(expiry)
+                .tokenFamily("prepared")
+                .build();
+        reactor.test.StepVerifier.create(repository
+                        .rotateRefreshToken(
+                                expected, new com.apex.scaffold.auth.domain.model.vo.TokenEntityPair(access, refresh))
+                        .contextWrite(TenantContext.withTenant(TENANT)))
+                .assertNext(result -> {
+                    assertThat(result.status().name())
+                            .isEqualTo(
+                                    state.equals("rotated")
+                                            ? "ROTATED"
+                                            : state.equals("replay") ? "REPLAY" : "REJECTED");
+                    if (state.equals("rotated")) {
+                        assertThat(result.tokens().accessToken().getId()).isEqualTo(8L);
+                        assertThat(result.tokens().refreshToken().getPreviousJti())
+                                .isEqualTo("old");
+                        assertThat(result.tokens().refreshToken().getTokenFamily())
+                                .isEqualTo("family");
+                    }
+                })
+                .verifyComplete();
+        org.mockito.InOrder order = inOrder(users, mapper);
+        order.verify(users).selectOne(any(Wrapper.class));
+        order.verify(mapper).selectOne(any(Wrapper.class));
+        verify(mapper, times(state.equals("rotated") ? 2 : 0)).insert(any(TokenPO.class));
     }
 
     @Test

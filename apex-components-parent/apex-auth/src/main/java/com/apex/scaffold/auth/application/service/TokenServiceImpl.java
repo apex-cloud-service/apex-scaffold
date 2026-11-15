@@ -1,7 +1,10 @@
 package com.apex.scaffold.auth.application.service;
 
 import com.apex.scaffold.auth.domain.model.entity.TokenEntity;
+import com.apex.scaffold.auth.domain.model.entity.UserEntity;
+import com.apex.scaffold.auth.domain.model.vo.TokenEntityPair;
 import com.apex.scaffold.auth.domain.model.vo.TokenPair;
+import com.apex.scaffold.auth.domain.model.vo.TokenRotationResult;
 import com.apex.scaffold.auth.domain.repository.TokenRepository;
 import com.apex.scaffold.auth.domain.repository.UserRepository;
 import com.apex.scaffold.auth.domain.service.JwtKeyMaterialService;
@@ -11,51 +14,25 @@ import com.apex.scaffold.common.audit.SecurityAuditService;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 /**
- * Token服务实现类
+ * JWT 生命周期用例：事务前签名加密，仓储原子签发或消费轮换，提交后执行有界非阻断审计。
  *
- * <p>基于JWT实现Token的签发、验证、刷新和撤销功能。
- *
- * <h2>职责范围</h2>
- * <ul>
- *   <li>签发Token对：访问令牌（2小时）+ 刷新令牌（7天）</li>
- *   <li>验证Token：签名验证、过期检测、撤销检查</li>
- *   <li>刷新Token：使用刷新令牌换取新的访问令牌</li>
- *   <li>撤销Token：单个撤销或批量撤销用户所有Token</li>
- * </ul>
- *
- * <h2>设计说明</h2>
- * <pre>{@code
- * {
- *   "jti": "唯一Token ID",
- *   "userId": "用户ID",
- *   "tenantId": "租户ID",
- *   "tokenType": "ACCESS/REFRESH",
- *   "deviceId": "设备ID",
- *   "iat": "签发时间",
- *   "exp": "过期时间"
- * }
- * }</pre>
- *
- * <h2>设计说明</h2>
- * <ul>
- *   <li>所有Token持久化到数据库，支持撤销和追踪</li>
- *   <li>验证时检查数据库撤销状态，已撤销Token拒绝访问</li>
- *   <li>刷新令牌不轮换，使用时不生成新的刷新令牌</li>
- *   <li>租户隔离：Token只能在签发租户内使用</li>
- * </ul>
+ * <p>普通验证拒绝所有已撤销记录；刷新共享验签及可信声明核对，但保留撤销状态供仓储分类。
  *
  * @author Apex Team
  * @since 1.3.1
@@ -67,6 +44,9 @@ public class TokenServiceImpl implements TokenService {
 
     private static final int CLAIMS_INITIAL_CAPACITY = 8;
     private static final String REFRESH_TOKEN_TYPE = "REFRESH";
+    private static final long ACCESS_TOKEN_EXPIRE_MS = 2 * 60 * 60 * 1000L;
+    private static final long REFRESH_TOKEN_EXPIRE_MS = 7 * 24 * 60 * 60 * 1000L;
+    private static final Duration AUDIT_TIMEOUT = Duration.ofSeconds(2);
 
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
@@ -74,26 +54,30 @@ public class TokenServiceImpl implements TokenService {
     private final SecurityAuditService auditService;
     private final JwtKeyMaterialService jwtKeyMaterialService;
 
-    private static final long ACCESS_TOKEN_EXPIRE_MS = 2 * 60 * 60 * 1000L;
-    private static final long REFRESH_TOKEN_EXPIRE_MS = 7 * 24 * 60 * 60 * 1000L;
-
     @Override
-    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<TokenPair> issueToken(Long userId, String tenantId, String deviceId, String clientIp) {
         return issueToken(userId, tenantId, deviceId, clientIp, null);
     }
 
     @Override
-    @SuppressWarnings("PMD.MethodTooLongRule")
     public Mono<TokenPair> issueToken(
             Long userId, String tenantId, String deviceId, String clientIp, String clientType) {
-        log.debug("开始签发Token: userId={}, clientType={}", userId, clientType);
+        return activeUser(userId, tenantId)
+                .flatMap(user -> prepareTokens(user, deviceId, clientIp, clientType, null))
+                .flatMap(prepared -> tokenRepository
+                        .savePair(prepared.entities())
+                        .flatMap(saved -> auditAfterCommit(() -> auditService.logTokenIssued(
+                                        userId, tenantId, clientIp, deviceId, "ACCESS+REFRESH"))
+                                .thenReturn(prepared.response(saved))))
+                .doOnSuccess(pair -> log.debug("Token签发成功: userId={}", userId));
+    }
 
+    private Mono<UserEntity> activeUser(Long userId, String tenantId) {
         return userRepository
                 .findById(userId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "用户不存在")))
                 .flatMap(user -> {
-                    if (!tenantId.equals(user.getTenantId())) {
+                    if (!Objects.equals(tenantId, user.getTenantId())) {
                         return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "租户不匹配"));
                     }
                     if (!user.isActive()) {
@@ -102,112 +86,103 @@ public class TokenServiceImpl implements TokenService {
                     if (user.isLocked()) {
                         return Mono.error(new BusinessException(ResultCode.FORBIDDEN, "账户已锁定"));
                     }
-
-                    String accessJti = UUID.randomUUID().toString();
-                    String refreshJti = UUID.randomUUID().toString();
-
-                    Map<String, Object> accessClaims =
-                            buildClaims(accessJti, userId, tenantId, "ACCESS", deviceId, user, clientType);
-                    Map<String, Object> refreshClaims =
-                            buildClaims(refreshJti, userId, tenantId, REFRESH_TOKEN_TYPE, deviceId, user, clientType);
-
-                    // 使用 RSA/RS256 非对称密钥签发访问令牌与刷新令牌（Phase 2.1 迁移）
-                    return jwtKeyMaterialService
-                            .sign(String.valueOf(userId), accessClaims, ACCESS_TOKEN_EXPIRE_MS)
-                            .zipWith(jwtKeyMaterialService.sign(
-                                    String.valueOf(userId), refreshClaims, REFRESH_TOKEN_EXPIRE_MS))
-                            .flatMap(signedTokens -> {
-                                String accessToken = signedTokens.getT1();
-                                String refreshToken = signedTokens.getT2();
-
-                                // 加密Token并计算哈希
-                                TokenEncryptionService.EncryptedToken encryptedAccess =
-                                        encryptionService.encrypt(accessToken);
-                                TokenEncryptionService.EncryptedToken encryptedRefresh =
-                                        encryptionService.encrypt(refreshToken);
-                                String accessTokenHash = encryptionService.hashToken(accessToken);
-                                String refreshTokenHash = encryptionService.hashToken(refreshToken);
-
-                                // 生成Token Family ID用于轮换检测
-                                String tokenFamily = UUID.randomUUID().toString();
-
-                                LocalDateTime now = LocalDateTime.now();
-                                TokenEntity accessTokenEntity = TokenEntity.builder()
-                                        .tenantId(tenantId)
-                                        .userId(userId)
-                                        .tokenType("ACCESS")
-                                        .tokenValue(encryptedAccess.encryptedData())
-                                        .tokenHash(accessTokenHash)
-                                        .tokenIv(encryptedAccess.iv())
-                                        .jti(accessJti)
-                                        .expiresAt(now.plusSeconds(ACCESS_TOKEN_EXPIRE_MS / 1000))
-                                        .deviceId(deviceId)
-                                        .clientIp(clientIp)
-                                        .tokenFamily(tokenFamily)
-                                        .build();
-
-                                TokenEntity refreshTokenEntity = TokenEntity.builder()
-                                        .tenantId(tenantId)
-                                        .userId(userId)
-                                        .tokenType(REFRESH_TOKEN_TYPE)
-                                        .tokenValue(encryptedRefresh.encryptedData())
-                                        .tokenHash(refreshTokenHash)
-                                        .tokenIv(encryptedRefresh.iv())
-                                        .jti(refreshJti)
-                                        .expiresAt(now.plusSeconds(REFRESH_TOKEN_EXPIRE_MS / 1000))
-                                        .deviceId(deviceId)
-                                        .clientIp(clientIp)
-                                        .tokenFamily(tokenFamily)
-                                        .build();
-
-                                return tokenRepository
-                                        .save(accessTokenEntity)
-                                        .flatMap(savedAccessToken -> tokenRepository
-                                                .save(refreshTokenEntity)
-                                                .thenReturn(savedAccessToken))
-                                        .flatMap(savedAccessToken -> auditService
-                                                .logTokenIssued(userId, tenantId, clientIp, deviceId, "ACCESS+REFRESH")
-                                                .thenReturn(TokenPair.builder()
-                                                        .accessToken(accessToken)
-                                                        .refreshToken(refreshToken)
-                                                        .accessTokenId(savedAccessToken.getId())
-                                                        .expiresIn(ACCESS_TOKEN_EXPIRE_MS / 1000)
-                                                        .tokenType("Bearer")
-                                                        .build()));
-                            });
-                })
-                .doOnSuccess(pair -> log.debug("Token签发成功: userId={}", userId));
+                    return Mono.just(user);
+                });
     }
 
     /**
-     * 构建 Token claims（统一账户模型）。
-     *
-     * <p>除既有 jti/userId/tenantId/tokenType/deviceId 外，追加统一账户字段：
-     * {@code accountId}（主应用 sys_user.id，未映射时不写入）、{@code username}、
-     * {@code clientType}（客户端类型编码，调用方未上报时不写入），供主应用
-     * 装配统一身份与按终端审计。
-     *
-     * @param jti        Token 唯一ID
-     * @param userId     认证中心用户ID
-     * @param tenantId   租户ID
-     * @param tokenType  令牌类型（ACCESS/REFRESH）
-     * @param deviceId   设备ID
-     * @param user       用户实体（携带统一账户映射）
-     * @param clientType 客户端类型编码，可为空
-     * @return claims Map
+     * 异步加载签名密钥并加密新 JWT；此阶段不写数据库，也不消费旧刷新令牌。
+     * @param user 当前有效用户档案，统一账户声明取此档案
+     * @param deviceId 原设备标识
+     * @param clientIp 原客户端 IP
+     * @param clientType 已验签的客户端类型，初次签发由调用方提供
+     * @param previous 轮换前记录；初次签发为 null
+     * @return 明文响应及密文持久化记录，仅在事务提交后返回调用方
      */
-    private Map<String, Object> buildClaims(
-            String jti,
-            Long userId,
-            String tenantId,
-            String tokenType,
+    private Mono<PreparedTokens> prepareTokens(
+            UserEntity user, String deviceId, String clientIp, String clientType, TokenEntity previous) {
+        return Mono.defer(() -> {
+            String accessJti = UUID.randomUUID().toString();
+            String refreshJti = UUID.randomUUID().toString();
+            String family = previous == null
+                            || previous.getTokenFamily() == null
+                            || previous.getTokenFamily().isBlank()
+                    ? UUID.randomUUID().toString()
+                    : previous.getTokenFamily();
+            int rotationCount = previous == null
+                    ? 0
+                    : Math.addExact(previous.getRotationCount() == null ? 0 : previous.getRotationCount(), 1);
+            Map<String, Object> accessClaims = buildClaims(accessJti, user, "ACCESS", deviceId, clientType);
+            Map<String, Object> refreshClaims = buildClaims(refreshJti, user, REFRESH_TOKEN_TYPE, deviceId, clientType);
+            return jwtKeyMaterialService
+                    .sign(String.valueOf(user.getId()), accessClaims, ACCESS_TOKEN_EXPIRE_MS)
+                    .zipWith(jwtKeyMaterialService.sign(
+                            String.valueOf(user.getId()), refreshClaims, REFRESH_TOKEN_EXPIRE_MS))
+                    .map(signed -> {
+                        LocalDateTime now = LocalDateTime.now();
+                        TokenEntity access = preparedEntity(
+                                user,
+                                deviceId,
+                                clientIp,
+                                accessJti,
+                                "ACCESS",
+                                signed.getT1(),
+                                now.plusSeconds(ACCESS_TOKEN_EXPIRE_MS / 1000),
+                                family,
+                                rotationCount,
+                                previous);
+                        TokenEntity refresh = preparedEntity(
+                                user,
+                                deviceId,
+                                clientIp,
+                                refreshJti,
+                                REFRESH_TOKEN_TYPE,
+                                signed.getT2(),
+                                now.plusSeconds(REFRESH_TOKEN_EXPIRE_MS / 1000),
+                                family,
+                                rotationCount,
+                                previous);
+                        return new PreparedTokens(signed.getT1(), signed.getT2(), new TokenEntityPair(access, refresh));
+                    });
+        });
+    }
+
+    private TokenEntity preparedEntity(
+            UserEntity user,
             String deviceId,
-            com.apex.scaffold.auth.domain.model.entity.UserEntity user,
-            String clientType) {
+            String clientIp,
+            String jti,
+            String tokenType,
+            String token,
+            LocalDateTime expiry,
+            String family,
+            int rotationCount,
+            TokenEntity previous) {
+        TokenEncryptionService.EncryptedToken encrypted = encryptionService.encrypt(token);
+        return TokenEntity.builder()
+                .tenantId(user.getTenantId())
+                .userId(user.getId())
+                .tokenType(tokenType)
+                .tokenValue(encrypted.encryptedData())
+                .tokenHash(encryptionService.hashToken(token))
+                .tokenIv(encrypted.iv())
+                .jti(jti)
+                .expiresAt(expiry)
+                .deviceId(deviceId)
+                .clientIp(clientIp)
+                .userAgent(previous == null ? null : previous.getUserAgent())
+                .tokenFamily(family)
+                .previousJti(previous == null ? null : previous.getJti())
+                .rotationCount(rotationCount)
+                .build();
+    }
+
+    private Map<String, Object> buildClaims(
+            String jti, UserEntity user, String tokenType, String deviceId, String clientType) {
         Map<String, Object> claims = new HashMap<>(CLAIMS_INITIAL_CAPACITY);
         claims.put("jti", jti);
-        claims.put("userId", userId);
-        claims.put("tenantId", tenantId);
+        claims.put("userId", user.getId());
+        claims.put("tenantId", user.getTenantId());
         claims.put("tokenType", tokenType);
         claims.put("deviceId", deviceId);
         if (user.getAccountId() != null) {
@@ -224,56 +199,69 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public Mono<TokenEntity> validateToken(String token) {
+        return verifiedToken(token, false).map(VerifiedToken::entity);
+    }
+
+    /**
+     * 共享签名、声明、租户、记录身份与有效期验证，不因刷新允许检查撤销状态而跳过可信核对。
+     * @param token 原始 JWT
+     * @param allowRevoked 刷新时允许返回已撤销记录，普通验证保持拒绝
+     * @return 已核对的持久化记录及验签声明
+     */
+    private Mono<VerifiedToken> verifiedToken(String token, boolean allowRevoked) {
         return jwtKeyMaterialService
                 .parse(token)
-                .onErrorMap(ExpiredJwtException.class, exception -> {
-                    log.debug("Token已过期");
-                    return new BusinessException(ResultCode.UNAUTHORIZED, "Token已过期");
-                })
+                .onErrorMap(
+                        ExpiredJwtException.class,
+                        exception -> new BusinessException(ResultCode.UNAUTHORIZED, "Token已过期"))
                 .onErrorMap(
                         exception -> exception instanceof JwtException || exception instanceof IllegalArgumentException,
-                        exception -> {
-                            log.debug("Token验证失败");
-                            return new BusinessException(ResultCode.UNAUTHORIZED, "Token无效");
-                        })
+                        exception -> new BusinessException(ResultCode.UNAUTHORIZED, "Token无效"))
                 .flatMap(claims -> {
                     String jti = claims.get("jti", String.class);
                     Long userId = claims.get("userId", Long.class);
                     String tenantId = claims.get("tenantId", String.class);
-
-                    if (jti == null || jti.isBlank() || userId == null || tenantId == null || tenantId.isBlank()) {
+                    String tokenType = claims.get("tokenType", String.class);
+                    if (jti == null
+                            || jti.isBlank()
+                            || userId == null
+                            || tenantId == null
+                            || tenantId.isBlank()
+                            || tokenType == null
+                            || tokenType.isBlank()) {
                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token声明不完整"));
                     }
-
                     return Mono.deferContextual(context -> {
-                        String existingTenant = context.getOrDefault(TenantContext.REACTOR_CONTEXT_KEY, null);
+                        String existingTenant = context.getOrDefault(
+                                TenantContext.REACTOR_CONTEXT_KEY,
+                                TenantContext.currentTenantId().orElse(null));
                         if (existingTenant != null && !existingTenant.equals(tenantId)) {
                             return Mono.error(new BusinessException(ResultCode.FORBIDDEN));
                         }
                         return tokenRepository
                                 .findByJti(jti)
                                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token不存在")))
-                                .flatMap(tokenEntity -> {
-                                    if (!Objects.equals(tokenEntity.getTenantId(), tenantId)
-                                            || !Objects.equals(tokenEntity.getUserId(), userId)
-                                            || !Objects.equals(tokenEntity.getJti(), jti)
-                                            || !Objects.equals(
-                                                    tokenEntity.getTokenType(),
-                                                    claims.get("tokenType", String.class))) {
+                                .flatMap(entity -> {
+                                    if (!Objects.equals(entity.getTenantId(), tenantId)
+                                            || !Objects.equals(entity.getUserId(), userId)
+                                            || !Objects.equals(entity.getJti(), jti)
+                                            || !Objects.equals(entity.getTokenType(), tokenType)
+                                            || (entity.getTokenHash() != null
+                                                    && !Objects.equals(
+                                                            entity.getTokenHash(),
+                                                            encryptionService.hashToken(token)))) {
                                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED));
                                     }
-                                    if (tokenEntity.isRevoked()) {
+                                    if (entity.isRevoked() && !allowRevoked) {
                                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token已撤销"));
                                     }
-                                    if (tokenEntity.isExpired()) {
+                                    if (entity.getExpiresAt() == null
+                                            || !entity.getExpiresAt().isAfter(LocalDateTime.now())) {
                                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token已过期"));
                                     }
-                                    if (!tokenEntity.isValid()) {
-                                        return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token无效"));
-                                    }
-                                    return Mono.just(tokenEntity);
+                                    return Mono.just(new VerifiedToken(entity, claims));
                                 })
-                                .transformDeferred(mono -> TenantContext.withTenant(mono))
+                                .transformDeferred(TenantContext::withTenant)
                                 .contextWrite(TenantContext.withTenant(tenantId));
                     });
                 });
@@ -281,56 +269,61 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public Mono<TokenPair> refreshToken(String refreshToken) {
-        return validateToken(refreshToken)
-                .flatMap(tokenEntity -> {
-                    if (!REFRESH_TOKEN_TYPE.equals(tokenEntity.getTokenType())) {
-                        return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "必须使用刷新令牌"));
-                    }
+        return verifiedToken(refreshToken, true).flatMap(verified -> {
+            TokenEntity previous = verified.entity();
+            if (!REFRESH_TOKEN_TYPE.equals(previous.getTokenType())) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "必须使用刷新令牌"));
+            }
+            Mono<TokenPair> refresh;
+            if (previous.isRevoked()) {
+                refresh = tokenRepository
+                        .checkRefreshReplay(previous)
+                        .flatMap(result -> finishRotation(result, previous, null));
+            } else {
+                String clientType = verified.claims().get("clientType", String.class);
+                refresh = activeUser(previous.getUserId(), previous.getTenantId())
+                        .flatMap(user -> prepareTokens(
+                                user, previous.getDeviceId(), previous.getClientIp(), clientType, previous))
+                        .flatMap(prepared -> tokenRepository
+                                .rotateRefreshToken(previous, prepared.entities())
+                                .flatMap(result -> finishRotation(result, previous, prepared)));
+            }
+            return refresh.transformDeferred(TenantContext::withTenant)
+                    .contextWrite(TenantContext.withTenant(previous.getTenantId()));
+        });
+    }
 
-                    // 检测Token重放攻击：如果Token已被撤销，说明可能是重放攻击
-                    if (tokenEntity.isRevoked()) {
-                        log.warn("检测到可疑的Token刷新尝试: userId={}", tokenEntity.getUserId());
+    /**
+     * 仓储结果已提交后才映射重放为 401，审计不可使安全撤销回滚或隐藏已提交令牌。
+     * @param result 同步事务提交结果
+     * @param previous 旧刷新令牌记录
+     * @param prepared 成功轮换对应的响应；单独检查重放时为 null
+     * @return 新令牌对或认证失败信号
+     */
+    private Mono<TokenPair> finishRotation(TokenRotationResult result, TokenEntity previous, PreparedTokens prepared) {
+        if (result.status() == TokenRotationResult.Status.REPLAY) {
+            return auditAfterCommit(() -> auditService.logTokenReplayAttack(
+                            previous.getUserId(), previous.getTenantId(), previous.getClientIp(), previous.getJti()))
+                    .then(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "检测到安全威胁，已撤销所有会话，请重新登录")));
+        }
+        if (result.status() != TokenRotationResult.Status.ROTATED || prepared == null) {
+            return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token已撤销或失效"));
+        }
+        return auditAfterCommit(() -> auditService.logTokenRefreshed(
+                        previous.getUserId(), previous.getTenantId(), previous.getClientIp(), previous.getJti()))
+                .thenReturn(prepared.response(result.tokens()));
+    }
 
-                        // 记录Token重放攻击审计日志
-                        return auditService
-                                .logTokenReplayAttack(
-                                        tokenEntity.getUserId(),
-                                        tokenEntity.getTenantId(),
-                                        tokenEntity.getClientIp(),
-                                        tokenEntity.getJti())
-                                .then(tokenRepository.revokeByUserId(
-                                        tokenEntity.getUserId(), tokenEntity.getTenantId()))
-                                .then(Mono.error(
-                                        new BusinessException(ResultCode.UNAUTHORIZED, "检测到安全威胁，已撤销所有会话，请重新登录")));
-                    }
-
-                    // 实施Token轮换：撤销旧的refresh token
-                    return tokenRepository
-                            .revokeByJti(tokenEntity.getJti(), "system", "token_refresh")
-                            .flatMap(revoked -> {
-                                if (!revoked) {
-                                    log.warn("Token轮换失败: 无法撤销旧token");
-                                    return Mono.error(new BusinessException(ResultCode.ERROR, "Token刷新失败"));
-                                }
-
-                                // 签发新的Token对（包含新的refresh token）
-                                return issueToken(
-                                                tokenEntity.getUserId(),
-                                                tokenEntity.getTenantId(),
-                                                tokenEntity.getDeviceId(),
-                                                tokenEntity.getClientIp())
-                                        .flatMap(newTokenPair -> auditService
-                                                .logTokenRefreshed(
-                                                        tokenEntity.getUserId(),
-                                                        tokenEntity.getTenantId(),
-                                                        tokenEntity.getClientIp(),
-                                                        tokenEntity.getJti())
-                                                .thenReturn(newTokenPair));
-                            })
-                            .transformDeferred(mono -> TenantContext.withTenant(mono))
-                            .contextWrite(TenantContext.withTenant(tokenEntity.getTenantId()));
-                })
-                .doOnSuccess(pair -> log.debug("Token刷新成功，已轮换refresh token"));
+    /**
+     * 有界等待提交后的审计，记录失败类型但不输出敏感载荷，不改变已提交的认证结果。
+     * @param audit 延迟执行的审计操作
+     * @return 审计结束、超时或失败后的完成信号
+     */
+    private Mono<Void> auditAfterCommit(Supplier<Mono<Void>> audit) {
+        return Mono.defer(audit).timeout(AUDIT_TIMEOUT).onErrorResume(error -> {
+            log.warn("Token提交后审计失败: type={}", error.getClass().getSimpleName());
+            return Mono.empty();
+        });
     }
 
     @Override
@@ -339,34 +332,24 @@ public class TokenServiceImpl implements TokenService {
                 .parse(token)
                 .onErrorMap(
                         exception -> exception instanceof JwtException || exception instanceof IllegalArgumentException,
-                        exception -> {
-                            log.debug("Token无效");
-                            return new BusinessException(ResultCode.UNAUTHORIZED, "Token无效");
-                        })
+                        exception -> new BusinessException(ResultCode.UNAUTHORIZED, "Token无效"))
                 .flatMap(claims -> {
                     String jti = claims.get("jti", String.class);
-
                     if (jti == null || jti.isBlank()) {
                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token格式错误"));
                     }
-
                     return tokenRepository
                             .findByJti(jti)
                             .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "Token不存在")))
-                            .flatMap(tokenEntity -> {
-                                // 记录撤销原因和操作人
-                                tokenEntity.revoke("user:" + tokenEntity.getUserId(), "manual");
-                                return tokenRepository
-                                        .update(tokenEntity)
-                                        .then(auditService.logTokenRevoked(
-                                                tokenEntity.getUserId(),
-                                                null, // username需要从UserService获取
-                                                tokenEntity.getTenantId(),
-                                                jti,
-                                                "manual",
-                                                tokenEntity.getClientIp()));
-                            })
-                            .doOnSuccess(v -> log.debug("Token撤销成功"));
+                            .flatMap(entity -> tokenRepository
+                                    .revokeByJti(jti, "user:" + entity.getUserId(), "manual")
+                                    .then(auditAfterCommit(() -> auditService.logTokenRevoked(
+                                            entity.getUserId(),
+                                            null,
+                                            entity.getTenantId(),
+                                            jti,
+                                            "manual",
+                                            entity.getClientIp()))));
                 });
     }
 
@@ -374,12 +357,27 @@ public class TokenServiceImpl implements TokenService {
     public Mono<Void> revokeAllUserTokens(Long userId, String tenantId) {
         return tokenRepository
                 .revokeByUserId(userId, tenantId)
-                .doOnSuccess(count -> log.debug("已撤销用户所有Token: userId={}, count={}", userId, count))
+                .doOnSuccess(count -> log.debug("已撤销用户所有Token: userId={}, changed={}", userId, count))
                 .then();
     }
 
     @Override
     public Mono<Long> extractUserId(String token) {
         return validateToken(token).map(TokenEntity::getUserId);
+    }
+
+    private record VerifiedToken(TokenEntity entity, Claims claims) {}
+
+    private record PreparedTokens(String accessToken, String refreshToken, TokenEntityPair entities) {
+        TokenPair response(TokenEntityPair saved) {
+            return TokenPair.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .accessTokenId(saved.accessToken().getId())
+                    .refreshTokenJti(saved.refreshToken().getJti())
+                    .expiresIn(ACCESS_TOKEN_EXPIRE_MS / 1000)
+                    .tokenType("Bearer")
+                    .build();
+        }
     }
 }

@@ -77,6 +77,10 @@ class PersistenceContractTest {
                     args[index] = LocalDateTime.now();
                 } else if (type == Iterable.class) {
                     args[index] = List.of(1L);
+                } else if (type == com.apex.scaffold.auth.domain.model.vo.TokenEntityPair.class) {
+                    args[index] = new com.apex.scaffold.auth.domain.model.vo.TokenEntityPair(
+                            new com.apex.scaffold.auth.domain.model.entity.TokenEntity(),
+                            new com.apex.scaffold.auth.domain.model.entity.TokenEntity());
                 } else {
                     args[index] = type.getConstructor().newInstance();
                 }
@@ -320,7 +324,7 @@ class PersistenceContractTest {
                 com.apex.scaffold.auth.infrastructure.persistence.converter.TokenConverter.class);
         var users = org.mockito.Mockito.mock(com.apex.scaffold.auth.infrastructure.persistence.mapper.UserMapper.class);
         var repository = new com.apex.scaffold.auth.infrastructure.persistence.repository.TokenRepositoryImpl(
-                mapper, converter, users);
+                mapper, converter, users, org.mockito.Mockito.mock(javax.sql.DataSource.class));
         var po = new com.apex.scaffold.auth.infrastructure.persistence.po.TokenPO();
         po.setJti("jti-platform-1");
         po.setRevokedAt(java.time.LocalDateTime.of(2026, 10, 31, 12, 0));

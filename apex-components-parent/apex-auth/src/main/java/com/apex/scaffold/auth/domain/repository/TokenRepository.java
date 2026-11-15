@@ -1,6 +1,8 @@
 package com.apex.scaffold.auth.domain.repository;
 
 import com.apex.scaffold.auth.domain.model.entity.TokenEntity;
+import com.apex.scaffold.auth.domain.model.vo.TokenEntityPair;
+import com.apex.scaffold.auth.domain.model.vo.TokenRotationResult;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,6 +23,29 @@ public interface TokenRepository {
      * @return 保存后的Token实体
      */
     Mono<TokenEntity> save(TokenEntity token);
+
+    /**
+     * 在同一 JDBC 事务中保存新令牌对，与轮换及用户撤销共用用户行锁。
+     * @param tokens 已签名、加密的同租户用户令牌记录，不得包含既有记录 ID
+     * @return 提交后的记录，含分配的主键
+     */
+    Mono<TokenEntityPair> savePair(TokenEntityPair tokens);
+
+    /**
+     * 锁定用户后核对旧记录，以 CAS 消费旧刷新令牌并插入新令牌对；插入失败全部回滚。
+     * 消费重放的全用户撤销提交后返回 REPLAY，调用方再映射为认证失败。
+     * @param expectedRefresh 经验签核对的旧刷新记录，仓储再次核对身份、哈希及过期时间
+     * @param preparedTokens 事务前完成签名及加密的新令牌记录
+     * @return 提交后的轮换或拒绝结果
+     */
+    Mono<TokenRotationResult> rotateRefreshToken(TokenEntity expectedRefresh, TokenEntityPair preparedTokens);
+
+    /**
+     * 在用户锁内重新检查已撤销记录；仅消费原因 token_refresh/token_rotated 触发租户内全用户撤销。
+     * @param expectedRefresh 经验签核对的刷新记录
+     * @return 安全撤销提交后的 REPLAY 或无写入的 REJECTED
+     */
+    Mono<TokenRotationResult> checkRefreshReplay(TokenEntity expectedRefresh);
 
     /**
      * 根据ID查找Token

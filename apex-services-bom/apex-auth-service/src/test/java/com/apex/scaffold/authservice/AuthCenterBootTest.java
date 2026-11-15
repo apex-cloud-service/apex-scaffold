@@ -226,7 +226,9 @@ class AuthCenterBootTest extends EmbeddedRedisBootTestSupport {
                 .exchange()
                 .expectStatus()
                 .isUnauthorized();
-        String access = (String) renewed.get("accessToken");
+        // 重放检测已撤销该用户全部令牌，登出授权边界需使用重新登录后的新访问令牌。
+        Map<?, ?> fresh = login(200);
+        String access = (String) fresh.get("accessToken");
         client.post()
                 .uri("/auth/v1/logout/2?tenantId=other")
                 .headers(h -> h.setBearerAuth(access))

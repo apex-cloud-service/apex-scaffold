@@ -6,7 +6,9 @@ import static org.mockito.Mockito.*;
 
 import com.apex.scaffold.auth.domain.model.entity.TokenEntity;
 import com.apex.scaffold.auth.domain.model.entity.UserEntity;
+import com.apex.scaffold.auth.domain.model.vo.TokenEntityPair;
 import com.apex.scaffold.auth.domain.model.vo.TokenPair;
+import com.apex.scaffold.auth.domain.model.vo.TokenRotationResult;
 import com.apex.scaffold.auth.domain.repository.TokenRepository;
 import com.apex.scaffold.auth.domain.repository.UserRepository;
 import com.apex.scaffold.auth.domain.service.JwtKeyMaterialService;
@@ -124,7 +126,7 @@ class TokenServiceImplTest {
         void testIssueTokenSuccess() {
             // Given
             when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
-            when(tokenRepository.save(any(TokenEntity.class)))
+            when(tokenRepository.savePair(any(TokenEntityPair.class)))
                     .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
             when(encryptionService.encrypt(anyString()))
                     .thenReturn(new TokenEncryptionService.EncryptedToken("encrypted-data", "test-iv"));
@@ -149,7 +151,8 @@ class TokenServiceImplTest {
                     .verifyComplete();
 
             verify(userRepository).findById(100L);
-            verify(tokenRepository, times(2)).save(any(TokenEntity.class));
+            verify(tokenRepository).savePair(any(TokenEntityPair.class));
+            verify(tokenRepository, never()).save(any());
         }
 
         @Test
@@ -247,9 +250,9 @@ class TokenServiceImplTest {
         @DisplayName("保存的 Token 实体包含正确的字段")
         void testIssueTokenSavesCorrectEntities() {
             // Given
-            ArgumentCaptor<TokenEntity> entityCaptor = ArgumentCaptor.forClass(TokenEntity.class);
+            ArgumentCaptor<TokenEntityPair> entityCaptor = ArgumentCaptor.forClass(TokenEntityPair.class);
             when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
-            when(tokenRepository.save(entityCaptor.capture()))
+            when(tokenRepository.savePair(entityCaptor.capture()))
                     .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
             when(encryptionService.encrypt(anyString()))
                     .thenReturn(new TokenEncryptionService.EncryptedToken("encrypted-data", "test-iv"));
@@ -265,10 +268,7 @@ class TokenServiceImplTest {
                     .block();
 
             // Then
-            var savedTokens = entityCaptor.getAllValues();
-            assertThat(savedTokens).hasSize(2);
-
-            TokenEntity accessToken = savedTokens.get(0);
+            TokenEntity accessToken = entityCaptor.getValue().accessToken();
             assertThat(accessToken.getTokenType()).isEqualTo("ACCESS");
             assertThat(accessToken.getUserId()).isEqualTo(100L);
             assertThat(accessToken.getTenantId()).isEqualTo("test-tenant");
@@ -276,7 +276,7 @@ class TokenServiceImplTest {
             assertThat(accessToken.getClientIp()).isEqualTo("192.168.1.100");
             assertThat(accessToken.getJti()).isNotNull();
 
-            TokenEntity refreshToken = savedTokens.get(1);
+            TokenEntity refreshToken = entityCaptor.getValue().refreshToken();
             assertThat(refreshToken.getTokenType()).isEqualTo("REFRESH");
             assertThat(refreshToken.getUserId()).isEqualTo(100L);
             assertThat(refreshToken.getTenantId()).isEqualTo("test-tenant");
@@ -303,7 +303,7 @@ class TokenServiceImplTest {
                     .accountId(500L)
                     .build();
             when(userRepository.findById(100L)).thenReturn(Mono.just(mappedUser));
-            when(tokenRepository.save(any(TokenEntity.class)))
+            when(tokenRepository.savePair(any(TokenEntityPair.class)))
                     .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
             when(encryptionService.encrypt(anyString()))
                     .thenReturn(new TokenEncryptionService.EncryptedToken("encrypted-data", "test-iv"));
@@ -342,7 +342,7 @@ class TokenServiceImplTest {
         void testIssueTokenLegacyClaimsCompatible() {
             // Given：mockUser 未设置 accountId，4 参签名（无 clientType）
             when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
-            when(tokenRepository.save(any(TokenEntity.class)))
+            when(tokenRepository.savePair(any(TokenEntityPair.class)))
                     .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
             when(encryptionService.encrypt(anyString()))
                     .thenReturn(new TokenEncryptionService.EncryptedToken("encrypted-data", "test-iv"));
@@ -549,16 +549,12 @@ class TokenServiceImplTest {
                     .thenReturn(Mono.just("new-mocked-jwt-token"));
 
             when(tokenRepository.findByJti("refresh-jti-456")).thenReturn(Mono.just(mockRefreshToken));
-            when(tokenRepository.revokeByJti(eq("refresh-jti-456"), anyString(), anyString()))
-                    .thenReturn(Mono.just(true));
             when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
-            when(tokenRepository.save(any(TokenEntity.class)))
-                    .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+            when(tokenRepository.rotateRefreshToken(eq(mockRefreshToken), any(TokenEntityPair.class)))
+                    .thenAnswer(invocation -> Mono.just(TokenRotationResult.rotated(invocation.getArgument(1))));
             when(encryptionService.encrypt(anyString()))
                     .thenReturn(new TokenEncryptionService.EncryptedToken("encrypted-data", "test-iv"));
             when(encryptionService.hashToken(anyString())).thenReturn("token-hash");
-            when(auditService.logTokenIssued(anyLong(), anyString(), anyString(), anyString(), anyString()))
-                    .thenReturn(Mono.empty());
             when(auditService.logTokenRefreshed(anyLong(), anyString(), anyString(), anyString()))
                     .thenReturn(Mono.empty());
 
@@ -576,7 +572,8 @@ class TokenServiceImplTest {
 
             verify(tokenRepository).findByJti("refresh-jti-456");
             verify(userRepository).findById(100L);
-            verify(tokenRepository, times(2)).save(any(TokenEntity.class));
+            verify(tokenRepository).rotateRefreshToken(eq(mockRefreshToken), any(TokenEntityPair.class));
+            verify(tokenRepository, never()).save(any());
         }
 
         @Test
@@ -638,8 +635,8 @@ class TokenServiceImplTest {
 
             when(jwtKeyMaterialService.parse("token-to-revoke")).thenReturn(Mono.just(new DefaultClaims(claims)));
             when(tokenRepository.findByJti("access-jti-123")).thenReturn(Mono.just(mockAccessToken));
-            when(tokenRepository.update(any(TokenEntity.class)))
-                    .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+            when(tokenRepository.revokeByJti(eq("access-jti-123"), anyString(), eq("manual")))
+                    .thenReturn(Mono.just(true));
             when(auditService.logTokenRevoked(anyLong(), isNull(), anyString(), anyString(), anyString(), anyString()))
                     .thenReturn(Mono.empty());
 
@@ -650,7 +647,7 @@ class TokenServiceImplTest {
             StepVerifier.create(result).verifyComplete();
 
             verify(tokenRepository).findByJti("access-jti-123");
-            verify(tokenRepository).update(argThat(token -> token.isRevoked()));
+            verify(tokenRepository).revokeByJti("access-jti-123", "user:100", "manual");
         }
 
         @Test
@@ -676,17 +673,16 @@ class TokenServiceImplTest {
         }
 
         @Test
-        @DisplayName("撤销 Token 时调用实体的 revoke 方法")
-        void testRevokeTokenCallsEntityMethod() {
+        @DisplayName("撤销 Token 使用仓储 CAS，不覆盖已有实体状态")
+        void testRevokeTokenUsesCasWithoutEntityRewrite() {
             // Given
-            ArgumentCaptor<TokenEntity> entityCaptor = ArgumentCaptor.forClass(TokenEntity.class);
             Map<String, Object> claims = new HashMap<>();
             claims.put("jti", "access-jti-123");
 
             when(jwtKeyMaterialService.parse("token-to-revoke")).thenReturn(Mono.just(new DefaultClaims(claims)));
             when(tokenRepository.findByJti("access-jti-123")).thenReturn(Mono.just(mockAccessToken));
-            when(tokenRepository.update(entityCaptor.capture()))
-                    .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+            when(tokenRepository.revokeByJti("access-jti-123", "user:100", "manual"))
+                    .thenReturn(Mono.just(true));
             when(auditService.logTokenRevoked(anyLong(), isNull(), anyString(), anyString(), anyString(), anyString()))
                     .thenReturn(Mono.empty());
 
@@ -694,9 +690,8 @@ class TokenServiceImplTest {
             tokenService.revokeToken("token-to-revoke").block();
 
             // Then
-            TokenEntity revokedToken = entityCaptor.getValue();
-            assertThat(revokedToken.isRevoked()).isTrue();
-            assertThat(revokedToken.getRevokedAt()).isNotNull();
+            verify(tokenRepository).revokeByJti("access-jti-123", "user:100", "manual");
+            verify(tokenRepository, never()).update(any());
         }
     }
 
@@ -732,6 +727,237 @@ class TokenServiceImplTest {
             StepVerifier.create(result).verifyComplete();
 
             verify(tokenRepository).revokeByUserId(100L, "test-tenant");
+        }
+    }
+
+    @Test
+    void consumedRefreshReplayRevokesTenantUserEvenWhenAuditFails() {
+        mockRefreshToken.revoke("system", "token_refresh");
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("jti", mockRefreshToken.getJti());
+        claims.put("userId", 100L);
+        claims.put("tenantId", "test-tenant");
+        claims.put("tokenType", "REFRESH");
+        when(jwtKeyMaterialService.parse("consumed-refresh")).thenReturn(Mono.just(new DefaultClaims(claims)));
+        when(tokenRepository.findByJti(mockRefreshToken.getJti())).thenReturn(Mono.just(mockRefreshToken));
+        lenient()
+                .when(auditService.logTokenReplayAttack(anyLong(), anyString(), anyString(), anyString()))
+                .thenReturn(Mono.error(new IllegalStateException("audit unavailable")));
+        when(tokenRepository.checkRefreshReplay(mockRefreshToken)).thenReturn(Mono.just(TokenRotationResult.replay()));
+
+        StepVerifier.create(tokenService.refreshToken("consumed-refresh"))
+                .expectErrorMatches(error -> error instanceof BusinessException)
+                .verify();
+
+        verify(tokenRepository).checkRefreshReplay(mockRefreshToken);
+        verifyNoInteractions(userRepository, encryptionService);
+    }
+
+    @Test
+    void signingFailureDoesNotConsumeRefreshToken() {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("jti", mockRefreshToken.getJti());
+        claims.put("userId", 100L);
+        claims.put("tenantId", "test-tenant");
+        claims.put("tokenType", "REFRESH");
+        when(jwtKeyMaterialService.parse("refresh-sign-failure")).thenReturn(Mono.just(new DefaultClaims(claims)));
+        when(tokenRepository.findByJti(mockRefreshToken.getJti())).thenReturn(Mono.just(mockRefreshToken));
+        when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
+        when(jwtKeyMaterialService.sign(anyString(), anyMap(), anyLong()))
+                .thenReturn(Mono.error(new IllegalStateException("sign unavailable")));
+        lenient()
+                .when(tokenRepository.revokeByJti(anyString(), anyString(), anyString()))
+                .thenReturn(Mono.just(true));
+
+        StepVerifier.create(tokenService.refreshToken("refresh-sign-failure"))
+                .expectErrorMessage("sign unavailable")
+                .verify();
+
+        verify(tokenRepository, never()).revokeByJti(anyString(), anyString(), anyString());
+        verify(tokenRepository, never()).rotateRefreshToken(any(), any());
+        verify(tokenRepository, never()).save(any());
+    }
+
+    @Nested
+    class AtomicRefreshSecurityTest {
+        private void refreshClaims(Map<String, Object> overrides) {
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("jti", mockRefreshToken.getJti());
+            claims.put("userId", 100L);
+            claims.put("tenantId", "test-tenant");
+            claims.put("tokenType", "REFRESH");
+            claims.putAll(overrides);
+            when(jwtKeyMaterialService.parse("atomic-refresh")).thenReturn(Mono.just(new DefaultClaims(claims)));
+            lenient()
+                    .when(tokenRepository.findByJti(mockRefreshToken.getJti()))
+                    .thenReturn(Mono.just(mockRefreshToken));
+        }
+
+        private void prepareRefresh() {
+            when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
+            when(jwtKeyMaterialService.sign(anyString(), anyMap(), anyLong()))
+                    .thenReturn(Mono.just("signed-new-token"));
+            when(encryptionService.encrypt(anyString()))
+                    .thenReturn(new TokenEncryptionService.EncryptedToken("cipher", "iv"));
+            when(encryptionService.hashToken(anyString())).thenReturn("hash");
+        }
+
+        @Test
+        void rotationPreservesFamilyChainClientTypeAndCurrentAccountClaims() {
+            mockRefreshToken.setTokenFamily("original-family");
+            mockRefreshToken.setRotationCount(3);
+            mockUser.setAccountId(500L);
+            refreshClaims(Map.of("clientType", "PC_ADMIN"));
+            prepareRefresh();
+            ArgumentCaptor<TokenEntityPair> tokens = ArgumentCaptor.forClass(TokenEntityPair.class);
+            when(tokenRepository.rotateRefreshToken(eq(mockRefreshToken), tokens.capture()))
+                    .thenAnswer(invocation -> {
+                        TokenEntityPair pair = invocation.getArgument(1);
+                        pair.accessToken().setId(8L);
+                        return Mono.just(TokenRotationResult.rotated(pair));
+                    });
+            when(auditService.logTokenRefreshed(anyLong(), anyString(), anyString(), anyString()))
+                    .thenReturn(Mono.empty());
+            StepVerifier.create(tokenService.refreshToken("atomic-refresh"))
+                    .assertNext(pair -> {
+                        assertThat(pair.getAccessTokenId()).isEqualTo(8L);
+                        assertThat(pair.getRefreshTokenJti())
+                                .isEqualTo(tokens.getValue().refreshToken().getJti());
+                    })
+                    .verifyComplete();
+            for (TokenEntity entity : java.util.List.of(
+                    tokens.getValue().accessToken(), tokens.getValue().refreshToken())) {
+                assertThat(entity.getTokenFamily()).isEqualTo("original-family");
+                assertThat(entity.getPreviousJti()).isEqualTo(mockRefreshToken.getJti());
+                assertThat(entity.getRotationCount()).isEqualTo(4);
+                assertThat(entity.getTokenValue()).isEqualTo("cipher");
+            }
+            verify(jwtKeyMaterialService, times(2))
+                    .sign(
+                            eq("100"),
+                            argThat(claims -> "PC_ADMIN".equals(claims.get("clientType"))
+                                    && Long.valueOf(500).equals(claims.get("accountId"))
+                                    && "testuser".equals(claims.get("username"))),
+                            anyLong());
+            verify(tokenRepository, never()).savePair(any());
+            verify(tokenRepository, never()).revokeByJti(anyString(), anyString(), anyString());
+        }
+
+        @org.junit.jupiter.params.ParameterizedTest
+        @org.junit.jupiter.params.provider.ValueSource(strings = {"manual", "logout", "token_refresh", "token_rotated"})
+        void repositoryDecidesRevocationClassAfterTrustedVerification(String reason) {
+            mockRefreshToken.revoke("system", reason);
+            refreshClaims(Map.of());
+            boolean consumed = reason.startsWith("token_");
+            when(tokenRepository.checkRefreshReplay(mockRefreshToken))
+                    .thenReturn(Mono.just(consumed ? TokenRotationResult.replay() : TokenRotationResult.rejected()));
+            if (consumed) {
+                when(auditService.logTokenReplayAttack(anyLong(), anyString(), anyString(), anyString()))
+                        .thenReturn(Mono.empty());
+            }
+            StepVerifier.create(tokenService.refreshToken("atomic-refresh"))
+                    .expectErrorSatisfies(error -> {
+                        assertThat(error).isInstanceOf(BusinessException.class);
+                        assertThat(((BusinessException) error).getCode()).isEqualTo(401);
+                    })
+                    .verify();
+            verify(tokenRepository).checkRefreshReplay(mockRefreshToken);
+            verifyNoInteractions(userRepository, encryptionService);
+            verify(jwtKeyMaterialService, never()).sign(anyString(), anyMap(), anyLong());
+        }
+
+        @org.junit.jupiter.params.ParameterizedTest
+        @org.junit.jupiter.params.provider.ValueSource(strings = {"tenantId", "userId", "tokenType"})
+        void mismatchedSignedClaimsCannotTriggerReplayRevocation(String field) {
+            mockRefreshToken.revoke("system", "token_refresh");
+            refreshClaims(Map.of(field, field.equals("userId") ? 101L : "mismatch"));
+            StepVerifier.create(tokenService.refreshToken("atomic-refresh"))
+                    .expectError(BusinessException.class)
+                    .verify();
+            verify(tokenRepository, never()).checkRefreshReplay(any());
+            verify(tokenRepository, never()).rotateRefreshToken(any(), any());
+            verifyNoInteractions(auditService);
+        }
+
+        @Test
+        void persistedTokenHashMismatchCannotTriggerReplayRevocation() {
+            mockRefreshToken.setTokenHash("expected-hash");
+            mockRefreshToken.revoke("system", "token_refresh");
+            refreshClaims(Map.of());
+            when(encryptionService.hashToken("atomic-refresh")).thenReturn("wrong-hash");
+            StepVerifier.create(tokenService.refreshToken("atomic-refresh"))
+                    .expectError(BusinessException.class)
+                    .verify();
+            verify(tokenRepository, never()).checkRefreshReplay(any());
+            verifyNoInteractions(auditService);
+        }
+
+        @Test
+        void tenantContextConflictCannotTriggerReplayRevocation() {
+            mockRefreshToken.revoke("system", "token_refresh");
+            refreshClaims(Map.of());
+            StepVerifier.create(tokenService
+                            .refreshToken("atomic-refresh")
+                            .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant("other-tenant")))
+                    .expectError(BusinessException.class)
+                    .verify();
+            verifyNoInteractions(tokenRepository, auditService);
+        }
+
+        @Test
+        void encryptionFailureNeverStartsConsumptionTransaction() {
+            refreshClaims(Map.of());
+            when(userRepository.findById(100L)).thenReturn(Mono.just(mockUser));
+            when(jwtKeyMaterialService.sign(anyString(), anyMap(), anyLong())).thenReturn(Mono.just("signed"));
+            when(encryptionService.encrypt(anyString())).thenThrow(new IllegalStateException("encrypt unavailable"));
+            StepVerifier.create(tokenService.refreshToken("atomic-refresh"))
+                    .expectErrorMessage("encrypt unavailable")
+                    .verify();
+            verify(tokenRepository, never()).rotateRefreshToken(any(), any());
+            verifyNoInteractions(auditService);
+        }
+
+        @Test
+        void auditFailureAfterSuccessfulRotationDoesNotHideTokenPair() {
+            refreshClaims(Map.of());
+            prepareRefresh();
+            when(tokenRepository.rotateRefreshToken(any(), any()))
+                    .thenAnswer(invocation -> Mono.just(TokenRotationResult.rotated(invocation.getArgument(1))));
+            when(auditService.logTokenRefreshed(anyLong(), anyString(), anyString(), anyString()))
+                    .thenThrow(new IllegalStateException("audit unavailable"));
+            StepVerifier.create(tokenService.refreshToken("atomic-refresh"))
+                    .expectNextCount(1)
+                    .verifyComplete();
+            org.mockito.InOrder order = inOrder(tokenRepository, auditService);
+            order.verify(tokenRepository).findByJti(mockRefreshToken.getJti());
+            order.verify(tokenRepository).rotateRefreshToken(any(), any());
+            order.verify(auditService).logTokenRefreshed(anyLong(), anyString(), anyString(), anyString());
+        }
+
+        @Test
+        void auditTimeoutCannotMaskCommittedReplayUnauthorized() {
+            mockRefreshToken.revoke("system", "token_refresh");
+            refreshClaims(Map.of());
+            when(tokenRepository.checkRefreshReplay(mockRefreshToken))
+                    .thenReturn(Mono.just(TokenRotationResult.replay()));
+            when(auditService.logTokenReplayAttack(anyLong(), anyString(), anyString(), anyString()))
+                    .thenReturn(Mono.never());
+            StepVerifier.withVirtualTime(() -> tokenService.refreshToken("atomic-refresh"))
+                    .thenAwait(java.time.Duration.ofSeconds(3))
+                    .expectError(BusinessException.class)
+                    .verify();
+        }
+
+        @Test
+        void repositoryFailureDoesNotLogSuccessOrReturnTokens() {
+            refreshClaims(Map.of());
+            prepareRefresh();
+            when(tokenRepository.rotateRefreshToken(any(), any()))
+                    .thenReturn(Mono.error(new IllegalStateException("insert failed")));
+            StepVerifier.create(tokenService.refreshToken("atomic-refresh"))
+                    .expectErrorMessage("insert failed")
+                    .verify();
+            verifyNoInteractions(auditService);
         }
     }
 

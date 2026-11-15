@@ -281,7 +281,30 @@ class AuthenticationHandlerIntegrationTest {
                     .jsonPath("$.expiresIn")
                     .isEqualTo(7200)
                     .jsonPath("$.tokenType")
-                    .isEqualTo("Bearer");
+                    .isEqualTo("Bearer")
+                    .jsonPath("$.code")
+                    .doesNotExist()
+                    .jsonPath("$.data")
+                    .doesNotExist();
+            org.mockito.Mockito.verify(authenticationService).refreshToken("refresh-token-123");
+        }
+
+        @org.junit.jupiter.params.ParameterizedTest
+        @org.junit.jupiter.params.provider.ValueSource(strings = {"检测到安全威胁，已撤销所有会话，请重新登录", "Token已撤销或失效"})
+        void replayAndManualRevocationKeepUnauthorizedContract(String reason) {
+            when(authenticationService.refreshToken("refresh-token-123"))
+                    .thenReturn(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, reason)));
+            webTestClient
+                    .mutateWith(SecurityMockServerConfigurers.csrf())
+                    .post()
+                    .uri("/auth/v1/refresh")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(refreshTokenRequest)
+                    .exchange()
+                    .expectStatus()
+                    .isUnauthorized()
+                    .expectBody(String.class)
+                    .isEqualTo("刷新令牌无效或已过期");
         }
 
         @Test
