@@ -198,7 +198,9 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
         String algorithm = headerValue(token, "alg");
         Claims claims = null;
         if (Jwts.SIG.RS256.getId().equals(algorithm)) {
-            String keyId = keyedPublicKeys ? headerValue(token, "kid") : "";
+            boolean fetcherActive = jwksFetcher != null && jwksFetcher.enabled();
+            boolean kidLookup = keyedPublicKeys || (publicKeys.isEmpty() && fetcherActive);
+            String keyId = kidLookup ? headerValue(token, "kid") : "";
             PublicKey verificationKey = keyId == null ? null : effectiveKeys().get(keyId);
             if (verificationKey != null) {
                 try {
