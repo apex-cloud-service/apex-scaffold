@@ -1,6 +1,6 @@
 # Apex Common（共享 SDK）
 
-> 依据：`docs/08-project-management/plans/microservice-migration-plan.md` §4.1、`.trae/documents/microservice-migration-execution-plan.md` §1.1.3
+> 依据：`docs/08-project-management/plans/microservice-migration-plan.md` §4.1、`docs/plans/archived-ai-sessions/microservice-migration-execution-plan.md` §1.1.3
 > 版本：1.3.1（微服务改造 Phase 1）
 > 维护：Apex Team
 

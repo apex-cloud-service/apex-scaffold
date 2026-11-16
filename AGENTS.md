@@ -1,3 +1,104 @@
+# AGENTS.md — Apex Scaffold（含 2026-11-16 项目治理增补）
+
+> **阅读顺序**：先读「第 0 章 项目治理与任务管理规范」（本次增补，对所有 AI 智能体生效）；再读「附录 A：原始仓库开发与协作规范」（2026-11-16 之前的原文，逐字完整保留，未做任何删改）。
+> **冲突处理**：第 0 章只约束「怎么管任务、文档放哪、多个 AI 怎么分工、编码红线」；具体技术事实（模块聚合、构建档位、接口契约、运行拓扑、端口）一律以附录 A、`pom.xml`、`README.md` 与执行代码为准。
+> **现状说明**：本仓库已为 Java 21 + Spring WebFlux + Handler/RouterFunction 实现，第 0.5 节的编码红线与现状基本一致；仅少数例外已登记在 `docs/tasks/project-tasks.md`，**本轮不改动业务代码**。
+
+## 第 0 章 项目治理与任务管理规范
+
+### 0.1 生效范围与优先级
+
+1. 适用对象：Trae、WorkBuddy、ZCode、Qoder、Codex 及其他任何接入本仓库的 AI 智能体与人工作者。
+2. 本文件是仓库协作约束的唯一权威来源；各 AI 私有目录内的规则文件只能是本文件的**镜像或补充**，不得与本文件冲突。
+3. 治理目标：任务可追溯、文档不散落、多 AI 不打架、重构不破坏功能。
+4. **完整规范正文**见 `docs/specs/project-governance.md`（任务体系、文档收口、多智能体目录映射、`.gitignore` 规则、10 条后端红线、执行记录、验收清单）；本文件第 0 章为其入口索引，两者同步维护，冲突以本文件为准。
+
+### 0.2 文档收口：唯一存放位置 `docs/`
+
+1. 所有业务文档（需求、方案、计划、评审、变更记录、调研笔记、知识库、图表说明）**只能**存放在 `docs/` 下。
+2. 既有编号目录（`00-getting-started`、`01-guides`、`02-architecture`、`03-api`、`04-development`、`05-operations`、`06-testing`、`07-commercial`、`08-project-management`）与既有专题目录（`architecture`、`api`、`cache`、`diagrams`、`migration`、`reports`、`fix-reports`、`_archive`）**继续有效**，本次不搬迁、不改名、不改内容。
+3. 新增标准目录（与既有目录并存，按职责归位）：
+
+   | 目录 | 用途 | 唯一入口 |
+   | --- | --- | --- |
+   | `docs/tasks/` | 任务大盘、迭代任务清单 | `docs/tasks/project-tasks.md` |
+   | `docs/specs/` | 需求规格、技术方案、接口契约设计 | `docs/specs/README.md` |
+   | `docs/plans/` | 实施计划、重构拆解、迁移计划 | `docs/plans/README.md` |
+   | `docs/records/` | 变更记录、改造留痕、缺陷复盘 | `docs/records/README.md` |
+   | `docs/reviews/` | 评审记录与检查清单结果 | `docs/reviews/README.md` |
+   | `docs/notes/` | 调研、对接备忘、风险纪要 | `docs/notes/README.md` |
+
+4. 归属判断：已成体系的历史材料留在原编号目录；**新产出**按上表归位。同一结论只允许存在一份正文，其余用链接引用。
+5. 新增文档必须同步在 `docs/README.md` 登记，禁止「只建文件不登记」。
+
+### 0.3 图表资产保护（本仓库重点）
+
+1. 现状基线（2026-11-16）：`docs/` 共 1272 个文件，其中 `.svg` 217 个、`.mmd` 68 个，`docs/diagrams/` 为图表主库（顶层 130 SVG + 38 MMD，另有 `_templates/`、`_icon_sources/`）。
+2. **禁止**删除、覆盖、重绘既有 SVG/MMD/PNG/PDF 图表；**禁止**为了"结构整齐"批量移动图表文件（会打断 `docs/**` 与 `README`、报告、测试报告中的既有引用）。
+3. 更新图表时：新增版本文件（如 `_v2`）并在 `docs/records/` 写明差异与受影响引用。
+4. 源文件与导出件必须成对保留（`.mmd` ↔ `.svg`）；**新增图必须同时提供源文件与导出件**。存量基线存在 30 个仅有 `.mmd` 的源文件（清单由 `scripts/governance/verify-docs.sh` 第 6 项输出），已登记任务 BE-001 分批补导出；补导前不视为违规，但不得删除这些源文件。
+5. 图表索引维护在 `docs/diagrams/`（新增图表需在对应 README/索引登记）。
+
+### 0.4 多智能体隔离（目录边界）
+
+1. 允许并存的私有目录：`.trae/`、`.workbuddy/`、`.zcode/`、`.qoder/`、`.codex/`、`.freebuff/` 及未来新增同类隐藏目录。
+2. 私有目录**只允许**存放：工具自身规则/配置、缓存、会话记忆（memory）、Agent 定义、自动化脚本定义。
+3. 私有目录**禁止**存放业务文档：知识库、方案、计划、评审、报告、任务清单必须落在 `docs/`。
+4. 每个智能体只读写自身私有目录，**禁止跨 AI 修改他人私有目录**；所有智能体均可读写 `docs/`。
+5. 工具目录与内容边界（新增工具按此对照，无需改本规范）：
+
+   | 工具 | 私有目录 | 允许存放 | 禁止存放 |
+   | --- | --- | --- | --- |
+   | Trae | `.trae/` | 规则镜像（`rules/project_rules.md`）、技能、缓存 | 设计文档/方案/报告正文（已迁 4 份设计文档，原路径仅留 3 行指针） |
+   | WorkBuddy | `.workbuddy/` | memory、automations、`rag/`、`ops/`、reports 临时输出 | 知识库正文（已迁至 `docs/reference/ai-knowledge/`） |
+   | ZCode | `.zcode/` | ignore 配置、会话计划缓存 | 计划正文（须进 `docs/plans/` 或 `docs/archived/ai-sessions/`） |
+   | Qoder | `.qoder/` | 配置、缓存 | 业务文档 |
+   | Codex | `.codex/` | 配置、缓存 | 业务文档 |
+   | Claude | `.claude/` | 配置、agents 定义 | 业务文档 |
+   | 其他/未来 | 新增隐藏目录 | 配置、缓存、规则镜像 | 业务文档 |
+
+6. **版本控制**：`.gitignore` 必须整体忽略上表私有目录，且**禁止出现任何忽略 `docs/` 或 `docs/**.md` 的规则**（`docs/` 全量入库）；每个忽略项须带注释说明「为什么忽略、正文在哪」，禁止裸 `*.md` 模糊规则（会误伤 `docs/` 下归档件）。当前已以「AI 工具私有目录（规则见 AGENTS.md 第 0 章 0.4）」标记块落地。
+7. `.trae/rules/project_rules.md` 是本地镜像（不入版本库），内容不得与本文件冲突。
+8. **角色卡**：`docs/specs/ai-agents/`（R1 规划 / R2 后端实现 / R3 契约守门 / R4 测试 / R5 评审）可直接粘贴给任意工具复用；复核默认由 R5 承担，不得自审自放。
+
+### 0.5 后端编码红线（与现状对齐 + 例外登记）
+
+1. **Web 层**：Spring WebFlux 响应式，接口一律 `Handler`（函数式处理器）+ `RouterFunction` 注册路由；接口返回 `Mono`/`Flux`。
+2. **禁止**新增 `@Controller` / `@RestController` 注解式控制器。存量例外见 `docs/tasks/project-tasks.md`（BE-004），**在评估通过前不得改动**，避免改变错误响应契约。
+3. **依赖注入**：禁止 `@Autowired`，统一构造器注入；禁止字段注入、setter 注入、混合注入。
+4. **POJO**：`Entity` / `DTO` / `VO` / `BO` / `Query` 统一 Lombok；禁止手写 getter/setter/toString，禁止 Lombok 与手写存取方法混用。`lombok.config` 保持仓库现状。
+5. **对象转换**：统一 MapStruct；禁止 `BeanUtils`、`PropertyUtils`、手写逐行 set 拷贝。
+6. **日志**：统一 `@Slf4j`；禁止手动 `LoggerFactory.getLogger()`。
+7. **注释**：类、接口、枚举、常量、公开方法必须有完整 Javadoc（含 `@author`/`@since`/`@param`/`@return`/`@throws`）；禁止占位空注释。
+8. **接口文档**：SpringDoc OpenAPI3（WebFlux 版），Handler 用 `@Tag`/`@Operation`，DTO 字段用 `@Schema`（说明、示例、必填、约束），保证 Swagger 可见完整请求体/响应体。
+9. **构建环境**：`sdk env` 后使用 JDK `21.0.13.0+9-tem` + `mvnd 2.0.0-rc-3`；禁止系统 `mvn`、禁止其他 JDK、禁止 `-Dmaven.repo.local` 指项目内目录。
+10. **模块边界**：新增模块只在所属分组 `<modules>` 登记一次，根只登记顶层分组；不得复制安全/数据源/缓存/消息/日志/调度框架到业务库。
+
+### 0.6 变更纪律（保证「不影响功能」）
+
+1. 先登记任务再动手；改造必须可评审、可回滚、可分批。
+2. 涉及接口契约、模块坐标、parent 继承、运行模块清单、数据库迁移、网关路由的改动，必须在 `docs/specs/` 先出方案。
+3. 一次提交只做一类改动（文档归位 / 脚本 / 功能），禁止混提。
+4. 提交前必须通过：`mvnd -T4 -B clean verify`（或按改动范围 `-pl` 定位模块 + `-am`）；文档类改动至少跑 `bash scripts/governance/verify-docs.sh`。
+5. 不得为通过构建而放宽质量门禁、跳过测试、删除断言。
+6. 回滚以 `git revert` 为准，禁止 `reset --hard` 覆盖他人工作区。
+7. 工作区若存在他人未提交改动（每日报告等），不得清理、不得覆盖。
+
+### 0.7 自检命令
+
+```bash
+source scripts/build/init-build-env.sh      # 固定 JDK/mvnd
+bash scripts/governance/verify-docs.sh      # 目录/索引/任务大盘/私有目录/图表数量自检
+bash scripts/governance/audit-backend-rules.sh   # 后端红线静态扫描（默认警告模式）
+```
+
+脚本用法与实现说明见 `scripts/governance/README.md`；`--strict` 才产生非零退出码（默认只警告）。
+提交前钩子启用方式：`git config core.hooksPath .githooks`（`.githooks/pre-commit` 只警告不阻断，含图表删除告警）。
+
+---
+
+## 附录 A：原始仓库开发与协作规范（原文完整保留，未删改）
+
 # AGENTS.md — Apex Scaffold
 
 本文件定义仓库的开发、验证和协作约束。项目使用 Java 21、Spring Boot、Spring WebFlux 和 DDD，当前运行架构为网关加六个业务服务（system/auth/workflow/file/office/integration）、只读查询聚合服务，以及任务代理、可选脱敏服务与可选知识库服务（system/auth/workflow/file/office/integration 七个业务库，2026-11-14 新增知识库）。修改前阅读目标模块的代码、POM、配置和测试，沿用现有模式；只完成任务需要的变更。

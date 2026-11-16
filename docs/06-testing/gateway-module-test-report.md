@@ -109,7 +109,7 @@ mvnd -pl :apex-gateway -am verify
 ## 八、熔断 · 限流 · 负载均衡 · 访问日志增强补充（2026-10-12）
 
 > 对应迁移方案 §5.3（过滤器链）、§15（灰度切流），以及内部方案
-> `.trae/documents/gateway-resilience-enhancement-plan.md`（Task 1–5）。
+> `docs/plans/archived-ai-sessions/gateway-resilience-enhancement-plan.md`（Task 1–5）。
 
 ### 8.1 新增/扩展测试类
 

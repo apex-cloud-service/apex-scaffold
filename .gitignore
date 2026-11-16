@@ -124,3 +124,16 @@ podman-compose.yml.bak.*
 /daily-report-*.md
 /daily-report-*.html
 /daily-report-*.docx
+
+# ===== AI 工具私有目录（规则见 AGENTS.md 第 0 章 0.3）=====
+# 只允许存放各 AI 工具的规则/配置/缓存/记忆；
+# 业务文档、方案、报告一律写入 docs/，禁止在本目录留存正文。
+.workbuddy/
+.trae/
+.zcode/
+.qoder/
+.codex/
+.agents/
+.ai/
+.claude/
+# 注意：docs/ 必须全量入库，禁止添加任何忽略 docs 的规则

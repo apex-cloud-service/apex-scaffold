@@ -70,7 +70,7 @@
 >   `apex.gateway.rate-limit.algorithm` 默认 `token-bucket`（可切换 `fixed-window`），超限 `429`，
 >   Redis 异常时降级放行并记录 WARN 与指标。
 > - **负载均衡**：`apex.gateway` 按 `X-Gray-Tag` 匹配 `metadata[gray-tag]` 实例（`com.apex.scaffold.gateway.lb`）。
-> 上述实现细节、装配类与指标（`apex.gateway.*`）以源码与 `.trae/documents/gateway-resilience-enhancement-plan.md` 为准。
+> 上述实现细节、装配类与指标（`apex.gateway.*`）以源码与 `docs/plans/archived-ai-sessions/gateway-resilience-enhancement-plan.md` 为准。
 
 ### 2.4 已有健康检查与注册能力
 

@@ -210,3 +210,50 @@ API 接口文档、规范和版本管理。
 [快速开始](./00-getting-started/quickstart.md) • [架构设计](./02-architecture/README.md) • [API 文档](./03-api/README.md) • [运维部署](./05-operations/README.md)
 
 </div>
+
+---
+
+## 🏛 项目治理与任务管理（2026-11-16 增补）
+
+> 本区块为治理规范新增入口。既有编号目录（00–08）与专题目录（`architecture`/`api`/`cache`/`diagrams`/`migration`/`reports`/`_archive`）**全部保持不变**，不搬迁、不改名。
+
+### 规范与规则
+
+- [项目治理规范（AGENTS.md 第 0 章）](../AGENTS.md) — 文档收口、任务体系、多智能体隔离、后端编码红线、图表保护
+- [任务大盘](tasks/project-tasks.md) — 全量任务、优先级、状态与验收标准（唯一可信源）
+
+### 新增标准目录
+
+| 目录 | 用途 | 入口 |
+| --- | --- | --- |
+| `docs/tasks/` | 任务大盘与迭代任务 | [tasks/README](tasks/README.md) |
+| `docs/specs/` | 需求与技术方案（评审后实施） | [specs/README](specs/README.md) |
+| `docs/plans/` | 实施与迁移计划 | [plans/README](plans/README.md) |
+| `docs/records/` | 变更、改造、缺陷留痕 | [records/README](records/README.md) |
+| `docs/reviews/` | 方案评审、代码评审 | [reviews/README](reviews/README.md) |
+| `docs/notes/` | 调研、对接备忘、风险纪要 | [notes/README](notes/README.md) |
+
+### 图表资产（217 SVG / 68 MMD，禁止批量移动与删除）
+
+- [图表主库](diagrams/) — 逻辑/物理/技术架构、登录鉴权、权限校验、工作流审批、文件上传、ER 图、多级缓存、限流熔断，以及 100+ 模块结构与 UML 领域模型
+- [架构设计文档](02-architecture/README.md) — DDD 四层架构、部署架构、架构演进
+- 更新规则见 [AGENTS.md 第 0.3 节](../AGENTS.md)：新增版本文件 + 记录差异，不改历史图。
+
+### 规范正文（完整、可独立阅读）
+
+- [项目任务管理规范](specs/project-governance.md) — 优先级与五状态、文档收口、多智能体目录映射、`.gitignore` 规则、后端 10 条红线、执行记录、验收清单
+- [AI 角色卡 R1–R5](specs/ai-agents/README.md) — 需求拆解 / 后端实现 / 契约守门 / 测试回归 / 评审
+
+### 迁入的历史资料（自 AI 私有目录迁出，内容零删改）
+
+- [AI 会话设计文档归档](plans/archived-ai-sessions/README.md) — 原 `.trae/documents`：文档对齐计划、网关韧性方案、微服务迁移执行计划、Phase 5/6 抽取设计
+
+### 治理自检
+
+```bash
+source scripts/build/init-build-env.sh        # 固定 JDK 21.0.13.0+9-tem + mvnd 2.0.0-rc-3
+bash scripts/governance/verify-docs.sh        # 目录、索引、任务大盘、私有目录边界、图表计数
+bash scripts/governance/audit-backend-rules.sh     # 后端红线扫描（默认警告模式）
+```
+
+脚本用法与判据见 [scripts/governance/README.md](../scripts/governance/README.md)；配合 `.githooks/pre-commit`（`git config core.hooksPath .githooks`）在提交前自动提示。

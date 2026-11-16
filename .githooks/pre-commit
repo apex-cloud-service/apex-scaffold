@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# 提交前治理自检（警告模式，永不阻断提交）
+# 启用：git config core.hooksPath .githooks
+# 关闭：git config --unset core.hooksPath
+set -u
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)
+[ -z "$STAGED" ] && exit 0
+
+# 只在改动涉及治理范围时触发
+TRIGGER=$(echo "$STAGED" | grep -E "^(docs/|AGENTS\.md|scripts/governance/|\.githooks/)" || true)
+[ -z "$TRIGGER" ] && exit 0
+
+echo "[governance] 改动涉及文档治理范围，运行自检（警告模式）"
+
+# 1. 文档治理自检
+if [ -x scripts/governance/verify-docs.sh ]; then
+  bash scripts/governance/verify-docs.sh 2>&1 | grep -E "^(==|  \[WARN\]|⚠️|✅)" || true
+fi
+
+# 2. 红线扫描（仅提示，不阻断）
+if [ -x scripts/governance/audit-backend-rules.sh ] && echo "$STAGED" | grep -q "\.java"; then
+  echo "[governance] 检测到 Java 改动，跳过全量红线扫描（提交后请手动跑 audit-backend-rules.sh）"
+fi
+if [ -x scripts/governance/audit-frontend-rules.sh ] && echo "$STAGED" | grep -qE "\.(ts|vue)$"; then
+  echo "[governance] 检测到前端改动，跳过全量红线扫描（提交后请手动跑 audit-frontend-rules.sh）"
+fi
+
+# 3. 图表删除告警（防止误删 SVG/MMD）
+DEL=$(git diff --cached --name-only --diff-filter=D 2>/dev/null | grep -E "\.(svg|mmd)$" || true)
+if [ -n "$DEL" ]; then
+  echo "[governance] ⚠️ 本提交删除图表文件（如有意为之请忽略）："
+  echo "$DEL" | sed 's/^/    /'
+fi
+
+# 4. 大文件提醒（>5MB）
+while read -r f; do
+  [ -f "$f" ] || continue
+  sz=$(wc -c < "$f" | tr -d ' ')
+  [ "${sz:-0}" -gt 5242880 ] && echo "[governance] ⚠️ 大文件入库（${sz} 字节）：$f"
+done <<EOF
+$(echo "$STAGED")
+EOF
+
+echo "[governance] 自检结束（未阻断提交）"
+exit 0
