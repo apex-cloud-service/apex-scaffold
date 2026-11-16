@@ -165,6 +165,22 @@ if [ "$REPO" = "backend" ]; then
     *\"21*) pass "JDK 21：${JAVA_V}" ;;
     *) warn "当前 JDK 可能不是 21：${JAVA_V}" ;;
   esac
+  # 本地仓库位置与根 target 副本（只报告，不自动清理；详见 BE-035）
+  if [ -f scripts/lib/common.sh ]; then
+    # shellcheck disable=SC1091
+    source scripts/lib/common.sh
+  fi
+  if REPO_RESOLVED="$(apex_check_local_repository "$ROOT" -T4 -B clean verify 2>&1)"; then
+    pass "本地仓库位于仓库外：${REPO_RESOLVED}"
+  else
+    warn "本地仓库检查未通过：${REPO_RESOLVED}"
+  fi
+  if [ -d "${ROOT}/target/project-local-repo" ]; then
+    COPY_FILES="$(find "${ROOT}/target/project-local-repo" -type f 2>/dev/null | wc -l | tr -d ' ')"
+    warn "根 target/project-local-repo 有 ${COPY_FILES} 个文件（Maven 4 构建自动写入的 reactor 副本，可再生；释放空间可定向清理该目录，勿清空 ~/.m2/repository）"
+  else
+    pass "根 target 无 project-local-repo 副本"
+  fi
 else
   if command -v node >/dev/null 2>&1; then pass "node 可用：$(node --version)"; else fail "node 不可用"; fi
   if [ -f package.json ]; then

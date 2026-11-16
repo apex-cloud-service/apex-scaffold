@@ -62,6 +62,10 @@ SERVICES=(apex-system-service apex-auth-service apex-workflow-service apex-offic
 # -pl 冒号形式按坐标匹配（第二阶段起叶子嵌套于分组父目录，裸路径不再命中）
 SERVICE_MODULES="${(j:,:)${SERVICES/#/:}},:apex-tools-deployment"
 
+# 本地仓库守卫：最终参数定型后、调用 mvnd 前拒绝项目内仓库覆盖（只读解析，不触发 Maven）
+source "${ROOT_DIR}/scripts/lib/common.sh"
+apex_check_local_repository "${ROOT_DIR}" -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests
+
 echo "==> [1/3] 构建 ${PROFILE} 版本 (v${VERSION})"
 MAVEN_OPTS="-Xmx1024m" mvnd -o -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests \
   || MAVEN_OPTS="-Xmx1024m" mvnd -q clean package -P"${PROFILE}" -pl "${SERVICE_MODULES}" -am -DskipTests

@@ -149,6 +149,8 @@ manifest_field() {
 # 调用方: cmd_build / cmd_package / precheck_common
 # ------------------------------------------------------------
 mvnd_offline_first() {
+  # 本地仓库守卫：最终参数定型后、调用 mvnd 前拒绝项目内仓库覆盖（只读解析，不触发 Maven）
+  apex_check_local_repository "${PROJECT_ROOT}" "$@" || exit 1
   log_info "mvnd $*"
   MAVEN_OPTS="-Xmx1024m" mvnd -o "$@" || MAVEN_OPTS="-Xmx1024m" mvnd "$@"
 }
@@ -273,9 +275,11 @@ cmd_test() {
   init_build_env
   if [[ -n "${module}" ]]; then
     log_info "模块测试（-am 连带依赖模块）"
+    apex_check_local_repository "${PROJECT_ROOT}" -T4 -B -pl "$(colonize_ids "${module}")" -am test
     MAVEN_OPTS="-Xmx1024m" mvnd -T4 -B -pl "$(colonize_ids "${module}")" -am test
   else
     log_info "整仓测试"
+    apex_check_local_repository "${PROJECT_ROOT}" -T4 -B test
     MAVEN_OPTS="-Xmx1024m" mvnd -T4 -B test
   fi
 }
@@ -288,6 +292,7 @@ cmd_test() {
 # ------------------------------------------------------------
 cmd_verify() {
   init_build_env
+  apex_check_local_repository "${PROJECT_ROOT}" -T4 -B clean verify
   log_info "完整回归门禁（含 Spotless/PMD/JaCoCo/Failsafe，约 20 分钟）"
   MAVEN_OPTS="-Xmx1024m" mvnd -T4 -B clean verify
 }

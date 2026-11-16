@@ -325,6 +325,200 @@ handle_error() {
 }
 
 ###############################################################################
+# 构建仓库路径检查
+###############################################################################
+
+# 只读解析 mvnd 的仓库配置；不调用 Maven，不创建目录，不输出其它属性/凭据。
+# 用法：apex_check_local_repository <项目根> <最终 mvnd 参数...>
+# 调用方须使用与随后的 mvnd 命令相同的环境（包括覆盖后的 MAVEN_OPTS）。
+apex_check_local_repository() {
+    require_command python3 "Python 3（本地仓库路径检查）" || return 1
+    python3 - "$@" <<'PY'
+import os
+import re
+import shlex
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+
+def reject(message):
+    print("[ERROR] 本地仓库检查：" + message, file=sys.stderr)
+    raise SystemExit(1)
+
+
+if len(sys.argv) < 2:
+    reject("缺少项目根目录")
+root = Path(sys.argv[1]).resolve()
+home = Path.home()
+properties = {
+    "user.home": str(home),
+    "user.dir": os.getcwd(),
+    "session.rootDirectory": str(root),
+    "session.topDirectory": str(root),
+    "maven.multiModuleProjectDirectory": str(root),
+    "maven.user.conf": str(home / ".m2"),
+}
+settings_options = {}
+
+
+def expand(value):
+    for _ in range(12):
+        replaced = re.sub(
+            r"\$\{([^}]+)\}",
+            lambda match: os.environ.get(match[1][4:], match[0])
+            if match[1].startswith("env.")
+            else properties.get(match[1], match[0]),
+            value,
+        )
+        if replaced == value:
+            break
+        value = replaced
+    if "${" in value:
+        reject("仓库相关配置包含无法解析的变量；请使用明确的绝对路径")
+    return os.path.expanduser(value)
+
+
+def path(value):
+    candidate = Path(expand(value))
+    return (candidate if candidate.is_absolute() else Path.cwd() / candidate).resolve()
+
+
+def text(file):
+    try:
+        return file.read_text(encoding="utf-8") if file.is_file() else ""
+    except (OSError, UnicodeError):
+        reject("无法读取仓库相关配置")
+
+
+def tokens(value):
+    try:
+        return shlex.split(value, comments=True)
+    except ValueError:
+        reject("仓库相关参数引号不完整")
+
+
+def arguments(items):
+    index = 0
+    while index < len(items):
+        item = items[index]
+        if item == "-D":
+            index += 1
+            if index == len(items):
+                reject("-D 缺少属性")
+            item = "-D" + items[index]
+        if item.startswith("-D"):
+            key, separator, value = item[2:].partition("=")
+            properties[key] = value if separator else "true"
+        elif item in ("-s", "--settings", "-gs", "--global-settings", "-ps", "--project-settings"):
+            index += 1
+            if index == len(items):
+                reject("settings 参数缺少文件路径")
+            settings_options[item] = items[index]
+        else:
+            for option in ("--settings", "--global-settings", "--project-settings"):
+                if item.startswith(option + "="):
+                    settings_options[option] = item[len(option) + 1:]
+            for option in ("-s", "-gs", "-ps"):
+                if item.startswith(option) and len(item) > len(option):
+                    settings_options[option] = item[len(option):].lstrip("=")
+        index += 1
+
+
+def property_file(file, seen=None):
+    seen = set() if seen is None else seen
+    file = file.resolve()
+    if file in seen:
+        reject("仓库配置 include 循环")
+    seen.add(file)
+    contents = re.sub(r"\\\r?\n\s*", "", text(file))
+    includes = []
+    for line in contents.splitlines():
+        line = line.strip()
+        if not line or line.startswith(("#", "!")):
+            continue
+        match = re.match(r"([^\s=:]+)\s*[=:]?\s*(.*)", line)
+        if match:
+            key, value = match.groups()
+            value = re.sub(r"\\([ =:\\\\])", r"\1", value)
+            if key == "${includes}":
+                includes.extend(value.split(","))
+            else:
+                properties[key] = value
+    for include in includes:
+        include = expand(include.strip().lstrip("?"))
+        included = Path(include)
+        property_file(included if included.is_absolute() else file.parent / included, seen)
+    seen.remove(file)
+
+
+mvnd_home = os.environ.get("MVND_HOME")
+if mvnd_home:
+    property_file(Path(mvnd_home) / "conf/mvnd.properties")
+    maven_home = Path(mvnd_home) / "mvn"
+else:
+    maven_home = Path(os.environ["MAVEN_HOME"]) if os.environ.get("MAVEN_HOME") else None
+if maven_home:
+    properties["maven.home"] = str(maven_home)
+    properties["maven.installation.conf"] = str(maven_home / "conf")
+    property_file(maven_home / "conf/maven.properties")
+property_file(home / ".m2/maven.properties")
+property_file(root / ".mvn/maven.properties")
+property_file(home / ".m2/mvnd.properties")
+property_file(root / ".mvn/mvnd.properties")
+if os.environ.get("MVND_PROPERTIES_PATH"):
+    property_file(path(os.environ["MVND_PROPERTIES_PATH"]))
+for name in ("MAVEN_OPTS", "MVND_OPTS", "JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "_JAVA_OPTIONS"):
+    arguments(tokens(os.environ.get(name, "")))
+arguments(tokens(text(root / ".mvn/jvm.config")))
+arguments(tokens(text(root / ".mvn/maven.config")))
+arguments(tokens(os.environ.get("MAVEN_ARGS", "")))
+arguments(sys.argv[2:])
+
+
+def repository_from_settings(file):
+    if not file.is_file():
+        return None
+    try:
+        document = ET.fromstring(text(file))
+    except ET.ParseError:
+        reject("无法解析 settings 文件")
+    for child in document:
+        if child.tag.rsplit("}", 1)[-1] == "localRepository" and child.text:
+            return child.text.strip()
+    return None
+
+
+repository = None
+settings_files = []
+if maven_home:
+    settings_files.append(maven_home / "conf/settings.xml")
+settings_files.extend((path(properties["maven.user.conf"]) / "settings.xml", root / ".mvn/settings.xml"))
+for index, options in enumerate((("-gs", "--global-settings"), ("-s", "--settings"), ("-ps", "--project-settings"))):
+    explicit = next((settings_options[option] for option in reversed(options) if option in settings_options), None)
+    if explicit:
+        while len(settings_files) < 3:
+            settings_files.insert(0, None)
+        settings_files[index] = path(explicit)
+for file in settings_files:
+    if file:
+        configured = repository_from_settings(file)
+        if configured is not None:
+            repository = configured
+repository = properties.get("maven.repo.local", repository if repository is not None else str(home / ".m2/repository"))
+if not repository.strip():
+    reject("仓库路径为空")
+try:
+    resolved = path(repository)
+except (OSError, RuntimeError):
+    reject("无法规范化仓库路径")
+if resolved == root or root in resolved.parents:
+    reject("拒绝项目内本地仓库；请移除覆盖，使用 ~/.m2/repository 或项目外目录")
+print(resolved)
+PY
+}
+
+###############################################################################
 # 路径处理函数
 ###############################################################################
 

@@ -10,7 +10,7 @@
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- |
 
-（2026-11-16：本轮 5 张卡 `BE-002/004/005/006/007` 已全部完成并移入 §2；新增任务须先立卡再动手。）
+| BE-035 | P2 | 根 target 额外构件副本定向清理与项目内本地仓库防再现守卫 | 已完成 | 主控 Trae | 守卫接入 build.sh/release.sh/apex.sh 并经 BuildPathContractTest 9/9 验证；preflight 仓库位置与副本双检通过（OK=15 WARN=3 FAIL=0）；`target/project-local-repo` 125 副本 1.4G + 44 .DS_Store 已定向清理；不改业务代码/POM、未提交 | `scripts/lib/common.sh`、`scripts/build/build.sh`、`scripts/release/release.sh`、`apex-tools-parent/apex-tools-build/bin/apex.sh`、`scripts/dev/apex-preflight.sh`、台账 #40/#41 |
 
 ## 2. 本期已完成（治理基线）
 

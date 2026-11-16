@@ -20,6 +20,10 @@ echo "开始构建项目..."
 
 source "${PROJECT_ROOT}/scripts/build/init-build-env.sh"
 
+# 本地仓库守卫：最终参数定型后、调用 mvnd 前拒绝项目内仓库覆盖（只读解析，不触发 Maven）
+source "${PROJECT_ROOT}/scripts/lib/common.sh"
+apex_check_local_repository "${PROJECT_ROOT}" clean package "${PROFILE}" -DskipTests
+
 # 离线优先；失败时自动回退在线（首次构建需联网拉依赖）
 MAVEN_OPTS="-Xmx1024m" mvnd -o clean package "${PROFILE}" -DskipTests \
   || MAVEN_OPTS="-Xmx1024m" mvnd clean package "${PROFILE}" -DskipTests
