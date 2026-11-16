@@ -28,7 +28,7 @@
 | 2026-11-11 | all-projects | 文档与代码一致性收口 | [2026-11-11-all-projects-daily-report.md](./2026-11-11-all-projects-daily-report.md) |
 | 2026-11-12 | all-projects | 查询聚合能力落地 | [2026-11-12-all-projects-daily-report.md](./2026-11-12-all-projects-daily-report.md) |
 | 2026-11-14 | all-projects | 知识库落地与模块归位 | [2026-11-14-all-projects-daily-report.md](./2026-11-14-all-projects-daily-report.md) |
-| 2026-11-16 | all-projects | 认证加固与知识库清理 | [2026-11-16-all-projects-daily-report.md](./2026-11-16-all-projects-daily-report.md) |
+| 2026-11-16 | all-projects | 治理规范落地与仓库规范化 | [2026-11-16-all-projects-daily-report.md](./2026-11-16-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 
