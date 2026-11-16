@@ -93,20 +93,13 @@ backups/
 rebel.xml
 rebel-remote.xml
 
-# ===== 工具链本地状态 =====
-.workbuddy/
-.idea/*
+# ===== 本地日志输出 =====
 *.log.{err,out}
-
-# ===== Agent / 协作工具工作区（本地状态与计划草稿，不入库）=====
-.trae/
-.workbuddy/
-.zcode/
-.freebuff/
+# 注：AI 私有目录（.workbuddy/.trae/.zcode/.qoder/.codex/.claude/.agents/.ai/.freebuff）
+#     统一在文件末尾单一区块维护，此处不再重复。
 
 # ===== 发布产物 =====
-# 注：release/ 锚定到仓库根目录，理由同上方 build/。
-dist/
+# 注：release/ 锚定到仓库根目录，理由同上方 build/；dist/ 已在「构建产物」区块声明。
 /release/
 .scannerwork/
 
@@ -125,15 +118,15 @@ podman-compose.yml.bak.*
 /daily-report-*.html
 /daily-report-*.docx
 
-# ===== AI 工具私有目录（规则见 AGENTS.md 第 0 章 0.3）=====
-# 只允许存放各 AI 工具的规则/配置/缓存/记忆；
-# 业务文档、方案、报告一律写入 docs/，禁止在本目录留存正文。
-.workbuddy/
-.trae/
-.zcode/
-.qoder/
-.codex/
-.agents/
-.ai/
-.claude/
+# ===== AI 工具私有目录（规则见 AGENTS.md 第 0 章 0.4；唯一区块，勿在别处重复）=====
+# 只允许存放各 AI 工具的规则/配置/缓存/记忆；业务文档、方案、报告一律写入 docs/。
+.workbuddy/      # WorkBuddy 会话/记忆（正文见 docs/reference/ai-knowledge/）
+.trae/           # Trae 会话与文档草稿（正文见 docs/）
+.zcode/          # ZCode 计划/会话（正文见 docs/plans/）
+.qoder/          # Qoder 工作区
+.codex/          # Codex 工作区
+.claude/         # Claude 工作区
+.agents/         # 通用 Agent 定义与缓存
+.ai/             # 其他 AI 工具目录
+.freebuff/       # Freebuff 工作区
 # 注意：docs/ 必须全量入库，禁止添加任何忽略 docs 的规则
