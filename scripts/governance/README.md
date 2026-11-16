@@ -76,3 +76,28 @@ bash scripts/governance/check-doc-refs.sh --strict   # CI / 复审用
 
 **为什么新增**：治理评审（2026-11-16）发现 25 篇活文档在迁移后仍指向私有目录，旧自检无法发现。
 白名单只允许「历史归档 + 迁移说明 + 评审取证」三类，**不得豁免 `docs/` 下的现行规范与索引**。
+
+
+## 6. `check-memory-sync.sh`（记忆台账同步校验，2026-11-16 新增）
+
+| 项 | 说明 |
+| --- | --- |
+| 目的 | 强制「任何改动都写入记忆台账」，落实规范 §5.4 |
+| 查什么 | ① 本次暂存改动里是否包含记忆台账 `docs/reference/ai-knowledge/07-change-memory.md`（前端仓为 `04-change-memory.md`，脚本自动探测）② 提交信息是否带 `memory:` 标记 |
+| 阻断 | 默认**只告警**（exit 0），`--strict` 才 exit 1 |
+| 接入点 | `.githooks/pre-commit` 第 0 步（所有提交都跑）+ `.githooks/commit-msg`（校验提交信息） |
+| 例外 | 纯机械改动（格式化、改错字）在提交信息写 `memory: n/a（原因）` |
+
+```bash
+bash scripts/governance/check-memory-sync.sh                     # 检查已暂存改动
+bash scripts/governance/check-memory-sync.sh --msg "$(cat .git/COMMIT_EDITMSG)"   # 连提交信息一起查
+bash scripts/governance/check-memory-sync.sh --strict            # CI 用，缺登记即失败
+```
+
+输出示例：
+
+```text
+[memory] ⚠️ 本次提交共 3 个文件改动，但未暂存记忆台账 07-change-memory.md
+[memory]    规则（规范 §5.4）：任何改动都要在台账追加一条，六字段 = 日期/类型/摘要/提交/证据/影响面
+[memory] 结果：警告（不阻断提交）
+```

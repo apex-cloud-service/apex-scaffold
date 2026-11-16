@@ -9,6 +9,11 @@ cd "$ROOT"
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null || true)
 [ -z "$STAGED" ] && exit 0
 
+# 0. 记忆台账同步（规范 §5.4，所有改动都查，警告模式）
+if [ -x scripts/governance/check-memory-sync.sh ]; then
+  bash scripts/governance/check-memory-sync.sh 2>&1 || true
+fi
+
 # 只在改动涉及治理范围时触发
 TRIGGER=$(echo "$STAGED" | grep -E "^(docs/|AGENTS\.md|scripts/governance/|\.githooks/)" || true)
 [ -z "$TRIGGER" ] && exit 0

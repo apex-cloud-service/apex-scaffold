@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# 提交信息记忆标记校验（警告模式，永不阻断）
+# 规则：docs/specs/project-governance.md §5.4 —— 提交信息末行须写 memory: <台账>#<条目>
+set -u
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT" || exit 0
+MSG_FILE="${1:-}"
+[ -f "$MSG_FILE" ] || exit 0
+if [ -x scripts/governance/check-memory-sync.sh ]; then
+  bash scripts/governance/check-memory-sync.sh --msg "$(cat "$MSG_FILE")" 2>&1 || true
+fi
+exit 0
