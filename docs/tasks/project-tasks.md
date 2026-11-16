@@ -28,9 +28,9 @@
 | BE-016 | P1 | 迁移 `.workbuddy/reports` 3 份自动周期报告 → `docs/08-project-management/periodic-reports/{daily,weekly,monthly}`（内容唯一，避免丢失） | 已完成 | 2026-11-16 | `docs/records/2026-11-16-docs-governance.md` |
 | BE-018 | P3 | 规范正文入仓并补工具目录/忽略规则条款 | 已完成 | 2026-11-16 | `docs/specs/project-governance.md`、`AGENTS.md` 0.1/0.4/0.7、`scripts/governance/README.md` |
 | BE-019 | P2 | 他人未提交的 3 项（记忆卡基线、daily 索引、11-16 日报）按规范复核后纳入版本库 | 已完成 | 2026-11-16 | `MEMORY-CARD.md`（指针改指 `docs/`）、`daily/README.md`、`2026-11-16-all-projects-daily-report.md`（补后段补记） |
-| BE-020 | P1 | 治理评审整改（RV-01~RV-14，批次 1–6） | 已完成 | 主控 | 2026-11-16 | `verify-docs.sh` 通过（仅 BE-001 存量告警）、`check-doc-refs.sh` 0 项、图表 217/68 不变 | `docs/records/2026-11-16-governance-alignment-remediation.md` |
-| BE-001 | P2 | 图表资产补导出：30 个 `.mmd` 补同名 `.svg` | 已完成 | 主控 | 2026-11-16 | 68/68 配对、SVG 217→247、`verify-docs.sh` 第 6 项 0 告警 | `docs/diagrams/README.md`（补导出记录）、`scripts/utils/render-mermaid-svg.sh` |
-| BE-017 | P3 | `apex-common` 的 `VirtualThreadBoundedExecutor` 手写 `LoggerFactory` 改 `@Slf4j` | 已完成 | 主控 | 2026-11-16 | `mvnd -pl :apex-common -am verify` BUILD SUCCESS（测试/覆盖率/failsafe 全绿）、日志变量名仍为 `log` | `apex-shared-parent/apex-common/.../scheduler/VirtualThreadBoundedExecutor.java` |
+| BE-020 | P1 | 治理评审整改（RV-01~RV-14，批次 1–6） | 已完成 | 2026-11-16 | 验收：`verify-docs.sh` 通过（仅 BE-001 存量告警）、`check-doc-refs.sh` 0 项、图表 217/68 不变；产出：`docs/records/2026-11-16-governance-alignment-remediation.md` |
+| BE-001 | P2 | 图表资产补导出：30 个 `.mmd` 补同名 `.svg` | 已完成 | 2026-11-16 | 验收：68/68 配对、SVG 217→247、`verify-docs.sh` 第 6 项 0 告警；产出：`docs/diagrams/README.md`（补导出记录）、`scripts/utils/render-mermaid-svg.sh` |
+| BE-017 | P3 | `apex-common` 的 `VirtualThreadBoundedExecutor` 手写 `LoggerFactory` 改 `@Slf4j` | 已完成 | 2026-11-16 | 验收：`mvnd -pl :apex-common -am verify` BUILD SUCCESS（测试/覆盖率/failsafe 全绿）、日志变量名仍为 `log`；产出：`apex-shared-parent/apex-common/.../scheduler/VirtualThreadBoundedExecutor.java` |
 | BE-021 | P3 | 5 张序列图激活盒恢复（`78/84/90/93/94`）：源文件激活盒嵌套不合法，已归一化为无语义损失的生命线 | 已完成 | 2026-11-16 | **决策①接受现状**（业主 2026-11-16 确认；如需还原按②人工重排或③`opt/alt` 替代另开任务）。见 `docs/diagrams/README.md`「2026-11-16 批量补导出记录」 |
 | BE-003 | P2 | 根目录散落文档归位：`aggregation-optimization-plan.md` → `docs/plans/`、`architecture-review-report.md` → `docs/reviews/`（根目录留 3 行指针，SHA-256 迁移前后核对） | 已完成 | 主控 | 2026-11-16 |
 | BE-022 | P1 | 变更记忆台账建立 + 规范 §5.4 强制登记（六字段、append-only） | 已完成 | 2026-11-16 | `docs/reference/ai-knowledge/07-change-memory.md`；验收：台账条目连续、提交带 `memory:` 标记（`check-memory-sync.sh` 0 项） |
@@ -44,7 +44,7 @@
 | BE-030 | P0 | 整改 B3：CI 触发分支对齐 `dev`/`master`/`test`（5 个 workflow + 镜像条件改 `refs/heads/master`） | 已完成 | 2026-11-16 | `.github/workflows/`；验收：无 `main` 残留、YAML 解析通过 |
 | BE-031 | P1 | 整改 B4：SpringDoc 注解补齐至 100%（2 Router `@RouterOperations`、3 方法 `@Operation`） | 已完成 | 2026-11-16 | `apex-system/.../router/OpenUserRouter.java` 等 4 个类；验收：覆盖率 100%、`verify` BUILD SUCCESS |
 | BE-032 | P2 | 整改 B5：`.gitignore` 去重为单一私有目录区块（含注释独占一行的补正） | 已完成 | 2026-11-16 | `.gitignore`；验收：`check-ignore` 命中、无未跟踪私有目录 |
-| BE-033 | P1 | 整改 B6：GitHub 分支保护「档 1」 | **已完成** | 2026-11-16 | 转 public 后六条 `PUT /protection` 全部成功：两仓 `master`/`test`/`dev` 均 `force=false del=false`，`master`/`test` 另加 `conversation_resolution=true`；绕钩子实测删支/强推均被服务端 `protected branch hook declined` 拒绝，`test` 未被改写。保底保留 `.githooks/pre-push`。见 `docs/05-operations/github-branch-protection.md` §0.1 + §5 |
+| BE-033 | P1 | 整改 B6：GitHub 分支保护「档 1」 | 已完成 | 2026-11-16 | 转 public 后六条 `PUT /protection` 全部成功：两仓 `master`/`test`/`dev` 均 `force=false del=false`，`master`/`test` 另加 `conversation_resolution=true`；绕钩子实测删支/强推均被服务端 `protected branch hook declined` 拒绝，`test` 未被改写。保底保留 `.githooks/pre-push`。见 `docs/05-operations/github-branch-protection.md` §0.1 + §5 |
 
 ## 3. 阻塞与风险登记
 

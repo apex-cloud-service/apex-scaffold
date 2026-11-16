@@ -125,6 +125,8 @@ podman-compose.yml.bak.*
 .workbuddy/
 # Trae 会话与文档草稿（正文见 docs/）
 .trae/
+# Trae 导出的 HTML 分享包（含他人报告副本，正文不入库）
+.trae-html-share-packages/
 # ZCode 计划与会话（正文见 docs/plans/）
 .zcode/
 # Qoder 工作区
