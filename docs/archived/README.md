@@ -10,4 +10,4 @@
 
 | 目录 | 内容 |
 | --- | --- |
-| [ai-sessions/](./ai-sessions/README.md) | AI 会话计划归档（SHA-256 与原件一致，仅修 1 处相对链接） |
+| [ai-sessions/](./ai-sessions/) | AI 会话计划归档（SHA-256 与原件一致，仅修 1 处相对链接；目录内无 README，按文件列表检索） |
