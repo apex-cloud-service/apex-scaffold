@@ -120,13 +120,23 @@ podman-compose.yml.bak.*
 
 # ===== AI 工具私有目录（规则见 AGENTS.md 第 0 章 0.4；唯一区块，勿在别处重复）=====
 # 只允许存放各 AI 工具的规则/配置/缓存/记忆；业务文档、方案、报告一律写入 docs/。
-.workbuddy/      # WorkBuddy 会话/记忆（正文见 docs/reference/ai-knowledge/）
-.trae/           # Trae 会话与文档草稿（正文见 docs/）
-.zcode/          # ZCode 计划/会话（正文见 docs/plans/）
-.qoder/          # Qoder 工作区
-.codex/          # Codex 工作区
-.claude/         # Claude 工作区
-.agents/         # 通用 Agent 定义与缓存
-.ai/             # 其他 AI 工具目录
-.freebuff/       # Freebuff 工作区
+# 注：.gitignore 的注释必须独占一行，不能写在规则行尾（行尾 # 会被当作规则的一部分）。
+# WorkBuddy 会话与记忆（正文见 docs/reference/ai-knowledge/）
+.workbuddy/
+# Trae 会话与文档草稿（正文见 docs/）
+.trae/
+# ZCode 计划与会话（正文见 docs/plans/）
+.zcode/
+# Qoder 工作区
+.qoder/
+# Codex 工作区
+.codex/
+# Claude 工作区
+.claude/
+# 通用 Agent 定义与缓存
+.agents/
+# 其他 AI 工具目录
+.ai/
+# Freebuff 工作区
+.freebuff/
 # 注意：docs/ 必须全量入库，禁止添加任何忽略 docs 的规则
