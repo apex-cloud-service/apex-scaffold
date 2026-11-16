@@ -13,3 +13,9 @@
 计划模板：每步必须写「改动范围 / 验证命令（`mvnd -pl … -am`）/ 回滚动作」。
 
 > 既有计划文档仍保留在 `docs/08-project-management/plans/`，不搬迁；新计划写入本目录。
+
+## 在办计划
+
+| 日期 | 主题 | 状态 | 文件 |
+| --- | --- | --- | --- |
+| 2026-11-16 | 治理规范对齐整改（RV-01~RV-14，批次 1–6） | 待业主确认 | [2026-11-16-governance-alignment-plan.md](./2026-11-16-governance-alignment-plan.md) |

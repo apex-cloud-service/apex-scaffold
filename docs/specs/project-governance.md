@@ -172,7 +172,8 @@
 - 一次提交只做一类改动：`docs(governance): …` / `chore(scripts): …` / `feat(...)` / `fix(...)`。
 - 提交前钩子：`git config core.hooksPath .githooks`（每人一次），`.githooks/pre-commit` **只警告不阻断**。
 - 禁止 `git reset --hard`、`git push -f`；回滚用 `git revert`。
-- **他人未提交改动不得触碰**：本轮改造期间 `MEMORY-CARD.md`、`docs/08-project-management/periodic-reports/daily/README.md`、`daily/2026-11-16-all-projects-daily-report.md` 属他人工作，全程未动、也未纳入提交。
+- **他人未提交改动默认不纳入**：`git status` 中非本人产物的改动，不清理、不覆盖、不擅自提交。
+- 确需纳入时：先经业主明确授权 → 按 §3.3/§3.4 只做指针与索引对齐（**正文一字不改**）→ 单独提交 → 在 `docs/records/` 留痕。示例：BE-019 将 `MEMORY-CARD.md`（指针改指 `docs/reference/ai-knowledge/`）、`daily/README.md`（索引登记）、`daily/2026-11-16-all-projects-daily-report.md`（补后段补记）复核后提交为 `14f6bc2a`。
 
 ### 5.3 分支
 
@@ -226,7 +227,7 @@
 ### 9.1 做了什么
 
 1. `AGENTS.md`：前置新增第 0 章（含 0.3 图表保护、0.4 多智能体、0.5 十条红线），原文下移为附录 A（`tail -n 306` 哈希 `aa0c25fc…60ed` 与原文件一致）。
-2. 新建六标准目录 + 各 `README.md` + 任务大盘（BE-001~007 待规划、BE-010~013 治理完成、BE-014~016 迁移完成、BE-017 技术债）。
+2. 新建六标准目录 + 各 `README.md` + 任务大盘（BE-001~008 待规划、BE-010~013 治理完成、BE-014~016 迁移完成、BE-017 技术债、BE-018 规范正文入仓已完成、BE-019 他人 3 项改动纳入已完成、BE-020 治理评审整改待规划）。
 3. 私有目录正文迁入 `docs/`（逐文件 SHA-256 一致）：
    - `.trae/documents` 4 份 → `docs/plans/archived-ai-sessions/`（原路径留指针，修 3 处引用）
    - `.workbuddy/knowledge` 7 份 → `docs/reference/ai-knowledge/`（修 rag/ops 相对链接）
@@ -253,7 +254,10 @@
 | BE-001 30 个 MMD 补 SVG | 待规划 |
 | BE-004 异常处理器评估 | 待规划（禁止先改） |
 | BE-017 `VirtualThreadBoundedExecutor` 改 `@Slf4j` | 待规划 |
-| 根目录散落文档（`aggregation-optimization-plan.md`、`architecture-review-report.md`） | 未擅动，按「先出方案再迁移」处理 |
+| BE-018 规范正文入仓（v1.1） | 已完成（2026-11-16） |
+| BE-019 他人 3 项改动按规范复核纳入 | 已完成（`14f6bc2a`） |
+| BE-020 治理评审整改（RV-01~RV-14） | 已执行（见 `docs/plans/2026-11-16-governance-alignment-plan.md`） |
+| 根目录散落文档（`aggregation-optimization-plan.md`、`architecture-review-report.md`） | 已迁入 `docs/plans/`、`docs/reviews/`，根目录留 3 行指针 |
 
 ---
 

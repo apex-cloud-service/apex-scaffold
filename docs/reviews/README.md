@@ -9,3 +9,9 @@
 4. 后续动作与任务 ID
 
 既有评审材料保留在 `docs/08-project-management/reports/` 与 `docs/02-architecture/`，不搬迁。
+
+## 已归档评审
+
+| 日期 | 对象 | 结论 | 文件 |
+| --- | --- | --- | --- |
+| 2026-11-16 | 前后端两仓治理规范对齐（基线 前端 `1455fbc` / 后端 `14f6bc2a`） | 有条件通过（P1 5 项待整改） | [2026-11-16-governance-alignment-review.md](./2026-11-16-governance-alignment-review.md) |

@@ -8,6 +8,7 @@
 ## 1. 活跃任务
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
+| BE-020 | P1 | 治理评审整改（RV-01~RV-14，批次 1–6） | 待规划 | 主控 | `verify-docs.sh` + `check-doc-refs.sh` 通过、图表 217/68 不变 | `docs/reviews/2026-11-16-governance-alignment-review.md`、`docs/plans/2026-11-16-governance-alignment-plan.md` |
 | --- | --- | --- | --- | --- | --- | --- |
 | BE-001 | P2 | 图表资产索引体检：217 SVG / 68 MMD 配对核查（实测 **30 个 MMD 无同名 SVG 导出件**，如 `diagrams/sequence/72_multi_tenant_isolation_architecture.mmd`），输出补齐清单 | 待规划 | 待定 | 清单落 `docs/notes/`；无孤立 `.mmd` 或无源 `.svg`；`verify-docs.sh` 通过 | `docs/diagrams/` |
 | BE-002 | P2 | 文档孤岛盘点：715 篇 md 中未被 `docs/README.md` 或任何目录索引引用的文件清单化（只盘点、不移动、不删除） | 待规划 | 待定 | 输出「孤岛清单 + 建议归属」，不产生任何文件移动 | `docs/README.md` |
