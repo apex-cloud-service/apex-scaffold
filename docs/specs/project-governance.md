@@ -193,10 +193,21 @@
 
 | 分支 | 用途 | 允许直接提交 | 说明 |
 | --- | --- | --- | --- |
-| `master` | 生产基线，可发布状态 | 仅文档治理类小步提交 | 每条提交都应可发布；禁止 `push -f` |
-| `dev` | 集成分支，日常开发回合 | 是 | 功能合入后先到 `dev`，验证通过再合 `master` |
-| `test` | 测试/验收环境分支 | 是 | 供测试环境部署与联调；由 `dev` 合入 |
-| 短分支 | 单个任务（如 `feat/BE-021`、`fix/FE-018`） | — | 完成后合并回 `dev` 并删除 |
+| `dev` | **默认工作分支**，承载全部日常开发与文档治理提交 | **是（默认）** | 所有新增/修改/整改都在此提交，是唯一的日常入口 |
+| `master` | 生产基线，可发布状态 | 否（仅接受从 `dev` 合入，或紧急热修） | 每条提交都应可发布；**禁止 `push -f`** |
+| `test` | 测试/验收环境分支 | 否（仅由 `dev` 合入） | 供测试环境部署与联调 |
+| 短分支 | 单个任务（如 `feat/BE-021`、`fix/FE-018`） | — | 自 `dev` 拉出，完成后合并回 `dev` 并删除 |
+
+**默认工作分支为 `dev`（2026-11-16 起，两仓本地已切换）**：日常开发、技术债整改、文档治理一律在 `dev` 上进行；`master` 只做发布与合入，`test` 只做验收。开工前先确认与对齐：
+
+```bash
+cd /Users/work/apex-scaffold
+git checkout dev                 # 默认工作分支（已切换，长期停留于此）
+git pull --ff-only               # 开工前必须与 origin/dev 对齐
+git rev-parse --abbrev-ref HEAD  # 应输出 dev
+```
+
+合入规则：`dev` 验证通过（`verify-docs.sh` / `check-doc-refs.sh` / `audit-backend-rules.sh` 全绿）→ `git checkout master && git merge --ff-only dev && git push` → `git checkout test && git merge --ff-only dev && git push` → 回到 `dev` 继续开发。**禁止在 `master` 上直接改代码或文档**（紧急热修除外，且须当日回合 `dev`）。
 
 建立与推送（已执行，两仓同款）：
 
