@@ -9,11 +9,8 @@
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- |
-| BE-002 | P2 | 文档孤岛盘点：715 篇 md 中未被 `docs/README.md` 或任何目录索引引用的文件清单化（只盘点、不移动、不删除） | 待规划 | 待定 | 输出「孤岛清单 + 建议归属」，不产生任何文件移动 | `docs/README.md` |
-| BE-004 | P3 | 存量注解式异常处理例外评估：`apex-system` 的 `GlobalExceptionHandler`、`SentinelExceptionHandler`（`@RestControllerAdvice`）是否下沉为 `ErrorWebExceptionHandler` | 待规划 | 待定 | 评估错误响应契约兼容性；**评估通过前禁止改动**，避免影响线上错误码/报文 | `apex-components-parent/apex-system` |
-| BE-005 | P3 | 周期报告（日报/周报/月报）流水件治理：`docs/08-project-management/periodic-reports/` 只保留索引与近期，历史按月归档 | 待规划 | 待定 | 索引完整、无散落根目录日报 | `docs/08-project-management/periodic-reports/` |
-| BE-006 | P3 | `scripts/` 与 `docs/` 的脚本说明对齐：`scripts/` 各子目录是否都有 README 与用途说明 | 待规划 | 待定 | 每个脚本目录有 README，命令可复现 | `scripts/` |
-| BE-007 | P3 | AI 私有目录指针桩清理：确认 `.trae/documents` 的 `MIGRATED.md` 指针以外无残留正文、全仓无指向私有目录的链接后，移除桩文件 | 待规划 | 待定 | `grep -r ".trae/documents"` 无命中 | 本表 BE-012 |
+
+（2026-11-16：本轮 5 张卡 `BE-002/004/005/006/007` 已全部完成并移入 §2；新增任务须先立卡再动手。）
 
 ## 2. 本期已完成（治理基线）
 
@@ -45,6 +42,11 @@
 | BE-031 | P1 | 整改 B4：SpringDoc 注解补齐至 100%（2 Router `@RouterOperations`、3 方法 `@Operation`） | 已完成 | 2026-11-16 | `apex-system/.../router/OpenUserRouter.java` 等 4 个类；验收：覆盖率 100%、`verify` BUILD SUCCESS |
 | BE-032 | P2 | 整改 B5：`.gitignore` 去重为单一私有目录区块（含注释独占一行的补正） | 已完成 | 2026-11-16 | `.gitignore`；验收：`check-ignore` 命中、无未跟踪私有目录 |
 | BE-033 | P1 | 整改 B6：GitHub 分支保护「档 1」 | 已完成 | 2026-11-16 | 转 public 后六条 `PUT /protection` 全部成功：两仓 `master`/`test`/`dev` 均 `force=false del=false`，`master`/`test` 另加 `conversation_resolution=true`；绕钩子实测删支/强推均被服务端 `protected branch hook declined` 拒绝，`test` 未被改写。保底保留 `.githooks/pre-push`。见 `docs/05-operations/github-branch-protection.md` §0.1 + §5 |
+| BE-002 | P2 | 文档孤岛盘点：715 篇 md 中未被 `docs/README.md` 或任何目录索引引用的文件清单化（只盘点、不移动、不删除） | 已完成 | 2026-11-16 | `docs/notes/2026-11-16-doc-orphans.md`（527 篇孤岛 + 建议归属）；`scripts/governance/report-doc-orphans.sh`；验收：清单已生成、零文件移动 |
+| BE-004 | P3 | 存量注解式异常处理例外评估：`apex-system` 的 `GlobalExceptionHandler`、`SentinelExceptionHandler`（`@RestControllerAdvice`）是否下沉为 `ErrorWebExceptionHandler` | 已完成 | 2026-11-16 | `docs/reviews/2026-11-16-exception-handler-evaluation.md`；验收：结论「维持现状」、契约零变化、未改代码 |
+| BE-007 | P3 | AI 私有目录指针桩清理：确认 `.trae/documents` 的 `MIGRATED.md` 指针以外无残留正文、全仓无指向私有目录的链接后，移除桩文件 | 已完成 | 2026-11-16 | 移除 Trae 私有目录下的全部 5 个指针桩（`MIGRATED.md` + 4 个 3 行指针）；验收：全仓无指向私有目录的链接（历史叙述按 §3.6 豁免） |
+| BE-005 | P3 | 周期报告（日报/周报/月报）流水件治理：`docs/08-project-management/periodic-reports/` 只保留索引与近期，历史按月归档 | 已完成 | 2026-11-16 | 日报 11 / 周报 6 / 月报 2 件移入 `_archive/2026-10/`，三个 README 索引改指归档并写入归档策略；验收：`check-doc-refs` 0 项 |
+| BE-006 | P3 | `scripts/` 与 `docs/` 的脚本说明对齐：`scripts/` 各子目录是否都有 README 与用途说明 | 已完成 | 2026-11-16 | `scripts/` 19 个子目录新增 README（合计 22/22 齐备）；`scripts/governance/README.md` 登记盘点脚本；验收：每个目录有用途/用法/退出码约定 |
 
 ## 3. 阻塞与风险登记
 

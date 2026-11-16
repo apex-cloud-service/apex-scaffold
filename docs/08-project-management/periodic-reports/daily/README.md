@@ -10,11 +10,11 @@
 
 | 日期 | 范围 | 主题 | 文档 |
 | --- | --- | --- | --- |
-| 2026-10-27 | 冷链管理系统 V2.0 | 后端功能开发与接口联调 | [2026-10-27-cold-chain-daily-report.md](./2026-10-27-cold-chain-daily-report.md)（另有 [.html](./2026-10-27-cold-chain-daily-report.html) / [.docx](./2026-10-27-cold-chain-daily-report.docx) 交付副本） |
-| 2026-10-28 | 冷链管理系统 V2.0 | 后端功能开发与接口联调 | [2026-10-28-cold-chain-daily-report.md](./2026-10-28-cold-chain-daily-report.md)（另有 [.html](./2026-10-28-cold-chain-daily-report.html) / [.docx](./2026-10-28-cold-chain-daily-report.docx) 交付副本） |
-| 2026-10-29 | 冷链管理系统 V2.0 | 28 改 / 23 增文件，功能收口 | [2026-10-29-cold-chain-daily-report.md](./2026-10-29-cold-chain-daily-report.md)（另有 [.html](./2026-10-29-cold-chain-daily-report.html) 交付副本） |
-| 2026-10-31 | apex-scaffold | 42.33 评审收口（13 提交）与 A1+A2 统一认证/JWKS 闭环（未提交） | [2026-10-31-apex-scaffold-daily-report.md](./2026-10-31-apex-scaffold-daily-report.md) |
-| 2026-10-31 | apex-admin-web | 对齐后端 v2 契约并新增生成向导/游标收件箱/公开页 | [2026-10-31-apex-admin-web-daily-report.md](./2026-10-31-apex-admin-web-daily-report.md) |
+| 2026-10-27 | 冷链管理系统 V2.0 | 后端功能开发与接口联调 | [2026-10-27-cold-chain-daily-report.md](./_archive/2026-10/2026-10-27-cold-chain-daily-report.md)（另有 [.html](./_archive/2026-10/2026-10-27-cold-chain-daily-report.html) / [.docx](./_archive/2026-10/2026-10-27-cold-chain-daily-report.docx) 交付副本） |
+| 2026-10-28 | 冷链管理系统 V2.0 | 后端功能开发与接口联调 | [2026-10-28-cold-chain-daily-report.md](./_archive/2026-10/2026-10-28-cold-chain-daily-report.md)（另有 [.html](./_archive/2026-10/2026-10-28-cold-chain-daily-report.html) / [.docx](./_archive/2026-10/2026-10-28-cold-chain-daily-report.docx) 交付副本） |
+| 2026-10-29 | 冷链管理系统 V2.0 | 28 改 / 23 增文件，功能收口 | [2026-10-29-cold-chain-daily-report.md](./_archive/2026-10/2026-10-29-cold-chain-daily-report.md)（另有 [.html](./_archive/2026-10/2026-10-29-cold-chain-daily-report.html) 交付副本） |
+| 2026-10-31 | apex-scaffold | 42.33 评审收口（13 提交）与 A1+A2 统一认证/JWKS 闭环（未提交） | [2026-10-31-apex-scaffold-daily-report.md](./_archive/2026-10/2026-10-31-apex-scaffold-daily-report.md) |
+| 2026-10-31 | apex-admin-web | 对齐后端 v2 契约并新增生成向导/游标收件箱/公开页 | [2026-10-31-apex-admin-web-daily-report.md](./_archive/2026-10/2026-10-31-apex-admin-web-daily-report.md) |
 | 2026-11-01 | apex-scaffold | B 批多租户收官、C 批组件化贯通（除 C4）、D 批中台前四项（10 提交 / 89 文件） | [2026-11-01-apex-scaffold-daily-report.md](./2026-11-01-apex-scaffold-daily-report.md) |
 | 2026-11-02 | apex-scaffold | E 批集成与 IoT 全面收口（E1–E4）、D 批 D5 数据服务层与开放路由门禁收官（5 提交 / 303 文件） | [2026-11-02-apex-scaffold-daily-report.md](./2026-11-02-apex-scaffold-daily-report.md) |
 | 2026-11-03 | all-projects | 平台运营收口：分档限流、能力二次校验、前端九页与 MFA、冷链大屏与调拨展示（附按仓详版存档） | [2026-11-03-all-projects-daily-report.md](./2026-11-03-all-projects-daily-report.md) |
@@ -37,3 +37,10 @@
 - **补写**：漏报日期按同一格式补齐，插入索引时保持日期升序；不得用「无变动」以外的空话占位，确实无提交时写明「无代码变更」并说明当日工作性质（如评审、调研）。
 - **去重**：同一日期只保留一份全项目日报，当日二次生成直接覆盖，不产生 `v2`、`final` 等副本。
 - 日报为过程性记录，不参与技术文档索引。
+
+## 归档策略（BE-005，2026-11-16 起执行）
+
+- **只留当期**：`daily/`、`weekly/`、`monthly/` 根目录只保留**当月在用**的报告与索引；历史报告按月移入同名 `_archive/YYYY-MM/` 子目录，文件名与内容一字不改。
+- **索引不散**：索引仍在本 README，链接直接指向归档路径（`./_archive/YYYY-MM/<原文件名>`），因此“文件搬走了、索引还找得到”。
+- **历史引用不改**：早期日报正文里出现的旧路径属历史记录，保持原样，不做批量改写；需要定位时按本 README 的归档路径换算。
+- **命名不变**：归档仅改变所在目录，不改文件名，避免打破既有引用与外部汇报链路。

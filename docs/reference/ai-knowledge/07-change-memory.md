@@ -75,6 +75,8 @@
 | 32 | 2026-11-16 | 治理 | **B6 闭环**：两仓转 public 后同一批 `PUT /branches/{master,test,dev}/protection` 六条全部成功（档 1：禁强推+禁删除，master/test 加对话解决）；绕本地钩子实测服务端 `protected branch hook declined`（删支/强推均拒，`test` 仍 11302e84）；§0.1 由「平台限制」改写为「处理经过 + 最终结论」，§5 验收 8 条逐项回填 | 本条提交 | 六支 `GET /protection` 均 200 且 `force=false del=false`；`dev` 普通推送成功（钩子与服务端双防线） | 仅保护文档/任务盘/台账，不改代码 |
 | 33 | 2026-11-16 | 治理 | **对齐修复 G1–G5**：台账补 `日期` 列（32 条回填，`摘要`/`证据` 原文未改）、任务盘「本期已完成」表 3 行错列修正（多插的「负责」列并入验收/产出）、`BE-033` 状态去加粗、`.gitignore` 补 `.trae-html-share-packages/`（内含他人报告副本，正文不入库） | 本条提交 | 表格列一致性校验：`project-tasks.md`/`07-change-memory.md` 异常 0；`verify-docs.sh` 0 项；`check-doc-refs.sh` 0 项；`git check-ignore` 命中 | 仅文档与忽略规则，不改代码 |
 | 34 | 2026-11-16 | 治理 | **更正 #33**：新增条目误把「证据」与「影响面」写在同一格（6 格），已拆为 7 格，与表头一致 | 本条提交 | 校验：`07-change-memory.md` 条目列数异常 0 | 仅文档，不改代码 |
+| 35 | 2026-11-16 | 脚本 | **BE-006**：`scripts/` 下 19 个缺说明的子目录各生成 README（标题+一句用途+`脚本|用途|用法`表+约定：路径解析/退出码/新增脚本须先立卡），合计 22/22 齐备；抽描述时跳过 shebang 与 `=`/`*`/`Copyright`/`SPDX` 行，避免把 `#!/usr/bin/env bash` 当成描述 | 本条提交 | `for d in scripts/*/; do test -f $d/README.md || echo $d; done` 输出为空；`scripts/utils/README.md` 为唯一手填描述 | 仅新增脚本目录说明，不改脚本逻辑 |
+| 36 | 2026-11-16 | 治理 | **BE-002/004/005/007 收口**：①新增 `scripts/governance/report-doc-orphans.sh` 与孤岛清单 `docs/notes/2026-11-16-doc-orphans.md`（md 772 / 索引引用 374 / 孤岛 527）；②周期报告按「只留当期」归档 19 件到 `_archive/2026-10/`，三份 README 索引改指归档并写入归档策略；③`docs/reviews/2026-11-16-exception-handler-evaluation.md` 结论维持现状（`@RestControllerAdvice` 在 WebFlux 正常，20 分支迁移会改错误契约，未改代码）；④移除 Trae 私有目录（`.trae`）下 5 个指针桩；5 张卡状态改为已完成并回填产出 | 本条提交 | `check-doc-refs.sh` 0 项、`verify-docs.sh` 0 项、`apex-preflight.sh --fast` `FAIL=0`；`ls .trae` 的 `documents/` 为空 | 仅文档、脚本与归档，不改业务代码 |
 
 
 

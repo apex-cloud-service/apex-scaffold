@@ -15,15 +15,15 @@
 
 | 周期 | 范围 | 主题 | 原文 |
 | --- | --- | --- | --- |
-| 2026-10（月） | apex-scaffold | 架构定型（31 模块）+ 网关/事务消息/可观测三条能力线 + 管理端收口与前端 v2 对齐 | [月报](./monthly/2026-10-apex-scaffold-monthly-report.md) |
-| 2026-W43（10.19–10.25） | apex-scaffold | 产品文档体系从 0 到 1（基线 → 多格式 → 设计指导）+ 工作区文档治理；**无代码提交** | [周报](./weekly/2026-W43-apex-scaffold-weekly-report.md) |
-| 2026-W43（10.19–10.25） | 冷链 / 园区 / 供应链（合并） | 冷链架构开发收官转测试验证；园区架构设计推进；供应链对接方案与文档交付 | [周报](./weekly/2026-W43-cold-chain-park-supply-weekly-report.md) |
-| 2026-W44（10.26–11.01） | apex-scaffold + apex-admin-web | 31 模块架构定型、后端能力补齐、前端 v2 契约对齐与四个新能力面 | [周报](./weekly/2026-W44-apex-scaffold-weekly-report.md) |
-| 2026-10-27 | 冷链管理系统 V2.0 | 基础设施物理边界收敛、密码找回链路、脱敏与审计、Seata undo_log、虚拟线程执行器、全量回归 | [日报](./daily/2026-10-27-cold-chain-daily-report.md) |
-| 2026-10-28 | 冷链管理系统 V2.0 | 文件限时分享、站内信三通道投递、组织跨服务解析、工作流 DAG 校验、文档链接检查 Java 化 | [日报](./daily/2026-10-28-cold-chain-daily-report.md) |
-| 2026-10-29 | 冷链管理系统 V2.0 | 体检快照签名三态、可信客户端 IP 解析、认证四语言、事务与租户加固 | [日报](./daily/2026-10-29-cold-chain-daily-report.md) |
-| 2026-10-31 | apex-scaffold | 42.33 评审收口（13 提交）+ A1+A2 统一认证与 JWKS（未提交） | [日报](./daily/2026-10-31-apex-scaffold-daily-report.md) |
-| 2026-10-31 | apex-admin-web | v2 契约对齐 + 生成向导 / 游标收件箱 / 分享兑换 / 密码找回四能力面 | [日报](./daily/2026-10-31-apex-admin-web-daily-report.md) |
+| 2026-10（月） | apex-scaffold | 架构定型（31 模块）+ 网关/事务消息/可观测三条能力线 + 管理端收口与前端 v2 对齐 | [月报](./monthly/_archive/2026-10/2026-10-apex-scaffold-monthly-report.md) |
+| 2026-W43（10.19–10.25） | apex-scaffold | 产品文档体系从 0 到 1（基线 → 多格式 → 设计指导）+ 工作区文档治理；**无代码提交** | [周报](./weekly/_archive/2026-10/2026-W43-apex-scaffold-weekly-report.md) |
+| 2026-W43（10.19–10.25） | 冷链 / 园区 / 供应链（合并） | 冷链架构开发收官转测试验证；园区架构设计推进；供应链对接方案与文档交付 | [周报](./weekly/_archive/2026-10/2026-W43-cold-chain-park-supply-weekly-report.md) |
+| 2026-W44（10.26–11.01） | apex-scaffold + apex-admin-web | 31 模块架构定型、后端能力补齐、前端 v2 契约对齐与四个新能力面 | [周报](./weekly/_archive/2026-10/2026-W44-apex-scaffold-weekly-report.md) |
+| 2026-10-27 | 冷链管理系统 V2.0 | 基础设施物理边界收敛、密码找回链路、脱敏与审计、Seata undo_log、虚拟线程执行器、全量回归 | [日报](./daily/_archive/2026-10/2026-10-27-cold-chain-daily-report.md) |
+| 2026-10-28 | 冷链管理系统 V2.0 | 文件限时分享、站内信三通道投递、组织跨服务解析、工作流 DAG 校验、文档链接检查 Java 化 | [日报](./daily/_archive/2026-10/2026-10-28-cold-chain-daily-report.md) |
+| 2026-10-29 | 冷链管理系统 V2.0 | 体检快照签名三态、可信客户端 IP 解析、认证四语言、事务与租户加固 | [日报](./daily/_archive/2026-10/2026-10-29-cold-chain-daily-report.md) |
+| 2026-10-31 | apex-scaffold | 42.33 评审收口（13 提交）+ A1+A2 统一认证与 JWKS（未提交） | [日报](./daily/_archive/2026-10/2026-10-31-apex-scaffold-daily-report.md) |
+| 2026-10-31 | apex-admin-web | v2 契约对齐 + 生成向导 / 游标收件箱 / 分享兑换 / 密码找回四能力面 | [日报](./daily/_archive/2026-10/2026-10-31-apex-admin-web-daily-report.md) |
 | 2026-11-01 | apex-scaffold | B 批多租户收官、C 批组件化贯通（除 C4）、D 批中台前四项 | [日报](./daily/2026-11-01-apex-scaffold-daily-report.md) |
 | 2026-11-02 | apex-scaffold | E 批集成与 IoT 收口（E1–E4）、D5 数据服务层与开放路由门禁 | [日报](./daily/2026-11-02-apex-scaffold-daily-report.md) |
 

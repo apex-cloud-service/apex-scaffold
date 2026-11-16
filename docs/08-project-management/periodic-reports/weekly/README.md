@@ -10,9 +10,9 @@
 
 | 周期 | 范围 | 主题 | 文档 |
 | --- | --- | --- | --- |
-| 2026 年第 43 周（10-19 ~ 10-25） | Apex-Scaffold 本仓库 | —（历史存档，未登记主题） | [2026-W43-apex-scaffold-weekly-report.md](./2026-W43-apex-scaffold-weekly-report.md) |
-| 2026 年第 43 周（10-19 ~ 10-25） | 冷链管理系统 V2.0 / 园区管理系统 / 供应链对接 | —（历史存档，未登记主题） | [2026-W43-cold-chain-park-supply-weekly-report.md](./2026-W43-cold-chain-park-supply-weekly-report.md)（另有 [.doc](./2026-W43-cold-chain-park-supply-weekly-report.doc) / [.docx](./2026-W43-cold-chain-park-supply-weekly-report.docx) 交付版） |
-| 2026 年第 44 周（10-26 ~ 11-01） | Apex-Scaffold 后端 + apex-admin-web 前端 | 架构定型（31 模块）与能力补齐 | [2026-W44-apex-scaffold-weekly-report.md](./2026-W44-apex-scaffold-weekly-report.md)（另有 [.docx](./2026-W44-apex-scaffold-weekly-report.docx) 交付版，内容为上一版，未含本次验证范围与测试计数的修正） |
+| 2026 年第 43 周（10-19 ~ 10-25） | Apex-Scaffold 本仓库 | —（历史存档，未登记主题） | [2026-W43-apex-scaffold-weekly-report.md](./_archive/2026-10/2026-W43-apex-scaffold-weekly-report.md) |
+| 2026 年第 43 周（10-19 ~ 10-25） | 冷链管理系统 V2.0 / 园区管理系统 / 供应链对接 | —（历史存档，未登记主题） | [2026-W43-cold-chain-park-supply-weekly-report.md](./_archive/2026-10/2026-W43-cold-chain-park-supply-weekly-report.md)（另有 [.doc](./_archive/2026-10/2026-W43-cold-chain-park-supply-weekly-report.doc) / [.docx](./_archive/2026-10/2026-W43-cold-chain-park-supply-weekly-report.docx) 交付版） |
+| 2026 年第 44 周（10-26 ~ 11-01） | Apex-Scaffold 后端 + apex-admin-web 前端 | 架构定型（31 模块）与能力补齐 | [2026-W44-apex-scaffold-weekly-report.md](./_archive/2026-10/2026-W44-apex-scaffold-weekly-report.md)（另有 [.docx](./_archive/2026-10/2026-W44-apex-scaffold-weekly-report.docx) 交付版，内容为上一版，未含本次验证范围与测试计数的修正） |
 | 2026 年第 45 周（11-02 ~ 11-07） | all-projects（apex-scaffold 后端 + apex-admin-web 前端 + cold-chain 冷链） | 平台运营闭环、构建发布模块收口与仓园四阶段合并 | [2026-W45-all-projects-weekly-report.md](./2026-W45-all-projects-weekly-report.md) |
 | 2026 年第 46 周（11-09 ~ 11-14） | all-projects（apex-scaffold 后端 + apex-admin-web 前端 + cold-chain 冷链） | 中台整改收口、聚合与知识库新域落地、模块两级物理归位 | [2026-W46-all-projects-weekly-report.md](./2026-W46-all-projects-weekly-report.md) |
 
@@ -24,3 +24,10 @@
 - **补写**：漏报周期按同一格式补齐，插入索引时保持周期升序。
 - **去重**：同一周期同一范围只保留一份，二次生成直接覆盖。
 - 周报为过程性记录，不参与技术文档索引。
+
+## 归档策略（BE-005，2026-11-16 起执行）
+
+- **只留当期**：`daily/`、`weekly/`、`monthly/` 根目录只保留**当月在用**的报告与索引；历史报告按月移入同名 `_archive/YYYY-MM/` 子目录，文件名与内容一字不改。
+- **索引不散**：索引仍在本 README，链接直接指向归档路径（`./_archive/YYYY-MM/<原文件名>`），因此“文件搬走了、索引还找得到”。
+- **历史引用不改**：早期日报正文里出现的旧路径属历史记录，保持原样，不做批量改写；需要定位时按本 README 的归档路径换算。
+- **命名不变**：归档仅改变所在目录，不改文件名，避免打破既有引用与外部汇报链路。
