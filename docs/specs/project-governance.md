@@ -189,6 +189,24 @@
 
 主线 **`master`**（2026-11-16 由 `main` 重命名）；改动走短分支后合并；文档治理可在 `master` 小步提交。远端默认分支需在 GitHub Settings → General → Default branch 设为 `master`。
 
+**分支模型（长期分支三个，2026-11-16 建立 `dev` / `test`）**：
+
+| 分支 | 用途 | 允许直接提交 | 说明 |
+| --- | --- | --- | --- |
+| `master` | 生产基线，可发布状态 | 仅文档治理类小步提交 | 每条提交都应可发布；禁止 `push -f` |
+| `dev` | 集成分支，日常开发回合 | 是 | 功能合入后先到 `dev`，验证通过再合 `master` |
+| `test` | 测试/验收环境分支 | 是 | 供测试环境部署与联调；由 `dev` 合入 |
+| 短分支 | 单个任务（如 `feat/BE-021`、`fix/FE-018`） | — | 完成后合并回 `dev` 并删除 |
+
+建立与推送（已执行，两仓同款）：
+
+```bash
+git branch dev  master && git push -u origin dev
+git branch test master && git push -u origin test
+```
+
+首建时三支指向同一提交（后端 `ee244f89`、前端 `88ca2d1`），历史零变化。旧远端 `main` 已于远端默认分支切换为 `master` 后删除（`git push origin --delete main` + `git fetch --prune`）。
+
 **远端与离线归档（`origin` = `git@github.com:apex-cloud-service/apex-scaffold.git`，SSH 走 443）**：
 
 1. 未配置远端（或推送受阻）时，全部历史只存在于本机 → **每周做一次离线归档**（用 `git archive` 只打受控文件，避免把 `target/`、`.workbuddy/` 等打进包）：
