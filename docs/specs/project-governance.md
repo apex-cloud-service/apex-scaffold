@@ -191,13 +191,15 @@
 
 **远端与离线归档（本仓当前 `git remote` = 0）**：
 
-1. 未配置远端时，全部历史只存在于本机 → **每周做一次离线归档**：
+1. 未配置远端（或推送受阻）时，全部历史只存在于本机 → **每周做一次离线归档**（用 `git archive` 只打受控文件，避免把 `target/`、`.workbuddy/` 等打进包）：
    ```bash
    cd /Users/work/apex-scaffold
-   ts=$(date +%Y%m%d); tar -czf /Users/work/backup/apex-scaffold-$ts.tar.gz --exclude=.git .
-   shasum -a 256 /Users/work/backup/apex-scaffold-$ts.tar.gz >> /Users/work/backup/SHA256SUMS.txt
+   ts=$(date +%Y%m%d); mkdir -p /Users/work/backup
+   git archive --format=tar.gz --prefix=apex-scaffold/ -o /Users/work/backup/apex-scaffold-$ts.tar.gz main
    git bundle create /Users/work/backup/apex-scaffold-$ts.bundle main
+   cd /Users/work/backup && shasum -a 256 apex-scaffold-$ts.tar.gz >> SHA256SUMS.txt
    ```
+   **不要**用 `tar --exclude=.git .`：根目录 `target/`（本仓实测 1.4GB）、`.workbuddy/` 会被打进去（实测一次 2.7GB）。
 2. 归档件（tar.gz + bundle）必须异地/异盘保存至少一份；`SHA256SUMS.txt` 用于校验完整性。
 3. 一旦拿到远端地址，**先 push 再谈清理**：`git remote add origin <url> && git push -u origin main`；禁止 `push -f`。
 4. 评审/整改若涉及「合并到 main」，在无远端时等价于「在 `main` 上提交 + 生成 bundle 归档」。
