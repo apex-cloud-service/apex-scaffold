@@ -8,11 +8,9 @@
 ## 1. 活跃任务
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
-| BE-020 | P1 | 治理评审整改（RV-01~RV-14，批次 1–6） | 待规划 | 主控 | `verify-docs.sh` + `check-doc-refs.sh` 通过、图表 217/68 不变 | `docs/reviews/2026-11-16-governance-alignment-review.md`、`docs/plans/2026-11-16-governance-alignment-plan.md` |
 | --- | --- | --- | --- | --- | --- | --- |
 | BE-001 | P2 | 图表资产索引体检：217 SVG / 68 MMD 配对核查（实测 **30 个 MMD 无同名 SVG 导出件**，如 `diagrams/sequence/72_multi_tenant_isolation_architecture.mmd`），输出补齐清单 | 待规划 | 待定 | 清单落 `docs/notes/`；无孤立 `.mmd` 或无源 `.svg`；`verify-docs.sh` 通过 | `docs/diagrams/` |
 | BE-002 | P2 | 文档孤岛盘点：715 篇 md 中未被 `docs/README.md` 或任何目录索引引用的文件清单化（只盘点、不移动、不删除） | 待规划 | 待定 | 输出「孤岛清单 + 建议归属」，不产生任何文件移动 | `docs/README.md` |
-| BE-003 | P2 | 根目录散落文档归位方案：`aggregation-optimization-plan.md`、`architecture-review-report.md` 的迁移可行性与引用影响分析（先出方案，再决定是否迁移） | 待规划 | 待定 | 方案含「引用扫描结果 / 目标目录 / 断链修复清单 / 回滚方式」 | `docs/specs/` |
 | BE-004 | P3 | 存量注解式异常处理例外评估：`apex-system` 的 `GlobalExceptionHandler`、`SentinelExceptionHandler`（`@RestControllerAdvice`）是否下沉为 `ErrorWebExceptionHandler` | 待规划 | 待定 | 评估错误响应契约兼容性；**评估通过前禁止改动**，避免影响线上错误码/报文 | `apex-components-parent/apex-system` |
 | BE-005 | P3 | 周期报告（日报/周报/月报）流水件治理：`docs/08-project-management/periodic-reports/` 只保留索引与近期，历史按月归档 | 待规划 | 待定 | 索引完整、无散落根目录日报 | `docs/08-project-management/periodic-reports/` |
 | BE-006 | P3 | `scripts/` 与 `docs/` 的脚本说明对齐：`scripts/` 各子目录是否都有 README 与用途说明 | 待规划 | 待定 | 每个脚本目录有 README，命令可复现 | `scripts/` |
@@ -32,6 +30,8 @@
 | BE-016 | P1 | 迁移 `.workbuddy/reports` 3 份自动周期报告 → `docs/08-project-management/periodic-reports/{daily,weekly,monthly}`（内容唯一，避免丢失） | 已完成 | 2026-11-16 | `docs/records/2026-11-16-docs-governance.md` |
 | BE-018 | P3 | 规范正文入仓并补工具目录/忽略规则条款 | 已完成 | 2026-11-16 | `docs/specs/project-governance.md`、`AGENTS.md` 0.1/0.4/0.7、`scripts/governance/README.md` |
 | BE-019 | P2 | 他人未提交的 3 项（记忆卡基线、daily 索引、11-16 日报）按规范复核后纳入版本库 | 已完成 | 2026-11-16 | `MEMORY-CARD.md`（指针改指 `docs/`）、`daily/README.md`、`2026-11-16-all-projects-daily-report.md`（补后段补记） |
+| BE-020 | P1 | 治理评审整改（RV-01~RV-14，批次 1–6） | 已完成 | 主控 | 2026-11-16 | `verify-docs.sh` 通过（仅 BE-001 存量告警）、`check-doc-refs.sh` 0 项、图表 217/68 不变 | `docs/records/2026-11-16-governance-alignment-remediation.md` |
+| BE-003 | P2 | 根目录散落文档归位：`aggregation-optimization-plan.md` → `docs/plans/`、`architecture-review-report.md` → `docs/reviews/`（根目录留 3 行指针，SHA-256 迁移前后核对） | 已完成 | 主控 | 2026-11-16 |
 
 ## 3. 阻塞与风险登记
 

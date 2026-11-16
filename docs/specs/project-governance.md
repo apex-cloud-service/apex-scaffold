@@ -66,7 +66,7 @@
 2. 验证通过：`source scripts/build/init-build-env.sh` 后 `mvnd -pl :受影响模块 -am verify`（跨模块改动用全量 `mvnd -T4 -B clean verify`）。
 3. 不违反第 6 章红线；红线违规必须显式登记例外（见 BE-004、BE-017）。
 4. 文档与索引同步（新增文档已登记 `docs/README.md`）。
-5. 在 `docs/records/` 留一条变更记录。
+5. 在 `docs/records/` 留一条变更记录；**同批次一条记录须列全本批次涉及的全部任务卡号**（如批次 1–6 须列 BE-020 涉及的 RV-01~RV-14 与同批次其它卡号），不得只写首张卡。
 
 ### 2.6 大盘维护权
 
@@ -117,6 +117,16 @@
 4. 源文件与导出件成对（`.mmd` ↔ `.svg`）；**新增图必须两者齐备**。
 5. 存量缺口：**30 个 `.mmd` 缺同名 `.svg`**（清单由 `verify-docs.sh` 第 6 项输出），登记 BE-001 分批补导出；补导前不视为违规，但**禁止删除这些源文件**。
 6. 数量门槛写死在自检脚本（svg ≥ 217、mmd ≥ 68），低于基线即告警。
+
+### 3.6 历史归档的旧路径与断链（豁免口径）
+
+1. 适用范围：`docs/_archive/`（整体）、`docs/archived/` 下的历史记录、`docs/reports/` 下 2026-09 及更早的执行报告、`CHANGELOG.md` 历史条目。
+2. 这些文档记录的是**当时真实路径与当时真实断链**，改动即篡改证据 → **不改正文**，只做两件事：
+   - 在文首加一行「历史记录说明」，注明相关正文已迁入 `docs/`、未迁入部分「原文未入库」；
+   - 登记到 `scripts/governance/doc-refs-allowlist.txt`（必须写明豁免理由）。
+3. **活文档（`docs/` 下现行规范、索引、指南、方案、评审）不得豁免**，必须改到可达。
+4. 豁免清单的准入门槛只有三类：历史归档 / 迁移说明与来源证明 / 评审取证；新增一类须先在规范中登记。
+5. 自检口径：`check-doc-refs.sh` 只统计「未豁免且未标注」的问题；数字必须能收敛到 0，否则视为整改未完成。
 
 ---
 
@@ -175,9 +185,22 @@
 - **他人未提交改动默认不纳入**：`git status` 中非本人产物的改动，不清理、不覆盖、不擅自提交。
 - 确需纳入时：先经业主明确授权 → 按 §3.3/§3.4 只做指针与索引对齐（**正文一字不改**）→ 单独提交 → 在 `docs/records/` 留痕。示例：BE-019 将 `MEMORY-CARD.md`（指针改指 `docs/reference/ai-knowledge/`）、`daily/README.md`（索引登记）、`daily/2026-11-16-all-projects-daily-report.md`（补后段补记）复核后提交为 `14f6bc2a`。
 
-### 5.3 分支
+### 5.3 分支与远端
 
 主线 `main`；改动走短分支后合并；文档治理可在 `main` 小步提交。
+
+**远端与离线归档（本仓当前 `git remote` = 0）**：
+
+1. 未配置远端时，全部历史只存在于本机 → **每周做一次离线归档**：
+   ```bash
+   cd /Users/work/apex-scaffold
+   ts=$(date +%Y%m%d); tar -czf /Users/work/backup/apex-scaffold-$ts.tar.gz --exclude=.git .
+   shasum -a 256 /Users/work/backup/apex-scaffold-$ts.tar.gz >> /Users/work/backup/SHA256SUMS.txt
+   git bundle create /Users/work/backup/apex-scaffold-$ts.bundle main
+   ```
+2. 归档件（tar.gz + bundle）必须异地/异盘保存至少一份；`SHA256SUMS.txt` 用于校验完整性。
+3. 一旦拿到远端地址，**先 push 再谈清理**：`git remote add origin <url> && git push -u origin main`；禁止 `push -f`。
+4. 评审/整改若涉及「合并到 main」，在无远端时等价于「在 `main` 上提交 + 生成 bundle 归档」。
 
 ---
 
@@ -257,7 +280,7 @@
 | BE-017 `VirtualThreadBoundedExecutor` 改 `@Slf4j` | 待规划 |
 | BE-018 规范正文入仓（v1.1） | 已完成（2026-11-16） |
 | BE-019 他人 3 项改动按规范复核纳入 | 已完成（`14f6bc2a`） |
-| BE-020 治理评审整改（RV-01~RV-14） | 已执行（见 `docs/plans/2026-11-16-governance-alignment-plan.md`） |
+| BE-020 治理评审整改（RV-01~RV-14） | 已完成（2026-11-16，见 `docs/records/2026-11-16-governance-alignment-remediation.md`） |
 | 根目录散落文档（`aggregation-optimization-plan.md`、`architecture-review-report.md`） | 已迁入 `docs/plans/`、`docs/reviews/`，根目录留 3 行指针 |
 
 ---

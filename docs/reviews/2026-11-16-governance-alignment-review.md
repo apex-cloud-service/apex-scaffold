@@ -186,6 +186,26 @@ git status --short ; git remote -v ; git config core.hooksPath
 
 ---
 
+## 6.1 复审结论（2026-11-16 整改后追加）
+
+**结论：通过（有条件）** — 14 项偏差中 13 项已闭环，1 项按 D1 口径转为长期豁免；无新增偏差。
+
+| 复审准入口径 | 实测 | 判定 |
+| --- | --- | --- |
+| D1–D6 均有结论 | 按默认口径全部落地（D4 远端暂缓并写入离线归档条款） | ✅ |
+| RV-01 ~ RV-05 清零 | §5.2 已改写；§9 已更新；评审记录入库；活文档私有路径 0 处；前端死指针 0 处 | ✅ |
+| 两仓 `verify-docs.sh` 通过 | 后端 1 项存量告警（BE-001，非本次引入）；前端 0 项 | ✅ |
+| `audit-backend-rules.sh` 阻断仍只有 BE-017 | 未新增阻断项 | ✅ |
+| 断链收敛 | `check-doc-refs.sh` 两仓 `结果：0 项`；旧 `check-doc-links.sh` 的 15 条按 §3.6 豁免并要求白名单登记 | ✅ |
+| 图表基线不变 | `svg=217`、`mmd=68` | ✅ |
+| `AGENTS.md` 附录 A 不变 | 后端 `aa0c25fc…60ed`、前端 `ae5e19db…53a` | ✅ |
+| 新增记录 | `docs/records/2026-11-16-governance-alignment-remediation.md` | ✅ |
+
+**遗留（不影响通过）**：D4 远端（需地址）、BE-001（30 个 MMD 补导出）、BE-017（`@Slf4j` 改法需单模块验证）。
+**复审证据**：见 `docs/records/2026-11-16-governance-alignment-remediation.md` §4。
+
+---
+
 ## 7. 附录：关键原始输出（评审时）
 
 ```text

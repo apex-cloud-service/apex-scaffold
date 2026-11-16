@@ -16,7 +16,7 @@
 
 跨仓索引：`.workbuddy/memory/CARDS.md`。**本目录的 01–06 以 apex 为主、兼顾跨仓导航**；web/cold 的细节已下沉到各自仓的知识库，避免两处维护。
 
-**检索入口**：不确定结论在哪一篇时，先用 `.workbuddy/rag/` 的 RAG 检索（覆盖三仓文档与源码，返回路径+行号），再回到本目录读结论。用法见 [rag/README.md](../../../.workbuddy/rag/README.md)。
+**检索入口**：不确定结论在哪一篇时，先用 AI 私有目录下的 RAG 检索（覆盖三仓文档与源码，返回路径+行号），再回到本目录读结论。RAG 的说明文档位于 AI 工作目录 `rag/README.md`，**按规范不入库**（原文未入库），需要时向维护人索取。
 
 **维护入口**：本目录与三张记忆卡都是**手工快照，不会随代码自动更新**。开工前跑 `python3 .workbuddy/ops/maintain.py status` 检测口径漂移，改完文档跑 `sync` 刷新索引，`--accept` 收口基线；日报/周报/月报用同目录 `maintain.py daily|weekly|monthly`。详见 [ops/README.md](../../../.workbuddy/ops/README.md)。
 
@@ -64,8 +64,8 @@
 | [04-admin-web.md](04-admin-web.md) | 前端技术栈、页面模块、契约前缀、工程约定、风险（**摘要**；细节见该仓知识库） | 前端重大改版后 |
 | [05-cold-chain.md](05-cold-chain.md) | 冷链项目定位、17 模块、关键业务口径、当前进度、风险（**摘要**；细节见该仓记忆与知识库） | 客户项目节点后 |
 | [06-delivery-status-and-next.md](06-delivery-status-and-next.md) | 主线批次 A–E 状态、下一步、证据缺口、跨项目待办 | 每工作单元 |
-| [../rag/README.md](../../../.workbuddy/rag/README.md) | RAG 索引范围、检索原理、评测指标、HTTP API、LLM 接入 | 检索逻辑或索引范围变更时 |
-| [../ops/README.md](../../../.workbuddy/ops/README.md) | 漂移检测原理、`sync`/`status` 用法、日报周报月报口径 | 维护流程或报告口径变更时 |
+| AI 私有目录 `rag/README.md`（原文未入库） | RAG 索引范围、检索原理、评测指标、HTTP API、LLM 接入 | 检索逻辑或索引范围变更时 |
+| AI 私有目录 `ops/README.md`（原文未入库） | 漂移检测原理、`sync`/`status` 用法、日报周报月报口径 | 维护流程或报告口径变更时 |
 
 ## 五、维护规则
 
