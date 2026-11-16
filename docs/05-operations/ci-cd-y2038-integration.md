@@ -144,7 +144,7 @@ mvnd -pl :apex-infrastructure test -Dtest=TimeFieldArchTest
    - 启动 MySQL 和 Redis 服务
    - 运行集成测试
 
-4. **构建镜像** (build-image, 仅 main 分支)
+4. **构建镜像** (build-image, 仅 master 分支)
    - 构建 JAR 包
    - 构建 Podman 镜像
    - 推送到镜像仓库
