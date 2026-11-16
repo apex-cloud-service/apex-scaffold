@@ -44,7 +44,7 @@
 | BE-030 | P0 | 整改 B3：CI 触发分支对齐 `dev`/`master`/`test`（5 个 workflow + 镜像条件改 `refs/heads/master`） | 已完成 | 2026-11-16 | `.github/workflows/`；验收：无 `main` 残留、YAML 解析通过 |
 | BE-031 | P1 | 整改 B4：SpringDoc 注解补齐至 100%（2 Router `@RouterOperations`、3 方法 `@Operation`） | 已完成 | 2026-11-16 | `apex-system/.../router/OpenUserRouter.java` 等 4 个类；验收：覆盖率 100%、`verify` BUILD SUCCESS |
 | BE-032 | P2 | 整改 B5：`.gitignore` 去重为单一私有目录区块（含注释独占一行的补正） | 已完成 | 2026-11-16 | `.gitignore`；验收：`check-ignore` 命中、无未跟踪私有目录 |
-| BE-033 | P1 | 整改 B6：GitHub 分支保护「档 1」 | **阻塞（平台限制）+ 本地补偿已完成** | 2026-11-16 | 实测 `PUT .../protection` → `403 Upgrade to GitHub Pro or make this repository public`（private + Free）；已加 `.githooks/pre-push`（拒绝强推/删除 dev·master·test，4 用例实测通过）。**解锁需业主决定：转公开 或 升级 Pro/Team**。见 `docs/05-operations/github-branch-protection.md` §0.1 |
+| BE-033 | P1 | 整改 B6：GitHub 分支保护「档 1」 | **已完成** | 2026-11-16 | 转 public 后六条 `PUT /protection` 全部成功：两仓 `master`/`test`/`dev` 均 `force=false del=false`，`master`/`test` 另加 `conversation_resolution=true`；绕钩子实测删支/强推均被服务端 `protected branch hook declined` 拒绝，`test` 未被改写。保底保留 `.githooks/pre-push`。见 `docs/05-operations/github-branch-protection.md` §0.1 + §5 |
 
 ## 3. 阻塞与风险登记
 
