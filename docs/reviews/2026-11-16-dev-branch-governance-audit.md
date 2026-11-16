@@ -256,3 +256,24 @@ hooksPath=.githooks
 git log 台账建立后：带 memory 标记=5 / 5
 .github 不存在（无 CI）
 ```
+
+---
+
+## 8. 整改结果（2026-11-16 执行后回填）
+
+决策按业主指定执行：**CI 方案 A**（显式 `master/test/dev`）、**保护档 1**（禁强推 + 禁删除）、**`BE-021` ①接受现状**。
+
+| 编号 | 等级 | 状态 | 落地证据 |
+| --- | --- | --- | --- |
+| D-01 | P0 | **已关闭** | 5 个 workflow 改绑 `master/test/dev`（PR 为 `master/test`），镜像条件改 `refs/heads/master`；`grep main` 无残留、6 个 YAML 解析通过 |
+| D-02 | P1 | **已关闭** | 前端新增 `.github/workflows/ci.yml`（4 个治理脚本 + `npm ci && build`） |
+| D-03 | P1 | **已关闭** | 两仓 `AGENTS.md` 第 0 章新增 `0.8`；附录 A 哈希 `aa0c25fc…60ed` / `ae5e19db…53a` 未变 |
+| D-04 | P1 | **已关闭** | 后端 `BE-022`~`BE-033`、前端 `FE-016`~`FE-024` 登记；`BE-021` 定「①接受现状」 |
+| D-05 | P1 | **已关闭** | SpringDoc 覆盖 98% → **100%**；`mvnd -pl :apex-system -am -DskipTests verify` **BUILD SUCCESS** |
+| D-06 | P2 | **已关闭** | 两仓 `.gitignore` 去重为单一私有目录区块；并补正「行尾注释不被 git 识别」的缺陷 |
+| D-07 | P1 | **待执行（凭据阻塞）** | 规则清单与命令就绪；`gh auth status` 未登录、无 `GITHUB_TOKEN`、匿名 API 401/403 → 需网页操作或 PAT 后按清单执行 |
+| D-08 | P1 | **已关闭** | `ai-knowledge/README.md` 口径改为「台账强制登记 + 记忆卡为派生视图」；前端知识库同改 |
+| D-09 | P2 | **已关闭** | `MEMORY-CARD.md` 层级契约降级为「可选镜像，不作验收项」 |
+| D-10 | P3 | **已关闭** | 规范 §5.3 默认分支改为既成事实表述 |
+
+**收尾自检**：两仓 `apex-preflight --fast` 均 `FAIL=0`；`verify-docs` / `check-doc-refs` 均 0 项；图表 `.mmd` 68 / `.svg` 247 只增未减；三支同点；`master`/`test` 已由 `dev` 快进合入并推送。

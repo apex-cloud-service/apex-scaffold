@@ -2,7 +2,7 @@
 
 - **配套评审**：`docs/reviews/2026-11-16-dev-branch-governance-audit.md`（偏差编号 D-01 ~ D-10）
 - **基线**：后端 `dev` `d4311202`、前端 `dev` `d957e6f`；`master`/`test` 与 `dev` 同点；工作区干净
-- **状态**：**方案待确认，尚未执行任何整改**
+- **状态**：**已执行（2026-11-16）**：B1–B5 全部完成并合并至 `master`/`test`；B6（分支保护）因无凭据待网页操作或 PAT
 - **总原则**：只改「CI 配置 / Markdown 文档 / `.gitignore` / 注解」四类，**零业务逻辑改动**；每批一次提交、可单独 `git revert`；全程不 `reset --hard`、不 `push -f`、不用 `git add -A`
 
 ---

@@ -70,6 +70,7 @@
 | 27 | 脚本 | **B5 补正**：`.gitignore` 行尾注释不被 git 识别（`.workbuddy/  # 注释` 会被当作含 `#` 的规则，导致私有目录未被忽略、`git status` 出现 `?? .workbuddy/`），改为「注释独占一行 + 规则单列」 | 本条提交 | 验收：`git check-ignore -v .workbuddy` 命中第 125 行；`git status` 不再出现私有目录未跟踪项 |
 | 28 | 功能 | **整改 B4（关闭 D-05）**：`OpenUserRouter`/`OpenAppMigrationRouter` 补 `@RouterOperations`+`@RouterOperation`（含 parameters/requestBody 数组 schema/responses）；`OpenUserHandler`/`OpenAppMigrationHandler` 补 `@Tag`+`@Operation`+`@ApiResponses`/`@RequestBody` | 本条提交 | 验收：`check-springdoc-coverage.sh` **Handler 100% / DTO 100%**（原 98%）；`audit-backend-rules` 无阻断；`mvnd -pl :apex-system -am -DskipTests verify` **BUILD SUCCESS**（含 spotless/checkstyle/PMD）；仅注解，方法体与路由未改 |
 | 29 | 治理 | 任务盘登记整改批次 B3/B4/B5 完成与 B6 待执行（BE-030~BE-033），B6 阻塞原因写入验收列 | 本条提交 | 与代码/文档提交一一对应，状态列与实际一致 |
+| 30 | 治理 | 评审报告与整改方案回填执行结果（D-01~D-06、D-08~D-10 关闭；D-07 待凭据）；方案状态改「已执行」 | 本条提交 | 与任务盘 BE-030~BE-033 一致；收尾自检 `FAIL=0` |
 
 ---
 
