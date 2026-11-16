@@ -189,7 +189,7 @@
 
 主线 `main`；改动走短分支后合并；文档治理可在 `main` 小步提交。
 
-**远端与离线归档（本仓当前 `git remote` = 0）**：
+**远端与离线归档（`origin` = `git@github.com:apex-cloud-service/apex-scaffold.git`，SSH 走 443）**：
 
 1. 未配置远端（或推送受阻）时，全部历史只存在于本机 → **每周做一次离线归档**（用 `git archive` 只打受控文件，避免把 `target/`、`.workbuddy/` 等打进包）：
    ```bash
@@ -201,8 +201,19 @@
    ```
    **不要**用 `tar --exclude=.git .`：根目录 `target/`（本仓实测 1.4GB）、`.workbuddy/` 会被打进去（实测一次 2.7GB）。
 2. 归档件（tar.gz + bundle）必须异地/异盘保存至少一份；`SHA256SUMS.txt` 用于校验完整性。
-3. 一旦拿到远端地址，**先 push 再谈清理**：`git remote add origin <url> && git push -u origin main`；禁止 `push -f`。
-4. 评审/整改若涉及「合并到 main」，在无远端时等价于「在 `main` 上提交 + 生成 bundle 归档」。
+3. 推送纪律：`git push -u origin main`；**禁止 `push -f`**。本机 22 端口被网络阻断，仓库内已固定走 443：
+   ```bash
+   git config core.sshCommand "ssh -o Hostname=ssh.github.com -p 443"
+   ssh -T -p 443 git@ssh.github.com      # 期望回 Hi <账号>! You've successfully authenticated...
+   ```
+   私钥若带口令，先 `ssh-add --apple-use-keychain ~/.ssh/<key>`（非交互环境无法解密带口令私钥）。
+4. 远端若已有另一条历史（如 GitHub 建仓时的 `Initial commit`），**先把远端内容读清楚再合并**：
+   ```bash
+   git fetch origin && git ls-tree -r --name-only origin/main
+   git merge --allow-unrelated-histories origin/main     # 冲突保留本地完整版
+   ```
+   默认保留本地完整版（本仓 2026-11-16 即按此合并远端仅含 `LICENSE`/`README` 桩的 Initial commit，LICENSE 维持项目既有的 MIT、不采用 GitHub 模板的 Apache 2.0）。
+5. 评审/整改若涉及「合并到 main」：有远端即「提交 + push」；推送受阻时等价于「在 `main` 上提交 + 生成 bundle 归档」（见 `docs/records/2026-11-16-github-remote-onboarding.md`）。
 
 ---
 
