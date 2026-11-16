@@ -61,6 +61,8 @@
 | 18 | 脚本 | **更正 #17**：`check-memory-sync.sh` 首版在 macOS bash 3.2 下报 `MEM_NAME: unbound variable` —— 变量紧跟中文全角括号 `（` 时被并入变量名；改为 `${MEM_NAME}` 后复测通过。**结论：本仓脚本里任何变量后接非 ASCII 字符，一律写 `${VAR}`** | 本条提交 | 修复后实测两种路径均正常：有改动未登记 → 告警；已登记 → `OK：本次提交已登记记忆台账（07-change-memory.md）` |
 | 19 | 分支 | **`master` / `test` 快进到 `dev`**：`git checkout master && git merge --ff-only dev && git push`、`test` 同款、随后回 `dev`；三支最终同指一个提交，内容零差异 | 本条提交 | `git rev-list --count master..dev` → 0；`git rev-parse dev master test` 三者相同；推送为 `--ff-only` 快进（非强推、未 `reset --hard`） |
 | 20 | 治理 | **安装项目专属 Skill 3 个**（`apex-scaffold-backend`、`apex-admin-web-frontend`、`apex-governance-ops`，落在 `/Users/eric/DoubaoWork/skills/`，用户级不入库）+ **Agent 定义新增 2 个**（`.workbuddy/agents/doc-governance-auditor.md`、`release-guardian.md`）；新增受控文档 `08-agent-tooling.md` 登记清单与重建要点；插件市场 `find_plugin` 无匹配，改用仓库内脚本 | 本条提交 | `ls /Users/eric/DoubaoWork/skills/*/SKILL.md` 三份 frontmatter 完整；`.workbuddy/agents/` 6 个定义；`find_plugin` 返回空。不影响构建与接口 |
+| 21 | 脚本 | **新增一键预检 `scripts/dev/apex-preflight.sh`**（两仓同款）：4 种模式（默认全量 / `--fast` / `--commit` / `--strict`），10 类检查（仓类型、分支=dev、工作区、远端对齐、附录 A 哈希、origin 与 SSH 443、记忆台账、治理脚本及其自检、图表基线、JDK+mvnd / node+build、三支一致性）；三个项目 Skill 同步加入入口 | 本条提交 | 后端实测 `OK=19 WARN=1 FAIL=0`、前端 `OK=16 WARN=1 FAIL=0`（WARN 均为「有未跟踪新文件」）。脚本只读，不改任何文件 |
+| 22 | 治理 | **分支保护清单** `docs/05-operations/github-branch-protection.md`：`master`/`test` 目标规则（Require PR + 线性历史 + 禁强推 + 禁删除）、`dev` 只禁强推与删除、网页步骤、`gh api` 命令、开启后改走 PR + Rebase and merge、8 条验收清单；规范 §5.3 增指引（前端副本在 `docs/guides/`） | 本条提交 | 现状实测：匿名 `GET .../branches/master/protection` → **403**（无 token，无法核实/开启），需网页或 PAT |
 
 ---
 

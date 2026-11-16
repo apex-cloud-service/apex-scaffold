@@ -57,6 +57,16 @@
 | 测试与报告 | 后端 `scripts/test/*`、前端 `npm run test:report` |
 | 部署后自检 | 前端 `scripts/verify/post-deploy-check.sh`（C1–C13） |
 
+
+## 4.5 配套脚本与规则清单（本会话新增）
+
+| 产物 | 路径 | 用途 |
+| --- | --- | --- |
+| 一键预检 | `scripts/dev/apex-preflight.sh`（两仓同款） | 分支/工作区/远端/附录A哈希/台账/治理脚本/图表基线/JDK+mvnd/分支对齐；`--fast`、`--commit`、`--strict` 四种模式 |
+| 分支保护清单 | `docs/05-operations/github-branch-protection.md` | 目标规则表、网页步骤、`gh api` 命令、开启后的 PR 流程、8 条验收清单 |
+
+三个 Skill 均已加入 `apex-preflight.sh` 的调用入口（后端 `§1.5`、前端 `§1.5`、治理 `§1.5`）。
+
 ## 5. 生效验证（换机器/新会话后跑一遍）
 
 ```bash
@@ -69,7 +79,8 @@ ls /Users/work/apex-scaffold/.workbuddy/agents/
 ls /Users/work/apex-admin-web/.workbuddy/agents/
 
 # 3) 技能里写的命令是否真的可跑（抽查两条）
-cd /Users/work/apex-scaffold && bash scripts/governance/verify-docs.sh | tail -1
+cd /Users/work/apex-scaffold && bash scripts/dev/apex-preflight.sh --fast | tail -3   # 预检脚本可跑
+bash scripts/governance/verify-docs.sh | tail -1
 cd /Users/work/apex-admin-web && python3 -c "import json;print(list(json.load(open('package.json'))['scripts'])[:6])"
 ```
 
