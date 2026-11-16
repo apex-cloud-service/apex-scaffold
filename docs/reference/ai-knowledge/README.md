@@ -10,11 +10,11 @@
 
 | 仓 | 一页式记忆卡 | 本仓知识库 |
 | --- | --- | --- |
-| apex-scaffold | `MEMORY-CARD.md` | 本目录（01–07） |
+| apex-scaffold | `MEMORY-CARD.md` | 本目录（01–08） |
 | apex-admin-web | `MEMORY-CARD.md` | `apex-admin-web/docs/reference/ai-knowledge/` |
 | cold-chain | `MEMORY-CARD.md` | `cold-chain/docs/reference/ai-knowledge/` |
 
-跨仓索引：`.workbuddy/memory/CARDS.md`。**本目录的 01–07 以 apex 为主、兼顾跨仓导航**；web/cold 的细节已下沉到各自仓的知识库，避免两处维护。
+跨仓索引：`.workbuddy/memory/CARDS.md`。**本目录的 01–08 以 apex 为主、兼顾跨仓导航**；web/cold 的细节已下沉到各自仓的知识库，避免两处维护。
 
 **检索入口**：不确定结论在哪一篇时，先用 AI 私有目录下的 RAG 检索（覆盖三仓文档与源码，返回路径+行号），再回到本目录读结论。RAG 的说明文档位于 AI 工作目录 `rag/README.md`，**按规范不入库**（原文未入库），需要时向维护人索取。
 

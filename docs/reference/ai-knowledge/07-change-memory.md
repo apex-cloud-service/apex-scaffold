@@ -60,6 +60,7 @@
 | 16 | 文档 | 本篇 `07-change-memory.md` 建立 + 规范 §5.4「记忆文档同步（强制）」+ `MEMORY-CARD.md`/`README.md` 索引同步 | 本条提交 | 本文件；`grep -n "5.4 记忆文档同步" docs/specs/project-governance.md` |
 | 18 | 脚本 | **更正 #17**：`check-memory-sync.sh` 首版在 macOS bash 3.2 下报 `MEM_NAME: unbound variable` —— 变量紧跟中文全角括号 `（` 时被并入变量名；改为 `${MEM_NAME}` 后复测通过。**结论：本仓脚本里任何变量后接非 ASCII 字符，一律写 `${VAR}`** | 本条提交 | 修复后实测两种路径均正常：有改动未登记 → 告警；已登记 → `OK：本次提交已登记记忆台账（07-change-memory.md）` |
 | 19 | 分支 | **`master` / `test` 快进到 `dev`**：`git checkout master && git merge --ff-only dev && git push`、`test` 同款、随后回 `dev`；三支最终同指一个提交，内容零差异 | 本条提交 | `git rev-list --count master..dev` → 0；`git rev-parse dev master test` 三者相同；推送为 `--ff-only` 快进（非强推、未 `reset --hard`） |
+| 20 | 治理 | **安装项目专属 Skill 3 个**（`apex-scaffold-backend`、`apex-admin-web-frontend`、`apex-governance-ops`，落在 `/Users/eric/DoubaoWork/skills/`，用户级不入库）+ **Agent 定义新增 2 个**（`.workbuddy/agents/doc-governance-auditor.md`、`release-guardian.md`）；新增受控文档 `08-agent-tooling.md` 登记清单与重建要点；插件市场 `find_plugin` 无匹配，改用仓库内脚本 | 本条提交 | `ls /Users/eric/DoubaoWork/skills/*/SKILL.md` 三份 frontmatter 完整；`.workbuddy/agents/` 6 个定义；`find_plugin` 返回空。不影响构建与接口 |
 
 ---
 
