@@ -143,3 +143,33 @@ git config --unset core.hooksPath
 | Java/POM | 0 改动 |
 | 自检 | `verify-docs.sh` 通过（30 个 MMD 缺导出件为存量告警）；`audit-backend-rules.sh` 1 项阻断（BE-017） |
 
+
+## 10. 三次增补（同日 BE-019：他人未提交改动按规范复核纳入）
+
+**背景**：首轮提交（`19731479`）刻意排除了他人 3 项未提交改动。用户随后要求「按上述要求调整这些内容，调整完成后并提交」，故在**保留原文**前提下做规范对齐。
+
+**改动清单（只改指针/索引，不动他人在写结论）**
+
+| 文件 | 原状态 | 调整 | 依据 |
+| --- | --- | --- | --- |
+| `MEMORY-CARD.md` | 他人改动：基线日期改 11-16、knowledge 迁移档 V1→V2、规模 2244/776、282 迁移、加 11-15～11-16 加固批次 | 4 处指针由 `.workbuddy/knowledge/` 改指 `docs/reference/ai-knowledge/`；权威优先级链标注私有目录不入库；跨仓台账标注「私有目录」 | §3 文档收口、0.4 多智能体目录 |
+| `docs/08-project-management/periodic-reports/daily/README.md` | 他人改动：+1 行登记 11-16 日报 | 无需改（登记者符合 §3.4 索引约定） | §3.4 |
+| `docs/08-project-management/periodic-reports/daily/2026-11-16-all-projects-daily-report.md` | 未跟踪新文件（14 行） | 追加「补记（同日后段·文档治理）」，原文一字未改 | §3.4 报告须可追溯 |
+
+**事实复核（对他人数字逐项验证，未凭记忆采信）**
+
+| 指标 | 卡片声明 | 实测 | 结论 |
+| --- | --- | --- | --- |
+| 主源码 Java | 2244 | 2244（`src/main/java`，排除 target） | 一致 |
+| 测试类 | 776 | 776（`src/test/java`） | 一致 |
+| 已跟踪迁移 | 282（MySQL 141 + PG 141） | 141 + 141 = 282 | 一致 |
+| knowledge V2 | 存在（双方言） | `apex-knowledge-service` 下 mysql/postgresql 各 1 | 一致 |
+
+**回归**
+
+| 项 | 结果 |
+| --- | --- |
+| AGENTS.md 附录 A | 本轮未改 `AGENTS.md`，哈希基线 `aa0c25fc…60ed` 保持 |
+| 图表 | SVG 217 / MMD 68 不变 |
+| Java/POM | 0 改动 |
+| 自检 | `verify-docs.sh` 通过（仅 30 个 MMD 存量告警） |

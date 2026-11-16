@@ -1,8 +1,8 @@
 # 记忆卡 · apex-scaffold（后端基座）
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
-> **基线**：2026-11-14 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 根直接聚合 7 组、递归 44 个模块、含根 45 个 reactor 项目；第二阶段叶子物理嵌套于各分组父目录
-> **权威优先级**：源码 > `AGENTS.md` > `docs/` > `.workbuddy/knowledge/` > 本卡。本卡是**导航与结论**，不是规范原文。
+> **基线**：2026-11-16 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 根直接聚合 7 组、递归 44 个模块、含根 45 个 reactor 项目；第二阶段叶子物理嵌套于各分组父目录
+> **权威优先级**：源码 > `AGENTS.md` > `docs/`（含 `docs/reference/ai-knowledge/`，原 `.workbuddy/knowledge/` 已于 11-16 迁入）> 本卡。本卡是**导航与结论**，不是规范原文；私有目录（`.workbuddy/`、`.zcode/`、`.trae/`）不入版本库，只留指针。
 
 ## 1. 一句话
 
@@ -32,7 +32,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | `apex-office-service` | 8084 | `apex_office` | V10 |
 | `apex-file-service` | 8085 | `apex_file` | V7 |
 | `apex-integration-service` | 8094（管理 8097） | `apex_integration` | V3 |
-| `apex-knowledge-service` | 8100 | `apex_knowledge`（可选档） | V1 |
+| `apex-knowledge-service` | 8100 | `apex_knowledge`（可选档） | V2 |
 | `apex-aggregation-service` | 8098 | 无（只读聚合，无 DB/迁移/事务） | — |
 | `apex-job-service` | 8095 | 无（固定代理 system） | — |
 | `apex-masking-service` | 8096 | 无 | — |
@@ -40,7 +40,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | `apex-boot-all` | 缺省 8080 | 单进程组合多库 | 复用组件迁移 |
 
 - 迁移**按服务归位**在业务库 / 运行模块的 `src/main/resources/db/migration/{mysql,postgresql}`。注意物理位置有历史遗留：system 迁移在 **`apex-components-parent/apex-system`**（不在 `-service`）、auth 迁移在 **`apex-services-bom/apex-auth-service`**（不在 `apex-auth`）、integration 迁移在 **`apex-components-parent/apex-integration`**（库模块，不在 `-service`）；11-14 两级布局后模块目录前面带分组父目录，`maintain.py` 的迁移键也随之变为 `分组/模块`；新增时跟随现有位置，不要另起一套。
-- 规模：MySQL 140 + PostgreSQL 140 = **280 个已跟踪迁移**（office 域 11-12～11-13 增 V9/V10；system V91 与 knowledge V1 为 11-14 知识库落地新增，双方言配对）。
+- 规模：MySQL 141 + PostgreSQL 141 = **282 个已跟踪迁移**（office 域 11-12～11-13 增 V9/V10；system V91 与 knowledge V1 为 11-14 知识库落地新增、knowledge V2 与 auth V65 为 11-15～11-16 加固批次新增，均双方言配对）。
 - system 管理端口缺省 8083；workflow 业务端口 2026-11-07 起为 8093，两者不再冲突，同机直跑无须改端口。
 - 组合档 `apex-boot-all` 只装配不实现，无自有 `application.yml`；多实例部署必须显式选 MQ，否则 `apex.events.channel=auto` 退化为进程内派发。
 
@@ -69,9 +69,10 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 统一授权「默认开启」判断错误 | 组件库缺省 true，但 `apex-services-bom/apex-system-service/application.yml` 覆盖为 `${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}` → 排查按「运行模块 yml → 环境变量 → 组件默认」 |
 | 集成服务启动即失败 | 连接器/设备子域依赖外部 EMQX；本地无 broker 时需显式关闭 MQTT 并核 `hivemq-mqtt-client` 为 optional |
 
-## 6. 当前状态（2026-11-14）
+## 6. 当前状态（2026-11-16）
 
-- **规模**：主源码 **2233** 个 Java 文件、测试类 **769** 个；启动入口 **13** 个（12 个部署单元含 `apex-knowledge-service` 8100 与 `apex-example` + `apex-boot-all` 组合档）。
+- **规模**：主源码 **2244** 个 Java 文件、测试类 **776** 个；启动入口 **13** 个（12 个部署单元含 `apex-knowledge-service` 8100 与 `apex-example` + `apex-boot-all` 组合档）。
+- **11-15～11-16 加固批次**（`8d489f4e`/`acc7baad`/`0e0c480e`/`ef5c4337`/`db968c70`/`72773898`/`2807632e`）：JWKS kid 选钥分支补齐 file/integration/aggregation、阻塞调度器租户上下文、masking 令牌家族兼容、auth 刷新令牌事务内原子轮换与重放撤销（auth **V65**）、知识库文档删除改持久清理凭证并统一问答错误协议（knowledge **V2**）、Javadoc 与构造器注入收口；未改变模块与端口拓扑。
 - **主线《评审收口调整方案》**（`docs/08-project-management/plans/unified-auth-tenant-platform-remediation-plan.md`）：
   - 批次 **A（A1–A7 统一认证）已完成并提交**（10-31）。
   - 批次 **B（B1–B9 多租户）已完成并提交**（10-31～11-01，B9 为 M2 收官）。
@@ -94,12 +95,12 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 想知道 | 去哪 |
 | --- | --- |
 | 协作约束（唯一权威） | `AGENTS.md` |
-| 项目地图 / 模块职责 | `.workbuddy/knowledge/01-project-map.md` |
-| 架构现状与完成度 | `.workbuddy/knowledge/02-apex-scaffold-current-state.md` |
-| 约定与陷阱全文 | `.workbuddy/knowledge/03-conventions-and-pitfalls.md` |
-| 批次状态与证据缺口 | `.workbuddy/knowledge/06-delivery-status-and-next.md`、方案原文 |
+| 项目地图 / 模块职责 | `docs/reference/ai-knowledge/01-project-map.md` |
+| 架构现状与完成度 | `docs/reference/ai-knowledge/02-apex-scaffold-current-state.md` |
+| 约定与陷阱全文 | `docs/reference/ai-knowledge/03-conventions-and-pitfalls.md` |
+| 批次状态与证据缺口 | `docs/reference/ai-knowledge/06-delivery-status-and-next.md`、方案原文 |
 | 路由登记 | `docs/03-api/API_ROUTES.md` |
-| 跨仓变动台账 | `.workbuddy/memory/PROJECTS.md` |
+| 跨仓变动台账 | `.workbuddy/memory/PROJECTS.md`（私有目录，不入版本库） |
 
 ## 9. 维护规则
 
