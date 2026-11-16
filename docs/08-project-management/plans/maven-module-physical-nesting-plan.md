@@ -200,7 +200,7 @@ apex-scaffold/
 | 需重绘图表 | **内联 mermaid 85 块中 0 张需要重绘**（全部为业务流程/时序/状态图，按模块名绘制、模块名不变）。需改的是 2 个双源图：`docs/diagrams/128_maven_module_groups.mmd/.svg` 与 `129_maven_parent_inheritance.mmd/.svg`（NOTE 明文"叶子物理目录仍在仓库根/`../apex-xxx` 聚合"，与新布局直接矛盾；必须 .mmd 与 SVG 双源同改，禁止只改一侧）；`95_module_dependency_graph` 仅副标题口径复核（0-1 处） |
 | 其他资产 | 全仓 0 个 png/puml/drawio；217 个 SVG 中仅上述 2 个刻画 Maven 布局；`97-106/122/123` 等包结构 SVG 刻画 Java 包名（不变），**不受影响** |
 | 模块自带 README | 5 个模块有 README；`apex-tools-build`、`apex-common` 必改；6 处 `../docs/...` 相对链接深度 +1 |
-| 零散 | 根级 `aggregation-optimization-plan.md`、`architecture-review-report.md`（各含路径引用）；`scripts/lib/README.md`、`scripts/dev/check/` 2 个 md、`config/monitoring/grafana/README.md` 各 1 处 |
+| 零散 | 已于 2026-11-16 迁入 `docs/plans/aggregation-optimization-plan.md`、`docs/reviews/architecture-review-report.md`（根目录仅留指针）；`scripts/lib/README.md`、`scripts/dev/check/` 2 个 md、`config/monitoring/grafana/README.md` 各 1 处 |
 | 顺手甄别项 | 有效区存在大量**已过期引用**（指向已退役模块：`apex-interfaces` 410 处、`apex-application` 247 处、`apex-auth-center` 74 处、`apex-admin-web` 154 处）——不在本次混改，已另立任务：`docs/08-project-management/plans/retired-module-reference-cleanup-plan.md`（§8-Q7 已确认） |
 
 ### 2.8 明确不受影响清单（评审兜底）
