@@ -121,3 +121,20 @@ bash scripts/governance/report-doc-orphans.sh > docs/notes/2026-11-16-doc-orphan
 ```text
 md 总数 772（README 38）· 被索引引用 374 · 孤岛 527
 ```
+
+## 8. `check-doc-layout.sh`（目录结构规范化自检，2026-11-16 新增）
+
+| 项 | 说明 |
+| --- | --- |
+| 目的 | 让「目录规划」可执行、可回归：目录不再一人一套 |
+| 断言 1 | `docs/` 下**每个一级目录都有 `README.md`**（25 个，含 `_archive/`） |
+| 断言 2 | 一级目录必须在脚本 `EXPECTED` 白名单内（新增目录要同步脚本） |
+| 断言 3 | `docs/README.md` 的「🗂 目录总览」表必须覆盖全部一级目录 |
+| 断言 4 | 仓库根目录不得散落业务 Markdown（白名单：门面 + 许可 + 2 个历史指针文件） |
+| 阻断 | 默认警告（exit 0），`--strict` 有问题 exit 1 |
+| 接入 | `verify-docs.sh` 第 9 项 |
+
+```bash
+bash scripts/governance/check-doc-layout.sh            # 明细
+bash scripts/governance/check-doc-layout.sh --strict   # CI
+```

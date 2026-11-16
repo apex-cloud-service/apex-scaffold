@@ -12,4 +12,5 @@
 
 | 日期 | 文档 | 说明 |
 | --- | --- | --- |
+| 2026-11-16 | [2026-11-16-directory-normalization.md](./2026-11-16-directory-normalization.md) | 目录规范化：docs 总览表 + 7 个 README + check-doc-layout.sh（BE-034） |
 | 2026-11-16 | [2026-11-16-tech-debt-reverify.md](./2026-11-16-tech-debt-reverify.md) | BE-001/BE-017 复核（均已闭合）+ mvnd 守护进程故障与 mvn 回退 |

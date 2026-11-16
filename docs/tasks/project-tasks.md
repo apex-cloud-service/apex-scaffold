@@ -16,6 +16,7 @@
 
 | ID | 优先级 | 任务 | 状态 | 完成日期 | 产出 |
 | --- | --- | --- | --- | --- | --- |
+| BE-034 | P1 | 目录规范化：docs 目录总览 + 7 个一级目录 README + 目录结构自检 | 已完成 | 2026-11-16 | 验收：`verify-docs.sh` 9 项 0 问题、`check-doc-layout.sh` 4 条断言全 OK（25 个一级目录均有 README 且被总览覆盖）、`check-doc-refs.sh` 断链 0；产出：`docs/README.md`「🗂 目录总览」、`docs/{_archive,api,architecture,archived,fix-reports,migration,reference}/README.md`、`scripts/governance/check-doc-layout.sh`、规范 §3.7、`docs/plans/2026-11-16-directory-normalization-plan.md` |
 | BE-010 | P1 | AGENTS.md 增补第 0 章治理规范（附录 A 原文逐字保留，SHA-256 已比对） | 已完成 | 2026-11-16 | `AGENTS.md` |
 | BE-011 | P1 | 建立 `docs/{tasks,specs,plans,records,reviews,notes}` 标准目录与索引（既有编号目录不动） | 已完成 | 2026-11-16 | `docs/README.md`、各目录 README |
 | BE-012 | P1 | 迁移 `.trae/documents` 4 份设计文档 → `docs/plans/archived-ai-sessions/`（逐字节一致后移除原件，留指针） | 已完成 | 2026-11-16 | `docs/records/2026-11-16-docs-governance.md` |

@@ -130,6 +130,16 @@
 
 ---
 
+### 3.7 目录总览与「一个主题一个家」（2026-11-16 增补）
+
+| 规则 | 内容 |
+| --- | --- |
+| 唯一索引 | `docs/README.md` 的「🗂 目录总览」表是全部一级目录的唯一索引；新增目录必须先登记该表，再建目录 |
+| 必带 README | `docs/` 下**每个**一级目录必须有 `README.md`，写清「用途 / 收什么 / 不收什么（新内容去哪） / 索引」 |
+| 两级体系并存 | 编号体系（`00`–`08`）继续收新内容，是**架构/接口/测试报告/周期报告的权威落点**；英文专题目录（`architecture`、`api`、`reports` 等）作为**历史细分材料只读**，不再追加，避免同一主题两份口径 |
+| 根目录洁净 | 仓库根目录只允许门面/许可文档（`README.md`、`CHANGELOG.md`、`CONTRIBUTING.md`、`CODE_OF_CONDUCT.md`、`LICENSE*`、`MEMORY-CARD.md`、`AGENTS.md`）与历史迁移指针文件；业务 Markdown 一律进 `docs/` |
+| 机器校验 | `scripts/governance/check-doc-layout.sh`（接入 `verify-docs.sh` 第 9 项）断言上述四条，`--strict` 进 CI |
+
 ## 4. 多智能体协作
 
 ### 4.1 工具对应目录与允许内容
@@ -318,7 +328,8 @@ git branch test master && git push -u origin test
 
 | 脚本 | 作用 | 用法 |
 | --- | --- | --- |
-| `scripts/governance/verify-docs.sh` | 六目录/索引/任务大盘/私有目录边界/**图表数量门槛 247/68**/`.mmd`↔`.svg` 配对/归档索引 | `bash scripts/governance/verify-docs.sh` |
+| `scripts/governance/verify-docs.sh` | 六目录/索引/任务大盘/私有目录边界/**图表数量门槛 247/68**/`.mmd`↔`.svg` 配对/归档索引/**目录结构（第 9 项）** | `bash scripts/governance/verify-docs.sh` |
+| `scripts/governance/check-doc-layout.sh` | 一级目录 README、总览表覆盖、目录白名单、根目录散落 | `bash scripts/governance/check-doc-layout.sh [--strict]` |
 | `scripts/governance/audit-backend-rules.sh` | 行首精确注解匹配：`@Autowired`、`@Controller`、`@RestControllerAdvice`（例外）、`BeanUtils`、生产代码手写 Logger、`.sdkmanrc`/WebFlux/MVC starter | `bash scripts/governance/audit-backend-rules.sh [--strict]` |
 | `scripts/governance/check-doc-refs.sh` | 活文档私有路径残留 + Markdown 断链（含白名单豁免） | `bash scripts/governance/check-doc-refs.sh [--strict]` |
 | `.githooks/pre-commit` | 治理范围改动时跑自检 + 图表删除告警 + 大文件提醒 | `git config core.hooksPath .githooks` |

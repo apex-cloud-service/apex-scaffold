@@ -80,6 +80,18 @@ else
   pass "活文档无私有路径残留、无断链"
 fi
 
+echo "== 9. 目录结构规范化（一级目录 README / 总览覆盖 / 根目录散落） =="
+if [ -f scripts/governance/check-doc-layout.sh ]; then
+  layout=$(bash scripts/governance/check-doc-layout.sh 2>&1)
+  if echo "$layout" | grep -q "自检通过"; then
+    pass "目录结构规范（25 个一级目录均有 README 且被总览覆盖）"
+  else
+    warn "目录结构有问题：$(echo "$layout" | grep '\[WARN\]' | tr '\n' ' ')"
+  fi
+else
+  warn "缺少 scripts/governance/check-doc-layout.sh"
+fi
+
 echo
 if [ "$FAIL" -eq 0 ]; then
   echo "✅ 文档治理自检通过（0 项问题）"

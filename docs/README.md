@@ -114,6 +114,44 @@ API 接口文档、规范和版本管理。
 
 ---
 
+## 🗂 目录总览（全部一级目录，2026-11-16 增补）
+
+本表是 `docs/` 的**唯一目录索引**：新增文档前先查本表确定去向，新增目录必须同步登记本表与 `scripts/governance/check-doc-layout.sh` 白名单。
+
+| 目录 | 内容 | 性质 | 收新内容 | 入口 |
+| --- | --- | --- | --- | --- |
+| `00-getting-started/` | 快速开始、示例 | 编号体系（历史主线，继续有效） | 是（入门类） | [README](./00-getting-started/README.md) |
+| `01-guides/` | 使用指南、最佳实践、排障 | 编号体系 | 是（指南类） | [README](./01-guides/README.md) |
+| `02-architecture/` | 架构总览、演进、能力目录 | 编号体系（**架构类的权威落点**） | 是 | [README](./02-architecture/README.md) |
+| `03-api/` | 接口文档（按业务域） | 编号体系（**接口类的权威落点**） | 是 | [README](./03-api/README.md) |
+| `04-development/` | 开发规范、构建、编码约定 | 编号体系 | 是 | [README](./04-development/README.md) |
+| `05-operations/` | 部署、运维、分支保护等操作手册 | 编号体系 | 是 | [README](./05-operations/README.md) |
+| `06-testing/` | 测试策略、用例、测试报告 | 编号体系（**测试报告权威落点**） | 是 | [README](./06-testing/README.md) |
+| `07-commercial/` | 商业化、许可、授权 | 编号体系 | 是 | [README](./07-commercial/README.md) |
+| `08-project-management/` | 周期报告、里程碑、项目台账 | 编号体系（**周期报告权威落点**） | 是 | [README](./08-project-management/README.md) |
+| `tasks/` | 任务大盘（唯一的任务登记处） | 规范六目录 | 是（强制） | [README](./tasks/README.md) |
+| `specs/` | 规范正文、角色卡 | 规范六目录 | 是 | [README](./specs/README.md) |
+| `plans/` | 方案/计划（含已确认整改方案） | 规范六目录 | 是 | [README](./plans/README.md) |
+| `records/` | 执行记录、验收证据、复盘 | 规范六目录 | 是 | [README](./records/README.md) |
+| `reviews/` | 评审、审计、评估报告 | 规范六目录 | 是 | [README](./reviews/README.md) |
+| `notes/` | 调研备忘、临时纪要（可升格为正式文档） | 规范六目录 | 是 | [README](./notes/README.md) |
+| `reference/` | 受控参考：AI 记忆与知识库 | 受控参考 | 仅 `ai-knowledge/` | [ai-knowledge](./reference/ai-knowledge/README.md) |
+| `diagrams/` | 图表资产：`.mmd` 源 + 同名 `.svg` 成对 | 资产目录 | 是（必须成对） | [README](./diagrams/README.md) |
+| `architecture/` | 分层架构详解（29 篇 + `_templates`、`advanced-features`） | 专题历史（BE-003 后作为细分深度材料） | 否（新内容进 `02-architecture/`） | [README](./architecture/README.md) |
+| `api/` | 早期单接口文档（如定时任务分页） | 专题历史 | 否（新内容进 `03-api/`） | [README](./api/README.md) |
+| `cache/` | 缓存专题（设计、评审、优化记录） | 专题历史 | 否（新评审进 `reviews/`） | [README](./cache/README.md) |
+| `reports/` | 早期实施/优化报告（39 篇） | 专题历史 | 否（新报告进 `records/` 或 `06-testing/`） | [README](./reports/README.md) |
+| `fix-reports/` | Bug 修复报告（历史快照） | 专题历史 | 否（新记录进 `records/`） | [README](./fix-reports/README.md) |
+| `migration/` | 数据/版本迁移记录 | 专题历史 | 否（新方案进 `plans/`） | [README](./migration/README.md) |
+| `archived/` | AI 会话归档（`ai-sessions/`） | 归档 | 否 | [README](./archived/README.md) |
+| `_archive/` | 已下线文档总仓（235 篇，按子目录分组） | 归档（只读） | 否 | [README](./_archive/README.md) |
+
+**三条归置规则**
+
+1. **新产出只进上位「收新内容 = 是」的目录**；专题历史目录只读、不追加（避免同一主题两份口径）。
+2. **同一主题只允许一个权威落点**：架构 → `02-architecture/`；接口 → `03-api/`；测试报告 → `06-testing/`；周期报告 → `08-project-management/periodic-reports/`；评审 → `reviews/`。
+3. **归档不改正文**（规范 §3.6）：`_archive/`、`archived/` 里的旧路径与旧口径保持原样，仅由 README 说明「以当前代码为准」。
+
 ## 🎨 架构图表
 
 完整的架构图表位于 [diagrams](./diagrams/README.md) 目录，包含 200+ 张 SVG 图表（含图标源素材）：
