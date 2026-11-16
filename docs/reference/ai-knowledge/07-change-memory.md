@@ -77,6 +77,7 @@
 | 34 | 2026-11-16 | 治理 | **更正 #33**：新增条目误把「证据」与「影响面」写在同一格（6 格），已拆为 7 格，与表头一致 | 本条提交 | 校验：`07-change-memory.md` 条目列数异常 0 | 仅文档，不改代码 |
 | 35 | 2026-11-16 | 脚本 | **BE-006**：`scripts/` 下 19 个缺说明的子目录各生成 README（标题+一句用途+`脚本|用途|用法`表+约定：路径解析/退出码/新增脚本须先立卡），合计 22/22 齐备；抽描述时跳过 shebang 与 `=`/`*`/`Copyright`/`SPDX` 行，避免把 `#!/usr/bin/env bash` 当成描述 | 本条提交 | `for d in scripts/*/; do test -f $d/README.md || echo $d; done` 输出为空；`scripts/utils/README.md` 为唯一手填描述 | 仅新增脚本目录说明，不改脚本逻辑 |
 | 36 | 2026-11-16 | 治理 | **BE-002/004/005/007 收口**：①新增 `scripts/governance/report-doc-orphans.sh` 与孤岛清单 `docs/notes/2026-11-16-doc-orphans.md`（md 772 / 索引引用 374 / 孤岛 527）；②周期报告按「只留当期」归档 19 件到 `_archive/2026-10/`，三份 README 索引改指归档并写入归档策略；③`docs/reviews/2026-11-16-exception-handler-evaluation.md` 结论维持现状（`@RestControllerAdvice` 在 WebFlux 正常，20 分支迁移会改错误契约，未改代码）；④移除 Trae 私有目录（`.trae`）下 5 个指针桩；5 张卡状态改为已完成并回填产出 | 本条提交 | `check-doc-refs.sh` 0 项、`verify-docs.sh` 0 项、`apex-preflight.sh --fast` `FAIL=0`；`ls .trae` 的 `documents/` 为空 | 仅文档、脚本与归档，不改业务代码 |
+| 37 | 2026-11-16 | 文档 | **技术债卡复核与口径更正**：复核 `BE-001`（68/68 `.mmd` ↔ `.svg` 配对、缺失 0）与 `BE-017`（主代码手写 Logger 0 处、`@Slf4j` 482 文件、残余仅在测试用 logback `ListAppender` 做断言），两卡均**早已闭合**，上一轮「本轮未动」表述更正；同时记录 mvnd 守护进程故障（`aktStatus is NULL`）与 `mvn` 回退路径 | 本条提交 | `mvn -pl :apex-common -am test -DskipITs` → BUILD SUCCESS（26.272s，jacoco 覆盖率检查通过）；`bash scripts/governance/verify-docs.sh` 0 项 | 仅新增 `docs/records/2026-11-16-tech-debt-reverify.md` 与索引，不改代码 |
 
 
 
