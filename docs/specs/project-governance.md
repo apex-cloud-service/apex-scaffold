@@ -246,6 +246,43 @@ git branch test master && git push -u origin test
 
 ---
 
+### 5.4 记忆文档同步（强制）
+
+**规则**：**任何改动都必须写入本仓的记忆文档**，与改动同一次提交完成，不允许「先提交、以后再补」。
+
+**记忆文档清单（本仓）**
+
+| 文件 | 角色 | 何时必须更新 |
+| --- | --- | --- |
+| `docs/reference/ai-knowledge/07-change-memory.md` | **变更流水台账**（append-only） | **每一次改动**都追加一条 |
+| `MEMORY-CARD.md` | 一页式记忆卡（结论 + 指针） | 结构性变化（模块/端口/库/分支/许可/构建命令变化） |
+| `docs/reference/ai-knowledge/01`–`06` | 现状 / 地图 / 陷阱 / 交付快照 | 该篇描述的结论发生变化时 |
+| `docs/records/<日期>-<主题>.md` | 事件级完整复盘 | 复杂改动（跨模块、跨仓、有踩坑或决策） |
+
+**台账一条的必填六字段**：`日期` · `类型`（代码/技术债/文档/脚本/图表/许可/分支/远端/治理）· `摘要`（做了什么 + 为什么）· `提交`（短哈希）· `证据`（实测命令与输出、校验脚本结果）· `影响面`（是否影响功能/接口/构建）。
+
+**提交时的强制动作**
+
+1. 提交信息末行写 `memory: 07-change-memory.md#<条目编号>`；无记忆更新的纯机械改动（如格式化、改错字）写 `memory: n/a（原因）`。
+2. 提交前对照下表自检，缺项即视为未完成：
+
+| 改动类型 | 除台账外还要动的记忆文档 |
+| --- | --- |
+| 新增/删除模块、改包结构、改端口或库 | `MEMORY-CARD.md` §3/§6、`02-apex-scaffold-current-state.md` |
+| 改构建命令、JDK/mvnd 口径、CI 矩阵 | `MEMORY-CARD.md` §2、`06-delivery-status-and-next.md` |
+| 改编码红线 / 治理脚本 / 分支策略 | 本篇（`docs/specs/project-governance.md`）+ 台账 |
+| 改图表基线（`.mmd`/`.svg` 数量） | `docs/diagrams/README.md`、`03-conventions-and-pitfalls.md`、`verify-docs.sh` 门槛 |
+| 改许可 / 远端 / 分支结构 | `MEMORY-CARD.md` 基线行、台账 |
+
+3. 周期校验（每周一次，可放进周报）：
+   ```bash
+   python3 .workbuddy/ops/maintain.py status      # 检测口径漂移（私有运维脚本，不入库）
+   bash scripts/governance/verify-docs.sh          # 结构与索引可达性
+   git log --oneline -10 | grep -c "memory:"       # 最近 10 条是否都带记忆标记
+   ```
+
+**禁止**：① 把私有目录（`.workbuddy/`、`.zcode/`、`.trae/`）内容抄进受控记忆文档；② 只写「已完成」不写证据；③ 删除或改写历史条目——记错时追加 `更正 #n` 条目。
+
 ## 6. 编码红线（后端，10 条）
 
 | 编号 | 红线 | 现状与例外 |

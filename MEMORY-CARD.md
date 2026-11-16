@@ -2,6 +2,7 @@
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
 > **基线**：2026-11-16 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 根直接聚合 7 组、递归 44 个模块、含根 45 个 reactor 项目；第二阶段叶子物理嵌套于各分组父目录
+> **仓库基线**：默认工作分支 **`dev`**（长期分支 `master`/`dev`/`test`，`main` 已删除）· 远端 `origin` = `git@github.com:apex-cloud-service/apex-scaffold.git`（固定 SSH 443）· 许可 **MIT** + `LICENSE-COMMERCIAL.md` 商业双轨
 > **权威优先级**：源码 > `AGENTS.md` > `docs/`（含 `docs/reference/ai-knowledge/`，原 `.workbuddy/knowledge/` 已于 11-16 迁入）> 本卡。本卡是**导航与结论**，不是规范原文；私有目录（`.workbuddy/`、`.zcode/`、`.trae/`）不入版本库，只留指针。
 
 ## 1. 一句话
@@ -99,6 +100,7 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 架构现状与完成度 | `docs/reference/ai-knowledge/02-apex-scaffold-current-state.md` |
 | 约定与陷阱全文 | `docs/reference/ai-knowledge/03-conventions-and-pitfalls.md` |
 | 批次状态与证据缺口 | `docs/reference/ai-knowledge/06-delivery-status-and-next.md`、方案原文 |
+| **变更流水台账（每次改动登记）** | `docs/reference/ai-knowledge/07-change-memory.md` |
 | 路由登记 | `docs/03-api/API_ROUTES.md` |
 | 跨仓变动台账 | `.workbuddy/memory/PROJECTS.md`（私有目录，不入版本库） |
 
@@ -107,5 +109,6 @@ mvnd -T4 -B clean verify                  # 全量基线
 - 只在**结构性变化**（新增/删除模块、迁移归属变更、批次推进、端口或库变更）时改本卡，并同步知识库对应篇。
 - 所有数字带采集日期；与源码冲突时以源码为准并回改本卡。
 - 卡片保持一页：新增内容先进知识库，本卡只留结论与指针。
+- **变更必登记**：任何改动都要在 `docs/reference/ai-knowledge/07-change-memory.md` 追加一条（六字段：日期/类型/摘要/提交/证据/影响面），并在提交信息末行写 `memory: 07-change-memory.md#<条目>`；规则见 `docs/specs/project-governance.md` §5.4。
 - **层级契约（与本卡配对）**：`.workbuddy/memory/MEMORY.md` 是每轮自动注入的**子集**（无指针表），本卡是可导航的**全集**。冲突时以本卡与源码为准；**改任一处必须同日同步另一处**——历史上测试基线、版本号、工作树计数曾两处不一致。
 - 超 30 天的当日日志移入 `.workbuddy/memory/_archive/YYYY-MM/`，不再留在 `memory/` 根层。
