@@ -41,9 +41,9 @@ FAIL=0
 TOTAL=$(printf '%s\n' "$STAGED" | wc -l | tr -d ' ')
 
 if printf '%s\n' "$STAGED" | grep -q "^$MEMORY_FILE"; then
-  echo "[memory] OK：本次提交已登记记忆台账（$MEM_NAME）"
+  echo "[memory] OK：本次提交已登记记忆台账（${MEM_NAME}）"
 else
-  echo "[memory] ⚠️ 本次提交共 $TOTAL 个文件改动，但未暂存记忆台账 $MEM_NAME"
+  echo "[memory] ⚠️ 本次提交共 $TOTAL 个文件改动，但未暂存记忆台账 ${MEM_NAME}"
   echo "[memory]    规则（规范 §5.4）：任何改动都要在台账追加一条，六字段 = 日期/类型/摘要/提交/证据/影响面"
   echo "[memory]    修复：编辑 $MEMORY_FILE 追加条目后 git add 同一文件再提交；"
   echo "[memory]          确为纯机械改动（格式化/改错字）则在提交信息末行写 memory: n/a（原因）"
@@ -55,7 +55,7 @@ if [ -n "$MSG" ]; then
   if printf '%s\n' "$MSG" | grep -q "memory:"; then
     echo "[memory] OK：提交信息带 memory 标记"
   else
-    echo "[memory] ⚠️ 提交信息缺少 memory 标记（末行应写 memory: $MEM_NAME#<条目编号>）"
+    echo "[memory] ⚠️ 提交信息缺少 memory 标记（末行应写 memory: ${MEM_NAME}#<条目编号>）"
     FAIL=1
   fi
 fi

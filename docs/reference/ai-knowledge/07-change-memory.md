@@ -58,6 +58,7 @@
 | 15 | 治理 | **`dev` 设为默认工作分支**：规范 §5.3 分支模型表改为 `dev` 默认、`master` 仅接受从 `dev` 合入、`test` 仅由 `dev` 合入；写明开工三条自检与 `dev→master→test` 合入命令；本地切 `dev` | `1b5f0851` | `git checkout dev` + `git pull --ff-only`（Already up to date）；该规则更新本身即首个 `dev` 提交 |
 | 17 | 脚本 | 新增 `scripts/governance/check-memory-sync.sh`（校验暂存改动是否含台账、提交信息是否带 `memory:` 标记；默认只告警，`--strict` 才 exit 1），接入 `.githooks/pre-commit` 第 0 步与新增的 `.githooks/commit-msg`；`scripts/governance/README.md` 增 §6 说明 | 本条提交 | `bash scripts/governance/check-memory-sync.sh` 实测输出；钩子为警告模式，不影响任何功能与提交 |
 | 16 | 文档 | 本篇 `07-change-memory.md` 建立 + 规范 §5.4「记忆文档同步（强制）」+ `MEMORY-CARD.md`/`README.md` 索引同步 | 本条提交 | 本文件；`grep -n "5.4 记忆文档同步" docs/specs/project-governance.md` |
+| 18 | 脚本 | **更正 #17**：`check-memory-sync.sh` 首版在 macOS bash 3.2 下报 `MEM_NAME: unbound variable` —— 变量紧跟中文全角括号 `（` 时被并入变量名；改为 `${MEM_NAME}` 后复测通过。**结论：本仓脚本里任何变量后接非 ASCII 字符，一律写 `${VAR}`** | 本条提交 | 修复后实测两种路径均正常：有改动未登记 → 告警；已登记 → `OK：本次提交已登记记忆台账（07-change-memory.md）` |
 
 ---
 
