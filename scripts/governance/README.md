@@ -59,3 +59,20 @@ git config --unset core.hooksPath     # 临时关闭
 1. 脚本不得修改仓库文件；只允许读与打印。
 2. 新增检查项必须同步更新本 README 与 `docs/specs/project-governance.md` §8。
 3. macOS 自带 bash 3.2：脚本内避免 `case ... ;;` 嵌在命令替换里，变量紧跟中文标点时用 `${VAR}`。
+## 5. `check-doc-refs.sh`（活文档指针自检，2026-11-16 新增）
+
+| 项 | 说明 |
+| --- | --- |
+| 检查 1 | 受控 Markdown 中是否仍指向 AI 私有目录（`.workbuddy/knowledge|reports/`、`.zcode/plans/`、`.trae/documents/`） |
+| 检查 2 | Markdown 相对链接是否可达（目标是 `.md` 文件的相对链接） |
+| 豁免 | ① `docs/_archive/` 前缀整体豁免（历史归档不改正文）② `doc-refs-allowlist.txt` 列出的文件 ③ 该行显式标注「原文未入库」 |
+| 接入 | `verify-docs.sh` 第 8 项，结果计入 FAIL（默认仍只告警） |
+| 严格模式 | `bash scripts/governance/check-doc-refs.sh --strict` 有问题是退出码 1 |
+
+```bash
+bash scripts/governance/check-doc-refs.sh            # 明细 + 结果计数
+bash scripts/governance/check-doc-refs.sh --strict   # CI / 复审用
+```
+
+**为什么新增**：治理评审（2026-11-16）发现 25 篇活文档在迁移后仍指向私有目录，旧自检无法发现。
+白名单只允许「历史归档 + 迁移说明 + 评审取证」三类，**不得豁免 `docs/` 下的现行规范与索引**。

@@ -216,6 +216,7 @@
 | --- | --- | --- |
 | `scripts/governance/verify-docs.sh` | 六目录/索引/任务大盘/私有目录边界/**图表数量门槛 217/68**/`.mmd`↔`.svg` 配对/归档索引 | `bash scripts/governance/verify-docs.sh` |
 | `scripts/governance/audit-backend-rules.sh` | 行首精确注解匹配：`@Autowired`、`@Controller`、`@RestControllerAdvice`（例外）、`BeanUtils`、生产代码手写 Logger、`.sdkmanrc`/WebFlux/MVC starter | `bash scripts/governance/audit-backend-rules.sh [--strict]` |
+| `scripts/governance/check-doc-refs.sh` | 活文档私有路径残留 + Markdown 断链（含白名单豁免） | `bash scripts/governance/check-doc-refs.sh [--strict]` |
 | `.githooks/pre-commit` | 治理范围改动时跑自检 + 图表删除告警 + 大文件提醒 | `git config core.hooksPath .githooks` |
 
 脚本说明见 `scripts/governance/README.md`；`--strict` 才产生非零退出码，默认只警告。
