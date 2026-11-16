@@ -10,6 +10,12 @@
 
 既有评审材料保留在 `docs/08-project-management/reports/` 与 `docs/02-architecture/`，不搬迁。
 
+## 存量评审（2026-11-16 由根目录迁入）
+
+| 对象 | 文件 |
+| --- | --- |
+| 后端模块架构评审（分层/依赖/响应式链路） | [architecture-review-report.md](./architecture-review-report.md) |
+
 ## 已归档评审
 
 | 日期 | 对象 | 结论 | 文件 |

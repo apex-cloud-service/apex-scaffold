@@ -14,6 +14,12 @@
 
 > 既有计划文档仍保留在 `docs/08-project-management/plans/`，不搬迁；新计划写入本目录。
 
+## 存量计划（2026-11-16 由根目录迁入）
+
+| 主题 | 状态 | 文件 |
+| --- | --- | --- |
+| 概览聚合门面与统一待办聚合优化方案 | 已实施 | [aggregation-optimization-plan.md](./aggregation-optimization-plan.md) |
+
 ## 在办计划
 
 | 日期 | 主题 | 状态 | 文件 |
