@@ -181,7 +181,7 @@ tail -f logs/apex-scaffold.log
 1. **前端实施文档**：`/Users/work/apex-admin-web/DATABASE_CONFIG_IMPLEMENTATION.md`
 2. **后端实施文档**：`/Users/work/apex-scaffold/docs/DATABASE_CONFIG_BACKEND_IMPLEMENTATION.md`
 3. **对接说明文档**：`/Users/work/apex-admin-web/FRONTEND_BACKEND_INTEGRATION.md`
-4. **方案设计文档**：`/Users/work/apex-scaffold/.trae/documents/前端配置数据库多适配方案.md`
+4. **方案设计文档**：`/Users/work/apex-scaffold/.trae/documents/前端配置数据库多适配方案.md`（原文未入库）
 
 ## 下一步扩展
 

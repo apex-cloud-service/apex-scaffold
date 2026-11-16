@@ -1377,7 +1377,7 @@ mvnd clean compile -DskipTests
 **报告生成时间**: 2026-09-20  
 **执行耗时**: 约 2 小时  
 **文档版本**: 1.0  
-**文档路径**: `/Users/work/apex-scaffold/.trae/documents/代码注释与SpringDoc文档完善-执行报告.md`
+**文档路径**: `/Users/work/apex-scaffold/.trae/documents/代码注释与SpringDoc文档完善-执行报告.md`（原文未入库）
 # 代码注释与 SpringDoc 文档完善 - 最终执行报告
 
 **执行时间**: 2026-09-20  

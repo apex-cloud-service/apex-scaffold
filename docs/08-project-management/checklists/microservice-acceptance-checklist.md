@@ -1,7 +1,7 @@
 # 微服务化改造 - §17 验收清单（可执行跟踪）
 
 **来源**：`docs/08-project-management/plans/microservice-migration-plan.md` §17 验收标准清单
-**配套执行计划**：`.trae/documents/microservice-migration-execution-plan.md` §9/§10/§11
+**配套执行计划**：`docs/plans/archived-ai-sessions/microservice-migration-execution-plan.md` §9/§10/§11
 **最后更新**：2026-10-12
 **当前拓扑**：网关 `apex-gateway` + 已服务化 `apex-auth-service`（原 `apex-auth-center` 更名）/ `apex-workflow-service` / `apex-file-service` / `apex-office-service`（Phase 5 业务抽取已完成）/ `apex-system-service`（已装配 `apex-system`，接口、应用与 system 专属领域/基础设施已完成物理迁移；本批最终门禁见下方记录）。
 

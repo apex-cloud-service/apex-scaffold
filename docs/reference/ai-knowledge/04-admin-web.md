@@ -1,7 +1,7 @@
 # 04 · apex-admin-web（管理后台前端）
 
 > 采集：2026-10-31。**权威原文为该仓 `AGENTS.md`（核对日期 2026-10-30）**，本文只做要点与风险提炼。
-> **细节已下沉**：页面清单、契约对照、排障表见 `apex-admin-web/MEMORY-CARD.md` 与 `apex-admin-web/.workbuddy/knowledge/`（2026-11-01 建立）。本页只保留跨仓视角的摘要，避免两处维护。
+> **细节已下沉**：页面清单、契约对照、排障表见 `apex-admin-web/MEMORY-CARD.md` 与 `apex-admin-web/docs/reference/ai-knowledge/`（2026-11-01 建立）。本页只保留跨仓视角的摘要，避免两处维护。
 
 ## 1. 基本盘
 

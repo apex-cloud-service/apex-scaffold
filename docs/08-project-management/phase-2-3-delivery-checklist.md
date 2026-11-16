@@ -226,16 +226,16 @@ cat apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interface
 
 ```bash
 # 详细实施计划
-cat .trae/documents/phase-2-3-implementation-plan.md
+cat docs/08-project-management/plans/phase-2-3-implementation-plan.md
 
 # 后端快速指南
-cat .trae/documents/phase-2-3-quick-guide.md
+cat docs/08-project-management/phase-2-3-quick-guide.md
 
 # 前端开发指南
-cat .trae/documents/phase-3-frontend-guide.md
+echo '前端开发指南原文未入库；前端实现参考 docs/08-project-management/quick-guides/phase-2-3-quick-guide.md'
 
 # 实施总结
-cat .trae/documents/phase-2-3-implementation-summary.md
+cat docs/_archive/trae-reports/2026-09/phase-2-3-implementation-summary.md
 ```
 
 ### 3. 使用代码生成工具
@@ -418,9 +418,9 @@ public Mono<SyncTaskResult> syncDepartments(String tenantId, OfficePlatform plat
 ### 技术咨询
 
 如有问题，请参考：
-1. **实施计划**：`.trae/documents/phase-2-3-implementation-plan.md`
-2. **快速指南**：`.trae/documents/phase-2-3-quick-guide.md`
-3. **前端指南**：`.trae/documents/phase-3-frontend-guide.md`
+1. **实施计划**：`docs/08-project-management/plans/phase-2-3-implementation-plan.md`
+2. **快速指南**：`docs/08-project-management/phase-2-3-quick-guide.md`
+3. **前端指南**：`.trae/documents/phase-3-frontend-guide.md`（原文未入库）
 4. **代码示例**：组织同步功能的完整实现
 5. **API 文档**：启动项目后访问 `/swagger-ui.html`
 

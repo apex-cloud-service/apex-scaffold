@@ -33,7 +33,7 @@
 ## 生成与补写约定
 
 - **自动生成**：每日 17:00 前（16:45 触发）由工作区定时任务产出当日全项目日报（正文约 200 字，向领导汇报口径），落盘为 `.md` 并回写本索引。
-- **数据来源**：三仓当日 `git log --since="00:00" --until="now"`、`git status`、`.workbuddy/memory/YYYY-MM-DD.md`、`.workbuddy/knowledge/`。
+- **数据来源**：三仓当日 `git log --since="00:00" --until="now"`、`git status`、`.workbuddy/memory/YYYY-MM-DD.md`、`docs/reference/ai-knowledge/`。
 - **补写**：漏报日期按同一格式补齐，插入索引时保持日期升序；不得用「无变动」以外的空话占位，确实无提交时写明「无代码变更」并说明当日工作性质（如评审、调研）。
 - **去重**：同一日期只保留一份全项目日报，当日二次生成直接覆盖，不产生 `v2`、`final` 等副本。
 - 日报为过程性记录，不参与技术文档索引。

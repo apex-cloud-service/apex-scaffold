@@ -49,7 +49,7 @@
 ### 2.4 需求侧记录
 
 - 全仓产品/交付文档无 RAG、知识库需求条目；`docs/08-project-management/delivery/delivery-scope.md` 等交付范围未列该能力。
-- 文档中「知识库」字样命中均为 AI 协作笔记目录（`.workbuddy/knowledge/`）与运维报告表述，非产品功能。
+- 文档中「知识库」字样命中均为 AI 协作笔记目录（`docs/reference/ai-knowledge/`）与运维报告表述，非产品功能。
 
 ## 三、候选场景与价值判定
 

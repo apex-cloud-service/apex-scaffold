@@ -87,9 +87,9 @@
 
 | 报告 | 时点 | 数据来源 |
 | --- | --- | --- |
-| 日报 | 每日 17:00 前（16:45 触发） | 三仓当日 `git log`、`git status`、`.workbuddy/memory/YYYY-MM-DD.md`、`.workbuddy/knowledge/` |
+| 日报 | 每日 17:00 前（16:45 触发） | 三仓当日 `git log`、`git status`、`.workbuddy/memory/YYYY-MM-DD.md`、`docs/reference/ai-knowledge/` |
 | 周报 | 每周六 17:00 | 三仓本周一至周六 `git log`、当周全部日报、`.workbuddy/memory/` |
-| 月报 | 每月最后一天 17:00 | 三仓当月 `git log`、当月全部日报与周报、`.workbuddy/knowledge/` |
+| 月报 | 每月最后一天 17:00 | 三仓当月 `git log`、当月全部日报与周报、`docs/reference/ai-knowledge/` |
 
 调度规则与生成要点见 `.workbuddy/agents/` 下的报告生成约定；手工补写遵循同一格式。
 

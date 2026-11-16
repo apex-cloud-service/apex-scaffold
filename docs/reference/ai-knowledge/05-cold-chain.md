@@ -1,7 +1,7 @@
 # 05 · cold-chain（冷链客户项目）
 
 > 采集：2026-10-31。与 apex **无代码依赖**，独立交付线。本文只做入口级提炼，业务口径以该仓与其外迁文档为准。
-> **细节已下沉**：模块规模、红线 R1–R11 全文提炼、已知代码偏差、文档地图见 `cold-chain/MEMORY-CARD.md` 与 `cold-chain/.workbuddy/knowledge/`（2026-11-01 建立）。
+> **细节已下沉**：模块规模、红线 R1–R11 全文提炼、已知代码偏差、文档地图见 `cold-chain/MEMORY-CARD.md` 与 `cold-chain/docs/reference/ai-knowledge/`（2026-11-01 建立）。
 
 ## 1. 项目定位
 

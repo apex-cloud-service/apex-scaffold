@@ -2,7 +2,7 @@
 
 **配套文档**：
 - 主方案：`docs/microservice-migration-plan.md`（§4 目标架构、§16 风险、§17 验收）
-- 执行计划：`.trae/documents/microservice-migration-execution-plan.md`（§5 Phase 5/6、§11 待办）
+- 执行计划：`docs/plans/archived-ai-sessions/microservice-migration-execution-plan.md`（§5 Phase 5/6、§11 待办）
 - 验收跟踪：`docs/08-project-management/checklists/microservice-acceptance-checklist.md`
 
 **最后更新**：2026-10-12

@@ -68,7 +68,7 @@ index.deleteDocument("doc_id");
 
 ### 2. 确认实际PO字段
 
-参考 `/Users/work/apex-scaffold/.trae/documents/MeilisearchAdapter快速修复指南.md`
+参考 `docs/08-project-management/plans/MeilisearchAdapter快速修复指南.md`
 
 **关键字段差异**：
 - ✅ `createTime` / `updateTime`（不是createdAt/updatedAt）

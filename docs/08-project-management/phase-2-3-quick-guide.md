@@ -434,9 +434,9 @@ open http://localhost:8080/swagger-ui.html
 - 文档：https://developer.work.weixin.qq.com/document/path/97459
 
 ### 内部文档
-- 实施计划：`.trae/documents/phase-2-3-implementation-plan.md`
-- 进度报告：`.trae/documents/phase-2-progress-report.md`
-- 实施总结：`.trae/documents/phase-2-3-implementation-summary.md`
+- 实施计划：`docs/08-project-management/plans/phase-2-3-implementation-plan.md`
+- 进度报告：`docs/_archive/trae-reports/2026-09/phase-2-progress-report.md`
+- 实施总结：`docs/_archive/trae-reports/2026-09/phase-2-3-implementation-summary.md`
 - 编码规范：`AGENTS.md`
 
 ---

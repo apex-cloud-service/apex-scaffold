@@ -273,4 +273,4 @@ apex-scaffold/
 ## 参考文档
 
 - 前端实施文档：`/Users/work/apex-admin-web/DATABASE_CONFIG_IMPLEMENTATION.md`
-- 方案文档：`/Users/work/apex-scaffold/.trae/documents/前端配置数据库多适配方案.md`
+- 方案文档：`/Users/work/apex-scaffold/.trae/documents/前端配置数据库多适配方案.md`（原文未入库）

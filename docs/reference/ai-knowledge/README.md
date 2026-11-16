@@ -11,8 +11,8 @@
 | 仓 | 一页式记忆卡 | 本仓知识库 |
 | --- | --- | --- |
 | apex-scaffold | `MEMORY-CARD.md` | 本目录（01–06） |
-| apex-admin-web | `MEMORY-CARD.md` | `apex-admin-web/.workbuddy/knowledge/` |
-| cold-chain | `MEMORY-CARD.md` | `cold-chain/.workbuddy/knowledge/` |
+| apex-admin-web | `MEMORY-CARD.md` | `apex-admin-web/docs/reference/ai-knowledge/` |
+| cold-chain | `MEMORY-CARD.md` | `cold-chain/docs/reference/ai-knowledge/` |
 
 跨仓索引：`.workbuddy/memory/CARDS.md`。**本目录的 01–06 以 apex 为主、兼顾跨仓导航**；web/cold 的细节已下沉到各自仓的知识库，避免两处维护。
 
@@ -49,8 +49,8 @@
 | --- | --- | --- |
 | 新人接手 / 换机器 | [01 项目地图](01-project-map.md) | [02 后端现状](02-apex-scaffold-current-state.md) → [03 约定与陷阱](03-conventions-and-pitfalls.md) |
 | 要改后端代码 | [03 约定与陷阱](03-conventions-and-pitfalls.md) | [02 后端现状](02-apex-scaffold-current-state.md) |
-| 要改前端页面 | `apex-admin-web/MEMORY-CARD.md` | [04 前端工程](04-admin-web.md) → 该仓 `.workbuddy/knowledge/` |
-| 接冷链客户项目 | `cold-chain/MEMORY-CARD.md` | [05 冷链项目](05-cold-chain.md) → 该仓 `.workbuddy/knowledge/` 与 `docs/memory/` |
+| 要改前端页面 | `apex-admin-web/MEMORY-CARD.md` | [04 前端工程](04-admin-web.md) → 该仓 `docs/reference/ai-knowledge/` |
+| 接冷链客户项目 | `cold-chain/MEMORY-CARD.md` | [05 冷链项目](05-cold-chain.md) → 该仓 `docs/reference/ai-knowledge/` 与 `docs/memory/` |
 | 汇报 / 排期 | [06 交付状态](06-delivery-status-and-next.md) | `.workbuddy/memory/PROJECTS.md` |
 | 只记得关键词、不知道在哪 | `.workbuddy/rag/`（`rag.py search "..."` 或 `serve` 界面） | 命中结果里的路径与行号 |
 

@@ -158,7 +158,7 @@ A: 查看详细报告（`cat /tmp/springdoc-report.txt`），定位缺失的注�
 
 遇到问题请查看：
 - 完整文档：`scripts/README-check-springdoc.md`
-- 工作总结：`.trae/documents/SpringDoc注解完善工作总结.md`
+- 工作总结：`docs/_archive/trae-documents/SpringDoc注解完善工作总结.md`
 - 项目规范：`AGENTS.md`
 
 ---
