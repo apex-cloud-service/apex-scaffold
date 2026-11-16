@@ -6,7 +6,16 @@ import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.contract.dto.internal.OpenAppImportRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -22,6 +31,7 @@ import reactor.core.publisher.Mono;
  * @version 1.3.2
  * @since 1.3.2
  */
+@Tag(name = "开放应用迁移", description = "平台管理员专用的存量开放应用导出与批量导入")
 @Component
 public class OpenAppMigrationHandler {
 
@@ -46,6 +56,18 @@ public class OpenAppMigrationHandler {
      * @param request 服务器请求
      * @return 统一响应，{@code data} 为待导入清单
      */
+    @Operation(
+            operationId = "exportLegacyOpenApps",
+            summary = "导出待迁移的存量开放应用清单",
+            description = "返回待导入清单（含密码哈希，不含明文密钥），需平台管理员权限")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "导出成功，data 为待导入清单",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:manage"),
+        @ApiResponse(responseCode = "500", description = "服务端异常")
+    })
     @RequirePermission("open:app:manage")
     @OperationLog(
             module = "OpenAppMigration",
@@ -63,6 +85,26 @@ public class OpenAppMigrationHandler {
      * @param request 服务器请求，请求体为 {@link OpenAppImportRequest} 数组
      * @return 统一响应，{@code data} 为导入汇总
      */
+    @Operation(
+            operationId = "importLegacyOpenApps",
+            summary = "批量导入存量开放应用",
+            description = "逐条写入并汇总成功与失败；单条失败不影响其余条目，失败项只含异常类型")
+    @RequestBody(
+            required = true,
+            description = "待导入的开放应用数组",
+            content =
+                    @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            array = @ArraySchema(schema = @Schema(implementation = OpenAppImportRequest.class))))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "导入完成，data 为成功/失败汇总",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "400", description = "请求体为空或非 JSON 数组"),
+        @ApiResponse(responseCode = "403", description = "权限不足，需要 open:app:manage"),
+        @ApiResponse(responseCode = "500", description = "服务端异常")
+    })
     @RequirePermission("open:app:manage")
     @OperationLog(
             module = "OpenAppMigration",

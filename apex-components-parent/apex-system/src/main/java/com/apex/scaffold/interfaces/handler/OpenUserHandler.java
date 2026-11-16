@@ -3,7 +3,15 @@ package com.apex.scaffold.interfaces.handler;
 import com.apex.scaffold.application.service.UserService;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.domain.model.entity.UserEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Map;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -19,6 +27,7 @@ import reactor.core.publisher.Mono;
  * @version 1.3.2
  * @since 1.3.2
  */
+@Tag(name = "开放用户", description = "开放接口：当前租户用户只读查询（最小字段集）")
 @Component
 public class OpenUserHandler {
 
@@ -39,6 +48,20 @@ public class OpenUserHandler {
      * @param request 服务器请求（query 参数 pageNum/pageSize，越界自动收敛）
      * @return 统一响应，{@code data.rows} 为用户精简列表
      */
+    @Operation(
+            operationId = "openUserList",
+            summary = "分页查询当前租户用户",
+            description = "仅返回 id/username/nickname/deptId/status 的最小字段集，不返回手机号与邮箱")
+    @Parameter(name = "pageNum", in = ParameterIn.QUERY, description = "页码，默认 1，越界自动收敛")
+    @Parameter(name = "pageSize", in = ParameterIn.QUERY, description = "每页条数，默认 20，上限 100")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data.rows 为用户精简列表",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
+        @ApiResponse(responseCode = "401", description = "开放令牌无效或缺失"),
+        @ApiResponse(responseCode = "500", description = "服务端异常")
+    })
     public Mono<ServerResponse> list(ServerRequest request) {
         int page = parse(request.queryParam("pageNum").orElse("1"));
         int size = parse(request.queryParam("pageSize").orElse("20"));
