@@ -1,14 +1,17 @@
 name: 文档一致性检查
 
+# 分支模型：dev/test/master 均需跑文档门禁（开发阶段就拦住断链与索引缺失）
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
+      - test
+      - dev
   pull_request:
     branches:
-      - main
-      - develop
+      - master
+      - test
+  workflow_dispatch:
 
 jobs:
   check-consistency:

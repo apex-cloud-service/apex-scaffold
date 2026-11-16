@@ -3,8 +3,9 @@ name: 文档链接检查
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
+      - test
+      - dev
     paths:
       - 'docs/**/*.md'
       - '**/README.md'
@@ -13,8 +14,8 @@ on:
       - '.github/workflows/doc-link-check.yml'
   pull_request:
     branches:
-      - main
-      - develop
+      - master
+      - test
     paths:
       - 'docs/**/*.md'
       - '**/README.md'

@@ -66,6 +66,7 @@
 | 23 | 治理 | **`dev` 分支治理一致性评审 + 整改方案**：跨仓评审报告（判定口径、12 项达标证据、10 条偏差 D-01~D-10、允许差异、未验证项、功能无关性核对）与整改方案（B1–B6 批次、逐文件行号、命令、验收、回滚、3 个决策点）落盘 `docs/reviews/`、`docs/plans/` | 本条提交 | 关键实测：CI 4 个 workflow 仍绑 `main/develop`（D-01/P0）；SpringDoc Handler 98%（3 处 `@Operation` + 2 Router 缺 `@RouterOperations`）；两仓 `AGENTS.md` 第 0 章无台账/分支条款；前端无任何 CI；保护规则匿名 API 403 不可核实。**方案未执行，待确认** |
 | 24 | 治理 | **整改 B1+B2（关闭 D-03/D-08/D-09/D-10/D-04）**：`AGENTS.md` 第 0 章新增 `0.8 记忆台账、分支模型与工具链`；规范 §5.3 默认分支改为既成事实；`ai-knowledge/README.md` 维护口径改为「台账强制登记 + 记忆卡为派生视图」；`MEMORY-CARD.md` 层级契约降级为可选；任务盘补 BE-022~BE-029 并把 BE-021 定为「决策①接受现状」 | 本条提交 | 验收：`tail -n 306 AGENTS.md \| shasum -a 256` = `aa0c25fc…60ed` **不变**（附录 A 零改动）；任务盘 6 列表格对齐（`awk` 校验 NF=8） |
 | 25 | 脚本 | **整改 B5（关闭 D-06）**：`.gitignore` 合并重复忽略项为单一「AI 私有目录」区块（`.workbuddy/.trae/.zcode/.qoder/.codex/.claude/.agents/.ai/.freebuff` 各 1 条并带用途注释），移除重复的 `dist/`、`dist/` 二次声明与工具链段重复目录 | 本条提交 | 验收：`grep -vE '^#|^$' .gitignore \| sort \| uniq -d` 为空；`git check-ignore docs/README.md` 无命中；`verify-docs` 仍 0 项 |
+| 26 | 治理 | **整改 B3（关闭 D-01）**：5 个 workflow 触发分支由 `main/develop` 改为 `master/test/dev`（PR 为 `master/test`），全部加 `workflow_dispatch`；`ci-cd.yml` 镜像构建条件改 `refs/heads/master`、注释同步 | 本条提交 | 验收：`grep -rn 'refs/heads/main\|branches: \[ main\|- main' .github/workflows/` 为空；`ruby -ryaml` 解析 6 个 yml 全部通过；推 `dev` 将实际触发 CI（本轮推送即验证） |
 
 ---
 
