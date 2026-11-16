@@ -31,8 +31,16 @@
 | BE-020 | P1 | 治理评审整改（RV-01~RV-14，批次 1–6） | 已完成 | 主控 | 2026-11-16 | `verify-docs.sh` 通过（仅 BE-001 存量告警）、`check-doc-refs.sh` 0 项、图表 217/68 不变 | `docs/records/2026-11-16-governance-alignment-remediation.md` |
 | BE-001 | P2 | 图表资产补导出：30 个 `.mmd` 补同名 `.svg` | 已完成 | 主控 | 2026-11-16 | 68/68 配对、SVG 217→247、`verify-docs.sh` 第 6 项 0 告警 | `docs/diagrams/README.md`（补导出记录）、`scripts/utils/render-mermaid-svg.sh` |
 | BE-017 | P3 | `apex-common` 的 `VirtualThreadBoundedExecutor` 手写 `LoggerFactory` 改 `@Slf4j` | 已完成 | 主控 | 2026-11-16 | `mvnd -pl :apex-common -am verify` BUILD SUCCESS（测试/覆盖率/failsafe 全绿）、日志变量名仍为 `log` | `apex-shared-parent/apex-common/.../scheduler/VirtualThreadBoundedExecutor.java` |
-| BE-021 | P3 | 恢复 5 张序列图的激活盒：`78/84/90/93/94` 源文件激活盒嵌套不合法，已归一化为无语义损失的默认生命线；如需恢复需人工重排 `activate/deactivate` | 已完成（登记） | 待定 | 三选一：①接受现状 ②人工重排 ③改写为 `opt/alt` 片段替代激活盒 | 见 `docs/diagrams/README.md`「2026-11-16 批量补导出记录」 |
+| BE-021 | P3 | 5 张序列图激活盒恢复（`78/84/90/93/94`）：源文件激活盒嵌套不合法，已归一化为无语义损失的生命线 | 已完成 | 2026-11-16 | **决策①接受现状**（业主 2026-11-16 确认；如需还原按②人工重排或③`opt/alt` 替代另开任务）。见 `docs/diagrams/README.md`「2026-11-16 批量补导出记录」 |
 | BE-003 | P2 | 根目录散落文档归位：`aggregation-optimization-plan.md` → `docs/plans/`、`architecture-review-report.md` → `docs/reviews/`（根目录留 3 行指针，SHA-256 迁移前后核对） | 已完成 | 主控 | 2026-11-16 |
+| BE-022 | P1 | 变更记忆台账建立 + 规范 §5.4 强制登记（六字段、append-only） | 已完成 | 2026-11-16 | `docs/reference/ai-knowledge/07-change-memory.md`；验收：台账条目连续、提交带 `memory:` 标记（`check-memory-sync.sh` 0 项） |
+| BE-023 | P1 | 台账自动校验脚本 + `pre-commit`/`commit-msg` 双钩子（默认警告，`--strict` 阻断） | 已完成 | 2026-11-16 | `.githooks/pre-commit`、`.githooks/commit-msg`、`scripts/governance/check-memory-sync.sh`；验收：钩子实测放行并打印 `[memory] OK` |
+| BE-024 | P1 | 一键预检脚本 `apex-preflight.sh`（4 模式 / 10 类检查，两仓同款） | 已完成 | 2026-11-16 | `scripts/dev/apex-preflight.sh`、三个项目 Skill §1.5；验收：后端 `OK=19 WARN=1 FAIL=0`、前端 `OK=16 WARN=1 FAIL=0` |
+| BE-025 | P1 | 分支模型 `dev`/`master`/`test` 建立并删除 `main`；`dev` 为日常开发分支 | 已完成 | 2026-11-16 | `docs/records/2026-11-16-github-remote-onboarding.md` §5；验收：远端仅三支、三支同点差 0/0、无 `main` |
+| BE-026 | P1 | 许可统一 MIT（后端 MIT + `LICENSE-COMMERCIAL.md` 商业双轨） | 已完成 | 2026-11-16 | `LICENSE`、`LICENSE-COMMERCIAL.md`；验收：两仓 `LICENSE` 一致、台账 `05` 条可查 |
+| BE-027 | P1 | 分支保护规则清单成文（`master`/`test` 档1：禁强推+禁删除） | 已完成 | 2026-11-16 | `docs/05-operations/github-branch-protection.md`；**规则开启待网页操作或 PAT**（匿名 API 403） |
+| BE-028 | P1 | `dev` 分支一致性评审（D-01~D-10）与整改方案 B1–B6 | 已完成 | 2026-11-16 | `docs/reviews/2026-11-16-dev-branch-governance-audit.md`、`docs/plans/2026-11-16-dev-alignment-remediation-plan.md`；决策 1A/2档1/3① 已确认 |
+| BE-029 | P1 | 整改 B1：`AGENTS.md` 0.8 + 规范 §5.3 口径 + 记忆卡/知识库口径纠偏 | 已完成 | 2026-11-16 | `AGENTS.md`、`docs/specs/project-governance.md`、`MEMORY-CARD.md`、`docs/reference/ai-knowledge/README.md`；验收：附录 A 哈希 `aa0c25fc…60ed` 不变 |
 
 ## 3. 阻塞与风险登记
 

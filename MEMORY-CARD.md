@@ -110,5 +110,5 @@ mvnd -T4 -B clean verify                  # 全量基线
 - 所有数字带采集日期；与源码冲突时以源码为准并回改本卡。
 - 卡片保持一页：新增内容先进知识库，本卡只留结论与指针。
 - **变更必登记**：任何改动都要在 `docs/reference/ai-knowledge/07-change-memory.md` 追加一条（六字段：日期/类型/摘要/提交/证据/影响面），并在提交信息末行写 `memory: 07-change-memory.md#<条目>`；规则见 `docs/specs/project-governance.md` §5.4。
-- **层级契约（与本卡配对）**：`.workbuddy/memory/MEMORY.md` 是每轮自动注入的**子集**（无指针表），本卡是可导航的**全集**。冲突时以本卡与源码为准；**改任一处必须同日同步另一处**——历史上测试基线、版本号、工作树计数曾两处不一致。
+- **层级契约（可选）**：可在同日顺手同步 `.workbuddy/memory/MEMORY.md` 作为本地便利镜像。该文件位于 §5.1 允许忽略的 AI 私有目录，**不纳入版本库、不作验收项**；验收只看 `docs/reference/ai-knowledge/07-change-memory.md` 条目与提交 `memory:` 标记。冲突时以本卡与源码为准。
 - 超 30 天的当日日志移入 `.workbuddy/memory/_archive/YYYY-MM/`，不再留在 `memory/` 根层。

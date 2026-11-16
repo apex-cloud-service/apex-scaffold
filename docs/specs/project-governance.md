@@ -187,7 +187,7 @@
 
 ### 5.3 分支与远端
 
-主线 **`master`**（2026-11-16 由 `main` 重命名）；改动走短分支后合并；文档治理可在 `master` 小步提交。远端默认分支需在 GitHub Settings → General → Default branch 设为 `master`。
+主线 **`master`**（2026-11-16 由 `main` 重命名）；改动走短分支后合并；文档治理可在 `master` 小步提交。远端默认分支**已**设为 `master`（2026-11-16，两仓均已切换并删除 `main`）；如需再次变更，按 GitHub Settings → General → Default branch 操作，变更后同步本条与 `docs/records/2026-11-16-github-remote-onboarding.md` §5。
 
 **分支模型（长期分支三个，2026-11-16 建立 `dev` / `test`）**：
 

@@ -64,6 +64,7 @@
 | 21 | 脚本 | **新增一键预检 `scripts/dev/apex-preflight.sh`**（两仓同款）：4 种模式（默认全量 / `--fast` / `--commit` / `--strict`），10 类检查（仓类型、分支=dev、工作区、远端对齐、附录 A 哈希、origin 与 SSH 443、记忆台账、治理脚本及其自检、图表基线、JDK+mvnd / node+build、三支一致性）；三个项目 Skill 同步加入入口 | 本条提交 | 后端实测 `OK=19 WARN=1 FAIL=0`、前端 `OK=16 WARN=1 FAIL=0`（WARN 均为「有未跟踪新文件」）。脚本只读，不改任何文件 |
 | 22 | 治理 | **分支保护清单** `docs/05-operations/github-branch-protection.md`：`master`/`test` 目标规则（Require PR + 线性历史 + 禁强推 + 禁删除）、`dev` 只禁强推与删除、网页步骤、`gh api` 命令、开启后改走 PR + Rebase and merge、8 条验收清单；规范 §5.3 增指引（前端副本在 `docs/guides/`） | 本条提交 | 现状实测：匿名 `GET .../branches/master/protection` → **403**（无 token，无法核实/开启），需网页或 PAT |
 | 23 | 治理 | **`dev` 分支治理一致性评审 + 整改方案**：跨仓评审报告（判定口径、12 项达标证据、10 条偏差 D-01~D-10、允许差异、未验证项、功能无关性核对）与整改方案（B1–B6 批次、逐文件行号、命令、验收、回滚、3 个决策点）落盘 `docs/reviews/`、`docs/plans/` | 本条提交 | 关键实测：CI 4 个 workflow 仍绑 `main/develop`（D-01/P0）；SpringDoc Handler 98%（3 处 `@Operation` + 2 Router 缺 `@RouterOperations`）；两仓 `AGENTS.md` 第 0 章无台账/分支条款；前端无任何 CI；保护规则匿名 API 403 不可核实。**方案未执行，待确认** |
+| 24 | 治理 | **整改 B1+B2（关闭 D-03/D-08/D-09/D-10/D-04）**：`AGENTS.md` 第 0 章新增 `0.8 记忆台账、分支模型与工具链`；规范 §5.3 默认分支改为既成事实；`ai-knowledge/README.md` 维护口径改为「台账强制登记 + 记忆卡为派生视图」；`MEMORY-CARD.md` 层级契约降级为可选；任务盘补 BE-022~BE-029 并把 BE-021 定为「决策①接受现状」 | 本条提交 | 验收：`tail -n 306 AGENTS.md \| shasum -a 256` = `aa0c25fc…60ed` **不变**（附录 A 零改动）；任务盘 6 列表格对齐（`awk` 校验 NF=8） |
 
 ---
 

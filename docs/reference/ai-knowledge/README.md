@@ -18,7 +18,7 @@
 
 **检索入口**：不确定结论在哪一篇时，先用 AI 私有目录下的 RAG 检索（覆盖三仓文档与源码，返回路径+行号），再回到本目录读结论。RAG 的说明文档位于 AI 工作目录 `rag/README.md`，**按规范不入库**（原文未入库），需要时向维护人索取。
 
-**维护入口**：本目录与三张记忆卡都是**手工快照，不会随代码自动更新**。开工前跑 `python3 .workbuddy/ops/maintain.py status` 检测口径漂移，改完文档跑 `sync` 刷新索引，`--accept` 收口基线；日报/周报/月报用同目录 `maintain.py daily|weekly|monthly`。详见 [ops/README.md](../../../.workbuddy/ops/README.md)。
+**维护入口**：变更台账 `07-change-memory.md` 由规范 §5.4 **强制登记**，并由 `.githooks/pre-commit`（第 0 步）与 `.githooks/commit-msg` 校验（`scripts/governance/check-memory-sync.sh`，默认警告、`--strict` 阻断）；验收以台账条目与提交 `memory:` 标记为准。`MEMORY-CARD.md` 与三张记忆卡是**派生视图**，只做摘要与检索便利，**不作为验收依据**。私有目录下的 `maintain.py`（`status`/`sync`/`daily`）仅作本地便利工具，可不跑，不影响合规判定。
 
 ## 一、知识库解决什么问题
 
