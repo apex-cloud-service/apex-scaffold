@@ -21,3 +21,4 @@
 | 日期 | 对象 | 结论 | 文件 |
 | --- | --- | --- | --- |
 | 2026-11-16 | 前后端两仓治理规范对齐（基线 前端 `1455fbc` / 后端 `14f6bc2a`） | 有条件通过（P1 5 项待整改） | [2026-11-16-governance-alignment-review.md](./2026-11-16-governance-alignment-review.md) |
+| 2026-11-16 | 两仓 `dev` 分支治理一致性（基线 后端 `d4311202` / 前端 `d957e6f`） | 有条件通过（P0 1 / P1 6 / P2 2 / P3 1） | [2026-11-16-dev-branch-governance-audit.md](./2026-11-16-dev-branch-governance-audit.md) |

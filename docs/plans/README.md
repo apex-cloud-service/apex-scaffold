@@ -25,3 +25,4 @@
 | 日期 | 主题 | 状态 | 文件 |
 | --- | --- | --- | --- |
 | 2026-11-16 | 治理规范对齐整改（RV-01~RV-14，批次 1–6） | 已执行（见 `docs/records/2026-11-16-governance-alignment-remediation.md`） | [2026-11-16-governance-alignment-plan.md](./2026-11-16-governance-alignment-plan.md) |
+| 2026-11-16 | `dev` 分支一致性整改（B1–B6，关闭 D-01~D-10） | **待业主确认**（未执行） | [2026-11-16-dev-alignment-remediation-plan.md](./2026-11-16-dev-alignment-remediation-plan.md) |
