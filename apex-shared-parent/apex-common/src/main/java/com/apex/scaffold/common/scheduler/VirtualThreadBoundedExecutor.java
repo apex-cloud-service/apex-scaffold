@@ -18,8 +18,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 虚拟线程版阻塞任务执行器（JDK 21 {@code Thread.ofVirtual}）。
@@ -66,10 +65,8 @@ import org.slf4j.LoggerFactory;
  * @version 1.0.0
  * @since 1.3.1
  */
+@Slf4j
 public final class VirtualThreadBoundedExecutor extends AbstractExecutorService implements ScheduledExecutorService {
-
-    /** 任务异常、拒绝与停机事件日志。 */
-    private static final Logger log = LoggerFactory.getLogger(VirtualThreadBoundedExecutor.class);
 
     /** 池名称，用于虚拟线程命名与指标标签。 */
     private final String poolName;

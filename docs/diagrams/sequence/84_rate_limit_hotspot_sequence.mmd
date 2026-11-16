@@ -11,10 +11,8 @@ sequenceDiagram
     Note over Client,Service: Sentinel热点参数限流流程
     
     Client->>Gateway: POST /api/v1/sms/send<br/>phone=13800138000
-    activate Gateway
     
     Gateway->>Sentinel: Entry资源点检查<br/>resource=sms_send
-    activate Sentinel
     
     Sentinel->>Sentinel: 热点参数识别<br/>paramIndex=0 phone参数
     
@@ -22,45 +20,32 @@ sequenceDiagram
     
     alt 热点参数未超限
         Sentinel-->>Gateway: 通过
-        deactivate Sentinel
         
         Gateway->>RateLimiter: @UserRateLimit注解拦截
-        activate RateLimiter
         Note right of RateLimiter: 用户维度限流<br/>userId级别控制
         
         RateLimiter->>Redis: 获取令牌桶<br/>key=user:rate:123
-        activate Redis
         
         Redis->>Redis: 令牌桶算法<br/>容量20 速率10/s
         
         alt 令牌充足
             Redis-->>RateLimiter: 获取令牌成功
-            deactivate Redis
             
             RateLimiter-->>Handler: 通过
-            deactivate RateLimiter
             
             Handler->>Service: sendSms(phone)
-            activate Service
             Service-->>Handler: 发送成功
-            deactivate Service
             
             Handler-->>Gateway: 200 OK
             Gateway-->>Client: 短信发送成功
-            deactivate Gateway
         else 令牌不足
             Redis-->>RateLimiter: 令牌不足
-            deactivate Redis
             RateLimiter--xGateway: TooManyRequestsException
-            deactivate RateLimiter
             Gateway--xClient: 429 Too Many Requests<br/>用户限流
-            deactivate Gateway
         end
     else 热点参数超限
         Sentinel--xGateway: FlowException<br/>热点phone超限
-        deactivate Sentinel
         Gateway--xClient: 429 Too Many Requests<br/>该手机号请求过于频繁
-        deactivate Gateway
     end
     
     Note over Client,Service: 双重保护

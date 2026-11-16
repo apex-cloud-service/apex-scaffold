@@ -111,12 +111,12 @@
 
 ### 3.5 图表资产保护（刚性，本仓重点）
 
-1. 基线（2026-11-16）：`docs/` 共 1272 个文件，`.svg` **217**、`.mmd` **68**；`docs/diagrams/` 为图表主库（顶层 130 SVG + 38 MMD）。
+1. 基线（2026-11-16，BE-001 补导出后）：`docs/` 共 1302 个文件，`.svg` **247**、`.mmd` **68**；`docs/diagrams/` 为图表主库（顶层 130 SVG + 38 MMD），`docs/diagrams/sequence/` 的 30 个 `.mmd` 于 2026-11-16 全部补齐同名 `.svg`。
 2. **禁止**删除、覆盖、重绘既有 SVG/MMD/PNG/PDF 图表；**禁止**为「结构整齐」批量移动图表文件。
 3. 更新图表：新增版本文件（如 `_v2`）并在 `docs/records/` 写明差异与受影响引用。
 4. 源文件与导出件成对（`.mmd` ↔ `.svg`）；**新增图必须两者齐备**。
-5. 存量缺口：**30 个 `.mmd` 缺同名 `.svg`**（清单由 `verify-docs.sh` 第 6 项输出），登记 BE-001 分批补导出；补导前不视为违规，但**禁止删除这些源文件**。
-6. 数量门槛写死在自检脚本（svg ≥ 217、mmd ≥ 68），低于基线即告警。
+5. 存量缺口：**0 个**（原 30 个 `.mmd` 缺同名 `.svg` 已于 2026-11-16 用 mermaid-cli 10 补导出，见 `docs/records/2026-11-16-tech-debt-be001-be017.md`）；**禁止删除任何 `.mmd` 源文件**。`verify-docs.sh` 第 6 项继续守护配对。
+6. 数量门槛写死在自检脚本（svg ≥ 247、mmd ≥ 68），低于基线即告警。
 
 ### 3.6 历史归档的旧路径与断链（豁免口径）
 
@@ -237,7 +237,7 @@
 
 | 脚本 | 作用 | 用法 |
 | --- | --- | --- |
-| `scripts/governance/verify-docs.sh` | 六目录/索引/任务大盘/私有目录边界/**图表数量门槛 217/68**/`.mmd`↔`.svg` 配对/归档索引 | `bash scripts/governance/verify-docs.sh` |
+| `scripts/governance/verify-docs.sh` | 六目录/索引/任务大盘/私有目录边界/**图表数量门槛 247/68**/`.mmd`↔`.svg` 配对/归档索引 | `bash scripts/governance/verify-docs.sh` |
 | `scripts/governance/audit-backend-rules.sh` | 行首精确注解匹配：`@Autowired`、`@Controller`、`@RestControllerAdvice`（例外）、`BeanUtils`、生产代码手写 Logger、`.sdkmanrc`/WebFlux/MVC starter | `bash scripts/governance/audit-backend-rules.sh [--strict]` |
 | `scripts/governance/check-doc-refs.sh` | 活文档私有路径残留 + Markdown 断链（含白名单豁免） | `bash scripts/governance/check-doc-refs.sh [--strict]` |
 | `.githooks/pre-commit` | 治理范围改动时跑自检 + 图表删除告警 + 大文件提醒 | `git config core.hooksPath .githooks` |
@@ -266,18 +266,18 @@
 | 项 | 结果 |
 | --- | --- |
 | 基线 1272 个 docs 文件 | 1269 个逐字节一致；3 个为纯追加（`docs/README.md` 40+0）或单行链接替换（`01+01`），零删除 |
-| 图表 | SVG 217、MMD 68，**一个没少** |
+| 图表 | SVG 217、MMD 68，**一个没少**（2026-11-16 BE-001 补导出至 SVG 247、MMD 68） |
 | AGENTS.md 原文 | 306 行 / `aa0c25fcc3d4b32a79981efb4e01534ae68449fb320d37037263d4668d8960ed` 一致 |
 | Java 代码 / POM / `.sdkmanrc` | 0 文件改动 |
-| 治理自检 | `verify-docs.sh` 通过（1 项为 30 个 MMD 缺导出件存量告警）；`audit-backend-rules.sh` 1 项阻断（BE-017） |
+| 治理自检 | `verify-docs.sh` 通过（0 项告警，30 个 MMD 缺口已于 BE-001 补齐）；`audit-backend-rules.sh` 0 阻断（BE-017 已改 `@Slf4j`） |
 
 ### 9.3 未完成与后续
 
 | 项 | 状态 |
 | --- | --- |
-| BE-001 30 个 MMD 补 SVG | 待规划 |
+| BE-001 30 个 MMD 补 SVG | 已完成（2026-11-16，68/68 配对，SVG 247） |
 | BE-004 异常处理器评估 | 待规划（禁止先改） |
-| BE-017 `VirtualThreadBoundedExecutor` 改 `@Slf4j` | 待规划 |
+| BE-017 `VirtualThreadBoundedExecutor` 改 `@Slf4j` | 已完成（2026-11-16，`:apex-common` verify 通过） |
 | BE-018 规范正文入仓（v1.1） | 已完成（2026-11-16） |
 | BE-019 他人 3 项改动按规范复核纳入 | 已完成（`14f6bc2a`） |
 | BE-020 治理评审整改（RV-01~RV-14） | 已完成（2026-11-16，见 `docs/records/2026-11-16-governance-alignment-remediation.md`） |
@@ -291,7 +291,7 @@
 - [ ] 任务已在大盘登记，优先级 P0–P3，验收标准可执行
 - [ ] 改动只覆盖任务目标，未跨模块顺手重构
 - [ ] 新文档归位六标准目录并登记 docs/README.md
-- [ ] 未删除/覆盖任何既有文档与图表；SVG ≥ 217、MMD ≥ 68
+- [ ] 未删除/覆盖任何既有文档与图表；SVG ≥ 247、MMD ≥ 68
 - [ ] 私有目录未新增业务正文
 - [ ] .gitignore 未出现忽略 docs 的规则
 - [ ] bash scripts/governance/verify-docs.sh 通过
@@ -316,7 +316,7 @@ apex-scaffold/
 │   ├── plans/archived-ai-sessions/    # .trae 迁入的设计文档 + 指针
 │   ├── archived/ai-sessions/zcode-plans/  # .zcode 迁入的 13 份计划
 │   ├── reference/ai-knowledge/        # .workbuddy 迁入的 7 份知识库
-│   └── diagrams/                      # 图表主库（217 SVG / 68 MMD，禁动）
+│   └── diagrams/                      # 图表主库（247 SVG / 68 MMD，禁动）
 ├── scripts/governance/                # 自检脚本 + README
 └── .githooks/pre-commit               # 警告模式钩子
 ```

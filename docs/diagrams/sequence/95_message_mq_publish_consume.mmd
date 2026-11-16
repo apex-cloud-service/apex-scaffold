@@ -17,73 +17,73 @@ sequenceDiagram
 
     rect rgb(238, 242, 255)
     Note over Biz,MQ: ① 生产端：sendSyncWithOutbox（先落箱 → 同步发送 → 置状态）
-    Biz->>+Prod: sendSyncWithOutbox(topic, tag, payload)
-    Prod->>+Outbox: append(status=PENDING, attempts=0,<br/>maxAttempts=5, retryDelaySeconds=10,<br/>nextAttemptAt=now, lockTimeoutSeconds=300)
-    Outbox->>+DB: INSERT sys_message_outbox<br/>（uk_message_id 唯一约束幂等）
-    DB-->>-Outbox: 落库成功
-    Outbox-->>-Prod: messageId
-    Prod->>+MQ: sendSync(topic:tag, headers{apex-message-id, tenantId, KEYS})<br/>（超时 30s）
+    Biz->>Prod: sendSyncWithOutbox(topic, tag, payload)
+    Prod->>Outbox: append(status=PENDING, attempts=0,<br/>maxAttempts=5, retryDelaySeconds=10,<br/>nextAttemptAt=now, lockTimeoutSeconds=300)
+    Outbox->>DB: INSERT sys_message_outbox<br/>（uk_message_id 唯一约束幂等）
+    DB-->>Outbox: 落库成功
+    Outbox-->>Prod: messageId
+    Prod->>MQ: sendSync(topic:tag, headers{apex-message-id, tenantId, KEYS})<br/>（超时 30s）
     alt 发送成功
-        MQ-->>-Prod: SendResult OK
+        MQ-->>Prod: SendResult OK
         Prod->>Outbox: markAsDelivered(messageId)<br/>status=PENDING → DELIVERED
     else 发送失败 / 超时
         MQ-->>Prod: 异常
         Prod->>Outbox: 保留 status=PENDING（由调度器补偿重投）
         Note over Prod: 兜底策略 fallback-strategy=LOG / OUTBOX / LOCAL_QUEUE
     end
-    Prod-->>-Biz: 完成
+    Prod-->>Biz: 完成
     end
 
     rect rgb(240, 253, 244)
     Note over Dispatcher,MQ: ② 业务消息补偿调度：MessageOutboxDispatcher（fixedDelay=5000ms）
-    Dispatcher->>+Outbox: releaseExpiredLocks()<br/>（PROCESSING 且 locked_at 超时 → 清锁）
+    Dispatcher->>Outbox: releaseExpiredLocks()<br/>（PROCESSING 且 locked_at 超时 → 清锁）
     Dispatcher->>Outbox: fetchPendingMessages(batchSize=100)
-    Outbox->>+DB: SELECT ... WHERE status='PENDING' AND next_attempt_at&lt;=now
-    DB-->>-Outbox: 待投递消息列表
+    Outbox->>DB: SELECT ... WHERE status='PENDING' AND next_attempt_at≤now
+    DB-->>Outbox: 待投递消息列表
     loop 逐条投递
         Dispatcher->>Outbox: lockMessage(messageId, instanceId)<br/>CAS: locked_by IS NULL/'' → PROCESSING
         alt 抢锁成功
-            Dispatcher->>+MQ: sendSync(topic, tag, payload)
+            Dispatcher->>MQ: sendSync(topic, tag, payload)
             alt 投递成功
-                MQ-->>-Dispatcher: OK
+                MQ-->>Dispatcher: OK
                 Dispatcher->>Outbox: markAsDelivered → DELIVERED
             else 投递失败
-                MQ-->>-Dispatcher: 异常
+                MQ-->>Dispatcher: 异常
                 Dispatcher->>Outbox: markAsFailed<br/>attempts+1，delay=retryDelaySeconds*2^(attempts-1)
-                Note over Outbox: attempts &lt; maxAttempts(5) → PENDING 重试<br/>attempts &gt;= 5 → DEAD 死信
+                Note over Outbox: attempts ＜ maxAttempts(5) → PENDING 重试<br/>attempts ≥ 5 → DEAD 死信
             end
         else 抢锁失败（其他实例已抢占）
             Dispatcher->>Dispatcher: skip 跳过
         end
     end
-    Outbox-->>-Dispatcher: 本轮完成
+    Outbox-->>Dispatcher: 本轮完成
     end
 
     rect rgb(255, 247, 237)
     Note over DED,DEDD: ③ 领域事件通道：DomainEventOutboxDispatcher（fixedDelay=1000ms）
     Note over Biz: 领域事件经 DomainEventOutboxStore.append(event) 落 sys_domain_event_outbox
-    DEDD->>+DED: claim(workerId, batchSize=50, lockTimeoutSeconds=120)
-    DED->>+DB: recoverTimedOutRecords() 恢复超时锁
-    DED->>DB: UPDATE ... SET status='PROCESSING', locked_by, locked_at<br/>WHERE status='PENDING' AND next_attempt_at&lt;=now ORDER BY id LIMIT 50
-    DB-->>-DED: 领取记录
+    DEDD->>DED: claim(workerId, batchSize=50, lockTimeoutSeconds=120)
+    DED->>DB: recoverTimedOutRecords() 恢复超时锁
+    DED->>DB: UPDATE ... SET status='PROCESSING', locked_by, locked_at<br/>WHERE status='PENDING' AND next_attempt_at≤now ORDER BY id LIMIT 50
+    DB-->>DED: 领取记录
     DEDD->>DED: 逐条处理（parallelism=4）
     alt 处理成功
         DEDD->>DED: markDelivered(id, workerId) → DELIVERED
     else 处理失败
         DEDD->>DED: markFailed(id, workerId)<br/>delay = min(300, 2^min(attempts,8)) 秒（封顶 300s）
-        Note over DED: attempts &gt;= maxAttempts(8) → DEAD，否则 PENDING
+        Note over DED: attempts ≥ maxAttempts(8) → DEAD，否则 PENDING
     end
-    Note over DEDD: purgeRetained（fixedDelay=3600000ms）<br/>清理 DELIVERED(&gt;168h) / DEAD(&gt;30d)，批量 5000
-    DED-->>-DEDD: 本轮完成
+    Note over DEDD: purgeRetained（fixedDelay=3600000ms）<br/>清理 DELIVERED(＞168h) / DEAD(＞30d)，批量 5000
+    DED-->>DEDD: 本轮完成
     end
 
     rect rgb(254, 242, 242)
     Note over Consumer,Cache: ④ 消费端：Push Consumer + 幂等 + 死信回补
-    MQ->>+Consumer: 推送消息 user-topic<br/>tag ∈ register/login/logout/update（顺序消费）
-    Consumer->>+Idem: 幂等校验 messageId
-    Idem->>+Cache: setIfAbsent("mq:idempotent:{tenantId}:{messageId}",<br/>"PROCESSING:token", ttl=30min)
+    MQ->>Consumer: 推送消息 user-topic<br/>tag ∈ register/login/logout/update（顺序消费）
+    Consumer->>Idem: 幂等校验 messageId
+    Idem->>Cache: setIfAbsent("mq:idempotent:{tenantId}:{messageId}",<br/>"PROCESSING:token", ttl=30min)
     alt 首次消费（占位成功）
-        Cache-->>-Idem: true
+        Cache-->>Idem: true
         Consumer->>Consumer: 按 tag 路由 Handler 处理业务
         alt 处理成功
             Consumer->>Cache: SET mq:idempotent:... = "SUCCESS"
@@ -92,15 +92,15 @@ sequenceDiagram
             Consumer-->>MQ: RECONSUME_LATER（maxReconsumeTimes=16）
         end
     else 重复消费（占位失败）
-        Cache-->>-Idem: false
+        Cache-->>Idem: false
         Idem-->>Consumer: 命中幂等，直接 ACK 跳过
     end
-    Idem-->>-Consumer: 校验结果
-    Consumer-->>-MQ: CONSUME_SUCCESS
+    Idem-->>Consumer: 校验结果
+    Consumer-->>MQ: CONSUME_SUCCESS
 
     Note over MQ: 重试达上限（MESSAGE_RETRY_TIMES=3）→ DLQ：%DLQ%{group}
-    MQ->>+Consumer: DeadLetterQueueProcessor 消费 DLQ<br/>（apex.mq.dlq.enabled=true 时补偿回 sys_message_outbox）
-    Consumer-->>-MQ: 回补完成
+    MQ->>Consumer: DeadLetterQueueProcessor 消费 DLQ<br/>（apex.mq.dlq.enabled=true 时补偿回 sys_message_outbox）
+    Consumer-->>MQ: 回补完成
     end
 
     Note over Biz,Cache: 关键点：两套 Outbox 独立配置（业务 apex.outbox.dispatcher.*，领域 apex.events.outbox.*）；投递锁均走 DB CAS（locked_by/locked_at），唯一 Redis 用于消费幂等；MqLagMonitor @Scheduled 30s 监控积压（阈值 10000）

@@ -170,6 +170,29 @@ mmdc -i docs/diagrams/107_uml_auth_center_domain.mmd \
     -o docs/diagrams/107_uml_auth_center_domain.svg
 ```
 
+
+#### 2026-11-16 批量补导出记录（BE-001）
+
+`docs/diagrams/sequence/` 原有 30 个 `.mmd` 缺同名 `.svg`，已全部补齐，**68 个源图 100% 有导出件**（仓库 SVG 总数 217 → 247）。
+
+```bash
+# 只补缺导出件（幂等，已有的跳过）
+bash scripts/utils/render-mermaid-svg.sh
+# 强制重渲染全部
+bash scripts/utils/render-mermaid-svg.sh -f
+# 单图重渲染
+bash scripts/utils/render-mermaid-svg.sh -f docs/diagrams/sequence/31_permission_check_sequence.mmd
+```
+
+渲染口径与踩坑（复现时必须知道）：
+
+1. **版本用 10，不用 11**：mermaid-cli 11 对 `activate/deactivate` 嵌套、`&lt;`/`&gt;` 实体转义更严格，本仓 12 个历史源文件在 11 下解析失败、在 10 下正常。脚本默认 `MMDC_VERSION=10`，需要 11 时显式覆盖。
+2. **6 个源文件做了语法归一化**（只动激活盒标记，参与者与消息文本一字未改）：
+   - `78_auto_retry_mechanism_sequence`、`84_rate_limit_hotspot_sequence`、`90_login_biometric_mfa`、`93_rate_limit_sentinel`、`94_cache_consistency`、`95_message_mq_publish_consume`：删除不合法的 `activate X` / `deactivate X` 行并去掉箭头上的 `+`/`-` 标记（原文件激活盒嵌套不满足 Mermaid「后进先出」要求）。
+   - `95_message_mq_publish_consume` 另有 2 处 `&lt;=` 写法会被解析成箭头，已改为 `≤`（其余 `&lt;`/`&gt;` 改为全角 `＜`/`＞`）。
+3. 上述 5 张图因此**没有激活盒（activation bar）**，只剩默认生命线；内容语义完整，若要恢复激活盒需人工重排（登记 BE-021）。
+4. 渲染通过**不等于**业务验证：SVG 仅用于文档展示，不改任何运行代码。
+
 自动渲染双源以 `.mmd` 为语义源；手写配对需要同时更新两份。95 的 SVG 以邻接清单替代密集连线，与 `.mmd` 的 35 JAR / 104 条生产边对应；128 / 129 将叶子合并为清单卡片，并不把全 43 项目塞成一张节点图。不得只改一侧、将 parent 箭头作为 compile 依赖，或为本次 Maven 分组全仓重渲染历史图。SVG 可用本地 `rsvg-convert` 渲染后检查文本与连线；渲染通过不等于业务运行验证。
 
 ### 107–123 UML 类图 / ER 表图 / 模块结构图

@@ -16,23 +16,23 @@ sequenceDiagram
 
     rect rgb(239, 246, 255)
         Note over C,Redis: ① IP 级滑动窗口（WebFilter 最早介入）
-        C->>+IpFilter: HTTP 请求
+        C->>IpFilter: HTTP 请求
         IpFilter->>IpFilter: ClientIpResolver 解析真实 IP（XFF / X-Real-IP）
         alt 白名单（精确 IP / CIDR）
             IpFilter->>Handler: 直接放行
         else 命中排除路径（path-excludes）
             IpFilter->>Handler: 直接放行
         end
-        IpFilter->>+Redis: GET reputation:ip:{fp} blockedUntil
-        Redis-->>-IpFilter: 封禁状态
+        IpFilter->>Redis: GET reputation:ip:{fp} blockedUntil
+        Redis-->>IpFilter: 封禁状态
         alt 处于封禁期
             IpFilter-->>C: 429 RATE_LIMIT（短时封禁）
         else 正常
-            IpFilter->>+Redis: EVAL RATE_LIMIT_LUA<br/>ZREMRANGEBYSCORE+ZADD+EXPIRE+ZCOUNT
-            Redis-->>-IpFilter: 窗口内计数 count
+            IpFilter->>Redis: EVAL RATE_LIMIT_LUA<br/>ZREMRANGEBYSCORE+ZADD+EXPIRE+ZCOUNT
+            Redis-->>IpFilter: 窗口内计数 count
             alt count > limit
-                IpFilter->>+Redis: EVAL VIOLATION_COUNT_LUA（违规计数）
-                Redis-->>-IpFilter: violations
+                IpFilter->>Redis: EVAL VIOLATION_COUNT_LUA（违规计数）
+                Redis-->>IpFilter: violations
                 alt violations >= blockThreshold
                     IpFilter->>Redis: HSET reputation:ip blockedUntil + EXPIRE
                     IpFilter-->>C: 429（触发封禁 blockDuration）
@@ -47,27 +47,27 @@ sequenceDiagram
 
     rect rgb(255, 251, 235)
         Note over Handler,Sentinel: ② Sentinel 资源保护（@SentinelResource）
-        Handler->>+Sentinel: SphU.entry(authLogin/authRefresh/authSendSms/authSendClSms)
+        Handler->>Sentinel: SphU.entry(authLogin/authRefresh/authSendSms/authSendClSms)
         Sentinel->>Sentinel: 匹配 FlowRule（QPS/线程数）/ DegradeRule（RT/异常比）
         alt 触发限流
-            Sentinel-->>-Exc: BlockException → 429 限流响应
+            Sentinel-->>Exc: BlockException → 429 限流响应
         else 触发熔断降级
             Sentinel-->>Exc: DegradeException → DegradeFallbackService 兜底
         else 放行
-            Sentinel-->>-Handler: 继续执行业务
+            Sentinel-->>Handler: 继续执行业务
         end
         Note right of Sentinel: 规则来源：本地文件 SentinelRuleFileWatcher / Nacos<br/>SentinelConfig 注册 WebFlux 适配器
     end
 
     rect rgb(240, 253, 244)
         Note over Handler,Local: ③ 用户级限流（@UserRateLimit，切面 @Order 1）
-        Handler->>+UserAspect: @Around 拦截
+        Handler->>UserAspect: @Around 拦截
         UserAspect->>UserAspect: SpEL 解析 key → rate:user:{prefix}:{key}
-        UserAspect->>+Redisson: RRateLimiter.trySetRate(OVERALL,rate,interval)+tryAcquire()
-        Redisson-->>-UserAspect: 是否获取许可
+        UserAspect->>Redisson: RRateLimiter.trySetRate(OVERALL,rate,interval)+tryAcquire()
+        Redisson-->>UserAspect: 是否获取许可
         alt Redis 异常（RedisException / client==null）
-            UserAspect->>+Local: LocalRateLimiter.of(...).tryAcquire()<br/>算法：TOKEN_BUCKET/LEAKY_BUCKET/SLIDING_WINDOW
-            Local-->>-UserAspect: 本地窗口结果
+            UserAspect->>Local: LocalRateLimiter.of(...).tryAcquire()<br/>算法：TOKEN_BUCKET/LEAKY_BUCKET/SLIDING_WINDOW
+            Local-->>UserAspect: 本地窗口结果
         end
         alt 未获取许可
             UserAspect-->>C: BusinessException（限流消息）
@@ -78,12 +78,12 @@ sequenceDiagram
 
     rect rgb(255, 247, 237)
         Note over Handler,Redisson: ④ 热点参数限流（@HotSpotRateLimit，切面 @Order 2）
-        Handler->>+HotAspect: @Around 拦截
+        Handler->>HotAspect: @Around 拦截
         HotAspect->>HotAspect: SpEL 解析热点参数值 baseKey
-        HotAspect->>+Redisson: INCR hotspot:slot:{baseKey}:{second}（每秒槽位）
-        Redisson-->>-HotAspect: 当前槽位计数
-        HotAspect->>+Redisson: EVAL LUA_SUM_SLOTS 汇总窗口内槽位
-        Redisson-->>-HotAspect: windowCount
+        HotAspect->>Redisson: INCR hotspot:slot:{baseKey}:{second}（每秒槽位）
+        Redisson-->>HotAspect: 当前槽位计数
+        HotAspect->>Redisson: EVAL LUA_SUM_SLOTS 汇总窗口内槽位
+        Redisson-->>HotAspect: windowCount
         alt windowCount > hotThreshold（判定为热点）
             alt 当前槽位 currentCount > limit
                 HotAspect-->>C: BusinessException（热点限流）

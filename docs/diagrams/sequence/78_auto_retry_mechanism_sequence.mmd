@@ -12,95 +12,61 @@ sequenceDiagram
     Note over Client,ExternalAPI: 自动重试完整流程 (三层重试机制)
     
     Client->>Handler: POST /api/v1/orders/sync
-    activate Handler
     
     Handler->>Service: syncOrderToERP(orderId)
-    activate Service
     
     Service->>AutoRetry: AOP拦截 @AutoRetry(maxAttempts=3)
-    activate AutoRetry
     Note right of AutoRetry: 应用层重试<br/>指数退避 200ms→400ms→800ms
     
     AutoRetry->>RemoteApi: callErpApi(request)
-    activate RemoteApi
     
     RemoteApi->>ReactorRetry: retry(Retry.backoff(5, 100ms))
-    activate ReactorRetry
     Note right of ReactorRetry: Reactor响应式重试<br/>退避+抖动 100ms→200ms→400ms
     
     ReactorRetry->>CircuitBreaker: decorateCall(apiCall)
-    activate CircuitBreaker
     Note right of CircuitBreaker: 熔断器状态检查<br/>CLOSED/OPEN/HALF_OPEN
     
     alt 熔断器关闭状态
         CircuitBreaker->>ExternalAPI: HTTP POST /erp/api/orders
-        activate ExternalAPI
         
         alt 成功响应 (200 OK)
             ExternalAPI-->>CircuitBreaker: 返回订单数据
-            deactivate ExternalAPI
             CircuitBreaker-->>ReactorRetry: 成功
-            deactivate CircuitBreaker
             ReactorRetry-->>RemoteApi: Mono<Response>
-            deactivate ReactorRetry
             RemoteApi-->>AutoRetry: 返回结果
-            deactivate RemoteApi
             AutoRetry-->>Service: 成功
-            deactivate AutoRetry
             Service-->>Handler: OrderDTO
-            deactivate Service
             Handler-->>Client: 200 OK + 订单数据
-            deactivate Handler
         else 临时错误 (5xx 或超时)
             ExternalAPI--xCircuitBreaker: 503 Service Unavailable
-            deactivate ExternalAPI
             Note right of CircuitBreaker: 记录失败<br/>失败率计数+1
             
             CircuitBreaker--xReactorRetry: TimeoutException
-            deactivate CircuitBreaker
             
             Note right of ReactorRetry: 第1次重试<br/>延迟100ms
             ReactorRetry->>CircuitBreaker: 重试调用
-            activate CircuitBreaker
             CircuitBreaker->>ExternalAPI: HTTP POST (重试1)
-            activate ExternalAPI
             ExternalAPI--xCircuitBreaker: 504 Gateway Timeout
-            deactivate ExternalAPI
             CircuitBreaker--xReactorRetry: TimeoutException
-            deactivate CircuitBreaker
             
             Note right of ReactorRetry: 第2次重试<br/>延迟200ms
             ReactorRetry->>CircuitBreaker: 重试调用
-            activate CircuitBreaker
             CircuitBreaker->>ExternalAPI: HTTP POST (重试2)
-            activate ExternalAPI
             ExternalAPI-->>CircuitBreaker: 200 OK
-            deactivate ExternalAPI
             CircuitBreaker-->>ReactorRetry: 成功
-            deactivate CircuitBreaker
             ReactorRetry-->>RemoteApi: Mono<Response>
-            deactivate ReactorRetry
             RemoteApi-->>AutoRetry: 返回结果
-            deactivate RemoteApi
             AutoRetry-->>Service: 成功
-            deactivate AutoRetry
             Service-->>Handler: OrderDTO
-            deactivate Service
             Handler-->>Client: 200 OK + 订单数据
-            deactivate Handler
         end
     else 熔断器打开状态
         CircuitBreaker--xRemoteApi: CircuitBreakerOpenException
-        deactivate CircuitBreaker
         Note right of RemoteApi: 快速失败<br/>不调用外部API
         RemoteApi--xAutoRetry: 熔断器打开
-        deactivate RemoteApi
         AutoRetry--xService: 降级处理
-        deactivate AutoRetry
         Service--xHandler: 返回降级数据
-        deactivate Service
         Handler-->>Client: 200 OK + 降级提示
-        deactivate Handler
     end
     
     Note over Client,ExternalAPI: 关键要点
