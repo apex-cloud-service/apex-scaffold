@@ -12,10 +12,44 @@
 | --- | --- |
 | 远程 | `origin` = `git@github.com:apex-cloud-service/<repo>.git`，SSH 走 443 |
 | 分支 | `dev`（默认工作）/ `master`（生产，远端默认分支）/ `test`（验收）；三支同点，无 `main` |
-| 已开启的保护 | **无**（`GET /repos/.../branches/master/protection` 匿名访问返回 403，无法核实；`gh auth status` 未登录） |
+| 已开启的保护 | **无（平台不支持）**：两仓均为 **private** + 账户 **Free** 计划，`PUT /branches/*/protection` 返回 `403 Upgrade to GitHub Pro or make this repository public to enable this feature`；已用 `gh`（`anqli8341`，`repo` 权限）实测六次均被拒 |
 | 可用手段 | ① GitHub 网页 Settings（推荐，无需凭据）；② PAT + `gh api`（需 `repo` 与 `admin:repo_hook` 权限）；③ 无 token 时**不能**用 API |
 
 > **重要前提**：本仓当前**没有可靠的 CI 状态检查**可挂。若在保护规则里启用 "Require status checks"，PR 会因「检查项永远不出现」而永久阻塞。**先按下方「阶段一」只开人工与历史约束，等 CI 就绪再进「阶段二」。**
+
+### 0.1 平台硬限制与补偿（2026-11-16 实测结论）
+
+**结论**：服务端分支保护在「私有仓库 + GitHub Free」组合下**不可用**，与凭据无关。
+
+复现命令与返回：
+
+```bash
+gh auth status                       # ✓ Logged in as anqli8341（scopes: gist, read:org, repo）
+gh api repos/apex-cloud-service/apex-scaffold --jq .visibility   # private
+echo '{"required_status_checks":null,"enforce_admins":false,"required_pull_request_reviews":null,
+"restrictions":null,"allow_force_pushes":false,"allow_deletions":false}' \
+  | gh api -X PUT repos/apex-cloud-service/apex-scaffold/branches/master/protection --input -
+# → 403 {"message":"Upgrade to GitHub Pro or make this repository public to enable this feature."}
+```
+
+**两条解锁路径**（二选一，由业主决定，均不改代码）：
+
+| 路径 | 动作 | 代价 | 之后 |
+| --- | --- | --- | --- |
+| A. 转公开 | 两仓 Settings → Danger Zone → Change visibility → Public | 源码公开（MIT 许可，理论上可接受） | 立刻可用，按 §2/§3 配置 |
+| B. 升级计划 | 组织升级到 **Pro/Team**（私有仓库才支持保护） | 按席位付费 | 同上 |
+
+**当前补偿：本地 pre-push 守护**（`.githooks/pre-push`，两仓同款，已启用）
+
+| 行为 | 结果 |
+| --- | --- |
+| 对 `dev`/`master`/`test` 强推（非快进） | **拒绝**（提示改用 `--ff-only` 或 PR + Rebase and merge） |
+| 删除 `dev`/`master`/`test` | **拒绝** |
+| 正常快进推送、普通分支、新建分支 | 放行（不干扰现有发布流程） |
+| `git push --no-verify` | 可绕过——属业主授权行为，须在 `docs/records/` 留痕 |
+
+**能力边界（必须诚实记录）**：钩子是**本地**的，只约束装了本仓钩子的机器（`git config core.hooksPath .githooks`）；无法阻止他人从别的克隆强推或删除。**只要不转公开、不升级计划，服务端强约束就是缺失的**——这是平台限制，不是配置遗漏。升级后按 §3 的命令一次性补齐即可（命令已备好，无需重写）。
+
 
 ---
 

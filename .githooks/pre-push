@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# pre-push 分支守护
+#
+# 背景：GitHub Free 计划的私有仓库不提供服务端分支保护（API 返回
+# "Upgrade to GitHub Pro or make this repository public"）。在升级计划或转为
+# 公开仓库之前，用本地钩子承担同一条硬约束：
+#   1. 禁止对 dev / master / test 强推（非快进）；
+#   2. 禁止删除 dev / master / test；
+#   3. 其余分支与新建分支一律放行（不影响 --ff-only 发布）。
+#
+# 绕过：git push --no-verify（属业主授权行为，须在 docs/records/ 留痕）。
+
+ZERO='0000000000000000000000000000000000000000'
+PROTECTED='dev master test'
+
+fail() {
+    echo "[pre-push] 拒绝：$1" >&2
+    echo "[pre-push] 受保护分支：${PROTECTED}；确有必要时须业主授权后 git push --no-verify 并在 docs/records/ 留痕。" >&2
+    exit 1
+}
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ -z "${remote_ref}" ] && continue
+
+    branch="${remote_ref#refs/heads/}"
+    case " ${PROTECTED} " in
+        *" ${branch} "*) ;;
+        *) continue ;;
+    esac
+
+    # 删除（本地 ref 为全零）
+    if [ "${local_sha}" = "${ZERO}" ]; then
+        fail "禁止删除受保护分支 ${branch}"
+    fi
+
+    # 强推（远端提交不是本地提交的祖先）
+    if [ "${remote_sha}" != "${ZERO}" ] && ! git merge-base --is-ancestor "${remote_sha}" "${local_sha}" 2>/dev/null; then
+        fail "禁止对 ${branch} 强推（非快进）。请改用 git merge --ff-only 或 PR + Rebase and merge"
+    fi
+done
+
+exit 0

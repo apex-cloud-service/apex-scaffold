@@ -71,6 +71,7 @@
 | 28 | 功能 | **整改 B4（关闭 D-05）**：`OpenUserRouter`/`OpenAppMigrationRouter` 补 `@RouterOperations`+`@RouterOperation`（含 parameters/requestBody 数组 schema/responses）；`OpenUserHandler`/`OpenAppMigrationHandler` 补 `@Tag`+`@Operation`+`@ApiResponses`/`@RequestBody` | 本条提交 | 验收：`check-springdoc-coverage.sh` **Handler 100% / DTO 100%**（原 98%）；`audit-backend-rules` 无阻断；`mvnd -pl :apex-system -am -DskipTests verify` **BUILD SUCCESS**（含 spotless/checkstyle/PMD）；仅注解，方法体与路由未改 |
 | 29 | 治理 | 任务盘登记整改批次 B3/B4/B5 完成与 B6 待执行（BE-030~BE-033），B6 阻塞原因写入验收列 | 本条提交 | 与代码/文档提交一一对应，状态列与实际一致 |
 | 30 | 治理 | 评审报告与整改方案回填执行结果（D-01~D-06、D-08~D-10 关闭；D-07 待凭据）；方案状态改「已执行」 | 本条提交 | 与任务盘 BE-030~BE-033 一致；收尾自检 `FAIL=0` |
+| 31 | 治理 | **B6 落地**：完成 `gh` 设备授权（`anqli8341`/`repo`）后实测六条 `PUT /branches/{master,test,dev}/protection` 全部 **403**（private + Free 计划不支持服务端保护）；改为本地补偿 `.githooks/pre-push`（拒绝强推/删除三支，快进与普通分支放行）；保护正文新增 §0.1 平台限制、两条解锁路径与能力边界 | 本条提交 | 钩子 4 用例实测：非快进=1（拒）、删除=1（拒）、快进=0、普通分支=0；`gh auth status` 已登录；两仓钩子同款已 `chmod +x` |
 
 ---
 
