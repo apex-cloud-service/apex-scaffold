@@ -20,7 +20,7 @@ docs/records/2026-11-16-docs-governance.md
 
 # —— 历史周期报告与历史计划（当次口径） ——
 docs/08-project-management/periodic-reports/daily/2026-11-02-apex-scaffold-daily-report.md
-docs/08-project-management/periodic-reports/monthly/2026-10-apex-scaffold-monthly-report.md
+docs/08-project-management/periodic-reports/monthly/_archive/2026-10/2026-10-apex-scaffold-monthly-report.md
 docs/08-project-management/plans/database/database-reorganization-plan.md
 
 # —— 根入口与变更日志（含历史沿革说明） ——

@@ -101,3 +101,23 @@ bash scripts/governance/check-memory-sync.sh --strict            # CI 用，缺�
 [memory]    规则（规范 §5.4）：任何改动都要在台账追加一条，六字段 = 日期/类型/摘要/提交/证据/影响面
 [memory] 结果：警告（不阻断提交）
 ```
+
+## 7. `report-doc-orphans.sh`（文档孤岛盘点，2026-11-16 新增）
+
+| 项 | 说明 |
+| --- | --- |
+| 目的 | 盘点「存在但没有任何索引链接指向」的文档，为后续归位/归档提供依据（对应任务卡 BE-002） |
+| 口径 | **被引用** = 出现在 `docs/README.md` 或任一目录 `README.md` 的相对链接中；其余 md 计为孤岛（README 自身不计入被引用） |
+| 只读 | **不移动、不删除、不改写任何文档**；仅打印 Markdown 清单，重定向到 `docs/notes/` 即为盘点报告 |
+| 输出 | ① 口径说明 ② 按目录汇总表（含建议归属/处置建议）③ 孤岛明细（按路径字母序） |
+
+```bash
+bash scripts/governance/report-doc-orphans.sh                      # 打印清单到标准输出
+bash scripts/governance/report-doc-orphans.sh > docs/notes/2026-11-16-doc-orphans.md
+```
+
+输出示例（2026-11-16 实测，仓库规模：md 772 篇含 README 38 篇）：
+
+```text
+md 总数 772（README 38）· 被索引引用 374 · 孤岛 527
+```
