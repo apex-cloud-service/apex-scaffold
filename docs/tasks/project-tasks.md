@@ -41,6 +41,10 @@
 | BE-027 | P1 | 分支保护规则清单成文（`master`/`test` 档1：禁强推+禁删除） | 已完成 | 2026-11-16 | `docs/05-operations/github-branch-protection.md`；**规则开启待网页操作或 PAT**（匿名 API 403） |
 | BE-028 | P1 | `dev` 分支一致性评审（D-01~D-10）与整改方案 B1–B6 | 已完成 | 2026-11-16 | `docs/reviews/2026-11-16-dev-branch-governance-audit.md`、`docs/plans/2026-11-16-dev-alignment-remediation-plan.md`；决策 1A/2档1/3① 已确认 |
 | BE-029 | P1 | 整改 B1：`AGENTS.md` 0.8 + 规范 §5.3 口径 + 记忆卡/知识库口径纠偏 | 已完成 | 2026-11-16 | `AGENTS.md`、`docs/specs/project-governance.md`、`MEMORY-CARD.md`、`docs/reference/ai-knowledge/README.md`；验收：附录 A 哈希 `aa0c25fc…60ed` 不变 |
+| BE-030 | P0 | 整改 B3：CI 触发分支对齐 `dev`/`master`/`test`（5 个 workflow + 镜像条件改 `refs/heads/master`） | 已完成 | 2026-11-16 | `.github/workflows/`；验收：无 `main` 残留、YAML 解析通过 |
+| BE-031 | P1 | 整改 B4：SpringDoc 注解补齐至 100%（2 Router `@RouterOperations`、3 方法 `@Operation`） | 已完成 | 2026-11-16 | `apex-system/.../router/OpenUserRouter.java` 等 4 个类；验收：覆盖率 100%、`verify` BUILD SUCCESS |
+| BE-032 | P2 | 整改 B5：`.gitignore` 去重为单一私有目录区块（含注释独占一行的补正） | 已完成 | 2026-11-16 | `.gitignore`；验收：`check-ignore` 命中、无未跟踪私有目录 |
+| BE-033 | P1 | 整改 B6：GitHub 分支保护「档 1」（`master`/`test`/`dev` 禁强推+禁删除） | 待执行 | 2026-11-16 | `docs/05-operations/github-branch-protection.md`；**阻塞：无 token/`gh` 未登录，需网页操作或 PAT** |
 
 ## 3. 阻塞与风险登记
 

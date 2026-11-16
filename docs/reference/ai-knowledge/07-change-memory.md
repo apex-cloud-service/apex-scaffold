@@ -69,6 +69,7 @@
 | 26 | 治理 | **整改 B3（关闭 D-01）**：5 个 workflow 触发分支由 `main/develop` 改为 `master/test/dev`（PR 为 `master/test`），全部加 `workflow_dispatch`；`ci-cd.yml` 镜像构建条件改 `refs/heads/master`、注释同步 | 本条提交 | 验收：`grep -rn 'refs/heads/main\|branches: \[ main\|- main' .github/workflows/` 为空；`ruby -ryaml` 解析 6 个 yml 全部通过；推 `dev` 将实际触发 CI（本轮推送即验证） |
 | 27 | 脚本 | **B5 补正**：`.gitignore` 行尾注释不被 git 识别（`.workbuddy/  # 注释` 会被当作含 `#` 的规则，导致私有目录未被忽略、`git status` 出现 `?? .workbuddy/`），改为「注释独占一行 + 规则单列」 | 本条提交 | 验收：`git check-ignore -v .workbuddy` 命中第 125 行；`git status` 不再出现私有目录未跟踪项 |
 | 28 | 功能 | **整改 B4（关闭 D-05）**：`OpenUserRouter`/`OpenAppMigrationRouter` 补 `@RouterOperations`+`@RouterOperation`（含 parameters/requestBody 数组 schema/responses）；`OpenUserHandler`/`OpenAppMigrationHandler` 补 `@Tag`+`@Operation`+`@ApiResponses`/`@RequestBody` | 本条提交 | 验收：`check-springdoc-coverage.sh` **Handler 100% / DTO 100%**（原 98%）；`audit-backend-rules` 无阻断；`mvnd -pl :apex-system -am -DskipTests verify` **BUILD SUCCESS**（含 spotless/checkstyle/PMD）；仅注解，方法体与路由未改 |
+| 29 | 治理 | 任务盘登记整改批次 B3/B4/B5 完成与 B6 待执行（BE-030~BE-033），B6 阻塞原因写入验收列 | 本条提交 | 与代码/文档提交一一对应，状态列与实际一致 |
 
 ---
 
