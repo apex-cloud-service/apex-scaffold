@@ -4,6 +4,10 @@
 
 ---
 
+## 本次联调
+
+- [2026-11-17 后端联调修复方案](./specs/2026-11-17-integration-contract-repair.md) — BE-036，权限快照兼容、菜单范围、审批租户上下文及回归边界。
+
 ## 📖 文档导航
 
 ### [00. 快速开始](./00-getting-started/README.md)

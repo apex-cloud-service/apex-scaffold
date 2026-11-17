@@ -8,6 +8,10 @@
 >
 > 历史方案仍在既有目录：`docs/08-project-management/plans/`（迁移方案、整改方案）与 `docs/02-architecture/`，不搬迁。
 
+## 联调修复方案
+
+- [2026-11-17 前后端联调后端修复方案](2026-11-17-integration-contract-repair.md) — BE-036，既有改动补记及后续回归边界，待独立复核；非事前审批。
+
 ## AI 智能体角色规范（跨工具通用）
 
 `docs/specs/ai-agents/` 存放角色卡正文，可直接粘贴给 Trae / WorkBuddy / Qoder / Codex / ZCode 等工具：
