@@ -134,6 +134,43 @@ public abstract class AbstractOfficeApiSupport {
     }
 
     /**
+     * 发送带自定义请求头且带查询参数的 GET 请求。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param params 查询参数，按名排序写入 URI
+     * @param headers 请求头，常用于承载平台访问令牌
+     * @return 平台响应体
+     */
+    protected Mono<Map<String, Object>> getJsonWithHeadersAndParams(
+            String path, Map<String, String> params, Map<String, String> headers) {
+        return webClient
+                .get()
+                .uri(uriBuilder -> {
+                    var builder = uriBuilder.path(path);
+                    params.forEach(builder::queryParam);
+                    return builder.build();
+                })
+                .headers(httpHeaders -> headers.forEach(httpHeaders::set))
+                .retrieve()
+                .bodyToMono(Map.class)
+                .timeout(timeout)
+                .map(this::checkedBody);
+    }
+
+    /**
+     * 发送带自定义请求头的 JSON POST 请求（无查询参数）。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param body 请求体，按 JSON 序列化
+     * @param headers 附加请求头
+     * @return 平台响应体
+     */
+    protected Mono<Map<String, Object>> postJsonWithHeaders(
+            String path, Map<String, Object> body, Map<String, String> headers) {
+        return postJson(path, body, headers);
+    }
+
+    /**
      * 将平台响应映射为业务对象，并把平台错误统一转换为 {@link BusinessException}。
      *
      * @param mapper 响应体到业务对象的映射函数
