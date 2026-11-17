@@ -97,6 +97,8 @@
 
 | 49 | 2026-11-17 | 代码 | **BE-038 日历端口扩展与组织者身份换算**：①`CalendarPort` 的 `getEventDetail`/`updateEvent` 增加 `organizerId`（飞书/钉钉事件以日历为父资源，仅事件ID无法定位）；`CalendarClient` 同步。②三客户端实现详情与更新（飞书 GET/PATCH、钉钉 GET/PUT、企微 get/update），基类补 `patchJsonWithHeaders`/`putJsonWithHeaders`。③新增 `OfficeRepository.findMemberMappingByApexUser`（复用 `office_organization_mapping` 按 `apex_user_id` 反查）与 `OfficeCalendarService.resolvePlatformUserId`：系统用户ID → 平台用户ID，未绑定/空值/非法平台均 fail-closed，绝不把系统ID当平台ID。④创建路径租户改用 `currentTenantIdReactive()`（原 ThreadLocal 在阻塞调度器下丢失） | 未提交 | `:apex-office` 198 用例 0 失败（新增详情/更新/缺组织者/未绑定 4 组用例）BUILD SUCCESS；spotless 通过；真实网关：无绑定时返回「系统用户 1001 未绑定 feishu 平台账号」，插入绑定后推进到「飞书 appId未配置」，**证明换算与路由链路已通**（真实创建仍需平台凭据） | 端口契约变更（内部）；HTTP 路径与字段不变；未改前端、未部署；测试数据已清理 |
 
+| 50 | 2026-11-17 | 代码 | **BE-039 平台基址可配置 + 日历写操作端到端闭环**：①`OfficePlatformProperties.Platform` 加 `baseUrl`，`AbstractOfficeApiSupport` 优先取该值、缺省回落官方地址（生产行为不变）。②发现并修复三个此前被「不支持的办公平台」掩盖的落库缺陷：创建时 `create_time` 未赋值、更新/取消时 `update_time` 未赋值、逻辑删除经 `deleteById` 时 `update_time` 为 null 且 `@TableLogic` 字段被常规 update 排除——根因是 `apex-office` 未依赖 `apex-infrastructure-persistence`，`FieldFill`/`MetaObjectHandler` 不生效；改为服务层显式赋值 + 仓储 `UpdateWrapper.set()` 显式写 `deleted`/`update_time`。③新增基址覆盖回归用例 | 未提交 | `:apex-office` 199、`:apex-office-service` 406 用例 0 失败；spotless 通过；**本地模拟飞书平台端到端 6/6 全通**（创建→详情→更新→范围查询→删除→删除后为空），真实经网关与 office 服务全链路。测试数据已清理 | 仅 office 模块；HTTP 契约不变；`baseUrl` 为新增可选配置，缺省不改变生产地址 |
+
 
 
 > **表列与 §1「必填字段」一一对应**：`日期` · `类型` · `摘要` · `提交` · `证据` · `影响面`（`#` 仅序号，不计入字段）。2026-11-16 分列重排：`摘要`/`证据` 原文一字未改，`影响面` 按当次改动范围回填。
