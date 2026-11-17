@@ -9,6 +9,7 @@
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- |
+| BE-038 | P1 | 【P1】office-扩展 CalendarPort 支持详情/更新/删除与组织者换算 | 待复核 | ZCode（用户于 2026-11-17 授权） | 端口方法补父资源标识（calendarId 或 organizerId），使飞书/钉钉详情、更新、删除可用；新增「系统用户 → 平台用户」换算（复用 office_organization_mapping），避免用系统 ID 调平台；保留 fail-closed 与租户隔离；新增回归用例（4 组）；`:apex-office` 198 用例 0 失败、spotless 通过；真实链路：无绑定→「未绑定 feishu 平台账号」，插入绑定→「飞书 appId未配置」，换算与路由已通；真实创建仍需平台凭据 | 前端 FE-026；BE-037 |
 | BE-037 | P1 | 【P1】office-补齐三平台日历客户端实现 | 待复核 | ZCode（用户于 2026-11-17 授权） | 实现 feishu/dingtalk/wecom 三个 CalendarClient（端口 9 方法：创建/详情/更新/取消/删除/范围列表/会议室可用性/平台标识）；Bean 名 `<platform>CalendarClient` 与 `OfficeCalendarService.getCalendarClient` 一致；未配置凭据时 fail-closed 且错误可读；真实创建链路可跑通或明确外部依赖；新增单测覆盖请求构建与错误映射（6 条）；spotless 与模块测试通过（195 用例 0 失败）；真实网关三平台均返回凭据未配置而非「不支持的办公平台」，证明 Bean 查找链路已通。**限制**：详情/更新端口签名缺组织者，已显式拒绝；真实创建需平台凭据，本地未闭环 | 前端 FE-026；记录 §7.2 |
 | BE-036 | P1 | 【P1】联调-修复快照兼容、菜单范围与审批租户传播 | 已完成 | ZCode（用户于 2026-11-17 授权为本项主控） | 验收：`:apex-system`/`:apex-office`（189 用例）/四个服务模块 `-am test` 均 BUILD SUCCESS 且 0 失败；二轮修审批响应 `processName`/`currentNode`/`createdAt` 恒 null（实体与 DTO 命名不一致致 MapStruct 静默丢字段），`:apex-office-service` 406 用例 0 失败，提交 `102fa274`；缺租户拒绝、JDBC 上下文恢复、空菜单全量、快照 roles/未知字段解码均有回归用例；真实环境租户隔离已验证（租户1 仅见自身记录、跨租户查询返回不存在）；最终重建环境后经网关 18 条真实接口 18/18 通过 | [方案](../specs/2026-11-17-integration-contract-repair.md)；前端 FE-026 |
 
