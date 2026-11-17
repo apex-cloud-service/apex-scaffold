@@ -164,6 +164,20 @@ public interface OfficeRepository {
     Mono<OfficeOrganizationMapping> findMemberMapping(String tenantId, OfficePlatform platform, String externalUserId);
 
     /**
+     * 查询系统用户在某平台的外部映射（反向查询）。
+     *
+     * <p>用于把系统用户标识换算成平台侧用户标识（open_id/unionId/userid），
+     * 避免把系统 ID 直接当作平台 ID 调用办公平台接口。
+     *
+     * @param tenantId 租户标识，不能为空
+     * @param platform 平台类型，不能为空
+     * @param apexUserId 系统用户标识，不能为空
+     * @return 组织映射，不存在时返回空 Mono
+     */
+    Mono<OfficeOrganizationMapping> findMemberMappingByApexUser(
+            String tenantId, OfficePlatform platform, String apexUserId);
+
+    /**
      * 查询租户的所有组织映射列表
      *
      * @param tenantId 租户标识，不能为空

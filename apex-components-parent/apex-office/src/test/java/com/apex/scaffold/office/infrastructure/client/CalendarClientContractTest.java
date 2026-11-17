@@ -117,25 +117,57 @@ class CalendarClientContractTest {
     }
 
     @Test
-    @DisplayName("飞书详情/更新在端口缺组织者时显式拒绝，不静默操作")
-    void feishuRejectsOperationsMissingCalendarScope() {
+    @DisplayName("飞书详情：GET 主日历下的事件详情")
+    void feishuGetEventDetail() {
+        FeishuCalendarClient client = new FeishuCalendarClient(
+                builder("{\"code\":0,\"tenant_access_token\":\"t\"}", "{\"code\":0,\"data\":{\"event\":{}}}"),
+                properties(OfficePlatform.FEISHU, "app-1", "PATH"));
+
+        StepVerifier.create(client.getEventDetail("evt-1", "ou-organizer"))
+                .assertNext(body -> assertThat(body).containsKey("data"))
+                .verifyComplete();
+
+        assertThat(requests.get(1).method()).isEqualTo(HttpMethod.GET);
+        assertThat(requests.get(1).url().getPath())
+                .isEqualTo("/open-apis/calendar/v4/calendars/ou-organizer/events/evt-1");
+    }
+
+    @Test
+    @DisplayName("飞书更新：PATCH 主日历下的事件，空载荷时短路不发请求")
+    void feishuUpdateEvent() {
+        FeishuCalendarClient client = new FeishuCalendarClient(
+                builder("{\"code\":0,\"tenant_access_token\":\"t\"}", "{\"code\":0}"),
+                properties(OfficePlatform.FEISHU, "app-1", "PATH"));
+
+        StepVerifier.create(client.updateEvent("evt-1", "ou-organizer", "新标题", null, null, null, null, null))
+                .expectNext(Boolean.TRUE)
+                .verifyComplete();
+        assertThat(requests.get(1).method()).isEqualTo(HttpMethod.PATCH);
+        assertThat(requests.get(1).url().getPath())
+                .isEqualTo("/open-apis/calendar/v4/calendars/ou-organizer/events/evt-1");
+
+        // 全部字段为空时不产生第二次业务请求
+        int before = requests.size();
+        StepVerifier.create(client.updateEvent("evt-1", "ou-organizer", null, null, null, null, null, null))
+                .expectNext(Boolean.TRUE)
+                .verifyComplete();
+        assertThat(requests).hasSize(before);
+    }
+
+    @Test
+    @DisplayName("缺组织者时详情/更新显式拒绝，不发平台请求")
+    void feishuRejectsOperationsWithoutOrganizer() {
         FeishuCalendarClient client =
                 new FeishuCalendarClient(builder("{}"), properties(OfficePlatform.FEISHU, "app-1", "PATH"));
 
-        StepVerifier.create(client.getEventDetail("evt-1"))
-                .expectErrorSatisfies(error ->
-                        assertThat(error).isInstanceOf(BusinessException.class).hasMessageContaining("主日历"))
-                .verify();
-        StepVerifier.create(client.updateEvent(
-                        "evt-1",
-                        "标题",
-                        null,
-                        LocalDateTime.now(),
-                        LocalDateTime.now().plusHours(1),
-                        null,
-                        null))
-                .expectError(BusinessException.class)
-                .verify();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> client.getEventDetail("evt-1", null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("组织者ID");
+        // 组织者校验同样在组装阶段同步 fail-fast，故断言同步异常
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> client.updateEvent("evt-1", " ", "标题", null, LocalDateTime.now(), null, null, null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("组织者ID");
         assertThat(requests).isEmpty();
     }
 

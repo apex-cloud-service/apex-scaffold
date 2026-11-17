@@ -46,9 +46,6 @@ public class FeishuCalendarClient extends AbstractOfficeApiSupport implements Ca
     /** 单页拉取条数（飞书上限 1000，取 100 平衡响应体量）。 */
     private static final int PAGE_SIZE = 100;
 
-    /** 缺少必要父资源标识时的统一提示后缀。 */
-    private static final String NEEDS_CALENDAR = "；飞书事件操作需要父日历标识（以组织者主日历为父资源），当前端口签名未提供组织者";
-
     /**
      * 构造飞书日历客户端。
      *
@@ -95,20 +92,64 @@ public class FeishuCalendarClient extends AbstractOfficeApiSupport implements Ca
     }
 
     @Override
-    public Mono<Map<String, Object>> getEventDetail(String platformEventId) {
-        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "飞书日历事件详情不可用" + NEEDS_CALENDAR));
+    public Mono<Map<String, Object>> getEventDetail(String platformEventId, String organizerId) {
+        String calendarId = required(organizerId, "飞书组织者ID（主日历）");
+        return token().flatMap(token -> call(
+                body -> body,
+                getJsonWithHeaders(
+                        "/open-apis/calendar/v4/calendars/" + calendarId + "/events/"
+                                + required(platformEventId, "飞书 eventId"),
+                        auth(token))));
     }
 
     @Override
     public Mono<Boolean> updateEvent(
             String platformEventId,
+            String organizerId,
             String title,
             String description,
             LocalDateTime startTime,
             LocalDateTime endTime,
             String[] participantIds,
             String location) {
-        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "飞书日历事件更新不可用" + NEEDS_CALENDAR));
+        String calendarId = required(organizerId, "飞书组织者ID（主日历）");
+        Map<String, Object> body = new HashMap<>(8);
+        if (title != null && !title.isBlank()) {
+            body.put("summary", title);
+        }
+        if (description != null) {
+            body.put("description", description);
+        }
+        if (startTime != null) {
+            body.put("start_time", time(startTime, "开始时间"));
+        }
+        if (endTime != null) {
+            body.put("end_time", time(endTime, "结束时间"));
+        }
+        if (location != null && !location.isBlank()) {
+            body.put("location", Map.of("name", location));
+        }
+        List<Map<String, Object>> attendees = new ArrayList<>();
+        if (participantIds != null) {
+            for (String participantId : participantIds) {
+                if (participantId != null && !participantId.isBlank()) {
+                    attendees.add(Map.of("type", "user", "user_id", participantId));
+                }
+            }
+        }
+        if (!attendees.isEmpty()) {
+            body.put("attendees", attendees);
+        }
+        if (body.isEmpty()) {
+            return Mono.just(Boolean.TRUE);
+        }
+        return token().flatMap(token -> call(
+                response -> Boolean.TRUE,
+                patchJsonWithHeaders(
+                        "/open-apis/calendar/v4/calendars/" + calendarId + "/events/"
+                                + required(platformEventId, "飞书 eventId"),
+                        body,
+                        auth(token))));
     }
 
     @Override

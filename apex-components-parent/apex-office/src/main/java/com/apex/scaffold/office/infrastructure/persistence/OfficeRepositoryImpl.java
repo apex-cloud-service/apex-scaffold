@@ -256,6 +256,19 @@ public class OfficeRepositoryImpl implements OfficeRepository {
     }
 
     @Override
+    public Mono<OfficeOrganizationMapping> findMemberMappingByApexUser(
+            String tenantId, OfficePlatform platform, String apexUserId) {
+        return scoped(
+                tenantId,
+                () -> converter.toOrganizationMapping(
+                        organizationMappings.selectOne(new QueryWrapper<OfficeOrganizationMappingPO>()
+                                .eq("tenant_id", tenantId)
+                                .eq("platform", platform.name())
+                                .eq("apex_user_id", apexUserId)
+                                .eq("deleted", 0))));
+    }
+
+    @Override
     public Mono<List<OfficeOrganizationMapping>> listOrganizationMappings(String tenantId, OfficePlatform platform) {
         return scoped(
                 tenantId,

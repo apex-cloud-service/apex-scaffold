@@ -58,7 +58,7 @@ public interface CalendarClient extends CalendarPort {
      * @param platformEventId 平台中的事件ID
      * @return 事件详情
      */
-    Mono<Map<String, Object>> getEventDetail(String platformEventId);
+    Mono<Map<String, Object>> getEventDetail(String platformEventId, String organizerId);
 
     /**
      * 更新日历事件
@@ -74,6 +74,7 @@ public interface CalendarClient extends CalendarPort {
      */
     Mono<Boolean> updateEvent(
             String platformEventId,
+            String organizerId,
             String title,
             String description,
             LocalDateTime startTime,

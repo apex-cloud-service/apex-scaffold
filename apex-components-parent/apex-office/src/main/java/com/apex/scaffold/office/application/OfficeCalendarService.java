@@ -1,6 +1,8 @@
 package com.apex.scaffold.office.application;
 
 import com.apex.scaffold.common.context.TenantContext;
+import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.office.domain.calendar.*;
 import com.apex.scaffold.office.domain.port.CalendarPort;
 import java.time.LocalDateTime;
@@ -36,6 +38,7 @@ public class OfficeCalendarService {
 
     private final CalendarEventRepository calendarEventRepository;
     private final Map<String, CalendarPort> calendarClients;
+    private final com.apex.scaffold.office.domain.OfficeRepository officeRepository;
 
     /**
      * 创建日历事件
@@ -83,36 +86,43 @@ public class OfficeCalendarService {
 
         CalendarPort client = getCalendarClient(platform);
 
-        return client.createEvent(
-                        organizerId, title, description, startTime, endTime, participantIds, location, reminderMinutes)
-                .flatMap(platformEventId -> {
-                    Long tenantId = TenantContext.currentTenantId()
-                            .map(Long::parseLong)
-                            .orElseThrow(() -> new IllegalStateException("租户ID未设置"));
-
-                    CalendarEvent event = CalendarEvent.builder()
-                            .tenantId(tenantId)
-                            .platform(platform)
-                            .platformEventId(platformEventId)
-                            .title(title)
-                            .description(description)
-                            .eventType(eventType)
-                            .organizerId(organizerId)
-                            .organizerName(organizerName)
-                            .startTime(startTime)
-                            .endTime(endTime)
-                            .isAllDay(Boolean.TRUE.equals(isAllDay))
-                            .location(location)
-                            .participantIds(convertToJson(participantIds))
-                            .participantNames(convertToJson(participantNames))
-                            .meetingRoomId(meetingRoomId)
-                            .reminderMinutes(reminderMinutes)
-                            .isRecurring(false)
-                            .status("CONFIRMED")
-                            .build();
-
-                    return calendarEventRepository.save(event);
-                })
+        // 租户只写在 Reactor Context；阻塞调度器切线程后 ThreadLocal 已恢复，必须用响应式读取
+        // 租户只写在 Reactor Context；阻塞调度器切线程后 ThreadLocal 已恢复，必须用响应式读取
+        return TenantContext.currentTenantIdReactive()
+                .switchIfEmpty(Mono.error(new IllegalStateException("租户ID未设置")))
+                .flatMap(currentTenantId -> resolvePlatformUserId(currentTenantId, platform, organizerId)
+                        .flatMap(platformUserId -> client.createEvent(
+                                platformUserId,
+                                title,
+                                description,
+                                startTime,
+                                endTime,
+                                participantIds,
+                                location,
+                                reminderMinutes))
+                        .flatMap(platformEventId -> {
+                            CalendarEvent event = CalendarEvent.builder()
+                                    .tenantId(Long.parseLong(currentTenantId))
+                                    .platform(platform)
+                                    .platformEventId(platformEventId)
+                                    .title(title)
+                                    .description(description)
+                                    .eventType(eventType)
+                                    .organizerId(organizerId)
+                                    .organizerName(organizerName)
+                                    .startTime(startTime)
+                                    .endTime(endTime)
+                                    .isAllDay(Boolean.TRUE.equals(isAllDay))
+                                    .location(location)
+                                    .participantIds(convertToJson(participantIds))
+                                    .participantNames(convertToJson(participantNames))
+                                    .meetingRoomId(meetingRoomId)
+                                    .reminderMinutes(reminderMinutes)
+                                    .isRecurring(false)
+                                    .status("CONFIRMED")
+                                    .build();
+                            return calendarEventRepository.save(event);
+                        }))
                 .doOnSuccess(event -> log.info(
                         "日历事件创建成功 - eventId: {}, platformEventId: {}", event.getId(), event.getPlatformEventId()))
                 .doOnError(error -> log.error("日历事件创建失败 - title: {}", title, error));
@@ -134,10 +144,14 @@ public class OfficeCalendarService {
                 .switchIfEmpty(Mono.error(new RuntimeException("日历事件不存在: " + eventId)))
                 .flatMap(event -> {
                     CalendarPort client = getCalendarClient(event.getPlatform());
-                    return client.getEventDetail(event.getPlatformEventId()).map(detail -> {
-                        // 可以根据平台返回的最新信息更新事件
-                        return event;
-                    });
+                    return resolvePlatformUserId(
+                                    String.valueOf(event.getTenantId()), event.getPlatform(), event.getOrganizerId())
+                            .flatMap(
+                                    platformUserId -> client.getEventDetail(event.getPlatformEventId(), platformUserId))
+                            .map(detail -> {
+                                // 可以根据平台返回的最新信息更新事件
+                                return event;
+                            });
                 })
                 .doOnSuccess(event -> log.info("日历事件详情查询成功 - eventId: {}", eventId))
                 .doOnError(error -> log.error("日历事件详情查询失败 - eventId: {}", eventId, error));
@@ -203,14 +217,17 @@ public class OfficeCalendarService {
                     }
 
                     CalendarPort client = getCalendarClient(event.getPlatform());
-                    return client.updateEvent(
+                    return resolvePlatformUserId(
+                                    String.valueOf(event.getTenantId()), event.getPlatform(), event.getOrganizerId())
+                            .flatMap(platformUserId -> client.updateEvent(
                                     event.getPlatformEventId(),
+                                    platformUserId,
                                     title,
                                     description,
                                     startTime,
                                     endTime,
                                     participantIds,
-                                    location)
+                                    location))
                             .flatMap(success -> {
                                 if (success) {
                                     event.setTitle(title);
@@ -256,7 +273,8 @@ public class OfficeCalendarService {
                     }
 
                     CalendarPort client = getCalendarClient(event.getPlatform());
-                    return client.cancelEvent(event.getPlatformEventId(), organizerId)
+                    return resolvePlatformUserId(String.valueOf(event.getTenantId()), event.getPlatform(), organizerId)
+                            .flatMap(platformUserId -> client.cancelEvent(event.getPlatformEventId(), platformUserId))
                             .flatMap(success -> {
                                 if (success) {
                                     event.cancel();
@@ -290,7 +308,8 @@ public class OfficeCalendarService {
                     }
 
                     CalendarPort client = getCalendarClient(event.getPlatform());
-                    return client.deleteEvent(event.getPlatformEventId(), organizerId)
+                    return resolvePlatformUserId(String.valueOf(event.getTenantId()), event.getPlatform(), organizerId)
+                            .flatMap(platformUserId -> client.deleteEvent(event.getPlatformEventId(), platformUserId))
                             .flatMap(success -> {
                                 if (success) {
                                     return calendarEventRepository.deleteById(eventId);
@@ -378,6 +397,37 @@ public class OfficeCalendarService {
                 .doOnSuccess(available ->
                         log.info("会议室可用性检查完成 - meetingRoomId: {}, available: {}", meetingRoomId, available))
                 .doOnError(error -> log.error("会议室可用性检查失败 - meetingRoomId: {}", meetingRoomId, error));
+    }
+
+    /**
+     * 将系统用户标识换算为平台侧用户标识。
+     *
+     * <p>办公平台的日历/日程接口要求平台侧标识（open_id / unionId / userid），
+     * 而事件模型与前端传的是系统用户 ID。这里统一查 {@code office_organization_mapping}
+     * 换算；查不到时以业务异常失败，绝不把系统 ID 直接当作平台 ID 使用。
+     *
+     * @param tenantId 当前租户
+     * @param platform 办公平台类型
+     * @param apexUserId 系统用户标识
+     * @return 平台侧用户标识
+     */
+    private Mono<String> resolvePlatformUserId(String tenantId, String platform, String apexUserId) {
+        if (apexUserId == null || apexUserId.isBlank()) {
+            return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "组织者ID不能为空"));
+        }
+        com.apex.scaffold.office.domain.OfficePlatform target;
+        try {
+            target = com.apex.scaffold.office.domain.OfficePlatform.valueOf(
+                    platform.trim().toUpperCase());
+        } catch (IllegalArgumentException invalidPlatform) {
+            return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "不支持的办公平台: " + platform));
+        }
+        return officeRepository
+                .findMemberMappingByApexUser(tenantId, target, apexUserId)
+                .map(com.apex.scaffold.office.domain.OfficeOrganizationMapping::getExternalUserId)
+                .filter(external -> external != null && !external.isBlank())
+                .switchIfEmpty(Mono.error(new BusinessException(
+                        ResultCode.BUSINESS_ERROR, "系统用户 " + apexUserId + " 未绑定 " + platform + " 平台账号，无法调用平台接口")));
     }
 
     /**

@@ -20,9 +20,9 @@ import reactor.core.publisher.Mono;
 /**
  * 企业微信日程 API 客户端。
  *
- * <p>企业微信的日程接口以「组织者」为主体，事件归属组织者个人日程（日程 ID 由平台在
- * 创建后返回），因此创建可直接使用 {@code organizerId}；详情/更新/删除仍需组织者
- * 定位日程归属，当前端口签名未提供，故作明确拒绝而非猜测归属。
+ * <p>企业微信的日程接口以「组织者」为主体，事件归属组织者个人日程（日程 ID 由平台
+ * 在创建后返回），创建与删除使用 {@code organizerId}；详情/更新按 {@code schedule_id}
+ * 定位，平台不要求组织者参数。
  *
  * <p>凭据沿用 {@code apex.office.platforms[WECOM]}，与企业微信消息客户端一致；
  * 未配置时在发请求前以业务异常失败。
@@ -39,9 +39,6 @@ public class WecomCalendarClient extends AbstractOfficeApiSupport implements Cal
 
     /** 单页拉取条数。 */
     private static final int PAGE_SIZE = 100;
-
-    /** 缺少组织者标识的提示后缀。 */
-    private static final String NEEDS_ORGANIZER = "；企业微信日程操作需要组织者定位日程归属，当前端口签名未提供组织者";
 
     /**
      * 构造企业微信日程客户端。
@@ -89,20 +86,48 @@ public class WecomCalendarClient extends AbstractOfficeApiSupport implements Cal
     }
 
     @Override
-    public Mono<Map<String, Object>> getEventDetail(String platformEventId) {
-        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信日程详情不可用" + NEEDS_ORGANIZER));
+    public Mono<Map<String, Object>> getEventDetail(String platformEventId, String organizerId) {
+        // 企业微信按 schedule_id 查询，organizerId 仅用于审计与权限一致性校验
+        return token().flatMap(token -> call(
+                body -> body,
+                postJson(
+                        "/cgi-bin/oa/schedule/get?access_token=" + token,
+                        Map.of("schedule_id", required(platformEventId, "企业微信 schedule_id")))));
     }
 
     @Override
     public Mono<Boolean> updateEvent(
             String platformEventId,
+            String organizerId,
             String title,
             String description,
             LocalDateTime startTime,
             LocalDateTime endTime,
             String[] participantIds,
             String location) {
-        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "企业微信日程更新不可用" + NEEDS_ORGANIZER));
+        Map<String, Object> schedule = new HashMap<>(8);
+        schedule.put("schedule_id", required(platformEventId, "企业微信 schedule_id"));
+        if (title != null && !title.isBlank()) {
+            schedule.put("summary", title);
+        }
+        if (description != null) {
+            schedule.put("description", description);
+        }
+        if (startTime != null) {
+            schedule.put("start_time", epochSecond(startTime, "开始时间"));
+        }
+        if (endTime != null) {
+            schedule.put("end_time", epochSecond(endTime, "结束时间"));
+        }
+        if (location != null && !location.isBlank()) {
+            schedule.put("location", Map.of("name", location));
+        }
+        if (schedule.size() == 1) {
+            return Mono.just(Boolean.TRUE);
+        }
+        return token().flatMap(token -> call(
+                body -> Boolean.TRUE,
+                postJson("/cgi-bin/oa/schedule/update?access_token=" + token, Map.of("schedule", schedule))));
     }
 
     @Override

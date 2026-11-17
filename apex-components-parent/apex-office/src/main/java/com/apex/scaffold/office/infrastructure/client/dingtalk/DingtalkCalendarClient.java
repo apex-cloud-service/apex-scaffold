@@ -42,9 +42,6 @@ public class DingtalkCalendarClient extends AbstractOfficeApiSupport implements 
     /** 单页拉取条数。 */
     private static final int PAGE_SIZE = 100;
 
-    /** 缺少父日历标识的提示后缀。 */
-    private static final String NEEDS_CALENDAR = "；钉钉事件操作需要父日历标识（以组织者主日历为父资源），当前端口签名未提供组织者";
-
     /**
      * 构造钉钉日历客户端。
      *
@@ -93,20 +90,53 @@ public class DingtalkCalendarClient extends AbstractOfficeApiSupport implements 
     }
 
     @Override
-    public Mono<Map<String, Object>> getEventDetail(String platformEventId) {
-        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉日历事件详情不可用" + NEEDS_CALENDAR));
+    public Mono<Map<String, Object>> getEventDetail(String platformEventId, String organizerId) {
+        String calendarId = required(organizerId, "钉钉组织者 unionId（主日历）");
+        return token().flatMap(token -> call(
+                body -> body,
+                getJsonWithHeaders(
+                        "/v1.0/calendar/users/" + calendarId + "/calendars/primary/events/"
+                                + required(platformEventId, "钉钉 eventId"),
+                        Map.of("x-acs-dingtalk-access-token", token))));
     }
 
     @Override
     public Mono<Boolean> updateEvent(
             String platformEventId,
+            String organizerId,
             String title,
             String description,
             LocalDateTime startTime,
             LocalDateTime endTime,
             String[] participantIds,
             String location) {
-        return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "钉钉日历事件更新不可用" + NEEDS_CALENDAR));
+        String calendarId = required(organizerId, "钉钉组织者 unionId（主日历）");
+        Map<String, Object> body = new HashMap<>(8);
+        if (title != null && !title.isBlank()) {
+            body.put("summary", title);
+        }
+        if (description != null) {
+            body.put("description", description);
+        }
+        if (startTime != null) {
+            body.put("start", time(startTime, "开始时间"));
+        }
+        if (endTime != null) {
+            body.put("end", time(endTime, "结束时间"));
+        }
+        if (location != null && !location.isBlank()) {
+            body.put("location", Map.of("displayName", location));
+        }
+        if (body.isEmpty()) {
+            return Mono.just(Boolean.TRUE);
+        }
+        return token().flatMap(token -> call(
+                response -> Boolean.TRUE,
+                putJsonWithHeaders(
+                        "/v1.0/calendar/users/" + calendarId + "/calendars/primary/events/"
+                                + required(platformEventId, "钉钉 eventId"),
+                        body,
+                        Map.of("x-acs-dingtalk-access-token", token))));
     }
 
     @Override

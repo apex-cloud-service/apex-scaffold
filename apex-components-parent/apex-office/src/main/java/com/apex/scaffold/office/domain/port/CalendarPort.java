@@ -43,12 +43,16 @@ public interface CalendarPort {
             Integer reminderMinutes);
 
     /**
-     * 查询日历事件详情
+     * 查询日历事件详情。
+     *
+     * <p>飞书/钉钉的事件以日历为父资源，仅有事件ID无法定位，故需同时提供组织者
+     * （其主日历即父资源）。实现方不得在缺少该标识时猜测归属。
      *
      * @param platformEventId 平台中的事件ID
+     * @param organizerId 组织者ID（平台侧用户标识，用作主日历）
      * @return 事件详情
      */
-    Mono<Map<String, Object>> getEventDetail(String platformEventId);
+    Mono<Map<String, Object>> getEventDetail(String platformEventId, String organizerId);
 
     /**
      * 更新日历事件
@@ -64,6 +68,7 @@ public interface CalendarPort {
      */
     Mono<Boolean> updateEvent(
             String platformEventId,
+            String organizerId,
             String title,
             String description,
             LocalDateTime startTime,

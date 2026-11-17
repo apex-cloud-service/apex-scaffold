@@ -11,6 +11,7 @@ import com.apex.scaffold.office.domain.port.CalendarPort;
 import java.time.LocalDateTime;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,8 +31,28 @@ class OfficeCalendarEventServiceTest {
     @Mock
     private Map<String, CalendarPort> calendarClients;
 
+    @Mock
+    private com.apex.scaffold.office.domain.OfficeRepository officeRepository;
+
     @InjectMocks
     private OfficeCalendarService service;
+
+    /**
+     * 让「系统用户 → 平台用户」换算命中：返回固定平台标识。
+     *
+     * <p>BE-038 起服务层在调用客户端前必须换算组织者，测试统一桩掉。
+     */
+    private void stubOrganizerMapping() {
+        com.apex.scaffold.office.domain.OfficeOrganizationMapping mapping =
+                com.apex.scaffold.office.domain.OfficeOrganizationMapping.builder()
+                        .tenantId("1")
+                        .externalUserId("ext-user")
+                        .apexUserId("1001")
+                        .build();
+        lenient()
+                .when(officeRepository.findMemberMappingByApexUser(any(), any(), any()))
+                .thenReturn(Mono.just(mapping));
+    }
 
     @AfterEach
     void clearTenant() {
@@ -50,16 +71,20 @@ class OfficeCalendarEventServiceTest {
     @NullSource
     @ValueSource(booleans = {false, true})
     void updateAllDayOnlyWhenProvided(Boolean allDay) throws Exception {
+        stubOrganizerMapping();
         CalendarEvent event = CalendarEvent.builder()
+                .tenantId(1L)
                 .platform("feishu")
                 .platformEventId("remote-1")
+                .organizerId("1001")
                 .isAllDay(true)
                 .status("CONFIRMED")
                 .build();
         CalendarPort client = mock(CalendarPort.class);
         when(calendarClients.get("feishuCalendarClient")).thenReturn(client);
         when(repository.findById(1L)).thenReturn(Mono.just(event));
-        when(client.updateEvent(any(), any(), any(), any(), any(), any(), any()))
+        // BE-038：updateEvent 新增 organizerId 参数（8 个实参）
+        when(client.updateEvent(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(Mono.just(true));
         when(repository.update(any())).thenReturn(Mono.just(event));
         LocalDateTime start = LocalDateTime.of(2026, 10, 18, 9, 0);
@@ -69,10 +94,43 @@ class OfficeCalendarEventServiceTest {
         assertThat(event.getIsAllDay()).isEqualTo(allDay == null || allDay);
     }
 
+    @Test
+    @DisplayName("未绑定平台账号时创建直接拒绝，不发平台请求也不落库")
+    void createRejectsUnboundOrganizer() {
+        CalendarPort client = mock(CalendarPort.class);
+        when(calendarClients.get("feishuCalendarClient")).thenReturn(client);
+        when(officeRepository.findMemberMappingByApexUser(any(), any(), any())).thenReturn(Mono.empty());
+        TenantContext.setTenantId("41");
+
+        StepVerifier.create(service.createEvent(
+                        "feishu",
+                        "title",
+                        null,
+                        CalendarEventType.MEETING,
+                        "1001",
+                        "系统管理员",
+                        LocalDateTime.of(2026, 10, 18, 9, 0),
+                        LocalDateTime.of(2026, 10, 18, 10, 0),
+                        false,
+                        null,
+                        new String[0],
+                        new String[0],
+                        null,
+                        15))
+                .expectErrorSatisfies(error -> assertThat(error)
+                        .isInstanceOf(com.apex.scaffold.common.exception.BusinessException.class)
+                        .hasMessageContaining("未绑定"))
+                .verify();
+
+        verifyNoInteractions(client);
+        verify(repository, never()).save(any());
+    }
+
     @ParameterizedTest
     @NullSource
     @ValueSource(booleans = {false, true})
     void createNormalizesAllDayBeforeSaving(Boolean allDay) {
+        stubOrganizerMapping();
         CalendarPort client = mock(CalendarPort.class);
         when(calendarClients.get("feishuCalendarClient")).thenReturn(client);
         when(client.createEvent(any(), any(), any(), any(), any(), any(), any(), any()))

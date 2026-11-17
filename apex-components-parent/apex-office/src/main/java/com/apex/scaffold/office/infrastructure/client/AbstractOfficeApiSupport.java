@@ -171,6 +171,48 @@ public abstract class AbstractOfficeApiSupport {
     }
 
     /**
+     * 发送带自定义请求头的 JSON PATCH 请求。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param body 局部更新请求体，按 JSON 序列化
+     * @param headers 附加请求头
+     * @return 平台响应体
+     */
+    protected Mono<Map<String, Object>> patchJsonWithHeaders(
+            String path, Map<String, Object> body, Map<String, String> headers) {
+        return webClient
+                .patch()
+                .uri(path)
+                .headers(httpHeaders -> headers.forEach(httpHeaders::set))
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .timeout(timeout)
+                .map(this::checkedBody);
+    }
+
+    /**
+     * 发送带自定义请求头的 JSON PUT 请求。
+     *
+     * @param path 接口路径（相对 {@code baseUrl}）
+     * @param body 请求体，按 JSON 序列化
+     * @param headers 附加请求头
+     * @return 平台响应体
+     */
+    protected Mono<Map<String, Object>> putJsonWithHeaders(
+            String path, Map<String, Object> body, Map<String, String> headers) {
+        return webClient
+                .put()
+                .uri(path)
+                .headers(httpHeaders -> headers.forEach(httpHeaders::set))
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .timeout(timeout)
+                .map(this::checkedBody);
+    }
+
+    /**
      * 将平台响应映射为业务对象，并把平台错误统一转换为 {@link BusinessException}。
      *
      * @param mapper 响应体到业务对象的映射函数
