@@ -125,8 +125,6 @@ public class GenDatasourcePO extends BasePO {
      * </ul>
      *
      * <p>加密后长度最多 500 字符。
-     *
-     * @see com.apex.scaffold.common.util.EncryptUtil
      */
     private String password;
 

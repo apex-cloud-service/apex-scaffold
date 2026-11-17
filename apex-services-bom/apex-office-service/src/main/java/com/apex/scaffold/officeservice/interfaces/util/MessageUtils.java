@@ -15,8 +15,8 @@ import reactor.core.publisher.Mono;
  * <p>
  * 传统 Spring MVC 使用 {@code LocaleResolver} 和 {@code LocaleContextHolder}
  * 通过 ThreadLocal 传递 Locale。在 WebFlux 响应式架构中，请求可能在多个线程间切换，
- * ThreadLocal 不再可靠。因此采用 Reactor Context 机制，由
- * {@link com.apex.scaffold.officeservice.interfaces.filter.LocaleWebFilter} 将解析出的 Locale 写入 Context，
+ * ThreadLocal 不再可靠。因此采用 Reactor Context 机制，由 Locale 过滤器（预留，
+ * 见 {@code LocaleWebFilter} 设计约定）将解析出的 Locale 写入 Context，
  * 本工具类通过 {@link Mono#deferContextual} 从中读取。
  * </p>
  *
@@ -43,8 +43,6 @@ import reactor.core.publisher.Mono;
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
- * @see com.apex.scaffold.officeservice.interfaces.filter.LocaleWebFilter
- * @see com.apex.scaffold.officeservice.interfaces.config.I18nConfig
  */
 @Component
 public class MessageUtils {
@@ -62,7 +60,7 @@ public class MessageUtils {
     /**
      * 构造方法，注入 MessageSource
      *
-     * @param messageSource Spring MessageSource，由 {@link com.apex.scaffold.officeservice.interfaces.config.I18nConfig} 创建
+     * @param messageSource Spring MessageSource，由 i18n 配置类创建
      */
     public MessageUtils(MessageSource messageSource) {
         this.messageSource = messageSource;
@@ -73,7 +71,7 @@ public class MessageUtils {
      *
      * <p>
      * 通过 {@link Mono#deferContextual} 从当前响应式链路的 Reactor Context 中
-     * 读取由 {@link com.apex.scaffold.officeservice.interfaces.filter.LocaleWebFilter} 写入的 Locale，
+     * 读取由 Locale 过滤器写入的 Locale，
      * 然后调用 {@link MessageSource#getMessage(String, Object[], String, Locale)} 获取消息。
      * 如果 Context 中不存在 Locale，则使用简体中文作为默认值。
      * </p>
@@ -112,7 +110,7 @@ public class MessageUtils {
      *
      * <p>
      * 适用于非响应式上下文（如过滤器、Security 配置等无法使用 Reactor Context 的场景）。
-     * 调用方需要自行获取 Locale（通常从 {@link com.apex.scaffold.officeservice.interfaces.filter.LocaleWebFilter}
+     * 调用方需要自行获取 Locale（通常从 Locale 过滤器
      * 写入的 Context 中读取）。
      * </p>
      *

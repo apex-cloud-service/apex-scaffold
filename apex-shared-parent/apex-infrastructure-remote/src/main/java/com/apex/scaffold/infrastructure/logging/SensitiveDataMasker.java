@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * </ul>
  *
  * <h2>设计说明</h2>
- * <p>使用正则表达式预编译和多模式并行匹配，单次脱敏耗时 < 1ms。
+ * <p>使用正则表达式预编译和多模式并行匹配，单次脱敏耗时 {@code < 1ms}。
  *
  * <h2>使用示例</h2>
  * <pre>{@code
@@ -68,7 +68,7 @@ public class SensitiveDataMasker {
             Pattern.CASE_INSENSITIVE);
 
     /**
-     * URL 参数格式敏感字段正则（匹配：password=value 或 password=value&）
+     * URL 参数格式敏感字段正则（匹配：{@code password=value} 或 {@code password=value&}）
      */
     private static final Pattern URL_PATTERN = Pattern.compile(
             "((?:password|pwd|passwd|secret|idCard|idNo|identityCard|mobile|phone|cellphone|"

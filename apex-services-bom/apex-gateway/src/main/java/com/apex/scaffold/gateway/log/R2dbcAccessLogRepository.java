@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * 基于 R2DBC 的访问日志仓储实现.
  *
  * <p>将 {@link AccessLogRecord} 异步写入独立库 {@code apex_gateway.sys_gateway_access_log}，
- * 由 {@link AccessLogConfig} 注册，复用 Spring Boot 依据 {@code spring.r2dbc.*}
+ * 由 {@link com.apex.scaffold.gateway.config.AccessLogConfig} 注册，复用 Spring Boot 依据 {@code spring.r2dbc.*}
  * 自动配置的 {@link DatabaseClient}（非阻塞响应式）。表结构见迁移 V60。
  *
  * <p><b>主键</b>：调用方组装时可为 {@code null}，本实现落库前用

@@ -387,7 +387,7 @@ public class ResourcePermissionService {
     /**
      * 检查组织层级权限。
      *
-     * <p>当前实现默认拒绝。{@link PermissionContext#getOrganizationRoles()} 只是调用方
+     * <p>当前实现默认拒绝。{@code PermissionContext#organizationRoles} 只是调用方
      * 传入的声明，不能单独作为授权依据；未来必须接入可靠的 {@code OrganizationPermissionPort}，
      * 校验租户、用户组织归属、资源所属组织单元与角色在该单元内的权限快照后，才可返回放行。</p>
      *

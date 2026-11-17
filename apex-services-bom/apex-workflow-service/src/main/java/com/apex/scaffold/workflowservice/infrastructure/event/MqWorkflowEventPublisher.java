@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  *       避免占用 Netty 事件循环。</li>
  * </ul>
  *
- * <p>本实现由 {@link WorkflowEventConfig} 在 {@code apex.events.outbox.enabled=true} 且
+ * <p>本实现由 {@link com.apex.scaffold.workflowservice.config.WorkflowEventConfig} 在 {@code apex.events.outbox.enabled=true} 且
  * 存在 {@link RocketMQTemplate} Bean 时装配；basic/H2 环境改由
  * {@link LocalWorkflowEventPublisher} 兜底。</p>
  *

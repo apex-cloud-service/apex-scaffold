@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  * 文件域内部端点 Handler（方案 D5 只读统计）。
  *
  * <p>承载 {@code GET /internal/v1/file/stats}：返回租户已用存储字节数，
- * 契约固定为 {@code Result<{ "storageUsageBytes": N }>，供 system 聚合门面
+ * 契约固定为 {@code data} 含 {@code storageUsageBytes} 字段的 JSON 对象，供 system 聚合门面
  * （{@code GET /internal/v1/overview}）消费，字段名勿改。
  *
  * <p>信任模型：{@code /internal/v1/**} 在文件服务为放行路径（集群内服务直连，

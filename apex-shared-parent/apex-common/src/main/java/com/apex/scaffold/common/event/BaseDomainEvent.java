@@ -173,7 +173,7 @@ public abstract class BaseDomainEvent {
     /**
      * 把发布时的租户上下文注入事件对象。
      *
-     * <p>应仅由发布器在发布前调用一次；监听器通过 {@link #getTenantId()}
+     * <p>应仅由发布器在发布前调用一次；监听器通过 {@code getTenantId()}
      * 读取，避免跨线程监听器访问 {@code TenantContext ThreadLocal}。</p>
      *
      * @param tenantId 当前发布请求的租户 ID（可 {@code null} 表示无租户）

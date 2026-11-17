@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * <h2>设计说明</h2>
- * <p>建议与 {@link CircuitBreakerService} 配合使用：
+ * <p>建议与 {@code CircuitBreakerService}（位于 {@code apex-infrastructure-remote}）配合使用：
  * <pre>{@code
  * bulkheadService.execute("third-party-api", () ->
  *     circuitBreakerService.execute("third-party-api", () ->
@@ -48,7 +48,6 @@ import reactor.core.publisher.Mono;
  * @author Apex Team
  * @version 1.3.0
  * @since 1.3.0
- * @see CircuitBreakerService
  * @see BulkheadProperties
  */
 @Slf4j

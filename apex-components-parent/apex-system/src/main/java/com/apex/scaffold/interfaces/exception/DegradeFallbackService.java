@@ -35,10 +35,10 @@ import reactor.core.publisher.Mono;
  * <h2>设计说明</h2>
  * <ul>
  *   <li><strong>Redis 写入节流</strong>：同一资源在
- *       {@link DegradeSnapshotProperties#getRedisThrottleSeconds()} 窗口内最多写一次 Redis，
+ *       {@code redisThrottleSeconds} 窗口内最多写一次 Redis，
  *       本地缓存不受节流限制（始终更新，保证最新数据）；</li>
  *   <li><strong>本地缓存容量上限</strong>：超过
- *       {@link DegradeSnapshotProperties#getLocalMaxEntries()} 时淘汰最旧条目，防止内存积攒；</li>
+ *       {@code localMaxEntries} 时淘汰最旧条目，防止内存积攒；</li>
  *   <li><strong>惰性过期</strong>：读取本地缓存时校验 TTL，过期条目即时清理。</li>
  * </ul>
  *
@@ -106,7 +106,7 @@ public class DegradeFallbackService {
      * 保存资源响应快照到本地缓存（节流后异步写 Redis）。
      *
      * <p>在正常请求成功后调用，为后续可能的降级场景准备兜底数据。
-     * 保存失败不影响主流程。受 {@link DegradeSnapshotProperties#isEnabled()} 控制，
+     * 保存失败不影响主流程。受 {@code enabled} 开关控制，
      * 关闭时直接返回。</p>
      *
      * @param resource 资源名称（Sentinel resource 名称）
@@ -213,7 +213,7 @@ public class DegradeFallbackService {
     /**
      * 按节流窗口异步写 Redis 快照。
      *
-     * <p>同一资源在 {@link DegradeSnapshotProperties#getRedisThrottleSeconds()} 秒窗口内
+     * <p>同一资源在 {@code redisThrottleSeconds} 秒窗口内
      * 仅发起一次写入；窗口内再次保存只更新本地缓存。写入失败仅记日志，不影响主流程。</p>
      *
      * @param key      快照 key

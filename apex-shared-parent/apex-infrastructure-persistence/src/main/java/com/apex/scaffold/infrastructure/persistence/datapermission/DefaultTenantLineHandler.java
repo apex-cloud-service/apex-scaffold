@@ -37,7 +37,6 @@ import net.sf.jsqlparser.expression.StringValue;
  * @version 1.2.0
  * @since 1.2.0
  * @see TenantContext
- * @see com.apex.scaffold.interfaces.aspect.TenantAspect
  */
 @Slf4j
 public class DefaultTenantLineHandler implements TenantLineHandler {

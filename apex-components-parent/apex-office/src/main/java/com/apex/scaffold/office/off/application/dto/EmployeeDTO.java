@@ -75,8 +75,7 @@ import lombok.NoArgsConstructor;
  * @author Apex Team
  * @version 1.2.0
  * @since 1.2.0
- * @see com.apex.scaffold.application.dto.DepartmentDTO
- * @see com.apex.scaffold.application.dto.UserDTO
+ * @see com.apex.scaffold.office.off.application.dto.DepartmentDTO
  */
 @Data
 @Builder

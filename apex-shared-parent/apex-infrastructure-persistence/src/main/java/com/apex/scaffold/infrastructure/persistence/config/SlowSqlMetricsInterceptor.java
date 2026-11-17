@@ -33,7 +33,7 @@ import org.apache.ibatis.session.RowBounds;
  *   <li>{@code apex.sql.slow.max.ms}：历史最慢 SQL 耗时 Gauge（毫秒）</li>
  * </ul>
  *
- * <p>超过 {@link SlowSqlProperties#getThresholdMs()} 阈值时，除指标外还会以 WARN 级别
+ * <p>超过 {@code SlowSqlProperties#getThresholdMs()} 阈值时，除指标外还会以 WARN 级别
  * 输出截断后的 SQL 文本与耗时（慢 SQL 日志）。计时开销为纳秒级，不影响业务性能。</p>
  *
  * @author Apex Team

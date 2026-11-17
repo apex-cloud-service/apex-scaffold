@@ -15,7 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <h2>设计说明</h2>
  * <ul>
  *   <li><b>总开关默认开启</b>：{@code enabled} 默认 {@code true}，关闭时快照保存整体跳过；</li>
- *   <li><b>白名单默认空列表</b>：{@link #getResources()} 默认为空，表示默认不接入任何接口，
+ *   <li><b>白名单默认空列表</b>：{@code resources} 默认为空，表示默认不接入任何接口，
  *       保证对现有功能零影响；接入需在部署环境显式声明资源名（如 {@code /api/v1/rankings/rules}）；</li>
  *   <li><b>写放大控制</b>：同一资源在 {@code redisThrottleSeconds} 窗口内最多写一次 Redis，
  *       本地缓存不受节流限制（始终更新，保证最新数据）。</li>

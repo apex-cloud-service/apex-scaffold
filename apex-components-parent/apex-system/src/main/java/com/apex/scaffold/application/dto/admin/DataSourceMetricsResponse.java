@@ -76,7 +76,7 @@ public class DataSourceMetricsResponse {
      * <br>
      * <b>健康指标</b>:
      * <ul>
-     *   <li>< 60%: 正常，连接池资源充足</li>
+     *   <li>{@code < 60%}: 正常，连接池资源充足</li>
      *   <li>60% - 80%: 注意，连接池使用率较高</li>
      *   <li>80% - 90%: 告警，连接池接近饱和</li>
      *   <li>> 90%: 严重，连接池即将耗尽</li>
@@ -97,7 +97,7 @@ public class DataSourceMetricsResponse {
      * <b>健康指标</b>:
      * <ul>
      *   <li>> minIdle: 正常，有足够的预热连接</li>
-     *   <li>< minIdle: 注意，空闲连接不足</li>
+     *   <li>{@code < minIdle}: 注意，空闲连接不足</li>
      *   <li>= 0: 告警，无空闲连接，新请求需等待</li>
      * </ul>
      */
@@ -129,7 +129,7 @@ public class DataSourceMetricsResponse {
      * <br>
      * <b>性能参考</b>:
      * <ul>
-     *   <li>< 10ms: 优秀，连接池性能良好</li>
+     *   <li>{@code < 10ms}: 优秀，连接池性能良好</li>
      *   <li>10-50ms: 良好，正常的性能水平</li>
      *   <li>50-100ms: 注意，性能开始下降</li>
      *   <li>100-500ms: 告警，性能明显下降</li>
@@ -147,7 +147,7 @@ public class DataSourceMetricsResponse {
      * <br>
      * <b>性能参考</b>:
      * <ul>
-     *   <li>< 50ms: 优秀，查询响应快</li>
+     *   <li>{@code < 50ms}: 优秀，查询响应快</li>
      *   <li>50-200ms: 良好，正常的查询时间</li>
      *   <li>200-500ms: 注意，查询较慢，可优化</li>
      *   <li>500-1000ms: 告警，查询很慢，需优化</li>
@@ -165,7 +165,7 @@ public class DataSourceMetricsResponse {
      * <br>
      * <b>健康指标</b>:
      * <ul>
-     *   <li>< 1000ms: 正常</li>
+     *   <li>{@code < 1000ms}: 正常</li>
      *   <li>1000-5000ms: 注意，部分请求等待较久</li>
      *   <li>5000-30000ms: 告警，接近超时阈值</li>
      *   <li>> 30000ms: 严重，已触发超时异常</li>
@@ -199,7 +199,7 @@ public class DataSourceMetricsResponse {
      * <b>健康指标</b>:
      * <ul>
      *   <li>= 0: 优秀，无连接失败</li>
-     *   <li>< 1%: 正常，偶尔失败可接受</li>
+     *   <li>{@code < 1%}: 正常，偶尔失败可接受</li>
      *   <li>1-5%: 注意，失败率偏高</li>
      *   <li>> 5%: 告警，失败率过高，需排查数据库或网络问题</li>
      * </ul>

@@ -92,7 +92,7 @@ public class WeWorkService {
      * </ul>
      *
      * @return 企业微信AccessToken字符串
-     * @throws WeChatApiException 当API返回错误时抛出
+     * @throws com.apex.scaffold.infrastructure.wechat.exception.WeChatApiException 当 API 返回错误时抛出
      */
     public Mono<String> getAccessToken() {
         log.info("获取企业微信AccessToken");

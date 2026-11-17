@@ -148,7 +148,7 @@ public class SysSecurityPolicyEntity extends BaseEntity {
     /**
      * 密码是否必须包含特殊字符。
      *
-     * <p>启用后密码必须至少包含一个特殊字符（如 !@#$%^&*）。
+     * <p>启用后密码必须至少包含一个特殊字符（如 {@code !@#$%^&*}）。
      *
      * <p>取值：
      * <ul>

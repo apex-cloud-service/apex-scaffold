@@ -121,7 +121,7 @@ public class AuthHandler extends BaseHandler {
      *
      * <p>
      * 处理微信 APP 登录请求，通过微信开放平台授权码换取登录态，返回 JWT Token 和用户信息。
-     * 登录方式由 {@link LoginRequest#getLoginType()} 动态决定，支持验证码登录、一键登录和短信验证码登录。
+     * 登录方式由 {@code LoginRequest#getLoginType()} 动态决定，支持验证码登录、一键登录和短信验证码登录。
      *
      * <p><strong>登录方式</strong></p>
      * <ul>

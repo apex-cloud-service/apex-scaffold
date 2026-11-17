@@ -242,18 +242,24 @@ public class ExampleUserService {
                 .build();
     }
 
+    /** 手机号参与脱敏判定的最小长度（短于该长度原样返回）。 */
+    private static final int MIN_PHONE_LENGTH = 7;
+
+    /** 脱敏后保留的手机号前缀位数。 */
+    private static final int PHONE_PREFIX_LENGTH = 3;
+
+    /** 脱敏后保留的手机号后缀位数。 */
+    private static final int PHONE_SUFFIX_LENGTH = 4;
+
+    /** 脱敏占位符。 */
+    private static final String PHONE_MASK = "****";
+
     /**
-     * 手机号脱敏展示（138****8000）
+     * 手机号脱敏展示（138****8000）。
      *
      * @param phone 原始手机号
      * @return 脱敏后的手机号
      */
-    private static final int MIN_PHONE_LENGTH = 7;
-
-    private static final int PHONE_PREFIX_LENGTH = 3;
-    private static final int PHONE_SUFFIX_LENGTH = 4;
-    private static final String PHONE_MASK = "****";
-
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < MIN_PHONE_LENGTH) {
             return phone;

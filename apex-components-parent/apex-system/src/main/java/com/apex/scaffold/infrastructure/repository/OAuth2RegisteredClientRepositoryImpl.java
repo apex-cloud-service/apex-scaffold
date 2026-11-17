@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
  * OAuth2注册客户端仓储实现
  *
  * <p>负责OAuth2客户端的数据访问，采用响应式编程模型。
- * 数据库I/O操作调度到{@link BlockingIoSchedulers#single()}线程池。
+ * 数据库I/O操作调度到{@link BlockingIoSchedulers#jdbc()}线程池。
  *
  * @author Apex Team
  * @version 2.0.0

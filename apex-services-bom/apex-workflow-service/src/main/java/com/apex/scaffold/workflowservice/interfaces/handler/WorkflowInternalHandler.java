@@ -32,7 +32,7 @@ import reactor.core.publisher.Mono;
  * 工作流域内部端点 Handler（方案 D5 只读统计）。
  *
  * <p>承载 {@code GET /internal/v1/workflow/stats}：返回当前租户进行中流程实例数，
- * 契约固定为 {@code Result<{ "inProgressInstances": N }>，供 system 聚合门面
+ * 契约固定为 {@code data} 含 {@code inProgressInstances} 字段的 JSON 对象，供 system 聚合门面
  * （{@code GET /internal/v1/overview}）消费，字段名勿改。
  *
  * <p>租户口径：该路径在安全配置中要求已认证，租户取自验签 JWT 建立的可信

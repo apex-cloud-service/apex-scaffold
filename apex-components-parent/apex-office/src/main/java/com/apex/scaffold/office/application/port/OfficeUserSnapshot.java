@@ -18,10 +18,10 @@ import lombok.Getter;
  *
  * <h2>设计说明</h2>
  * <ul>
- *   <li>{@link #isEnabled()}：对应系统用户 {@code status == ENABLED(1)}</li>
- *   <li>{@link #getDeleted()}：逻辑删除标记（0-未删除，1-已删除）</li>
- *   <li>{@link #getTenantId()}：用户所属租户，用于跨租户校验</li>
- *   <li>{@link #getOpenId()}：办公平台 OpenID，作为办公登录的 JWT subject</li>
+ *   <li>{@code isEnabled()}：对应系统用户 {@code status == ENABLED(1)}</li>
+ *   <li>{@code getDeleted()}：逻辑删除标记（0-未删除，1-已删除）</li>
+ *   <li>{@code getTenantId()}：用户所属租户，用于跨租户校验</li>
+ *   <li>{@code getOpenId()}：办公平台 OpenID，作为办公登录的 JWT subject</li>
  * </ul>
  *
  * @see OfficeUserQueryPort

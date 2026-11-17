@@ -57,8 +57,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Apex Team
  * @version 1.3.2
  * @since 1.3.2
- * @see org.redisson.config.Config
- * @see com.apex.scaffold.infrastructure.cache.config.RedissonConfig
  */
 @Data
 @ConfigurationProperties(prefix = "apex.redis")
@@ -78,7 +76,7 @@ public class RedissonProperties {
     /**
      * Redis 命令超时时间（毫秒）
      *
-     * <p>默认 3000ms（3 秒）。超过该时间未响应则抛出 {@link org.redisson.client.RedisTimeoutException}。
+     * <p>默认 3000ms（3 秒）。超过该时间未响应则抛出 {@code RedisTimeoutException}。
      *
      * <p><strong>注意</strong>：该超时不包括命令在 Redis 队列中的等待时间，仅计算命令执行时间。
      */

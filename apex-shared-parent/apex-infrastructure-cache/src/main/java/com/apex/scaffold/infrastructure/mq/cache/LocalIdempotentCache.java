@@ -37,7 +37,6 @@ import org.springframework.stereotype.Component;
  * @author Apex Team
  * @version 1.0.0
  * @since 1.0.0
- * @see com.apex.scaffold.infrastructure.mq.service.MqConsumerService
  */
 @Slf4j
 @Component

@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * <p>本接口定义系统管理数据（用户、角色、菜单、部门、字典、配置）的全文检索契约，
  * 隔离搜索引擎实现细节，Domain 层与 Application 层仅依赖本接口。
  *
- * <p><strong>设计理念（Hexagonal Architecture / Ports & Adapters）</strong></p>
+ * <p><strong>设计理念（Hexagonal Architecture / Ports &amp; Adapters）</strong></p>
  * <ul>
  *   <li><b>接口归属</b>：本接口属于 Domain 层，由 Infrastructure 层的适配器实现</li>
  *   <li><b>依赖方向</b>：Application 层 → Domain 层接口 ← Infrastructure 层适配器</li>
@@ -145,7 +145,7 @@ public interface SearchRepository {
      *
      * <p><strong>性能考量</strong></p>
      * <ul>
-     *   <li><b>响应时间目标</b>：P95 < 200ms（单次查询）</li>
+     *   <li><b>响应时间目标</b>：P95 {@code < 200ms}（单次查询）</li>
      *   <li><b>结果数量限制</b>：单页最多返回 100 条（前端限制，后端兜底）</li>
      *   <li><b>超时处理</b>：搜索引擎查询超时（默认 5 秒）时返回空结果，记录 WARN 日志</li>
      * </ul>

@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>经 system 内部端点 {@code GET /internal/v1/tenants/{code}/capabilities} 拉取租户
  * 能力订阅快照（{@code exists/unbounded/features}），本地短 TTL 缓存后交由共享的
- * {@link CapabilityGate} 判定——与网关能力门禁共用同一判定实现，保证两端口径一致。
+ * {@link com.apex.scaffold.common.capability.CapabilityGate} 判定——与网关能力门禁共用同一判定实现，保证两端口径一致。
  *
  * <p><b>fail-closed 口径</b>：租户编码缺失、租户不存在（{@code exists=false}）一律视为
  * 未订阅；内部端点不可达或响应不可解析时向上发出错误，由调用方决定降级出口

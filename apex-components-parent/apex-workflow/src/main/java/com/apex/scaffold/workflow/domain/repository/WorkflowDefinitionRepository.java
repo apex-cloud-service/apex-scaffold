@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
  * 编码查询，列表查询以及新增、更新、删除操作。该接口由基础设施层的
  * {@code WorkflowDefinitionRepositoryImpl} 提供 MyBatis-Plus 实现。</p>
  *
- * <p>仓储方法返回响应式类型（{@link Mono}/{@link Flux}），由调用方决定是否调度到
+ * <p>仓储方法返回响应式类型（{@link Mono}/{@link reactor.core.publisher.Flux}），由调用方决定是否调度到
  * 阻塞 I/O 线程池执行。</p>
  *
  * @author Apex Team

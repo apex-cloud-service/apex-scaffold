@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
  * <h2>设计说明</h2>
  * <ul>
  *   <li>仅保存 GET/HEAD/OPTIONS 等只读方法的响应，写接口降级走"排队中"，无需快照；</li>
- *   <li>仅保存白名单（{@link DegradeSnapshotProperties#getResources()}）内的归一化资源，
+ *   <li>仅保存白名单（{@code resources}）内的归一化资源，
  *       默认空列表 = 不接入任何接口，对现有功能零影响；</li>
  *   <li>禁止接入个人化接口（用户专属对局/资料等）：快照 key 仅资源路径维度，
  *       跨用户复用快照会导致数据错配与业务归属校验失败。</li>

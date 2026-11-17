@@ -55,7 +55,7 @@ public enum SsoSessionStatus {
      * <p>特征：
      * <ul>
      *   <li>用户已通过 SSO 认证成功</li>
-     *   <li>会话尚未过期（当前时间 < expire_time）</li>
+     *   <li>会话尚未过期（{@code 当前时间 < expire_time}）</li>
      *   <li>用户未主动登出</li>
      *   <li>会话未被管理员强制终止</li>
      * </ul>

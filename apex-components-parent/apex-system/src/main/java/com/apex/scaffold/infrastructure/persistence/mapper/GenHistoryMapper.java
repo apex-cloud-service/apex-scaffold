@@ -64,7 +64,7 @@ import org.apache.ibatis.annotations.Mapper;
  * @version 1.0.0
  * @since 1.0.0
  * @see GenHistoryPO
- * @see GenConfigPO
+ * @see com.apex.scaffold.infrastructure.persistence.po.GenConfigPO
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper
  */
 @Mapper

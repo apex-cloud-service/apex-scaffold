@@ -37,7 +37,7 @@ import reactor.core.publisher.Mono;
  * office 域内部端点 Handler（方案 D4 能力计量 / D5 只读统计）.
  *
  * <p>承载 {@code GET /internal/v1/office/messages/stats}：返回租户站内信总量，
- * 契约固定为 {@code Result<{ "messageCount": N }>，供 system 能力计量
+ * 契约固定为 {@code data} 含 {@code messageCount} 字段的 JSON 对象，供 system 能力计量
  * （{@code /api/v2/capability-usage} 消息量维度）与聚合门面消费，字段名勿改。
  *
  * <p>信任模型：{@code /internal/v1/**} 在 office 服务为放行路径（集群内服务直连，

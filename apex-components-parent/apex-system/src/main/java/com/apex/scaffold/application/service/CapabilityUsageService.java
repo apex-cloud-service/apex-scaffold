@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
  * 能力调用用量查询服务（方案 D4 计量，只读）。
  *
  * <p>基于既有操作审计日志按 租户 × 能力 输出接口调用次数：
- * 能力编码经 {@link CapabilityUsageProperties#getMappings() 映射} 解析为
+ * 能力编码经 {@code CapabilityUsageProperties#getMappings()} 映射解析为
  * 请求 URI 前缀清单，聚合结果做内存分页（租户维度行数有限）。
  *
  * <h2>设计说明</h2>

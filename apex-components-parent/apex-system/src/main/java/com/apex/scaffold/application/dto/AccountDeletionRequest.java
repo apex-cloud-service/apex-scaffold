@@ -39,7 +39,6 @@ import lombok.NoArgsConstructor;
  * @author Apex Team
  * @version 1.2.0
  * @since 1.0.0
- * @see com.apex.scaffold.application.service.UserService#deleteAccount
  */
 @Data
 @Builder

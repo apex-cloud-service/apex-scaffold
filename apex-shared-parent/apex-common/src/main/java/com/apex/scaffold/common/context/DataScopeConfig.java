@@ -10,7 +10,7 @@ import com.apex.scaffold.common.annotation.DataScope;
  * <ul>
  *   <li>{@code deptAlias}：部门字段所在表的别名（多表 JOIN 场景必填，避免列歧义）；
  *       为空时按主表裸列名注入（MyBatis-Plus 自动生成的无别名 SQL 适用）；</li>
- *   <li>{@code userAlias}：用户字段所在表的别名（{@link DataScopeType#SELF} 类型使用）；</li>
+ *   <li>{@code userAlias}：用户字段所在表的别名（{@link com.apex.scaffold.common.enums.DataScopeType#SELF} 类型使用）；</li>
  *   <li>{@code deptField}：部门字段名，默认 {@code dept_id}；</li>
  *   <li>{@code userField}：用户字段名，默认 {@code user_id}。</li>
  * </ul>

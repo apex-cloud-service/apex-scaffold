@@ -63,7 +63,7 @@ public class DictDataEntity extends BaseEntity {
     /**
      * 所属字典类型编码。
      *
-     * <p>关联 {@link DictTypeEntity#getDictType()}，例如 {@code sys_user_sex}。</p>
+     * <p>关联 {@code DictTypeEntity#getDictType()}，例如 {@code sys_user_sex}。</p>
      */
     private String dictType;
 

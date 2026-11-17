@@ -342,7 +342,7 @@ public class UserRepositoryImpl implements UserRepository {
      * 适用于统计分析、批处理等需要全量数据的场景。</p>
      *
      * <p><strong>性能提示</strong></p>
-     * <p>当用户数量较大时，建议使用 {@link #findPage(Integer, Integer)} 分页查询，
+     * <p>当用户数量较大时，建议使用 {@link #findPage(Integer, Integer, String, Boolean)} 分页查询，
      * 避免一次性加载全量数据造成内存压力。</p>
      *
      * @return 所有用户实体的 Flux 流

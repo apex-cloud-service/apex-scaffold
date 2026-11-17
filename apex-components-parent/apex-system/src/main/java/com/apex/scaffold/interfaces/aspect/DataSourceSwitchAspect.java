@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
  *       （注册表不存在时静默跳过）。</li>
  * </ol>
  *
- * <p><b>执行顺序</b>：{@link Order#HIGHEST_PRECEDENCE} 保证先于事务切面执行，
+ * <p><b>执行顺序</b>：{@link Ordered#HIGHEST_PRECEDENCE} 保证先于事务切面执行，
  * 使连接从正确的数据源获取。</p>
  *
  * <p><b>响应式线程模型</b>：切换基于线程上下文，要求查询与切换同线程执行；

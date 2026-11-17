@@ -205,7 +205,7 @@ public class CircuitBreakerService implements CircuitBreakerPort {
     /**
      * 创建默认断路器配置。
      *
-     * <p>参数来源于 {@link CircuitBreakerProperties#getDefaultConfig()}，
+     * <p>参数来源于 {@code CircuitBreakerProperties#getDefaultConfig()}，
      * 未显式配置时回退到代码中的合理默认值。
      *
      * <ul>
@@ -230,7 +230,7 @@ public class CircuitBreakerService implements CircuitBreakerPort {
     /**
      * 创建严格模式断路器配置。
      *
-     * <p>参数来源于 {@link CircuitBreakerProperties#getStrict()}。
+     * <p>参数来源于 {@code CircuitBreakerProperties#getStrict()}。
      *
      * @return 严格模式配置
      */
@@ -249,7 +249,7 @@ public class CircuitBreakerService implements CircuitBreakerPort {
     /**
      * 创建宽松模式断路器配置。
      *
-     * <p>参数来源于 {@link CircuitBreakerProperties#getLenient()}。
+     * <p>参数来源于 {@code CircuitBreakerProperties#getLenient()}。
      *
      * @return 宽松模式配置
      */

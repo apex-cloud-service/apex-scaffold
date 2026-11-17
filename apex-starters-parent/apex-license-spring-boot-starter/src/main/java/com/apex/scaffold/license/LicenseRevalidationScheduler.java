@@ -36,7 +36,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * </ul>
  *
  * <p><strong>线程安全</strong></p>
- * <p>调度器使用单线程{@link ScheduledExecutorService},守护线程命名为{@code apex-license-recheck}。
+ * <p>调度器使用单线程{@link java.util.concurrent.ScheduledExecutorService},守护线程命名为{@code apex-license-recheck}。
  * 应用关闭时,通过{@link #close()}方法调用{@code shutdownNow()}立即终止调度线程。</p>
  *
  * <p><strong>配置说明</strong></p>

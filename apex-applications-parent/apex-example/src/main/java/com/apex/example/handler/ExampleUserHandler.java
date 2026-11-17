@@ -187,7 +187,7 @@ public class ExampleUserHandler extends BaseHandler {
      *
      * <p>{@code @FeatureGate}示例接口: 该接口需要License中授权了
      * {@code premium_report}功能才能访问(标准版/企业版)。
-     * 未授权时由{@link com.apex.scaffold.common.license.FeatureGateAspect}
+     * 未授权时由{@link com.apex.scaffold.license.FeatureGateAspect}
      * 返回权限不足的错误响应。
      *
      * @param request HTTP请求

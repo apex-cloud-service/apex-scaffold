@@ -113,7 +113,7 @@ public class DataSourceRequest {
      * <p>完整的 JDBC 连接字符串，包含主机、端口、数据库名称和连接参数。
      * 示例：
      * <ul>
-     *   <li>MySQL: jdbc:mysql://localhost:3306/apex?useSSL=false&serverTimezone=Asia/Shanghai</li>
+     *   <li>MySQL: {@code jdbc:mysql://localhost:3306/apex?useSSL=false&serverTimezone=Asia/Shanghai}</li>
      *   <li>PostgreSQL: jdbc:postgresql://localhost:5432/apex?currentSchema=public</li>
      * </ul>
      */

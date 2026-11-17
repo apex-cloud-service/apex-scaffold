@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
  * <ul>
  *   <li>{@link #syncUserFromKeycloak} - 从 Keycloak 同步单个用户</li>
  *   <li>{@link #syncAllUsers} - 从 Keycloak 批量同步所有用户</li>
- *   <li>{@link #createUserInKeycloak} - 在 Keycloak 中创建新用户（预留）</li>
+ *   <li>{@code createUserInKeycloak} - 在 Keycloak 中创建新用户（预留）</li>
  * </ul>
  *
  * <h2>设计说明</h2>

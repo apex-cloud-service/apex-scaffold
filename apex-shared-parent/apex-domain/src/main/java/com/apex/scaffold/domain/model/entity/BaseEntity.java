@@ -114,8 +114,6 @@ public abstract class BaseEntity implements Serializable {
      * </ul>
      *
      * <p>领域行为不应直接修改该字段，否则可能跳过并发冲突检测或制造无效冲突。
-     *
-     * @see #setLockVersion(Integer)
      */
     protected Integer lockVersion;
 

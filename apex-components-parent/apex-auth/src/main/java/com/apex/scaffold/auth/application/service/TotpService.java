@@ -354,7 +354,7 @@ public class TotpService {
     /**
      * 构建 OTP Auth URL
      *
-     * <p>格式: otpauth://totp/Issuer:accountName?secret=SECRET&issuer=Issuer&algorithm=SHA1&digits=6&period=30
+     * <p>格式: {@code otpauth://totp/Issuer:accountName?secret=SECRET&issuer=Issuer&algorithm=SHA1&digits=6&period=30}
      *
      * @param issuer      发行方
      * @param accountName 账户名

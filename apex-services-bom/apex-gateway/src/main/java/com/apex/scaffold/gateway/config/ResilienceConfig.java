@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>本配置的职责：
  * <ul>
- *   <li>{@link #circuitBreakerOverrides()}：将 {@code apex.gateway.circuit-breaker.instances.*}
+ *   <li>{@link #circuitBreakerOverrides(CircuitBreakerProperties)}：将 {@code apex.gateway.circuit-breaker.instances.*}
  *       的可覆盖参数落到命名实例（Nacos 热更新后重新绑定属性即可生效）。</li>
  *   <li>{@link #circuitBreakerEventConsumer(MeterRegistry)}：订阅状态迁移与「拒绝放行」事件，
  *       输出 WARN/INFO 日志并累计 Micrometer 计数指标，供 Prometheus 抓取与告警。</li>

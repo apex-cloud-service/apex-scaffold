@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>网关经 system 内部端点 {@code GET /internal/v1/open-apps/{clientId}/rate-limit-tier}
  * 拉取开放应用注册时声明的限流档编码并做短 TTL 缓存；档位 → 阈值的数值映射见
- * {@link GatewayRateLimitProperties#getOpenApiTiers()}。
+ * {@code GatewayRateLimitProperties#getOpenApiTiers()}。
  *
  * @author Apex Team
  * @version 1.3.2
