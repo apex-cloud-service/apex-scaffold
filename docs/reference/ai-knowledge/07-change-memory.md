@@ -93,6 +93,8 @@
 
 | 47 | 2026-11-17 | 台账 | **BE-036 收口**：真实环境验证租户隔离（租户1 仅见自身记录、跨租户 processInstanceId 查询返回「审批流程不存在」）；环境完全重建后经网关 18 条真实接口 18/18 通过；任务卡 BE-036 置「已完成」 | 未提交 | `:apex-office` 189、`:apex-office-service` 406 用例 0 失败 BUILD SUCCESS；18/18 实测；spotless 通过 | 仅记录与任务状态；日历客户端缺口（无 `*CalendarClient` 实现）已列入前端记录 §7.2 需另立任务 |
 
+| 48 | 2026-11-17 | 代码 | **BE-037 三平台日历客户端**：新增 `feishuCalendarClient`/`dingtalkCalendarClient`/`wecomCalendarClient`，实现 `CalendarPort` 的创建/取消/删除/范围查询/平台标识；`AbstractOfficeApiSupport` 补 `getJsonWithHeadersAndParams`、`postJsonWithHeaders` 两个带鉴权与查询参数的方法。设计约束：飞书/钉钉事件接口需父日历标识而本系统不保存，统一用组织者主日历（`organizerId` 承担）；`getEventDetail`/`updateEvent` 端口签名缺组织者，显式拒绝不猜归属；会议室可用性三平台均显式拒绝。未配凭据时发请求前 fail-closed | 未提交 | `:apex-office` 195 用例（新增 6 条日历客户端契约测试）0 失败 BUILD SUCCESS；spotless apply/check 双通过；真实网关 `POST /api/office/calendar/events` 三平台分别返回「飞书 appId未配置 / 钉钉 appKey未配置 / 企业微信 corpid未配置」，**不再是「不支持的办公平台」**，证明 Bean 查找与凭据校验链路已通 | 新增 3 个客户端类 + 基类 2 方法 + 1 个测试类 + API 路由文档标注；未改端口签名、未改前端、未部署 |
+
 
 
 > **表列与 §1「必填字段」一一对应**：`日期` · `类型` · `摘要` · `提交` · `证据` · `影响面`（`#` 仅序号，不计入字段）。2026-11-16 分列重排：`摘要`/`证据` 原文一字未改，`影响面` 按当次改动范围回填。

@@ -156,6 +156,16 @@
 | GET | `/api/office/calendar/events/my` | `OfficeCalendarRouter` | `OfficeCalendarHandler.getMyCalendarEvents` | 查询我的日历事件 |
 | GET | `/api/office/calendar/events/upcoming` | `OfficeCalendarRouter` | `OfficeCalendarHandler.getUpcomingEvents` | 查询即将到来的事件 |
 
+#### 日历写接口的平台适配（BE-037）
+
+`createCalendarEvent`/`deleteCalendarEvent` 经 `OfficeCalendarService#getCalendarClient(platform)` 按 Bean 名 `<platform>CalendarClient` 选择实现，平台标识必须是**小写**（`feishu`/`dingtalk`/`wecom`），大写会返回「不支持的办公平台」。
+
+已实现三个客户端：`feishuCalendarClient`、`dingtalkCalendarClient`、`wecomCalendarClient`。三者均以**组织者主日历**作为父资源（飞书/钉钉日历接口的事件读写需日历标识，本系统事件模型不保存该标识，故用主日历替代），所以 `organizerId` 在飞书/钉钉下承担「日历ID」语义，需传平台侧用户标识（open_id/unionId）。
+
+端口 `CalendarPort` 的 `getEventDetail`/`updateEvent` 只接收 `platformEventId`，无法定位父日历，故飞书/钉钉下这两个操作返回明确业务异常而非猜测归属；企业微信的 `getEventDetail`/`updateEvent` 同理需要组织者。
+
+未配置平台凭据（`appId`/`appKey`/`corpid` 或对应密钥环境变量）时在发请求前 fail-closed，返回「xx 未配置」，不会静默降级。会议室可用性查询三平台均未实现（需建筑/楼层层级或独立预订权限），同样显式报错。
+
 ### 2.6 办公消息、组织和文档
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
