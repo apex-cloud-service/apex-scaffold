@@ -91,6 +91,8 @@
 
 | 46 | 2026-11-17 | 文档 | **11-17 快照与日报收口**：`MEMORY-CARD.md`、`01-project-map.md`、`02-apex-scaffold-current-state.md`、`06-delivery-status-and-next.md` 采集口径更新到 2026-11-17；新增 `08-project-management/periodic-reports/daily/2026-11-17-all-projects-daily-report.md` 并在 daily README 登记，其中风险段落已按实际提交状态更正（两仓已提交并同步三支，日历写操作仍缺 `*CalendarClient` 实现） | 未提交 | `verify-docs.sh` 通过；日报风险描述与实际 git 状态一致（后端 `102fa274`） | 仅文档快照与日报，不改代码/契约 |
 
+| 47 | 2026-11-17 | 台账 | **BE-036 收口**：真实环境验证租户隔离（租户1 仅见自身记录、跨租户 processInstanceId 查询返回「审批流程不存在」）；环境完全重建后经网关 18 条真实接口 18/18 通过；任务卡 BE-036 置「已完成」 | 未提交 | `:apex-office` 189、`:apex-office-service` 406 用例 0 失败 BUILD SUCCESS；18/18 实测；spotless 通过 | 仅记录与任务状态；日历客户端缺口（无 `*CalendarClient` 实现）已列入前端记录 §7.2 需另立任务 |
+
 
 
 > **表列与 §1「必填字段」一一对应**：`日期` · `类型` · `摘要` · `提交` · `证据` · `影响面`（`#` 仅序号，不计入字段）。2026-11-16 分列重排：`摘要`/`证据` 原文一字未改，`影响面` 按当次改动范围回填。
