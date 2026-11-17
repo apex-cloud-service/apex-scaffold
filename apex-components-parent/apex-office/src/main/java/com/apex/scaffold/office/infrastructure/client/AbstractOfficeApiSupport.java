@@ -22,16 +22,27 @@ public abstract class AbstractOfficeApiSupport {
     protected final WebClient webClient;
     protected final OfficePlatformProperties.Platform properties;
 
-    /** 构造 API 调用支持类并初始化超时、WebClient 与平台配置。 */
+    /**
+     * 构造 API 调用支持类并初始化超时、WebClient 与平台配置。
+     *
+     * <p>基址优先取 {@code apex.office.platforms[<platform>].base-url}（本地联调或私有化网关），
+     * 未配置时回落到各客户端内置的官方地址，生产默认行为不变。
+     */
     protected AbstractOfficeApiSupport(
             WebClient.Builder builder,
             OfficePlatformProperties platformProperties,
             com.apex.scaffold.office.domain.OfficePlatform platform,
-            String baseUrl) {
+            String defaultBaseUrl) {
         this.timeout = platformProperties.getTimeout();
-        this.webClient = builder.baseUrl(baseUrl).build();
-        this.properties =
+        OfficePlatformProperties.Platform configured =
                 platformProperties.getPlatforms().getOrDefault(platform, new OfficePlatformProperties.Platform());
+        String effectiveBaseUrl = configured.getBaseUrl();
+        this.webClient = builder.baseUrl(
+                        effectiveBaseUrl == null || effectiveBaseUrl.isBlank()
+                                ? defaultBaseUrl
+                                : effectiveBaseUrl.trim())
+                .build();
+        this.properties = configured;
     }
 
     /**

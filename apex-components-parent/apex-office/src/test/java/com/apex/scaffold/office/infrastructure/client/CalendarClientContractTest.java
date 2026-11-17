@@ -120,7 +120,9 @@ class CalendarClientContractTest {
     @DisplayName("飞书详情：GET 主日历下的事件详情")
     void feishuGetEventDetail() {
         FeishuCalendarClient client = new FeishuCalendarClient(
-                builder("{\"code\":0,\"tenant_access_token\":\"t\"}", "{\"code\":0,\"data\":{\"event\":{}}}"),
+                builder(
+                        "{\"code\":0,\"tenant_access_token\":\"t\"}",
+                        "{\"code\":0,\"data\":{\"event\":{\"event_id\":\"evt-x\"}}}"),
                 properties(OfficePlatform.FEISHU, "app-1", "PATH"));
 
         StepVerifier.create(client.getEventDetail("evt-1", "ou-organizer"))
@@ -226,6 +228,49 @@ class CalendarClientContractTest {
         assertThat(client.getPlatformType()).isEqualTo("wecom");
         assertThat(requests.get(1).url().getPath()).isEqualTo("/cgi-bin/oa/schedule/add");
         assertThat(requests.get(3).url().getPath()).isEqualTo("/cgi-bin/oa/schedule/del");
+    }
+
+    @Test
+    @DisplayName("配置 baseUrl 时请求打到覆盖地址；未配置时保持官方地址")
+    void baseUrlOverride() {
+        OfficePlatformProperties withOverride = properties(OfficePlatform.FEISHU, "app-1", "PATH");
+        withOverride.getPlatforms().get(OfficePlatform.FEISHU).setBaseUrl("http://127.0.0.1:9999");
+        FeishuCalendarClient overridden = new FeishuCalendarClient(
+                builder(
+                        "{\"code\":0,\"tenant_access_token\":\"t\"}",
+                        "{\"code\":0,\"data\":{\"event\":{\"event_id\":\"evt-x\"}}}"),
+                withOverride);
+        StepVerifier.create(overridden.createEvent(
+                        "ou-1",
+                        "t",
+                        null,
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusHours(1),
+                        null,
+                        null,
+                        null))
+                .expectNextCount(1)
+                .verifyComplete();
+        assertThat(requests.get(0).url().toString()).startsWith("http://127.0.0.1:9999/");
+
+        requests.clear();
+        FeishuCalendarClient official = new FeishuCalendarClient(
+                builder(
+                        "{\"code\":0,\"tenant_access_token\":\"t\"}",
+                        "{\"code\":0,\"data\":{\"event\":{\"event_id\":\"evt-x\"}}}"),
+                properties(OfficePlatform.FEISHU, "app-1", "PATH"));
+        StepVerifier.create(official.createEvent(
+                        "ou-1",
+                        "t",
+                        null,
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusHours(1),
+                        null,
+                        null,
+                        null))
+                .expectNextCount(1)
+                .verifyComplete();
+        assertThat(requests.get(0).url().getHost()).isEqualTo("open.feishu.cn");
     }
 
     @Test

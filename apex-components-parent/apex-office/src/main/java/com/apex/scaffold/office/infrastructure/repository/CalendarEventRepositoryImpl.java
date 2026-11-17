@@ -135,7 +135,20 @@ public class CalendarEventRepositoryImpl implements CalendarEventRepository {
 
     @Override
     public Mono<Boolean> deleteById(Long id) {
-        return Mono.fromCallable(() -> mapper.deleteById(id) > 0)
+        // 逻辑删除由 MyBatis-Plus 改写为 UPDATE ... SET update_time=?, deleted=1；
+        // 本模块未装配 MetaObjectHandler（无 apex-infrastructure-persistence 依赖），
+        // FieldFill 不会被填充，故显式带上 update_time，避免非空约束失败。
+        return Mono.fromCallable(() -> {
+                    // 用 UpdateWrapper.set 直接写列：@TableLogic 字段不会被 entity 更新路径带上，
+                    // 且本模块无 MetaObjectHandler，update_time 也必须显式赋值。
+                    com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<CalendarEventPO> wrapper =
+                            new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
+                    wrapper.eq("id", id)
+                            .eq("deleted", 0)
+                            .set("deleted", 1)
+                            .set("update_time", java.time.LocalDateTime.now());
+                    return mapper.update(null, wrapper) > 0;
+                })
                 .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(deleted -> log.debug("日历事件删除 - id: {}, deleted: {}", id, deleted))
                 .doOnError(error -> log.error("日历事件删除失败 - id: {}", id, error));

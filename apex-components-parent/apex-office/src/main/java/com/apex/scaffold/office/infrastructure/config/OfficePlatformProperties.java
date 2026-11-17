@@ -36,6 +36,13 @@ public class OfficePlatformProperties {
         private boolean enabled;
         private String appId;
         private String secretReference;
+        /**
+         * 平台 API 基址覆盖；留空时使用各客户端内置的官方地址。
+         *
+         * <p>仅用于本地联调与私有化部署指向兼容网关，默认不改变生产地址。
+         */
+        private String baseUrl;
+
         private String redirectUri;
         private String signingSecretReference;
         private String agentId;
