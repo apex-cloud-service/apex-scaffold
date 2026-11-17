@@ -1,0 +1,66 @@
+# 2026-11-17 根治 office/auth 字段自动填充失效（BE-040）
+
+## 1. 背景
+
+BE-039 端到端验证暴露：`apex-office` 与 `apex-auth` 的 PO 使用了
+`@TableField(fill = FieldFill.INSERT / INSERT_UPDATE)`，但两个模块**均未依赖
+`apex-infrastructure-persistence`**，其中的 `MyMetaObjectHandler`（`MetaObjectHandler`
+实现）既不在依赖里也不在服务扫描包内，导致全部 fill 字段无人填充。
+
+后果：
+- `@TableField(fill=...)` 字段即使为 null 也会进入 INSERT/UPDATE 语句（MP 对 fill
+  字段不做非空裁剪），`office_calendar_event.create_time/update_time` 为 NOT NULL 且
+  显式 null 时触发非空约束失败（BE-039 已复现并在服务层临时显式赋值绕过）。
+- `apex_auth_dev.auth_mfa_config`/`auth_totp` 同样存在 `fill` 注解，MFA 启用与
+  TOTP 绑定的写路径存在同样的潜在 500。
+- 时间列本身有 `DEFAULT CURRENT_TIMESTAMP`，若字段被正常裁剪则无需填充器；
+  问题恰恰出在 fill 字段不会被裁剪。
+
+## 2. 目标
+
+- office / auth 两个运行服务的 `MetaObjectHandler` 生效，fill 字段在插入/更新时
+  自动获得时间值。
+- 不改变 `apex-office`/`apex-auth` 的模块依赖边界（保持 `common + domain`，
+  auth 另有 `infrastructure-integration`、`api-contract`），不为引入一个 25 行的
+  处理器而给业务库挂上整套持久化设施。
+- 已显式赋值的调用点不受影响（strict fill 只填充 null 值）。
+- `OfficeCalendarService` 中 BE-039 的临时显式赋值移除，改由填充器负责，并以
+  真实端到端回归证明。
+
+## 3. 影响面（模块 / 接口 / 数据）
+
+| 位置 | 变更 |
+| --- | --- |
+| `apex-office` | 新增 `com.apex.scaffold.office.infrastructure.config.AuditFieldFillHandler`（该 config 包已存在，含 MyBatis-Plus 配置类） |
+| `apex-auth` | 新增 `com.apex.scaffold.auth.infrastructure.config.AuditFieldFillHandler`（新建 config 包，auth-service 扫描 `com.apex.scaffold.auth`） |
+| `apex-office` 应用服务 | 移除 BE-039 的临时显式时间赋值 |
+| 测试 | 两个 handler 的单元用例 + 现有回归 |
+
+不新增模块、不新增 POM 依赖（MyBatis-Plus core 已在两模块依赖树内）、不改 HTTP
+契约、不改数据库。
+
+## 4. 兼容性
+
+- handler 采用与共享 `MyMetaObjectHandler` 相同的 strict 语义（仅填 null 值）：
+  业务代码已显式赋值的时间不会被覆盖。
+- 只填 `createTime`/`updateTime` 两个属性；`version`/`deleted` 在 office/auth 的
+  PO 中无 fill 注解且类型混用（Integer/Boolean），不纳入填充，维持现状。
+- auth 的时间列名为 `created_at`/`updated_at`（属性名 `createTime`/`updateTime`），
+  由既有 `@TableField` 的列名映射完成，handler 无需感知列名。
+- 两服务扫描 `com.apex.scaffold.office` / `com.apex.scaffold.auth`，新类位于各自
+  组件包内，天然被扫描，无需改服务启动类。
+
+## 5. 回滚方案
+
+未提交工作区按文件回退即可；提交后 `git revert`。无数据库迁移与数据变更。
+
+## 6. 验收标准
+
+1. 单元用例：insertFill/updateFill 对 null 的 createTime/updateTime 填充时间值；
+   已有值不被覆盖。
+2. 移除 `OfficeCalendarService` 临时赋值后，经真实网关创建日历事件成功，且库中
+   `create_time/update_time` 非空（证明填充器在运行服务内生效）。
+3. `:apex-office`、`:apex-auth`、`:apex-office-service`、`:apex-auth-service` 四个
+   模块测试与 `spotless:check` 通过。
+4. 记录与任务卡同步，写明 auth 侧 MFA/TOTP 写路径为潜在缺陷已随本修复消除、
+   但真实平台写操作仍需平台凭据（外部依赖不变）。

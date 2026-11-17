@@ -120,10 +120,7 @@ public class OfficeCalendarService {
                                     .reminderMinutes(reminderMinutes)
                                     .isRecurring(false)
                                     .status("CONFIRMED")
-                                    // 本模块未引入 apex-infrastructure-persistence，FieldFill 无人填充，
-                                    // 必须显式赋值，否则 create_time 为 null 触发数据库非空约束
-                                    .createTime(LocalDateTime.now())
-                                    .updateTime(LocalDateTime.now())
+                                    // create_time/update_time 由 AuditFieldFillHandler 自动填充
                                     .build();
                             return calendarEventRepository.save(event);
                         }))
@@ -242,8 +239,7 @@ public class OfficeCalendarService {
                                     if (isAllDay != null) {
                                         event.setIsAllDay(isAllDay);
                                     }
-                                    // 同 createEvent：本模块无 FieldFill，需显式维护 update_time
-                                    event.setUpdateTime(LocalDateTime.now());
+                                    // update_time 由 AuditFieldFillHandler 自动填充
 
                                     return calendarEventRepository.update(event).thenReturn(true);
                                 }
@@ -284,7 +280,7 @@ public class OfficeCalendarService {
                             .flatMap(success -> {
                                 if (success) {
                                     event.cancel();
-                                    event.setUpdateTime(LocalDateTime.now());
+                                    // update_time 由 AuditFieldFillHandler 自动填充
                                     return calendarEventRepository.update(event).thenReturn(true);
                                 }
                                 return Mono.just(false);

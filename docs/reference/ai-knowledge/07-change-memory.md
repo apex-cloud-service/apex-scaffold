@@ -99,6 +99,8 @@
 
 | 50 | 2026-11-17 | 代码 | **BE-039 平台基址可配置 + 日历写操作端到端闭环**：①`OfficePlatformProperties.Platform` 加 `baseUrl`，`AbstractOfficeApiSupport` 优先取该值、缺省回落官方地址（生产行为不变）。②发现并修复三个此前被「不支持的办公平台」掩盖的落库缺陷：创建时 `create_time` 未赋值、更新/取消时 `update_time` 未赋值、逻辑删除经 `deleteById` 时 `update_time` 为 null 且 `@TableLogic` 字段被常规 update 排除——根因是 `apex-office` 未依赖 `apex-infrastructure-persistence`，`FieldFill`/`MetaObjectHandler` 不生效；改为服务层显式赋值 + 仓储 `UpdateWrapper.set()` 显式写 `deleted`/`update_time`。③新增基址覆盖回归用例 | 未提交 | `:apex-office` 199、`:apex-office-service` 406 用例 0 失败；spotless 通过；**本地模拟飞书平台端到端 6/6 全通**（创建→详情→更新→范围查询→删除→删除后为空），真实经网关与 office 服务全链路。测试数据已清理 | 仅 office 模块；HTTP 契约不变；`baseUrl` 为新增可选配置，缺省不改变生产地址 |
 
+| 51 | 2026-11-17 | 代码 | **BE-040 根治 office/auth 的 FieldFill 失效**：新增 `AuditFieldFillHandler`（office：`infrastructure/config`；auth：新建 `infrastructure/config`），两服务扫描包天然覆盖，不新增依赖、不改模块边界。实现用 `metaObject.getValue/setValue` + null 检查而非 `strictInsertFill`——后者依赖 MP TableInfo 注册，且共享填充器填的属性名（createTime/updateTime）与 auth PO 实际属性（createdAt/updatedAt）不匹配，这也是共享填充器即使装配也无法覆盖 auth 的原因之一。移除 `OfficeCalendarService` 中 BE-039 的临时显式时间赋值，改由填充器负责。auth 的 MFA/TOTP 写路径潜在 500 随本修复消除 | 未提交 | `:apex-office` 202 用例、`:apex-auth` 1348 用例 0 失败 BUILD SUCCESS；spotless 通过；真实环境验证：移除显式赋值后创建日历事件成功且库中 `create_time/update_time` 被填充器写入（服务层无显式赋值）；MFA/TOTP 写路径未实测（需 MFA 凭据与 TOTP 扫码），属潜在缺陷消除 | office/auth 两个模块运行时行为变化：审计时间字段自动填充；auth MFA/TOTP 写路径从潜在 500 变为可用；auth 属性名为 createdAt/updatedAt 需在文档标注 |
+
 
 
 > **表列与 §1「必填字段」一一对应**：`日期` · `类型` · `摘要` · `提交` · `证据` · `影响面`（`#` 仅序号，不计入字段）。2026-11-16 分列重排：`摘要`/`证据` 原文一字未改，`影响面` 按当次改动范围回填。
