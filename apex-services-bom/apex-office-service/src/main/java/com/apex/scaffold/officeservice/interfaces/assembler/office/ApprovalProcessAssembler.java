@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -20,11 +21,17 @@ import org.mapstruct.ReportingPolicy;
 public interface ApprovalProcessAssembler {
 
     /**
-     * 领域实体转响应DTO
+     * 领域实体转响应DTO。
+     *
+     * <p>领域实体沿用业务侧命名（title/initiateTime/createTime），响应 DTO 沿用
+     * 平台侧命名（processName/createdAt），两处必须显式映射，否则 MapStruct 会
+     * 静默留空，导致审批列表标题与发起时间为 null。
      *
      * @param entity 领域实体
      * @return 响应DTO
      */
+    @Mapping(target = "processName", source = "title")
+    @Mapping(target = "createdAt", source = "createTime")
     ApprovalProcessResponse toResponse(ApprovalProcess entity);
 
     /**

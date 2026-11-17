@@ -52,6 +52,8 @@ public abstract class ApprovalProcessConverter {
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")
     @Mapping(target = "currentApproverIds", source = "currentApproverIds")
     @Mapping(target = "records", source = "records", qualifiedByName = "recordsToJson")
+    @Mapping(target = "processName", source = "title")
+    @Mapping(target = "createdAt", source = "createTime")
     public abstract ApprovalProcessPO toPO(ApprovalProcess entity);
 
     /**
@@ -64,6 +66,8 @@ public abstract class ApprovalProcessConverter {
     @Mapping(target = "status", source = "status", qualifiedByName = "stringToStatus")
     @Mapping(target = "currentApproverIds", source = "currentApproverIds")
     @Mapping(target = "records", source = "records", qualifiedByName = "jsonToRecords")
+    @Mapping(target = "title", source = "processName")
+    @Mapping(target = "createTime", source = "createdAt")
     public abstract ApprovalProcess toEntity(ApprovalProcessPO po);
 
     /**

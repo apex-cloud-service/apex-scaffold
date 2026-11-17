@@ -47,6 +47,9 @@ public class ApprovalProcess {
     /** 业务流程实例ID（业务系统中的流程ID） */
     private String processInstanceId;
 
+    /** 审批流程定义ID（PO 与响应 DTO 的同名字段由此透传） */
+    private String processDefinitionId;
+
     /** 审批模板ID */
     private String templateId;
 
@@ -58,6 +61,9 @@ public class ApprovalProcess {
 
     /** 发起人姓名 */
     private String initiatorName;
+
+    /** 当前审批节点名称（平台返回；PO 与响应 DTO 的同名字段由此透传） */
+    private String currentNode;
 
     /** 审批状态 */
     private ApprovalStatus status;
@@ -76,6 +82,12 @@ public class ApprovalProcess {
 
     /** 审批完成时间 */
     private LocalDateTime completeTime;
+
+    /** 平台口径的完成时间（PO/响应 DTO 字段，与 completeTime 同步由仓储映射） */
+    private LocalDateTime completedAt;
+
+    /** 平台口径的更新时间（PO/响应 DTO 字段） */
+    private LocalDateTime updatedAt;
 
     /** 乐观锁版本号 */
     private Integer version;

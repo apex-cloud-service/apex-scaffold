@@ -43,6 +43,24 @@ class ApprovalProcessAssemblerTest {
     }
 
     @Test
+    @DisplayName("toResponse 透传 title/currentNode/createTime，不再因命名差异静默留空")
+    void toResponseCarriesPlatformFacingFields() {
+        ApprovalProcess entity = ApprovalProcess.builder()
+                .id(2L)
+                .title("报销审批")
+                .currentNode("主管审批")
+                .createTime(java.time.LocalDateTime.of(2026, 11, 17, 10, 0))
+                .build();
+
+        ApprovalProcessResponse response = assembler.toResponse(entity);
+
+        // 回归：实体用 title/createTime，DTO 用 processName/createdAt，缺失显式映射时恒为 null
+        assertThat(response.getProcessName()).isEqualTo("报销审批");
+        assertThat(response.getCurrentNode()).isEqualTo("主管审批");
+        assertThat(response.getCreatedAt()).isEqualTo(java.time.LocalDateTime.of(2026, 11, 17, 10, 0));
+    }
+
+    @Test
     @DisplayName("map 空字符串返回空列表")
     void mapBlank() {
         assertThat(assembler.map("   ")).isEmpty();
