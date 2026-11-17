@@ -101,6 +101,8 @@
 
 | 51 | 2026-11-17 | 代码 | **BE-040 根治 office/auth 的 FieldFill 失效**：新增 `AuditFieldFillHandler`（office：`infrastructure/config`；auth：新建 `infrastructure/config`），两服务扫描包天然覆盖，不新增依赖、不改模块边界。实现用 `metaObject.getValue/setValue` + null 检查而非 `strictInsertFill`——后者依赖 MP TableInfo 注册，且共享填充器填的属性名（createTime/updateTime）与 auth PO 实际属性（createdAt/updatedAt）不匹配，这也是共享填充器即使装配也无法覆盖 auth 的原因之一。移除 `OfficeCalendarService` 中 BE-039 的临时显式时间赋值，改由填充器负责。auth 的 MFA/TOTP 写路径潜在 500 随本修复消除 | 未提交 | `:apex-office` 202 用例、`:apex-auth` 1348 用例 0 失败 BUILD SUCCESS；spotless 通过；真实环境验证：移除显式赋值后创建日历事件成功且库中 `create_time/update_time` 被填充器写入（服务层无显式赋值）；MFA/TOTP 写路径未实测（需 MFA 凭据与 TOTP 扫码），属潜在缺陷消除 | office/auth 两个模块运行时行为变化：审计时间字段自动填充；auth MFA/TOTP 写路径从潜在 500 变为可用；auth 属性名为 createdAt/updatedAt 需在文档标注 |
 
+| 52 | 2026-11-18 | 文档 | **BE-041 全仓 Javadoc 评审与补齐**：`scan-javadoc-issues.sh`（默认路径已被 11-14 模块嵌套破坏，需 `JAVADOC_SCAN_PATH='apex-*/apex-*/src/main/java'`）四类清单全 0，类级覆盖历史战役已收口；升级为 JDK doclint（missing+syntax+reference）全反应堆审计出 **78 条告警/53 文件**（53 失效 {@link/@see——Lombok 生成方法、跨模块反向引用、错包名/签名、幽灵类；24 处裸 `<`/`&` 与嵌套花括号畸形标签；1 处 @throws 未导入类型；1 处方法注释错挂常量），53 个 Java 文件纯注释修复归零。手法：可解析改 FQN/纠错目标（`BlockingIoSchedulers#jdbc()`、`Ordered`、`sendSmsCode`、office 本模块 DTO），不可解析降级 `{@code}`/删陈旧 @see，畸形标签重写为等价描述 | 未提交 | 三批 doclint 复验 0 告警 + 全反应堆终验 0 告警 BUILD SUCCESS；批 1 test 1028 / 批 2 test 4848 / 批 3+4 test 4205 用例 0 失败；spotless 通过；全量 `clean verify` 结果补录于记录文档 §4 | 零运行时行为变化（纯注释）；唯一遗留为 messaging 模块 javadoc 目标因 Lombok `onMethod_` 的工具级不兼容（非注释缺陷）；死代码候选：office-service `MessageUtils`、`LocalIdempotentCache` 无生产消费方；扫描器默认路径失效待另立任务 |
+
 
 
 > **表列与 §1「必填字段」一一对应**：`日期` · `类型` · `摘要` · `提交` · `证据` · `影响面`（`#` 仅序号，不计入字段）。2026-11-16 分列重排：`摘要`/`证据` 原文一字未改，`影响面` 按当次改动范围回填。
