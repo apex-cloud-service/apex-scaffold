@@ -29,6 +29,7 @@
 | 2026-11-12 | all-projects | 查询聚合能力落地 | [2026-11-12-all-projects-daily-report.md](./2026-11-12-all-projects-daily-report.md) |
 | 2026-11-14 | all-projects | 知识库落地与模块归位 | [2026-11-14-all-projects-daily-report.md](./2026-11-14-all-projects-daily-report.md) |
 | 2026-11-16 | all-projects | 治理规范落地与仓库规范化 | [2026-11-16-all-projects-daily-report.md](./2026-11-16-all-projects-daily-report.md) |
+| 2026-11-17 | all-projects | 办公域联调契约修复 | [2026-11-17-all-projects-daily-report.md](./2026-11-17-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 
