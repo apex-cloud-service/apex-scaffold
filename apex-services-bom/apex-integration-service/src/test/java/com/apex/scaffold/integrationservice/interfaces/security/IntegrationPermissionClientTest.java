@@ -2,6 +2,8 @@ package com.apex.scaffold.integrationservice.interfaces.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +39,19 @@ class IntegrationPermissionClientTest {
         properties.setBaseUrl("https://auth.example.com");
         properties.setTimeout(Duration.ofSeconds(2));
         properties.setReaderTokens(Map.of("t-1", "reader-token"));
+    }
+
+    @Test
+    void strictMapperAcceptsAuthRolesAndUnknownFutureFields() throws Exception {
+        ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        var snapshot = mapper.readValue(
+                """
+                {"tenantId":"t-1","userId":7,"permissions":["iot:device:read"],
+                 "roles":[{"code":"ADMIN","dataScope":"ALL"}],"futureField":{"version":2}}
+                """,
+                IntegrationPermissionClient.Snapshot.class);
+        assertThat(snapshot)
+                .isEqualTo(new IntegrationPermissionClient.Snapshot("t-1", 7L, java.util.List.of("iot:device:read")));
     }
 
     @Test

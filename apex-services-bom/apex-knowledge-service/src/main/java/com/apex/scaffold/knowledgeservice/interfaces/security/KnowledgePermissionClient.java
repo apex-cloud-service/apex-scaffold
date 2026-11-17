@@ -2,6 +2,7 @@ package com.apex.scaffold.knowledgeservice.interfaces.security;
 
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -107,5 +108,6 @@ public class KnowledgePermissionClient {
      * @author Apex Team
      * @since 1.3.2
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Snapshot(String tenantId, Long userId, List<String> permissions) {}
 }

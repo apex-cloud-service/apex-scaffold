@@ -10,8 +10,11 @@ import com.apex.scaffold.office.infrastructure.converter.ApprovalProcessConverte
 import com.apex.scaffold.office.infrastructure.mapper.ApprovalProcessMapper;
 import com.apex.scaffold.office.infrastructure.po.ApprovalProcessPO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -51,24 +54,59 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
     private final ApprovalProcessConverter converter;
     private final BlockingIoSchedulers blockingIoSchedulers;
 
+    /**
+     * 在 JDBC callable 内安装可信租户，完成或异常时恢复原线程上下文。
+     *
+     * @param operation 阻塞操作
+     * @param <T> 结果类型
+     * @return 租户范围内的操作结果；无租户时拒绝
+     */
+    private <T> Mono<T> withTenantScoped(Function<Long, T> operation) {
+        return TenantContext.currentTenantIdReactive()
+                .switchIfEmpty(Mono.error(new IllegalStateException("租户上下文未设置")))
+                .flatMap(trusted -> {
+                    Long tenantId = Long.valueOf(trusted);
+                    return Mono.fromCallable(
+                                    () -> TenantContext.callWithTenant(trusted, () -> operation.apply(tenantId)))
+                            .subscribeOn(blockingIoSchedulers.jdbc());
+                });
+    }
+
+    /**
+     * 校验显式租户与可信上下文一致后执行 JDBC 操作。
+     *
+     * @param expectedTenant 显式租户
+     * @param operation 阻塞操作
+     * @param <T> 结果类型
+     * @return 租户范围内的操作结果
+     */
+    private <T> Mono<T> withTenantScoped(Long expectedTenant, Function<Long, T> operation) {
+        return withTenantScoped(tenantId -> {
+            if (!Objects.equals(expectedTenant, tenantId)) {
+                throw new IllegalStateException("审批流程不属于当前租户");
+            }
+            return operation.apply(tenantId);
+        });
+    }
+
     @Override
     public Mono<ApprovalProcess> save(ApprovalProcess process) {
-        return Mono.fromCallable(() -> {
+        return Mono.defer(() -> withTenantScoped(process.getTenantId(), tenantId -> {
                     ApprovalProcessPO po = converter.toPO(process);
                     mapper.insert(po);
                     return converter.toEntity(po);
-                })
-                .subscribeOn(blockingIoSchedulers.jdbc())
+                }))
                 .doOnSuccess(saved -> log.debug("审批流程已保存，ID：{}", saved.getId()));
     }
 
     @Override
     public Mono<ApprovalProcess> findById(Long id) {
-        return Mono.fromCallable(() -> {
-                    ApprovalProcessPO po = mapper.selectById(id);
+        return withTenantScoped(tenantId -> {
+                    QueryWrapper<ApprovalProcessPO> wrapper = new QueryWrapper<>();
+                    wrapper.eq("tenant_id", tenantId).eq("id", id);
+                    ApprovalProcessPO po = mapper.selectOne(wrapper);
                     return po != null ? converter.toEntity(po) : null;
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(found -> {
                     if (found != null) {
                         log.debug("查询审批流程成功，ID：{}", id);
@@ -78,14 +116,10 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
 
     @Override
     public Mono<ApprovalProcess> findByPlatformAndInstanceId(String platform, String platformInstanceId) {
-        return Mono.fromCallable(() -> {
-                    Long tenantId = TenantContext.currentTenantId()
-                            .map(Long::valueOf)
-                            .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
+        return withTenantScoped(tenantId -> {
                     ApprovalProcessPO po = mapper.selectByPlatformInstanceId(platformInstanceId, tenantId);
                     return po != null ? converter.toEntity(po) : null;
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(found -> {
                     if (found != null) {
                         log.debug("根据平台实例ID查询成功：{}", platformInstanceId);
@@ -95,17 +129,13 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
 
     @Override
     public Mono<ApprovalProcess> findByProcessInstanceId(String processInstanceId) {
-        return Mono.fromCallable(() -> {
-                    Long tenantId = TenantContext.currentTenantId()
-                            .map(Long::valueOf)
-                            .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
+        return withTenantScoped(tenantId -> {
                     ApprovalProcessPO po = mapper.selectByProcessInstanceId(processInstanceId, tenantId);
                     return po != null ? converter.toEntity(po) : null;
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(found -> {
                     if (found != null) {
-                        log.debug("根据流程实例ID查询成功：{}", processInstanceId);
+                        log.debug("查询审批流程成功，ID：{}", found.getId());
                     }
                 });
     }
@@ -113,10 +143,10 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
     @Override
     public Mono<List<ApprovalProcess>> findByConditions(
             Long tenantId, String platform, ApprovalStatus status, int page, int size) {
-        return Mono.fromCallable(() -> {
+        return withTenantScoped(tenantId, scopedTenant -> {
                     Page<ApprovalProcessPO> pageParam = new Page<>(page, size);
                     LambdaQueryWrapper<ApprovalProcessPO> wrapper = new LambdaQueryWrapper<>();
-                    wrapper.eq(ApprovalProcessPO::getTenantId, tenantId);
+                    wrapper.eq(ApprovalProcessPO::getTenantId, scopedTenant);
                     if (platform != null) {
                         wrapper.eq(ApprovalProcessPO::getPlatform, platform);
                     }
@@ -127,15 +157,14 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
                     Page<ApprovalProcessPO> result = mapper.selectPage(pageParam, wrapper);
                     return result.getRecords().stream().map(converter::toEntity).toList();
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(list -> log.debug("条件查询审批流程完成，租户：{}，数量：{}", tenantId, list.size()));
     }
 
     @Override
     public Mono<Long> countByConditions(Long tenantId, String platform, ApprovalStatus status) {
-        return Mono.fromCallable(() -> {
+        return withTenantScoped(tenantId, scopedTenant -> {
                     LambdaQueryWrapper<ApprovalProcessPO> wrapper = new LambdaQueryWrapper<>();
-                    wrapper.eq(ApprovalProcessPO::getTenantId, tenantId);
+                    wrapper.eq(ApprovalProcessPO::getTenantId, scopedTenant);
                     if (platform != null) {
                         wrapper.eq(ApprovalProcessPO::getPlatform, platform);
                     }
@@ -144,29 +173,21 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
                     }
                     return mapper.selectCount(wrapper);
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(count -> log.debug("统计审批流程数量完成，租户：{}，数量：{}", tenantId, count));
     }
 
     @Override
     public Mono<List<ApprovalProcess>> findByInitiator(String initiatorId) {
-        return Mono.fromCallable(() -> {
-                    Long tenantId = TenantContext.currentTenantId()
-                            .map(Long::valueOf)
-                            .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
+        return withTenantScoped(tenantId -> {
                     List<ApprovalProcessPO> poList = mapper.selectByInitiator(initiatorId, tenantId);
                     return poList.stream().map(converter::toEntity).toList();
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(list -> log.debug("查询发起人审批列表完成，发起人：{}，数量：{}", initiatorId, list.size()));
     }
 
     @Override
     public Mono<List<ApprovalProcess>> findPendingByApprover(String approverId) {
-        return Mono.fromCallable(() -> {
-                    Long tenantId = TenantContext.currentTenantId()
-                            .map(Long::valueOf)
-                            .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
+        return withTenantScoped(tenantId -> {
                     // 审批人归属在仓储层解析 JSON 数组：JSON_CONTAINS 为 MySQL 专有函数，
                     // H2 basic 与 PostgreSQL 不支持（与 selectAllByTenant 的方言规避口径一致）
                     List<ApprovalProcessPO> poList = mapper.selectPendingByTenant(tenantId).stream()
@@ -174,7 +195,6 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
                             .toList();
                     return poList.stream().map(converter::toEntity).toList();
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(list -> log.debug("查询待审批列表完成，审批人：{}，数量：{}", approverId, list.size()));
     }
 
@@ -201,10 +221,7 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
 
     @Override
     public Mono<List<ApprovalProcess>> findCompletedByApprover(String approverId) {
-        return Mono.fromCallable(() -> {
-                    Long tenantId = TenantContext.currentTenantId()
-                            .map(Long::valueOf)
-                            .orElseThrow(() -> new IllegalStateException("租户上下文未设置"));
+        return withTenantScoped(tenantId -> {
                     List<ApprovalProcessPO> poList = mapper.selectAllByTenant(tenantId);
                     return poList.stream()
                             .map(converter::toEntity)
@@ -215,28 +232,31 @@ public class ApprovalProcessRepositoryImpl implements ApprovalProcessRepository 
                                                             || record.getAction() == ApprovalAction.REJECT)))
                             .toList();
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(list -> log.debug("查询已办审批列表完成，审批人：{}，数量：{}", approverId, list.size()));
     }
 
     @Override
     public Mono<ApprovalProcess> update(ApprovalProcess process) {
-        return Mono.fromCallable(() -> {
+        return Mono.defer(() -> withTenantScoped(process.getTenantId(), tenantId -> {
                     ApprovalProcessPO po = converter.toPO(process);
-                    mapper.updateById(po);
-                    return converter.toEntity(mapper.selectById(po.getId()));
-                })
-                .subscribeOn(blockingIoSchedulers.jdbc())
+                    QueryWrapper<ApprovalProcessPO> wrapper = new QueryWrapper<>();
+                    wrapper.eq("tenant_id", tenantId).eq("id", po.getId());
+                    mapper.update(po, wrapper);
+                    QueryWrapper<ApprovalProcessPO> query = new QueryWrapper<>();
+                    query.eq("tenant_id", tenantId).eq("id", po.getId());
+                    return converter.toEntity(mapper.selectOne(query));
+                }))
                 .doOnSuccess(updated -> log.debug("审批流程已更新，ID：{}，状态：{}", updated.getId(), updated.getStatus()));
     }
 
     @Override
     public Mono<Boolean> deleteById(Long id) {
-        return Mono.fromCallable(() -> {
-                    int rows = mapper.deleteById(id);
+        return withTenantScoped(tenantId -> {
+                    QueryWrapper<ApprovalProcessPO> wrapper = new QueryWrapper<>();
+                    wrapper.eq("tenant_id", tenantId).eq("id", id);
+                    int rows = mapper.delete(wrapper);
                     return rows > 0;
                 })
-                .subscribeOn(blockingIoSchedulers.jdbc())
                 .doOnSuccess(deleted -> log.debug("审批流程删除{}，ID：{}", deleted ? "成功" : "失败", id));
     }
 }

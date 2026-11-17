@@ -156,16 +156,59 @@ class MenuServiceTest {
         verify(tenantPackageService, never()).resolveScope(any(String.class));
     }
 
+    @Test
+    @DisplayName("getMenuTree - menuIds 为空或 null 时保留全部菜单")
+    void getMenuTree_EmptyOrNullMenuIdsAllowsAllMenus() {
+        MenuEntity other = MenuEntity.create(0L, "其他模块", 1, "other", "other/index", "other:read", 2);
+        other.setId(3L);
+        MenuDTO otherDTO = new MenuDTO();
+        otherDTO.setId(3L);
+        otherDTO.setParentId(0L);
+        otherDTO.setSort(2);
+        when(menuAssembler.toDTO(other)).thenReturn(otherDTO);
+        when(menuRepository.findAll()).thenReturn(Mono.just(List.of(directory, childMenu, other)));
+
+        for (var scope : List.of(
+                new TenantPackageService.PackageScope(false, false, null, java.util.Set.of(), java.util.Set.of()),
+                new TenantPackageService.PackageScope(
+                        false, false, java.util.Set.of(), java.util.Set.of(), java.util.Set.of()))) {
+            when(tenantPackageService.resolveScope("tenant-a")).thenReturn(Mono.just(scope));
+            directoryDTO.setChildren(new java.util.ArrayList<>());
+
+            menuService
+                    .getMenuTree()
+                    .contextWrite(TenantContext.withTenant("tenant-a"))
+                    .as(StepVerifier::create)
+                    .assertNext(roots -> {
+                        assertThat(roots).extracting(MenuDTO::getId).containsExactly(1L, 3L);
+                        assertThat(roots.get(0).getChildren())
+                                .extracting(MenuDTO::getId)
+                                .containsExactly(2L);
+                    })
+                    .verifyComplete();
+        }
+    }
+
     /**
      * 验证受限套餐按 menu_ids 裁剪并补全父链。
      */
     @Test
     @DisplayName("getMenuTree - 受限套餐按 menu_ids 返回父链完整菜单")
     void getMenuTree_ScopedByPackage() {
+        var allowed = new java.util.HashSet<>(java.util.Set.of(4L));
         when(tenantPackageService.resolveScope("tenant-a"))
                 .thenReturn(Mono.just(new TenantPackageService.PackageScope(
-                        false, false, java.util.Set.of(2L), java.util.Set.of("system:user:list"), java.util.Set.of())));
-        when(menuRepository.findAll()).thenReturn(Mono.just(List.of(directory, childMenu)));
+                        false, false, allowed, java.util.Set.of("system:user:list"), java.util.Set.of())));
+        MenuEntity leaf = MenuEntity.create(2L, "详情", 2, null, null, "system:user:read", 1);
+        leaf.setId(4L);
+        MenuDTO leafDTO = new MenuDTO();
+        leafDTO.setId(4L);
+        leafDTO.setParentId(2L);
+        leafDTO.setSort(1);
+        when(menuAssembler.toDTO(leaf)).thenReturn(leafDTO);
+        MenuEntity excluded = MenuEntity.create(1L, "角色管理", 1, "role", "system/role/index", null, 2);
+        excluded.setId(3L);
+        when(menuRepository.findAll()).thenReturn(Mono.just(List.of(directory, childMenu, excluded, leaf)));
 
         menuService
                 .getMenuTree()
@@ -177,8 +220,13 @@ class MenuServiceTest {
                     assertThat(roots.get(0).getChildren())
                             .extracting(MenuDTO::getId)
                             .containsExactly(2L);
+                    assertThat(roots.get(0).getChildren().get(0).getChildren())
+                            .extracting(MenuDTO::getId)
+                            .containsExactly(4L);
                 })
                 .verifyComplete();
+        assertThat(allowed).containsExactly(4L);
+        verify(menuAssembler, never()).toDTO(excluded);
     }
 
     /**

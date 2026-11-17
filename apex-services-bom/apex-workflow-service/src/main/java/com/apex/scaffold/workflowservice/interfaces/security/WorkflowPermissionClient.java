@@ -2,6 +2,7 @@ package com.apex.scaffold.workflowservice.interfaces.security;
 
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -117,5 +118,6 @@ public class WorkflowPermissionClient {
      * @version 1.3.1
      * @since 1.3.1
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Snapshot(String tenantId, Long userId, List<String> permissions) {}
 }

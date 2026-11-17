@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import com.apex.scaffold.common.annotation.Logical;
 import com.apex.scaffold.common.annotation.RequirePermission;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,6 +35,19 @@ import reactor.test.StepVerifier;
 class WorkflowAuthorizationTest {
     private final AuthenticatedUser user = new AuthenticatedUser(42L, null, "tenant-a");
     private final AtomicInteger requests = new AtomicInteger();
+
+    @Test
+    void strictMapperAcceptsAuthRolesAndUnknownFutureFields() throws Exception {
+        ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        var snapshot = mapper.readValue(
+                """
+                {"tenantId":"tenant-a","userId":42,"permissions":["workflow:definition:read"],
+                 "roles":[{"code":"ADMIN","dataScope":"ALL"}],"futureField":{"version":2}}
+                """,
+                WorkflowPermissionClient.Snapshot.class);
+        assertThat(snapshot)
+                .isEqualTo(new WorkflowPermissionClient.Snapshot("tenant-a", 42L, List.of("workflow:definition:read")));
+    }
 
     @Test
     void returnsExactPermissionsForMatchingSnapshot() {

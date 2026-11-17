@@ -12,6 +12,8 @@ import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.annotation.RequirePermission;
 import com.apex.scaffold.common.audit.AuditLogService;
 import com.apex.scaffold.common.result.Result;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +33,19 @@ class OfficeAuthorizationTest {
     private final AuthenticatedUser user = new AuthenticatedUser(42L, null, "tenant-a");
     private final AtomicInteger requests = new AtomicInteger();
     private final AuditLogService audit = mock(AuditLogService.class);
+
+    @Test
+    void strictMapperAcceptsAuthRolesAndUnknownFutureFields() throws Exception {
+        ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        var snapshot = mapper.readValue(
+                """
+                {"tenantId":"tenant-a","userId":42,"permissions":["office:app:update"],
+                 "roles":[{"code":"ADMIN","dataScope":"ALL"}],"futureField":{"version":2}}
+                """,
+                OfficePermissionClient.Snapshot.class);
+        assertThat(snapshot)
+                .isEqualTo(new OfficePermissionClient.Snapshot("tenant-a", 42L, List.of("office:app:update")));
+    }
 
     @Test
     void permissionClientUsesSingleImplicitConstructorAndContextAssembly() {

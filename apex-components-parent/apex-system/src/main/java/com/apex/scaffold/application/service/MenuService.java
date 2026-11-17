@@ -90,9 +90,12 @@ public class MenuService {
      */
     private List<MenuDTO> buildScopedTree(List<MenuEntity> entities, TenantPackageService.PackageScope scope) {
         if (!scope.unbounded()) {
+            var allowed = scope.menuIds();
+            if (allowed == null || allowed.isEmpty()) {
+                return buildTree(entities);
+            }
             var byId = new java.util.HashMap<Long, Long>();
             entities.forEach(entity -> byId.put(entity.getId(), entity.getParentId()));
-            var allowed = scope.menuIds() == null ? java.util.Set.<Long>of() : scope.menuIds();
             var completed = new java.util.HashSet<>(allowed);
             allowed.forEach(id -> {
                 Long parent = byId.get(id);

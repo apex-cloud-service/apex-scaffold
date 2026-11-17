@@ -2,6 +2,7 @@ package com.apex.scaffold.integrationservice.interfaces.security;
 
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -110,5 +111,6 @@ public class IntegrationPermissionClient {
      * @param userId 快照所属用户
      * @param permissions 精确权限码列表
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public record Snapshot(String tenantId, Long userId, List<String> permissions) {}
 }
