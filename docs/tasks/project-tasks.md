@@ -31,6 +31,7 @@
 - **全局集成租约**：`HOLDING`（本次治理改动；R0 集成前核验并释放）。
 - **验收命令**：`git diff --check`；附录 A 哈希；`apex-preflight.sh --fast --strict`；`verify-docs.sh --strict`；`check-doc-refs.sh --strict`；`audit-backend-rules.sh --strict`；暂存后执行 `check-memory-sync.sh --strict`。
 - **交接物**：变更记录 `docs/records/2026-11-18-multi-agent-governance.md`、台账 #53、真实命令结果、未验证项与回滚方式。
+- **内容提交 SHA**：`61a7499f7cf87d52930b0dd3b2de7e69d91fe6d5`。
 - **用户集成授权**：2026-11-18 用户明确要求提交并合并至 `dev`/`master`/`test`、推送所有分支；该指令覆盖默认“R5 放行后再集成”的执行顺序，但不构成 R5 复核结论。
 - **当前状态**：`待复核`；R5 尚未放行，不得改为 `已完成`。
 
