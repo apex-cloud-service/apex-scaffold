@@ -9,7 +9,7 @@
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- |
-| BE-042 | P1 | 【P1】治理-落地多智能体并行协作与交接规则 | 执行中 | R0/执行：Codex（同一会话，串行单写者）；R5：Chandrasekhar（独立子代理 `01a1ed5c-98d3-72f2-9091-ac26530b2d12`） | 主控/执行/复核分责、任务租约与认领、并行准入、单写者与写入范围、Worktree 隔离、标准交接包、合并冲突升级、异常接管与关闭条件均写入 `AGENTS.md`、治理正文、R0–R5 角色卡和任务入口；文档引用、后端红线、预检与记忆台账通过；`verify-docs.sh --strict` 0 项；附录 A 哈希不变；R5 复审通过后方可完成 | `docs/specs/project-governance.md` §2/§4；`docs/specs/ai-agents/`；`docs/records/2026-11-18-multi-agent-governance.md`；台账 #53/#54；[R5 首轮评审](../reviews/2026-11-18-be-042-r5-review.md) |
+| BE-042 | P1 | 【P1】治理-落地多智能体并行协作与交接规则 | 已完成 | R0/执行：Codex（同一会话，串行单写者）；首轮 R5：Chandrasekhar；增量 R5：Erdos（独立子代理 `01a1ed8c-02cb-7300-a949-cca27d03f6fa`） | 主控/执行/复核分责、任务租约与认领、并行准入、单写者与写入范围、Worktree 隔离、标准交接包、合并冲突升级、异常接管与关闭条件均写入 `AGENTS.md`、治理正文、R0–R5 角色卡和任务入口；文档引用、后端红线、预检与记忆台账通过；`verify-docs.sh --strict` 0 项；附录 A 哈希不变；独立 R5 增量结论 `APPROVE_WITH_NITS`，MF-01–MF-05 清零；最终关闭提交及三支同步见本任务提交历史 | `docs/specs/project-governance.md` §2/§4；`docs/specs/ai-agents/`；`docs/records/2026-11-18-multi-agent-governance.md`；台账 #53/#54/#55；[R5 评审报告](../reviews/2026-11-18-be-042-r5-review.md) |
 | BE-041 | P2 | 【P2】全仓 Javadoc 评审与补齐战役（红线 B7 收口） | 待复核 | ZCode（用户于 2026-11-18 授权） | 双工具评审：扫描器四类清单全 0（类级历史战役已收口）+ JDK doclint 全反应堆 78 告警→0（53 失效引用/24 裸字符/1 @throws/1 注释错挂，53 文件纯注释修复）；`@param/@return/@throws` 全量 0 缺失；零逻辑改动；spotless 通过；三批 `-am test` 1028/4848/4205 用例 0 失败；全量 `clean verify` 43/45 模块 SUCCESS（2 个环境性失败均 -T1 单跑复核为绿：example 计时抖动、boot-all 8080 被既有网关占用）；记录 [2026-11-18-javadoc-review-campaign](../records/2026-11-18-javadoc-review-campaign.md)；台账 #52。已知工具限制：messaging javadoc 目标因 Lombok `onMethod_` 不兼容；顺带发现扫描器默认路径已被 11-14 嵌套破坏（另立任务） | 治理规范 B7；历史战役（2026-09 javadoc-work-summary） |
 | BE-040 | P1 | 【P1】根治 office/auth 的 FieldFill 失效（MetaObjectHandler 未装配） | 待复核 | ZCode（用户于 2026-11-17 授权） | 定位所有 FieldFill 失效的 PO（office 6 个、auth 2 个）并给出根治方案；修复后 create_time/update_time/version/deleted 能自动填充；不破坏模块依赖边界与既有测试；新增 AuditFieldFillHandler（office/auth 各一，属性名分别对齐模块 PO 口径）；新增填充语义回归用例；`:apex-office` 202、`:apex-auth` 1348 用例 0 失败、spotless 通过；真实环境验证移除显式赋值后时间被填充器写入；auth MFA/TOTP 写路径未实测（需外部凭据） | BE-039 遗留项 |
 | BE-039 | P1 | 【P1】office-平台基址可配置并完成日历写操作端到端验证 | 待复核 | ZCode（用户于 2026-11-17 授权） | 三平台客户端基址支持 `apex.office.platforms[*].base-url` 覆盖（缺省保持官方地址，不得改变生产行为）；用本地模拟平台完成 创建→详情→更新→删除→范围查询 全链路真实验证；回归用例覆盖基址覆盖与缺省；`:apex-office` 199 + `:apex-office-service` 406 用例 0 失败、spotless 通过；**本地模拟平台端到端 6/6**（创建/详情/更新/范围/删除/删除后为空）。过程中修复三个落库缺陷（create_time、update_time、逻辑删除未生效） | BE-037/BE-038 未验证项 |
@@ -23,7 +23,7 @@
 
 - **基线 SHA**：`5d17cac276c8fcb4b9855671a7240b14a669d455`（`dev`）。
 - **R0 / 执行者**：Codex（同一用户会话，串行单写者）；该任务无并行写入，R0 与执行者可合并。
-- **独立复核者**：Chandrasekhar（独立子代理 `01a1ed5c-98d3-72f2-9091-ac26530b2d12`，与执行者不同实例/会话）。
+- **独立复核者**：首轮 Chandrasekhar（独立子代理 `01a1ed5c-98d3-72f2-9091-ac26530b2d12`，结论 REJECT）；增量复审 Erdos（独立子代理 `01a1ed8c-02cb-7300-a949-cca27d03f6fa`，与执行者不同实例/会话，结论 APPROVE_WITH_NITS）。
 - **租约时间**：初次 `2026-11-18 14:28`；R5 首轮 `REJECT` 后返工租约 `2026-11-18 14:44`。
 - **执行环境**：共享 checkout 串行单写者；返工仅改治理文档并处置用户授权的 ZCode 私有计划目录内容，不创建或改写业务代码。
 - **写入范围**：`AGENTS.md`、`docs/README.md`、`docs/specs/README.md`、`docs/specs/project-governance.md`、`docs/specs/ai-agents/**`、`docs/tasks/README.md`、`docs/tasks/project-tasks.md`、`docs/records/**`、`docs/reviews/**`、`docs/archived/**`、`docs/reference/ai-knowledge/07-change-memory.md`，以及用户授权处置的 ZCode 私有计划目录内容。
@@ -31,10 +31,10 @@
 - **并行边界**：本任务独占任务盘、记录/评审索引、归档索引和记忆台账；无并行写入任务，其他任务不得同时写共享 checkout。
 - **全局集成租约**：`NOT_REQUIRED`（单一 R0/执行者、无并行写入任务）；共享 `dev` 的 `master`/`test` 同步与推送仍由本任务 R0 串行执行。
 - **验收命令**：`git diff --check`；附录 A 哈希；`check-doc-refs.sh --strict`；`check-memory-sync.sh --strict`；`audit-backend-rules.sh --strict`；`apex-preflight.sh --fast --strict`；`verify-docs.sh --strict`。
-- **交接物**：变更记录 `docs/records/2026-11-18-multi-agent-governance.md`、台账 #53 与追加更正条目 #54、[R5 首轮评审](../reviews/2026-11-18-be-042-r5-review.md)、真实命令结果、未验证项与回滚方式。
+- **交接物**：变更记录 `docs/records/2026-11-18-multi-agent-governance.md`、台账 #53 与追加条目 #54/#55、[R5 评审报告](../reviews/2026-11-18-be-042-r5-review.md)、真实命令结果、未验证项与回滚方式。
 - **历史事实**：内容提交 `61a7499f7cf87d52930b0dd3b2de7e69d91fe6d5`；证据回填/中间集成提交 `90c13b744be84b0bbd9dbab96c9d47fc55cbef22`。`90c13b74` 时 `dev`/`master`/`test` 与同名远端均为该 SHA，推送范围 `5d17cac2..90c13b74`；它**不是最终关闭 SHA**。
 - **用户集成授权**：2026-11-18 用户明确要求提交并合并至 `dev`/`master`/`test`、推送所有分支；该指令覆盖默认“R5 放行后再集成”的执行顺序，但不构成 R5 复核结论。
-- **当前状态**：`执行中`（R5 首轮 `REJECT`，MF-01–MF-05 返工中）；最终关闭 SHA 尚未产生，R5 复审通过前不得改为 `已完成`。
+- **当前状态**：`已完成`；R5 增量复审 `APPROVE_WITH_NITS`、MF-01–MF-05 无未解决必改项；最终关闭提交为本状态提交，完整 SHA 可由本任务所在分支的 HEAD 定位。
 
 ## 2. 本期已完成（治理基线）
 

@@ -285,8 +285,8 @@ API 接口文档、规范和版本管理。
 
 - [项目任务管理规范](specs/project-governance.md) — v1.2 任务租约、并行准入、worktree 隔离、标准交接、独立复核、集成关闭、文档收口与后端红线
 - [AI 角色卡 R0–R5](specs/ai-agents/README.md) — 主控编排 / 需求拆解 / 后端实现 / 契约守门 / 测试回归 / 独立评审
-- [多智能体并行协作治理记录](records/2026-11-18-multi-agent-governance.md) — BE-042 的范围、关键规则、R5 首轮评审与返工证据（待 R5 复审）
-- [BE-042 独立 R5 评审报告](reviews/2026-11-18-be-042-r5-review.md) — 首轮 `REJECT`：5 项 P1 必改，返工中，待同一独立 R5 复审
+- [多智能体并行协作治理记录](records/2026-11-18-multi-agent-governance.md) — BE-042 的范围、关键规则、R5 首轮驳回、返工复审与最终关闭证据
+- [BE-042 独立 R5 评审报告](reviews/2026-11-18-be-042-r5-review.md) — 首轮 `REJECT` 后增量复审 `APPROVE_WITH_NITS`，MF-01–MF-05 已清零
 
 ### 迁入的历史资料（自 AI 私有目录迁出，内容零删改）
 

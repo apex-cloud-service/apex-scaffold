@@ -1,6 +1,6 @@
 # 2026-11-18 多智能体并行协作治理（BE-042）
 
-> 状态：**R5 首轮 REJECT，返工待复审**。本记录由执行会话供 R0 验收，不替代 R5 结论或最终集成。
+> 状态：**已完成**。R5 首轮 REJECT 后完成返工；独立增量复审结论 `APPROVE_WITH_NITS`，MF-01–MF-05 清零。最终关闭与分支同步证据见 §10。
 
 ## 1. 范围
 
@@ -52,11 +52,11 @@
 
 ## 7. 复核状态
 
-- R5：首轮已由独立子代理 Chandrasekhar（`01a1ed5c-98d3-72f2-9091-ac26530b2d12`）复核并给出 **REJECT**；MF-01–MF-05 返工后待同一 R5 增量复审，详见 §8–§9。
+- R5：首轮由独立子代理 Chandrasekhar（`01a1ed5c-98d3-72f2-9091-ac26530b2d12`）给出 **REJECT**；返工由独立子代理 Erdos（`01a1ed8c-02cb-7300-a949-cca27d03f6fa`）增量复审并给出 **APPROVE_WITH_NITS**，MF-01–MF-05 均清零，详见 §8–§10。
 - 用户授权：2026-11-18 用户明确要求提交、合并至 `master`/`test` 并推送所有分支；这是对默认复核顺序的一次性覆盖，不视为 R5 通过。
-- 内容提交：`61a7499f7cf87d52930b0dd3b2de7e69d91fe6d5`。
+- 内容提交：`61a7499f7cf87d52930b0dd3b2de7e69d91fe6d5`；R5 放行的返工提交：`fdc09ec6240bbe245ccbb1e275197bb1b0f5d854`。
 - 集成：中间集成 `90c13b74` 依据用户明确授权，将 `dev` 以 `--ff-only` 同步至 `master`/`test`；该动作发生在 R5 首轮评审前，且首轮结论为 REJECT，不能据此关闭 BE-042。
-- 关闭：**不满足**；须待 R5 结论、逐任务集成、治理复验和台账可定位后，由 R0 更新为 `已完成`。
+- 关闭：满足；R5 增量结论、最终关闭提交、治理复验、记录/索引、台账 #55 与回滚方式均已留痕，BE-042 已由 R0 更新为 `已完成`。
 
 ## 8. R5 首轮驳回、返工与中间集成事实（2026-11-18）
 
@@ -65,11 +65,19 @@
 - 历史事实：`61a7499f7cf87d52930b0dd3b2de7e69d91fe6d5` 为正文章节内容提交；`90c13b744be84b0bbd9dbab96c9d47fc55cbef22` 为证据回填和中间集成提交。`90c13b74` 时 `dev`/`master`/`test` 与同名远端均为该 SHA，推送范围为 `5d17cac2..90c13b74`；该 SHA **不是最终关闭 SHA**。
 - append-only 纠正：`61a7499f` 首次登记 #53 时提交字段为“本轮 dev 提交（SHA 待回填）”；`90c13b74` 原地改写 #53 填入内容提交 SHA，违反历史条目只追加的硬规则。本轮不再次修改 #53，改在台账追加 #54 说明原状态、违规事实、当前可定位提交与防再犯措施。
 - ZCode 外部阻断处置：用户于本轮明确授权处置 ZCode 私有计划目录。`plan-sess_4299cf14-153e-49cf-9fc2-ef9bbeea0aca.md` 共 51 行、4844 bytes，原文 SHA-256 为 `9e83bc0321bc126f14bdcee640a2a7b0276e560cf15c39b9ee86638519bd6de1`；已逐字节迁入 `docs/archived/ai-sessions/zcode-plans/`，归档副本哈希相同，原位置仅保留 5 行短指针。未修改或放宽 `verify-docs.sh`。
-- 当前尚未最终集成：返工提交需先经同一独立 R5 增量复审，R5 `APPROVE` 或 `APPROVE_WITH_NITS` 且必须修项清零后，才能产生最终关闭提交并同步 `dev`/`master`/`test`。返工验证结果见任务盘执行租约与台账 #54。
+- 返工提交 `fdc09ec6` 已由独立 R5 增量复审放行（`APPROVE_WITH_NITS`，MF-01–MF-05 清零）；最终关闭与分支同步结果见 §10。
 
 ## 9. 返工验证与复审结果
 
 - 返工验证：`bash scripts/governance/verify-docs.sh --strict` PASS（0 项问题）；`bash scripts/governance/check-doc-refs.sh --strict` PASS（0 问题）；`bash scripts/governance/audit-backend-rules.sh --strict` PASS（无阻断项）。
 - 预检：`bash scripts/dev/apex-preflight.sh --fast --strict` PASS（`OK=14 WARN=4 FAIL=0`）；`git diff --check` PASS；附录 A 哈希保持 `aa0c25fcc3d4b32a79981efb4e01534ae68449fb320d37037263d4668d8960ed`。
-- R5 复审：待同一独立 R5 对返工提交增量复核。
-- 最终集成：尚未产生最终关闭 SHA。
+- R5 复审：独立增量复审 `APPROVE_WITH_NITS`，报告已保留首轮 REJECT 并追加复审依据。
+- 最终集成：BE-042 已由 R0 标记 `已完成`；本记录所在最终关闭提交作为 `dev` 集成点，完整 SHA 由 `git log` 定位；`master`/`test` 与远端对齐结果见 §10。
+
+## 10. 最终关闭与分支同步
+
+- R5：Erdos（独立子代理 `01a1ed8c-02cb-7300-a949-cca27d03f6fa`）于 2026-11-18 对返工提交 `fdc09ec6240bbe245ccbb1e275197bb1b0f5d854` 增量复审，结论 `APPROVE_WITH_NITS`；MF-01–MF-05 清零，无未解决必改项。
+- 最终关闭提交：本记录、任务状态和台账 #55 同步更新所在的本提交；提交 SHA 可由 `dev`/`master`/`test` 共同 HEAD 定位。其父提交为 R5 放行的返工提交 `fdc09ec6240bbe245ccbb1e275197bb1b0f5d854`。
+- 合入方式：`master` 与 `test` 均仅以 `--ff-only` 从 `dev` 快进；禁止强推或历史改写。三支及远端 refs 的实际 SHA 将在推送后据 `git rev-parse` 与 `git ls-remote` 核验。
+- 严格验收：`verify-docs.sh --strict` 0 项；`check-doc-refs.sh --strict` 0 项；`check-memory-sync.sh --strict` 0 项；`audit-backend-rules.sh --strict` 无阻断；`apex-preflight.sh --fast --strict` `OK=14 WARN=4 FAIL=0`；附录 A SHA-256 `aa0c25fcc3d4b32a79981efb4e01534ae68449fb320d37037263d4668d8960ed`。
+- 回滚：`git revert <最终关闭提交 SHA>`，并同步回滚 BE-042 状态、索引和追加记忆条目；不改写历史。
