@@ -255,7 +255,7 @@ API 接口文档、规范和版本管理。
 
 ---
 
-## 🏛 项目治理与任务管理（2026-11-16 增补）（2026-11-18 多智能体并行协作增补）
+## 🏛 项目治理与任务管理（2026-11-16 增补）· 2026-11-18 多智能体协作增补
 
 > 本区块为治理规范新增入口。既有编号目录（00–08）与专题目录（`architecture`/`api`/`cache`/`diagrams`/`migration`/`reports`/`_archive`）**全部保持不变**，不搬迁、不改名。
 
@@ -285,11 +285,13 @@ API 接口文档、规范和版本管理。
 
 - [项目任务管理规范](specs/project-governance.md) — v1.2 任务租约、并行准入、worktree 隔离、标准交接、独立复核、集成关闭、文档收口与后端红线
 - [AI 角色卡 R0–R5](specs/ai-agents/README.md) — 主控编排 / 需求拆解 / 后端实现 / 契约守门 / 测试回归 / 独立评审
-- [多智能体并行协作治理记录](records/2026-11-18-multi-agent-governance.md) — BE-042 的范围、关键规则、验证证据、影响面与回滚方式（待 R5 独立复核）
+- [多智能体并行协作治理记录](records/2026-11-18-multi-agent-governance.md) — BE-042 的范围、关键规则、R5 首轮评审与返工证据（待 R5 复审）
+- [BE-042 独立 R5 评审报告](reviews/2026-11-18-be-042-r5-review.md) — 首轮 `REJECT`：5 项 P1 必改，返工中，待同一独立 R5 复审
 
 ### 迁入的历史资料（自 AI 私有目录迁出，内容零删改）
 
 - [AI 会话设计文档归档](plans/archived-ai-sessions/README.md) — 原 `.trae/documents`：文档对齐计划、网关韧性方案、微服务迁移执行计划、Phase 5/6 抽取设计
+- [ZCode 会话计划归档](archived/ai-sessions/zcode-plans/README.md) — 原 `.zcode/plans` 的 14 份历史计划（逐字节一致，私有目录仅保留短指针）
 
 ### 治理自检
 

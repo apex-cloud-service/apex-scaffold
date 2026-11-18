@@ -1,8 +1,8 @@
 # ZCode 会话计划归档（docs/archived/ai-sessions/zcode-plans）
 
-原 `.zcode/plans/` 的 13 份会话计划原文，用于追溯「当时为什么这么改」。
+原 `.zcode/plans/` 的 14 份会话计划原文，用于追溯「当时为什么这么改」。
 
-- **迁移日期**：2026-11-16（任务 BE-015）
+- **迁移日期**：2026-11-16（13 份，任务 BE-015）；2026-11-18（1 份，任务 BE-042）
 - **内容改动**：无，逐字节一致（SHA-256 已比对）
 - **原目录**：`.zcode/plans/`（被 gitignore，未入库），已保留 `MIGRATED.md` 指针
 
@@ -11,6 +11,7 @@
 | 文件 | 主题 |
 | --- | --- |
 | `plan-sess_0551c3f3-5890-4584-b1f1-793d4b312b6d.md` | 方案 v3 首批 A1+A2：双算法验签统一 + JWKS 闭环 |
+| `plan-sess_4299cf14-153e-49cf-9fc2-ef9bbeea0aca.md` | 全仓 Javadoc 评审与补齐战役（BE-041；2026-11-18 随 BE-042 迁入） |
 | `plan-sess_1d68e5f7-c904-46d9-875f-326c816f0c14.md` | 剩余任务实施计划（接续会话） |
 | `plan-sess_279431bd-6b46-4313-b621-7f51a998ab72.md` | Context 式会话计划 |
 | `plan-sess_3e256dff-3702-4c92-a667-5bf731a2f9e0.md` | 已完成并验证部分的抽样核对结论 |

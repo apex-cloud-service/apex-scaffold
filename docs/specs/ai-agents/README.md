@@ -19,10 +19,10 @@
 | R1 需求拆解与任务卡 | `r1-task-planner.md` | 用户提需求 → 输出 P0–P3 优先级 + 任务卡 + 验收标准 |
 | R2 后端实现（WebFlux） | `r2-backend-implementer.md` | 按红线写 Handler/Router/Service/Repository |
 | R3 接口契约守门 | `r3-contract-guard.md` | 审 OpenAPI/Handler 签名/DTO/错误码/版本兼容 |
-| R4 测试与回归 | `r4-test-runner.md` | 写测试、跑 `mvnd`、定位失败原因 |
+| R4 测试与回归 | `r4-test-runner.md` | 执行/定位测试，按任务授权修改指定测试文件，跑 `mvnd` |
 | R5 评审与红线扫描 | `r5-reviewer.md` | 提交前评审、跑治理脚本、给结论 |
 
-主链路：`R0 建卡/授权 → R1 拆解 → R2 实现 → R3/R4 独立取证 → R5 放行 → R0 集成/关闭`。小任务可合并规划与实现，但 R2 与 R5 不得是同一智能体实例或同一会话。
+主链路：`R0 建卡/授权 → R1 拆解 → R2 实现 → R3/R4 独立取证 → R5 放行 → R0 集成/关闭`。小任务可合并规划与实现，但 R5 必须与实际执行者为不同智能体实例或会话；代码任务中 R2 与 R5 也不得相同；并行任务不得合并 R0、执行者和复核者。
 
 ## 使用方式（三选一）
 
@@ -38,4 +38,4 @@
 4. 并行写任务使用独立 worktree；共享 checkout 同一时刻只允许一个写者，禁止清理他人未提交改动。
 5. 不删既有文档与图表；移动必须先建新版再留指针。
 6. 提交前必跑：`bash scripts/governance/verify-docs.sh --strict`、`bash scripts/governance/check-doc-refs.sh --strict`、`bash scripts/governance/audit-backend-rules.sh --strict` 与 `bash scripts/governance/check-memory-sync.sh --strict`。
-7. R2 实现与 R5 复核不得自审自放；任何“顺手重构”一律拒绝并登记独立任务卡。
+7. R5 必须与实际执行者为不同智能体实例或会话；代码任务中 R2 与 R5 也不得相同；不得自审自放；任何“顺手重构”一律拒绝并登记独立任务卡。

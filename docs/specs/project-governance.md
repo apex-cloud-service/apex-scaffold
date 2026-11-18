@@ -65,7 +65,7 @@
 | 基线版本 | 任务开工时的 `dev` commit SHA；不得用“最新代码”代替 |
 | 写入范围 | 允许修改的模块/文件/目录清单，并列出禁止触碰的共享文件与高风险路径 |
 | 并行边界 | 依赖任务、可并行任务、必须串行的共享文件；证明与所有活跃任务写范围互斥 |
-| 执行环境 | 共享 checkout（只读审查）或独立 worktree/短分支（写任务） |
+| 执行环境 | 共享 checkout（串行单写者写入；只读审查）或独立 worktree/短分支（并行写任务） |
 | 验收标准 | **可执行**（命令 + 期望结果），如 `mvnd -pl :模块 -am verify` 通过、`verify-docs.sh` 通过 |
 | 影响面 | 模块/文件清单，标注是否触碰红线与契约 |
 | 项目校验 | 明确回归范围（单模块 / 全量 / 仅文档） |
@@ -194,13 +194,13 @@
 | R4 测试回归 | `ai-agents/r4-test-runner.md` | `mvnd` 分层验证、失败定位、测试缺口 | 默认只读；仅任务卡指定的测试文件可写 |
 | R5 评审 | `ai-agents/r5-reviewer.md` | 独立评审 + 跑治理脚本 + 放行结论 | 代码只读；可写 R0 指定的评审记录 |
 
-> 主链路：`R0 建卡/授权 → R1 拆解 → R2 实现 → R3/R4 独立取证 → R5 放行 → R0 集成/关闭`。小任务可合并规划/实现，但 R2 与 R5 不得是同一智能体实例或同一会话；不得自审自放。
+> 主链路：`R0 建卡/授权 → R1 拆解 → R2 实现 → R3/R4 独立取证 → R5 放行 → R0 集成/关闭`。小任务可合并规划/实现，但 R5 必须与实际执行者为不同智能体实例或会话；代码任务中 R2 与 R5 也不得相同；并行任务不得合并 R0、执行者和复核者；不得自审自放。
 
 ### 4.5 职责分离与单写者
 
 1. **R0 唯一协调**：各任务的任务盘行、状态、租约、记忆台账条目和最终 `dev` 集成由该任务 R0 负责；跨任务共享写入与 `dev` 集成仍须遵守 §4.10 的全局租约。执行者不得直接改这些共享写入物。
-2. **R2 范围实现**：执行者只改任务卡列明的写入范围；发现相邻缺陷、公共依赖或契约变化时登记新卡，不得顺手扩展。
-3. **R3/R5 代码只读**：契约守门和评审只输出问题清单与结论；返工由 R2 执行，修复后复核增量范围。
+2. **执行者范围实现**：执行者只改任务卡列明的写入范围；发现相邻缺陷、公共依赖或契约变化时登记新卡，不得顺手扩展。
+3. **R3/R5 代码只读**：契约守门和评审只输出问题清单与结论；返工由原执行者执行，修复后复核增量范围。
 4. **R4 证据优先**：测试执行者必须报告环境、命令、结果、失败摘要和复现步骤；不得用“已验证”代替原始证据。
 5. **人负责最终风险**：P0、安全、数据迁移、模块坐标、parent 继承、运行拓扑和契约破坏性变更，必须由用户或指定决策人确认。
 
@@ -466,7 +466,7 @@ git branch test master && git push -u origin test
 3. 私有目录正文迁入 `docs/`（逐文件 SHA-256 一致）：
    - `.trae/documents` 4 份 → `docs/plans/archived-ai-sessions/`（原路径留指针，修 3 处引用）
    - `.workbuddy/knowledge` 7 份 → `docs/reference/ai-knowledge/`（修 rag/ops 相对链接）
-   - `.zcode/plans` 13 份 → `docs/archived/ai-sessions/zcode-plans/`
+   - `.zcode/plans` 13 份（2026-11-16）→ `docs/archived/ai-sessions/zcode-plans/`；2026-11-18 BE-042 追加 1 份后当前 14 份
    - `.workbuddy/reports` 3 份 → `docs/08-project-management/periodic-reports/{daily,weekly,monthly}/`
 4. 新建治理脚本与 pre-commit（警告模式）、`docs/specs/ai-agents/` 五张角色卡、`scripts/governance/README.md`。
 5. `.gitignore` 补私有目录标记块，明确「docs 全量入库」。
@@ -510,7 +510,7 @@ git branch test master && git push -u origin test
 - [ ] source scripts/build/init-build-env.sh 后受影响模块 mvnd verify 通过
 - [ ] 他人未提交改动未被触碰
 - [ ] docs/records/ 已留变更记录
-- [ ] R0、执行者、复核者已指定，且 R2 与 R5 不是同一实例/会话
+- [ ] R0、执行者、复核者已指定，且 R5 与实际执行者不是同一实例/会话；代码任务中 R2 与 R5 也不是同一实例/会话
 - [ ] 基线 SHA、写入范围、并行边界和租约已登记
 - [ ] 并行写任务使用独立 worktree，未与其他活跃任务写同一路径
 - [ ] 标准交接包含真实命令与结果，未把“已完成”当作证据
@@ -530,7 +530,7 @@ apex-scaffold/
 │   ├── specs/project-governance.md    # 本文件（规范正文）
 │   ├── specs/ai-agents/               # R0–R5 角色卡
 │   ├── plans/archived-ai-sessions/    # .trae 迁入的设计文档 + 指针
-│   ├── archived/ai-sessions/zcode-plans/  # .zcode 迁入的 13 份计划
+│   ├── archived/ai-sessions/zcode-plans/  # .zcode 迁入的 14 份计划
 │   ├── reference/ai-knowledge/        # .workbuddy 迁入的 7 份知识库
 │   └── diagrams/                      # 图表主库（247 SVG / 68 MMD，禁动）
 ├── scripts/governance/                # 自检脚本 + README
@@ -547,7 +547,7 @@ apex-scaffold/
 1. 新增 R0 主控编排角色，明确任务盘、租约、最终集成和记忆台账的唯一协调责任。
 2. 将“先写盘者为准”改为“同一写入范围只允许一个活跃写任务，由 R0 串行化或拆分”。
 3. 增加任务租约、并行准入矩阵、独立 worktree、单写者、标准交接包、冲突升级和异常接管规则。
-4. 明确 R2 实现与 R5 复核不得是同一智能体实例/会话，复核证据必须来自真实执行。
+4. 明确 R5 必须与实际执行者不同，代码任务中 R2 与 R5 也不得是同一智能体实例/会话；复核证据必须来自真实执行。
 5. 修正角色卡与 `AGENTS.md` 0.5 的 B1–B10 编号漂移、构建初始化命令和图表基线。
 
 完整执行证据见 `docs/records/2026-11-18-multi-agent-governance.md`，记忆台账追加条目 #53。

@@ -10,6 +10,12 @@
 
 既有评审材料保留在 `docs/08-project-management/reports/` 与 `docs/02-architecture/`，不搬迁。
 
+## 当前评审
+
+| 日期 | 对象 | 结论 | 状态 | 文件 |
+| --- | --- | --- | --- | --- |
+| 2026-11-18 | BE-042 多智能体并行协作与交接治理（基线 `5d17cac2`，复核 `90c13b74`） | REJECT：P1 必改 5 项 | 返工中；待同一独立 R5 复审 | [2026-11-18-be-042-r5-review.md](./2026-11-18-be-042-r5-review.md) |
+
 ## 存量评审（2026-11-16 由根目录迁入）
 
 | 对象 | 文件 |
@@ -23,6 +29,8 @@
 | 2026-11-16 | 前后端两仓治理规范对齐（基线 前端 `1455fbc` / 后端 `14f6bc2a`） | 有条件通过（P1 5 项待整改） | [2026-11-16-governance-alignment-review.md](./2026-11-16-governance-alignment-review.md) |
 | 2026-11-16 | 两仓 `dev` 分支治理一致性（基线 后端 `d4311202` / 前端 `d957e6f`） | 有条件通过（P0 1 / P1 6 / P2 2 / P3 1） | [2026-11-16-dev-branch-governance-audit.md](./2026-11-16-dev-branch-governance-audit.md) |
 | 2026-11-16 | 异常处理机制（`@RestControllerAdvice` vs `ErrorWebExceptionHandler`） | 维持现状，不迁移（契约零变化） | [2026-11-16-exception-handler-evaluation.md](./2026-11-16-exception-handler-evaluation.md) |
+
+## 评审要点清单
 
 | 日期 | 文档 | 说明 |
 | --- | --- | --- |
