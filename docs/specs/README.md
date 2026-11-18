@@ -20,6 +20,7 @@
 
 | 角色 | 文件 |
 | --- | --- |
+| 主控编排与最终集成 | `ai-agents/r0-orchestrator.md` |
 | 需求拆解与任务卡 | `ai-agents/r1-task-planner.md` |
 | 后端实现（WebFlux） | `ai-agents/r2-backend-implementer.md` |
 | 接口契约守门 | `ai-agents/r3-contract-guard.md` |
@@ -30,4 +31,4 @@
 
 | 文档 | 内容 | 状态 |
 | --- | --- | --- |
-| [project-governance.md](project-governance.md) | 项目任务管理规范完整正文（任务体系、文档收口、多智能体目录映射、`.gitignore` 规则、后端 10 条红线、执行记录、验收清单） | v1.1 · 2026-11-16 生效 |
+| [project-governance.md](project-governance.md) | 项目任务管理规范完整正文（任务租约、并行准入、worktree 隔离、标准交接、独立复核、任务体系、文档收口、后端 10 条红线、验收清单） | v1.2 · 2026-11-18 生效 |

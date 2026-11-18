@@ -1,14 +1,15 @@
 # 项目任务大盘 · apex-scaffold
 
-> **唯一可信源**。仅主控智能体（默认 Trae）可编辑；WorkBuddy / ZCode / Qoder / Codex 只读，完成后回报主控更新状态。
+> **唯一可信源**。仅本任务指定的协调智能体（R0，可由用户指定任意 AI 或人）可编辑；执行智能体只读，完成后以标准交接包回报 R0。未指定 R0 时不得启动并行写入。
 > 优先级：`P0` 线上阻断 · `P1` 当期必做 · `P2` 后续排期 · `P3` 技术债/优化
 > 状态：`待规划｜执行中｜待复核｜已完成｜搁置`
-> 记录日期：2026-11-16（治理基线建立；基线：`docs/` 1272 文件 = 715 md + 217 svg + 68 mmd + 139 json + 68 mmd…）
+> 记录日期：2026-11-16（治理基线建立；BE-001 补导出后为 `docs/` 1302 文件 = 715 md + 247 svg + 68 mmd + 139 json + 133 其他，图表配对缺口 0）
 
 ## 1. 活跃任务
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- |
+| BE-042 | P1 | 【P1】治理-落地多智能体并行协作与交接规则 | 待复核 | R0/执行：Codex（用户于 2026-11-18 指定）；R5：待指定且须为独立会话 | 主控/执行/复核分责、任务租约与认领、并行准入、单写者与写入范围、Worktree 隔离、标准交接包、合并冲突升级、异常接管与关闭条件均写入 `AGENTS.md`、治理正文、R0–R5 角色卡和任务入口；文档引用、后端红线、预检与记忆台账通过；`verify-docs.sh --strict` 仅被既有 `.zcode` 私有计划文件告警阻断；附录 A 哈希不变；R5 独立复核后方可完成 | `docs/specs/project-governance.md` §2/§4；`docs/specs/ai-agents/`；`docs/records/2026-11-18-multi-agent-governance.md`；台账 #53 |
 | BE-041 | P2 | 【P2】全仓 Javadoc 评审与补齐战役（红线 B7 收口） | 待复核 | ZCode（用户于 2026-11-18 授权） | 双工具评审：扫描器四类清单全 0（类级历史战役已收口）+ JDK doclint 全反应堆 78 告警→0（53 失效引用/24 裸字符/1 @throws/1 注释错挂，53 文件纯注释修复）；`@param/@return/@throws` 全量 0 缺失；零逻辑改动；spotless 通过；三批 `-am test` 1028/4848/4205 用例 0 失败；全量 `clean verify` 43/45 模块 SUCCESS（2 个环境性失败均 -T1 单跑复核为绿：example 计时抖动、boot-all 8080 被既有网关占用）；记录 [2026-11-18-javadoc-review-campaign](../records/2026-11-18-javadoc-review-campaign.md)；台账 #52。已知工具限制：messaging javadoc 目标因 Lombok `onMethod_` 不兼容；顺带发现扫描器默认路径已被 11-14 嵌套破坏（另立任务） | 治理规范 B7；历史战役（2026-09 javadoc-work-summary） |
 | BE-040 | P1 | 【P1】根治 office/auth 的 FieldFill 失效（MetaObjectHandler 未装配） | 待复核 | ZCode（用户于 2026-11-17 授权） | 定位所有 FieldFill 失效的 PO（office 6 个、auth 2 个）并给出根治方案；修复后 create_time/update_time/version/deleted 能自动填充；不破坏模块依赖边界与既有测试；新增 AuditFieldFillHandler（office/auth 各一，属性名分别对齐模块 PO 口径）；新增填充语义回归用例；`:apex-office` 202、`:apex-auth` 1348 用例 0 失败、spotless 通过；真实环境验证移除显式赋值后时间被填充器写入；auth MFA/TOTP 写路径未实测（需外部凭据） | BE-039 遗留项 |
 | BE-039 | P1 | 【P1】office-平台基址可配置并完成日历写操作端到端验证 | 待复核 | ZCode（用户于 2026-11-17 授权） | 三平台客户端基址支持 `apex.office.platforms[*].base-url` 覆盖（缺省保持官方地址，不得改变生产行为）；用本地模拟平台完成 创建→详情→更新→删除→范围查询 全链路真实验证；回归用例覆盖基址覆盖与缺省；`:apex-office` 199 + `:apex-office-service` 406 用例 0 失败、spotless 通过；**本地模拟平台端到端 6/6**（创建/详情/更新/范围/删除/删除后为空）。过程中修复三个落库缺陷（create_time、update_time、逻辑删除未生效） | BE-037/BE-038 未验证项 |
@@ -17,6 +18,21 @@
 | BE-036 | P1 | 【P1】联调-修复快照兼容、菜单范围与审批租户传播 | 待复核 | ZCode（用户于 2026-11-17 授权为本项主控） | 验收：`:apex-system`/`:apex-office`（189 用例）/四个服务模块 `-am test` 均 BUILD SUCCESS 且 0 失败；二轮修审批响应 `processName`/`currentNode`/`createdAt` 恒 null（实体与 DTO 命名不一致致 MapStruct 静默丢字段），`:apex-office-service` 406 用例 0 失败，提交 `102fa274`；缺租户拒绝、JDBC 上下文恢复、空菜单全量、快照 roles/未知字段解码均有回归用例；真实环境租户隔离已验证（租户1 仅见自身记录、跨租户查询返回不存在）；最终重建环境后经网关 18 条真实接口 18/18 通过 | [方案](../specs/2026-11-17-integration-contract-repair.md)；前端 FE-026；[复核清单](../reviews/2026-11-17-integration-review-checklist.md) |
 
 | BE-035 | P2 | 根 target 额外构件副本定向清理与项目内本地仓库防再现守卫 | 已完成 | 主控 Trae | 守卫接入 build.sh/release.sh/apex.sh 并经 BuildPathContractTest 9/9 验证；preflight 仓库位置与副本双检通过（OK=15 WARN=3 FAIL=0）；`target/project-local-repo` 125 副本 1.4G + 44 .DS_Store 已定向清理；不改业务代码/POM、未提交 | `scripts/lib/common.sh`、`scripts/build/build.sh`、`scripts/release/release.sh`、`apex-tools-parent/apex-tools-build/bin/apex.sh`、`scripts/dev/apex-preflight.sh`、台账 #40/#41 |
+
+### BE-042 执行租约（2026-11-18）
+
+- **基线 SHA**：`5d17cac276c8fcb4b9855671a7240b14a669d455`（`dev`）。
+- **R0 / 执行者**：Codex（用户指定）；串行小任务允许 R0 与执行者合并。
+- **独立复核者**：待 R0 指定 R5；不得由本执行实例或同一会话自审。
+- **执行环境**：共享 checkout 单写者；仅文档改动，不创建或改写业务代码。
+- **写入范围**：`AGENTS.md`、`docs/README.md`、`docs/specs/README.md`、`docs/specs/project-governance.md`、`docs/specs/ai-agents/**`、`docs/tasks/README.md`、`docs/tasks/project-tasks.md`、`docs/records/**`、`docs/reference/ai-knowledge/07-change-memory.md`。
+- **禁止触碰**：Java/POM、构建与治理脚本、数据库迁移、接口契约、图表资产及其他智能体私有目录。
+- **并行边界**：本任务独占任务盘、记录索引和记忆台账；无并行写入任务。
+- **全局集成租约**：`HOLDING`（本次治理改动；R0 集成前核验并释放）。
+- **验收命令**：`git diff --check`；附录 A 哈希；`apex-preflight.sh --fast --strict`；`verify-docs.sh --strict`；`check-doc-refs.sh --strict`；`audit-backend-rules.sh --strict`；暂存后执行 `check-memory-sync.sh --strict`。
+- **交接物**：变更记录 `docs/records/2026-11-18-multi-agent-governance.md`、台账 #53、真实命令结果、未验证项与回滚方式。
+- **用户集成授权**：2026-11-18 用户明确要求提交并合并至 `dev`/`master`/`test`、推送所有分支；该指令覆盖默认“R5 放行后再集成”的执行顺序，但不构成 R5 复核结论。
+- **当前状态**：`待复核`；R5 尚未放行，不得改为 `已完成`。
 
 ## 2. 本期已完成（治理基线）
 

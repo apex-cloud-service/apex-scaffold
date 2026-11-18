@@ -9,17 +9,20 @@
 | `docs/specs/ai-agents/`（本目录） | **角色规范正文**，跨工具唯一权威副本 | ✅ 入库 |
 | `.trae/` `.workbuddy/` `.zcode/` `.qoder/` `.codex/` | 各工具的会话缓存、索引、规则副本 | ❌ gitignore |
 
-工具私有目录只放"读取路径/指针"，正文一律在本目录，避免多工具各自一份导致口径分裂（见 `AGENTS.md` 0.3）。
+工具私有目录只放“读取路径/指针”，正文一律在本目录，避免多工具各自一份导致口径分裂（见 `AGENTS.md` 0.4/0.9）。
 
 ## 角色清单
 
 | 角色 | 文件 | 适用场景 |
 | --- | --- | --- |
+| R0 主控编排 | `r0-orchestrator.md` | 建卡、租约、并行准入、分派、交接验收、逐个集成与关闭 |
 | R1 需求拆解与任务卡 | `r1-task-planner.md` | 用户提需求 → 输出 P0–P3 优先级 + 任务卡 + 验收标准 |
 | R2 后端实现（WebFlux） | `r2-backend-implementer.md` | 按红线写 Handler/Router/Service/Repository |
 | R3 接口契约守门 | `r3-contract-guard.md` | 审 OpenAPI/Handler 签名/DTO/错误码/版本兼容 |
 | R4 测试与回归 | `r4-test-runner.md` | 写测试、跑 `mvnd`、定位失败原因 |
 | R5 评审与红线扫描 | `r5-reviewer.md` | 提交前评审、跑治理脚本、给结论 |
+
+主链路：`R0 建卡/授权 → R1 拆解 → R2 实现 → R3/R4 独立取证 → R5 放行 → R0 集成/关闭`。小任务可合并规划与实现，但 R2 与 R5 不得是同一智能体实例或同一会话。
 
 ## 使用方式（三选一）
 
@@ -30,7 +33,9 @@
 ## 通用铁律（所有角色都适用）
 
 1. 改代码前先读 `AGENTS.md` 第 0 章 + 目标文件全文，不凭猜测改。
-2. 一个任务只解决一个目标；跨模块改动必须拆卡。
-3. 不删既有文档与图表；移动必须先建新版再留指针。
-4. 提交前必跑：`bash scripts/governance/verify-docs.sh` 与 `bash scripts/governance/audit-backend-rules.sh`。
-5. 任何"顺手重构"一律拒绝，登记为独立任务卡。
+2. 先确认任务 R0、活跃租约和写入范围；缺少任一项时停止写入并回报 R0。
+3. 一个任务只解决一个目标；跨模块改动必须拆卡。执行者不得直接改任务盘、记录索引或记忆台账。
+4. 并行写任务使用独立 worktree；共享 checkout 同一时刻只允许一个写者，禁止清理他人未提交改动。
+5. 不删既有文档与图表；移动必须先建新版再留指针。
+6. 提交前必跑：`bash scripts/governance/verify-docs.sh --strict`、`bash scripts/governance/check-doc-refs.sh --strict`、`bash scripts/governance/audit-backend-rules.sh --strict` 与 `bash scripts/governance/check-memory-sync.sh --strict`。
+7. R2 实现与 R5 复核不得自审自放；任何“顺手重构”一律拒绝并登记独立任务卡。
