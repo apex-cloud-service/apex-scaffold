@@ -342,6 +342,8 @@ services:
     environment:
       <<: *app-common-environment
       DB_NAME: apex_workflow
+      JWKS_REMOTE_URL: ${JWKS_REMOTE_URL:-http://apex-auth-service:8081/.well-known/jwks.json}
+      JWKS_REFRESH_INTERVAL_SECONDS: ${JWKS_REFRESH_INTERVAL_SECONDS:-300}
       WORKFLOW_JWT_PUBLIC_KEY_BASE64: ${WORKFLOW_JWT_PUBLIC_KEY_BASE64:-}
       WORKFLOW_JWT_HMAC_ENABLED: ${WORKFLOW_JWT_HMAC_ENABLED:-false}
       WORKFLOW_JWT_SECRET: ${WORKFLOW_JWT_SECRET:-}
@@ -438,6 +440,8 @@ services:
     environment:
       <<: *app-common-environment
       DB_NAME: apex_file
+      JWKS_REMOTE_URL: ${JWKS_REMOTE_URL:-http://apex-auth-service:8081/.well-known/jwks.json}
+      JWKS_REFRESH_INTERVAL_SECONDS: ${JWKS_REFRESH_INTERVAL_SECONDS:-300}
       FILE_JWT_PUBLIC_KEY_BASE64: ${FILE_JWT_PUBLIC_KEY_BASE64:-}
       FILE_JWT_PUBLIC_KEYS_BASE64: ${FILE_JWT_PUBLIC_KEYS_BASE64:-}
       FILE_JWT_SECRET: ${FILE_JWT_SECRET:-}
@@ -512,6 +516,8 @@ services:
       <<: *app-common-environment
       MANAGEMENT_SERVER_ADDRESS: "0.0.0.0"
       DB_NAME: apex_integration
+      JWKS_REMOTE_URL: ${JWKS_REMOTE_URL:-http://apex-auth-service:8081/.well-known/jwks.json}
+      JWKS_REFRESH_INTERVAL_SECONDS: ${JWKS_REFRESH_INTERVAL_SECONDS:-300}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/apex_integration?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-apex-root}

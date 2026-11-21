@@ -123,6 +123,7 @@
 | 68 | 联调复测 | **BE-043** 补记通知中心真实已读复验 | 未提交 | 隔离 Chromium 两个真实已读 POST 均为 200/0；未读角标 2→1→隐藏；临时环境已清理，未验证 RocketMQ 投递 | `docs/records/2026-11-19-podman-only-integration.md` |
 | 69 | 消息集成 | 修复通知广播消费者晚于 RocketMQ 模板装配的问题 | 未提交 | 消费者改由 RocketMQ AutoConfiguration 之后条件导入；模板及两个现有开关用 ApplicationContextRunner 验证；11 条消息测试与 Spotless 通过；真实发布回执与 Chromium 投递仍待查 | `docs/records/2026-11-19-podman-only-integration.md`；`apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/NotificationConsumerAutoConfiguration.java` |
 | 70 | 2026-11-21 | 远端 | 汇总后端工作区全量变更，准备提交并推送 `dev`；待独立 R5 绑定提交 SHA 复核后再集成到 `master`/`test` | 本条提交 | `bash scripts/dev/apex-preflight.sh --fast` FAIL=0；`verify-docs.sh --strict` 0 项；`audit-backend-rules.sh --strict` 无阻断；固定 JDK 21/mvnd 定向测试 BUILD SUCCESS；远端 fetch 后 `dev/master/test` 均与本地同基线 | Podman 前后端已验收链路可发布；受保护 reader/知识库模型及 FE-029/BE-043 完整验收、独立 R5 尚未完成 |
+| 71 | 2026-11-21 | 配置 | 按独立 R5 对提交 `a0be46bb` 的意见，为 workflow、file、integration Compose 服务启用共享远程 JWKS；澄清构建管理计划中的 Docker Compose 仅为历史设计 | 本条提交 | `podman-compose -f podman-compose.yml config` 展开结果包含三服务 JWKS 默认地址及 300 秒刷新周期；固定 JDK 21/mvnd 定向测试 BUILD SUCCESS；`verify-docs.sh --strict` 0 项，`audit-backend-rules.sh --strict` 无阻断 | 使用统一认证中心 JWKS 默认端点，支持签名密钥轮换；不引入真实凭据或改变数据结构，受保护域/知识库验收与新 R5 复核仍未完成 |
 
 > **表列与 §1「必填字段」一一对应**：`日期` · `类型` · `摘要` · `提交` · `证据` · `影响面`（`#` 仅序号，不计入字段）。2026-11-16 分列重排：`摘要`/`证据` 原文一字未改，`影响面` 按当次改动范围回填。
 
