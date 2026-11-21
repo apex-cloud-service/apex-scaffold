@@ -9,6 +9,7 @@
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- |
+| BE-043 | P1 | 【P1】联调-全量 API 契约核验与 Podman Compose 真实链路 | 执行中 | R0/执行：Codex（用户 2026-11-18 授权，串行单写者） | R3 方案评审 `integration_plan_review`：最终结论 APPROVE（2026-11-18，确认移除不存在的 integration profile、唯一 Compose 入口及执行边界）；与 FE-029 对照后端执行路由/DTO/权限/分页与真实响应；只修真实证据确认的缺陷并补定向测试；Podman 栈服务名/健康/网络反代可用；测试、spotless、治理检查和 R5 独立复核通过后关闭 | [方案](../specs/2026-11-18-fullstack-integration.md)；BE 基线 `b177605d1d1482470945b8a48183103655bf3d18`；FE 基线 `f03bb6883a0f05be9cb4fda836062db55f6e4460`；FE-029 |
 | BE-042 | P1 | 【P1】治理-落地多智能体并行协作与交接规则 | 已完成 | R0/执行：Codex（同一会话，串行单写者）；首轮 R5：Chandrasekhar；增量 R5：Erdos（独立子代理 `01a1ed8c-02cb-7300-a949-cca27d03f6fa`） | 主控/执行/复核分责、任务租约与认领、并行准入、单写者与写入范围、Worktree 隔离、标准交接包、合并冲突升级、异常接管与关闭条件均写入 `AGENTS.md`、治理正文、R0–R5 角色卡和任务入口；文档引用、后端红线、预检与记忆台账通过；`verify-docs.sh --strict` 0 项；附录 A 哈希不变；独立 R5 增量结论 `APPROVE_WITH_NITS`，MF-01–MF-05 清零；最终关闭提交及三支同步见本任务提交历史 | `docs/specs/project-governance.md` §2/§4；`docs/specs/ai-agents/`；`docs/records/2026-11-18-multi-agent-governance.md`；台账 #53/#54/#55；[R5 评审报告](../reviews/2026-11-18-be-042-r5-review.md) |
 | BE-041 | P2 | 【P2】全仓 Javadoc 评审与补齐战役（红线 B7 收口） | 待复核 | ZCode（用户于 2026-11-18 授权） | 双工具评审：扫描器四类清单全 0（类级历史战役已收口）+ JDK doclint 全反应堆 78 告警→0（53 失效引用/24 裸字符/1 @throws/1 注释错挂，53 文件纯注释修复）；`@param/@return/@throws` 全量 0 缺失；零逻辑改动；spotless 通过；三批 `-am test` 1028/4848/4205 用例 0 失败；全量 `clean verify` 43/45 模块 SUCCESS（2 个环境性失败均 -T1 单跑复核为绿：example 计时抖动、boot-all 8080 被既有网关占用）；记录 [2026-11-18-javadoc-review-campaign](../records/2026-11-18-javadoc-review-campaign.md)；台账 #52。已知工具限制：messaging javadoc 目标因 Lombok `onMethod_` 不兼容；顺带发现扫描器默认路径已被 11-14 嵌套破坏（另立任务） | 治理规范 B7；历史战役（2026-09 javadoc-work-summary） |
 | BE-040 | P1 | 【P1】根治 office/auth 的 FieldFill 失效（MetaObjectHandler 未装配） | 待复核 | ZCode（用户于 2026-11-17 授权） | 定位所有 FieldFill 失效的 PO（office 6 个、auth 2 个）并给出根治方案；修复后 create_time/update_time/version/deleted 能自动填充；不破坏模块依赖边界与既有测试；新增 AuditFieldFillHandler（office/auth 各一，属性名分别对齐模块 PO 口径）；新增填充语义回归用例；`:apex-office` 202、`:apex-auth` 1348 用例 0 失败、spotless 通过；真实环境验证移除显式赋值后时间被填充器写入；auth MFA/TOTP 写路径未实测（需外部凭据） | BE-039 遗留项 |
@@ -16,6 +17,20 @@
 | BE-038 | P1 | 【P1】office-扩展 CalendarPort 支持详情/更新/删除与组织者换算 | 待复核 | ZCode（用户于 2026-11-17 授权） | 端口方法补父资源标识（calendarId 或 organizerId），使飞书/钉钉详情、更新、删除可用；新增「系统用户 → 平台用户」换算（复用 office_organization_mapping），避免用系统 ID 调平台；保留 fail-closed 与租户隔离；新增回归用例（4 组）；`:apex-office` 198 用例 0 失败、spotless 通过；真实链路：无绑定→「未绑定 feishu 平台账号」，插入绑定→「飞书 appId未配置」，换算与路由已通；真实创建仍需平台凭据 | 前端 FE-026；BE-037；[复核清单](../reviews/2026-11-17-integration-review-checklist.md) |
 | BE-037 | P1 | 【P1】office-补齐三平台日历客户端实现 | 待复核 | ZCode（用户于 2026-11-17 授权） | 实现 feishu/dingtalk/wecom 三个 CalendarClient（端口 9 方法：创建/详情/更新/取消/删除/范围列表/会议室可用性/平台标识）；Bean 名 `<platform>CalendarClient` 与 `OfficeCalendarService.getCalendarClient` 一致；未配置凭据时 fail-closed 且错误可读；真实创建链路可跑通或明确外部依赖；新增单测覆盖请求构建与错误映射（6 条）；spotless 与模块测试通过（195 用例 0 失败）；真实网关三平台均返回凭据未配置而非「不支持的办公平台」，证明 Bean 查找链路已通。**限制**：详情/更新端口签名缺组织者，已显式拒绝；真实创建需平台凭据，本地未闭环 | 前端 FE-026；记录 §7.2；[复核清单](../reviews/2026-11-17-integration-review-checklist.md) |
 | BE-036 | P1 | 【P1】联调-修复快照兼容、菜单范围与审批租户传播 | 待复核 | ZCode（用户于 2026-11-17 授权为本项主控） | 验收：`:apex-system`/`:apex-office`（189 用例）/四个服务模块 `-am test` 均 BUILD SUCCESS 且 0 失败；二轮修审批响应 `processName`/`currentNode`/`createdAt` 恒 null（实体与 DTO 命名不一致致 MapStruct 静默丢字段），`:apex-office-service` 406 用例 0 失败，提交 `102fa274`；缺租户拒绝、JDBC 上下文恢复、空菜单全量、快照 roles/未知字段解码均有回归用例；真实环境租户隔离已验证（租户1 仅见自身记录、跨租户查询返回不存在）；最终重建环境后经网关 18 条真实接口 18/18 通过 | [方案](../specs/2026-11-17-integration-contract-repair.md)；前端 FE-026；[复核清单](../reviews/2026-11-17-integration-review-checklist.md) |
+
+### BE-043 执行租约
+
+- **R0 / 执行者**：Codex（用户 2026-11-18 明确要求继续完成；当前串行单写者）。
+- **独立 R3 / R5**：R3 `integration_plan_review`（最终 APPROVE，2026-11-18）；R5 `integration_final_reviewer`（已接受最终复核指派，不参与实现，结论绑定最终待复核 SHA）。
+- **租约起始时间**：2026-11-18 继续执行（Asia/Shanghai）；R0 单写者持有至交接 R5。
+- **执行基线**：后端 `dev` `b177605d1d1482470945b8a48183103655bf3d18`；前端 `dev` `f03bb6883a0f05be9cb4fda836062db55f6e4460`。
+- **执行环境**：唯一 Compose 入口为本仓库 `podman-compose.yml`；显式项目名 `apex-scaffold`，网络名 `apex-scaffold_apex-network`。`.env` 从 `.env.example` 准备并配置本地必填安全密钥；前端镜像在独立仓库用 Podman 预构建，由本文件的 `apex-admin-web` 服务接入；不启动第二份前端 Compose。跨仓共享 checkout 串行单写者。
+- **写入范围**：仅真实缺陷影响的后端源码/测试最小文件；`podman-compose.yml`（仅联调证明确有环境缺陷时）；`docs/03-api/**`、`docs/06-testing/**`、`docs/specs/**`、`docs/records/**`、`docs/README.md`、本任务卡及 `docs/reference/ai-knowledge/07-change-memory.md`。
+- **禁止触碰**：无关服务、POM/模块边界、Flyway 迁移、外部生产配置、密钥与非测试数据；若必须修改，暂停并先增补评审方案。
+- **依赖/并行边界**：依赖 FE-029 API 对照；两卡共用 R0，串行执行；共享 DTO/权限/迁移变更先经 R3 评审，禁止 FE/BE 并行修改。
+- **验收命令**：`podman-compose -p apex-scaffold -f podman-compose.yml config`；固定构建环境后按受影响模块运行 `mvnd -B -pl :<artifactIds> -am test` 与 `spotless:check`；运行 `verify-docs.sh --strict`、`check-doc-refs.sh --strict`、`check-memory-sync.sh --strict`、`apex-preflight.sh --fast --strict`；校验 Podman Compose 配置及健康/网络探测。
+- **全局集成租约**：`HOLDING`，由本 R0 串行持有；跨仓同步与最终集成不得并行。
+- **交接物**：后端路由/DTO 差异和修复矩阵、定向测试原始结果、Podman 配置/容器/网络证据、记录/台账条目及 R5 结论。
 
 | BE-035 | P2 | 根 target 额外构件副本定向清理与项目内本地仓库防再现守卫 | 已完成 | 主控 Trae | 守卫接入 build.sh/release.sh/apex.sh 并经 BuildPathContractTest 9/9 验证；preflight 仓库位置与副本双检通过（OK=15 WARN=3 FAIL=0）；`target/project-local-repo` 125 副本 1.4G + 44 .DS_Store 已定向清理；不改业务代码/POM、未提交 | `scripts/lib/common.sh`、`scripts/build/build.sh`、`scripts/release/release.sh`、`apex-tools-parent/apex-tools-build/bin/apex.sh`、`scripts/dev/apex-preflight.sh`、台账 #40/#41 |
 

@@ -108,6 +108,22 @@
 
 
 
+| 56 | 2026-11-19 | 脚本 | **BE-043 Podman-only 联调入口补齐**：前端 Compose 服务移除固定容器名以支持项目隔离；将 Nginx 首页探活移入 Compose（OCI 镜像构建会忽略 Containerfile `HEALTHCHECK`）；`apex.sh` 说明统一为 Java JAR/Podman Compose/Kubernetes 三种运行时。此前工作区改动已移除 Docker Compose 分支与 MQTT 脚本双引擎逻辑 | 未提交 | `podman-compose -p apex-scaffold -f podman-compose.yml config --services` 通过（17 服务）；前端镜像 Podman 构建、隔离 Compose 单测 68 文件/533 用例、模拟反代冒烟均通过；真实网关镜像不存在且镜像库存读取报存储路径错误，未启动业务服务/数据库或触碰数据卷 | Compose 容器隔离与前端健康检查；无 API 契约变化；真实后端联调仍待完成 |
+| 57 | 2026-11-19 | 配置/测试/文档 | **BE-043 修复登录路由超时并补齐 API 索引**：为网关 `authService` 配置 10 秒 TimeLimiter，验证实际绑定值。Compose 为 gateway/system 提供同网络 auth JWKS 缺省地址。按 Router 补齐 23 条 API 索引 | 未提交 | 固定工具链 `GatewayApplicationTest` 4/4；隔离 Compose 网关 readiness 与前端代理登录均 HTTP 200，auth/system 临时空库迁移 22/91 条成功，验证项目容器和网络已清理 | 记录见 `docs/records/2026-11-19-podman-only-integration.md`。完整拓扑、业务写入和双通道推送待实测 |
+| 58 | 测试/文档 | 记录 Podman 容器 Playwright 回归发现与前端修复 | 未提交 | 代理环境曾导致回环探测超时；审批待办 mock 曾违反裸数组契约；两项修复后全套 E2E 12/12 通过，明细和边界见 FE-029 联调记录 | `docs/records/2026-11-19-podman-only-integration.md`；`../apex-admin-web/docs/records/2026-11-19-fullstack-integration.md` |
+| 59 | 配置/联调 | 为 office 注入公共配置加密属性并记录真实浏览器扩展验证 | 未提交 | office 空库迁移 10 条，补密钥属性后启动；网关刷新和列表重放 200，SSE 200，WS 101，字典创建 403 | `docs/records/2026-11-19-podman-only-integration.md` |
+| 60 | 配置/接口契约 | 对齐 system CORS 并保留字典响应 ID 精度 | 未提交 | 创建 200 后浏览器编辑携带失真 ID 得到 4711；字典 ID 字符串序列化测试通过，system 重打包成功；WS 心跳通过 | `docs/records/2026-11-19-podman-only-integration.md`；`docs/03-api/API_ROUTES.md` |
+| 61 | 配置/联调 | **BE-043** 透传 office 非秘密授权配置并记录字典及办公复测 | 未提交 | 字典双向启停和 CRUD 真实通过；办公三请求 403，WS 101 但本轮心跳未通过；Compose 四项映射检查与 office 定向测试 13/13 通过 | `docs/records/2026-11-19-podman-only-integration.md`；`docs/05-operations/configuration.md` |
+| 62 | 配置/联调 | **BE-043** 共享公共配置加密密钥的 Spring 属性映射 | 未提交 | 三服务缺配置导致 503；正式 Compose 四项服务映射渲染通过；隔离复跑未通过 system 就绪探测，WS 心跳在首轮通过 | `docs/records/2026-11-19-podman-only-integration.md`；`docs/05-operations/configuration.md` |
+| 63 | 联调复验 | **BE-043** 记录隔离编排下扩展服务启动及浏览器结果 | 未提交 | 扩展服务端口均可用；工作流与文件网关超时、总览降级、办公与集成授权仍未通过；复测在登录初始化阶段中止，专属资源已清理 | `docs/records/2026-11-19-podman-only-integration.md` |
+| 64 | 联调复验 | **BE-043** 同步轮换公钥与业务浏览器结果 | 未提交 | 工作流待办及总览三源通过；办公与集成授权 403，上传待复验前端 multipart 修复；未改正式验签配置或数据卷 | `docs/records/2026-11-19-podman-only-integration.md` |
+| 65 | 文件持久化修复 | **BE-043** 装配文件服务审计字段填充 | 未提交 | 真实上传暴露 create_time 非空约束错误；H2 Mapper 插入回归 2/2，重打包与 Spotless 通过；无迁移或 schema 改动 | `docs/records/2026-11-19-podman-only-integration.md` |
+| 66 | 文件服务联调 | **BE-043** 记录审计字段修复后真实上传结果 | 未提交 | 普通上传 200/0，线上对象键是 fileName；前端需映射；保留办公、连接器 403 和总览 file 超时的未通过记录，无数据库迁移变更 | `docs/records/2026-11-19-podman-only-integration.md` |
+| 67 | 联调复测 | **BE-043** 补记上传页面回显及总览复验 | 未提交 | 真实 multipart 上传 200/0 且页面键匹配，同轮总览三源 UP；保留办公与连接器 403 及 SSE/WS 业务投递未验收记录 | `docs/records/2026-11-19-podman-only-integration.md` |
+| 68 | 联调复测 | **BE-043** 补记通知中心真实已读复验 | 未提交 | 隔离 Chromium 两个真实已读 POST 均为 200/0；未读角标 2→1→隐藏；临时环境已清理，未验证 RocketMQ 投递 | `docs/records/2026-11-19-podman-only-integration.md` |
+| 69 | 消息集成 | 修复通知广播消费者晚于 RocketMQ 模板装配的问题 | 未提交 | 消费者改由 RocketMQ AutoConfiguration 之后条件导入；模板及两个现有开关用 ApplicationContextRunner 验证；11 条消息测试与 Spotless 通过；真实发布回执与 Chromium 投递仍待查 | `docs/records/2026-11-19-podman-only-integration.md`；`apex-shared-parent/apex-infrastructure-messaging/src/main/java/com/apex/scaffold/infrastructure/mq/NotificationConsumerAutoConfiguration.java` |
+| 70 | 2026-11-21 | 远端 | 汇总后端工作区全量变更，准备提交并推送 `dev`；待独立 R5 绑定提交 SHA 复核后再集成到 `master`/`test` | 本条提交 | `bash scripts/dev/apex-preflight.sh --fast` FAIL=0；`verify-docs.sh --strict` 0 项；`audit-backend-rules.sh --strict` 无阻断；固定 JDK 21/mvnd 定向测试 BUILD SUCCESS；远端 fetch 后 `dev/master/test` 均与本地同基线 | Podman 前后端已验收链路可发布；受保护 reader/知识库模型及 FE-029/BE-043 完整验收、独立 R5 尚未完成 |
+
 > **表列与 §1「必填字段」一一对应**：`日期` · `类型` · `摘要` · `提交` · `证据` · `影响面`（`#` 仅序号，不计入字段）。2026-11-16 分列重排：`摘要`/`证据` 原文一字未改，`影响面` 按当次改动范围回填。
 
 ---

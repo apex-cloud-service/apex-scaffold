@@ -14,15 +14,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
 /**
  * MQ消费者服务
@@ -65,10 +60,6 @@ import org.springframework.stereotype.Service;
  * @version 3.0.0
  * @since 1.0.0
  */
-@Service
-@ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
-@ConditionalOnClass(RocketMQTemplate.class)
-@ConditionalOnBean(RocketMQTemplate.class)
 @Slf4j
 public class MqConsumerService {
     /** 消息幂等性缓存键前缀 */

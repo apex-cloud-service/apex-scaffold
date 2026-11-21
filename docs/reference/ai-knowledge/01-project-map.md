@@ -1,6 +1,6 @@
 # 01 · 项目地图
 
-> 采集：**2026-11-17**（源码 + `pom.xml` + `git log` 实测）。回答「有几个项目、怎么连、东西在哪」。
+> 采集：**2026-11-19**（源码 + `pom.xml` + `git log` 实测）。回答「有几个项目、怎么连、东西在哪」。
 
 ## 1. 三个活跃仓库
 
@@ -80,7 +80,7 @@ Maven 结构：根 POM 直接聚合 `apex-shared-parent`(9) / `apex-components-p
 
 **`apex-system` 仍是四层合一巨库**（`interfaces`/`application`/`domain`/`infrastructure` 同包，Java 包名 `com.apex.scaffold.*`）。方案 D07/C4 决定将 interfaces 层迁往 `apex-system-service`，**尚未执行**。
 
-## 5. 文档入口（按用途；`docs/` 下共 727 个 Markdown，含各期报告）
+## 5. 文档入口（按用途；`docs/` 下共 736 个 Markdown，含各期报告）
 
 | 想知道 | 去哪 |
 | --- | --- |

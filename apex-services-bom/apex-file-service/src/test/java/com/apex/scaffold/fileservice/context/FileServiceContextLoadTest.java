@@ -6,12 +6,14 @@ import com.apex.scaffold.file.infrastructure.persistence.mapper.ChartMapper;
 import com.apex.scaffold.file.infrastructure.persistence.mapper.DocumentMapper;
 import com.apex.scaffold.file.infrastructure.persistence.mapper.FileChunkMapper;
 import com.apex.scaffold.file.infrastructure.persistence.mapper.FileMapper;
+import com.apex.scaffold.file.infrastructure.persistence.po.FilePO;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 文件服务 basic Profile 轻量上下文加载测试。
@@ -55,5 +57,19 @@ class FileServiceContextLoadTest {
         assertThat(context.getBeanNamesForType(DocumentMapper.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(ChartMapper.class)).hasSize(1);
         assertThat(context.getBeanNamesForType(FileChunkMapper.class)).hasSize(1);
+    }
+
+    @Test
+    @Transactional
+    void fileMapperInsertFillsRequiredAuditFields() {
+        FileMapper mapper = context.getBean(FileMapper.class);
+        FilePO file = FilePO.builder().fileName("audit-fixture.png").build();
+
+        assertThat(mapper.insert(file)).isEqualTo(1);
+
+        FilePO persisted = mapper.selectById(file.getId());
+        assertThat(persisted.getCreateTime()).isNotNull();
+        assertThat(persisted.getUpdateTime()).isNotNull();
+        assertThat(persisted.getVersion()).isZero();
     }
 }

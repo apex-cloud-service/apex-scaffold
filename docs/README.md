@@ -7,6 +7,8 @@
 ## 本次联调
 
 - [2026-11-17 后端联调修复方案](./specs/2026-11-17-integration-contract-repair.md) — BE-036，权限快照兼容、菜单范围、审批租户上下文及回归边界。
+- [2026-11-18 前后端全量联调方案](./specs/2026-11-18-fullstack-integration.md) — FE-029 / BE-043，Podman Compose 联调环境、全量 API 对照与缺陷闭环。
+- [2026-11-19 Podman-only 联调入口记录](./records/2026-11-19-podman-only-integration.md) — BE-043，Compose 配置与本轮前端镜像/模拟反代验证边界。
 
 ## 📖 文档导航
 

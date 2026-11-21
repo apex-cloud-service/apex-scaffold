@@ -64,7 +64,6 @@ public class DictDataRepositoryImpl implements DictDataRepository {
     public Mono<List<DictDataEntity>> findByType(String dictType) {
         return Mono.fromCallable(() -> dictDataMapper.selectList(ConditionUtil.lambda(DictDataPO.class)
                         .eq(DictDataPO::getDictType, dictType)
-                        .eq(DictDataPO::getStatus, DictDataEntity.DictState.ENABLED.getCode())
                         .orderByAsc(DictDataPO::getDictSort)))
                 .subscribeOn(BlockingIoSchedulers.jdbc())
                 .map(dictDataPoConverter::toEntityList);

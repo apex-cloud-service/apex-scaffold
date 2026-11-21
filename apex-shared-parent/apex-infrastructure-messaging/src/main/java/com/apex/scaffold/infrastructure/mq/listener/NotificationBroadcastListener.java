@@ -9,11 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.MessageModel;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 /**
  * 站内通知广播消费者（多实例 SSE 扇出）。
@@ -44,11 +39,6 @@ import org.springframework.stereotype.Component;
  * @see MqConsumerService
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
-@ConditionalOnClass(RocketMQTemplate.class)
-@ConditionalOnBean(RocketMQTemplate.class)
-@ConditionalOnProperty(name = "apex.mq.consumer.enabled", havingValue = "true", matchIfMissing = true)
 @RocketMQMessageListener(
         consumerGroup = MqConstant.CONSUMER_GROUP_NOTIFICATION,
         topic = MqConstant.TOPIC_NOTIFICATION,

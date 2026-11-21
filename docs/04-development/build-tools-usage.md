@@ -45,8 +45,8 @@
 | 需分别记住 `build.sh`、`release.sh`、`start.sh`、`stop.sh`、`pull-infra-images.sh`、`app.sh` 的用法 | 统一为 `apex.sh <子命令>`，底层仍调用这些脚本 |
 | "6/7/8 个服务 JAR"曾出现文档与脚本口径漂移 | 注册表 + 门禁测试锁定为 8 个（网关 + 六个业务服务 + 查询聚合服务），改错即构建失败 |
 | 部署前需手工构建 `tools/local-deployment.jar` | `deploy precheck` 自动补建 |
-| 仅支持 Podman Compose | 支持 **java -jar / Podman Compose / Docker Compose / K8s** 四种运行时 |
-| 无镜像构建/推送统一入口 | `image build` / `image push`，支持 podman/docker 双引擎 |
+| 仅支持 Podman Compose | 支持 **java -jar / Podman Compose / K8s** 三种运行时 |
+| 无镜像构建/推送统一入口 | `image build` / `image push` 统一使用 Podman |
 
 ### 1.3 一个关键设计约束（务必先理解）
 
@@ -137,10 +137,8 @@ cp .env.example .env
 **第 4 步（仅容器部署需要）：确认容器引擎**
 
 ```bash
-# Podman 路线
+# Podman 容器工具链
 podman info && podman-compose version
-# Docker 路线（二选一）
-docker info && docker compose version
 ```
 
 macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
@@ -161,11 +159,10 @@ macOS 首次使用 Podman 需 `podman machine init && podman machine start`。
 | `verify` | 完整回归门禁（耗时按实际环境记录） | `apex.sh verify` |
 | `package` | 构建 8 个发布服务 fat jar 并校验唯一性 | `apex.sh package -Penterprise` |
 | `release` | 产出交付 zip + sha256 | `apex.sh release standard` |
-| `image build` | 构建服务镜像（podman/docker） | `apex.sh image build --module apex-gateway` |
+| `image build` | 使用 Podman 构建服务镜像 | `apex.sh image build --module apex-gateway` |
 | `image push` | 打 registry 前缀并推送 | `apex.sh image push --module apex-gateway --registry harbor.example.com/apex` |
 | `deploy java-jar` | java -jar 直部署 | `apex.sh deploy java-jar start apex-system-service dev basic` |
 | `deploy podman-compose` | Podman Compose 编排 | `apex.sh deploy podman-compose up` |
-| `deploy docker-compose` | Docker Compose 编排 | `apex.sh deploy docker-compose up` |
 | `deploy k8s` | Kubernetes 清单编排 | `apex.sh deploy k8s apply --pdb` |
 | `status` | 环境 + 注册表 + 产物概览 | `apex.sh status` |
 | `help` | 命令手册 | `apex.sh help` |
@@ -314,8 +311,8 @@ cd dist && shasum -a 256 -c apex-scaffold-1.3.1-standard.zip.sha256
 # 全部发布服务
 ./apex-tools-parent/apex-tools-build/bin/apex.sh image build --all
 
-# 指定引擎与镜像引用
-./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-gateway --engine docker --tag apex-gateway:v1.3.1
+# 指定镜像引用
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-gateway --engine podman --tag apex-gateway:v1.3.1
 
 # source 分支仅列作已有选项，不用于第一阶段验收：当前容器内仍调用系统 mvn
 # ./apex-tools-parent/apex-tools-build/bin/apex.sh image build --module apex-gateway --mode source
@@ -326,7 +323,7 @@ cd dist && shasum -a 256 -c apex-scaffold-1.3.1-standard.zip.sha256
 | `--module` | 模块 artifactId | 目标模块 |
 | `--all` | — | 注册表 `service-jar` 全集 |
 | `--mode` | `prebuilt`（默认）/ `source` | prebuilt 复用宿主固定工具链构建的 JAR；source 仍用系统 `mvn`，未整改前不符合本仓构建约束、不记为验收通过 |
-| `--engine` | `podman`（默认）/ `docker` | 容器引擎 |
+| `--engine` | `podman`（默认且唯一支持值） | 容器引擎 |
 | `--tag` | 镜像引用 | 缺省为 `<模块>:${TAG:-latest}`（与 `podman-compose.yml` 的 `image:` 命名一致） |
 
 > **prebuilt 模式前提**：先在固定环境执行 `apex.sh package`（或 `build`）；JAR 还须被 `.containerignore` 放行，否则构建上下文缺少产物会失败。parent 不产生服务 JAR，无需放行其 target；显式 POM COPY 清单仍须覆盖全部递归模块，供 source 分支解析模型。
@@ -476,28 +473,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 
 委托 `scripts/deploy/stop.sh`（`down --timeout 105`，覆盖 90 秒优雅停机预算）。
 
-### 7.3 运行时三：Docker Compose
-
-与 Podman Compose **使用同一份 compose 文件**（已核对兼容：仅用到 `network_mode: none` 与 `read_only: true`，Docker 均支持；服务已显式声明 `dockerfile: Containerfile`）。命令形式完全对称：
-
-```bash
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose precheck
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose infra
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose up
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose status
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose health
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose down
-```
-
-**与 Podman 路线的差异**（脚本已内置，无需手工处理）：
-
-| 项 | Podman | Docker |
-| --- | --- | --- |
-| Compose 命令解析 | `podman-compose` | `docker compose`（v2 插件）优先，回退 `docker-compose` |
-| 基础设施拉镜像 | `pull-infra-images.sh`（podman 专属） | `docker compose -f podman-compose.infra.yml pull` |
-| `up`/`down` 实现 | 委托 `start.sh`/`stop.sh` | 脚本内注入相同的优雅停机治理变量后直接执行 compose |
-
-### 7.4 运行时四：Kubernetes
+### 7.3 运行时三：Kubernetes
 
 清单位于 `k8s/`：`deployment.yaml`（Namespace/Secret/Deployment/Service/Ingress/HPA）、`canary-deployment.yaml`（金丝雀）、`pod-disruption-budget.yaml`（PDB）。详见 [k8s/README.md](../../k8s/README.md)。
 
@@ -564,7 +540,7 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 
 ## 8. 流程五：完整发布上线（端到端）
 
-以「standard 档 → Docker Compose 部署到预发环境」为例：
+以「standard 档 → Podman Compose 部署到预发环境」为例：
 
 ```bash
 # ① 环境就绪
@@ -581,21 +557,21 @@ git status --porcelain      # 应为空
 cd dist && shasum -a 256 -c apex-scaffold-1.3.1-standard.zip.sha256 && cd ..
 
 # ⑤ 镜像构建与推送
-./apex-tools-parent/apex-tools-build/bin/apex.sh image build --all --engine docker --tag ""   # 或逐个 --module
-./apex-tools-parent/apex-tools-build/bin/apex.sh image push --all --engine docker --registry harbor.example.com/apex
+./apex-tools-parent/apex-tools-build/bin/apex.sh image build --all --engine podman --tag ""   # 或逐个 --module
+./apex-tools-parent/apex-tools-build/bin/apex.sh image push --all --engine podman --registry harbor.example.com/apex
 
 # ⑥ 部署前置检查
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose precheck
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose precheck
 
 # ⑦ 基础设施 → 主栈
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose infra
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose up
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose infra
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose up
 
 # ⑧ 健康验证（失败即退出码 1，可直接作为发布门禁）
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose health
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose health
 
 # ⑨ 查看状态
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy docker-compose status
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy podman-compose status
 ```
 
 K8s 路线把 ⑥⑦⑧ 替换为 `deploy k8s precheck → apply → health`。
@@ -605,7 +581,7 @@ K8s 路线把 ⑥⑦⑧ 替换为 `deploy k8s precheck → apply → health`。
 | 运行时 | 回滚方式 |
 | --- | --- |
 | java -jar | 用上一版本 JAR 重新 `deploy java-jar restart` |
-| Compose | `git checkout` 上一版本 compose/镜像 tag 后 `up -d` |
+| Podman Compose | 回退上一版本 compose/镜像 tag 后用 `podman-compose up -d` |
 | K8s | `kubectl -n apex-scaffold rollout undo deployment/apex-scaffold` |
 
 ---
@@ -675,11 +651,11 @@ mvnd -T4 -B -pl :apex-tools-build -am test     # 递归聚合、结构负面用�
 | `deploy ... precheck` 报"缺少根目录 .env" | 未准备环境变量 | `cp .env.example .env` 并填 6 个强制变量 |
 | `deploy ... precheck` 报"podman 守护不可达" | Podman 虚拟机未启动 | `podman machine start` |
 | `deploy k8s precheck` 报"集群不可达" | kubeconfig 未配置/集群未起 | 检查 `kubectl config current-context` |
-| `deploy k8s precheck` 报"Secret 仍为占位值" | 清单未改 | 按 §7.4 第 2 步修改，或演示环境加 `--allow-placeholder` |
+| `deploy k8s precheck` 报"Secret 仍为占位值" | 清单未改 | 按 §7.3 第 2 步修改，或演示环境加 `--allow-placeholder` |
 | `deploy k8s down` 被拒绝 | 缺少确认 | 追加 `--yes` |
 | `deploy ... health` 报 workflow 8093 未就绪 | workflow 未启动或端口被改 | 检查 `WORKFLOW_PORT` 与容器状态 |
 | `image build` 失败且提示缺少 JAR | prebuilt 未打包或 JAR 被忽略 | 先用固定环境执行 `apex.sh package`（示例单独 build），再核对 `.containerignore`，不回退 source 绕过工具链约束 |
-| `image build` 在 `FROM ...` 处超时 | 基础镜像拉取网络问题 | 预先 `podman pull`/`docker pull` 基础镜像后重试 |
+| `image build` 在 `FROM ...` 处超时 | 基础镜像拉取网络问题 | 预先 `podman pull` 基础镜像后重试 |
 | `deploy java-jar start` 立即退出 | 业务变量缺失（DB/Redis/JWT） | 检查 `APEX_ENV_FILE` 与必需变量 |
 
 **通用排查顺序**：
@@ -705,7 +681,7 @@ kubectl -n apex-scaffold logs -l app=apex-scaffold --tail=100
 | 不含 SSH 远程部署 | 所有部署都是本机/本地集群执行；远程主机需自行分发产物 |
 | K8s 不替代密钥管理 | Secret 修改、Ingress 域名/TLS 仍由部署者按 `k8s/README.md` 维护 |
 | 不进交付发布包 | `apex-tools-build` 不进交付包；`apex-tools-deployment` 则以 `tools/local-deployment.jar` 随既有发布脚本交付，不作为业务服务 |
-| 不做镜像仓库认证 | `image push` 只执行 `push`，登录（`podman login`/`docker login`）需提前完成 |
+| 不做镜像仓库认证 | `image push` 只执行 `push`，需提前通过 `podman login` 完成认证 |
 
 ### 11.2 常见误解
 
@@ -719,7 +695,7 @@ kubectl -n apex-scaffold logs -l app=apex-scaffold --tail=100
 → 注册表在 reactor 内受门禁保护，改完必须跑 `apex.sh test --module apex-tools-build` 验证一致性；`status` 可验证渲染。
 
 **❌ "`deploy` 会自己选运行时"**
-→ 必须显式指定 `java-jar`/`podman-compose`/`docker-compose`/`k8s`，无参数直接退出码 1。
+→ 必须显式指定 `java-jar`/`podman-compose`/`k8s`，无参数直接退出码 1。
 
 **❌ "K8s 清单可以直接 apply 到生产"**
 → `deployment.yaml` 内嵌 Secret 为占位值，`precheck` 会 fail-closed 拒绝；必须先改 Secret 与域名。

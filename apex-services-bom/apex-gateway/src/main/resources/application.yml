@@ -325,6 +325,11 @@ spring:
 # 各路由 CircuitBreaker 过滤器使用的命名实例（authService/workflowService/...）
 # 统一继承 default 配置，可按需为单实例覆盖。
 resilience4j:
+  timelimiter:
+    instances:
+      # 认证登录会串行执行账号验证与租户状态检查；为冷启动/首次远程调用保留有界窗口。
+      authService:
+        timeout-duration: 10s
   circuitbreaker:
     configs:
       default:

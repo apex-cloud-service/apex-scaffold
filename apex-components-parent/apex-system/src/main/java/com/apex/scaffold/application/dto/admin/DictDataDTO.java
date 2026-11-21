@@ -1,5 +1,7 @@
 package com.apex.scaffold.application.dto.admin;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +28,8 @@ public class DictDataDTO {
     /**
      * 字典数据 ID。
      */
-    @Schema(description = "字典数据ID")
+    @JsonSerialize(using = ToStringSerializer.class)
+    @Schema(type = "string", description = "字典数据ID（十进制字符串）", example = "9007199254740993")
     private Long id;
 
     /**

@@ -1,0 +1,11 @@
+services:
+  emqx:
+    image: docker.io/emqx/emqx:5.8
+    ports:
+      - "${APEX_MQTT_HOST_PORT:-1883}:1883"
+    environment:
+      EMQX_AUTHORIZATION__SOURCES__1__TYPE: http
+      EMQX_AUTHORIZATION__SOURCES__1__ENABLE: "${APEX_MQTT_ACL_ENABLED:-false}"
+      EMQX_AUTHORIZATION__SOURCES__1__URL: "${APEX_MQTT_ACL_URL:-http://host.containers.internal:8094/internal/v1/iot/mqtt/acl}"
+      EMQX_AUTHORIZATION__SOURCES__1__METHOD: post
+      EMQX_AUTHORIZATION__NO_MATCH: deny

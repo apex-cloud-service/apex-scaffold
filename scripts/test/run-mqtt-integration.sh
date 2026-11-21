@@ -4,7 +4,7 @@
 #
 # MQTT 真实 broker 联调（方案 §13 脚本交付物 / E3）。
 #
-# 拉起 EMQX 5.8 容器并运行 IoT MQTT 相关测试：
+# 通过独立 podman-compose 项目拉起 EMQX 5.8 并运行 IoT MQTT 相关测试：
 #   - IotMqttBrokerLiveTest           设备上行/租户隔离/共享订阅
 #   - MqttTopicAclEnforcementTest     越权订阅拒绝（ACL）
 #   - IotMqttThroughputBaselineTest   单连接吞吐基线
@@ -14,7 +14,7 @@
 #   bash scripts/test/run-mqtt-integration.sh          # 无 ACL（基线 + 冒烟）
 #   bash scripts/test/run-mqtt-integration.sh acl      # 带 HTTP 授权钩子（需服务可访问）
 #
-# 依赖：Docker、JDK 21、mvnd；broker 不可达时相关测试自动跳过（assumeTrue）
+# 依赖：Podman、podman-compose、JDK 21、mvnd；broker 不可达时相关测试自动跳过（assumeTrue）
 ###############################################################################
 set -euo pipefail
 
@@ -26,8 +26,12 @@ PROJECT_ROOT=$(get_project_root) || exit 1
 cd "$PROJECT_ROOT" || exit 1
 
 MODE=${1:-plain}
-CONTAINER="apex-emqx-it"
+COMPOSE_FILE="${SCRIPT_DIR}/podman-compose.mqtt.yml"
+PROJECT="apex-mqtt-it-$$"
 PORT=1883
+ACL_ENABLED=false
+COMPOSE=(podman-compose -p "$PROJECT" -f "$COMPOSE_FILE")
+COMPOSE_STARTED=0
 
 if [[ -f scripts/build/init-build-env.sh ]]; then
     # shellcheck source=../build/init-build-env.sh
@@ -38,34 +42,36 @@ else
 fi
 
 cleanup() {
-    if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
-        log_info "清理 EMQX 容器 ${CONTAINER}"
-        docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    if [[ "$COMPOSE_STARTED" == 1 ]]; then
+        log_info "停止本次 MQTT 联调 Compose 项目 ${PROJECT}"
+        "${COMPOSE[@]}" down --timeout 20 >/dev/null 2>&1 || true
     fi
 }
 trap cleanup EXIT
 
-if ! docker info >/dev/null 2>&1; then
-    log_failure "Docker 不可用，无法拉起 EMQX"
+if ! command -v podman >/dev/null || ! command -v podman-compose >/dev/null; then
+    log_failure "需要同时安装 Podman 和 podman-compose"
+    exit 1
+fi
+if ! podman info >/dev/null 2>&1; then
+    log_failure "Podman 服务不可达，无法拉起 EMQX"
     exit 1
 fi
 
 if [[ "$MODE" == "acl" ]]; then
-    ACL_URL=${APEX_MQTT_ACL_URL:-http://host.docker.internal:8094/internal/v1/iot/mqtt/acl}
+    ACL_ENABLED=true
+    ACL_URL=${APEX_MQTT_ACL_URL:-http://host.containers.internal:8094/internal/v1/iot/mqtt/acl}
     PORT=1884
     log_info "模式：ACL（HTTP 授权钩子 → ${ACL_URL}）"
-    docker run -d --rm --name "$CONTAINER" -p "${PORT}:1883" \
-        -e EMQX_AUTHORIZATION__SOURCES__1__TYPE=http \
-        -e EMQX_AUTHORIZATION__SOURCES__1__ENABLE=true \
-        -e EMQX_AUTHORIZATION__SOURCES__1__URL="$ACL_URL" \
-        -e EMQX_AUTHORIZATION__SOURCES__1__METHOD=post \
-        -e EMQX_AUTHORIZATION__NO_MATCH=deny \
-        emqx/emqx:5.8 >/dev/null
     log_warn "ACL 模式需要 integration-service 在 8094 运行且授权钩子可达"
 else
     log_info "模式：plain（无 ACL，用于吞吐基线与连通性冒烟）"
-    docker run -d --rm --name "$CONTAINER" -p "${PORT}:1883" emqx/emqx:5.8 >/dev/null
 fi
+export APEX_MQTT_HOST_PORT="$PORT"
+export APEX_MQTT_ACL_ENABLED="$ACL_ENABLED"
+export APEX_MQTT_ACL_URL="${ACL_URL:-}"
+COMPOSE_STARTED=1
+"${COMPOSE[@]}" up -d
 
 log_info "等待 EMQX 就绪（最多 90 秒）"
 for _ in $(seq 1 45); do

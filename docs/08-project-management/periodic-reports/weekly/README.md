@@ -15,6 +15,7 @@
 | 2026 年第 44 周（10-26 ~ 11-01） | Apex-Scaffold 后端 + apex-admin-web 前端 | 架构定型（31 模块）与能力补齐 | [2026-W44-apex-scaffold-weekly-report.md](./_archive/2026-10/2026-W44-apex-scaffold-weekly-report.md)（另有 [.docx](./_archive/2026-10/2026-W44-apex-scaffold-weekly-report.docx) 交付版，内容为上一版，未含本次验证范围与测试计数的修正） |
 | 2026 年第 45 周（11-02 ~ 11-07） | all-projects（apex-scaffold 后端 + apex-admin-web 前端 + cold-chain 冷链） | 平台运营闭环、构建发布模块收口与仓园四阶段合并 | [2026-W45-all-projects-weekly-report.md](./2026-W45-all-projects-weekly-report.md) |
 | 2026 年第 46 周（11-09 ~ 11-14） | all-projects（apex-scaffold 后端 + apex-admin-web 前端 + cold-chain 冷链） | 中台整改收口、聚合与知识库新域落地、模块两级物理归位 | [2026-W46-all-projects-weekly-report.md](./2026-W46-all-projects-weekly-report.md) |
+| 2026 年第 47 周（11-16 ~ 11-21） | all-projects（apex-scaffold 后端 + apex-admin-web 前端 + cold-chain 冷链） | 项目治理规范落地、办公域契约修复与全栈联调启动 | [2026-W47-all-projects-weekly-report.md](./2026-W47-all-projects-weekly-report.md) |
 
 ## 生成与补写约定
 

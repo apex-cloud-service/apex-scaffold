@@ -32,13 +32,15 @@ office-service 在订阅时执行本地 `@RequirePermission` 检查，权限码�
 
 本地 `AuditLogService` 输出可检索的 `OFFICE_AUDIT` 应用日志，不保证可靠持久化。`@OperationLog` 仅采集注解和 HTTP 元数据，正文、参数、身份头、凭据、异常消息均不采集；`saveRequest=false` / `saveResponse=false` 进一步关闭对应 HTTP 元数据。`HTTP_RESPONSE_READY` 只表示 Handler 已生成响应，不表示响应已发送或业务成功（包括 Handler 吞错、`Result<Boolean>` 为 `false` 的情况）。
 
+Podman Compose 显式将 `AUTH_CENTER_AUTHORIZATION_READER_USER_ID` 注入 auth，并将 `OFFICE_AUTHORIZATION_SHARED_USER_NAMESPACE`、`OFFICE_AUTHORIZATION_BASE_URL` 和 `OFFICE_AUTHORIZATION_TIMEOUT` 注入 office。reader JWT 映射仍需通过安全配置注入 office；不要在 `.env`、Compose 文件或报告中写入令牌。验证办公室收件箱、待办和日历查询须准备这些授权配置；WebSocket 票据成功不代表这些权限检查通过。
+
 ### 凭据加密密钥
 
 数据源密码和认证中心 TOTP 密钥、备份码及已消费备份码使用 `apex.security.data-encryption-key`，由 `APEX_DATA_ENCRYPTION_KEY` 注入，值为 Base64 编码的 32 字节随机密钥，可用 `openssl rand -base64 32` 生成。必须跨实例和重启保持一致；缺失、非法 Base64 或长度错误会拒绝初始化。原先由临时随机密钥加密的数据需要使用原密钥解密后重新加密，无法通过新密钥恢复。
 
 TOTP 仓储只读取加密格式，不会在解密失败时回退为明文。升级前需备份 `auth_totp`，使用部署的稳定数据密钥将历史明文 `secret`、`backup_codes`、`used_backup_codes` 转换为当前 AES-GCM 格式，或安排用户重新绑定 MFA；可用 `bash scripts/utils/local-deployment.sh prepare` 离线生成候选快照、备份和审查报告；工具不连接数据库，不自动执行迁移。更换密钥前也必须先完成旧密钥到新密钥的数据迁移。
 
-公共配置加密使用 `security.config.encryption.key`（`CONFIG_ENCRYPTION_KEY`），要求 UTF-8 编码后恰好 32 字节且不为全空白。认证中心独立配置加密使用 `apex.security.config-encryption-key`（`APEX_CONFIG_ENCRYPTION_KEY`），要求 Base64 解码后恰好 32 字节。两者格式不同，不能直接共用同一个字符串；均不再提供默认或临时密钥。
+公共配置加密使用 `security.config.encryption.key`，要求 UTF-8 编码后恰好 32 字节且不为全空白。Podman Compose 从 `CONFIG_ENCRYPTION_KEY` 读取，通过共享应用环境映射为 Spring 实际消费的 `SECURITY_CONFIG_ENCRYPTION_KEY`，包括 office、workflow、file 和 integration 服务。认证中心独立配置加密使用 `apex.security.config-encryption-key`（`APEX_CONFIG_ENCRYPTION_KEY`），要求 Base64 解码后恰好 32 字节。两者格式不同，不能直接共用同一个字符串；均不再提供默认或临时密钥。
 
 Token 存储加密使用 `security.encryption.key`（环境变量 `SECURITY_ENCRYPTION_KEY`）；认证中心也支持 `security.token.encryption.key`（`TOKEN_ENCRYPTION_KEY`），前者优先。密钥必须为 Base64 编码的 32 字节，跨实例和重启保持一致；缺失或长度错误会拒绝启动，不再生成临时密钥。旧临时密钥加密的 Token 需要保留原密钥迁移，否则必须重新登录。
 

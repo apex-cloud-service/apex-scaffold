@@ -8,8 +8,8 @@
 # 设计约定:
 #   - 本脚本只做编排：构建/发布/部署能力由 scripts/ 既有脚本与 mvnd 承载，不维护第二套逻辑；
 #     既有脚本（build.sh/release.sh/app.sh/start.sh/stop.sh）保持原样作为底层执行器
-#   - 部署支持四种运行时：java-jar（委托 app.sh）、podman-compose（委托 start.sh/stop.sh）、
-#     docker-compose（同一 compose 文件，新路径）、k8s（fail-closed 编排 k8s/ 清单）；
+#   - 部署支持三种运行时：java-jar（委托 app.sh）、podman-compose（委托 start.sh/stop.sh）、
+#     k8s（fail-closed 编排 k8s/ 清单）；
 #     运行时以显式参数选择：deploy <运行时> <动作> [参数]
 #   - 模块清单/交付口径/端口以 build-manifest.yaml 为准（BuildManifestSyncTest 在 verify
 #     门禁中锁定其与根 POM、各模块 POM、release.sh SERVICES 的四方一致）
@@ -390,7 +390,7 @@ cmd_release() {
 }
 
 # ============================================================
-# 子命令: image —— 服务镜像构建与推送（podman/docker 双引擎）
+# 子命令: image —— 服务镜像构建与推送（Podman）
 # ============================================================
 
 # ------------------------------------------------------------
@@ -412,27 +412,16 @@ cmd_image() {
 }
 
 # ------------------------------------------------------------
-# 函数: resolve_container_cli <podman|docker>
+# 函数: resolve_container_cli <podman>
 # 用途: 解析容器引擎到全局数组 CONTAINER_CMD（后续统一 "${CONTAINER_CMD[@]}" 调用），
 #       缺失即失败并提示安装（不静默回退引擎）。
 # 侧效: 写全局 CONTAINER_CMD。
 # ------------------------------------------------------------
 CONTAINER_CMD=()
 resolve_container_cli() {
-  case "$1" in
-    podman)
-      require_command podman "Podman"
-      CONTAINER_CMD=(podman)
-      ;;
-    docker)
-      require_command docker "Docker"
-      CONTAINER_CMD=(docker)
-      ;;
-    *)
-      log_error "不支持的容器引擎: $1（仅 podman/docker）"
-      exit 1
-      ;;
-  esac
+  [[ "${1:-podman}" == "podman" ]] || { log_error "镜像操作仅支持 Podman"; exit 1; }
+  require_command podman "Podman"
+  CONTAINER_CMD=(podman)
 }
 
 # ------------------------------------------------------------
@@ -459,12 +448,12 @@ image_ref() {
 
 # ------------------------------------------------------------
 # 函数: image_build [--module m|--all] [--mode prebuilt|source]
-#                   [--engine podman|docker] [--tag 引用]
+#                   [--engine podman] [--tag 引用]
 # 用途: 经根目录 Containerfile 构建服务镜像（一镜像一服务）。
 # 注入: SERVICE_MODULE（目标模块）、MODULE_PATH（仓库根相对的模块物理目录，第二阶段
 #       嵌套布局）、BUILD_MODE（prebuilt 复用宿主已构建 fat jar / source 容器内全量编译）、
 #       BUILD_VERSION（读根 POM）。
-# 约定: --all 目标为注册表 service-jar 全集；默认引擎 podman。
+# 约定: --all 目标为注册表 service-jar 全集；统一使用 Podman。
 # ------------------------------------------------------------
 image_build() {
   local module="" mode="prebuilt" use_all=0 engine="podman" tag_override=""
@@ -515,7 +504,7 @@ image_build() {
 
 # ------------------------------------------------------------
 # 函数: image_push --registry <host[:port]> [--module m|--all]
-#                   [--engine podman|docker] [--tag 引用]
+#                   [--engine podman] [--tag 引用]
 # 用途: 为本地镜像打 registry 前缀并推送——k8s 远程集群交付的前置步骤
 #       （节点无法访问本地引擎的镜像存储）。
 # 约定: registry 可经 --registry 或环境变量 APEX_IMAGE_REGISTRY 提供；
@@ -569,14 +558,14 @@ image_push() {
 }
 
 # ============================================================
-# 子命令: deploy —— 四运行时部署编排
-#   java-jar / podman-compose / docker-compose / k8s，详见 deploy_usage
+# 子命令: deploy —— 运行时部署编排
+#   java-jar / podman-compose / k8s，详见 deploy_usage
 # ============================================================
 
 # ------------------------------------------------------------
 # 函数: cmd_deploy <运行时> <动作> [参数]
 # 用途: deploy 子命令分发；运行时必须显式选择（无缺省运行时，避免误操作真实环境）。
-# 分发: java-jar → deploy_jar；podman-compose/docker-compose → deploy_compose podman|docker；
+# 分发: java-jar → deploy_jar；podman-compose → deploy_compose；
 #       k8s → deploy_k8s；未知运行时打印用法并以非零码退出。
 # ------------------------------------------------------------
 cmd_deploy() {
@@ -589,10 +578,9 @@ cmd_deploy() {
   case "${runtime}" in
     java-jar) deploy_jar "$@" ;;
     podman-compose) deploy_compose podman "$@" ;;
-    docker-compose) deploy_compose docker "$@" ;;
     k8s) deploy_k8s "$@" ;;
     *)
-      log_error "未知部署运行时: ${runtime}（支持 java-jar / podman-compose / docker-compose / k8s）"
+      log_error "未知部署运行时: ${runtime}（支持 java-jar / podman-compose / k8s）"
       deploy_usage
       exit 1
       ;;
@@ -611,8 +599,6 @@ deploy_usage() {
                   格式: deploy java-jar <动作> [模块] [dev|it|prod] [basic|standard|enterprise]
                   （委托 scripts/deploy/service/app.sh；模块默认 apex-gateway）
   podman-compose  precheck|infra|up|down|status|health [参数透传]
-  docker-compose  precheck|infra|up|down|status|health [参数透传]
-                  （同一 compose 文件双引擎；docker 基础设施镜像用 compose pull）
   k8s             precheck|apply|status|health|down [--canary] [--pdb] [--yes] [--allow-placeholder]
                   （Secret 占位值 fail-closed；down 删除含 Secret，需 --yes）
 EOF
@@ -620,7 +606,7 @@ EOF
 
 # ------------------------------------------------------------
 # 函数: precheck_common
-# 用途: Compose 两引擎共用的部署前置：根目录 .env 存在性（Compose 以 ${VAR:?}
+# 用途: podman-compose 部署前置：根目录 .env 存在性（Compose 以 ${VAR:?}
 #       强制注入密钥，缺失即拒绝启动）+ tools/local-deployment.jar 存在性。
 # 自动补建: 工具 JAR 缺失时执行 mvnd -pl :apex-tools-deployment -am package -DskipTests
 #       并复制到 tools/——修复"security-key-check 依赖 JAR 无编排"的既有缺口，
@@ -730,50 +716,22 @@ jar_health() {
 }
 
 # ------------------------------------------------------------
-# 函数: resolve_compose_cli <podman|docker>
+# 函数: resolve_compose_cli <podman>
 # 用途: 解析 Compose 引擎到全局数组 COMPOSE_CMD。
 #   podman: podman-compose 单命令；
-#   docker: docker compose v2 插件优先，回退 docker-compose v1 独立二进制。
-# 兼容性: podman-compose.yml 与 docker compose 兼容（仅 network_mode:none/read_only，
-#   均受支持；服务已显式 dockerfile: Containerfile）。
 # 侧效: 写全局 COMPOSE_CMD。
 # ------------------------------------------------------------
 COMPOSE_CMD=()
 resolve_compose_cli() {
-  case "$1" in
-    podman)
-      require_command podman "Podman"
-      require_command podman-compose "podman-compose"
-      COMPOSE_CMD=(podman-compose)
-      ;;
-    docker)
-      require_command docker "Docker"
-      if docker compose version >/dev/null 2>&1; then
-        COMPOSE_CMD=(docker compose)
-      elif command -v docker-compose >/dev/null 2>&1; then
-        COMPOSE_CMD=(docker-compose)
-      else
-        log_error "未找到 docker compose 插件或 docker-compose 独立二进制"
-        exit 1
-      fi
-      ;;
-    *)
-      log_error "不支持的 Compose 引擎: $1"
-      exit 1
-      ;;
-  esac
+  [[ "${1:-podman}" == "podman" ]] || { log_error "部署编排仅支持 podman-compose"; exit 1; }
+  require_command podman "Podman"
+  require_command podman-compose "podman-compose"
+  COMPOSE_CMD=(podman-compose)
 }
 
 # ------------------------------------------------------------
-# 函数: deploy_compose <podman|docker> <precheck|infra|up|down|status|health> [透传]
-# 用途: 运行时二/三——同一 compose 文件的双引擎编排。
-# precheck: 守护进程可达性（podman info / docker info）+ precheck_common。
-# infra:    拉取基础设施镜像并启动 podman-compose.infra.yml；
-#           docker 引擎因 pull-infra-images.sh 为 podman 专属改用 compose pull。
-# up/down:  podman 引擎委托既有 start.sh/stop.sh（内置优雅停机治理变量，行为不变）；
-#           docker 引擎在脚本内注入与 start.sh/stop.sh 相同的治理变量后执行
-#           compose up -d --build / compose down（新路径，无既有脚本可委托）。
-# health:   deploy_health 7 服务全量 readiness（compose 发布了主机端口，两引擎通用）。
+# 函数: deploy_compose <podman> <precheck|infra|up|down|status|health> [透传]
+# 用途: 通过 podman-compose 编排本地全栈，生命周期动作委托既有 start.sh/stop.sh。
 # ------------------------------------------------------------
 deploy_compose() {
   local engine="$1"
@@ -788,55 +746,34 @@ deploy_compose() {
   case "${action}" in
     precheck)
       print_header "部署前置检查（${engine}-compose）"
-      if [[ "${engine}" == "podman" ]]; then
-        podman info >/dev/null 2>&1 || { log_error "podman 守护不可达（先 podman machine start）"; exit 1; }
-      else
-        docker info >/dev/null 2>&1 || { log_error "docker 守护不可达（检查 Docker Desktop/daemon）"; exit 1; }
-      fi
+      podman info >/dev/null 2>&1 || { log_error "podman 服务不可达（先 podman machine start）"; exit 1; }
       log_success "容器守护进程可达"
       precheck_common
       log_success "前置检查通过；可继续: apex.sh deploy ${engine}-compose infra → apex.sh deploy ${engine}-compose up"
       ;;
     infra)
-      if [[ "${engine}" == "podman" ]]; then
-        log_info "拉取基础设施镜像（pull-infra-images.sh，失败自动重试）"
-        bash "${PROJECT_ROOT}/scripts/deploy/podman/pull-infra-images.sh"
-      else
-        log_info "拉取基础设施镜像（compose pull）"
-        "${COMPOSE_CMD[@]}" -f "${COMPOSE_INFRA}" pull
-      fi
+      log_info "拉取基础设施镜像（pull-infra-images.sh，失败自动重试）"
+      bash "${PROJECT_ROOT}/scripts/deploy/podman/pull-infra-images.sh"
       log_info "启动基础设施栈（podman-compose.infra.yml）"
       "${COMPOSE_CMD[@]}" -f "${COMPOSE_INFRA}" up -d
       log_success "基础设施栈（${engine}）已启动；主栈执行: apex.sh deploy ${engine}-compose up"
       ;;
     up|down|status)
-      if [[ "${engine}" == "podman" ]]; then
-        case "${action}" in
-          up)
-            log_info "委托 scripts/deploy/start.sh（参数透传）"
-            exec "${PROJECT_ROOT}/scripts/deploy/start.sh" "$@"
-            ;;
-          down)
-            log_info "委托 scripts/deploy/stop.sh（参数透传）"
-            exec "${PROJECT_ROOT}/scripts/deploy/stop.sh" "$@"
-            ;;
-          status) "${COMPOSE_CMD[@]}" -f "${COMPOSE_APP}" ps ;;
-        esac
-      else
-        # 与 start.sh/stop.sh 相同的优雅停机治理变量
-        export APEX_GOVERNANCE_DEPLOYMENT_MODE="${APEX_GOVERNANCE_DEPLOYMENT_MODE:-compose}"
-        export APEX_GOVERNANCE_SHUTDOWN_TIMEOUT="${APEX_GOVERNANCE_SHUTDOWN_TIMEOUT:-90s}"
-        export APEX_STOP_GRACE_PERIOD="${APEX_STOP_GRACE_PERIOD:-105s}"
-        case "${action}" in
-          up) "${COMPOSE_CMD[@]}" -f "${COMPOSE_APP}" up -d --build "$@" ;;
-          down) "${COMPOSE_CMD[@]}" -f "${COMPOSE_APP}" down "$@" ;;
-          status) "${COMPOSE_CMD[@]}" -f "${COMPOSE_APP}" ps ;;
-        esac
-      fi
+      case "${action}" in
+        up)
+          log_info "委托 scripts/deploy/start.sh（参数透传）"
+          exec "${PROJECT_ROOT}/scripts/deploy/start.sh" "$@"
+          ;;
+        down)
+          log_info "委托 scripts/deploy/stop.sh（参数透传）"
+          exec "${PROJECT_ROOT}/scripts/deploy/stop.sh" "$@"
+          ;;
+        status) "${COMPOSE_CMD[@]}" -f "${COMPOSE_APP}" ps ;;
+      esac
       ;;
     health) deploy_health ;;
     *)
-      log_error "未知 ${engine}-compose 动作: ${action}（支持 precheck/infra/up/down/status/health）"
+      log_error "未知 podman-compose 动作: ${action}（支持 precheck/infra/up/down/status/health）"
       exit 1
       ;;
   esac
@@ -951,7 +888,7 @@ k8s_precheck() {
     log_success "Secret 已脱占位"
   fi
   log_info "镜像: 清单使用 apex-scaffold:latest（单体聚合形态，SERVICE_MODULE=apex-example 构建）；确保节点可获取："
-  log_info "  apex.sh image build --module apex-example --tag apex-scaffold --engine <podman|docker>"
+  log_info "  apex.sh image build --module apex-example --tag apex-scaffold --engine podman"
   log_info "  远程集群需先推送: apex.sh image push --module apex-example --tag apex-scaffold --registry <host[:port]>"
   log_success "K8s 前置检查通过；部署: apex.sh deploy k8s apply [--pdb] [--canary]"
 }
@@ -1087,23 +1024,21 @@ Apex Scaffold 生命周期统一编排入口（apex-tools-build）
   package [-P 档位]       构建 8 个发布服务 fat jar 并逐一校验唯一性
   release [档位] [版本] [--allow-dirty]
                           前置检查后委托 release.sh 产出 dist/*.zip(.sha256)
-  image build [--module m|--all] [--mode prebuilt|source] [--engine podman|docker] [--tag 引用]
+  image build [--module m|--all] [--mode prebuilt|source] [--engine podman] [--tag 引用]
                           构建服务镜像（默认镜像名=模块 artifactId；--tag 指定完整引用）
-  image push --registry <host[:port]> [--module m|--all] [--engine podman|docker] [--tag 引用]
+  image push --registry <host[:port]> [--module m|--all] [--engine podman] [--tag 引用]
                           打 registry 前缀并推送（k8s 远程集群交付需要）
   deploy java-jar <动作> [模块] [dev|it|prod] [档位]
                           动作: precheck|start|stop|restart|status|logs|console|health
                           （委托 scripts/deploy/service/app.sh；模块默认 apex-gateway）
   deploy podman-compose <precheck|infra|up|down|status|health> [透传]
-  deploy docker-compose <precheck|infra|up|down|status|health> [透传]
-                          同一 compose 文件双引擎；up 透传 compose profile（如 --profile rocketmq）
   deploy k8s <precheck|apply|status|health|down> [--canary] [--pdb] [--yes] [--allow-placeholder]
                           fail-closed 编排 k8s/ 清单；Secret 占位值默认拒绝部署
   status                  环境版本 + 模块注册表/产物概览
   help                    本帮助
 
 档位: basic | standard | enterprise（默认 standard）
-部署运行时: java-jar | podman-compose | docker-compose | k8s
+部署运行时: java-jar | podman-compose | k8s
 EOF
 }
 

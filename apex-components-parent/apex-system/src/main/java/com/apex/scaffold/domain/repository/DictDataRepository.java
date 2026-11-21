@@ -27,7 +27,7 @@ public interface DictDataRepository {
     /**
      * 根据字典类型编码查询全部数据项。
      *
-     * <p>仅返回启用状态的数据项，按字典排序升序排列。</p>
+     * <p>管理列表包含启用和停用项，按字典排序升序排列。</p>
      *
      * @param dictType 字典类型编码
      * @return 字典数据实体列表

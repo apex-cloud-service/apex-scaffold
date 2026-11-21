@@ -14,7 +14,7 @@
 | `scripts/test/jvm-diagnostics-test.sh` | jvm-diagnostics-test.sh - jvm-diagnostics.sh 的自动化测试 | `bash scripts/test/jvm-diagnostics-test.sh` |
 | `scripts/test/new-batch-report.sh` | 批次测试报告骨架生成（方案 §13 脚本交付物）。 | `bash scripts/test/new-batch-report.sh` |
 | `scripts/test/run-dual-database-migration.sh` | 双库迁移演练（方案 §13 脚本交付物）。 | `bash scripts/test/run-dual-database-migration.sh` |
-| `scripts/test/run-mqtt-integration.sh` | MQTT 真实 broker 联调（方案 §13 脚本交付物 / E3）。 | `bash scripts/test/run-mqtt-integration.sh` |
+| `scripts/test/run-mqtt-integration.sh` | 通过专用 `podman-compose.mqtt.yml` 项目执行 MQTT 真实 broker 联调；只停止本次脚本创建的项目。 | `bash scripts/test/run-mqtt-integration.sh` |
 | `scripts/test/test-check-javadoc-comments.sh` | TMP_DIR="$(mktemp -d) | `bash scripts/test/test-check-javadoc-comments.sh` |
 | `scripts/test/test-sentinel-hot-reload.sh` | Sentinel 规则热更新测试脚本 | `bash scripts/test/test-sentinel-hot-reload.sh` |
 | `scripts/test/test-workflow-api.sh` | echo "工作流接口联调测试 | `bash scripts/test/test-workflow-api.sh` |

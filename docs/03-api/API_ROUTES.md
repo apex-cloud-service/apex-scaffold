@@ -88,6 +88,8 @@
 | DELETE | `/admin-api/v1/depts/{id}` | `RbacRouter` | `DeptHandler.delete` | 删除部门 |
 | GET | `/admin-api/v1/export/users` | `ExportRouter` | `ExcelExportHandler.exportUsers` | 导出用户 |
 
+字典类型和字典数据管理列表的 `id` 为十进制字符串；请求路径中的 `{id}` 仍由服务端按 `Long` 解析。客户端直接透传字符串，不转换为 JavaScript `Number`。字典数据管理列表包含启用和停用项，以便重新启用数据项。
+
 ### 2.3 认证配置、日志和图表
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
@@ -200,6 +202,7 @@
 | PUT | `/api/v1/messages/{messageId}/read` | `MessageRouter` | `MessageHandler.markAsRead` | 标记消息已读 |
 | PUT | `/api/v1/messages/read-all` | `MessageRouter` | `MessageHandler.markAllAsRead` | 全部标记已读 |
 | GET | `/api/v1/messages/unread/count` | `MessageRouter` | `MessageHandler.getUnreadCount` | 查询未读消息数 |
+| POST | `/api/v1/messages/ws-ticket` | `MessageWebSocketConfig` | 路由内处理 | 为已认证用户签发 WebSocket 握手票据 |
 | GET | `/admin-api/v1/message-templates/{templateCode}` | `MessageRouter` | `MessageTemplateHandler.getTemplateByCode` | 按编码查询模板 |
 | GET | `/admin-api/v1/message-templates` | `MessageRouter` | `MessageTemplateHandler.getEnabledTemplates` | 查询启用模板 |
 | POST | `/admin-api/v1/message-templates` | `MessageRouter` | `MessageTemplateHandler.createTemplate` | 创建消息模板 |
@@ -506,6 +509,35 @@
 | DELETE | `/api/v1/kb/chat/conversations/{conversationId}` | `KnowledgeChatRouter` | `KnowledgeChatHandler.deleteConversation` | 删除会话（归属用户校验） |
 
 问答流的错误事件统一为 `event: error` 与 JSON data `{code: string, message: string}`，业务消息按已有业务异常口径展示，技术异常使用安全中文兜底，不外泄内部原因。身份/请求校验/会话建立等进入 Handler 错误恢复的失败也采用该结构，HTTP 仍为 200 SSE；安全链或权限切面在进入 Handler 前拒绝时仍返回 401/403，不转换为成功流。
+
+### 2.20 集成、物联网与数据脱敏端点
+
+连接器、凭据和物联网端点由 `apex-integration-service` 提供。脱敏端点由 `apex-masking-service` 提供。
+
+| 方法 | 路径 | Router | Handler 方法 | 说明 |
+| --- | --- | --- | --- | --- |
+| GET | `/integration/v1/connectors` | `IntegrationConnectorRouter` | `ConnectorConfigHandler.page` | 分页查询连接器 |
+| POST | `/integration/v1/connectors` | `IntegrationConnectorRouter` | `ConnectorConfigHandler.create` | 创建连接器 |
+| PUT | `/integration/v1/connectors/{id}` | `IntegrationConnectorRouter` | `ConnectorConfigHandler.update` | 更新连接器 |
+| DELETE | `/integration/v1/connectors/{id}` | `IntegrationConnectorRouter` | `ConnectorConfigHandler.delete` | 删除连接器 |
+| GET | `/integration/v1/credentials` | `IntegrationConnectorRouter` | `CredentialHandler.list` | 查询凭据列表 |
+| POST | `/integration/v1/credentials` | `IntegrationConnectorRouter` | `CredentialHandler.register` | 注册凭据 |
+| PUT | `/integration/v1/credentials/{id}/rotate` | `IntegrationConnectorRouter` | `CredentialHandler.rotate` | 轮换凭据 |
+| DELETE | `/integration/v1/credentials/{id}` | `IntegrationConnectorRouter` | `CredentialHandler.delete` | 删除凭据 |
+| GET | `/integration/v1/iot/devices` | `IotDeviceRouter` | `DeviceAdminHandler.page` | 分页查询设备 |
+| GET | `/integration/v1/iot/devices/{id}` | `IotDeviceRouter` | `DeviceAdminHandler.get` | 查询设备详情 |
+| POST | `/integration/v1/iot/devices` | `IotDeviceRouter` | `DeviceAdminHandler.register` | 注册设备 |
+| DELETE | `/integration/v1/iot/devices/{id}` | `IotDeviceRouter` | `DeviceAdminHandler.deregister` | 注销设备 |
+| GET | `/integration/v1/iot/devices/{id}/telemetry` | `IotDeviceRouter` | `DeviceAdminHandler.telemetry` | 查询遥测历史 |
+| GET | `/integration/v1/iot/devices/{id}/shadow` | `IotDeviceRouter` | `DeviceAdminHandler.shadow` | 查询设备影子 |
+| GET | `/integration/v1/iot/devices/{id}/commands` | `IotDeviceRouter` | `DeviceAdminHandler.commands` | 查询命令历史 |
+| POST | `/integration/v1/iot/devices/{id}/commands` | `IotDeviceRouter` | `DeviceAdminHandler.dispatchCommand` | 下发设备命令 |
+| GET | `/integration/v1/iot/rules` | `IotDeviceRouter` | `IotRuleHandler.page` | 分页查询规则 |
+| POST | `/integration/v1/iot/rules` | `IotDeviceRouter` | `IotRuleHandler.create` | 创建规则 |
+| GET | `/integration/v1/iot/rules/{id}` | `IotDeviceRouter` | `IotRuleHandler.get` | 查询规则详情 |
+| PUT | `/integration/v1/iot/rules/{id}/toggle` | `IotDeviceRouter` | `IotRuleHandler.toggle` | 启停规则 |
+| GET | `/api/v1/masking/rules` | `MaskingRouter` | `MaskingHandler.rules` | 查询脱敏规则 |
+| POST | `/api/v1/masking/batch` | `MaskingRouter` | `MaskingHandler.batch` | 批量脱敏 |
 
 ## 3. 独立认证中心路由
 

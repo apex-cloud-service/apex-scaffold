@@ -10,6 +10,8 @@ import com.apex.scaffold.gateway.filter.RequestRateLimitFilter;
 import com.apex.scaffold.gateway.filter.TraceWebFilter;
 import com.apex.scaffold.gateway.filter.UserContextRelayFilter;
 import com.apex.scaffold.gateway.security.GatewayJwtVerifierService;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
+import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,6 +44,7 @@ class GatewayApplicationTest {
     private final GatewayJwtVerifierService gatewayJwtVerifierService;
     private final GatewayExceptionHandler gatewayExceptionHandler;
     private final GatewayProperties gatewayProperties;
+    private final TimeLimiterRegistry timeLimiterRegistry;
 
     /** 构造测试实例并注入网关过滤器与验签组件。 */
     GatewayApplicationTest(
@@ -53,7 +56,8 @@ class GatewayApplicationTest {
             RequestLoggingFilter requestLoggingFilter,
             GatewayJwtVerifierService gatewayJwtVerifierService,
             GatewayExceptionHandler gatewayExceptionHandler,
-            GatewayProperties gatewayProperties) {
+            GatewayProperties gatewayProperties,
+            TimeLimiterRegistry timeLimiterRegistry) {
         this.traceWebFilter = traceWebFilter;
         this.jwtSignatureFilter = jwtSignatureFilter;
         this.userContextRelayFilter = userContextRelayFilter;
@@ -63,6 +67,7 @@ class GatewayApplicationTest {
         this.gatewayJwtVerifierService = gatewayJwtVerifierService;
         this.gatewayExceptionHandler = gatewayExceptionHandler;
         this.gatewayProperties = gatewayProperties;
+        this.timeLimiterRegistry = timeLimiterRegistry;
     }
 
     @Test
@@ -76,6 +81,16 @@ class GatewayApplicationTest {
         assertThat(requestLoggingFilter).isNotNull();
         assertThat(gatewayJwtVerifierService).isNotNull();
         assertThat(gatewayExceptionHandler).isNotNull();
+    }
+
+    @Test
+    @DisplayName("认证路由应使用 10 秒有界 TimeLimiter")
+    void authRouteUsesBoundedTimeLimiter() {
+        assertThat(timeLimiterRegistry
+                        .timeLimiter("authService")
+                        .getTimeLimiterConfig()
+                        .getTimeoutDuration())
+                .isEqualTo(Duration.ofSeconds(10));
     }
 
     /** 握手优先于消息 HTTP 路由，且只有 HTTP 请求进入熔断回退。 */

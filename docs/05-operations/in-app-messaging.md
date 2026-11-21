@@ -6,7 +6,7 @@
 
 office-service 必须配置 `OFFICE_JWT_PUBLIC_KEY_BASE64`（认证服务 RS256 公钥，X509 DER Base64）。仅在明确使用 HMAC 的过渡部署中配置 `OFFICE_JWT_SECRET`；同时配置公钥时以 RSA 为准。服务独立验签，不接受 `X-User-Id`、`X-Tenant-Id` 等客户端身份头。现有办公令牌工具的 `jwt.*` 配置仍须按原运行环境维护。
 
-`OFFICE_MESSAGE_ALLOWED_ORIGINS` 填写允许的完整浏览器 Origin，以逗号分隔，例如 `https://app.example.com`。无 Origin、非白名单 Origin、缺少 WebSocket Upgrade 均拒绝。白名单不支持通配符。
+在 Podman Compose 的 `.env` 中设置 `OFFICE_MESSAGE_ALLOWED_ORIGINS`，填写允许的完整浏览器 Origin，以逗号分隔，例如 `https://app.example.com`。无 Origin、非白名单 Origin、缺少 WebSocket Upgrade 均拒绝。白名单不支持通配符，且不由 `CORS_ALLOWED_ORIGINS` 替代。
 
 网关 `ROUTE_OFFICE_MESSAGE_URI` / `ROUTE_OFFICE_WS_URI` 缺省与 office 主路由同为 `lb://apex-office-service`（2026-11-07 起）；关闭 Nacos 的直连部署须显式注入两者，并指向网关可达且相同的 office 实例地址，不能只配置通用的 `ROUTE_OFFICE_URI`。外部生产入口使用 HTTPS/WSS，并让反向代理保留 Upgrade、Connection 和 Origin；代理空闲超时应大于 60 秒。ticket、消息发送 HTTP 请求及 WebSocket 必须到同一 office 实例。
 
