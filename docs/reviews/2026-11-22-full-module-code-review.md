@@ -53,16 +53,16 @@
 
 | # | 位置 | 发现 | 处置 |
 | --- | --- | --- | --- |
-| C1 | `apex-gateway/.../security/GatewayJwtVerifierService`（JWKS 快照） | 拉取仅 `putAll` 不删除已下线 `kid` | 单独评估缓存淘汰语义，需与轮换窗口对齐 |
-| C2 | `apex-infrastructure-cache` 多级缓存 | L1 TTL 长于 L2、stale 语义不可实现 | 需先确认真实部署配置再改 |
-| C3 | `apex-office-service/.../OfficeInternalHandler.unreadMessageSection` | `getInbox(1, limit)` 后过滤未读，可能少取 | 需与 `OffMessageService` 增加未读查询端口，属契约变更 |
-| C4 | 六个 `IdentityRelayAuthenticationFilter` | 验签内核同构但域分支不同（开放应用、HMAC 开关、文件访问上下文、WebSocket 票据） | 已确认不可整体合并；如抽取需完整差异矩阵与正反向测试 |
-| C5 | `apex-office-service` 普通用户分支 | `verifyClaims` 与 `verify` 对同一令牌重复 RSA 验签 | 可局部复用 Claims；需确认无副作用 |
-| C6 | `apex-auth-service/.../RequestHandlerUtil` | 技术异常原文回传客户端；未知业务码 400 | 涉及错误契约与信息暴露，需安全评审 |
-| C7 | `apex-generator` `CodeGenerator` / `FieldDefinition` | dbType/javaType 映射为 switch | 表驱动收益有限，且属生成器输出稳定性范围 |
-| C8 | `apex-tools-deployment/.../MysqlClient` | 写入阶段不受 90 秒硬超时约束 | 离线运维工具，影响面小，单独评估 |
-| C9 | `apex-system/.../MeilisearchAdapter.maskPhone` | 非 11 位原样返回 | 与公共脱敏边界不同，改动影响索引内容，需确认产品口径 |
-| C10 | `apex-auth` `InternalAuthService.revocationsSince` | `revoked_at` 为 MySQL 秒级 `TIMESTAMP`，查询用 `revoked_at > since`；若单批在末秒被 `limit` 截断，同秒剩余记录不会被后续批返回 | 本轮尝试「游标回退 1 秒」后导致游标无法推进、记录永久重放（既有测试失败），已回退。正确做法需引入 `(revoked_at, id)` 复合游标或时间戳改毫秒精度，属契约变更，须独立评估 |
+| C1 | `apex-gateway/.../security/GatewayJwtVerifierService`（JWKS 快照） | 拉取仅 `putAll` 不删除已下线 `kid` | 单独评估缓存淘汰语义，需与轮换窗口对齐 → 已立任务 `BE-050` |
+| C2 | `apex-infrastructure-cache` 多级缓存 | L1 TTL 长于 L2、stale 语义不可实现 | 需先确认真实部署配置再改 → 已立任务 `BE-051` |
+| C3 | `apex-office-service/.../OfficeInternalHandler.unreadMessageSection` | `getInbox(1, limit)` 后过滤未读，可能少取 | 需与 `OffMessageService` 增加未读查询端口，属契约变更 → 已立任务 `BE-052` |
+| C4 | 六个 `IdentityRelayAuthenticationFilter` | 验签内核同构但域分支不同（开放应用、HMAC 开关、文件访问上下文、WebSocket 票据） | 已确认不可整体合并；如抽取需完整差异矩阵与正反向测试 → 已立任务 `BE-053` |
+| C5 | `apex-office-service` 普通用户分支 | `verifyClaims` 与 `verify` 对同一令牌重复 RSA 验签 | 可局部复用 Claims；需确认无副作用 → 已立任务 `BE-054` |
+| C6 | `apex-auth-service/.../RequestHandlerUtil` | 技术异常原文回传客户端；未知业务码 400 | 涉及错误契约与信息暴露，需安全评审 → 已立任务 `BE-055` |
+| C7 | `apex-generator` `CodeGenerator` / `FieldDefinition` | dbType/javaType 映射为 switch | 表驱动收益有限，且属生成器输出稳定性范围 → 已立任务 `BE-056` |
+| C8 | `apex-tools-deployment/.../MysqlClient` | 写入阶段不受 90 秒硬超时约束 | 离线运维工具，影响面小，单独评估 → 已立任务 `BE-057` |
+| C9 | `apex-system/.../MeilisearchAdapter.maskPhone` | 非 11 位原样返回 | 与公共脱敏边界不同，改动影响索引内容，需确认产品口径 → 已立任务 `BE-058` |
+| C10 | `apex-auth` `InternalAuthService.revocationsSince` | `revoked_at` 为 MySQL 秒级 `TIMESTAMP`，查询用 `revoked_at > since`；若单批在末秒被 `limit` 截断，同秒剩余记录不会被后续批返回 | 本轮尝试「游标回退 1 秒」后导致游标无法推进、记录永久重放（既有测试失败），已回退。正确做法需引入 `(revoked_at, id)` 复合游标或时间戳改毫秒精度，属契约变更，须独立评估 → 已立任务 `BE-059` |
 
 ## 3. 明确不改的项
 
