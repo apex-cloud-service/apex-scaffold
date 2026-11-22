@@ -1,0 +1,35 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfeff','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#0891b2','fontFamily':'sans-serif'}}}%%
+%% apex-integration 功能架构图（BE-047 新增，2026-11-22）
+%% 口径：connector 与 device 两子域四层 + 自含组件开关；类名以当前代码为准。
+%% 证据：apex-components-parent/apex-integration（connector|device 各 interfaces/application/domain/infrastructure）。
+flowchart TB
+    SWITCH["组件级开关<br/>apex.component.integration.enabled（默认 true，守护整个自动配置）<br/>apex.component.integration.interfaces-enabled（默认 true，守护内嵌协议层）<br/>apex.component.integration.device.enabled / device.interfaces-enabled（默认 true）"]
+
+    subgraph CONN["connector 子域（系统集成连接器）"]
+        direction TB
+        CI["interfaces<br/>IntegrationConnectorRouter + ConnectorConfigHandler / CredentialHandler / WebhookInboundHandler<br/>/integration/v1/connectors、/credentials、/webhook/{connector}"]
+        CA["application<br/>ConnectorInvokeService（出站门面+审计）· ConnectorExecutionService（幂等键重试）<br/>CredentialManageService · CredentialReferenceResolver · WebhookInboundService"]
+        CD["domain<br/>IntegrationConnector（SPI）· ConnectorLoader（ServiceLoader，内置优先）<br/>内置连接器：HttpConnector / WebhookOutboundConnector / WeChatConnector / ChuanglanConnector<br/>CredentialCipher（AES-256-GCM）· WebhookSignatures（HMAC-SHA256）"]
+        CP["infrastructure/persistence<br/>int_connector_config / int_credential / int_outbound_call_log / int_inbound_event / int_webhook_dedup<br/>5 组 RepositoryImpl + Mapper + PO"]
+        CI --> CA --> CD
+        CA --> CP
+    end
+
+    subgraph DEV["device 子域（物联网设备接入）"]
+        direction TB
+        DI["interfaces<br/>IotDeviceRouter + DeviceAdminHandler / IotRuleHandler / IotInternalHandler（MQTT 钩子）"]
+        DA["application<br/>DeviceRegistryService（注册+建影子）· DeviceTelemetryService（ingest→影子→规则）<br/>DeviceCommandService（PENDING→SENT→ACK/TIMEOUT）· DeviceRuleEngineService · DeviceCommandTimeoutScanner"]
+        DD["domain<br/>Device / DeviceShadow / DeviceTelemetry / DeviceCommand / DeviceRule<br/>端口：CommandDownlinkPort · NotifyActionPort · SecretHasher · MqttTopicPolicy"]
+        DP["infrastructure<br/>5 组 RepositoryImpl + Mapper + PO<br/>mqtt/：IotMqttSession（SmartLifecycle）· MqttCommandDownlinkBridge"]
+        DI --> DA --> DD
+        DA --> DP
+    end
+
+    EXT["外部依赖<br/>出站：原生 WebClient（4 个内置连接器各自持有）<br/>接入：hivemq-mqtt-client 为 optional（classpath 无依赖时零 Bean）；<br/>生产由外部 EMQX 经 /internal/v1/iot/mqtt/auth|acl 钩子对接（apex.integration.iot.mqtt.enabled 默认 false）<br/>存储：独立 MySQL（integration 域 V1–V3 迁移 + seata undo_log）"]
+
+    SWITCH --> CONN
+    SWITCH --> DEV
+    CD -->|"SPI 装载/出站调用"| EXT
+    DD -->|"命令下行（可选 MQTT）"| EXT
+    CP --> DB[("integration 业务库")]
+    DP --> DB

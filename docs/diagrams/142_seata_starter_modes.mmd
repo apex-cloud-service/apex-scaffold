@@ -1,0 +1,20 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fffbeb','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#d97706','fontFamily':'sans-serif'}}}%%
+%% seata 分布式事务 starter 模式图（BE-047 新增，2026-11-22）
+%% 口径：apex.seata.enabled 默认关闭；apex.seata.mode 选择 AT（缺省）/TCC/SAGA/XA。
+%% 证据：apex-seata-spring-boot-starter SeataAutoConfiguration / SeataProperties / SeataOutboxGuard。
+flowchart TB
+    EN["apex.seata.enabled（默认 false，须显式开启）<br/>类名字符串守卫：缺 seata 依赖时零 Bean"]
+    MODE{"apex.seata.mode"}
+
+    EN --> MODE
+    MODE -->|AT 缺省| AT["AT 模式<br/>数据源包装 DataSourceProxy<br/>要求各业务库 undo_log（宿主 V3 建表）<br/>与既有接入行为兼容"]
+    MODE -->|XA| XA["XA 模式<br/>DataSourceProxyXA + ResourceManagerXA<br/>依赖数据库 XA 能力，无 undo_log"]
+    MODE -->|SAGA| SAGA["SAGA 模式<br/>DbStateMachineConfig + ProcessCtrlStateMachineEngine<br/>SagaResourceManager；JSON 定义 apex.seata.saga.state-machine-resources<br/>需存储三表：seata_state_machine_def / _inst / seata_state_inst（建表脚本随 starter 发布）<br/>表前缀 apex.seata.saga.table-prefix 默认 seata_"]
+    MODE -->|TCC| TCC["TCC 模式<br/>GlobalTransactionScanner 代理 @LocalTCC 动作<br/>不包装数据源"]
+
+    CONS["通用约束（四种模式共用）<br/>要求同步单 JDBC 数据源：动态路由数据源或已有代理直接抛异常<br/>AT/XA 代理不支持 H2（须真实 MySQL/PostgreSQL）<br/>TCC/SAGA 不包装数据源<br/>全局事务内拒绝 Outbox 写入：SeataOutboxGuard 拦截<br/>TransactionalOutboxExecutor.execute 与 DomainEventOutboxStore.append*<br/>活动全局事务中抛 IllegalStateException"]
+
+    AT --> CONS
+    XA --> CONS
+    SAGA --> CONS
+    TCC --> CONS

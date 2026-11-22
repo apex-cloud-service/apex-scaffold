@@ -1,0 +1,39 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#059669','fontFamily':'sans-serif'}}}%%
+%% office 站内信实时推送与补偿流程图（BE-047 新增，2026-11-22）
+%% 口径：HTTP 消息路由与 WS 握手路由是网关 application.yml 两个 env 占位符
+%% ROUTE_OFFICE_MESSAGE_URI / ROUTE_OFFICE_WS_URI（非 Java 常量），缺省均 lb://apex-office-service；
+%% 票据与连接注册表为单实例内存状态；在线推送为进程内 MessageCommittedEvent（非 MQ）。
+%% 证据：apex-gateway application.yml office-message-* 路由；MessageWebSocketConfig/MessageSocketRegistry/OffMessageService。
+flowchart TB
+    CLI["前端"]
+
+    subgraph GW["apex-gateway（三条 office 路由缺省同指 lb://apex-office-service）"]
+        direction LR
+        R1["office-message-websocket<br/>Path=/api/v1/messages/ws + Upgrade 头<br/>uri ${ROUTE_OFFICE_WS_URI:lb://apex-office-service}"]
+        R2["office-message-http<br/>Path=/api/v1/messages, /api/v1/messages/**<br/>uri ${ROUTE_OFFICE_MESSAGE_URI:lb://apex-office-service}"]
+        R3["office-domain 主路由<br/>uri ${ROUTE_OFFICE_URI:lb://apex-office-service}"]
+    end
+
+    CLI --> GW
+    GW --> OFFICE["apex-office-service :8084<br/>MessageWebSocketConfig：MESSAGE_SOCKET_PATH=/api/v1/messages/ws<br/>心跳：服务端每 20s ping，60s 无 pong 或满 1h 关闭"]
+
+    subgraph TICKET["WS 握手票据链"]
+        T1["POST /api/v1/messages/ws-ticket（JWT principal）"]
+        T2["MessageSocketRegistry.issue<br/>票据 30s 有效（单实例内存 HashMap）"]
+        T3["WS connect：consume 票据 → 注册 Connection<br/>每连接一个 ArrayBlockingQueue"]
+        T1 --> T2 --> T3
+    end
+
+    subgraph SEND["发送与在线推送"]
+        S1["POST /api/v1/messages<br/>OffMessageService.sendMessage：原子保存消息与接收人（本地事务）"]
+        S2["事务提交后发布 MessageCommittedEvent<br/>（进程内事件，非 RocketMQ）"]
+        S3["MessageSocketRegistry.onCommitted：逐收件人 publish 到队列"]
+        S1 --> S2 --> S3
+    end
+
+    COMP["断线补偿（不提供跨实例实时广播）<br/>重连后走 HTTP：GET /api/v1/messages/inbox、<br/>/api/v1/messages/inbox/cursor、/api/v1/messages/unread/count<br/>关闭 Nacos 直连部署时须显式注入 MESSAGE/WS 两变量且指向同一 office 实例"]
+
+    OFFICE --> TICKET
+    OFFICE --> SEND
+    S3 -.->|"在线收件人实时推送"| CLI
+    COMP -.->|"离线/断线收件人"| CLI

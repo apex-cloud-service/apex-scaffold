@@ -1,0 +1,20 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fffbeb','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#d97706','fontFamily':'sans-serif'}}}%%
+%% masking 脱敏服务架构图（BE-047 新增，2026-11-22）
+%% 口径：可选运行模块，默认端口 8096；无持久化、无 CRUD、无热刷新，策略来自启动配置。
+%% 证据：apex-services-bom/apex-masking-service（MaskingRouter/MaskingHandler/MaskingProperties/MaskingSecurityConfig）。
+flowchart TB
+    CLIENT["调用方（携带 JWT）"]
+    GW["apex-gateway"]
+    subgraph MSVC["apex-masking-service（可选运行模块，端口 8096）"]
+        direction TB
+        SEC["MaskingSecurityConfig<br/>oauth2ResourceServer<br/>NimbusReactiveJwtDecoder.withJwkSetUri<br/>apex.masking.jwk-set-uri / issuer / audience"]
+        RT["MaskingRouter（函数式）<br/>POST /api/v1/masking/batch<br/>GET /api/v1/masking/rules"]
+        HD["MaskingHandler<br/>batch 批量脱敏 / rules 规则清单"]
+        PROP["MaskingProperties（record，启动配置）<br/>apex.masking.versions.&lt;v&gt;.tenants<br/>apex.masking.versions.&lt;v&gt;.fields.&lt;f&gt;.type<br/>构造器 Map.copyOf / Set.copyOf → 运行期不可变"]
+        NP["边界（MaskingRouter javadoc 明示）<br/>无持久化：无 JDBC/R2DBC/Redis 依赖，无 Flyway<br/>策略不提供增删改或热刷新<br/>租户仅取 JWT claims tenant_id（兼容 tenantId），不接受 header/body 指定"]
+    end
+
+    CLIENT --> GW --> SEC --> RT --> HD
+    PROP --> HD
+    NP -.-> MSVC
+    SEC -.->|"JWKS 拉取"| AUTH["apex-auth-service<br/>/.well-known/jwks.json（8081）"]

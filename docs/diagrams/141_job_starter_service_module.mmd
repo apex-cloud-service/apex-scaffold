@@ -1,0 +1,26 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fffbeb','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#d97706','fontFamily':'sans-serif'}}}%%
+%% job 定时任务模块图（BE-047 新增，2026-11-22）
+%% 口径：starter 默认禁用；job-service 为无状态代理，固定代理 system 九个任务接口。
+%% 证据：JobExecutorAutoConfiguration / JobProxy；apex-job-service pom 唯一内部依赖 infrastructure-remote。
+flowchart TB
+    subgraph STARTER["apex-job-spring-boot-starter（默认禁用）"]
+        direction TB
+        SW["开关：apex.job.executor.enabled<br/>havingValue=true 且无 matchIfMissing → 缺省不装配<br/>另有 XxlJobSpringExecutor 类名字符串守卫（缺依赖时零 Bean）"]
+        EXE["xxlJobExecutor（XxlJobSpringExecutor）<br/>校验：appName / adminAddresses / accessToken ≥32 字符 /<br/>HTTPS 无凭据中心地址 / 执行器端口 1–65535（默认 9999）<br/>配置前缀 apex.job.executor"]
+        BR["任务桥接<br/>SystemJobBridge（条件 apex.job.system.job-id + tenant-id）<br/>WorkflowJobBridge（条件 apex.job.workflow.enabled=true）"]
+        SW --> EXE --> BR
+    end
+
+    subgraph JSVC["apex-job-service（无状态代理，默认端口 8095）"]
+        direction TB
+        JP["JobProxy：固定代理九条路由（ROOT=/admin-api/v1/jobs）<br/>GET / · GET /page · POST / · GET /{id} · PUT /{id} ·<br/>DELETE /{id} · PUT /{id}/status · POST /{id}/run · GET /{id}/logs"]
+        MW["ManagedWebClientFactory<br/>（唯一内部依赖 apex-infrastructure-remote）"]
+        EX["启动排除 DataSource/Flyway/Redis/MyBatis-Plus 等共享设施<br/>不迁移 system 数据所有权"]
+        JP --> MW
+    end
+
+    SYS["apex-system-service（system 库任务所有权）<br/>目标 apex.job.system-url（默认 http://127.0.0.1:8082）"]
+    XXL["XXL 调度中心（外部）<br/>宿主端口 8099"]
+    XXL -->|"回调注册"| EXE
+    JP -->|"HTTP 转发"| SYS
+    BR -.->|"桥接执行"| EXE

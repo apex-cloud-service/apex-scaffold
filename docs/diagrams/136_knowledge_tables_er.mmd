@@ -1,0 +1,69 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+%% knowledge 域 ER 图（BE-047 新增，2026-11-22）
+%% 口径：按 apex-knowledge-service/src/main/resources/db/migration/mysql V1–V2 实测，业务表 7 张；
+%% 向量本体不落库（kb_chunk.id 兼作向量索引文档主键）。
+erDiagram
+    KB_SPACE ||--o{ KB_DOCUMENT : "space_id"
+    KB_DOCUMENT ||--o{ KB_CHUNK : "document_id"
+    KB_DOCUMENT ||--|| KB_DOCUMENT_WORK : "租户内认领租约"
+    KB_DOCUMENT ||--o| KB_DOCUMENT_CLEANUP : "删除清理凭证"
+    KB_CONVERSATION ||--o{ KB_MESSAGE : "conversation_id"
+
+    KB_SPACE {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar name "空间名"
+        varchar description "描述"
+    }
+    KB_DOCUMENT {
+        bigint id PK "主键"
+        bigint space_id FK "所属空间"
+        varchar title "标题"
+        varchar parse_status "解析状态机"
+        varchar index_status "索引状态机"
+        varchar storage_provider "V2 对象存储提供者"
+        varchar storage_bucket "V2 桶"
+        tinyint object_owned "V2 对象所有权"
+        varchar index_endpoint "V2 索引端点"
+        varchar index_name "V2 索引名"
+        tinyint index_required "V2 是否要求索引"
+    }
+    KB_CHUNK {
+        bigint id PK "主键（兼向量索引文档主键）"
+        bigint document_id FK "所属文档"
+        text content "分块文本"
+        int seq "块序"
+        bigint tenant_id "租户"
+    }
+    KB_DOCUMENT_WORK {
+        bigint id PK "主键"
+        bigint document_id "文档"
+        bigint tenant_id "uk tenant_id+document_id"
+        varchar owner "认领者"
+        bigint generation "fencing token"
+        varchar kind "工作类型"
+        datetime lease_until "租约到期"
+    }
+    KB_DOCUMENT_CLEANUP {
+        bigint id PK "主键"
+        bigint document_id "文档"
+        bigint tenant_id "uk tenant_id+document_id"
+        varchar mode "清理模式"
+        varchar status "状态"
+        int attempts "重试次数"
+        datetime next_retry_at "下次重试"
+        datetime next_review_at "下次复查"
+    }
+    KB_CONVERSATION {
+        bigint id PK "主键"
+        bigint user_id "归属用户"
+        bigint space_id "空间范围"
+        varchar title "会话标题"
+    }
+    KB_MESSAGE {
+        bigint id PK "主键"
+        bigint conversation_id FK "所属会话"
+        varchar role "user/assistant"
+        text content "消息内容"
+        json citations "引用溯源 JSON（seq/chunkId/documentId/title/spaceId/摘要）"
+    }

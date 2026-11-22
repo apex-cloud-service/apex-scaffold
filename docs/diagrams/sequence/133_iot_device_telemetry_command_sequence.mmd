@@ -1,0 +1,50 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfeff','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#0891b2','fontFamily':'sans-serif'}}}%%
+%% integration 设备接入时序图（BE-047 新增，2026-11-22）
+%% 口径：遥测上行与命令下行两条链路；类名以 apex-integration device 子域当前代码为准。
+%% 证据：DeviceTelemetryService / DeviceCommandService / DeviceRuleEngineService / MqttCommandDownlinkBridge。
+sequenceDiagram
+    autonumber
+    participant DEV as 设备
+    participant BRK as MQTT Broker（外部 EMQX，可选链路）
+    participant IIH as IotInternalHandler<br/>（MQTT 钩子）
+    participant TS as DeviceTelemetryService
+    participant SH as DeviceShadow<br/>（iot_device_shadow）
+    participant RES as DeviceRuleEngineService
+    participant ACT as NotifyActionPort /<br/>DeviceRuleTriggered 事件
+    participant CMD as DeviceCommandService
+    participant BRG as MqttCommandDownlinkBridge<br/>（CommandDownlinkPort）
+
+    rect rgb(236,254,255)
+    Note over DEV,ACT: 遥测上行
+    DEV->>BRK: 上报遥测（topic 策略 MqttTopicPolicy）
+    BRK->>IIH: 内部 MQTT 钩子转发
+    IIH->>TS: ingest（设备键 + 指标）
+    TS->>SH: 影子更新（version 乐观锁）
+    alt 影子版本冲突
+        SH-->>TS: DeviceShadowConflictException
+        TS->>SH: 重读最新 version 并重试
+    end
+    TS->>RES: 逐条发布 DeviceTelemetryReceived
+    RES->>RES: 解析规则条件（解析失败跳过当前规则，后续规则继续）
+    alt 命中 NOTIFY 动作
+        RES->>ACT: NotifyActionPort 发通知
+    else 命中 EVENT 动作
+        RES->>ACT: 发布 DeviceRuleTriggered
+    end
+    TS-->>IIH: TelemetryAck（acceptedCount, shadowVersion）
+    IIH-->>BRK: 回执
+    end
+
+    rect rgb(236,254,255)
+    Note over CMD,BRG: 命令下行
+    CMD->>CMD: 幂等校验（uk tenant_id+command_id），登记 PENDING
+    CMD->>BRG: CommandDownlinkPort 下发
+    BRG->>BRK: 发布命令 topic（hivemq 客户端，optional）
+    BRK->>DEV: 命令推送
+    DEV-->>BRG: 执行确认
+    BRG->>CMD: ack(deviceKey, commandId)
+    CMD->>CMD: PENDING → SENT → ACK
+    alt 超时未确认
+        Note over CMD: DeviceCommandTimeoutScanner（@Scheduled）兜底置 TIMEOUT
+    end
+    end

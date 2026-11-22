@@ -1,0 +1,33 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfeff','primaryTextColor':'#0f172a','primaryBorderColor':'#0891b2','lineColor':'#0891b2','fontFamily':'sans-serif'}}}%%
+%% integration 连接器出站与 Webhook 入站流程图（BE-047 新增，2026-11-22）
+%% 口径：出站调用与入站 webhook 两条主链路；步骤与类名以 connector 子域当前代码为准。
+%% 证据：ConnectorInvokeService / ConnectorExecutionService / CredentialReferenceResolver / WebhookInboundService。
+flowchart LR
+    subgraph OUT["出站调用（统一门面）"]
+        direction TB
+        BIZ["业务调用"] --> INV["ConnectorInvokeService<br/>出站门面"]
+        INV --> IDEM["ConnectorExecutionService<br/>幂等键重试（int_outbound_call_log idx tenant_id+idempotency_key）"]
+        IDEM --> RESC["CredentialReferenceResolver<br/>按 credential_key 解密（AES-256-GCM，int_credential）"]
+        RESC --> REG["连接器注册表<br/>ConnectorRegistryConfiguration：内置优先，同名 SPI 跳过告警"]
+        REG --> CONN["IntegrationConnector 按 type 分发<br/>HttpConnector / WebhookOutboundConnector / WeChatConnector / ChuanglanConnector"]
+        CONN --> WC["WebClient（原生，无 Feign）"]
+        WC --> EXT["外部系统"]
+        IDEM --> LOG[("int_outbound_call_log<br/>出站审计")]
+    end
+
+    subgraph INB["入站 Webhook（验签→去重→落库→发布）"]
+        direction TB
+        EXT2["外部系统回调"] --> H["POST /integration/v1/webhook/{connector}"]
+        H --> T1["租户解析：TenantContext → 回退 tenant 参数"]
+        T1 --> T2["findActive 加载启用配置"]
+        T2 --> T3["解密 secret"]
+        T3 --> T4["时间窗校验 ±300s"]
+        T4 --> T5["WebhookSignatures.verify<br/>HMAC-SHA256(timestamp.body)"]
+        T5 -->|通过| T6["int_webhook_dedup.tryInsert<br/>去重键 SHA-256 截 128，TTL 24h"]
+        T5 -->|失败| T7["以 signature_valid=0 落库并拒绝"]
+        T6 --> T8[("int_inbound_event")]
+        T8 --> T9["发布 WebhookEventReceived"]
+        T9 --> T10["markProcessed"]
+    end
+
+    EXT -.->|回调| EXT2

@@ -1,0 +1,41 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#059669','fontFamily':'sans-serif'}}}%%
+%% knowledge RAG 问答时序图（BE-047 新增，2026-11-22）
+%% 口径：SSE 端点 POST /api/v1/kb/chat/ask；事件协议 citations → delta* → done，失败转 error；
+%% 检索 hybrid 语义权重 apex.knowledge.search.semantic-ratio 默认 0.6、top-k 默认 5；三级降级独立生效。
+sequenceDiagram
+    autonumber
+    participant C as 客户端（SSE）
+    participant RT as KnowledgeChatRouter<br/>POST /api/v1/kb/chat/ask
+    participant CHAT as KnowledgeChatAppService
+    participant SRCH as KnowledgeSearchAppService
+    participant EMB as EmbeddingPort<br/>（OpenAI 兼容，可关）
+    participant MEILI as KnowledgeVectorIndexPort<br/>（Meilisearch REST hybrid，可关）
+    participant LLM as ChatPort<br/>（OpenAI 兼容，可关）
+    participant DB as apex_knowledge 库<br/>（kb_message.citations）
+
+    C->>RT: 提问（spaceId + question）
+    RT->>CHAT: ask（SSE 流式）
+    CHAT->>SRCH: retrieveTopK(question)
+    alt apex.knowledge.embedding.enabled 且调用成功
+        SRCH->>EMB: 查询向量化
+        EMB-->>SRCH: 查询向量
+        SRCH->>MEILI: hybrid 检索（embedder=default，semanticRatio=0.6）
+        MEILI-->>SRCH: Top-K=5 命中块
+    else 向量化关闭或失败
+        SRCH->>MEILI: 词法检索（适配器内 hybrid 失败同样降级一次词法）
+        MEILI-->>SRCH: Top-K 命中块
+    end
+    alt apex.knowledge.meilisearch.enabled=false
+        Note over SRCH: 检索恒空（disabledVectorIndexPort），仅凭上下文作答
+    end
+    CHAT->>LLM: 组装检索上下文 + 问题（流式）
+    CHAT-->>C: SSE event: citations（引用清单：seq/chunkId/documentId/title/spaceId/摘要≤300）
+    loop 逐增量
+        LLM-->>CHAT: delta
+        CHAT-->>C: SSE event: delta
+    end
+    CHAT-->>C: SSE event: done
+    CHAT->>DB: 持久化 kb_message（citations JSON 引用溯源）
+    alt apex.knowledge.chat.enabled=false
+        CHAT-->>C: SSE event: error {code,message}（disabledChatPort 显式报错）
+    end

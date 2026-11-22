@@ -1,0 +1,52 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#4f46e5','fontFamily':'sans-serif'}}}%%
+%% 当前运行拓扑系统架构图（BE-047 新增，2026-11-22）
+%% 口径：8 个标准发布运行模块 + 3 个可选运行模块；端口与数据库对齐 build-manifest.yaml 与各服务 application.yml；
+%% 历史拓扑见 02/93/94 号手写 SVG（仅作历史视图）。网关路由清单见 apex-gateway application.yml。
+flowchart TB
+    CLIENT["客户端（Vue3 管理后台 / API 调用方）"]
+
+    GW["apex-gateway :8080<br/>Spring Cloud Gateway<br/>路由：/auth/v1/** /oauth2/** → auth；/api/v1/workflows/** → workflow；<br/>/api/v1/messages/ws（Upgrade）与 /api/v1/messages/** → office；<br/>/api/v1/office/** /api/office/** → office；/api/v2/todo → aggregation；<br/>/api/v1/file|files|documents/** → file；/admin-api/v1/jobs → job；<br/>/api/v1/masking/** → masking；/api/v1/kb/** → knowledge；<br/>/api/v1/** /admin-api/v1/** 兜底 → system"]
+
+    subgraph STD["八个标准发布运行模块"]
+        direction LR
+        AUTH["apex-auth-service :8081<br/>apex_auth"]
+        SYS["apex-system-service :8082<br/>（管理 :8083）apex_system"]
+        WF["apex-workflow-service :8093<br/>apex_workflow"]
+        OFF["apex-office-service :8084<br/>apex_office"]
+        FILE["apex-file-service :8085<br/>apex_file"]
+        INT["apex-integration-service :8094<br/>（管理 :8097）apex_integration"]
+        AGG["apex-aggregation-service :8098<br/>无 DB，WebClient 聚合"]
+        KY["apex-knowledge-service :8100<br/>apex_knowledge（可选，不进标准交付包）"]
+    end
+
+    subgraph OPT["可选运行模块（不进标准交付包）"]
+        JOB["apex-job-service :8095<br/>无状态代理九个任务接口"]
+        MSK["apex-masking-service :8096<br/>无持久化脱敏"]
+    end
+
+    subgraph MW["中间件"]
+        MYSQL[("MySQL ×7<br/>apex_auth/system/workflow/<br/>office/file/integration/knowledge")]
+        REDIS[("Redis :6379")]
+        MQ[("RocketMQ :9876")]
+        MEILI[("Meilisearch :7700")]
+        NACOS["Nacos（注册/配置，可关）<br/>关闭时 lb:// 改显式地址"]
+        ST["对象存储五后端<br/>local / MinIO / OSS / 七牛 / 火山 TOS"]
+        XXL["XXL 调度中心（宿主 :8099，可选）"]
+        TC["Seata TC（可选，默认关）"]
+    end
+
+    CLIENT --> GW
+    GW --> STD
+    GW --> OPT
+    AUTH --> MYSQL & REDIS
+    SYS --> MYSQL & REDIS & MEILI & MQ
+    WF --> MYSQL & MQ
+    OFF --> MYSQL
+    FILE --> MYSQL & ST
+    INT --> MYSQL
+    KY --> MYSQL & MEILI
+    AGG -.->|"内部 HTTP 聚合 workflow/office"| WF & OFF
+    JOB -.->|"代理转发"| SYS
+    XXL -.-> JOB
+    TC -.-> WF & OFF & INT & FILE
+    NACOS -.->|"注册发现"| STD

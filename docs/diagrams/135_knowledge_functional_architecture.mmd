@@ -1,0 +1,49 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#059669','fontFamily':'sans-serif'}}}%%
+%% apex-knowledge 功能架构图（BE-047 新增，2026-11-22）
+%% 口径：协议层位于运行模块 knowledgeservice，业务四层位于业务库 knowledge；
+%% 三级能力降级开关独立（索引/向量化/问答）；Meilisearch hybrid 走 REST 直调。
+%% 证据：apex-business-parent/apex-knowledge + apex-services-bom/apex-knowledge-service。
+flowchart TB
+    SWITCH["三级能力降级开关（KnowledgeCapabilityFallbackConfiguration，@ConditionalOnMissingBean 让位真实适配器）<br/>索引：apex.knowledge.meilisearch.enabled（关→检索恒空、摄取只入库）<br/>向量化：apex.knowledge.embedding.enabled（关→仅词法）<br/>问答：apex.knowledge.chat.enabled（关→问答显式报错）<br/>环境变量：KNOWLEDGE_MEILISEARCH_ENABLED / KNOWLEDGE_EMBEDDING_ENABLED / KNOWLEDGE_CHAT_ENABLED"]
+
+    subgraph IF["接口层（apex-knowledge-service :8100，knowledgeservice.interfaces）"]
+        direction LR
+        RT["Router×4<br/>Space / Document / Search / Chat"]
+        HD["同名 Handler×4<br/>安全：KnowledgeSecurityConfig · IdentityRelayAuthenticationFilter · PermissionClient"]
+    end
+
+    subgraph APP["应用层（knowledge.application）"]
+        direction LR
+        ING["IngestionService<br/>摄取编排（租约+fencing token）"]
+        DOC["KnowledgeDocumentAppService<br/>上传→异步触发摄取"]
+        SPC["KnowledgeSpaceAppService"]
+        SRCH["KnowledgeSearchAppService<br/>hybrid 编排"]
+        CHAT["KnowledgeChatAppService<br/>RAG SSE 问答"]
+        CLN["CleanupService + LeaseRunner<br/>清理租约"]
+        JOBS["定时：IndexReconciliationJob<br/>DocumentCleanupJob"]
+    end
+
+    subgraph DOM["领域层（knowledge.domain）"]
+        direction LR
+        PORTS["端口：DocumentParserPort · EmbeddingPort · ChatPort ·<br/>KnowledgeVectorIndexPort · KnowledgeDocumentLifecyclePort<br/>+ 4 仓储接口"]
+        CHUNK["领域服务 ChunkingService（分块）"]
+    end
+
+    subgraph INFRA["基础设施层（knowledge.infrastructure）"]
+        direction LR
+        TIKA["TikaDocumentParser<br/>tika-core + parsers-standard-package"]
+        EMB["OpenAiCompatibleEmbeddingAdapter<br/>+ EmbeddingCache"]
+        CHATP["OpenAiCompatibleChatAdapter"]
+        MEILI["MeilisearchKnowledgeAdapter<br/>hybrid 检索走 REST 直调<br/>（SDK 0.17.1 未完整暴露 hybrid 参数）"]
+        PERS["persistence：Mapper/PO/Repository<br/>（kb_* 7 表，独立 apex_knowledge 库）"]
+    end
+
+    EXT["外部依赖<br/>对象存储（StorageRegistry 五后端）· Meilisearch :7700 ·<br/>OpenAI 兼容推理服务 · MySQL（单数据源，显式排除 dynamic-datasource）<br/>不注册 Nacos：网关 ROUTE_KNOWLEDGE_URI 固定地址"]
+
+    IF --> APP --> DOM --> INFRA
+    SWITCH -.-> INFRA
+    TIKA --> EXT
+    EMB --> EXT
+    CHATP --> EXT
+    MEILI --> EXT
+    PERS --> EXT

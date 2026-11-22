@@ -1,0 +1,27 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fffbeb','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#d97706','fontFamily':'sans-serif'}}}%%
+%% storage 多后端对象存储 starter 图（BE-047 新增，2026-11-22）
+%% 口径：无业务域依赖的五后端存储自动装配；SPI 扩展点为 ObjectStorage。
+%% 证据：apex-storage-spring-boot-starter StorageAutoConfiguration / StorageProviderLoader / StorageRegistry。
+flowchart TB
+    API["业务方（apex-file 经 storage-spring-boot-starter 使用）<br/>ObjectStorage SPI 接口：type / upload / download / delete / exists / presignGet"]
+
+    subgraph BUILTIN["内置后端（Spring Bean 装配，5 个）"]
+        direction LR
+        L["LocalStorage<br/>type=local<br/>storage.local.enabled 默认 true<br/>base-path 默认 /root/data/apex/uploads"]
+        M["MinioStorage<br/>type=minio<br/>@ConditionalOnClass MinioClient<br/>兼容旧前缀 minio.*"]
+        T["TosStorage<br/>type=volcengine<br/>TOSV2"]
+        O["OssStorage<br/>type=aliyun-oss<br/>com.aliyun.oss.OSS"]
+        Q["QiniuStorage<br/>type=qiniu"]
+    end
+
+    SPI["第三方扩展（ServiceLoader）<br/>META-INF/services/com.apex.scaffold.storage.ObjectStorage<br/>StorageProviderLoader.load()：坏描述符告警跳过并保留已发现"]
+
+    MERGE["合并装配：Bean 与 SPI 同 type 不重复注册<br/>StorageRegistry.putIfAbsent：重复 type 抛 IllegalArgumentException（重复存储策略）<br/>storage.default-type 未注册或未启用时拒绝（存储策略未启用或未知）"]
+
+    CFG["配置键<br/>storage.&lt;type&gt;.enabled（云后端必须显式 true；缺 SDK 时启用即 IllegalStateException）<br/>storage.default-type（默认 local）<br/>storage.local.base-path"]
+
+    API --> MERGE
+    BUILTIN --> MERGE
+    SPI --> MERGE
+    CFG -.-> BUILTIN
+    MERGE --> USE["StorageRegistry 提供统一存取"]

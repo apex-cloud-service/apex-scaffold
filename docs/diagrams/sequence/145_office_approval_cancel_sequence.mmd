@@ -1,0 +1,38 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#059669','fontFamily':'sans-serif'}}}%%
+%% office 审批撤销编排时序图（BE-047 新增，2026-11-22）
+%% 口径：同步两步编排（撤销请求→远程平台→本地落库），无平台审批结果回调入口；
+%% 状态机与 docs/diagrams/126_approval_cancel_state_machine.mmd 衔接（PENDING/REMOTE_CANCELLED/COMPLETED/FAILED）。
+%% 证据：OfficeApprovalRouter / OfficeApprovalHandler / OfficeApprovalService / ApprovalClient（飞书/钉钉/企微）。
+sequenceDiagram
+    autonumber
+    participant U as 发起人
+    participant RT as OfficeApprovalRouter<br/>DELETE /api/office/approvals/{processInstanceId}
+    participant HD as OfficeApprovalHandler<br/>（@RequirePermission office:approval:cancel）
+    participant SVC as OfficeApprovalService
+    participant OP as ApprovalCancelOperationRepository<br/>off_approval_cancel_operation
+    participant CLI as ApprovalClient（ApprovalPort）<br/>Dingtalk/Feishu/Wecom
+    participant EXT as 外部办公平台
+
+    U->>RT: 撤销审批（携带幂等操作键 cancelApproval）
+    RT->>HD: cancelApproval
+    HD->>SVC: cancelApproval(processInstanceId, idempotencyKey)
+    SVC->>OP: 创建/重放 ApprovalCancelOperation（markPending）<br/>幂等键 UNIQUE(tenant_id, idempotency_key, deleted)
+    alt 首次撤销
+        SVC->>CLI: cancelApproval(platformInstanceId, initiatorId)
+        CLI->>EXT: 平台撤销调用
+        alt 平台撤销成功
+            EXT-->>CLI: 成功
+            CLI-->>SVC: 成功
+            SVC->>OP: markRemoteCancelled（REMOTE_CANCELLED，isReplayableAsSuccess=true）
+            SVC->>SVC: 同一同步事务：本地流程置 CANCELLED + markCompleted（COMPLETED）
+        else 平台撤销失败
+            EXT-->>CLI: 失败
+            CLI-->>SVC: 失败
+            SVC->>OP: markFailed（FAILED，error_message 留审计线索）
+            Note over SVC,OP: 后续重放：FAILED→PENDING（幂等键不变）；<br/>REMOTE_CANCELLED 自环重放直至本地完成——状态机详见 126 号图
+        end
+    else 幂等重放（同键再次请求）
+        OP-->>SVC: 返回既有编排记录
+        SVC-->>HD: 按 isReplayableAsSuccess 直接返回成功语义
+    end
+    SVC-->>U: 撤销结果

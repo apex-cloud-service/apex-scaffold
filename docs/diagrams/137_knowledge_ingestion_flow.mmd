@@ -1,0 +1,23 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#ecfdf5','primaryTextColor':'#0f172a','primaryBorderColor':'#059669','lineColor':'#059669','fontFamily':'sans-serif'}}}%%
+%% knowledge 文档摄取流程图（BE-047 新增，2026-11-22）
+%% 口径：上传响应不等待摄取完成；摄取以租约认领 + fencing token 防并发；状态机 INDEXED / INDEXED_LEXICAL。
+%% 证据：KnowledgeDocumentAppService.upload / IngestionService.ingest / ChunkingService / lifecycle 端口。
+flowchart TB
+    UP["客户端上传文档<br/>POST 文档接口"] --> ST["StorageRegistry 上传对象（五后端）"]
+    ST --> TRIG["KnowledgeDocumentAppService.triggerIngestion<br/>响应不等待摄取完成"]
+    TRIG --> CLAIM["IngestionService.claimIngestion<br/>kb_document_work 租约认领（owner/generation/kind/lease_until）<br/>fencing token 防过期执行者"]
+    CLAIM -->|"认领失败/租约冲突"| SKIP["跳过：已有执行者持有"]
+    CLAIM --> PARSE["TikaDocumentParser.parse<br/>（tika-parsers-standard-package）"]
+    PARSE --> CHUNK["ChunkingService.chunk<br/>分块（kb_chunk.id 兼作向量索引文档主键）"]
+    CHUNK --> REPL["lifecycle.replaceChunks<br/>替换旧分块"]
+    REPL --> EMB{"apex.knowledge.embedding.enabled？"}
+    EMB -->|"开启"| VEC["embedWithCache：EmbeddingPort（OpenAI 兼容）+ EmbeddingCache<br/>响应逐条校验 index/维度，畸形显式失败"]
+    EMB -->|"关闭"| LEX["仅词法路径（不生成向量）"]
+    VEC --> IDX{"apex.knowledge.meilisearch.enabled？"}
+    LEX --> IDX
+    IDX -->|"开启"| UPIDX["KnowledgeVectorIndexPort：ensureIndex → upsertChunks<br/>MeilisearchKnowledgeAdapter（REST 直调，写入索引）"]
+    IDX -->|"关闭（no-op 端口）"| ONLYDB["摄取只入库：kb_chunk 持久化，索引恒空"]
+    UPIDX --> DONE["状态 INDEXED（有向量）/ INDEXED_LEXICAL（仅词法）"]
+    ONLYDB --> DONE
+    DONE -.-> RECON["KnowledgeIndexReconciliationJob<br/>周期对账重建"]
+    CLAIM -.->|"租约到期未完成"| RECOVERY["LeaseRunner/对账任务回收重派"]

@@ -1,0 +1,91 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eff6ff','primaryTextColor':'#0f172a','primaryBorderColor':'#3b82f6','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+%% integration 域 ER 图（BE-047 新增，2026-11-22）
+%% 口径：按 apex-components-parent/apex-integration/src/main/resources/db/migration/mysql V1–V3 实测，
+%% 业务表 10 张（不含 seata undo_log）；全部无物理外键，跨表为 tenant_id+业务键逻辑关联，
+%% 行级隔离依赖 tenant_id NOT NULL 与租户拦截器。V3 另建 seata undo_log（xid+branch_id 唯一）。
+erDiagram
+    INT_CONNECTOR_CONFIG ||--o{ INT_CREDENTIAL : "credential_key 逻辑引用"
+    INT_CONNECTOR_CONFIG ||--o{ INT_OUTBOUND_CALL_LOG : "config_key 出站审计"
+    INT_CONNECTOR_CONFIG ||--o{ INT_INBOUND_EVENT : "connector 入站事件"
+    IOT_DEVICE ||--|| IOT_DEVICE_SHADOW : "device_key 影子（乐观锁 version）"
+    IOT_DEVICE ||--o{ IOT_TELEMETRY : "device_key 遥测"
+    IOT_DEVICE ||--o{ IOT_COMMAND : "device_key 命令"
+
+    INT_CONNECTOR_CONFIG {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar config_key UK "uk tenant_id+config_key+deleted"
+        varchar connector_type "连接器类型"
+        text config_value "配置 JSON"
+        tinyint enabled "是否启用"
+    }
+    INT_CREDENTIAL {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar credential_key UK "uk tenant_id+credential_key+deleted"
+        varchar cipher_text "AES-256-GCM 密文"
+        varchar iv "GCM IV（Base64）"
+        varchar status "状态"
+    }
+    INT_OUTBOUND_CALL_LOG {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar config_key "连接器配置"
+        varchar idempotency_key "幂等键（idx）"
+        varchar request_summary "请求摘要"
+        int http_status "响应状态"
+        varchar error_message "失败原因"
+    }
+    INT_INBOUND_EVENT {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar connector "来源连接器"
+        varchar signature_valid "验签结果 0/1"
+        text payload "事件载荷"
+        varchar process_status "处理状态"
+    }
+    INT_WEBHOOK_DEDUP {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar dedup_key UK "uk tenant_id+dedup_key（SHA-256 截 128）"
+        datetime expire_at "去重窗口 TTL 24h"
+    }
+    IOT_DEVICE {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar device_key UK "uk tenant_id+device_key+deleted"
+        varchar product_key "产品标识"
+        varchar status "状态"
+        varchar secret_hash "凭据哈希"
+    }
+    IOT_DEVICE_SHADOW {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar device_key UK "uk tenant_id+device_key"
+        int version "影子版本（乐观锁）"
+        json reported "设备上报状态"
+        json desired "期望状态"
+    }
+    IOT_TELEMETRY {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar device_key "设备标识（idx）"
+        datetime recorded_at "上报时间（idx）"
+        json metrics "遥测指标"
+    }
+    IOT_COMMAND {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar command_id UK "uk tenant_id+command_id（幂等）"
+        varchar device_key "目标设备"
+        varchar status "PENDING/SENT/ACK/TIMEOUT"
+        datetime expire_at "超时判定"
+    }
+    IOT_RULE {
+        bigint id PK "主键"
+        bigint tenant_id "租户"
+        varchar rule_name UK "uk tenant_id+rule_name+deleted"
+        json conditions "条件 JSON（解析失败跳过）"
+        varchar action_type "NOTIFY/EVENT"
+        tinyint enabled "是否启用"
+    }

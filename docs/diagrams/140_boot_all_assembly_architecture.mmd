@@ -1,0 +1,27 @@
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fffbeb','primaryTextColor':'#0f172a','primaryBorderColor':'#d97706','lineColor':'#d97706','fontFamily':'sans-serif'}}}%%
+%% boot-all 单进程多上下文装配架构图（BE-047 新增，2026-11-22）
+%% 口径：SpringApplicationBuilder 父上下文（NONE）+ 按域独立子上下文；未声明 -Dapex.boot-all.domains 时
+%% 代码行为为启动全部域（BootAllDomains.resolve 空白输入返回全部；与主类 javadoc 表述不一致，以代码为准）。
+%% 薄 jar：无 repackage 插件，仅装配六业务库（不含 knowledge）。
+flowchart TB
+    LAUNCH["java -jar apex-boot-all（薄 jar，无 Boot repackage）<br/>[-Dapex.boot-all.domains=SYSTEM,AUTH,...]"]
+    PARENT["父上下文（WebApplicationType.NONE）<br/>BootAllParentConfiguration：仅注册 ApexBlockingIoProperties + BlockingIoSchedulers"]
+
+    LAUNCH --> PARENT
+
+    subgraph DOMAINS["子上下文 ×6（BootAllDomainConfiguration 仅 @EnableAutoConfiguration，不扫描业务包，装配全走组件自动配置）"]
+        direction LR
+        AUTHC["AUTH<br/>:8081<br/>spring.application.name=<br/>apex-boot-all-auth"]
+        SYSC["SYSTEM<br/>:8082<br/>apex-boot-all-system"]
+        WFC["WORKFLOW<br/>:8093<br/>apex-boot-all-workflow"]
+        FILEC["FILE<br/>:8085<br/>apex-boot-all-file"]
+        OFFC["OFFICE<br/>:8084<br/>apex-boot-all-office"]
+        INTC["INTEGRATION<br/>:8094<br/>apex-boot-all-integration<br/>（+device.enabled）"]
+    end
+
+    PARENT --> DOMAINS
+    DOMS["域选择：-Dapex.boot-all.domains 声明启用域；<br/>每域互斥设置 apex.component.&lt;domain&gt;.enabled<br/>（integration 另设 apex.component.integration.device.enabled）"]
+
+    POM["POM 装配（apex-applications-parent/apex-boot-all）<br/>apex-common · apex-domain · apex-api-contract ·<br/>apex-system · apex-auth · apex-workflow ·<br/>apex-file · apex-office · apex-integration<br/>（不含 apex-knowledge）"]
+
+    NOTE["档位说明：boot-all 仅用于 basic/示例/演示档单进程组合部署；<br/>Maven -Pbasic 与 Spring profile dev,basic 独立；basic 档 auth/workflow/office/file 走 H2 并关 Flyway，<br/>system basic 仍需 MySQL+Redis。"]

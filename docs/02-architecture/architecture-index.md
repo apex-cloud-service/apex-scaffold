@@ -236,7 +236,30 @@
 | 63 | **全文搜索处理流水线** | [63_fulltext_search_pipeline.svg](../diagrams/63_fulltext_search_pipeline.svg) | 展示数据写入、索引同步、查询和重建流程 |
 | 64 | **Redis Watchdog 分布式锁** | [64_redis_watchdog_lock.svg](../diagrams/64_redis_watchdog_lock.svg) | 展示获取锁、自动续期、释放与故障行为 |
 
-**登记范围**: 既有编号 01–69 及认证相关 84–86；本索引不是全量文件统计，不声明全部重新生成或验证通过。
+### 当前口径补缺图 (130–145，2026-11-22 ⭐)
+
+| 序号 | 名称 | 文件 | 说明 |
+| -- | -- | -- | -- |
+| 130 | **当前运行拓扑系统架构图** | [130\_current\_runtime\_topology.mmd](../diagrams/130_current_runtime_topology.mmd) / [.svg](../diagrams/130_current_runtime_topology.svg) | 8 标准运行模块 + 3 可选 + 中间件与网关主路由；端口对齐 build-manifest.yaml；历史拓扑仍以 02/93/94 号为准 |
+| 131 | **integration 功能架构图** | [131\_integration\_functional\_architecture.mmd](../diagrams/131_integration_functional_architecture.mmd) / [.svg](../diagrams/131_integration_functional_architecture.svg) | connector/device 两子域四层 + 组件级开关 + WebClient/可选 MQTT |
+| 132 | **integration ER 图** | [132\_integration\_tables\_er.mmd](../diagrams/132_integration_tables_er.mmd) / [.svg](../diagrams/132_integration_tables_er.svg) | 10 张业务表（无物理外键，tenant_id+业务键逻辑关联） |
+| 133 | **设备接入时序图** | [sequence/133\_iot\_device\_telemetry\_command\_sequence.mmd](../diagrams/sequence/133_iot_device_telemetry_command_sequence.mmd) / [.svg](../diagrams/sequence/133_iot_device_telemetry_command_sequence.svg) | 遥测上行（影子乐观锁→规则引擎）与命令下行（幂等→ACK/TIMEOUT） |
+| 134 | **连接器出站与 Webhook 入站流程图** | [134\_connector\_invoke\_webhook\_flow.mmd](../diagrams/134_connector_invoke_webhook_flow.mmd) / [.svg](../diagrams/134_connector_invoke_webhook_flow.svg) | 凭据解密→SPI 分发→审计；时间窗→验签→去重→落库→发布 |
+| 135 | **knowledge 功能架构图** | [135\_knowledge\_functional\_architecture.mmd](../diagrams/135_knowledge_functional_architecture.mmd) / [.svg](../diagrams/135_knowledge_functional_architecture.svg) | 摄取/检索/问答编排 + 三级能力降级开关 |
+| 136 | **knowledge ER 图** | [136\_knowledge\_tables\_er.mmd](../diagrams/136_knowledge_tables_er.mmd) / [.svg](../diagrams/136_knowledge_tables_er.svg) | kb_* 7 表；向量本体不落库 |
+| 137 | **knowledge 文档摄取流程图** | [137\_knowledge\_ingestion\_flow.mmd](../diagrams/137_knowledge_ingestion_flow.mmd) / [.svg](../diagrams/137_knowledge_ingestion_flow.svg) | 租约认领→Tika→分块→向量化→索引，含降级与对账 |
+| 138 | **knowledge RAG 问答时序图** | [sequence/138\_knowledge\_rag\_chat\_sequence.mmd](../diagrams/sequence/138_knowledge_rag_chat_sequence.mmd) / [.svg](../diagrams/sequence/138_knowledge_rag_chat_sequence.svg) | SSE citations→delta→done/error；hybrid 降级链 |
+| 139 | **masking 服务架构图** | [139\_masking\_service\_architecture.mmd](../diagrams/139_masking_service_architecture.mmd) / [.svg](../diagrams/139_masking_service_architecture.svg) | 无持久化脱敏：启动配置、JWT 租户、JWKS 鉴权 |
+| 140 | **boot-all 装配架构图** | [140\_boot\_all\_assembly\_architecture.mmd](../diagrams/140_boot_all_assembly_architecture.mmd) / [.svg](../diagrams/140_boot_all_assembly_architecture.svg) | 父上下文+按域子上下文装配六业务库（薄 jar） |
+| 141 | **job 模块图** | [141\_job\_starter\_service\_module.mmd](../diagrams/141_job_starter_service_module.mmd) / [.svg](../diagrams/141_job_starter_service_module.svg) | starter 默认禁用装配 vs job-service 九接口无状态代理 |
+| 142 | **seata 模式决策图** | [142\_seata\_starter\_modes.mmd](../diagrams/142_seata_starter_modes.mmd) / [.svg](../diagrams/142_seata_starter_modes.svg) | AT/TCC/SAGA/XA 与共同约束（Outbox 守护等） |
+| 143 | **storage 五后端图** | [143\_storage\_starter\_backends.mmd](../diagrams/143_storage_starter_backends.mmd) / [.svg](../diagrams/143_storage_starter_backends.svg) | Bean + SPI 合并、重复 type 拒绝 |
+| 144 | **office 站内信流程图** | [144\_office\_message\_flow.mmd](../diagrams/144_office_message_flow.mmd) / [.svg](../diagrams/144_office_message_flow.svg) | WS 票据链、进程内提交事件推送、断线 HTTP 补偿 |
+| 145 | **office 审批撤销编排时序图** | [sequence/145\_office\_approval\_cancel\_sequence.mmd](../diagrams/sequence/145_office_approval_cancel_sequence.mmd) / [.svg](../diagrams/sequence/145_office_approval_cancel_sequence.svg) | 同步两步编排，衔接 126 号状态机 |
+
+以上 16 张均为 `.mmd`+`.svg` 双源（mermaid-cli 10 渲染，2026-11-22）；登记同步见 `docs/diagrams/README.md`「130–145」节与 `docs/diagrams/sequence/README.md`。
+
+**登记范围**: 既有编号 01–69、认证相关 84–86 与 2026-11-22 新增 130–145；本索引不是全量文件统计，不声明全部重新生成或验证通过。
 
 ***
 
