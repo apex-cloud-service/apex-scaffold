@@ -221,7 +221,7 @@ bash scripts/utils/render-mermaid-svg.sh -f docs/diagrams/sequence/31_permission
 | 114 | `114_er_office_tables` | office 表 ER 图 | office | OFFICE_PLATFORM_APP/MESSAGE/APPROVAL/CALENDAR/DOCUMENT/NOTIFY/MEETING_ROOM 等 18 表 |
 | 121 | `121_er_file_tables` | **file 域表 ER 图（新增）** | file | file_record/file_chunk/file_share/file_document/file_chart，V1–V7 迁移链 |
 
-> 表数量为按 Flyway 迁移脚本（mysql）`CREATE TABLE` 语句实测去重统计（不含 undo_log/sys_domain_event_outbox 基础设施表）：system 101、auth 19、workflow 5、file 5、office 18，全仓唯一表名 135 张。
+> 表数量为按 Flyway 迁移脚本（mysql）`CREATE TABLE` 语句实测去重统计（不含 undo_log/sys_domain_event_outbox 基础设施表；2026-11-22 BE-046 复测，口径与脚本见[对齐战役记录](../records/2026-11-22-alignment-campaign.md)）：system 100（含已拆分服务的历史遗留表；`audit_log` 已由 V12 删除，按 CREATE TABLE 口径仍计入）、auth 19、workflow 5、file 5、office 19（含 V9/V10 撤销编排表）、integration 10、knowledge 7，跨域去重后全仓唯一表名 142 张。
 
 #### 模块结构图（97–106, 122–123）
 
@@ -235,17 +235,42 @@ bash scripts/utils/render-mermaid-svg.sh -f docs/diagrams/sequence/31_permission
 | 126 | `126_approval_cancel_state_machine.mmd` | **审批撤销幂等编排状态机（新增）** | office | PENDING/REMOTE_CANCELLED/COMPLETED/FAILED + 补偿重放（V9/V10 编排表） |
 | 127 | `127_overview_bulkhead_sequence.mmd` | **概览聚合舱壁时序图（新增）** | system | 概览门面三源并行、短 TTL 缓存、请求合并与舱壁降级 |
 
+### 130–145 当前口径补缺图（2026-11-22 BE-047 新增）
+
+以下图表同时提供 `.mmd` 源文件与 `.svg` 导出件（mermaid-cli 10 渲染），覆盖此前四类全缺的域与关键链路；类名、端口、配置键均以当前代码为准，事实来源与证据路径见 [对齐战役记录](../records/2026-11-22-alignment-campaign.md)。
+
+| 编号 | 文件（`.mmd` / `.svg`） | 图型 | 覆盖域 | 说明 |
+| -- | ------ | ---- | ------ | ---- |
+| 130 | `130_current_runtime_topology` | 系统架构 | 全仓 | 当前运行拓扑：8 标准运行模块 + job/masking/knowledge 可选 + 中间件；端口对齐 build-manifest.yaml；历史拓扑见 02/93/94 |
+| 131 | `131_integration_functional_architecture` | 功能架构 | integration | connector/device 两子域四层 + 组件级开关（interfaces-enabled 等）+ WebClient/可选 MQTT |
+| 132 | `132_integration_tables_er` | ER | integration | 10 张业务表（无物理外键，tenant_id+业务键逻辑关联；undo_log 不计入） |
+| 133 | `sequence/133_iot_device_telemetry_command_sequence` | 时序 | integration | 遥测上行（影子乐观锁→规则引擎）与命令下行（幂等→ACK/TIMEOUT 兜底） |
+| 134 | `134_connector_invoke_webhook_flow` | 业务流程 | integration | 出站调用（凭据解密→SPI 分发→审计）与 Webhook 入站（时间窗→验签→去重→落库→发布） |
+| 135 | `135_knowledge_functional_architecture` | 功能架构 | knowledge | 摄取/检索/问答编排 + 三级能力降级开关 + REST 直调 hybrid |
+| 136 | `136_knowledge_tables_er` | ER | knowledge | kb_* 7 表（space→document→chunk、conversation→message、租约与清理凭证） |
+| 137 | `137_knowledge_ingestion_flow` | 业务流程 | knowledge | 上传→租约认领→Tika→分块→向量化→索引，含降级分支与对账 |
+| 138 | `sequence/138_knowledge_rag_chat_sequence` | 时序 | knowledge | RAG SSE 问答：citations→delta→done/error，hybrid 降级链 |
+| 139 | `139_masking_service_architecture` | 功能架构 | masking | 无持久化脱敏：启动配置策略、JWT 租户、JWKS 鉴权 |
+| 140 | `140_boot_all_assembly_architecture` | 装配架构 | boot-all | 父上下文+按域子上下文装配六业务库（薄 jar，不含 knowledge） |
+| 141 | `141_job_starter_service_module` | 模块架构 | job | starter 默认禁用装配 vs job-service 无状态九接口代理 |
+| 142 | `142_seata_starter_modes` | 模式决策 | seata | AT/TCC/SAGA/XA 选择与共同约束（undo_log/三表/拒绝动态数据源/Outbox 守护） |
+| 143 | `143_storage_starter_backends` | 模块架构 | storage | 五后端 Bean + SPI 第三方合并、重复 type 拒绝 |
+| 144 | `144_office_message_flow` | 业务流程 | office | 站内信 WS 票据链、进程内提交事件推送、断线 HTTP 补偿 |
+| 145 | `sequence/145_office_approval_cancel_sequence` | 时序 | office | 审批撤销同步两步编排，衔接 126 号状态机 |
+
+> 豁免说明：shared 五个 infrastructure 能力 JAR 与 job/seata/storage starter 无业务表，不设 ER 图（141–143 为模块/模式图）；141 图覆盖 job 域。146 号后如需扩图按编号顺延。
+
 #### 配色规范
 
 所有 `.mmd` 文件统一使用 `theme:base` + 企业四色，按域分配主色：
 
 | 域 | primaryColor | primaryBorderColor | 适用图表 |
 | -- | ------------ | ------------------ | -------- |
-| auth / common / 通用 | `#eef2ff` | `#4f46e5` (靛蓝) | 107, 110, 115–118, 120, 模块结构, sequence |
-| system | `#ecfeff` | `#0891b2` (青) | 110b |
-| workflow / office | `#ecfdf5` | `#059669` (绿) | 108, 109 |
-| file / infrastructure | `#fffbeb` | `#d97706` (琥珀) | 119, 122 (file) |
-| ER 表图 | `#eff6ff` | `#3b82f6` (蓝) | 111–114, 121 |
+| auth / common / 通用 | `#eef2ff` | `#4f46e5` (靛蓝) | 107, 110, 115–118, 120, 模块结构, sequence, 130 拓扑 |
+| system / integration | `#ecfeff` | `#0891b2` (青) | 110b, 131–134 |
+| workflow / office / knowledge | `#ecfdf5` | `#059669` (绿) | 108, 109, 135–138, 144, 145 |
+| file / infrastructure / 支撑模块（masking/job/seata/storage/boot-all） | `#fffbeb` | `#d97706` (琥珀) | 119, 122 (file), 139–143 |
+| ER 表图 | `#eff6ff` | `#3b82f6` (蓝) | 111–114, 121, 132, 136 |
 
 #### 校验状态
 

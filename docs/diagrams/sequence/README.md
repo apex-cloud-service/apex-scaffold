@@ -38,6 +38,15 @@
 | 87 | [87_api_gateway_architecture.mmd](87_api_gateway_architecture.mmd) | api_gateway_architecture |
 | 88 | [88_webflux_reactive_architecture.mmd](88_webflux_reactive_architecture.mmd) | webflux_reactive_architecture |
 | 89 | [89_multi_tenant_data_isolation_sequence.mmd](89_multi_tenant_data_isolation_sequence.mmd) | multi_tenant_data_isolation_sequence |
+| 90 | [90_login_biometric_mfa.mmd](90_login_biometric_mfa.mmd) | login_biometric_mfa |
+| 91 | [91_sso_keycloak_flow.mmd](91_sso_keycloak_flow.mmd) | sso_keycloak_flow |
+| 92 | [92_workflow_submit_approve.mmd](92_workflow_submit_approve.mmd) | workflow_submit_approve |
+| 93 | [93_rate_limit_sentinel.mmd](93_rate_limit_sentinel.mmd) | rate_limit_sentinel |
+| 94 | [94_cache_consistency.mmd](94_cache_consistency.mmd) | cache_consistency |
+| 95 | [95_message_mq_publish_consume.mmd](95_message_mq_publish_consume.mmd) | message_mq_publish_consume |
+| 133 | [133_iot_device_telemetry_command_sequence.mmd](133_iot_device_telemetry_command_sequence.mmd) | iot_device_telemetry_command_sequence（2026-11-22 BE-047 新增） |
+| 138 | [138_knowledge_rag_chat_sequence.mmd](138_knowledge_rag_chat_sequence.mmd) | knowledge_rag_chat_sequence（2026-11-22 BE-047 新增） |
+| 145 | [145_office_approval_cancel_sequence.mmd](145_office_approval_cancel_sequence.mmd) | office_approval_cancel_sequence（2026-11-22 BE-047 新增） |
 
 当前统一授权时序见 [业务流程文档](../../architecture/business-flows.md)，配置见 [统一授权配置](../../05-operations/configuration.md#认证中心统一授权)。主应用保留 `/api/v1/auth/*`，认证中心使用 `/auth/v1/*`，二者独立启动。
 
