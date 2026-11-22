@@ -34,9 +34,15 @@
 
 默认输出 `target/reports/summary/test-report.md` 和 `test-summary.json`。如需避免覆盖最终报告，设置 `TEST_REPORT_OUTPUT_DIR` 为隔离目录。报告保留 XML 路径和修改时间，但不证明同一次构建、最新代码或完整 verify 门禁通过；损坏 XML 导致脚本失败。真实云桶测试、TC/双库等因环境缺失而跳过时必须单独披露，不得列作通过。存储配置与验证命令见[对象存储指南](../05-operations/object-storage-integration.md)。
 
-- [测试执行指南](./TEST_EXECUTION_GUIDE.md)
-- [集成测试指南](./integration-test-guide.md)
-- [测试报告](./TEST_REPORT.md)
-- [认证中心 JWT/JWKS 测试报告](./auth-center-jwt-jwks-test-report.md)
-- [网关模块测试报告](./gateway-module-test-report.md)
-- [契约模块测试报告](./contract-module-test-report.md)
+## 最近一次全量验证（2026-11-22）
+
+- [2026-11-22 全量验证报告](./2026-11-22-full-verify-report.md)：`mvnd -T4 -B clean verify` 全反应堆结果、Surefire/Failsafe 计数与环境依赖跳过项披露。当日早间 BE-044 已有一次全量 `BUILD SUCCESS`（45/45 项目，耗时 13:24，证据见[变更记录](../records/2026-11-22-code-quality-pattern-spi.md)与台账 #78）；本报告为全仓对齐战役（BE-045~BE-048）收尾复验的实测记录。
+
+## 历史报告导航（均为带日期历史快照，正文命令与数据不作为现状依据）
+
+- [测试执行指南](./TEST_EXECUTION_GUIDE.md)（历史快照，2026-11-11 复核：正文 `mvn`/Java 17 命令不可直接执行）
+- [集成测试指南](./integration-test-guide.md)（历史快照，工作流接口联调口径）
+- [测试报告](./TEST_REPORT.md)（历史快照，2026-10-05~10-26 段；含微服务改造 Phase 1–4 段落）
+- [认证中心 JWT/JWKS 测试报告](./auth-center-jwt-jwks-test-report.md)（2026-10-08，Java 17 环境快照）
+- [网关模块测试报告](./gateway-module-test-report.md)（2026-10-08，Java 17 环境快照）
+- [契约模块测试报告](./contract-module-test-report.md)（2026-10-08，Java 17 环境快照）

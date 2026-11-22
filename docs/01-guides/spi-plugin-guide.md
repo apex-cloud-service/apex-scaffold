@@ -176,6 +176,17 @@ public class SpiDemoRunner implements CommandLineRunner {
 已加载存储提供者: s3
 ```
 
+### 装载器异常隔离与优先级（2026-11-22 起的现行语义）
+
+仓库内两个 ServiceLoader 装载器对单条坏描述符统一采用「告警跳过、保留已发现」策略，不再让一条坏 SPI 描述符中断整轮发现：
+
+- **存储装载器 `StorageProviderLoader`**（apex-storage-spring-boot-starter）：`next()` 抛 `ServiceConfigurationError`/`RuntimeException`、`type()` 返回 null/空白或抛异常时，告警跳过并继续；`hasNext()` 抛 `ServiceConfigurationError` 时停止本轮并保留已发现实现。重复 `type()` 仍由 `StorageRegistry` 拒绝；显式启用但 SDK 缺失、未知默认类型仍按原口径失败。
+- **连接器装载器 `ConnectorLoader`**（apex-integration）：异常隔离口径与存储装载器一致；`load()` 使用上下文类加载器（为 null 时回退本类加载器）。`merge()` **保持内置连接器优先**：同名 SPI 描述符跳过并告警（内置与第三方同名不报错）；内置连接器之间重复仍抛 `IllegalStateException`。
+
+### 设备规则条件解析失败语义（apex-integration device）
+
+`DeviceRuleEngineService` 在单条规则条件解析失败时返回 `Mono.empty()` **跳过当前规则**，不触发该规则动作；非法 JSON 与解析器拒绝的空数组按 fail-closed 处理，**后续有效规则继续执行**。`RuleCondition.matchesAll` 自身的匹配语义不变。该语义由 `DeviceRuleEngineServiceTest` 三条回归用例守护（详见 [BE-044 变更记录](../records/2026-11-22-code-quality-pattern-spi.md)）。
+
 ## 注意事项
 
 1. **线程安全**: StorageProvider 实现应该是线程安全的,因为可能被多个线程并发调用。
