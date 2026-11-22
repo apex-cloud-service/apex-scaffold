@@ -120,6 +120,7 @@ workflow-service 从 `Authorization: Bearer` 独立验签，身份只读取已�
 | `apex.storage-quota.usage-cache-seconds` | — | file 侧存储已用字节聚合缓存（默认 60s，软上限口径，窗口内连续上传可能短暂低估） |
 | `apex.gateway.revocation.enabled` / `url` | `REVOCATION_FEED_ENABLED` / `REVOCATION_FEED_URL` | 网关令牌撤销流（A3）：周期拉取认证中心撤销增量（`GET /internal/v1/tokens/revocations?since=`），本地缓存 jti 撤销集；验签通过但命中撤销集的令牌收敛为 401，登出/踢人在拉取间隔内于网关生效 |
 | `apex.gateway.revocation.pull-interval-seconds` / `lookback-seconds` | `REVOCATION_PULL_INTERVAL_SECONDS` / `REVOCATION_LOOKBACK_SECONDS` | 拉取间隔（默认 15s，下限 5）与启动回看窗口（默认 7200s，覆盖访问令牌全生命周期） |
+| `apex.gateway.revocation.retention-seconds` | `REVOCATION_RETENTION_SECONDS` | 撤销记录本地保留时长（默认 7200s）。实际保留窗口取 `max(配置值, 2 × 拉取间隔, 60s)`；必须覆盖访问令牌最长剩余有效期，否则撤销标记会先于令牌过期被清理。下游六个服务只验签不查撤销，故该值不可低于访问令牌 TTL |
 
 行为约定：拉取失败保留上一次快照并告警，不影响在用公钥；启动时立即拉取一次；主应用自有令牌仍为 HS256（`jwt.secret`），`apex.system.jwt-center.legacy-hmac-enabled` 在主应用签发链路迁入统一密钥体系前不得关闭。轮换期间旧公钥在宽限期内持续可用，存量令牌不失效。
 

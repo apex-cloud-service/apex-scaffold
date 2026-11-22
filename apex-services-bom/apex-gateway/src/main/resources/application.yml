@@ -447,6 +447,9 @@ apex:
       pull-interval-seconds: ${REVOCATION_PULL_INTERVAL_SECONDS:15}
       # 启动游标回看窗口（秒）：重启补拉窗口，默认覆盖 2 小时访问令牌全生命周期。
       lookback-seconds: ${REVOCATION_LOOKBACK_SECONDS:7200}
+      # 撤销记录本地保留时长（秒）：实际取 max(本值, 2×拉取间隔, 60)。
+      # 必须覆盖访问令牌最长剩余有效期，否则撤销标记会先于令牌过期被清理。
+      retention-seconds: ${REVOCATION_RETENTION_SECONDS:7200}
     # 访问日志持久化（Task 4，结构化访问日志异步落库）
     access-log:
       # 落库总开关（关闭时仅保留控制台文件日志）

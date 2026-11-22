@@ -266,6 +266,8 @@ apex:
       url: ${REVOCATION_FEED_URL:}
       pull-interval-seconds: ${REVOCATION_PULL_INTERVAL_SECONDS:15}
       lookback-seconds: ${REVOCATION_LOOKBACK_SECONDS:7200}
+      # 撤销记录本地保留时长（秒）：不得低于访问令牌 TTL；实际取 max(本值, 2×间隔, 60)
+      retention-seconds: ${REVOCATION_RETENTION_SECONDS:7200}
 
     # ==================== 全局限流（Redis 分布式令牌桶） ====================
     # ⚠️ 与 application.yml 保持一致：rules 为列表，本文件一旦下发即整表覆盖本地 rules。

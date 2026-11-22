@@ -241,7 +241,7 @@ API 接口文档、规范和版本管理。
 
 ---
 
-**文档版本**: 2.0.0 · **最后更新**: 2026-11-22（BE-045 全仓对齐战役：治理任务盘/测试报告口径/图表索引同步） · **维护团队**: Apex Team
+**文档版本**: 2.0.0 · **最后更新**: 2026-11-22（BE-049 全模块增量评审：代码兼容性优化、测试报告生成链修复与文档口径同步） · **维护团队**: Apex Team
 
 ---
 
@@ -289,11 +289,14 @@ API 接口文档、规范和版本管理。
 - [AI 角色卡 R0–R5](specs/ai-agents/README.md) — 主控编排 / 需求拆解 / 后端实现 / 契约守门 / 测试回归 / 独立评审
 - [多智能体并行协作治理记录](records/2026-11-18-multi-agent-governance.md) — BE-042 的范围、关键规则、R5 首轮驳回、返工复审与最终关闭证据
 - [BE-042 独立 R5 评审报告](reviews/2026-11-18-be-042-r5-review.md) — 首轮 `REJECT` 后增量复审 `APPROVE_WITH_NITS`，MF-01–MF-05 已清零
+- [BE-049 全模块增量评审清单](reviews/2026-11-22-full-module-code-review.md) — 45 个 reactor 项目覆盖方式、有证据的优化与 C1–C10 待评估项
+- [BE-049 执行与验证记录](records/2026-11-22-code-review-pattern-spi-lambda.md) — 兼容性优化、报告生成链修复、七次门禁过程与影响面
+- [BE-049 全量验证报告](06-testing/2026-11-22-be049-full-verify-report.md) — 45/45 SUCCESS、控制台 6740 测试 0 失败、33 项环境跳过说明
 
 ### 迁入的历史资料（自 AI 私有目录迁出，内容零删改）
 
 - [AI 会话设计文档归档](plans/archived-ai-sessions/README.md) — 原 `.trae/documents`：文档对齐计划、网关韧性方案、微服务迁移执行计划、Phase 5/6 抽取设计
-- [ZCode 会话计划归档](archived/ai-sessions/zcode-plans/README.md) — 原 `.zcode/plans` 的 14 份历史计划（逐字节一致，私有目录仅保留短指针）
+- [ZCode 会话计划归档](archived/ai-sessions/zcode-plans/README.md) — 原 `.zcode/plans` 的 16 份历史计划（逐字节一致，私有目录仅保留短指针）
 
 ### 治理自检
 

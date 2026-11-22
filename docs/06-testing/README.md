@@ -30,11 +30,15 @@
 
 ## 当前报告汇总口径
 
-在仓库根目录运行 `bash scripts/test/generate-test-report.sh` 或 `bash scripts/test/generate-comprehensive-test-report.sh`；两入口复用同一实现，要求 Python 3，仅解析现存 XML，不执行构建。模块从根 POM 动态读取；Surefire/Failsafe 分列统计，`skipped` 仅代表报告中明确跳过的测试。无报告标记为“未执行或无可用报告”，JSON 计数为 null，不能推断未执行用例数量或记为通过。JaCoCo 读取 XML 的 LINE/BRANCH counter，单元/集成报告不相加。
+在仓库根目录运行 `bash scripts/test/generate-test-report.sh` 或 `bash scripts/test/generate-comprehensive-test-report.sh`；两入口复用同一实现（`apex-tools-deployment` 的 `TestReportSummary`，需先完成该模块打包），仅解析现存 XML，不执行构建。模块沿根 POM `<modules>` 递归发现（不再使用硬编码清单或单层目录 glob）；Surefire/Failsafe 分列统计，`skipped` 仅代表报告中明确跳过的测试。无报告模块标注“单元/集成”缺失，不能推断未执行用例数量或记为通过。XML 解析禁用 DOCTYPE 与外部实体。`tests` 属性为权威计数：按 `classname#name` 去重后的 `testcase` 数与 `tests` 不符即判定报告被截断并**非零退出**；仅有重复 `testcase`（Surefire 重复执行/嵌套类的合法输出）时计入告警、不阻断。非法属性或畸形 XML 同样非零退出。报告不校验整次 `verify` 是否通过。
 
-默认输出 `target/reports/summary/test-report.md` 和 `test-summary.json`。如需避免覆盖最终报告，设置 `TEST_REPORT_OUTPUT_DIR` 为隔离目录。报告保留 XML 路径和修改时间，但不证明同一次构建、最新代码或完整 verify 门禁通过；损坏 XML 导致脚本失败。真实云桶测试、TC/双库等因环境缺失而跳过时必须单独披露，不得列作通过。存储配置与验证命令见[对象存储指南](../05-operations/object-storage-integration.md)。
+固定输出 `target/reports/summary/test-report.md` 和 `test-summary.json`（未实现 `TEST_REPORT_OUTPUT_DIR` 覆盖）；两文件不保留逐文件 XML 路径与修改时间，也不证明同一次构建、最新代码或完整 verify 门禁通过；损坏 XML 导致脚本失败。真实云桶测试、TC/双库等因环境缺失而跳过时必须单独披露，不得列作通过。存储配置与验证命令见[对象存储指南](../05-operations/object-storage-integration.md)。
 
-## 最近一次全量验证（2026-11-22）
+## 最近一次全量验证（2026-11-22，BE-049）
+
+- [2026-11-22 BE-049 全量验证报告](./2026-11-22-be049-full-verify-report.md)：最终门禁 `mvnd -T1 -B clean verify` 45/45 SUCCESS、控制台 6740 测试 0 失败/33 跳过（23:37）、XML 汇总 6676（0 失败）；含七次执行的失败与处置记录。
+
+## 全仓对齐战役全量验证（2026-11-22，BE-045~BE-048）
 
 - [2026-11-22 全量验证报告](./2026-11-22-full-verify-report.md)：`mvnd -T4 -B clean verify` 全反应堆结果、Surefire/Failsafe 计数与环境依赖跳过项披露。当日早间 BE-044 已有一次全量 `BUILD SUCCESS`（45/45 项目，耗时 13:24，证据见[变更记录](../records/2026-11-22-code-quality-pattern-spi.md)与台账 #78）；本报告为全仓对齐战役（BE-045~BE-048）收尾复验的实测记录。
 

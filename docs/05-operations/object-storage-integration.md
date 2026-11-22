@@ -137,11 +137,12 @@ mvnd --version
 mvnd -T4 -B -pl :apex-file-service,:apex-storage-spring-boot-starter -am test
 # 完整门禁（独立安排执行，准备测试所需外部环境）
 mvnd -T4 -B clean verify
-# 报告只汇总现存 XML，不执行测试
+# 报告只汇总现存 XML，不执行测试；需先打包 apex-tools-deployment
+mvnd -B -pl :apex-tools-deployment -am package -DskipTests
 bash scripts/test/generate-comprehensive-test-report.sh
 ```
 
-报告分别统计 Surefire、Failsafe 和 XML skipped，无报告是“未执行或无可用报告”，不能编造通过或未执行用例数。真实 MinIO/TOS/OSS/七牛测试需专用桶、最小权限和清理策略，未准备凭据时必须明确记为未验证；本地/Mock 契约测试不能替代真实云端行为。应覆盖资源释放、特殊对象键、空文件、错误凭据、无桶、跨租户、补偿失败和重试恢复。测试范围与实际结果由本次最终测试报告单独记录。
+报告分别统计 Surefire、Failsafe 和 XML skipped；无报告模块标注“单元/集成”缺失，不能编造通过或未执行用例数。真实 MinIO/TOS/OSS/七牛测试需专用桶、最小权限和清理策略，未准备凭据时必须明确记为未验证；本地/Mock 契约测试不能替代真实云端行为。应覆盖资源释放、特殊对象键、空文件、错误凭据、无桶、跨租户、补偿失败和重试恢复。测试范围与实际结果由本次最终测试报告单独记录。
 
 脚本/文档维护检查：
 
