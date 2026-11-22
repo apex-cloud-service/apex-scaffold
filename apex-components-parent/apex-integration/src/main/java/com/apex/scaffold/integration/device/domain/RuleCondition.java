@@ -113,7 +113,14 @@ public record RuleCondition(String field, Operator op, JsonNode value) {
 
     /**
      * 标量比较：两侧均可数值化时按数值比较，否则按字符串比较。
-     * 类型不可比（含 null）返回特殊值，由比较方向翻译为 false。
+     *
+     * <p>{@code actual} 为 {@code null}（遥测缺少该字段）时返回哨兵值 {@code -2}。
+     * 该哨兵值不表示“不命中”：{@code NE}、{@code LT}、{@code LTE} 会因此判为命中，
+     * {@code EQ}、{@code GT}、{@code GTE} 判为不命中。若规则要求“字段缺失一律不命中”，
+     * 需在规则表达式中显式约束字段存在，或改用 {@code IN} 等空值安全操作符。</p>
+     *
+     * @param actual 遥测中的实际值
+     * @return 负数/0/正数分别表示 actual 小于/等于/大于阈值；{@code actual == null} 时返回 {@code -2}
      */
     private int compareScalar(Object actual) {
         if (actual == null) {
@@ -244,9 +251,12 @@ public record RuleCondition(String field, Operator op, JsonNode value) {
     /**
      * 判断条件列表是否全部命中（AND 语义）。
      *
+     * <p>空条件列表视为全部命中，返回 {@code true}；调用方需自行保证条件列表非空，
+     * 避免“条件缺失”被当作“无条件命中”。</p>
+     *
      * @param conditions 条件列表
      * @param metric     遥测指标 Map
-     * @return 是否命中
+     * @return 是否全部条件命中
      */
     public static boolean matchesAll(List<RuleCondition> conditions, Map<String, Object> metric) {
         for (RuleCondition condition : conditions) {

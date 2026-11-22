@@ -4,8 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -23,8 +27,8 @@ import reactor.core.publisher.Mono;
 @DisplayName("存储 SPI 扩展点测试")
 class StorageProviderLoaderTest {
 
-    /** 测试用第三方后端桩。 */
-    private static final class StubStorage implements ObjectStorage {
+    /** 测试用第三方后端桩（非 final，便于子类覆写异常行为）。 */
+    private static class StubStorage implements ObjectStorage {
         private final String type;
 
         StubStorage(String type) {
@@ -94,5 +98,80 @@ class StorageProviderLoaderTest {
     @DisplayName("ServiceLoader 无第三方声明时返回空列表（内置后端不受影响）")
     void loaderReturnsEmptyWhenNoSpi() {
         assertThat(StorageProviderLoader.load(getClass().getClassLoader())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("type() 抛异常的实现被跳过，其余条目保留")
+    void collectSkipsThrowingType() {
+        ObjectStorage broken = new StubStorage("broken") {
+            @Override
+            public String type() {
+                throw new IllegalStateException("type 调用失败");
+            }
+        };
+        List<ObjectStorage> target = new ArrayList<>();
+        StorageProviderLoader.collect(
+                List.of(broken, new StubStorage("azure-blob")).iterator(), target);
+        assertThat(target).extracting(ObjectStorage::type).containsExactly("azure-blob");
+    }
+
+    @Test
+    @DisplayName("type() 返回空白的实现被跳过")
+    void collectSkipsBlankType() {
+        List<ObjectStorage> target = new ArrayList<>();
+        StorageProviderLoader.collect(
+                List.<ObjectStorage>of(new StubStorage("   "), new StubStorage("local"))
+                        .iterator(),
+                target);
+        assertThat(target).extracting(ObjectStorage::type).containsExactly("local");
+    }
+
+    @Test
+    @DisplayName("next() 抛 ServiceConfigurationError 时跳过该条目并继续")
+    void collectContinuesAfterNextError() {
+        Iterator<ObjectStorage> iterator = new Iterator<>() {
+            private int index = -1;
+
+            @Override
+            public boolean hasNext() {
+                return index < 1;
+            }
+
+            @Override
+            public ObjectStorage next() {
+                index++;
+                if (index == 0) {
+                    throw new ServiceConfigurationError("坏实现实例化失败");
+                }
+                return new StubStorage("azure-blob");
+            }
+        };
+        List<ObjectStorage> target = new ArrayList<>();
+        StorageProviderLoader.collect(iterator, target);
+        assertThat(target).extracting(ObjectStorage::type).containsExactly("azure-blob");
+    }
+
+    @Test
+    @DisplayName("描述符遍历中途失败时停止发现但保留已发现条目")
+    void collectRetainsDiscoveredOnDescriptorFailure() {
+        AtomicInteger hasNextCalls = new AtomicInteger();
+        Iterator<ObjectStorage> iterator = new Iterator<>() {
+            @Override
+            public boolean hasNext() {
+                if (hasNextCalls.incrementAndGet() == 1) {
+                    return true;
+                }
+                throw new ServiceConfigurationError("描述符不可遍历");
+            }
+
+            @Override
+            public ObjectStorage next() {
+                return new StubStorage("azure-blob");
+            }
+        };
+        List<ObjectStorage> target = new ArrayList<>();
+        StorageProviderLoader.collect(iterator, target);
+        assertThat(target).extracting(ObjectStorage::type).containsExactly("azure-blob");
+        assertThat(hasNextCalls).hasValue(2);
     }
 }

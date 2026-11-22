@@ -27,20 +27,25 @@ public interface DomainEventBus {
      * 发布领域事件（异步）。
      *
      * @param event 领域事件
+     * @return 发布完成后结束的信号；订阅或处理失败时以错误信号终止
      */
     Mono<Void> publish(BaseDomainEvent event);
 
     /**
-     * 发布多个领域事件（异步）。
+     * 批量发布领域事件（异步），不保证各事件按列表顺序完成处理。
      *
      * @param events 领域事件列表
+     * @return 全部事件发布完成后结束的信号；任一事件失败时以错误信号终止
      */
     Mono<Void> publishAll(List<BaseDomainEvent> events);
 
     /**
      * 发布领域事件（同步）。
      *
+     * <p>调用方订阅后在同一调用链上等待处理器执行完毕，适用于要求发布即生效的场景。</p>
+     *
      * @param event 领域事件
+     * @return 处理器执行完成后结束的信号；处理失败时以错误信号终止
      */
     Mono<Void> publishSync(BaseDomainEvent event);
 

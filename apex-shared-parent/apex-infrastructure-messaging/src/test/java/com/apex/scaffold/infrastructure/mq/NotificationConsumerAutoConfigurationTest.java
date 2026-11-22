@@ -35,6 +35,19 @@ class NotificationConsumerAutoConfigurationTest {
     }
 
     @Test
+    void doesNotRegisterConsumersWithoutRedisson() {
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(NotificationConsumerAutoConfiguration.class))
+                .withBean(RocketMQTemplate.class, () -> mock(RocketMQTemplate.class))
+                .withBean(NotificationService.class, () -> mock(NotificationService.class))
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    assertThat(context).doesNotHaveBean(MqConsumerService.class);
+                    assertThat(context).doesNotHaveBean(NotificationBroadcastListener.class);
+                });
+    }
+
+    @Test
     void honorsBothFeatureSwitches() {
         withTemplate().withPropertyValues("apex.features.message-queue=false").run(context -> assertThat(context)
                 .doesNotHaveBean(NotificationBroadcastListener.class));

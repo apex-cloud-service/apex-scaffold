@@ -59,13 +59,15 @@ public class NotifyChannelConfiguration {
     }
 
     /**
-     * 短信通道（可选）：消费方提供 {@code smsNotifySender} 函数（手机号, 内容）→ 结果时启用。
+     * 短信通道（可选）：仅在 {@code apex.notify.sms.enabled=true} 时注册。
      *
      * <p>office 不直接依赖 {@code apex-infrastructure-integration}（保持模块边界）：
-     * 需要短信能力的部署在依赖该模块的装配层注册发送函数即可，未注册时本通道不存在。
+     * 需要短信能力的部署在装配层提供 {@code BiFunction<String, String, Mono<String>>}
+     * 发送函数 Bean（入参为手机号与内容，返回发送结果）即可。
      *
      * @param sender 短信发送函数（可能不存在）
-     * @return 短信通知通道；未提供发送函数时为 null（不注册 Bean）
+     * @return 短信通知通道
+     * @throws IllegalStateException 开关已开启但装配层未提供短信发送函数 Bean
      */
     @Bean
     @ConditionalOnMissingBean(name = "smsNotifyChannel")
@@ -81,10 +83,14 @@ public class NotifyChannelConfiguration {
     }
 
     /**
-     * 邮件通道（可选）：消费方提供 {@code mailNotifySender} Bean 时启用。
+     * 邮件通道（可选）：仅在 {@code apex.notify.email.enabled=true} 时注册。
+     *
+     * <p>邮件发送能力由装配层以 {@link EmailNotifyChannel.MailSender} Bean 提供，
+     * 本模块不直接依赖具体邮件实现。
      *
      * @param sender 邮件发送函数（可能不存在）
      * @return 邮件通知通道
+     * @throws IllegalStateException 开关已开启但装配层未提供邮件发送函数 Bean
      */
     @Bean
     @ConditionalOnMissingBean(name = "emailNotifyChannel")

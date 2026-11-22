@@ -3,28 +3,27 @@ package com.apex.scaffold.infrastructure.chuanglan.strategy;
 /**
  * 手机号解密策略接口（策略模式）。
  *
- * <p>P0-CL-10重构：根据创蓝文档，不同平台/应用可配置不同的手机号加密方式
- * （AES 或 RSA）。本接口定义手机号解密的统一契约，通过策略模式解耦具体的解密算法，
- * 便于后续扩展新的加密方式而无须修改调用方代码。
+ * <p>创蓝闪验允许不同平台/应用配置不同的手机号加密方式。本接口定义解密契约，
+ * 由具体算法实现按配置装配，调用方（{@link com.apex.scaffold.infrastructure.chuanglan.service.ChuanglanApiService}）
+ * 只依赖接口，不感知算法细节。
  *
- * <p><strong>支持的加密方式</strong></p>
+ * <p><strong>实现现状</strong></p>
  * <ul>
- *   <li><b>AES</b>（encryptType="0"）：AES/CBC/PKCS5Padding，密钥由 md5(appKey) 派生</li>
- *   <li><b>RSA</b>（encryptType="1"）：RSA 私钥解密（待实现）</li>
+ *   <li><b>AES</b>（{@code encryptType="0"}）：已实现，见 {@link AesPhoneDecryptStrategy}，
+ *       AES/CBC/PKCS5Padding，密钥由 {@code md5(appKey)} 派生</li>
+ *   <li><b>RSA</b>（{@code encryptType="1"}）：<strong>尚未实现</strong>。当前装配层只注册
+ *       AES 实现；如部署使用 RSA 加密，需新增 {@code PhoneDecryptStrategy} 实现并在装配层注册，
+ *       否则解密结果不正确</li>
  * </ul>
  *
- * <p><strong>使用方式</strong></p>
- * <pre>{@code * // 根据配置的 encryptType 选择策略
- * PhoneDecryptStrategy strategy = "0".equals(config.getEncryptType())
- *     ? new AesPhoneDecryptStrategy()
- *     : new DefaultPhoneDecryptStrategy();
- * String phone = strategy.decrypt(encryptedPhone, appKey);
- * }</pre>
+ * <p><strong>装配方式</strong></p>
+ * <p>实现类由装配层以 Spring Bean 注册（如 auth-service 的 {@code ChuanglanSmsConfig}
+ * 注册 {@link AesPhoneDecryptStrategy}），再由 {@code ChuanglanApiService} 构造器注入使用。</p>
  *
- * <p><strong>设计模式</strong></p>
+ * <h2>设计模式</h2>
  * <ul>
- *   <li><b>策略模式（Strategy Pattern）</b>：定义算法族，分别封装，让它们可以互相替换</li>
- *   <li>与 Spring 的依赖注入结合，运行时根据配置选择具体策略实现</li>
+ *   <li><b>策略模式</b>：把解密算法族分别封装为可替换实现</li>
+ *   <li>与 Spring 依赖注入结合，由装配层决定注入哪个算法实现</li>
  * </ul>
  *
  * @author Apex Team

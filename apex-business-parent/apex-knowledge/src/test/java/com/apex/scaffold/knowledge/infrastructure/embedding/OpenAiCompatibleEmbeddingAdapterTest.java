@@ -10,6 +10,8 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.test.StepVerifier;
 
@@ -109,5 +111,105 @@ class OpenAiCompatibleEmbeddingAdapterTest {
     void non2xxResponseBubblesError() {
         server.enqueue(new MockResponse().setResponseCode(401).setBody("unauthorized"));
         assertThatThrownBy(() -> adapter.embed(List.of("文本")).block()).isInstanceOf(Exception.class);
+    }
+
+    @Test
+    void reordersVectorsByResponseIndex() throws Exception {
+        server.enqueue(
+                new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody(
+                                """
+                        {"data":[{"index":1,"embedding":[0.5,0.6,0.7,0.8]},{"index":0,"embedding":[0.1,0.2,0.3,0.4]}]}"""));
+
+        StepVerifier.create(adapter.embed(List.of("第一段", "第二段")))
+                .assertNext(vectors -> {
+                    assertThat(vectors).hasSize(2);
+                    assertThat(vectors.get(0)[0]).isEqualTo(0.1f);
+                    assertThat(vectors.get(1)[0]).isEqualTo(0.5f);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void fallsBackToResponseOrderWhenIndexMissing() throws Exception {
+        server.enqueue(new MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody("""
+                        {"data":[{"embedding":[1,0,0,0]},{"embedding":[0,1,0,0]}]}"""));
+
+        StepVerifier.create(adapter.embed(List.of("a", "b")))
+                .assertNext(vectors -> {
+                    assertThat(vectors).hasSize(2);
+                    assertThat(vectors.get(0)[0]).isEqualTo(1.0f);
+                    assertThat(vectors.get(1)[1]).isEqualTo(1.0f);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void rejectsDuplicateIndex() throws Exception {
+        server.enqueue(
+                new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody(
+                                """
+                        {"data":[{"index":0,"embedding":[1,0,0,0]},{"index":0,"embedding":[0,1,0,0]}]}"""));
+
+        StepVerifier.create(adapter.embed(List.of("a", "b")))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @Test
+    void rejectsOutOfRangeIndex() throws Exception {
+        server.enqueue(
+                new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody(
+                                """
+                        {"data":[{"index":2,"embedding":[1,0,0,0]},{"index":0,"embedding":[0,1,0,0]}]}"""));
+
+        StepVerifier.create(adapter.embed(List.of("a", "b")))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"-0.5", "0.5", "4294967296", "18446744073709551616", "\"0\"", "null", "true"})
+    void rejectsPresentInvalidIndex(String index) {
+        server.enqueue(new MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody("{\"data\":[{\"index\":" + index + ",\"embedding\":[1,0,0,0]}]}"));
+
+        StepVerifier.create(adapter.embed(List.of("a")))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @Test
+    void rejectsSecondVectorDimensionMismatch() throws Exception {
+        server.enqueue(
+                new MockResponse()
+                        .setHeader("Content-Type", "application/json")
+                        .setBody(
+                                """
+                        {"data":[{"index":0,"embedding":[1,0,0,0]},{"index":1,"embedding":[0.1,0.2]}]}"""));
+
+        StepVerifier.create(adapter.embed(List.of("a", "b")))
+                .expectError(IllegalStateException.class)
+                .verify();
+    }
+
+    @Test
+    void rejectsNonNumericVectorElement() throws Exception {
+        server.enqueue(new MockResponse()
+                .setHeader("Content-Type", "application/json")
+                .setBody("""
+                        {"data":[{"index":0,"embedding":[1,"oops",0,0]}]}"""));
+
+        StepVerifier.create(adapter.embed(List.of("a")))
+                .expectError(IllegalStateException.class)
+                .verify();
     }
 }

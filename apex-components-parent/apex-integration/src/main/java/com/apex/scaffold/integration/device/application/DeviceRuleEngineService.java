@@ -9,7 +9,6 @@ import com.apex.scaffold.integration.device.domain.service.NotifyActionPort;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +96,7 @@ public class DeviceRuleEngineService {
         return Mono.fromCallable(() -> RuleCondition.parse(objectMapper, rule.getConditionJson()))
                 .onErrorResume(badCondition -> {
                     log.warn("规则条件解析失败（跳过）: tenant={}, rule={}", rule.getTenantId(), rule.getRuleName());
-                    return Mono.just(List.<RuleCondition>of());
+                    return Mono.empty();
                 })
                 .filter(conditions -> RuleCondition.matchesAll(conditions, metric))
                 .flatMap(conditions -> executeAction(rule, deviceKey, metricJson))

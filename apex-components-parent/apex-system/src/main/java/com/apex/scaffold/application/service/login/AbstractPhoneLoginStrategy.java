@@ -14,28 +14,30 @@ import com.apex.scaffold.domain.service.TokenService;
 import reactor.core.publisher.Mono;
 
 /**
- * 手机号登录策略抽象基类
+ * 手机号登录策略抽象基类。
  *
- * <p>采用模板方法模式，为所有基于手机号认证的登录策略提供统一的登录流程骨架。
- * 子类只需实现 {@link #authenticate(LoginRequest)} 方法获取手机号，
- * 其余的用户查询/创建、JWT Token 生成、登录响应构建等公共逻辑由本基类统一处理。
+ * <p>采用模板方法模式：子类只实现 {@link #authenticate(LoginRequest)} 取得已验证的手机号，
+ * 用户查询、注册准入校验、注册票据签发、令牌发放与响应构建由本基类统一完成。
  *
- * <h2>职责范围</h2>
+ * <h2>流程</h2>
  * <ol>
- *   <li>调用子类的 {@link #authenticate(LoginRequest)} 获取已认证的手机号</li>
- *   <li>根据手机号查询已有用户（通过 {@link UserService#getByPhone(String)}）</li>
- *   <li>如果用户已存在：生成 JWT Token 对，返回登录响应（isNewUser=false）</li>
- *   <li>如果用户不存在：调用 {@link UserEntity#create(String, String)} 创建新用户并设置手机号，
- *       保存后生成 JWT Token 对，返回登录响应（isNewUser=true）</li>
+ *   <li>调用子类 {@link #authenticate(LoginRequest)} 获取已验证手机号</li>
+ *   <li>按手机号查询已有用户（{@link UserService#getByPhone(String)}）</li>
+ *   <li>用户已存在：执行 {@link #postAuthentication(UserEntity, LoginRequest)} 扩展点后
+ *       签发正式 accessToken/refreshToken，返回登录响应（{@code isNewUser=false}）</li>
+ *   <li>用户不存在：先经注册准入校验，再签发 {@link AuthTicketType#REGISTRATION}
+ *       一次性注册票据，并发放与该票据同有效期的临时 accessToken，
+ *       返回 {@code nextAction=REGISTER_REQUIRED} 的响应。
+ *       <strong>本基类不创建用户</strong>——账号由注册流程消费该票据后落库</li>
  * </ol>
  *
- * <h2>职责范围</h2>
+ * <h2>扩展点</h2>
  * <ul>
- *   <li>{@link #postAuthentication(UserEntity, LoginRequest)} - 认证成功后、查询用户前的扩展点，
- *       子类可重写此方法对用户实体进行额外处理（如更新微信用户信息）</li>
+ *   <li>{@link #postAuthentication(UserEntity, LoginRequest)}：用户已存在时、构建登录响应前的
+ *       异步钩子，子类可重写以同步外部资料（如微信昵称、头像）</li>
  * </ul>
  *
- * <h2>设计说明</h2>
+ * <h2>已知实现</h2>
  * <ul>
  *   <li>{@link SmsLoginStrategy} - 短信验证码登录</li>
  *   <li>{@link ChuanglanSmsLoginStrategy} - 创蓝短信验证码登录</li>
@@ -70,15 +72,12 @@ public abstract class AbstractPhoneLoginStrategy implements LoginStrategy {
     protected final AuthTicketService authTicketService;
 
     /**
-     * 创建 {@link AbstractPhoneLoginStrategy} 实例。
+     * 创建手机号登录策略基类实例。
      *
-     * @param userService userService 参数
-     *
-     * @param tokenService tokenService 参数
-     *
-     * @param loginResponseHelper loginResponseHelper 参数
-     *
-     * @param authTicketService authTicketService 参数
+     * @param userService         用户应用服务，用于按手机号查询用户，并校验注册准入
+     * @param tokenService        令牌服务，用于签发与存储 accessToken/refreshToken
+     * @param loginResponseHelper 登录响应构建器，统一响应字段与令牌对结构
+     * @param authTicketService   一次性票据服务，新用户登录时签发注册票据
      */
     protected AbstractPhoneLoginStrategy(
             UserService userService,

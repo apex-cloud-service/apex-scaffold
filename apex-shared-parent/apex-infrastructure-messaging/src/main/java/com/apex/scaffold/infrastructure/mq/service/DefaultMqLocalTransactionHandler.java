@@ -4,11 +4,7 @@ import com.apex.scaffold.infrastructure.event.DomainEventOutboxStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQLocalTransactionState;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
-import org.springframework.stereotype.Component;
 
 /**
  * 基于 Outbox 的 RocketMQ 本地事务消息处理器。
@@ -26,16 +22,17 @@ import org.springframework.stereotype.Component;
  * {@link MqProducerService} 发送事务消息时写入），缺失或空白时回退到 RocketMQ 的
  * {@code KEYS} Header。</p>
  *
+ * <p><strong>注册方式</strong>：本类不是组件扫描候选，由
+ * {@link com.apex.scaffold.infrastructure.mq.MqLocalTransactionAutoConfiguration} 在
+ * 消息队列开启、RocketMQ 模板与 Outbox 存储均就绪时注册为默认实现；
+ * 业务方自行声明 {@link MqLocalTransactionHandler} Bean 即可完全覆盖本实现。</p>
+ *
  * @author Apex Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 3.4.0
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "apex.features", name = "message-queue", havingValue = "true", matchIfMissing = true)
-@ConditionalOnClass(RocketMQLocalTransactionState.class)
-@ConditionalOnBean(DomainEventOutboxStore.class)
 public class DefaultMqLocalTransactionHandler implements MqLocalTransactionHandler {
 
     /** 生产者写入的消息 ID Header。 */
