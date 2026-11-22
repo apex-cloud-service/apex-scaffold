@@ -209,6 +209,26 @@ class DataScopeSqlRewriterTest {
 
             assertThat(rewritten).contains("dept_id = 100");
             assertThat(rewritten).contains("(status = 1 OR status = 2)");
+            assertThat(rewritten).contains("deleted = 0");
+        }
+
+        @Test
+        void shouldKeepConditionWhenWhereHasOuterParentheses() {
+            String sql = "SELECT * FROM sys_user WHERE (status = 1 AND deleted = 0)";
+            String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L));
+
+            assertThat(rewritten).contains("dept_id = 100");
+            assertThat(rewritten).contains("status = 1 AND deleted = 0");
+        }
+
+        @Test
+        void shouldParenthesizeUnparenthesizedOrBeforeAppendingScope() {
+            // 未括号化的 OR 必须整体括起，否则 dept 条件只约束 OR 右侧，左侧行可越权返回。
+            String sql = "SELECT * FROM sys_user WHERE status = 1 OR status = 2";
+            String rewritten = DataScopeSqlRewriter.rewrite(sql, DEFAULT_CONFIG, DataScopeInfo.ofDept(100L));
+
+            assertThat(rewritten).contains("(status = 1 OR status = 2) AND dept_id = 100");
+            assertThat(rewritten).doesNotContain("status = 1 OR status = 2 AND dept_id = 100");
         }
     }
 }

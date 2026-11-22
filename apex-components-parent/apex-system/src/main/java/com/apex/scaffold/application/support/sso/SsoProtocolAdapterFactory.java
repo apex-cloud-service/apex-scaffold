@@ -1,16 +1,17 @@
 package com.apex.scaffold.application.support.sso;
 
+import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
  * SSO 协议适配器工厂类
  *
- * <p>根据协议类型创建对应的 SSO 协议适配器实例。支持多种 SSO 协议的动态适配,
- * 使用工厂模式实现协议适配器的统一管理和创建。
+ * <p>根据协议类型返回对应的 SSO 协议适配器实例。四个内置协议在构造时一次性登记为
+ * 不可变注册表，{@link #getAdapter(String)} 与 {@link #isSupported(String)} 共用同一来源，
+ * 避免两处协议清单漂移。适配器本身由 Spring 容器管理，本工厂不缓存也不创建新实例。
  *
  * <h2>职责范围</h2>
  * <ul>
@@ -26,20 +27,39 @@ import org.springframework.stereotype.Component;
  * Mono&lt;Map&lt;String, Object&gt;&gt; result = adapter.authenticate(config, params);
  * </pre>
  *
+ * <p>说明：注册表只登记内置协议，不提供 SPI 或运行时新增协议的扩展点；
+ * 新增内置协议需在构造器登记后同步本类注释。
+ *
  * @author Apex Scaffold Generator
  * @since 1.3.1
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class SsoProtocolAdapterFactory {
 
-    private final SamlProtocolAdapter samlProtocolAdapter;
-    private final CasProtocolAdapter casProtocolAdapter;
-    private final LdapProtocolAdapter ldapProtocolAdapter;
-    private final OidcProtocolAdapter oidcProtocolAdapter;
+    /** 协议类型 → 已装配适配器；构造后不再变化 */
+    private final Map<String, SsoProtocolAdapter> adapters;
 
-    private final Map<String, SsoProtocolAdapter> adapterCache = new ConcurrentHashMap<>();
+    /**
+     * 构造 SSO 协议适配器工厂。
+     *
+     * @param samlProtocolAdapter SAML 2.0 适配器
+     * @param casProtocolAdapter CAS 适配器
+     * @param ldapProtocolAdapter LDAP 适配器
+     * @param oidcProtocolAdapter OIDC 适配器
+     */
+    public SsoProtocolAdapterFactory(
+            SamlProtocolAdapter samlProtocolAdapter,
+            CasProtocolAdapter casProtocolAdapter,
+            LdapProtocolAdapter ldapProtocolAdapter,
+            OidcProtocolAdapter oidcProtocolAdapter) {
+        Map<String, SsoProtocolAdapter> registry = new LinkedHashMap<>(8);
+        registry.put("SAML", samlProtocolAdapter);
+        registry.put("CAS", casProtocolAdapter);
+        registry.put("LDAP", ldapProtocolAdapter);
+        registry.put("OIDC", oidcProtocolAdapter);
+        this.adapters = Map.copyOf(registry);
+    }
 
     /**
      * 根据协议类型获取对应的协议适配器
@@ -60,22 +80,13 @@ public class SsoProtocolAdapterFactory {
         if (protocolType == null || protocolType.trim().isEmpty()) {
             throw new IllegalArgumentException("协议类型不能为空");
         }
-
-        String normalizedType = protocolType.trim().toUpperCase();
-
-        return adapterCache.computeIfAbsent(normalizedType, type -> {
-            log.debug("创建 SSO 协议适配器: {}", type);
-            return switch (type) {
-                case "SAML" -> samlProtocolAdapter;
-                case "CAS" -> casProtocolAdapter;
-                case "LDAP" -> ldapProtocolAdapter;
-                case "OIDC" -> oidcProtocolAdapter;
-                default -> {
-                    log.error("不支持的 SSO 协议类型: {}", type);
-                    throw new IllegalArgumentException("不支持的 SSO 协议类型: " + type);
-                }
-            };
-        });
+        String normalized = protocolType.trim().toUpperCase(Locale.ROOT);
+        SsoProtocolAdapter adapter = adapters.get(normalized);
+        if (adapter == null) {
+            log.error("不支持的 SSO 协议类型: {}", normalized);
+            throw new IllegalArgumentException("不支持的 SSO 协议类型: " + normalized);
+        }
+        return adapter;
     }
 
     /**
@@ -88,11 +99,6 @@ public class SsoProtocolAdapterFactory {
         if (protocolType == null || protocolType.trim().isEmpty()) {
             return false;
         }
-
-        String normalizedType = protocolType.trim().toUpperCase();
-        return switch (normalizedType) {
-            case "SAML", "CAS", "LDAP", "OIDC" -> true;
-            default -> false;
-        };
+        return adapters.containsKey(protocolType.trim().toUpperCase(Locale.ROOT));
     }
 }

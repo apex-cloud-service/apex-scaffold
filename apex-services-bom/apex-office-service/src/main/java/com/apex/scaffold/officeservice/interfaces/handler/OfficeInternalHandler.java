@@ -2,6 +2,7 @@ package com.apex.scaffold.officeservice.interfaces.handler;
 
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
+import com.apex.scaffold.common.result.InternalEndpointErrors;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.contract.dto.internal.InternalTodoItem;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
@@ -303,19 +303,6 @@ public class OfficeInternalHandler {
      * @return 错误响应
      */
     private Mono<ServerResponse> toErrorResponse(Throwable error) {
-        if (error instanceof BusinessException businessException) {
-            int code = businessException.getCode() == null ? ResultCode.ERROR.getCode() : businessException.getCode();
-            HttpStatus status =
-                    switch (code) {
-                        case 400, 40001 -> HttpStatus.BAD_REQUEST;
-                        case 401 -> HttpStatus.UNAUTHORIZED;
-                        case 403 -> HttpStatus.FORBIDDEN;
-                        default -> HttpStatus.OK;
-                    };
-            return ServerResponse.status(status).bodyValue(Result.error(code, businessException.getMsg()));
-        }
-        log.error("office 内部统计端点处理失败", error);
-        return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .bodyValue(Result.error(ResultCode.ERROR.getCode(), ResultCode.ERROR.getMsg()));
+        return InternalEndpointErrors.toResponse(error, "office 内部统计端点处理失败");
     }
 }

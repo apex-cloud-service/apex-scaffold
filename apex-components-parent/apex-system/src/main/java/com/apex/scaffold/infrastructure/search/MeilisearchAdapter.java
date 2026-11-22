@@ -15,6 +15,8 @@ import com.meilisearch.sdk.Index;
 import com.meilisearch.sdk.SearchRequest;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +61,24 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     private final ConfigMapper configMapper;
 
     private static final String INDEX_NAME = "system_resources";
+
+    /** 全量重建时的资源类型顺序（与既有行为一致）。 */
+    private static final List<String> ALL_RESOURCE_TYPES = List.of("user", "role", "menu", "dept", "dict", "config");
+
+    /** 资源类型 → 查询策略；文档读取、全量 ID、增量 ID 三处共用同一注册来源。 */
+    private final Map<String, ResourceQuery> resourceQueries = Map.of(
+            "user",
+            new ResourceQuery(this::fetchUserDocument, this::fetchAllUserIds, this::fetchIncrementalUserIds),
+            "role",
+            new ResourceQuery(this::fetchRoleDocument, this::fetchAllRoleIds, this::fetchIncrementalRoleIds),
+            "menu",
+            new ResourceQuery(this::fetchMenuDocument, this::fetchAllMenuIds, this::fetchIncrementalMenuIds),
+            "dept",
+            new ResourceQuery(this::fetchDeptDocument, this::fetchAllDeptIds, this::fetchIncrementalDeptIds),
+            "dict",
+            new ResourceQuery(this::fetchDictDocument, this::fetchAllDictIds, this::fetchIncrementalDictIds),
+            "config",
+            new ResourceQuery(this::fetchConfigDocument, this::fetchAllConfigIds, this::fetchIncrementalConfigIds));
 
     /**
      * 执行全局搜索。
@@ -214,9 +234,8 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
         return Mono.fromCallable(() -> {
                     log.info("Starting index rebuild: type={}", resourceType);
 
-                    List<String> types = resourceType == null
-                            ? Arrays.asList("user", "role", "menu", "dept", "dict", "config")
-                            : Collections.singletonList(resourceType);
+                    List<String> types =
+                            resourceType == null ? ALL_RESOURCE_TYPES : Collections.singletonList(resourceType);
 
                     long totalCount = 0;
                     for (String type : types) {
@@ -285,16 +304,165 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
     }
 
     private Map<String, Object> fetchResourceDocument(String resourceType, String resourceId) {
-        return switch (resourceType) {
-            case "user" -> fetchUserDocument(resourceId);
-            case "role" -> fetchRoleDocument(resourceId);
-            case "menu" -> fetchMenuDocument(resourceId);
-            case "dept" -> fetchDeptDocument(resourceId);
-            case "dict" -> fetchDictDocument(resourceId);
-            case "config" -> fetchConfigDocument(resourceId);
-            default -> null;
-        };
+        ResourceQuery query = resourceQueries.get(resourceType);
+        return query == null ? null : query.document().apply(resourceId);
     }
+
+    private List<String> fetchAllResourceIds(String resourceType) {
+        ResourceQuery query = resourceQueries.get(resourceType);
+        return query == null ? Collections.emptyList() : query.allIds().get();
+    }
+
+    private List<String> fetchIncrementalResourceIds(String resourceType, Long sinceTimestamp) {
+        ResourceQuery query = resourceQueries.get(resourceType);
+        return query == null ? Collections.emptyList() : query.incrementalIds().apply(sinceTimestamp);
+    }
+
+    private List<String> fetchAllUserIds() {
+        return userMapper
+                .selectList(
+                        new LambdaQueryWrapper<UserPO>().select(UserPO::getId).eq(UserPO::getStatus, 1))
+                .stream()
+                .map(u -> u.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchAllRoleIds() {
+        return roleMapper
+                .selectList(
+                        new LambdaQueryWrapper<RolePO>().select(RolePO::getId).eq(RolePO::getStatus, 1))
+                .stream()
+                .map(r -> r.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchAllMenuIds() {
+        return menuMapper
+                .selectList(
+                        new LambdaQueryWrapper<MenuPO>().select(MenuPO::getId).eq(MenuPO::getStatus, 1))
+                .stream()
+                .map(m -> m.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchAllDeptIds() {
+        return deptMapper
+                .selectList(
+                        new LambdaQueryWrapper<DeptPO>().select(DeptPO::getId).eq(DeptPO::getStatus, 1))
+                .stream()
+                .map(d -> d.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchAllDictIds() {
+        return dictMapper
+                .selectList(new LambdaQueryWrapper<DictDataPO>()
+                        .select(DictDataPO::getId)
+                        .eq(DictDataPO::getStatus, 1))
+                .stream()
+                .map(d -> d.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchAllConfigIds() {
+        return configMapper.selectList(new LambdaQueryWrapper<ConfigPO>().select(ConfigPO::getId)).stream()
+                .map(c -> c.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchIncrementalUserIds(Long sinceTimestamp) {
+        LocalDateTime since = toIncrementalSince(sinceTimestamp);
+        return userMapper
+                .selectList(new LambdaQueryWrapper<UserPO>()
+                        .select(UserPO::getId)
+                        .gt(UserPO::getUpdateTime, since)
+                        .eq(UserPO::getStatus, 1))
+                .stream()
+                .map(u -> u.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchIncrementalRoleIds(Long sinceTimestamp) {
+        LocalDateTime since = toIncrementalSince(sinceTimestamp);
+        return roleMapper
+                .selectList(new LambdaQueryWrapper<RolePO>()
+                        .select(RolePO::getId)
+                        .gt(RolePO::getUpdateTime, since)
+                        .eq(RolePO::getStatus, 1))
+                .stream()
+                .map(r -> r.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchIncrementalMenuIds(Long sinceTimestamp) {
+        LocalDateTime since = toIncrementalSince(sinceTimestamp);
+        return menuMapper
+                .selectList(new LambdaQueryWrapper<MenuPO>()
+                        .select(MenuPO::getId)
+                        .gt(MenuPO::getUpdateTime, since)
+                        .eq(MenuPO::getStatus, 1))
+                .stream()
+                .map(m -> m.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchIncrementalDeptIds(Long sinceTimestamp) {
+        LocalDateTime since = toIncrementalSince(sinceTimestamp);
+        return deptMapper
+                .selectList(new LambdaQueryWrapper<DeptPO>()
+                        .select(DeptPO::getId)
+                        .gt(DeptPO::getUpdateTime, since)
+                        .eq(DeptPO::getStatus, 1))
+                .stream()
+                .map(d -> d.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchIncrementalDictIds(Long sinceTimestamp) {
+        LocalDateTime since = toIncrementalSince(sinceTimestamp);
+        return dictMapper
+                .selectList(new LambdaQueryWrapper<DictDataPO>()
+                        .select(DictDataPO::getId)
+                        .gt(DictDataPO::getUpdateTime, since)
+                        .eq(DictDataPO::getStatus, 1))
+                .stream()
+                .map(d -> d.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    private List<String> fetchIncrementalConfigIds(Long sinceTimestamp) {
+        LocalDateTime since = toIncrementalSince(sinceTimestamp);
+        return configMapper
+                .selectList(new LambdaQueryWrapper<ConfigPO>()
+                        .select(ConfigPO::getId)
+                        .gt(ConfigPO::getUpdateTime, since))
+                .stream()
+                .map(c -> c.getId().toString())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 将增量游标转换为数据库比较用的 {@link LocalDateTime}。
+     *
+     * @param sinceTimestamp 增量起始时间（epoch 毫秒）
+     * @return 对应本地时间
+     */
+    private LocalDateTime toIncrementalSince(Long sinceTimestamp) {
+        return LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochMilli(sinceTimestamp), java.time.ZoneId.systemDefault());
+    }
+
+    /**
+     * 单资源类型的查询策略。
+     *
+     * @param document       按 ID 构建索引文档（返回 {@code null} 表示资源不存在）
+     * @param allIds         全量 ID 查询
+     * @param incrementalIds 增量 ID 查询
+     */
+    private record ResourceQuery(
+            Function<String, Map<String, Object>> document,
+            Supplier<List<String>> allIds,
+            Function<Long, List<String>> incrementalIds) {}
 
     private Map<String, Object> fetchUserDocument(String resourceId) {
         UserPO user = userMapper.selectById(Long.parseLong(resourceId));
@@ -426,108 +594,6 @@ public class MeilisearchAdapter implements SearchRepository, IndexSyncPort {
         doc.put("updatedAt", toTimestamp(config.getUpdateTime()));
         doc.put("extra", Map.of("configType", config.getConfigType()));
         return doc;
-    }
-
-    private List<String> fetchAllResourceIds(String resourceType) {
-        return switch (resourceType) {
-            case "user" -> userMapper
-                    .selectList(new LambdaQueryWrapper<UserPO>()
-                            .select(UserPO::getId)
-                            .eq(UserPO::getStatus, 1))
-                    .stream()
-                    .map(u -> u.getId().toString())
-                    .collect(Collectors.toList());
-            case "role" -> roleMapper
-                    .selectList(new LambdaQueryWrapper<RolePO>()
-                            .select(RolePO::getId)
-                            .eq(RolePO::getStatus, 1))
-                    .stream()
-                    .map(r -> r.getId().toString())
-                    .collect(Collectors.toList());
-            case "menu" -> menuMapper
-                    .selectList(new LambdaQueryWrapper<MenuPO>()
-                            .select(MenuPO::getId)
-                            .eq(MenuPO::getStatus, 1))
-                    .stream()
-                    .map(m -> m.getId().toString())
-                    .collect(Collectors.toList());
-            case "dept" -> deptMapper
-                    .selectList(new LambdaQueryWrapper<DeptPO>()
-                            .select(DeptPO::getId)
-                            .eq(DeptPO::getStatus, 1))
-                    .stream()
-                    .map(d -> d.getId().toString())
-                    .collect(Collectors.toList());
-            case "dict" -> dictMapper
-                    .selectList(new LambdaQueryWrapper<DictDataPO>()
-                            .select(DictDataPO::getId)
-                            .eq(DictDataPO::getStatus, 1))
-                    .stream()
-                    .map(d -> d.getId().toString())
-                    .collect(Collectors.toList());
-            case "config" -> configMapper
-                    .selectList(new LambdaQueryWrapper<ConfigPO>().select(ConfigPO::getId))
-                    .stream()
-                    .map(c -> c.getId().toString())
-                    .collect(Collectors.toList());
-            default -> Collections.emptyList();
-        };
-    }
-
-    private List<String> fetchIncrementalResourceIds(String resourceType, Long sinceTimestamp) {
-        LocalDateTime since = LocalDateTime.ofInstant(
-                java.time.Instant.ofEpochMilli(sinceTimestamp), java.time.ZoneId.systemDefault());
-
-        return switch (resourceType) {
-            case "user" -> userMapper
-                    .selectList(new LambdaQueryWrapper<UserPO>()
-                            .select(UserPO::getId)
-                            .gt(UserPO::getUpdateTime, since)
-                            .eq(UserPO::getStatus, 1))
-                    .stream()
-                    .map(u -> u.getId().toString())
-                    .collect(Collectors.toList());
-            case "role" -> roleMapper
-                    .selectList(new LambdaQueryWrapper<RolePO>()
-                            .select(RolePO::getId)
-                            .gt(RolePO::getUpdateTime, since)
-                            .eq(RolePO::getStatus, 1))
-                    .stream()
-                    .map(r -> r.getId().toString())
-                    .collect(Collectors.toList());
-            case "menu" -> menuMapper
-                    .selectList(new LambdaQueryWrapper<MenuPO>()
-                            .select(MenuPO::getId)
-                            .gt(MenuPO::getUpdateTime, since)
-                            .eq(MenuPO::getStatus, 1))
-                    .stream()
-                    .map(m -> m.getId().toString())
-                    .collect(Collectors.toList());
-            case "dept" -> deptMapper
-                    .selectList(new LambdaQueryWrapper<DeptPO>()
-                            .select(DeptPO::getId)
-                            .gt(DeptPO::getUpdateTime, since)
-                            .eq(DeptPO::getStatus, 1))
-                    .stream()
-                    .map(d -> d.getId().toString())
-                    .collect(Collectors.toList());
-            case "dict" -> dictMapper
-                    .selectList(new LambdaQueryWrapper<DictDataPO>()
-                            .select(DictDataPO::getId)
-                            .gt(DictDataPO::getUpdateTime, since)
-                            .eq(DictDataPO::getStatus, 1))
-                    .stream()
-                    .map(d -> d.getId().toString())
-                    .collect(Collectors.toList());
-            case "config" -> configMapper
-                    .selectList(new LambdaQueryWrapper<ConfigPO>()
-                            .select(ConfigPO::getId)
-                            .gt(ConfigPO::getUpdateTime, since))
-                    .stream()
-                    .map(c -> c.getId().toString())
-                    .collect(Collectors.toList());
-            default -> Collections.emptyList();
-        };
     }
 
     private SearchResultEntity mapToEntity(Map<String, Object> doc) {

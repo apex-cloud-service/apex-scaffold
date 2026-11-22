@@ -5,6 +5,7 @@ import com.apex.scaffold.common.context.DataScopeInfo;
 import java.util.List;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
@@ -25,7 +26,7 @@ import net.sf.jsqlparser.statement.select.SetOperationList;
  *   <li>SELF 使用 {@code userAlias}，其他过滤类型使用 {@code deptAlias}，
  *       按别名匹配 FROM 表或 JOIN 右表；未指定别名时使用 FROM 表；</li>
  *   <li>递归处理集合操作的各个 SELECT 分支及括号包裹的 SELECT；
- *       已有 {@code WHERE} 时追加 {@code AND}，否则直接作为 {@code WHERE}；</li>
+ *       已有 {@code WHERE} 时追加 {@code AND}，根节点为 {@code OR} 时先整体括起原条件；</li>
  *   <li>采用 fail-closed 策略：权限关键值缺失、SQL 或条件解析失败、目标别名未匹配、
  *       目标表无法识别或 SELECT 结构不受支持时抛出 {@link IllegalStateException}，阻止查询。</li>
  * </ul>
@@ -100,10 +101,22 @@ final class DataScopeSqlRewriter {
                     ? config.userAlias()
                     : config.deptAlias();
             findTargetTable(plain, alias, unionBranch);
-            if (plain.getWhere() == null) {
+            Expression where = plain.getWhere();
+            if (where == null) {
                 plain.setWhere(condition);
+            } else if (needsGrouping(where)) {
+                // 根节点为 OR 时，原条件必须整体括起：否则 a OR b AND scope 会按
+                // a OR (b AND scope) 解析，导致数据权限被绕过。Parenthesis 需已有元素，
+                // 故先按字符串解析括号表达式再追加。
+                Expression grouped;
+                try {
+                    grouped = CCJSqlParserUtil.parseCondExpression("(" + where + ")");
+                } catch (Exception e) {
+                    throw new IllegalStateException("数据权限条件合并失败", e);
+                }
+                plain.setWhere(new AndExpression(grouped, condition));
             } else {
-                plain.setWhere(new AndExpression(plain.getWhere(), condition));
+                plain.setWhere(new AndExpression(where, condition));
             }
             return;
         }
@@ -126,6 +139,20 @@ final class DataScopeSqlRewriter {
             return;
         }
         throw new IllegalStateException("不支持的 SELECT 结构");
+    }
+
+    /**
+     * 判断追加 {@code AND} 前是否必须把原条件整体括起。
+     *
+     * <p>{@code AND} 优先级高于 {@code OR}，因此只有根节点是 {@link OrExpression} 时
+     * 直接追加会改变语义；子节点中的 {@code OR} 在原始 SQL 中必然已带括号，
+     * 无需重复处理。
+     *
+     * @param where 原 WHERE 条件
+     * @return 需要括号时为 {@code true}
+     */
+    private static boolean needsGrouping(Expression where) {
+        return where instanceof OrExpression;
     }
 
     /**

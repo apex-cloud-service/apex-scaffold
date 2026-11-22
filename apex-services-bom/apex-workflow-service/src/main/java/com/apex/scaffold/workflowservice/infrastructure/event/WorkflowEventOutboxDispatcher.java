@@ -77,9 +77,13 @@ public class WorkflowEventOutboxDispatcher {
     }
 
     /**
-     * 抢占一批待投递记录（单实例工作流库，直接条件更新即可）。
+     * 抢占一批待投递记录。
      *
-     * @return 本批记录
+     * <p>逐条以条件更新抢占（{@code WHERE id=? AND status='PENDING'}），只有实际更新到一行的记录
+     * 才返回给投递循环。同一实例的重叠调度或后续多实例部署下，未抢到的记录会被其他执行者处理，
+     * 避免同一事件被重复投递。
+     *
+     * @return 本批成功抢占的记录
      */
     private List<Pending> claim() {
         List<Pending> records = new ArrayList<>();
@@ -94,13 +98,17 @@ public class WorkflowEventOutboxDispatcher {
                             rs.getString("event_class"),
                             rs.getString("payload")));
                 });
+        List<Pending> claimed = new ArrayList<>(records.size());
         for (Pending record : records) {
-            jdbc.update(
+            int updated = jdbc.update(
                     "UPDATE sys_domain_event_outbox SET status='PROCESSING', locked_at=CURRENT_TIMESTAMP "
                             + "WHERE id=? AND status='PENDING'",
                     record.id());
+            if (updated == 1) {
+                claimed.add(record);
+            }
         }
-        return records;
+        return claimed;
     }
 
     /**

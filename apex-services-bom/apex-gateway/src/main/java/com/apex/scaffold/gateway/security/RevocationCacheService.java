@@ -20,7 +20,8 @@ import reactor.core.publisher.Mono;
  * <p>行为约定：
  * <ul>
  *   <li>启动游标回看 {@code lookback-seconds}（默认覆盖 2 小时访问令牌全生命周期），重启不漏撤销；</li>
- *   <li>本地缓存 TTL = max(2 × 拉取间隔, 60s)，撤销记录过期前必然经历至少一次完整拉取窗口；</li>
+ *   <li>本地缓存保留期 = max({@code retention-seconds}, 2 × 拉取间隔, 60s)；
+ *       默认 {@code retention-seconds=7200} 覆盖访问令牌最长生命周期，避免撤销标记先于令牌过期被清理；</li>
  *   <li>拉取失败保留游标与缓存并告警，下个周期重试；</li>
  *   <li>响应为 {@code Result} 封装：{@code data.revocations[].jti} 记录入缓存，
  *       {@code data.cursor} 单调推进。</li>
@@ -43,7 +44,7 @@ public class RevocationCacheService implements InitializingBean, DisposableBean 
     /** 撤销时间游标（epoch 毫秒），单调推进 */
     private final AtomicLong cursor = new AtomicLong();
 
-    /** 撤销记录保留窗口（毫秒） */
+    /** 撤销记录保留窗口（毫秒），不短于 2 × 拉取间隔且覆盖访问令牌生命周期 */
     private final long retentionMillis;
 
     /** 周期拉取订阅句柄 */
@@ -74,7 +75,8 @@ public class RevocationCacheService implements InitializingBean, DisposableBean 
                         WebClient.builder(), internalAuthProperties, signer)
                 .build();
         long ttlSeconds = Math.max(60, 2 * Math.max(5, properties.getPullIntervalSeconds()));
-        this.retentionMillis = ttlSeconds * 1000L;
+        long retainSeconds = Math.max(ttlSeconds, properties.getRetentionSeconds());
+        this.retentionMillis = retainSeconds * 1000L;
     }
 
     @Override
@@ -108,6 +110,15 @@ public class RevocationCacheService implements InitializingBean, DisposableBean 
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
+    }
+
+    /**
+     * 当前保留窗口（测试观察）。
+     *
+     * @return 撤销记录保留毫秒数
+     */
+    long retentionMillisForTest() {
+        return retentionMillis;
     }
 
     /**

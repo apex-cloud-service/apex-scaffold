@@ -32,6 +32,12 @@ public class RevocationProperties {
     /** 启动游标回看窗口（秒）：重启后从 now−lookback 起补拉，默认覆盖 2 小时访问令牌全生命周期 */
     private long lookbackSeconds = 7200;
 
+    /**
+     * 撤销记录本地保留时长（秒）：必须覆盖访问令牌最长剩余有效期，
+     * 否则撤销标记早于令牌过期被清理后，已撤销令牌会重新可用。
+     */
+    private long retentionSeconds = 7200;
+
     /** 单批拉取上限（透传给服务端，服务端收敛到 [1, 1000]） */
     private int batchLimit = 500;
 

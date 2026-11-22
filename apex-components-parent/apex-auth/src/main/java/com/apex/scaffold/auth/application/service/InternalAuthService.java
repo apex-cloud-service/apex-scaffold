@@ -81,7 +81,7 @@ public class InternalAuthService {
      * 撤销流响应体：增量记录 + 下一游标。
      *
      * @param revocations 本批撤销记录
-     * @param cursor 下一游标（epoch 毫秒）
+     * @param cursor 下一游标（epoch 毫秒，取本批最大撤销时间）
      */
     public record TokenRevocationFeed(java.util.List<Entry> revocations, long cursor) {
 

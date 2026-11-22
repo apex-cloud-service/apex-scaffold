@@ -68,4 +68,29 @@ class RevocationCacheServiceTest {
         // consume 为纯缓存操作，禁用态仅影响拉取调度
         assertThat(service.isRevoked("jti-x")).isTrue();
     }
+
+    @Test
+    @DisplayName("撤销记录保留期默认覆盖访问令牌生命周期，而非仅 2 个拉取间隔")
+    void defaultRetentionCoversAccessTokenLifetime() {
+        RevocationProperties properties = enabledProperties();
+        RevocationCacheService service = new RevocationCacheService(properties);
+        service.consume(
+                "{\"code\":0,\"data\":{\"revocations\":[{\"jti\":\"jti-long\",\"revokedAt\":1000}],\"cursor\":1000}}");
+
+        assertThat(properties.getRetentionSeconds()).isEqualTo(7200);
+        assertThat(service.retentionMillisForTest()).isEqualTo(7200_000L);
+        assertThat(service.isRevoked("jti-long")).isTrue();
+    }
+
+    @Test
+    @DisplayName("保留期不短于 2 个拉取间隔，配置过小时被抬升")
+    void retentionNeverBelowPullWindow() {
+        RevocationProperties properties = enabledProperties();
+        properties.setPullIntervalSeconds(600);
+        properties.setRetentionSeconds(1);
+
+        RevocationCacheService service = new RevocationCacheService(properties);
+
+        assertThat(service.retentionMillisForTest()).isEqualTo(1_200_000L);
+    }
 }

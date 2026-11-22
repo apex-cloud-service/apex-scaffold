@@ -123,6 +123,21 @@ class WorkflowEventOutboxTest {
         assertThat(Integer.parseInt(column("attempts"))).isPositive();
     }
 
+    @Test
+    @DisplayName("已被其他执行者抢占的记录不再重复投递")
+    void shouldNotRedeliverRecordAlreadyClaimed() throws Exception {
+        connection.setAutoCommit(false);
+        outbox.appendSync(connection, completedEvent());
+        connection.commit();
+        // 模拟另一执行者已抢占：状态离开 PENDING 后，本执行者不应再投递。
+        jdbc().update("UPDATE sys_domain_event_outbox SET status='PROCESSING'");
+
+        dispatcher.dispatch();
+
+        assertThat(delivered).isEmpty();
+        assertThat(column("status")).isEqualTo("PROCESSING");
+    }
+
     private TaskCompletedEvent completedEvent() {
         TaskCompletedEvent event = new TaskCompletedEvent(5001L, 3001L, 100L, "APPROVE", "ok", null);
         event.attachTenantContext("1");
