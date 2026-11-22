@@ -8,6 +8,7 @@
 
 - [2026-11-16 文档治理与目录重构](./2026-11-16-docs-governance.md)
 - [2026-11-19 Podman-only 联调入口记录](./2026-11-19-podman-only-integration.md)
+- [2026-11-22 设计模式 / SPI / 注释复审与整改记录](./2026-11-22-code-quality-pattern-spi.md)
 
 > 规则：记录只增不改；后续修正以追加段落写入，不覆盖历史结论。
 
@@ -19,3 +20,4 @@
 | 2026-11-18 | [2026-11-18-javadoc-review-campaign.md](./2026-11-18-javadoc-review-campaign.md) | BE-041 全仓 Javadoc 评审：doclint 78→0 告警、53 文件纯注释修复、三批测试全绿（BE-041） |
 | 2026-11-18 | [2026-11-18-multi-agent-governance.md](./2026-11-18-multi-agent-governance.md) | BE-042 多智能体并行协作治理：R0 租约、并行准入、worktree 隔离、标准交接、独立复核与逐个集成；R5 增量复审通过并关闭 |
 | 2026-11-19 | [2026-11-19-podman-only-integration.md](./2026-11-19-podman-only-integration.md) | BE-043 Podman-only 联调入口、前端容器健康检查及当前本机 Podman 服务阻塞 |
+| 2026-11-22 | [2026-11-22-code-quality-pattern-spi.md](./2026-11-22-code-quality-pattern-spi.md) | BE-044 全仓设计模式 / SPI / 注释复审：存储与连接器 SPI 发现加固、MQ 默认处理器让位、向量响应校验、9 处失真注释修正；受影响模块 `-am test` 全绿（Wave G 待业主确认） |
