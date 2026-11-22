@@ -1,7 +1,11 @@
 #!/bin/bash
 # ============================================================
-# JavaDoc 质量检查脚本
+# JavaDoc 质量检查脚本（已废弃，仅保留向后兼容）
 # ============================================================
+# ⚠️ 本脚本已废弃：会向当前工作目录落 javadoc_todo_list_*.md 并向 /tmp 写中间文件，
+#    且位置参数路径与两级嵌套布局的扫描口径不一致。新用法请统一使用：
+#      JAVADOC_OUTPUT_DIR=/tmp/javadoc-scan bash scripts/dev/check/scan-javadoc-issues.sh
+#    （默认按 apex-*/apex-*/src/main/java 两级嵌套扫描，可用 JAVADOC_SCAN_PATH 限定目录。）
 # 用途: 扫描Java文件,识别缺少JavaDoc的类和方法
 # 使用: ./check_javadoc.sh [module_path]
 # 示例: ./check_javadoc.sh apex-components-parent/apex-system/src/main/java

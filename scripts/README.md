@@ -102,6 +102,8 @@ cd scripts/codegen
 **示例**:
 ```bash
 # 扫描整个项目的 JavaDoc 问题
+# （默认按两级嵌套布局 apex-*/apex-*/src/main/java 扫描全部模块；限定目录时用
+#   JAVADOC_SCAN_PATH='apex-*/apex-*/src/main/java' JAVADOC_OUTPUT_DIR=/tmp/javadoc-scan 覆盖）
 ./scripts/dev/check/scan-javadoc-issues.sh
 
 # 检查 apex-system 模块的 SpringDoc 注解

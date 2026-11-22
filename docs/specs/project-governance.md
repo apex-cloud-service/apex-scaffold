@@ -423,8 +423,8 @@ git branch test master && git push -u origin test
 | B3 | 禁 `@Autowired`，统一构造器注入 | 0 命中（仓库自带 ArchUnit `NoAutowiredArchTest` 守护） |
 | B4 | POJO/DTO/VO/BO/Query 统一 Lombok，禁手写存取方法 | 抽样 10 处为不可变载体/`@ConfigurationProperties`，合法场景 |
 | B5 | 对象转换统一 MapStruct，禁 `BeanUtils`/手写逐字段拷贝 | 0 命中 |
-| B6 | 日志统一 `@Slf4j`，禁 `LoggerFactory.getLogger()` | 生产代码 1 处违规：`apex-common` 的 `VirtualThreadBoundedExecutor:72`，登记 BE-017；测试代码可保留 |
-| B7 | 类/接口/枚举/常量/公开方法必须有完整 Javadoc | — |
+| B6 | 日志统一 `@Slf4j`，禁 `LoggerFactory.getLogger()` | 生产代码 0 命中（BE-017 已完成：`apex-common` 的 `VirtualThreadBoundedExecutor` 已改 `@Slf4j`）；测试代码可保留 |
+| B7 | 类/接口/枚举/常量/公开方法必须有完整 Javadoc（含 `@author`/`@since`，公开方法含 `@param`/`@return`/`@throws`） | 验证：`JAVADOC_SCAN_PATH='apex-*/apex-*/src/main/java' JAVADOC_OUTPUT_DIR=/tmp/javadoc-scan bash scripts/dev/check/scan-javadoc-issues.sh`（两级嵌套布局必须显式传 `JAVADOC_SCAN_PATH`，默认值已按嵌套布局修正）；2026-11-18 BE-041 全仓归零，2026-11-22 BE-048 修复 BE-041 后唯一回归（`FileAuditFieldFillHandler`）后维持归零 |
 | B8 | Handler 必须有 SpringDoc OpenAPI3 注解（`@Tag`/`@Operation`），DTO 用 `@Schema` 保证请求体/响应体完整可见 | — |
 | B9 | 构建固定 JDK `21.0.13.0+9-tem` + `mvnd 2.0.0-rc-3`，禁系统 `mvn`、禁其他 JDK | `.sdkmanrc` 已固定 |
 | B10 | 模块边界：新模块只在所属分组 `<modules>` 登记一次；不复制安全/数据源/缓存/消息/日志/调度框架到业务库 | — |

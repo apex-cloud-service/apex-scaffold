@@ -592,7 +592,8 @@ mvnd javadoc:aggregate -DskipTests
 mvnd javadoc:javadoc -pl :apex-domain -DskipTests
 # 输出目录：target/site/apidocs/
 
-# 注释问题扫描（必须全绿）
+# 注释问题扫描（必须全绿；默认按两级嵌套布局 apex-*/apex-*/src/main/java 扫描全部模块，
+# 限定目录时用 JAVADOC_SCAN_PATH 环境变量覆盖，输出目录用 JAVADOC_OUTPUT_DIR 指定）
 scripts/dev/check/scan-javadoc-issues.sh
 ```
 

@@ -2,7 +2,8 @@
 # scan-javadoc-issues.sh
 # 扫描项目中 JavaDoc 注释缺失或不完整的文件
 # 用法：JAVADOC_OUTPUT_DIR=/tmp/javadoc-scan bash scripts/dev/check/scan-javadoc-issues.sh
-# 可用 JAVADOC_SCAN_PATH 限定扫描目录；默认扫描所有业务模块 main/java。
+# 可用 JAVADOC_SCAN_PATH 限定扫描目录；默认按两级嵌套布局扫描所有业务模块 main/java
+# （2026-11-14 起叶子模块物理位于各分组父目录之下，一级通配 apex-*/src/main/java 匹配不到任何目录）。
 # 默认输出到 _tmp/（工作区管理规范 4.1：中间产物不入项目根目录）；方法检查为启发式候选列表，退出码不表示文档门禁结果。
 # 作者：Apex Team
 
@@ -14,7 +15,7 @@ cd -- "$PROJECT_ROOT"
 OUTPUT_DIR=${JAVADOC_OUTPUT_DIR:-$PROJECT_ROOT/_tmp}
 mkdir -p -- "$OUTPUT_DIR" || exit
 OUTPUT_DIR=$(CDPATH= cd -- "$OUTPUT_DIR" && pwd -P) || exit
-SCAN_PATH=${JAVADOC_SCAN_PATH:-"apex-*/src/main/java"}
+SCAN_PATH=${JAVADOC_SCAN_PATH:-"apex-*/apex-*/src/main/java"}
 JAVA_FILES=$(safe_find "$SCAN_PATH" "*.java")
 
 print_header "扫描 JavaDoc 注释问题..."

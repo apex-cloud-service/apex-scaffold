@@ -15,7 +15,7 @@
 | 已开启的保护 | **已开启（档 1，六支全覆盖）**：两仓 `master`/`test`/`dev` 均 `allow_force_pushes=false`、`allow_deletions=false`，`master`/`test` 另加 `required_conversation_resolution=true`（2026-11-16 转 public 后由 `gh api` 写入并回读验证） |
 | 可用手段 | ① GitHub 网页 Settings（推荐，无需凭据）；② PAT + `gh api`（需 `repo` 与 `admin:repo_hook` 权限）；③ 无 token 时**不能**用 API |
 
-> **重要前提**：本仓当前**没有可靠的 CI 状态检查**可挂。若在保护规则里启用 "Require status checks"，PR 会因「检查项永远不出现」而永久阻塞。**先按下方「阶段一」只开人工与历史约束，等 CI 就绪再进「阶段二」。**
+> **重要前提（2026-11-22 刷新）**：本仓已具备 CI 工作流入仓（`.github/workflows/` 共 6 个：`ci-cd.yml` 八服务矩阵、`doc-consistency-check.yml`、`doc-link-check.yml`、`frontend-ci.yml`、`release.yml`、`security-scan.yml`，2026-11-16 起维护）。**启用 "Require status checks" 前，须先确认对应 workflow 在 GitHub Actions 上实际运行且通过**（本记录尚无 Actions 运行成功的回读证据）；确认前仍按下方「阶段一」只开人工与历史约束，CI 连续运行稳定后再进「阶段二」绑定 `ci-cd.yml` 的 job。
 
 ### 0.1 平台限制的处理经过与最终结论（2026-11-16）
 

@@ -64,7 +64,7 @@
 ### 0.5 后端编码红线（与现状对齐 + 例外登记）
 
 1. **Web 层**：Spring WebFlux 响应式，接口一律 `Handler`（函数式处理器）+ `RouterFunction` 注册路由；接口返回 `Mono`/`Flux`。
-2. **禁止**新增 `@Controller` / `@RestController` 注解式控制器。存量例外见 `docs/tasks/project-tasks.md`（BE-004），**在评估通过前不得改动**，避免改变错误响应契约。
+2. **禁止**新增 `@Controller` / `@RestController` 注解式控制器（当前生产代码为 0 处）。存量例外仅 2 处 `@RestControllerAdvice` 全局异常边界（system 的 `GlobalExceptionHandler`、`SentinelExceptionHandler`，登记见 `docs/tasks/project-tasks.md` BE-004），**在评估通过前不得改动**，避免改变错误响应契约。
 3. **依赖注入**：禁止 `@Autowired`，统一构造器注入；禁止字段注入、setter 注入、混合注入。
 4. **POJO**：`Entity` / `DTO` / `VO` / `BO` / `Query` 统一 Lombok；禁止手写 getter/setter/toString，禁止 Lombok 与手写存取方法混用。`lombok.config` 保持仓库现状。
 5. **对象转换**：统一 MapStruct；禁止 `BeanUtils`、`PropertyUtils`、手写逐行 set 拷贝。
