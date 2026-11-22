@@ -7,10 +7,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 本地部署离线运维工具：校验加密密钥与部署配置，生成 TOTP 敏感字段迁移包并可回滚。
+ * 本地部署离线运维工具：校验加密密钥与部署配置，生成 TOTP 敏感字段迁移包并可回滚，
+ * 以及汇总 Maven 测试报告。
  *
- * <p>子命令：{@code validate}、{@code preflight}、{@code compose}、{@code prepare}、{@code rollback}；
- * 退出码 0 表示通过，1 表示校验失败，2 表示参数无效。工具不连接数据库。
+ * <p>子命令：{@code validate}、{@code preflight}、{@code compose}、{@code prepare}、
+ * {@code rollback}、{@code test-report}；退出码 0 表示通过，1 表示校验失败，2 表示参数无效。
+ * 工具不连接数据库。
  *
  * @author Apex Team
  * @since 1.3.1
@@ -36,7 +38,8 @@ public final class LocalDeployment {
     private static final String USAGE = "validate | preflight --target compose|nacos-datasource-prod"
             + " | compose [--env-file PATH]"
             + " | prepare --input PATH --output PATH"
-            + " | rollback --bundle PATH --output PATH";
+            + " | rollback --bundle PATH --output PATH"
+            + " | test-report --root PATH --output DIR";
 
     /** 参数无效提示。 */
     private static final String USAGE_HINT = "参数无效；请使用 --help";
@@ -120,6 +123,7 @@ public final class LocalDeployment {
             case "rollback" -> TotpMigrationBundle.rollback(
                     Path.of(command.options().get("--bundle")),
                     Path.of(command.options().get("--output")));
+            case "test-report" -> runTestReport(command.options(), out);
             default -> throw new IllegalArgumentException(USAGE_HINT);
         }
     }
@@ -148,6 +152,24 @@ public final class LocalDeployment {
     }
 
     /**
+     * 汇总测试报告；不一致或解析失败时抛出异常，由调用方转换为失败退出码。
+     *
+     * @param options 选项
+     * @param out     标准输出
+     */
+    private static void runTestReport(Map<String, String> options, PrintStream out) {
+        int code = TestReportSummary.run(
+                new String[] {
+                    "--root", options.get("--root"), "--output", options.get("--output"),
+                },
+                out,
+                System.err);
+        if (code != EXIT_OK) {
+            throw new IllegalStateException("测试报告汇总未通过");
+        }
+    }
+
+    /**
      * 解析子命令及其必需、允许的选项。
      *
      * @param name    子命令名
@@ -162,6 +184,8 @@ public final class LocalDeployment {
             case "prepare" -> new Command(name, Set.of("--input", "--output"), Set.of("--input", "--output"), options);
             case "rollback" -> new Command(
                     name, Set.of("--bundle", "--output"), Set.of("--bundle", "--output"), options);
+            case "test-report" -> new Command(
+                    name, Set.of("--root", "--output"), Set.of("--root", "--output"), options);
             default -> null;
         };
     }

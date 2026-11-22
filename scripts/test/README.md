@@ -9,7 +9,7 @@
 | `scripts/test/chaos-fault-injection.sh` | 混沌故障注入演练脚本（Phase 7 / 强化 §7.1） | `bash scripts/test/chaos-fault-injection.sh` |
 | `scripts/test/check-migration-integrity.sh` | Flyway 迁移脚本完整性检查 | `bash scripts/test/check-migration-integrity.sh` |
 | `scripts/test/generate-comprehensive-test-report.sh` | 综合入口复用同一 XML 汇总实现，避免两个脚本统计口径漂移。 | `bash scripts/test/generate-comprehensive-test-report.sh` |
-| `scripts/test/generate-test-report.sh` | 生成测试报告脚本 | `bash scripts/test/generate-test-report.sh` |
+| `scripts/test/generate-test-report.sh` | 测试报告生成：沿 POM `<modules>` 递归发现模块，Surefire/Failsafe 分列解析并汇总为 Markdown/JSON（依赖 `apex-tools-deployment` 的 `TestReportSummary`，需先打包该模块）。 | `bash scripts/test/generate-test-report.sh` |
 | `scripts/test/integration-test.sh` | 前后端对接测试脚本 | `bash scripts/test/integration-test.sh` |
 | `scripts/test/jvm-diagnostics-test.sh` | jvm-diagnostics-test.sh - jvm-diagnostics.sh 的自动化测试 | `bash scripts/test/jvm-diagnostics-test.sh` |
 | `scripts/test/new-batch-report.sh` | 批次测试报告骨架生成（方案 §13 脚本交付物）。 | `bash scripts/test/new-batch-report.sh` |
