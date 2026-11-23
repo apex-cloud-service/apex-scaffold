@@ -465,6 +465,66 @@ public Mono<ServerResponse> exportUsers(ServerRequest request) {
 }
 ```
 
+## 模板10：Router 层路由绑定（`@RouterOperation`）
+
+函数式端点下 SpringDoc 的解析分两段：**Router 的 `@RouterOperation` 负责「路由 → Handler 方法」绑定**，**Handler 方法上的 `@Operation`/`@Parameter`/`@RequestBody`/`@ApiResponses` 负责全部文档内容**。两者缺一不可。
+
+> **分工原则（本仓库现行口径）**：`@RouterOperation` **只写 `path`/`method`/`beanClass`/`beanMethod`**，不重复写 `operation = @Operation(...)`。文档内容统一放在 Handler 方法上，避免同一份元数据写两遍后漂移。
+>
+> **例外**：`apex-system` 采用集中式策略——`RouterOpenApiConfig` 内嵌完整 `@Operation`，`OpenApiDocumentationCustomizer` 按 `operationId` 程序化注入请求体与响应模型。该模块有最严守护测试（`RouterOpenApiCoverageTest`），保持现状，不套用本模板。
+
+```java
+package com.apex.scaffold.fileservice.interfaces.router;
+
+import com.apex.scaffold.fileservice.interfaces.handler.OpenFileHandler;
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
+
+@Configuration
+public class OpenFileRouter {
+
+    /**
+     * 注册开放文件路由。
+     *
+     * @param handler 开放文件处理器
+     * @return 路由函数
+     */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/open-api/file/upload",
+                method = RequestMethod.POST,
+                beanClass = OpenFileHandler.class,
+                beanMethod = "upload"),
+        @RouterOperation(
+                path = "/open-api/file/content",
+                method = RequestMethod.GET,
+                beanClass = OpenFileHandler.class,
+                beanMethod = "content")
+    })
+    public RouterFunction<ServerResponse> openFileRoutes(OpenFileHandler handler) {
+        return RouterFunctions.route()
+                .POST("/open-api/file/upload", handler::upload)
+                .GET("/open-api/file/content", handler::content)
+                .build();
+    }
+}
+```
+
+**校验要点（新增 Router 必须逐条对齐）**
+
+1. `@RouterOperation` 条目数与 `RouterFunctions.route()` 实际注册的路由数**一一对应**；`path` 与方法必须与注册代码完全一致（含路径变量名）。
+2. `beanMethod` 必须是在 `beanClass` 中真实存在、签名接受 `ServerRequest` 的方法。
+3. 对应 Handler 方法必须有 `@Tag`（类级）+ `@Operation`（方法级，含非空 `operationId` 与 `summary`）。
+4. 写操作（POST/PUT/PATCH）且实际读取请求体时，必须有 `requestBody` 声明。
+5. 新增模块须登记到 `scripts/dev/check/check-springdoc-annotations-v2.sh` 的 `MODULE_ROOTS`，否则覆盖率统计不覆盖该模块。
+
 ## 常用HTTP状态码说明
 
 | 状态码 | 含义 | 使用场景 |

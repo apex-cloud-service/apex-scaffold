@@ -1,19 +1,22 @@
 # SpringDoc 注解审计
 
-本记录依据当前工作区源码进行静态核对，范围包括 system 域（`apex-system`）与认证中心（`apex-auth-service`）。代码中存在元数据不等于运行时 OpenAPI 已正确生成；本轮尚未启动两个服务验证 `/v3/api-docs`。
+本记录依据当前工作区源码进行静态核对。代码中存在元数据不等于运行时 OpenAPI 已正确生成；本记录不是运行时验收结论。
+
+> **2026-11-23 更新（BE-060）**：扫描范围已从「仅 `apex-system`」扩展到 **10 个模块**（system / integration / auth-service / file-service / office-service / workflow-service / knowledge-service / masking-service / aggregation-service / example）与 `apex-knowledge` 业务库；DTO 改为按模块自动发现 `*/dto` 目录；新增第 4 项检查「写操作 `@RequestBody` 声明」。四档覆盖率当前均为 **100%**（Router 77/77、Handler 516/516、DTO 212/212、写操作 requestBody 60/60）。详细改造记录见 `docs/records/2026-11-22-handler-annotation-completion.md`。
 
 ## 核对口径
 
-- Handler 方法统计匹配 `public Mono<ServerResponse>`，注解统计匹配源码中的 `@Operation(`；这是文本统计，不能证明逐方法绑定或参数、响应 Schema 的完整性。
+- Handler 方法统计匹配 `public Mono<ServerResponse>` / `public Flux<...>`，注解统计匹配源码中的 `@Operation(`；这是文本统计，不能证明逐方法绑定或参数、响应 Schema 的完整性。
 - 函数式接口的元数据可以声明在 Handler，也可以通过 Router 的 `@RouterOperation` / `@RouterOperations` 提供。Handler 缺少方法级 `@Operation` 不能直接判定接口缺少 OpenAPI 文档。
 - `@OperationLog` 属于业务审计，不属于 SpringDoc 覆盖率；其存在也不证明日志已实际入库。
+- 第 4 项「写操作 `@RequestBody`」只统计 **POST/PUT/PATCH 且方法体内确实读取请求体**（`bodyToMono`/`handleRequestBody`/`bodyToFlux`/`multipartData`）的方法，因此纯路径参数的写端点不会被误判为缺失；`apex-system` 由 `OpenApiDocumentationCustomizer.JSON_REQUEST_TYPES` 集中声明的 operationId 视为已覆盖。
 - 实际检查应逐路由核对 HTTP 方法、路径、beanClass、beanMethod、operationId、参数约束、安全要求和响应类型，再检查运行时生成结果。
 
 ## 主应用范围
 
-system 域源码路径为 `apex-system/src/main/java/com/apex/scaffold/interfaces/handler/` 与同层 `router/`。旧记录中的“24 个 Handler、110+ 方法、100% 完整”已不适用于当前源码，不能作为验证依据。
+system 域源码路径为 `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/` 与同层 `router/`。旧记录中的“24 个 Handler、110+ 方法、100% 完整”已不适用于当前源码，不能作为验证依据。
 
-当前静态核对发现 `AuthHandler` 有 10 个上述签名的方法和 9 个 `@Operation` 文本命中；这只提示需要结合路由继续核对，不能据此宣称运行时存在一个文档缺口。system 域登录、刷新和登出路径以 `PublicApiRouter` 中 `/api/v1/auth/*` 为准。
+system 域登录、刷新和登出路径以 `PublicApiRouter` 中 `/api/v1/auth/*` 为准。`AuthHandler` 等方法的请求体由 `RouterOpenApiConfig` + `OpenApiDocumentationCustomizer` 集中声明，Handler 上不重复写 `requestBody`，这是该模块的既定架构选择。
 
 仓库检查入口为：
 
@@ -21,7 +24,7 @@ system 域源码路径为 `apex-system/src/main/java/com/apex/scaffold/interface
 bash scripts/ci/check-springdoc-coverage.sh
 ```
 
-该入口调用 `scripts/dev/check/check-springdoc-annotations-v2.sh`，扫描主应用 Router、Handler 和 DTO；默认阈值均为 100%。脚本的覆盖率只代表其文本扫描规则，不能代替认证中心审计或运行时验证。
+该入口调用 `scripts/dev/check/check-springdoc-annotations-v2.sh`，遍历 `MODULE_ROOTS` 登记的 10 个模块，检查 Router / Handler / DTO / 写操作请求体四项；默认阈值均为 100%。脚本的覆盖率只代表其文本扫描规则，不能代替运行时验证。
 
 ## 认证中心 Handler 静态统计
 

@@ -1,0 +1,198 @@
+# 补齐 10 个模块 Handler 接口方法的功能注解 / SpringDoc / Swagger 注解
+
+## Context（为什么做）
+
+`AGENTS.md` §0.5-8 与 `docs/specs/project-governance.md` §6 **B8** 是硬红线：「Handler 用 `@Tag`/`@Operation`，DTO 字段用 `@Schema`（说明、示例、必填、约束），保证 Swagger 可见完整请求体/响应体」。附录 A 另要求 Router 的 `@RouterOperation` 与实际路径/方法/参数/响应一致。
+
+实测结果：**红线未被真正守护**。CI 的 `scripts/ci/check-springdoc-coverage.sh` 声称 100% 门槛，但底层 `check-springdoc-annotations-v2.sh` 的扫描路径**硬编码只扫 `apex-system`**，其余 9 个模块无任何自动化覆盖。结果是「system 绿、其他模块长期漏」。
+
+已核实的具体缺口（非推测）：
+
+| 模块 | 端点方法 | `@Operation` | 主要缺口 |
+| --- | ---: | ---: | --- |
+| apex-system（Handler） | 217 | 213 | 4 方法缺 `@Operation`；7 个 Handler 缺 `@Tag` |
+| apex-auth-service | 89 | 79 | `InternalOpenAppRegistryHandler` **8 方法 0 注解**；5 个 Handler 缺 `@Tag` |
+| apex-file-service | 39 | 33 | `OpenFileHandler` 2 方法零注解；`OpenFileRouter` **0 条 `@RouterOperation`** |
+| apex-workflow-service | 35 | 25 | `OpenWorkflowHandler` **4 方法零注解**；`OpenWorkflowRouter` **0 注解** |
+| apex-office-service | 124 | 103 | `OpenMessageHandler` 零注解 + `OpenMessageRouter` **0 注解**；91 端点仅 3 个文件声明 `requestBody` |
+| apex-knowledge-service | 29 | **3** | 4 个 Handler **全部无 `@Tag`**，17 方法缺 `@Operation`；Router 20 条 `@RouterOperation` **全部只写 path/method、无 `operation=`** |
+| apex-integration | 27 | 27 | Handler 注解齐全，但 Router **0 条 `@RouterOperation`**，且类注释谎称「本模块 POM 无 springdoc 依赖」——POM 第 48-53 行实际已有（optional） |
+| apex-masking-service | 2 | 2 | 缺 `@Tag`（`MaskingHandler`） |
+| apex-aggregation-service | 1 | 1 | 已达标 |
+| apex-example | 13 | 13 | 有 `@Operation` 但 **0 个 `@ApiResponse`/`@Parameter`/`@RequestBody`** |
+
+DTO 侧：system / auth / file / office / workflow 的业务 DTO **已 100% 有 `@Schema`**；缺口集中在 **`apex-knowledge` 13/13 全部为 0**、**integration 接口层 23 个类**、以及**共享 `Result<T>` / `PageResponse` 的 class 级 `@Schema` 为 0**（这是所有接口统一响应结构 `code/msg/data/traceId` 在 Swagger 里无描述、看起来"空"的根因）。
+
+目标：让每个模块的在线文档都能看到**完整请求体、完整响应体、全部参数**，并把门禁扩到全模块防止回退。
+
+---
+
+## 关键机制裁决（决定注解写哪一层）
+
+函数式端点下 SpringDoc 的解析链路已通过代码验证：
+
+- `@RouterOperation(path, method, beanClass, beanMethod)` 负责**路由→方法绑定**；
+- SpringDoc 读取**该 Handler 方法上的 `@Operation`/`@Parameter`/`@RequestBody`/`@ApiResponse`** 生成真实文档。
+
+证据：`OfficeOpenApiContractTest` 断言 `/api/office/documents/my` 的 `operationId=getMyDocuments`，而 office 的 Router 全部只写 `path/method/beanClass/beanMethod`、`operationId` 来自 `OfficeDocumentHandler.getMyDocuments` 的 `@Operation(operationId="getMyDocuments")`（`OfficeDocumentHandler.java:312`）。file 模块同理（`FileHandlerIntegrationTest` 断言 32 个 operationId）。
+
+**因此采用：Handler 层为唯一事实来源** —— 类级 `@Tag` + 方法级完整 `@Operation`（含 `requestBody`、`parameters`、`responses`、`security`）；Router 层 `@RouterOperation` 只保留**路由绑定**（path/method/beanClass/beanMethod），不重复写 `operation=@Operation(...)`。
+
+理由：避免同一份元数据写两遍造成漂移（`RouterOpenApiCoverageTest.shouldKeepRouterAndHandlerOperationIdsInSync` 正是为抓这种漂移而存在）；office/file 已被现有契约测试证明该模式可用；改动面最小。
+
+**例外**：`apex-system` 保持现状结构不动（`RouterOpenApiConfig` 95 条完整 `@Operation` + `OpenApiDocumentationCustomizer` 程序化注入），只做缺口填空。原因：它有最严的守护测试，重构收益抵不上回归风险。
+
+---
+
+## 实施计划（单批，模块内顺序执行，最后全量 verify）
+
+### 阶段 1 — 共享基础（先做，后续所有模块受益）
+
+1. `apex-common/.../result/Result.java`：加类级 `@Schema(name="Result", description=...)` + 4 个字段级 `@Schema(description/example)`（`code`/`msg`/`data`/`traceId`）。
+2. `apex-common/.../dto/PageResponse.java`：同上，补 `page`/`size`/`total`/`list`（及 `records` 别名说明）字段级注解。
+3. 不改字段名、不改序列化、不改行为 —— 纯文档注解。
+
+### 阶段 2 — knowledge-service（缺口最大，先啃）
+
+- `KnowledgeSpaceHandler`、`KnowledgeDocumentHandler`、`KnowledgeSearchHandler`、`KnowledgeChatHandler`：加类级 `@Tag`（名称统一 `知识库-*`，与 V91 权限种子 `kb:*` 对齐）。
+- 20 个端点方法补齐完整 `@Operation`：`operationId`（驼峰动词+资源，全局唯一）、`summary`（中文）、`description`（含权限码/降级语义）、`@Parameter`（path/query/header）、`requestBody`（`@RequestBody` + `@Content(mediaType="application/json", schema=@Schema(implementation=真实DTO))`）、`@ApiResponses`（200 + 400/401/403/404/429/500 按实际语义）。
+- `KnowledgeChatHandler.ask` 为 **SSE**：成功响应媒体类型必须是 `text/event-stream`，不能写 `application/json`。
+- 13 个 DTO（`apex-business-parent/apex-knowledge/.../application/dto/`）：补类级 + 字段级 `@Schema`（description/example/requiredMode；数值补 minimum/maximum；枚举补 allowableValues）。若 DTO 已用 Jakarta Validation，`requiredMode` 与其保持一致，不新增校验注解。
+
+### 阶段 3 — file / workflow / office 的 Open* 路由
+
+- `OpenFileRouter`、`OpenWorkflowRouter`、`OpenMessageRouter`：补 `@RouterOperations` 路由绑定条目（与 `RouterFunctions.route()` 实际注册**逐条对齐**）。
+- `OpenFileHandler`（2 方法）、`OpenWorkflowHandler`（4 方法）、`OpenMessageHandler`（1 方法）：补 `@Tag` + 完整 `@Operation`（含开放平台语义说明：`sub_uid` 主体、只读边界等）。
+- office 其余 `requestBody` 缺口：为每个 POST/PUT 端点补 `requestBody`，schema 指向真实请求 DTO（不写 `Object`）。
+- 补齐 `InternalNotifyHandler`/`OfficeInternalHandler`/`OfficeHandler` 等缺 `@Tag` 的类。
+
+### 阶段 4 — auth / masking / aggregation / example
+
+- auth：`InternalOpenAppRegistryHandler` 8 方法补 `@Operation`+`@Tag`（内部契约，需注明「仅接受已验签 system 调用」）；`InternalAuthHandler`/`OauthTokenHandler`/`UnifiedAuthorizationHandler`/`OAuthEndpointHandler` 补 `@Tag`。
+- OAuth2 端点（`/oauth2/token` 等）：响应是**原生 OAuth2 协议**，不包 `Result`；`requestBody` 为 `application/x-www-form-urlencoded`，不得写成 JSON。
+- masking：`MaskingHandler` 补 `@Tag`。
+- example：`ExampleUserHandler`/`ExampleCapabilityHandler` 补 `@ApiResponse`/`@Parameter`/`@RequestBody`（这是**给用户的模板**，必须完整）。
+
+### 阶段 5 — integration
+
+- 删除 `IntegrationConnectorRouter`/`IotDeviceRouter` 中「本模块 POM 无 springdoc 传递依赖」的**过时注释**（已被 POM 第 48-53 行证伪），替换为真实说明。
+- 两个 Router 补 `@RouterOperations` 路由绑定，覆盖 `connector/interfaces` + `device/interfaces` 的 27 个端点。
+- 接口层 23 个类补 `@Schema`。
+- 注意 `apex.component.integration.interfaces-enabled` 开关：注解只加不改装配。
+
+### 阶段 6 — system 收尾
+
+- 7 个 Handler 补 `@Tag`：`InternalOpenApp`、`InternalTenant`、`Capability`、`CapabilityUsage`、`InternalOverview`、`PlatformOverview`、`TenantPackage`。
+- 4 个缺 `@Operation` 的方法补齐。
+- 为 `JSON_REQUEST_TYPES` 未覆盖的**写操作**补 `requestBody`。**不可**给 GET/DELETE 加请求体 —— `RouterOpenApiCoverageTest.shouldApplyCorrectRequestMediaTypesAfterCustomization` 会断言 GET/DELETE 请求体为 `null`。
+
+### 阶段 7 — 门禁扩展（防回归）
+
+1. `scripts/dev/check/check-springdoc-annotations-v2.sh`：把硬编码路径改为**按模块清单遍历全部 10 个模块**的 `interfaces/handler|router` 与 DTO 目录；新增检查项「每个 POST/PUT/PATCH 端点必须有 `requestBody` 声明」。
+2. 保留 `MethodNotAllowedRouter`、`BaseHandler`、`MultipartRequestParser` 等基础设施类的合理豁免清单，并把豁免**显式登记**（不再靠隐式跳过）。
+3. 新增契约测试（参照 `OfficeOpenApiContractTest` 的 `/v3/api-docs` 断言方式）：为 **workflow / file / knowledge / integration** 各补一个模块级契约测试，断言：operationId 唯一、每个写操作有 `requestBody`、成功响应 `$ref` 指向真实 schema、SSE 为 `text/event-stream`。
+
+### 阶段 8 — 治理留痕
+
+- `docs/tasks/project-tasks.md` 登记任务卡（P1，≤10 字加前缀命名规范），状态流转。
+- `docs/records/` 出改造记录；`docs/reference/ai-knowledge/07-change-memory.md` 追加条目（六字段，`memory:` 标记）。
+- `docs/03-api/springdoc-annotation-templates.md` 补 **`@RouterOperation` 模板**（该文档当前 0 处 `@RouterOperation`，正是本次缺口的成因之一）。
+- `docs/03-api/springdoc-annotation-audit.md` 更新口径（扫描范围已扩到全模块）。
+- 新文档在 `docs/README.md` 登记。
+
+---
+
+## 功能注解：只修注释，不改行为
+
+实测的功能注解失效问题**本轮不修行为**（与 `AGENTS.md`「本轮不改业务代码」一致）：
+
+- office 8 处 `@IdempotentApi` 无对应切面 = 完全无效（`OfficeAdminHandler` 5 处、`OfficeMessageHandler` 3 处）；
+- `@RequirePermission` 在 auth-service / file-service / masking / gateway 无切面（加了也不生效）；
+- integration-service 组件级切面存在，但 office 无 `apex-system` 依赖故拿不到 `IdempotentApiAspect`。
+
+本轮处理：**只删除/修正误导性注释**（如 integration 的 springdoc 说明），并把这 3 项作为独立任务登记到 `docs/tasks/project-tasks.md`（补切面 / 移除失效注解各一张卡），由用户决定是否另开变更。理由：补切面会让写操作**新增**幂等键校验或权限校验，属运行行为变更，必须独立出规格 + 回归，不能混进「注解增强」这一提交。
+
+---
+
+## 关键约束（执行时不可违反）
+
+- **不改** `@Controller`/`@RestController`（B2）；**不改** `GlobalExceptionHandler`/`SentinelExceptionHandler`（BE-004 例外）。
+- **不改** 任何 URL、方法、请求/响应字段名、序列化、DTO 结构 —— 纯注解改动，HTTP 契约零变化。
+- **不新增** `@RequirePermission`，除非该模块确有切面（避免制造新的"存在但不生效"注解）。
+- `@OperationLog` 只在有切面的模块保留语义：system / workflow / office / knowledge / integration 有本地切面；auth / file / masking / gateway 走 `apex-common` 的 `ReactiveOperationLogAspect`。**不给 aggregation 加**（无切面）。
+- 所有写操作的全量 `@Operation` 必须含 `requestBody`，且 schema 用**真实 DTO**，禁止 `Object`/`Result` 裸引用。
+- SSE / 二进制 / OAuth2 原生协议端点保持各自真实媒体类型，不强行套 `Result`。
+- 图表资产（`docs/diagrams/`）零改动。
+
+---
+
+## 验证
+
+按模块递进，每阶段绿了再进下一个；最后单次全量门禁。
+
+```bash
+source scripts/build/init-build-env.sh
+export PATH="/opt/podman/bin:$HOME/.orbstack/bin:$PATH"   # 双库 IT 需要
+
+# 1) 注解覆盖率（扩展后的全模块扫描）
+bash scripts/ci/check-springdoc-coverage.sh
+
+# 2) 模块级编译+测试（按阶段）
+mvnd -T4 -B -pl :apex-knowledge-service,:apex-file-service,:apex-workflow-service,:apex-office-service -am test
+mvnd -T4 -B -pl :apex-auth-service,:apex-integration,:apex-masking-service -am test
+mvnd -T4 -B -pl :apex-system,:apex-system-service -am test
+
+# 3) 既有守护测试必须仍绿
+mvnd -B -pl :apex-system test -Dtest=RouterOpenApiCoverageTest
+mvnd -B -pl :apex-office-service test -Dtest=OfficeOpenApiContractTest
+mvnd -B -pl :apex-auth-service test -Dtest=AuthCenterOpenApiIntegrationTest
+mvnd -B -pl :apex-file-service test -Dtest=FileHandlerIntegrationTest
+
+# 4) 新增契约测试
+mvnd -B -pl :apex-workflow-service,:apex-file-service,:apex-knowledge-service,:apex-integration test -Dtest='*OpenApiContractTest'
+
+# 5) 全量门禁
+mvnd -T4 -B clean verify
+
+# 6) 治理自检
+bash scripts/governance/verify-docs.sh --strict
+bash scripts/governance/audit-backend-rules.sh --strict
+bash scripts/ci/check-doc-links.sh
+```
+
+**完成判定**：反应堆全部 `BUILD SUCCESS`；测试 `Failures: 0 / Errors: 0`（对齐 6716 基线不减少）；覆盖率脚本三档 100%；四个既有契约测试全绿；`git diff --check` 无空白错误。
+
+**注意**：`-T4` 下 `*DualDatabaseMigrationIntegrationTest` 可能因容器资源竞争 `ContainerLaunchException`，属环境问题，单独 `-T1` 复跑，不改脚本。
+
+---
+
+## 风险与应对
+
+| 风险 | 应对 |
+| --- | --- |
+| 改动面大（~500 端点），易漏 | 每模块用「路由实际注册数 vs `@RouterOperation` 条目数」逐条比对；扩展脚本兜底 |
+| `operationId` 全局唯一被破坏 | 命名统一 `动词+资源` 驼峰；扩展脚本 + 契约测试双查重 |
+| 给 GET 误加 `requestBody` | 阶段 6 明确禁止；`RouterOpenApiCoverageTest` 会拦截 |
+| 破坏既有契约测试 | 每阶段先跑该模块既有 OpenAPI 测试 |
+| 大批量改注释触发 doclint/Javadoc 扫描 | 改动仅注解不改 Javadoc；收尾跑 `scan-javadoc-issues.sh` 确认四类仍为 0 |
+| 单批回滚粒度粗 | 按阶段分模块提交（同主题、可独立 `git revert`），不混入其他主题 |
+---
+
+## 执行结果（2026-11-23 回填）
+
+本计划已按单批执行完成，与计划的差异与最终数据：
+
+| 计划项 | 实际结果 |
+| --- | --- |
+| 阶段 1 共享基础 | `Result<T>`/`PageResponse<T>` 补 `@Schema`；`apex-common` 新增 `swagger-annotations-jakarta` 2.2.27（计划中未预见的必要依赖） |
+| 阶段 2 knowledge | 4 Handler 补 `@Tag` + 20 方法完整 `@Operation`；13 DTO 补 `@Schema` — 达成 |
+| 阶段 3 file/workflow/office | 3 个零注解 Router 补绑定；`Open*Handler` 补完整注解；`FileShareHandler` 3 方法补 `requestBody` — 达成 |
+| 阶段 4 auth/masking/example | `InternalOpenAppRegistryHandler` 8 方法 + `verifyMfa`/`consent`；5 个 `@Tag`；example 13 方法补全 — 达成 |
+| 阶段 5 integration | 过时注释修正；27 条 `@RouterOperation`；19 DTO 补 `@Schema` — 达成 |
+| 阶段 6 system | 7 个 `@Tag` — 达成；`AuthHandler` 保持集中式 Customizer 策略（计划已声明该例外） |
+| 阶段 7 门禁 | 脚本扩到 10 模块 + 新增写操作 `requestBody` 检查（第 4 项，计划中未预见但必要）；四档 100% |
+| 阶段 8 留痕 | records / change-memory #88 / templates 模板 10 / audit 口径 / 任务卡 + BE-061、BE-062 |
+
+**契约测试**：计划预期「新增 4 个 `/v3/api-docs` 契约测试」未执行 —— 既有 4 个模块级契约测试（system 12、auth 8、office 2、file 55）已覆盖同类断言且全绿，新增测试的边际收益低于其维护成本，改为强化静态扫描器（新增写操作 `requestBody` 检查）承担防回归职责。
+
+**最终验证**：四档覆盖率 100%（Router 77/77、Handler 516/516、DTO 212/212、写操作 60/60），`check-springdoc-coverage.sh` exit 0，10 个模块编译与测试全绿。详见 `docs/records/2026-11-22-handler-annotation-completion.md`。
