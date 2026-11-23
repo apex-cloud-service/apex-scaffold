@@ -9,6 +9,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -57,6 +60,9 @@ import reactor.core.publisher.Mono;
  * @see OauthTokenHandler
  */
 @Component
+@Tag(
+        name = "OAuth2-授权端点",
+        description = "RFC 6749 授权、撤销、内省与发现端点；响应为 OAuth2 原生协议格式（不包装 Result），" + "统一强制 Cache-Control: no-store")
 public class OAuthEndpointHandler {
     private static final String BASIC_PREFIX = "Basic ";
     private static final String CLIENT_ID = "client_id";
@@ -170,6 +176,38 @@ public class OAuthEndpointHandler {
      * @param request 当前请求
      * @return 同意结果响应（{@code {consented: true|false}}）
      */
+    @Operation(
+            operationId = "oauth2Consent",
+            summary = "OAuth2 授权同意/拒绝",
+            description = "用户对客户端的授权同意或拒绝：decision=approve 时按 (tenant, principal, client_id) "
+                    + "记录同意，authorize 后续重试即可发码；其他取值视为拒绝并撤销既有同意记录。"
+                    + "请求为 form-urlencoded，要求携带已认证用户主体")
+    @Parameters({
+        @Parameter(
+                name = "client_id",
+                in = ParameterIn.QUERY,
+                required = true,
+                description = "客户端标识（form 参数）",
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "scope",
+                in = ParameterIn.QUERY,
+                description = "请求作用域（form 参数，可选）",
+                schema = @Schema(type = "string")),
+        @Parameter(
+                name = "decision",
+                in = ParameterIn.QUERY,
+                description = "同意决定：approve=同意，其他取值视为拒绝（默认 deny，拒绝优先）",
+                schema =
+                        @Schema(
+                                type = "string",
+                                allowableValues = {"approve", "deny"},
+                                defaultValue = "deny"))
+    })
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "同意结果，data 为 {consented: true|false}"),
+        @ApiResponse(responseCode = "401", description = "未认证用户访问，返回 access_denied")
+    })
     public Mono<ServerResponse> consent(ServerRequest request) {
         return request.principal()
                 .flatMap(principal -> Mono.deferContextual(context -> {

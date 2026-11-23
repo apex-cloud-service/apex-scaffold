@@ -8,6 +8,7 @@ import com.apex.scaffold.common.annotation.OperationLog;
 import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -24,6 +25,7 @@ import reactor.core.publisher.Mono;
  */
 @Component
 @RequiredArgsConstructor
+@Tag(name = "统一授权-内部快照", description = "仅供有效专用 reader 读取当前 Token 租户的授权快照")
 public class UnifiedAuthorizationHandler {
     private final UnifiedAuthorizationQueryService service;
     private final Environment environment;

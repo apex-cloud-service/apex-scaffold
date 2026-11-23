@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.interfaces.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,8 +17,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "DeviceStatsResponse", description = "设备统计响应；契约固定，deviceCount 字段名不得变更")
 public class DeviceStatsResponse {
 
     /** 租户内设备总数。 */
+    @Schema(
+            description = "租户内设备总数；契约固定字段名",
+            example = "128",
+            type = "integer",
+            format = "int64",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private long deviceCount;
 }

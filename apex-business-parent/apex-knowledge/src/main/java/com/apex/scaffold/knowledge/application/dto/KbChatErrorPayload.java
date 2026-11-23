@@ -3,6 +3,7 @@ package com.apex.scaffold.knowledge.application.dto;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.apex.scaffold.common.result.ResultCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,7 +16,18 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.3.2
  */
 @Slf4j
-public record KbChatErrorPayload(String code, String message) {
+@Schema(name = "KbChatErrorPayload", description = "问答 SSE 错误事件载荷；技术错误使用固定中文提示，不透传内部细节")
+public record KbChatErrorPayload(
+        @Schema(
+                        description = "字符串错误码；业务异常取 ResultCode，其他异常为 -1",
+                        example = "400",
+                        requiredMode = Schema.RequiredMode.REQUIRED)
+                String code,
+        @Schema(
+                        description = "安全的用户提示语，不透出内部技术细节",
+                        example = "问答服务暂时不可用，请稍后重试",
+                        requiredMode = Schema.RequiredMode.REQUIRED)
+                String message) {
 
     private static final String FALLBACK_MESSAGE = "问答服务暂时不可用，请稍后重试";
 

@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.interfaces.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -13,14 +14,21 @@ import lombok.Data;
  * @since 1.3.1
  */
 @Data
+@Schema(name = "MqttAclRequest", description = "MQTT 授权钩子请求（EMQX HTTP Authorize 规范）；按租户 topic 命名空间返回 allow/deny")
 public class MqttAclRequest {
 
     /** EMQX username（{@code {tenantCode}/{deviceKey}} 复合形态）。 */
+    @Schema(description = "EMQX username，{tenantCode}/{deviceKey} 复合形态", example = "default/dev-0001")
     private String username;
 
     /** 被访问的 topic。 */
+    @Schema(description = "被访问的 topic", example = "apex/default/dev-0001/up")
     private String topic;
 
     /** 动作：publish / subscribe。 */
+    @Schema(
+            description = "MQTT 动作",
+            example = "publish",
+            allowableValues = {"publish", "subscribe"})
     private String action;
 }

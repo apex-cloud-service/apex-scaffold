@@ -11,6 +11,12 @@ import com.apex.scaffold.infrastructure.excel.ExcelExportService;
 import com.apex.scaffold.interfaces.handler.BaseHandler;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import java.time.LocalDateTime;
@@ -53,6 +59,14 @@ import reactor.core.publisher.Mono;
 @Tag(name = "示例模块-能力演示", description = "脚手架核心能力开箱即用演示")
 public class ExampleCapabilityHandler extends BaseHandler {
 
+    /** 字符串结果的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "ExampleCapabilityStringResult")
+    public static class StringResult extends Result<String> {}
+
+    /** 映射结果的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "ExampleCapabilityMapResult")
+    public static class MapResult extends Result<Map<String, Object>> {}
+
     /** xlsx 附件响应类型。 */
     private static final MediaType XLSX_MEDIA_TYPE =
             MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -87,7 +101,22 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @param request HTTP 请求（路径参数 key 为业务键）
      * @return 缓存值 + 底层加载次数
      */
-    @Operation(summary = "缓存读穿演示", description = "多级缓存 getWithLoader：首次加载回填，后续命中缓存")
+    @Operation(
+            operationId = "exampleGetCacheValue",
+            summary = "缓存读穿演示",
+            description = "示例接口：多级缓存 getWithLoader，首次加载回填，后续命中缓存")
+    @Parameter(
+            name = "key",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "业务缓存键",
+            schema = @Schema(type = "string", example = "demo-key"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "读取成功，data 为缓存值与底层加载次数",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = MapResult.class)))
+    })
     @OperationLog(
             module = "ExampleCapability",
             type = OperationLog.OperationType.SELECT,
@@ -105,7 +134,19 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @param request HTTP 请求（路径参数 key 为业务键）
      * @return 删除的缓存键数量
      */
-    @Operation(summary = "缓存失效演示", description = "主动删除指定缓存键")
+    @Operation(operationId = "exampleEvictCache", summary = "缓存失效演示", description = "示例接口：主动删除指定缓存键")
+    @Parameter(
+            name = "key",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "业务缓存键",
+            schema = @Schema(type = "string", example = "demo-key"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "删除成功，data.deleted 为删除的缓存键数量",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = MapResult.class)))
+    })
     @OperationLog(
             module = "ExampleCapability",
             type = OperationLog.OperationType.OTHER,
@@ -128,7 +169,24 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @param request HTTP 请求（需携带 Idempotency-Key 请求头）
      * @return 幂等处理结果（含请求头中的幂等键）
      */
-    @Operation(summary = "写接口幂等演示", description = "@IdempotentApi：相同 Idempotency-Key 窗口内重复请求被拒绝")
+    @Operation(
+            operationId = "exampleIdempotentDemo",
+            summary = "写接口幂等演示",
+            description = "示例接口：@IdempotentApi 基于 Redis SETNX 去重，相同 Idempotency-Key 在 TTL 窗口内" + "的重复请求被拒绝，业务方法只执行一次")
+    @Parameter(
+            name = "Idempotency-Key",
+            in = ParameterIn.HEADER,
+            required = true,
+            description = "幂等键；客户端重试须复用同一值",
+            schema = @Schema(type = "string", example = "demo-idem-key-001"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "首次处理成功，data 为幂等键与处理时间",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = MapResult.class))),
+        @ApiResponse(responseCode = "400", description = "缺少 Idempotency-Key 请求头"),
+        @ApiResponse(responseCode = "409", description = "TTL 窗口内重复提交，已被幂等拦截")
+    })
     @IdempotentApi(header = "Idempotency-Key", expireTime = 60)
     @OperationLog(
             module = "ExampleCapability",
@@ -157,7 +215,16 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return 审计记录结果
      */
-    @Operation(summary = "操作审计演示", description = "@OperationLog：写操作自动落审计日志（sys_operation_log）")
+    @Operation(
+            operationId = "exampleAuditDemo",
+            summary = "操作审计演示",
+            description = "示例接口：@OperationLog 由切面自动记录操作人、模块、动作与请求/响应摘要至" + " sys_operation_log，支撑等保审计回溯")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "已记录审计日志",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = MapResult.class)))
+    })
     @OperationLog(
             module = "示例模块",
             type = OperationLog.OperationType.INSERT,
@@ -178,7 +245,16 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return SSE 事件流
      */
-    @Operation(summary = "SSE 实时推送演示", description = "服务端事件流：每秒心跳一条，共 10 条")
+    @Operation(
+            operationId = "exampleStreamDemo",
+            summary = "SSE 实时推送演示",
+            description = "示例接口：返回 text/event-stream 流式响应，每秒推送一条 heartbeat，共 10 条后自动结束")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "SSE 事件流，事件类型 heartbeat",
+                content = @Content(mediaType = "text/event-stream", schema = @Schema(type = "string")))
+    })
     @OperationLog(
             module = "ExampleCapability",
             type = OperationLog.OperationType.OTHER,
@@ -199,7 +275,36 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @param request HTTP 请求（query 参数 phone/idCard/email/name）
      * @return 脱敏后的字段映射
      */
-    @Operation(summary = "数据脱敏演示", description = "手机号/身份证/邮箱/姓名标准脱敏输出")
+    @Operation(
+            operationId = "exampleMaskDemo",
+            summary = "数据脱敏演示",
+            description = "示例接口：手机号/身份证/邮箱/姓名标准脱敏输出；全部参数可选，缺省使用演示值")
+    @Parameter(
+            name = "phone",
+            in = ParameterIn.QUERY,
+            description = "待脱敏手机号，缺省 13800138000",
+            schema = @Schema(type = "string", example = "13800138000"))
+    @Parameter(
+            name = "idCard",
+            in = ParameterIn.QUERY,
+            description = "待脱敏身份证号，缺省 110101199003071234",
+            schema = @Schema(type = "string", example = "110101199003071234"))
+    @Parameter(
+            name = "email",
+            in = ParameterIn.QUERY,
+            description = "待脱敏邮箱，缺省 test@example.com",
+            schema = @Schema(type = "string", example = "test@example.com"))
+    @Parameter(
+            name = "name",
+            in = ParameterIn.QUERY,
+            description = "待脱敏姓名，缺省 张三",
+            schema = @Schema(type = "string", example = "张三"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "脱敏成功，data 为脱敏后的字段映射",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = MapResult.class)))
+    })
     @OperationLog(
             module = "ExampleCapability",
             type = OperationLog.OperationType.OTHER,
@@ -223,7 +328,19 @@ public class ExampleCapabilityHandler extends BaseHandler {
      * @param request HTTP 请求
      * @return xlsx 文件流（attachment 下载）
      */
-    @Operation(summary = "Excel 导出演示", description = "EasyExcel 导出用户清单 xlsx 附件")
+    @Operation(
+            operationId = "exampleExportUsers",
+            summary = "Excel 导出演示",
+            description = "示例接口：基于 EasyExcel 将内存数据导出为 xlsx 附件流；响应为二进制附件而非 Result 包装")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "xlsx 附件流（Content-Disposition: attachment; filename=users.xlsx）",
+                content =
+                        @Content(
+                                mediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                schema = @Schema(type = "string", format = "binary")))
+    })
     @OperationLog(
             module = "ExampleCapability",
             type = OperationLog.OperationType.EXPORT,

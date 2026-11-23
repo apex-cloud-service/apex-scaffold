@@ -3,6 +3,7 @@ package com.apex.example.handler;
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
 import com.apex.example.dto.CreateUserRequest;
+import com.apex.example.dto.UserResponse;
 import com.apex.example.service.ExampleUserService;
 import com.apex.scaffold.common.annotation.FeatureGate;
 import com.apex.scaffold.common.annotation.OperationLog;
@@ -12,6 +13,13 @@ import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.interfaces.handler.BaseHandler;
 import com.apex.scaffold.interfaces.util.MessageUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import java.time.LocalDate;
@@ -49,6 +57,22 @@ import reactor.core.publisher.Mono;
 @Tag(name = "示例模块-用户管理", description = "展示脚手架的使用方法")
 public class ExampleUserHandler extends BaseHandler {
 
+    /** 创建用户结果的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "ExampleUserResult")
+    public static class ExampleUserCreateResult extends Result<UserResponse> {}
+
+    /** 用户分页的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "ExampleUserPageResult")
+    public static class ExampleUserPageResult extends Result<com.apex.scaffold.common.dto.PageResponse<UserResponse>> {}
+
+    /** 字符串结果的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "ExampleStringResult")
+    public static class ExampleStringResult extends Result<String> {}
+
+    /** 报表结果的统一响应结构，仅用于接口文档。 */
+    @Schema(name = "ExampleReportResult")
+    public static class ExampleReportResult extends Result<Map<String, Object>> {}
+
     /** 分页参数默认值：页码。 */
     private static final int DEFAULT_PAGE_NUM = 1;
 
@@ -78,7 +102,27 @@ public class ExampleUserHandler extends BaseHandler {
      * @param request HTTP请求
      * @return 响应结果
      */
-    @Operation(summary = "创建用户", description = "创建一个新用户")
+    @Operation(
+            operationId = "exampleCreateUser",
+            summary = "创建用户",
+            description = "示例接口：演示 Handler + RouterFunction 的标准写法，含请求体校验、统一响应与审计注解")
+    @RequestBody(
+            required = true,
+            description = "创建用户请求",
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CreateUserRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "创建成功，data 为创建后的用户",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ExampleUserCreateResult.class))),
+        @ApiResponse(responseCode = "400", description = "请求体缺失或字段校验失败")
+    })
     @OperationLog(
             module = "ExampleUser",
             type = OperationLog.OperationType.INSERT,
@@ -99,7 +143,24 @@ public class ExampleUserHandler extends BaseHandler {
      * @param request HTTP请求
      * @return 响应结果
      */
-    @Operation(summary = "查询用户", description = "根据ID查询用户详情")
+    @Operation(operationId = "exampleGetUser", summary = "查询用户", description = "示例接口：根据路径参数 ID 查询用户详情")
+    @Parameter(
+            name = "id",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "用户 ID",
+            schema = @Schema(type = "integer", format = "int64", minimum = "1"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为用户详情",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ExampleUserCreateResult.class))),
+        @ApiResponse(responseCode = "400", description = "用户 ID 格式非法"),
+        @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @OperationLog(
             module = "ExampleUser",
             type = OperationLog.OperationType.SELECT,
@@ -121,7 +182,30 @@ public class ExampleUserHandler extends BaseHandler {
      * @param request HTTP请求
      * @return 分页响应结果
      */
-    @Operation(summary = "分页查询用户列表", description = "支持 pageNum/pageSize 分页参数")
+    @Operation(
+            operationId = "exampleListUsers",
+            summary = "分页查询用户列表",
+            description = "示例接口：支持 pageNum/pageSize 分页参数，返回统一分页模型 PageResponse；pageSize 上限 100")
+    @Parameter(
+            name = "pageNum",
+            in = ParameterIn.QUERY,
+            description = "页码，从 1 开始，缺省 1",
+            schema = @Schema(type = "integer", format = "int64", defaultValue = "1", minimum = "1"))
+    @Parameter(
+            name = "pageSize",
+            in = ParameterIn.QUERY,
+            description = "每页数量，缺省 10，上限 100",
+            schema = @Schema(type = "integer", format = "int64", defaultValue = "10", minimum = "1", maximum = "100"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "查询成功，data 为用户分页结果",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ExampleUserPageResult.class))),
+        @ApiResponse(responseCode = "400", description = "分页参数非法（小于 1 或超过上限）")
+    })
     @OperationLog(
             module = "ExampleUser",
             type = OperationLog.OperationType.SELECT,
@@ -146,7 +230,31 @@ public class ExampleUserHandler extends BaseHandler {
      * @param request HTTP请求
      * @return 响应结果
      */
-    @Operation(summary = "更新用户", description = "根据ID更新用户信息")
+    @Operation(operationId = "exampleUpdateUser", summary = "更新用户", description = "示例接口：根据路径参数 ID 整体更新用户信息")
+    @Parameter(
+            name = "id",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "用户 ID",
+            schema = @Schema(type = "integer", format = "int64", minimum = "1"))
+    @RequestBody(
+            required = true,
+            description = "更新用户请求",
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CreateUserRequest.class)))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "更新成功，data 为更新后的用户",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ExampleUserCreateResult.class))),
+        @ApiResponse(responseCode = "400", description = "用户 ID 格式非法、请求体缺失或字段校验失败"),
+        @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @OperationLog(
             module = "ExampleUser",
             type = OperationLog.OperationType.UPDATE,
@@ -169,7 +277,24 @@ public class ExampleUserHandler extends BaseHandler {
      * @param request HTTP请求
      * @return 响应结果
      */
-    @Operation(summary = "删除用户", description = "根据ID逻辑删除用户")
+    @Operation(operationId = "exampleDeleteUser", summary = "删除用户", description = "示例接口：根据路径参数 ID 逻辑删除用户（保留记录，仅置删除标记）")
+    @Parameter(
+            name = "id",
+            in = ParameterIn.PATH,
+            required = true,
+            description = "用户 ID",
+            schema = @Schema(type = "integer", format = "int64", minimum = "1"))
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "删除成功，data 为结果提示文本",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ExampleStringResult.class))),
+        @ApiResponse(responseCode = "400", description = "用户 ID 格式非法"),
+        @ApiResponse(responseCode = "404", description = "用户不存在")
+    })
     @OperationLog(
             module = "ExampleUser",
             type = OperationLog.OperationType.DELETE,
@@ -193,7 +318,21 @@ public class ExampleUserHandler extends BaseHandler {
      * @param request HTTP请求
      * @return 响应结果
      */
-    @Operation(summary = "高级运营报表(商业版)", description = "@FeatureGate示例: 需标准版/企业版License授权 premium_report 功能")
+    @Operation(
+            operationId = "examplePremiumReport",
+            summary = "高级运营报表（商业版）",
+            description = "示例接口：@FeatureGate 用法示范，需标准版/企业版 License 授权 premium_report 功能；"
+                    + "未授权时由 FeatureGateAspect 返回权限不足错误")
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "生成成功，data 为报表字段",
+                content =
+                        @Content(
+                                mediaType = "application/json",
+                                schema = @Schema(implementation = ExampleReportResult.class))),
+        @ApiResponse(responseCode = "403", description = "License 未授权 premium_report 功能")
+    })
     @FeatureGate(value = "premium_report", message = "高级运营报表需要标准版或企业版License,请升级后重试")
     @OperationLog(
             module = "ExampleUser",

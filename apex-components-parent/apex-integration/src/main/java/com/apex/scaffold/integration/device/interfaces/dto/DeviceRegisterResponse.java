@@ -2,6 +2,7 @@ package com.apex.scaffold.integration.device.interfaces.dto;
 
 import com.apex.scaffold.integration.device.application.DeviceRegistration;
 import com.apex.scaffold.integration.device.domain.Device;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -17,9 +18,11 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Schema(name = "DeviceRegisterResponse", description = "设备注册响应；secret 为服务端生成的一次性明文凭据（服务端仅存哈希）")
 public class DeviceRegisterResponse extends DeviceResponse {
 
     /** 明文 secret（仅此一次）。 */
+    @Schema(description = "设备明文凭据，仅在本次注册响应出现一次；设备侧须自行持久化")
     private String secret;
 
     /**

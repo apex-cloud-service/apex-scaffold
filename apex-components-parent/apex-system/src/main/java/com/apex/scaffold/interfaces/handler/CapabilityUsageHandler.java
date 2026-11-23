@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "能力-调用用量", description = "按日期区间分页查询租户能力调用用量统计")
 public class CapabilityUsageHandler {
 
     private final CapabilityUsageService capabilityUsageService;

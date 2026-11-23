@@ -156,6 +156,24 @@ public class AuthenticationHandler {
      * @param request 当前请求
      * @return 登录响应（正式令牌）
      */
+    @Operation(
+            operationId = "verifyMfa",
+            summary = "MFA 二步验证",
+            description = "以登录返回的挑战凭据 + TOTP 验证码交换正式令牌；成功返回与登录同构的登录响应，" + "挑战凭据无效或验证码错误按 401 处理")
+    @RequestBody(
+            required = true,
+            description = "MFA 验证请求",
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema =
+                                    @Schema(
+                                            implementation =
+                                                    com.apex.scaffold.auth.application.dto.MfaVerifyRequest.class)))
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "验证通过，返回正式令牌"),
+        @ApiResponse(responseCode = "401", description = "挑战凭据无效、已过期或 TOTP 验证码错误")
+    })
     public Mono<ServerResponse> verifyMfa(ServerRequest request) {
         String clientIp = request.remoteAddress()
                 .map(addr -> addr.getAddress().getHostAddress())

@@ -3,6 +3,7 @@ package com.apex.scaffold.integration.device.interfaces.dto;
 import com.apex.scaffold.integration.device.domain.Device;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.Data;
@@ -17,27 +18,41 @@ import lombok.Data;
  * @since 1.3.1
  */
 @Data
+@Schema(name = "DeviceResponse", description = "设备响应；不含凭据哈希")
 public class DeviceResponse {
 
+    @Schema(description = "设备主键 ID", example = "1", type = "integer", format = "int64")
     private Long id;
 
+    @Schema(description = "所属租户 ID", example = "default")
     private String tenantId;
 
+    @Schema(description = "设备标识", example = "dev-0001")
     private String deviceKey;
 
+    @Schema(description = "X.509 证书指纹", example = "AB:CD:EF:01:23:45:67:89")
     private String certFingerprint;
 
     /** 状态（online/offline）。 */
+    @Schema(
+            description = "设备在线状态",
+            example = "online",
+            allowableValues = {"online", "offline"})
     private String status;
 
+    @Schema(description = "固件版本", example = "1.4.2")
     private String firmwareVersion;
 
+    @Schema(description = "设备标签键值对", example = "{\"site\":\"shenzhen\",\"line\":\"A\"}")
     private Map<String, String> labels;
 
+    @Schema(description = "最近活跃时间", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime lastActiveAt;
 
+    @Schema(description = "创建时间", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime createTime;
 
+    @Schema(description = "更新时间", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime updateTime;
 
     /**

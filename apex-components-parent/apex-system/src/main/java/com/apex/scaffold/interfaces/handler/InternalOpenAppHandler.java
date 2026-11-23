@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Tag(name = "内部契约-开放应用限流", description = "供网关按 clientId 消费的分档限流查询；集群内直连，不经网关")
 public class InternalOpenAppHandler {
 
     /** 默认限流档（与 {@code OpenAppAdminService} 兜底口径一致） */

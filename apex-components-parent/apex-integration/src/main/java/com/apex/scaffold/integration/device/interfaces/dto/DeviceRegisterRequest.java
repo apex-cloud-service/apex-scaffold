@@ -1,5 +1,6 @@
 package com.apex.scaffold.integration.device.interfaces.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Map;
@@ -15,21 +16,30 @@ import lombok.Data;
  * @since 1.3.1
  */
 @Data
+@Schema(name = "DeviceRegisterRequest", description = "设备注册请求；secret 由服务端生成，不在请求中出现")
 public class DeviceRegisterRequest {
 
     /** 设备标识（租户内唯一，topic 命名空间段）。 */
     @NotBlank(message = "设备标识不能为空")
     @Size(max = 64, message = "设备标识最长 64 位")
+    @Schema(
+            description = "设备标识，租户内唯一，同时作为 MQTT topic 命名空间段",
+            example = "dev-0001",
+            maxLength = 64,
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String deviceKey;
 
     /** X.509 证书指纹（可空）。 */
     @Size(max = 128, message = "证书指纹最长 128 位")
+    @Schema(description = "X.509 证书指纹，可空", example = "AB:CD:EF:01:23:45:67:89", maxLength = 128)
     private String certFingerprint;
 
     /** 固件版本（可空）。 */
     @Size(max = 64, message = "固件版本最长 64 位")
+    @Schema(description = "固件版本，可空", example = "1.4.2", maxLength = 64)
     private String firmwareVersion;
 
     /** 标签（可空，键值对；序列化为 JSON 存储）。 */
+    @Schema(description = "设备标签键值对，可为空", example = "{\"site\":\"shenzhen\",\"line\":\"A\"}")
     private Map<String, String> labels;
 }

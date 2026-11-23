@@ -1,8 +1,11 @@
 package com.apex.scaffold.integration.connector.interfaces;
 
+import org.springdoc.core.annotations.RouterOperation;
+import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
@@ -21,8 +24,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *   <li>POST {@code /integration/v1/webhook/{connector}}</li>
  * </ul>
  *
- * <p>springdoc 元数据（{@code @RouterOperation}）暂未声明：本模块 POM 无
- * springdoc 传递依赖，待依赖补齐后补充。
+ * <p>{@code @RouterOperation} 只声明路由绑定；操作说明、参数、请求体与响应模型统一由
+ * {@link ConnectorConfigHandler}、{@link CredentialHandler}、{@link WebhookInboundHandler}
+ * 方法上的 SpringDoc 注解决定。本模块 POM 已声明 springdoc-webflux-api（optional），
+ * 无该依赖时不注册文档元数据，路由行为不变。
  *
  * @author Apex Team
  * @version 1.3.1
@@ -40,6 +45,63 @@ public class IntegrationConnectorRouter {
      * @return 路由函数
      */
     @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/integration/v1/connectors",
+                method = RequestMethod.GET,
+                beanClass = ConnectorConfigHandler.class,
+                beanMethod = "page"),
+        @RouterOperation(
+                path = "/integration/v1/connectors",
+                method = RequestMethod.POST,
+                beanClass = ConnectorConfigHandler.class,
+                beanMethod = "create"),
+        @RouterOperation(
+                path = "/integration/v1/connectors/{id}",
+                method = RequestMethod.GET,
+                beanClass = ConnectorConfigHandler.class,
+                beanMethod = "get"),
+        @RouterOperation(
+                path = "/integration/v1/connectors/{id}",
+                method = RequestMethod.PUT,
+                beanClass = ConnectorConfigHandler.class,
+                beanMethod = "update"),
+        @RouterOperation(
+                path = "/integration/v1/connectors/{id}",
+                method = RequestMethod.DELETE,
+                beanClass = ConnectorConfigHandler.class,
+                beanMethod = "delete"),
+        @RouterOperation(
+                path = "/integration/v1/credentials",
+                method = RequestMethod.GET,
+                beanClass = CredentialHandler.class,
+                beanMethod = "list"),
+        @RouterOperation(
+                path = "/integration/v1/credentials",
+                method = RequestMethod.POST,
+                beanClass = CredentialHandler.class,
+                beanMethod = "register"),
+        @RouterOperation(
+                path = "/integration/v1/credentials/{id}",
+                method = RequestMethod.GET,
+                beanClass = CredentialHandler.class,
+                beanMethod = "get"),
+        @RouterOperation(
+                path = "/integration/v1/credentials/{id}/rotate",
+                method = RequestMethod.PUT,
+                beanClass = CredentialHandler.class,
+                beanMethod = "rotate"),
+        @RouterOperation(
+                path = "/integration/v1/credentials/{id}",
+                method = RequestMethod.DELETE,
+                beanClass = CredentialHandler.class,
+                beanMethod = "delete"),
+        @RouterOperation(
+                path = "/integration/v1/webhook/{connector}",
+                method = RequestMethod.POST,
+                beanClass = WebhookInboundHandler.class,
+                beanMethod = "accept")
+    })
     public RouterFunction<ServerResponse> integrationConnectorRoutes(
             ConnectorConfigHandler connectorHandler,
             CredentialHandler credentialHandler,

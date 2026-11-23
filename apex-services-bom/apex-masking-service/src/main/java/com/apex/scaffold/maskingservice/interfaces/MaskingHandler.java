@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Validator;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import reactor.core.publisher.Mono;
  */
 @Component
 @RequiredArgsConstructor
+@Tag(name = "脱敏服务", description = "按当前 JWT 租户的固定版本规则批量脱敏 JSON 文档；不持久化请求内容")
 public class MaskingHandler {
     private final MaskingProperties properties;
     private final Validator validator;

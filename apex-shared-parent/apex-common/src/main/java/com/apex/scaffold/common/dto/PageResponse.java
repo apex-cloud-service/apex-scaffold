@@ -1,5 +1,6 @@
 package com.apex.scaffold.common.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
@@ -16,6 +17,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Schema(name = "PageResponse", description = "统一分页响应；list 为当前页数据，records 为其序列化别名")
 public class PageResponse<T> implements Serializable {
 
     /** 序列化版本号 */
@@ -32,6 +34,7 @@ public class PageResponse<T> implements Serializable {
      *
      * <p>当前页的数据集合
      */
+    @Schema(description = "当前页数据集合", requiredMode = Schema.RequiredMode.REQUIRED)
     private List<T> list;
 
     public List<T> getRecords() {
@@ -47,6 +50,12 @@ public class PageResponse<T> implements Serializable {
      *
      * <p>符合条件的所有记录数
      */
+    @Schema(
+            description = "符合条件的所有记录数",
+            example = "128",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            type = "integer",
+            format = "int64")
     private Long total;
 
     /**
@@ -54,6 +63,13 @@ public class PageResponse<T> implements Serializable {
      *
      * <p>从1开始
      */
+    @Schema(
+            description = "当前页码，从 1 开始",
+            example = "1",
+            minimum = "1",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            type = "integer",
+            format = "int32")
     private Integer pageNum;
 
     /**
@@ -61,6 +77,13 @@ public class PageResponse<T> implements Serializable {
      *
      * <p>每页显示的记录数
      */
+    @Schema(
+            description = "每页显示的记录数",
+            example = "20",
+            minimum = "1",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            type = "integer",
+            format = "int32")
     private Integer pageSize;
 
     /**
@@ -68,6 +91,12 @@ public class PageResponse<T> implements Serializable {
      *
      * <p>计算公式：ceil(total / pageSize)
      */
+    @Schema(
+            description = "总页数，计算公式 ceil(total / pageSize)",
+            example = "7",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            type = "integer",
+            format = "int32")
     private Integer pages;
 
     /**
@@ -75,6 +104,7 @@ public class PageResponse<T> implements Serializable {
      *
      * <p>当前页码小于总页数时返回true
      */
+    @Schema(description = "是否还有下一页；当前页码小于总页数时为 true", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean hasNext;
 
     /**

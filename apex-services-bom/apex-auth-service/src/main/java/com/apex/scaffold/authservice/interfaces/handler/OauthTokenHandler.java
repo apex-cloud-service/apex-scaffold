@@ -5,6 +5,7 @@ import com.apex.scaffold.auth.application.service.OAuth2Service.OAuthException;
 import com.apex.scaffold.auth.domain.service.UnifiedAuditService;
 import com.apex.scaffold.common.annotation.OperationLog;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -51,6 +52,10 @@ import reactor.core.publisher.Mono;
  * @see OAuthEndpointHandler
  */
 @Component
+@Tag(
+        name = "OAuth2-令牌端点",
+        description = "RFC 6749 Token Endpoint：支持 authorization_code/password/client_credentials/refresh_token；"
+                + "请求为 form-urlencoded，响应为 OAuth2 原生 JSON（不包装 Result）")
 public class OauthTokenHandler {
     private static final String BASIC_PREFIX = "Basic ";
     private static final String BASIC_CHALLENGE = "Basic realm=oauth2";

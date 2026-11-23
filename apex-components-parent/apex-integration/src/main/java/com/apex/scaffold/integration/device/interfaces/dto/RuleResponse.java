@@ -1,6 +1,7 @@
 package com.apex.scaffold.integration.device.interfaces.dto;
 
 import com.apex.scaffold.integration.device.domain.DeviceRule;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -11,20 +12,31 @@ import lombok.Data;
  * @since 1.3.1
  */
 @Data
+@Schema(name = "RuleResponse", description = "设备规则响应")
 public class RuleResponse {
 
+    @Schema(description = "规则主键 ID", example = "1", type = "integer", format = "int64")
     private Long id;
 
+    @Schema(description = "所属租户 ID", example = "default")
     private String tenantId;
 
+    @Schema(description = "规则名", example = "高温告警")
     private String ruleName;
 
+    @Schema(description = "结构化条件 JSON", example = "{\"field\":\"temperature\",\"op\":\">\",\"value\":80}")
     private String conditionJson;
 
+    @Schema(
+            description = "动作类型",
+            example = "WEBHOOK",
+            allowableValues = {"NOTIFY", "WEBHOOK", "EVENT"})
     private String actionType;
 
+    @Schema(description = "动作配置 JSON", example = "{\"connectorKey\":\"alarm-hook\"}")
     private String actionConfig;
 
+    @Schema(description = "是否启用", example = "true")
     private boolean enabled;
 
     /**

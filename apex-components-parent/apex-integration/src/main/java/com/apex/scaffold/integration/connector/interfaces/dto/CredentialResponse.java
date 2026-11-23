@@ -1,6 +1,7 @@
 package com.apex.scaffold.integration.connector.interfaces.dto;
 
 import com.apex.scaffold.integration.connector.domain.Credential;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -14,24 +15,36 @@ import lombok.Data;
  * @since 1.3.1
  */
 @Data
+@Schema(name = "CredentialResponse", description = "凭据响应；仅含元数据，不回显明文、密文与 IV")
 public class CredentialResponse {
 
+    @Schema(description = "凭据主键 ID", example = "1", type = "integer", format = "int64")
     private Long id;
 
+    @Schema(description = "所属租户 ID", example = "default")
     private String tenantId;
 
+    @Schema(description = "凭据标识", example = "erp-key")
     private String credentialKey;
 
+    @Schema(
+            description = "凭据类型",
+            example = "API_KEY",
+            allowableValues = {"API_KEY", "BASIC", "TOKEN", "X509"})
     private String credentialType;
 
     /** 凭据版本（轮换递增）。 */
+    @Schema(description = "凭据版本，每次轮换递增", example = "2", type = "integer", format = "int32")
     private Integer versionNo;
 
     /** 最近轮换时间。 */
+    @Schema(description = "最近轮换时间；从未轮换时为 null", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime rotatedAt;
 
+    @Schema(description = "创建时间", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime createTime;
 
+    @Schema(description = "更新时间", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime updateTime;
 
     /**

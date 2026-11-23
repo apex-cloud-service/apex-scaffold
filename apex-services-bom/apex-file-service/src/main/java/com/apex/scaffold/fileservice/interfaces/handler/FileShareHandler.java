@@ -78,6 +78,13 @@ public class FileShareHandler {
             required = true,
             in = ParameterIn.PATH,
             schema = @Schema(type = "integer", format = "int64"))
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "创建分享请求；expireSeconds 可省略，省略时使用服务端默认有效期",
+            required = false,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = FileShareCreateRequestDoc.class)))
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -222,6 +229,13 @@ public class FileShareHandler {
      * @return 兑换结果
      */
     @Operation(operationId = "exchangeFileShare", summary = "兑换文件分享", description = "匿名兑换，租户与文件完全由服务端分享记录确定")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "分享兑换请求；token 为创建分享时返回的明文令牌",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = FileShareTokenRequestDoc.class)))
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",
@@ -259,6 +273,13 @@ public class FileShareHandler {
      * @return 文件流响应
      */
     @Operation(operationId = "downloadFileShare", summary = "下载分享文件", description = "匿名兑换并代理下载，不签发可直接访问的存储地址")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "分享下载请求；token 为创建分享时返回的明文令牌，响应为文件二进制流",
+            required = true,
+            content =
+                    @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = FileShareTokenRequestDoc.class)))
     @ApiResponses({
         @ApiResponse(
                 responseCode = "200",

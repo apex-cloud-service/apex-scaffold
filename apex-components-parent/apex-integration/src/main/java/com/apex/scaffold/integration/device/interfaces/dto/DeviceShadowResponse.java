@@ -3,6 +3,7 @@ package com.apex.scaffold.integration.device.interfaces.dto;
 import com.apex.scaffold.integration.device.domain.DeviceShadow;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Data;
 
@@ -18,30 +19,41 @@ import lombok.Data;
  * @since 1.3.2
  */
 @Data
+@Schema(name = "DeviceShadowResponse", description = "设备影子响应；desired/reported 为解析后的 JSON 节点，解析失败时回退原始文本")
 public class DeviceShadowResponse {
 
+    @Schema(description = "影子主键 ID", example = "1", type = "integer", format = "int64")
     private Long id;
 
+    @Schema(description = "所属租户 ID", example = "default")
     private String tenantId;
 
+    @Schema(description = "设备标识", example = "dev-0001")
     private String deviceKey;
 
     /** 期望状态（JSON 节点；原文非法时为 null）。 */
+    @Schema(description = "期望状态 JSON 节点；原文非法时为 null", example = "{\"interval\":30}")
     private JsonNode desired;
 
     /** 上报状态（JSON 节点；原文非法时为 null）。 */
+    @Schema(description = "上报状态 JSON 节点；原文非法时为 null", example = "{\"interval\":30,\"battery\":88}")
     private JsonNode reported;
 
     /** 期望/上报状态的原始 JSON 文本（解析失败时的排障依据）。 */
+    @Schema(description = "期望状态的原始 JSON 文本，用于解析失败时排障", example = "{\"interval\":30}")
     private String desiredRaw;
 
+    @Schema(description = "上报状态的原始 JSON 文本，用于解析失败时排障", example = "{\"interval\":30,\"battery\":88}")
     private String reportedRaw;
 
     /** 影子版本（乐观锁）。 */
+    @Schema(description = "影子版本号（乐观锁），写操作可回传作为期望版本", example = "3", type = "integer", format = "int32")
     private Integer version;
 
+    @Schema(description = "创建时间", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime createTime;
 
+    @Schema(description = "更新时间", example = "2026-11-22T10:15:30", type = "string", format = "date-time")
     private LocalDateTime updateTime;
 
     /**

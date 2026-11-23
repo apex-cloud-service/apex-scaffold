@@ -7,6 +7,7 @@ import com.apex.scaffold.common.result.Result;
 import com.apex.scaffold.common.result.ResultCode;
 import com.apex.scaffold.contract.dto.internal.TokenValidationRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,7 @@ import reactor.core.publisher.Mono;
  */
 @Component
 @RequiredArgsConstructor
+@Tag(name = "内部契约-认证", description = "仅供集群内部已验签调用：用户权限快照、令牌校验与撤销增量流；不经网关")
 public class InternalAuthHandler {
 
     /** 内部认证应用服务 */

@@ -92,6 +92,10 @@ public class WebhookInboundHandler {
         @ApiResponse(responseCode = "401", description = "缺少签名请求头或验签失败"),
         @ApiResponse(responseCode = "400", description = "连接器配置不存在或请求非法")
     })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "外部系统原始 webhook 载荷，按连接器约定原样提交；签名与时间戳取 X-Signature/X-Timestamp 头",
+            required = true,
+            content = @Content(mediaType = "application/json", schema = @Schema(type = "object")))
     public Mono<ServerResponse> accept(ServerRequest request) {
         String connectorKey = request.pathVariable("connector");
         String signature = request.headers().firstHeader(SIGNATURE_HEADER);

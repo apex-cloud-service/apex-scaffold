@@ -1,6 +1,7 @@
 package com.apex.scaffold.common.result;
 
 import com.apex.scaffold.common.error.ErrorCode;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(name = "Result", description = "统一响应结构；code=0 表示业务成功（注意不是 HTTP 200），业务失败仍可能使用 HTTP 200")
 public class Result<T> implements Serializable {
 
     /** 序列化版本号 */
@@ -35,15 +37,27 @@ public class Result<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 响应状态码 */
+    @Schema(
+            description = "业务状态码；0 表示成功，其余见 ResultCode",
+            example = "0",
+            requiredMode = Schema.RequiredMode.REQUIRED,
+            type = "integer",
+            format = "int32")
     private Integer code;
 
     /** 响应消息 */
+    @Schema(description = "面向调用方的结果说明", example = "操作成功", requiredMode = Schema.RequiredMode.REQUIRED)
     private String msg;
 
     /** 响应数据 */
+    @Schema(description = "业务数据；具体字段见各接口成功响应模型，无数据时为 null", nullable = true)
     private T data;
 
     /** 追踪ID，用于链路追踪 */
+    @Schema(
+            description = "链路追踪 ID，反馈问题时请一并提供",
+            example = "01JAZ8Y7N2M4P6Q8R0STUVWX12",
+            requiredMode = Schema.RequiredMode.REQUIRED)
     private String traceId;
 
     /**
