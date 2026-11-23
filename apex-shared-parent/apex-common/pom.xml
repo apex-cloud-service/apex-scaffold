@@ -56,6 +56,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
+        <!-- swagger 注解（仅注解，无运行时框架）：供 Result/PageResponse 等共享 DTO 描述
+             请求体与响应体字段。共享 DTO 的 @Schema 属编译期契约，故为常规 compile 依赖，
+             保证下游模块能读到注解（不含 springdoc 运行期框架，不引入额外自动装配）。 -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
