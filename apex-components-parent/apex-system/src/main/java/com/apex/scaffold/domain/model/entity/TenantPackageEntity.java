@@ -28,6 +28,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class TenantPackageEntity {
 
+    private static final int MAX_PARENT_CHAIN_DEPTH = 32;
+
     /**
      * 平台全量套餐编码（种子内置）。
      *
@@ -121,7 +123,7 @@ public class TenantPackageEntity {
         for (Long menuId : menuIds) {
             Long parent = parentIdResolver.apply(menuId);
             int guard = 0;
-            while (parent != null && parent > 0 && completed.add(parent) && guard++ < 32) {
+            while (parent != null && parent > 0 && completed.add(parent) && guard++ < MAX_PARENT_CHAIN_DEPTH) {
                 parent = parentIdResolver.apply(parent);
             }
         }

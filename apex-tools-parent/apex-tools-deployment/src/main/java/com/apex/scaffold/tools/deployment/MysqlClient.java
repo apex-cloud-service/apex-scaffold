@@ -6,11 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -25,10 +27,15 @@ import java.util.concurrent.TimeoutException;
 public class MysqlClient implements RecoverClient {
 
     /** 单条语句最长执行时间。 */
-    private static final long TIMEOUT_SECONDS = 90;
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(90);
 
-    /** 输出读取线程的回收等待时间。 */
+    /** 子进程退出后的管道任务等待时间。 */
     private static final long DRAIN_JOIN_MILLIS = 5000;
+
+    /** 标准输入、输出和错误各占一个专用线程。 */
+    private static final int PIPE_WORKERS = 3;
+
+    private static final String NEWLINE = "\n";
 
     /** 统一使用 utf8mb4，避免中文数据被客户端截断。 */
     private static final List<String> CLIENT_OPTIONS =
@@ -40,6 +47,8 @@ public class MysqlClient implements RecoverClient {
 
     private final String database;
 
+    private final Duration timeout;
+
     /**
      * 构造客户端。
      *
@@ -47,8 +56,13 @@ public class MysqlClient implements RecoverClient {
      * @param database 目标数据库
      */
     public MysqlClient(List<String> command, String database) {
+        this(command, database, DEFAULT_TIMEOUT);
+    }
+
+    MysqlClient(List<String> command, String database, Duration timeout) {
         this.command = command;
         this.database = database;
+        this.timeout = timeout;
     }
 
     @Override
@@ -61,18 +75,39 @@ public class MysqlClient implements RecoverClient {
         List<String> full = new ArrayList<>(command);
         full.addAll(CLIENT_OPTIONS);
         full.add(database);
-        Process process = new ProcessBuilder(full).start();
-        write(process, sql);
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {
-            Future<?> outDrain = pool.submit(() -> drain(process.getInputStream(), stdout));
-            Future<?> errDrain = pool.submit(() -> drain(process.getErrorStream(), OutputStream.nullOutputStream()));
-            waitFor(process);
-            outDrain.get(DRAIN_JOIN_MILLIS, TimeUnit.MILLISECONDS);
-            errDrain.get(DRAIN_JOIN_MILLIS, TimeUnit.MILLISECONDS);
-        }
-        if (process.exitValue() != 0) {
-            throw new IllegalStateException("mysql command failed; inspect server locally (output withheld)");
+        ExecutorService io = new ThreadPoolExecutor(
+                PIPE_WORKERS,
+                PIPE_WORKERS,
+                0L,
+                TimeUnit.MILLISECONDS,
+                new SynchronousQueue<>(),
+                Thread.ofPlatform().daemon().name("apex-mysql-io-", 0).factory());
+        try {
+            Process process = new ProcessBuilder(full).start();
+            try {
+                Future<?> outDrain = io.submit(() -> drain(process.getInputStream(), stdout));
+                Future<?> errDrain = io.submit(() -> drain(process.getErrorStream(), OutputStream.nullOutputStream()));
+                Future<?> inputWrite = io.submit(() -> write(process, sql));
+                waitFor(process);
+                outDrain.get(DRAIN_JOIN_MILLIS, TimeUnit.MILLISECONDS);
+                errDrain.get(DRAIN_JOIN_MILLIS, TimeUnit.MILLISECONDS);
+                inputWrite.get(DRAIN_JOIN_MILLIS, TimeUnit.MILLISECONDS);
+                if (process.exitValue() != 0) {
+                    throw new IllegalStateException("mysql command failed; inspect server locally (output withheld)");
+                }
+            } finally {
+                if (process.isAlive()) {
+                    ProcessHandle handle = process.toHandle();
+                    try (var descendants = handle.descendants()) {
+                        descendants.forEach(ProcessHandle::destroyForcibly);
+                    } finally {
+                        handle.destroyForcibly();
+                    }
+                }
+            }
+        } finally {
+            io.shutdownNow();
         }
         return stdout.toString(StandardCharsets.UTF_8).strip();
     }
@@ -84,7 +119,7 @@ public class MysqlClient implements RecoverClient {
         if (text.isEmpty()) {
             return rows;
         }
-        for (String line : text.split("\n")) {
+        for (String line : text.split(NEWLINE)) {
             rows.add(JSON.readValue(line, List.class));
         }
         return rows;
@@ -105,17 +140,16 @@ public class MysqlClient implements RecoverClient {
     }
 
     /**
-     * 等待子进程结束，超时强制销毁。
+     * 等待子进程结束，超时交由调用方销毁子进程。
      *
      * @param process 子进程
      * @throws Exception 超时或等待被中断时抛出
      */
-    private static void waitFor(Process process) throws Exception {
-        if (process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+    private void waitFor(Process process) throws Exception {
+        if (process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
             return;
         }
-        process.destroyForcibly();
-        throw new TimeoutException("mysql command timed out after " + TIMEOUT_SECONDS + " seconds");
+        throw new TimeoutException("mysql command timed out after " + timeout.toSeconds() + " seconds");
     }
 
     /**

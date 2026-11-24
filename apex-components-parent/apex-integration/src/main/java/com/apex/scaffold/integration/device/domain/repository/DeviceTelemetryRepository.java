@@ -18,6 +18,7 @@ public interface DeviceTelemetryRepository {
      * 批量落库（单次 jdbc 访问内循环插入，jdbc 池隔离）。
      *
      * @param records 遥测记录（含租户）
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> insertAll(List<DeviceTelemetry> records);
 

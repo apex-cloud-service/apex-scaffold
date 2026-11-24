@@ -33,6 +33,10 @@ import reactor.core.publisher.Mono;
  */
 @Component
 public class AuthOpenAppRegistryRemoteAdapter implements OpenAppRegistryGateway {
+
+    private static final String CLIENT_ID_PATTERN = "[A-Za-z0-9._-]{1,100}";
+    private static final String HTTP_SCHEME = "http";
+    private static final String HTTPS_SCHEME = "https";
     private static final String PATH = "/internal/v1/open-apps";
     private final WebClient client;
     private final String baseUrl;
@@ -65,11 +69,13 @@ public class AuthOpenAppRegistryRemoteAdapter implements OpenAppRegistryGateway 
      */
     private static String normalizeBaseUrl(String baseUrl) {
         java.net.URI endpoint = java.net.URI.create(baseUrl);
-        if (endpoint.getHost() == null
-                || endpoint.getUserInfo() != null
-                || endpoint.getQuery() != null
-                || endpoint.getFragment() != null
-                || !("http".equals(endpoint.getScheme()) || "https".equals(endpoint.getScheme()))) {
+        if (endpoint.getHost() == null) {
+            throw new IllegalArgumentException("Invalid auth registration endpoint");
+        }
+        if (endpoint.getUserInfo() != null || endpoint.getQuery() != null || endpoint.getFragment() != null) {
+            throw new IllegalArgumentException("Invalid auth registration endpoint");
+        }
+        if (!HTTP_SCHEME.equals(endpoint.getScheme()) && !HTTPS_SCHEME.equals(endpoint.getScheme())) {
             throw new IllegalArgumentException("Invalid auth registration endpoint");
         }
         return baseUrl.replaceAll("/+$", "");
@@ -145,7 +151,7 @@ public class AuthOpenAppRegistryRemoteAdapter implements OpenAppRegistryGateway 
     }
 
     private static String path(String clientId) {
-        if (clientId == null || !clientId.matches("[A-Za-z0-9._-]{1,100}")) {
+        if (clientId == null || !clientId.matches(CLIENT_ID_PATTERN)) {
             throw new BusinessException(ResultCode.PARAM_ERROR);
         }
         return UriComponentsBuilder.fromPath(PATH)

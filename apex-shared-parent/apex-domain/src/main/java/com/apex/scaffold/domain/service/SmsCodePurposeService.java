@@ -19,6 +19,7 @@ public interface SmsCodePurposeService {
      *
      * @param phone 手机号
      * @param purpose 业务用途
+     * @return 验证码发送与存储完成信号
      */
     Mono<Void> sendAndStore(String phone, SmsCodePurpose purpose);
 

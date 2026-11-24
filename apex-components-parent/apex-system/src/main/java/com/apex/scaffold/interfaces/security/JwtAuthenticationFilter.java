@@ -269,22 +269,7 @@ public class JwtAuthenticationFilter implements WebFilter {
                     .getFirst(com.apex.scaffold.common.openapi.OpenApiTokenSupport.CAPABILITY_HEADER);
             if (com.apex.scaffold.common.openapi.OpenApiTokenSupport.isOpenApplication(
                     exchange.getRequest().getPath().value(), capability, claims)) {
-                String tenant = com.apex.scaffold.common.openapi.OpenApiTokenSupport.tenantId(claims);
-                Long subject = com.apex.scaffold.common.openapi.OpenApiTokenSupport.subjectUserId(claims);
-                if (tenant == null || tenant.isBlank()) {
-                    return handleError(exchange, ResultCode.UNAUTHORIZED);
-                }
-                var principal =
-                        new com.apex.scaffold.interfaces.security.AuthenticatedUser(subject, null, tenant, null);
-                var authentication =
-                        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                                principal, null, java.util.List.of());
-                exchange.getAttributes().put("tenantId", tenant);
-                return com.apex.scaffold.common.context.TenantContext.withTenant(chain.filter(exchange))
-                        .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(tenant))
-                        .contextWrite(
-                                org.springframework.security.core.context.ReactiveSecurityContextHolder
-                                        .withAuthentication(authentication));
+                return authenticateOpenApplication(exchange, chain, claims);
             }
             Long accountId = claims.get("accountId", Long.class);
             if (tokenType == null && ACCESS_TOKEN_TYPE_CENTER.equals(centerTokenType) && accountId != null) {
@@ -346,6 +331,23 @@ public class JwtAuthenticationFilter implements WebFilter {
             log.error("JWT认证失败: {}", e.getMessage(), e);
             return handleError(exchange, ResultCode.ERROR);
         }
+    }
+
+    private Mono<Void> authenticateOpenApplication(ServerWebExchange exchange, WebFilterChain chain, Claims claims) {
+        String tenant = com.apex.scaffold.common.openapi.OpenApiTokenSupport.tenantId(claims);
+        Long subject = com.apex.scaffold.common.openapi.OpenApiTokenSupport.subjectUserId(claims);
+        if (tenant == null || tenant.isBlank()) {
+            return handleError(exchange, ResultCode.UNAUTHORIZED);
+        }
+        var principal = new com.apex.scaffold.interfaces.security.AuthenticatedUser(subject, null, tenant, null);
+        var authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                principal, null, java.util.List.of());
+        exchange.getAttributes().put("tenantId", tenant);
+        return com.apex.scaffold.common.context.TenantContext.withTenant(chain.filter(exchange))
+                .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(tenant))
+                .contextWrite(
+                        org.springframework.security.core.context.ReactiveSecurityContextHolder.withAuthentication(
+                                authentication));
     }
 
     /** 区分认证凭据无效与认证依赖设施暂时不可用，避免有效 Token 被误报为未授权。 */

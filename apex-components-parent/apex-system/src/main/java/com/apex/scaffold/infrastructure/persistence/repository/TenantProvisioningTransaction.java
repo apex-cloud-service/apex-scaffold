@@ -229,9 +229,10 @@ public class TenantProvisioningTransaction implements com.apex.scaffold.domain.g
                             JsonUtil.getObjectMapper()
                                     .getTypeFactory()
                                     .constructCollectionType(List.class, String.class));
-            if (values == null
-                    || values.isEmpty()
-                    || values.stream().anyMatch(code -> code == null || code.isBlank())) {
+            if (values == null || values.isEmpty()) {
+                throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐权限配置损坏");
+            }
+            if (values.stream().anyMatch(code -> code == null || code.isBlank())) {
                 throw new BusinessException(ResultCode.PARAM_ERROR, "租户套餐权限配置损坏");
             }
             Set<String> codes = new LinkedHashSet<>();

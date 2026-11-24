@@ -38,6 +38,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ChartServiceImpl implements ChartService {
 
+    private static final String CHART_TYPE_LINE = "line";
+    private static final String CHART_TYPE_BAR = "bar";
+    private static final String CHART_TYPE_PIE = "pie";
+    private static final String CHART_TYPE_SCATTER = "scatter";
+    private static final String CHART_TYPE_RADAR = "radar";
+
     private final ChartRepository chartRepository;
     private final ChartAssembler chartAssembler;
     private final Random random = new Random();
@@ -242,21 +248,17 @@ public class ChartServiceImpl implements ChartService {
         List<String> xAxis = Arrays.asList("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
         List<ChartDataResponse.ChartSeries> series = new ArrayList<>(16);
 
-        switch (chartType) {
-            case "line", "bar" -> {
-                series.add(createSeries("Series 1", chartType, 7));
-                series.add(createSeries("Series 2", chartType, 7));
-            }
-            case "pie" -> {
-                xAxis = Arrays.asList("A", "B", "C", "D", "E");
-                series.add(createSeries("Data", "pie", 5));
-            }
-            case "scatter" -> series.add(createSeries("Series 1", "scatter", 7));
-            case "radar" -> {
-                xAxis = Arrays.asList("Metric 1", "Metric 2", "Metric 3", "Metric 4", "Metric 5");
-                series.add(createSeries("Series 1", "radar", 5));
-            }
-            default -> {}
+        if (CHART_TYPE_LINE.equals(chartType) || CHART_TYPE_BAR.equals(chartType)) {
+            series.add(createSeries("Series 1", chartType, 7));
+            series.add(createSeries("Series 2", chartType, 7));
+        } else if (CHART_TYPE_PIE.equals(chartType)) {
+            xAxis = Arrays.asList("A", "B", "C", "D", "E");
+            series.add(createSeries("Data", CHART_TYPE_PIE, 5));
+        } else if (CHART_TYPE_SCATTER.equals(chartType)) {
+            series.add(createSeries("Series 1", CHART_TYPE_SCATTER, 7));
+        } else if (CHART_TYPE_RADAR.equals(chartType)) {
+            xAxis = Arrays.asList("Metric 1", "Metric 2", "Metric 3", "Metric 4", "Metric 5");
+            series.add(createSeries("Series 1", CHART_TYPE_RADAR, 5));
         }
 
         return ChartDataResponse.builder()

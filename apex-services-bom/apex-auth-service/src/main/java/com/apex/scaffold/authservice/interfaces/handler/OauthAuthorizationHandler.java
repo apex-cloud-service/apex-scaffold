@@ -63,7 +63,7 @@ import reactor.core.publisher.Mono;
 @Tag(
         name = "OAuth2-授权端点",
         description = "RFC 6749 授权、撤销、内省与发现端点；响应为 OAuth2 原生协议格式（不包装 Result），" + "统一强制 Cache-Control: no-store")
-public class OAuthEndpointHandler {
+public class OauthAuthorizationHandler {
     private static final String BASIC_PREFIX = "Basic ";
     private static final String CLIENT_ID = "client_id";
     private static final String CLIENT_SECRET = "client_secret";
@@ -81,7 +81,7 @@ public class OAuthEndpointHandler {
      * @param service OAuth2应用服务
      * @param auditService 统一审计服务
      */
-    public OAuthEndpointHandler(OAuth2Service service, UnifiedAuditService auditService) {
+    public OauthAuthorizationHandler(OAuth2Service service, UnifiedAuditService auditService) {
         this.service = service;
         this.auditService = auditService;
     }

@@ -61,6 +61,8 @@ import reactor.core.publisher.Mono;
         matchIfMissing = true)
 public class IotInternalHandler {
 
+    private static final int USERNAME_IDENTITY_PARTS = 2;
+
     private final DeviceRegistryService registryService;
 
     private final DeviceCommandService commandService;
@@ -169,8 +171,8 @@ public class IotInternalHandler {
         if (username == null || username.isBlank()) {
             return null;
         }
-        String[] parts = username.split("/", 2);
-        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
+        String[] parts = username.split("/", USERNAME_IDENTITY_PARTS);
+        if (parts.length != USERNAME_IDENTITY_PARTS || parts[0].isBlank() || parts[1].isBlank()) {
             return null;
         }
         return new String[] {parts[0].trim(), parts[1].trim()};
@@ -292,7 +294,7 @@ public class IotInternalHandler {
         String tenant = trimToNull(body.getTenant());
         String deviceKey = trimToNull(body.getDeviceKey());
         String username = trimToNull(body.getUsername());
-        if ((tenant == null || deviceKey == null) && username != null) {
+        if (needsUsernameIdentity(tenant, deviceKey, username)) {
             int slash = username.indexOf('/');
             if (slash > 0) {
                 if (tenant == null) {
@@ -307,6 +309,10 @@ public class IotInternalHandler {
         }
         String secret = body.getSecret() != null && !body.getSecret().isBlank() ? body.getSecret() : body.getPassword();
         return new Credential(tenant, deviceKey, secret);
+    }
+
+    private boolean needsUsernameIdentity(String tenant, String deviceKey, String username) {
+        return (tenant == null || deviceKey == null) && username != null;
     }
 
     private String serializePayload(Map<String, Object> payload) {

@@ -1,11 +1,12 @@
 package com.apex.scaffold.contract.dto.internal;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import java.io.Serial;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 租户认证期状态快照（内部 API 契约）.
@@ -21,8 +22,7 @@ import lombok.NoArgsConstructor;
  * @since 1.3.1
  */
 @Data
-@Builder
-@NoArgsConstructor
+@Builder(builderClassName = "Builder")
 @AllArgsConstructor
 public class TenantStatusSnapshotDTO implements Serializable {
 
@@ -30,17 +30,43 @@ public class TenantStatusSnapshotDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 租户是否存在（未知租户 false，便于消费方缓存负结果） */
-    private boolean exists;
+    @JsonSetter(nulls = Nulls.SKIP)
+    private Boolean exists;
 
     /** 租户状态机取值（如 ACTIVE/DISABLED） */
     private String status;
 
     /** 是否已过期 */
-    private boolean expired;
+    @JsonSetter(nulls = Nulls.SKIP)
+    private Boolean expired;
 
     /** 用户数配额上限；未配置为 null */
     private Integer maxUsers;
 
     /** 存储配额上限（MB）；未配置为 null */
     private Integer maxStorageMb;
+
+    /**
+     * Creates a snapshot with conservative false defaults for boolean flags.
+     *
+     * @author Apex Team
+     * @since 1.3.1
+     */
+    public TenantStatusSnapshotDTO() {
+        exists = Boolean.FALSE;
+        expired = Boolean.FALSE;
+    }
+
+    /**
+     * Lombok builder extension retaining the wire contract's false defaults.
+     *
+     * @author Apex Team
+     * @since 1.3.1
+     */
+    public static class Builder {
+
+        private Boolean exists = Boolean.FALSE;
+
+        private Boolean expired = Boolean.FALSE;
+    }
 }

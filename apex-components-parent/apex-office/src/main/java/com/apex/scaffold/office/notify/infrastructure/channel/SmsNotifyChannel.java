@@ -23,6 +23,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class SmsNotifyChannel implements NotifyChannelPort {
 
+    private static final int MIN_PHONE_LENGTH = 8;
+
     /** 通道标识（与 off_message_delivery 白名单一致）。 */
     public static final String CHANNEL = "SMS";
 
@@ -53,7 +55,7 @@ public class SmsNotifyChannel implements NotifyChannelPort {
 
     /** 手机号脱敏（保留前 3 后 4，用于日志）。 */
     private String maskPhone(String phone) {
-        if (phone.length() < 8) {
+        if (phone.length() < MIN_PHONE_LENGTH) {
             return "***";
         }
         return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);

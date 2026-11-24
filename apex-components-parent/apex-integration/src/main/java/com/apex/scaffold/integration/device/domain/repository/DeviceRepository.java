@@ -67,6 +67,7 @@ public interface DeviceRepository {
      * @param tenantId 租户编码
      * @param id       主键
      * @throws com.apex.scaffold.common.exception.BusinessException 删除 0 行时以 {@code NOT_FOUND} 终止
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> delete(String tenantId, Long id);
 
@@ -76,6 +77,7 @@ public interface DeviceRepository {
      * @param tenantId  租户编码
      * @param deviceKey 设备标识
      * @param online    是否置为 online（false 仅刷新活跃时间）
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> touchActivity(String tenantId, String deviceKey, boolean online);
 }

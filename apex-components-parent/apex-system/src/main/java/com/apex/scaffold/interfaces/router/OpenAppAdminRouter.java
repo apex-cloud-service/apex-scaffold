@@ -27,31 +27,13 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class OpenAppAdminRouter {
 
     /**
-     * 注册开放应用管理路由.
+     * 注册开放应用管理查询路由。
      *
      * @param handler 开放应用管理 Handler
-     * @return 路由函数
+     * @return 查询路由函数
      */
     @Bean
     @RouterOperations({
-        @RouterOperation(
-                path = "/api/v1/open-apps",
-                method = org.springframework.web.bind.annotation.RequestMethod.POST,
-                beanClass = OpenAppAdminHandler.class,
-                beanMethod = "createApp",
-                operation =
-                        @Operation(
-                                operationId = "createOpenApp",
-                                summary = "创建开放应用",
-                                tags = {"开放应用管理"},
-                                responses = {
-                                    @ApiResponse(
-                                            responseCode = "200",
-                                            description = "创建成功（含一次性明文密钥）",
-                                            content =
-                                                    @io.swagger.v3.oas.annotations.media.Content(
-                                                            mediaType = MediaType.APPLICATION_JSON_VALUE))
-                                })),
         @RouterOperation(
                 path = "/api/v1/open-apps",
                 method = org.springframework.web.bind.annotation.RequestMethod.GET,
@@ -105,6 +87,42 @@ public class OpenAppAdminRouter {
                                             content =
                                                     @io.swagger.v3.oas.annotations.media.Content(
                                                             mediaType = MediaType.APPLICATION_JSON_VALUE))
+                                }))
+    })
+    public RouterFunction<ServerResponse> openAppAdminReadRoutes(OpenAppAdminHandler handler) {
+        return RouterFunctions.route()
+                .GET("/api/v1/open-apps", handler::listApps)
+                // scope 目录须先于 /{clientId} 声明，避免被路径变量吞掉
+                .GET("/api/v1/open-apps/scopes", handler::listScopes)
+                .GET("/api/v1/open-apps/{clientId}", handler::getApp)
+                .build();
+    }
+
+    /**
+     * 注册开放应用管理写入路由。
+     *
+     * @param handler 开放应用管理 Handler
+     * @return 写入路由函数
+     */
+    @Bean
+    @RouterOperations({
+        @RouterOperation(
+                path = "/api/v1/open-apps",
+                method = org.springframework.web.bind.annotation.RequestMethod.POST,
+                beanClass = OpenAppAdminHandler.class,
+                beanMethod = "createApp",
+                operation =
+                        @Operation(
+                                operationId = "createOpenApp",
+                                summary = "创建开放应用",
+                                tags = {"开放应用管理"},
+                                responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "创建成功（含一次性明文密钥）",
+                                            content =
+                                                    @io.swagger.v3.oas.annotations.media.Content(
+                                                            mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 })),
         @RouterOperation(
                 path = "/api/v1/open-apps/{clientId}",
@@ -143,13 +161,9 @@ public class OpenAppAdminRouter {
                                                             mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
-    public RouterFunction<ServerResponse> openAppAdminRoutes(OpenAppAdminHandler handler) {
+    public RouterFunction<ServerResponse> openAppAdminWriteRoutes(OpenAppAdminHandler handler) {
         return RouterFunctions.route()
                 .POST("/api/v1/open-apps", handler::createApp)
-                .GET("/api/v1/open-apps", handler::listApps)
-                // scope 目录须先于 /{clientId} 声明，避免被路径变量吞掉
-                .GET("/api/v1/open-apps/scopes", handler::listScopes)
-                .GET("/api/v1/open-apps/{clientId}", handler::getApp)
                 .PUT("/api/v1/open-apps/{clientId}", handler::updateApp)
                 .POST("/api/v1/open-apps/{clientId}/reset-secret", handler::resetSecret)
                 .build();

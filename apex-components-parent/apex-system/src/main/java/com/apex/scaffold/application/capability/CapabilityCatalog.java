@@ -67,6 +67,12 @@ public final class CapabilityCatalog {
      */
     private static Map<String, Capability> buildCatalog() {
         Map<String, Capability> catalog = new LinkedHashMap<>();
+        registerCoreCapabilities(catalog);
+        registerPlatformCapabilities(catalog);
+        return Collections.unmodifiableMap(catalog);
+    }
+
+    private static void registerCoreCapabilities(Map<String, Capability> catalog) {
         register(
                 catalog,
                 new Capability(
@@ -137,6 +143,9 @@ public final class CapabilityCatalog {
                         "active",
                         Set.of("open:message:send"),
                         "站内信、办公平台 IM、通知模板与投递"));
+    }
+
+    private static void registerPlatformCapabilities(Map<String, Capability> catalog) {
         register(
                 catalog,
                 new Capability(
@@ -179,8 +188,6 @@ public final class CapabilityCatalog {
                         "active",
                         Set.of(),
                         "设备注册/认证、遥测上行、命令下行、规则引擎"));
-        // LinkedHashMap 保序包装：all()/目录页的展示顺序 = 登记顺序（Map.copyOf 不保序）
-        return Collections.unmodifiableMap(catalog);
     }
 
     /**

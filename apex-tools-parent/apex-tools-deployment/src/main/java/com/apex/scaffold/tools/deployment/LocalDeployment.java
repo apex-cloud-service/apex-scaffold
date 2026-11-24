@@ -50,6 +50,14 @@ public final class LocalDeployment {
     /** 失败提示：不输出敏感诊断信息。 */
     private static final String FAILURE_HINT = "操作失败：请检查输入格式、密钥、依赖和输出路径；敏感诊断信息已隐藏";
 
+    private static final String PREFLIGHT_COMMAND = "preflight";
+    private static final String VALIDATE_COMMAND = "validate";
+    private static final String COMPOSE_COMMAND = "compose";
+    private static final String PREPARE_COMMAND = "prepare";
+    private static final String ROLLBACK_COMMAND = "rollback";
+    private static final String TEST_REPORT_COMMAND = "test-report";
+    private static final int OPTION_PAIR_SIZE = 2;
+
     /**
      * 参数解析结果：子命令、选项与需要的位置参数集合。
      *
@@ -114,17 +122,24 @@ public final class LocalDeployment {
      * @throws Exception 子命令执行失败时抛出
      */
     private static void execute(Command command, Map<String, String> environment, PrintStream out) throws Exception {
-        switch (command.name()) {
-            case "validate" -> DeploymentKeyValidator.validateKeys(environment);
-            case "preflight" -> DeploymentKeyValidator.validatePreflight(
+        String name = command.name();
+        if (VALIDATE_COMMAND.equals(name)) {
+            DeploymentKeyValidator.validateKeys(environment);
+        } else if (PREFLIGHT_COMMAND.equals(name)) {
+            DeploymentKeyValidator.validatePreflight(
                     environment, command.options().get("--target"));
-            case "compose" -> ComposeConfigValidator.composeCheck(root(), envFile(command.options()), environment);
-            case "prepare" -> prepare(command.options(), environment, out);
-            case "rollback" -> TotpMigrationBundle.rollback(
+        } else if (COMPOSE_COMMAND.equals(name)) {
+            ComposeConfigValidator.composeCheck(root(), envFile(command.options()), environment);
+        } else if (PREPARE_COMMAND.equals(name)) {
+            prepare(command.options(), environment, out);
+        } else if (ROLLBACK_COMMAND.equals(name)) {
+            TotpMigrationBundle.rollback(
                     Path.of(command.options().get("--bundle")),
                     Path.of(command.options().get("--output")));
-            case "test-report" -> runTestReport(command.options(), out);
-            default -> throw new IllegalArgumentException(USAGE_HINT);
+        } else if (TEST_REPORT_COMMAND.equals(name)) {
+            runTestReport(command.options(), out);
+        } else {
+            throw new IllegalArgumentException(USAGE_HINT);
         }
     }
 
@@ -203,7 +218,7 @@ public final class LocalDeployment {
         if (!matches) {
             return false;
         }
-        if (!"preflight".equals(command.name())) {
+        if (!PREFLIGHT_COMMAND.equals(command.name())) {
             return true;
         }
         String target = command.options().get("--target");
@@ -219,8 +234,8 @@ public final class LocalDeployment {
      */
     private static Map<String, String> parseOptions(String[] args) {
         Map<String, String> options = new HashMap<>(args.length);
-        boolean valid = args.length % 2 == 1;
-        for (int i = 1; valid && i < args.length; i += 2) {
+        boolean valid = args.length % OPTION_PAIR_SIZE == 1;
+        for (int i = 1; valid && i < args.length; i += OPTION_PAIR_SIZE) {
             if (i + 1 >= args.length || !args[i].startsWith("--") || options.put(args[i], args[i + 1]) != null) {
                 valid = false;
             }

@@ -2,7 +2,7 @@
 # Apex Scaffold Kubernetes 部署配置（多服务清单）
 # ============================================================
 # 使用方式:
-#   kubectl apply -f k8s/
+#   新集群通过 apex.sh deploy k8s apply；旧集群先按本目录 README 迁移网关 selector。
 # 说明:
 #   - 一镜像一服务：每个 Deployment 由 Containerfile + SERVICE_MODULE 构建独立镜像，
 #     镜像名与 build-manifest.yaml 的 service-jar 集合一致（8 个发布服务）。
@@ -105,6 +105,7 @@ spec:
     metadata:
       labels:
         app: apex-gateway
+        track: stable
     spec:
       containers:
         - name: apex-gateway
@@ -170,6 +171,7 @@ spec:
   type: ClusterIP
   selector:
     app: apex-gateway
+    track: stable
   ports:
     - name: http
       port: 80
@@ -789,6 +791,7 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
+  ingressClassName: nginx
   rules:
     - host: apex-scaffold.example.com
       http:

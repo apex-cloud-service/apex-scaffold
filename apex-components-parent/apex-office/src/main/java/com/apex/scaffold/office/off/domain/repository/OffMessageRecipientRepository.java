@@ -106,6 +106,7 @@ public interface OffMessageRecipientRepository {
      * 根据ID删除消息接收记录
      *
      * @param id 记录ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> deleteById(Long id);
 

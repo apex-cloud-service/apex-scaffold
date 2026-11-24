@@ -65,6 +65,10 @@ public final class TestReportSummary {
     /** Failsafe 报告目录名。 */
     private static final String FAILSAFE_DIR = "failsafe-reports";
 
+    private static final String MODULES_ELEMENT = "modules";
+    private static final String MODULE_ELEMENT = "module";
+    private static final int OPTION_PAIR_SIZE = 2;
+
     private TestReportSummary() {}
 
     /**
@@ -78,18 +82,18 @@ public final class TestReportSummary {
     public static int run(String[] args, PrintStream out, PrintStream err) {
         String root = null;
         String output = null;
-        for (int i = 0; i < args.length; i += 2) {
+        for (int i = 0; i < args.length; i += OPTION_PAIR_SIZE) {
             if (i + 1 >= args.length) {
                 err.println(USAGE);
                 return EXIT_USAGE;
             }
-            switch (args[i]) {
-                case "--root" -> root = args[i + 1];
-                case "--output" -> output = args[i + 1];
-                default -> {
-                    err.println(USAGE);
-                    return EXIT_USAGE;
-                }
+            if ("--root".equals(args[i])) {
+                root = args[i + 1];
+            } else if ("--output".equals(args[i])) {
+                output = args[i + 1];
+            } else {
+                err.println(USAGE);
+                return EXIT_USAGE;
             }
         }
         if (root == null || output == null) {
@@ -209,8 +213,8 @@ public final class TestReportSummary {
         }
         boolean hasSources = Files.isDirectory(normalized.resolve("src"));
         modules.add(new Module(artifactId, normalized, hasSources));
-        for (Element modulesElement : children(project, "modules")) {
-            for (Element module : children(modulesElement, "module")) {
+        for (Element modulesElement : children(project, MODULES_ELEMENT)) {
+            for (Element module : children(modulesElement, MODULE_ELEMENT)) {
                 String name = module.getTextContent();
                 if (name != null && !name.isBlank()) {
                     discover(normalized.resolve(name.trim()), modules, visited);
@@ -361,12 +365,16 @@ public final class TestReportSummary {
             if (nodes.item(i) instanceof Element element) {
                 String local = element.getLocalName() == null ? element.getNodeName() : element.getLocalName();
                 String namespace = element.getNamespaceURI();
-                if (name.equals(local) && (namespace == null || POM_NS.equals(namespace))) {
+                if (name.equals(local) && isAllowedNamespace(namespace)) {
                     matched.add(element);
                 }
             }
         }
         return matched;
+    }
+
+    private static boolean isAllowedNamespace(String namespace) {
+        return namespace == null || POM_NS.equals(namespace);
     }
 
     /**

@@ -40,6 +40,8 @@ import reactor.core.publisher.Mono;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class IdentityRelayAuthenticationFilter implements WebFilter {
+    private static final String CONFIGURATION_DELIMITER = ",";
+    private static final int JWT_PART_COUNT = 3;
     public static final String HEADER_USER_ID = "X-User-Id";
     public static final String HEADER_TENANT_ID = "X-Tenant-Id";
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
@@ -74,9 +76,9 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
             Map<String, PublicKey> configuredKeys = new HashMap<>();
             if (publicKeyConfiguration.isBlank()) {
                 keyedPublicKeys = false;
-            } else if (publicKeyConfiguration.contains(",")) {
+            } else if (publicKeyConfiguration.contains(CONFIGURATION_DELIMITER)) {
                 KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-                for (String entry : publicKeyConfiguration.split(",", -1)) {
+                for (String entry : publicKeyConfiguration.split(CONFIGURATION_DELIMITER, -1)) {
                     String[] parts = entry.split("=", 2);
                     String keyId = parts.length == 2 ? parts[0].trim() : "";
                     String encodedKey = parts.length == 2 ? parts[1].trim() : "";
@@ -121,6 +123,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
 
     /** 空 JWKS 提供者：测试与程序化装配不装配共享拉取客户端。 */
     private enum EmptyJwksFetcher implements org.springframework.beans.factory.ObjectProvider<JwksFetcher> {
+        /** 唯一提供者实例。 */
         PROVIDER;
 
         @Override
@@ -239,7 +242,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private String headerValue(String token, String name) {
         try {
             String[] parts = token.split("\\.", -1);
-            if (parts.length != 3) {
+            if (parts.length != JWT_PART_COUNT) {
                 return null;
             }
             String header = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);

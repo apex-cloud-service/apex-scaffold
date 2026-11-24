@@ -90,6 +90,7 @@ public abstract class AbstractStorageService implements StorageService {
      * <p>如果存储桶不存在则创建，存在则直接返回
      *
      * @param bucketName 存储桶名称
+     * @return 操作完成信号，失败时传播错误
      */
     protected abstract Mono<Void> ensureBucketExistsInternal(String bucketName);
 
@@ -97,6 +98,7 @@ public abstract class AbstractStorageService implements StorageService {
      * 创建存储桶
      *
      * @param bucketName 存储桶名称
+     * @return 操作完成信号，失败时传播错误
      */
     protected abstract Mono<Void> createBucketInternal(String bucketName);
 

@@ -30,7 +30,7 @@ public class PasswordRecoveryRepositoryImpl implements PasswordRecoveryRepositor
     @Override
     public Mono<PasswordRecoveryEntity> save(PasswordRecoveryEntity entity) {
         return Mono.fromCallable(() -> {
-                    PasswordRecoveryPO po = toPO(entity);
+                    PasswordRecoveryPO po = toPo(entity);
                     mapper.insert(po);
                     return toEntity(po);
                 })
@@ -90,7 +90,7 @@ public class PasswordRecoveryRepositoryImpl implements PasswordRecoveryRepositor
                 .subscribeOn(BlockingIoSchedulers.jdbc());
     }
 
-    private PasswordRecoveryPO toPO(PasswordRecoveryEntity entity) {
+    private PasswordRecoveryPO toPo(PasswordRecoveryEntity entity) {
         PasswordRecoveryPO po = new PasswordRecoveryPO();
         po.setId(entity.getId());
         po.setUserId(entity.getUserId());

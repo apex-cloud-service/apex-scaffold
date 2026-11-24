@@ -29,6 +29,8 @@ import org.commonmark.renderer.html.HtmlRenderer;
  */
 final class MarkdownPageRenderer {
 
+    private static final String HEADING_START = "<h";
+
     private static final List<Extension> EXTENSIONS = List.of(
             org.commonmark.ext.gfm.tables.TablesExtension.create(),
             org.commonmark.ext.gfm.strikethrough.StrikethroughExtension.create(),
@@ -138,7 +140,7 @@ final class MarkdownPageRenderer {
         }
         List<Integer> starts = new ArrayList<>();
         int i = 0;
-        while ((i = html.indexOf("<h", i)) >= 0) {
+        while ((i = html.indexOf(HEADING_START, i)) >= 0) {
             if (i + 2 < html.length()
                     && html.charAt(i + 2) >= '1'
                     && html.charAt(i + 2) <= '6'

@@ -47,6 +47,8 @@ COMPOSE_APP="${PROJECT_ROOT}/podman-compose.yml"
 COMPOSE_INFRA="${PROJECT_ROOT}/podman-compose.infra.yml"
 K8S_DIR="${PROJECT_ROOT}/k8s"
 K8S_NAMESPACE="apex-scaffold"
+K8S_INGRESS_CLASS="${APEX_K8S_INGRESS_CLASS:-nginx}"
+K8S_INGRESS_CONTROLLER="${APEX_K8S_INGRESS_CONTROLLER:-k8s.io/ingress-nginx}"
 
 # 启动前置：注册表与环境脚本必须存在（缺失即失败，不静默降级）
 require_file "${MANIFEST}" "模块注册表 build-manifest.yaml"
@@ -599,7 +601,7 @@ deploy_usage() {
                   格式: deploy java-jar <动作> [模块] [dev|it|prod] [basic|standard|enterprise]
                   （委托 scripts/deploy/service/app.sh；模块默认 apex-gateway）
   podman-compose  precheck|infra|up|down|status|health [参数透传]
-  k8s             precheck|apply|status|health|down [--canary] [--pdb] [--yes] [--allow-placeholder]
+  k8s             precheck|apply|check-canary|status|health|down [--canary] [--pdb] [--yes] [--allow-placeholder]
                   （Secret 占位值 fail-closed；down 删除含 Secret，需 --yes）
 EOF
 }
@@ -780,19 +782,17 @@ deploy_compose() {
 }
 
 # ------------------------------------------------------------
-# 函数: deploy_k8s <precheck|apply|status|health|down> [--canary] [--pdb]
+# 函数: deploy_k8s <precheck|apply|check-canary|status|health|down> [--canary] [--pdb]
 #                  [--yes] [--allow-placeholder]
 # 用途: 运行时四——k8s/ 静态清单的 fail-closed 编排。
-# 清单: deployment.yaml（Namespace/Secret/Deployment/Service/Ingress/HPA，单体形态，
-#       镜像 apex-scaffold:latest）；--pdb 追加 PodDisruptionBudget；
-#       --canary 追加金丝雀清单（镜像需部署者先按 k8s/README 修改）。
+# 清单: deployment.yaml 为八服务基础部署；--pdb 追加 PodDisruptionBudget。
+#       apply --canary 仅发布预览，不重应用稳定组；--pdb 不与其组合。
 # fail-closed 三条线:
 #   1. precheck 强校验集群可达（kubectl get ns 超时即失败）；
 #   2. precheck 扫描 deployment.yaml 内嵌 Secret 的占位值（changeme/change-this），
 #      默认拒绝部署——防止把模板密钥打进集群；--allow-placeholder 显式豁免（仅限演示）；
 #   3. down 需 --yes 确认（会删除 Namespace 内对象，含 apex-secrets）。
-# apply: 依 deployment.yaml → [--pdb] → [--canary] 顺序应用，
-#        最后 rollout status --timeout=300s 等待滚动更新完成。
+# apply: 拒绝绕过旧 selector 的分阶段迁移；等待网关 rollout 后验证 EndpointSlice。
 # 边界: 不替代密钥管理（Secret 修改/Ingress 域名/TLS 仍由部署者按 k8s/README 维护），
 #       不做 SSH 远程、不做镜像推送自动化（见 image push）。
 # ------------------------------------------------------------
@@ -817,26 +817,43 @@ deploy_k8s() {
   case "${action}" in
     precheck) k8s_precheck "${allow_placeholder}" ;;
     apply)
+      require_command jq "jq"
+      if [[ ${canary} -eq 1 ]]; then
+        if [[ ${with_pdb} -eq 1 || ${allow_placeholder} -eq 1 || ${confirmed} -eq 1 ]]; then
+          log_error "apply --canary 仅配置预览组，不接受 --pdb、--allow-placeholder 或 --yes"
+          exit 1
+        fi
+        k8s_apply_canary
+        return
+      fi
       k8s_precheck "${allow_placeholder}"
+      k8s_require_stable_layout 0
       log_info "应用基础清单（Namespace/Secret/Deployment/Service/Ingress/HPA）"
       kubectl apply -f "${K8S_DIR}/deployment.yaml"
+      k8s_rollout apex-gateway 300s
+      k8s_wait_gateway_endpoints 0
       if [[ ${with_pdb} -eq 1 ]]; then
         log_info "应用 PodDisruptionBudget"
         kubectl apply -f "${K8S_DIR}/pod-disruption-budget.yaml"
       fi
-      if [[ ${canary} -eq 1 ]]; then
-        log_info "应用金丝雀清单（先确认 canary-deployment.yaml 的镜像已更新）"
-        kubectl apply -f "${K8S_DIR}/canary-deployment.yaml"
-      fi
-      log_info "等待滚动更新完成（超时 300s）"
-      kubectl -n "${K8S_NAMESPACE}" rollout status deployment/apex-scaffold --timeout=300s
       log_success "K8s 部署完成；状态: apex.sh deploy k8s status"
+      ;;
+    check-canary)
+      require_command jq "jq"
+      k8s_require_stable_layout 1
+      k8s_rollout apex-gateway 60s
+      k8s_rollout apex-gateway-canary 60s
+      k8s_wait_gateway_endpoints 1
+      local live_canary
+      live_canary=$(k8s_get ingress/apex-gateway-canary-ingress)
+      k8s_require_canary_ingress "${live_canary}" false
+      log_success "两组网关端点与 Ingress 规则通过检查；放量前仍须核对版本与入口探测"
       ;;
     status)
       kubectl -n "${K8S_NAMESPACE}" get deploy,pods,svc,ingress,hpa -o wide
       ;;
     health)
-      kubectl -n "${K8S_NAMESPACE}" rollout status deployment/apex-scaffold --timeout=60s
+      k8s_rollout apex-gateway 60s
       kubectl -n "${K8S_NAMESPACE}" get pods
       ;;
     down)
@@ -849,15 +866,97 @@ deploy_k8s() {
         kubectl delete -f "${K8S_DIR}/pod-disruption-budget.yaml" --ignore-not-found
       fi
       if [[ ${canary} -eq 1 ]]; then
+        kubectl delete -f "${K8S_DIR}/canary-ingress.yaml" --ignore-not-found
         kubectl delete -f "${K8S_DIR}/canary-deployment.yaml" --ignore-not-found
       fi
       log_success "K8s 资源已删除"
       ;;
     *)
-      log_error "未知 k8s 动作: ${action}（支持 precheck/apply/status/health/down）"
+      log_error "未知 k8s 动作: ${action}（支持 precheck/apply/check-canary/status/health/down）"
       exit 1
       ;;
   esac
+}
+
+k8s_get() {
+  kubectl -n "${K8S_NAMESPACE}" get "$1" --ignore-not-found --request-timeout=10s -o json
+}
+
+k8s_rollout() {
+  kubectl -n "${K8S_NAMESPACE}" rollout status "deployment/$1" "--timeout=$2"
+}
+
+k8s_require_stable_layout() {
+  local required="$1" stable_service stable_deployment
+  stable_service=$(k8s_get service/apex-gateway)
+  stable_deployment=$(k8s_get deployment/apex-gateway)
+  if [[ -z "${stable_service}${stable_deployment}" && "${required}" == 0 ]]; then
+    return
+  fi
+  if [[ -z "${stable_service}" || -z "${stable_deployment}" ]] ||
+    ! jq -e '.spec.selector == {app:"apex-gateway", track:"stable"}' <<< "${stable_service}" >/dev/null ||
+    ! jq -e '.spec.template.metadata.labels | .app == "apex-gateway" and .track == "stable"' \
+      <<< "${stable_deployment}" >/dev/null; then
+    log_error "稳定网关未完成隔离或存在部分资源；请按 k8s/README.md 分阶段迁移并验证，禁止直接应用"
+    exit 1
+  fi
+}
+
+k8s_wait_gateway_endpoints() {
+  local canary="$1" snapshot attempt
+  for attempt in {1..30}; do
+    snapshot=$(kubectl -n "${K8S_NAMESPACE}" get endpointslices,pods,replicasets,deployments \
+      --request-timeout=10s -o json)
+    if jq -e --argjson canary "${canary}" -f "${SCRIPT_DIR}/gateway-endpoints.jq" \
+      <<< "${snapshot}" >/dev/null; then
+      return
+    fi
+    if [[ ${attempt} -lt 30 ]]; then
+      sleep 2
+    fi
+  done
+  log_error "网关 EndpointSlice 未收敛、无 Ready 后端或含非本组 Pod；停止发布"
+  exit 1
+}
+
+k8s_require_canary_ingress() {
+  local candidate="$1" zero_only="$2" stable_ingress ingress_class
+  stable_ingress=$(k8s_get ingress/apex-scaffold-ingress)
+  ingress_class=$(kubectl get "ingressclass/${K8S_INGRESS_CLASS}" --request-timeout=10s -o json)
+  if ! jq -e --arg name "${K8S_INGRESS_CLASS}" --arg controller "${K8S_INGRESS_CONTROLLER}" \
+    '.metadata.name == $name and .spec.controller == $controller' <<< "${ingress_class}" >/dev/null; then
+    log_error "IngressClass ${K8S_INGRESS_CLASS} 不存在或 controller 不匹配 ${K8S_INGRESS_CONTROLLER}；停止灰度"
+    exit 1
+  fi
+  if [[ -z "${candidate}" || -z "${stable_ingress}" ]] || ! jq -e \
+    --argjson stable "${stable_ingress}" --argjson zero "${zero_only}" \
+    --arg class "${K8S_INGRESS_CLASS}" -f "${SCRIPT_DIR}/canary-ingress.jq" \
+    <<< "${candidate}" >/dev/null; then
+    log_error "金丝雀 Ingress 状态、权重、导流注解或主入口 host/path/class 不符合要求；停止发布"
+    exit 1
+  fi
+}
+
+k8s_apply_canary() {
+  local live_canary preview_ingress
+  k8s_precheck 0
+  k8s_require_stable_layout 1
+  k8s_rollout apex-gateway 300s
+  k8s_wait_gateway_endpoints 0
+  live_canary=$(k8s_get ingress/apex-gateway-canary-ingress)
+  if [[ -n "${live_canary}" ]]; then
+    k8s_require_canary_ingress "${live_canary}" true
+  fi
+  preview_ingress=$(kubectl apply --dry-run=server -f "${K8S_DIR}/canary-ingress.yaml" -o json)
+  k8s_require_canary_ingress "${preview_ingress}" true
+  kubectl apply -f "${K8S_DIR}/canary-deployment.yaml"
+  k8s_rollout apex-gateway-canary 300s
+  k8s_require_stable_layout 1
+  k8s_wait_gateway_endpoints 1
+  kubectl apply -f "${K8S_DIR}/canary-ingress.yaml"
+  live_canary=$(k8s_get ingress/apex-gateway-canary-ingress)
+  k8s_require_canary_ingress "${live_canary}" true
+  log_success "金丝雀预览已就绪，Ingress 权重 0%；先验证主入口再单独放量"
 }
 
 # ------------------------------------------------------------
@@ -887,10 +986,8 @@ k8s_precheck() {
   else
     log_success "Secret 已脱占位"
   fi
-  log_info "镜像: 清单使用 apex-scaffold:latest（单体聚合形态，SERVICE_MODULE=apex-example 构建）；确保节点可获取："
-  log_info "  apex.sh image build --module apex-example --tag apex-scaffold --engine podman"
-  log_info "  远程集群需先推送: apex.sh image push --module apex-example --tag apex-scaffold --registry <host[:port]>"
-  log_success "K8s 前置检查通过；部署: apex.sh deploy k8s apply [--pdb] [--canary]"
+  log_info "镜像: 确保集群节点能获取基础清单引用的八个服务镜像；远程集群需先推送并配置镜像地址"
+  log_success "K8s 前置检查通过；基础部署: apex.sh deploy k8s apply [--pdb]"
 }
 
 # ------------------------------------------------------------
@@ -1032,7 +1129,7 @@ Apex Scaffold 生命周期统一编排入口（apex-tools-build）
                           动作: precheck|start|stop|restart|status|logs|console|health
                           （委托 scripts/deploy/service/app.sh；模块默认 apex-gateway）
   deploy podman-compose <precheck|infra|up|down|status|health> [透传]
-  deploy k8s <precheck|apply|status|health|down> [--canary] [--pdb] [--yes] [--allow-placeholder]
+ deploy k8s <precheck|apply|check-canary|status|health|down> [--canary] [--pdb] [--yes] [--allow-placeholder]
                           fail-closed 编排 k8s/ 清单；Secret 占位值默认拒绝部署
   status                  环境版本 + 模块注册表/产物概览
   help                    本帮助

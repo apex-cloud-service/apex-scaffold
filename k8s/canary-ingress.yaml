@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apex-gateway-canary-ingress
+  namespace: apex-scaffold
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-by-weight: "0"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: apex-scaffold.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: apex-gateway-canary-service
+                port:
+                  number: 80

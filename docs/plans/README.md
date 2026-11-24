@@ -29,3 +29,4 @@
 | 2026-11-16 | 目录规范化（文档/脚本/配置/智能体目录/测试报告） | 已执行 | [2026-11-16-directory-normalization-plan.md](./2026-11-16-directory-normalization-plan.md) |
 | 2026-11-22 | 全仓设计模式 / SPI / 注释复审与整改（BE-044） | 执行中 | [2026-11-22-code-quality-pattern-spi-comment-plan.md](./2026-11-22-code-quality-pattern-spi-comment-plan.md) |
 | 2026-11-22 | 全模块 Handler SpringDoc/Swagger 注解补齐（BE-060） | 已执行（见文末「执行结果」） | [2026-11-22-handler-annotation-completion-plan.md](./2026-11-22-handler-annotation-completion-plan.md) |
+| 2026-11-23 | 全仓中台韧性、DDD 与发布能力分波次优化（BE-063） | Wave A/B1/B2/C1/D1 已获独立 R5 `APPROVE_WITH_NITS`；Wave E 全仓 verify 被 PMD/JDK 兼容与超时测试阻断；容量/延迟基线和集群演练待后续 | [2026-11-23-platform-resilience-ddd-release.md](./2026-11-23-platform-resilience-ddd-release.md) |

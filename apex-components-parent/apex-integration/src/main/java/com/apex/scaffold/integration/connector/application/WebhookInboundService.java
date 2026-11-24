@@ -42,6 +42,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class WebhookInboundService {
 
+    private static final String SIGNATURE_SEPARATOR = ".";
+
     /** 时间戳允许窗口（秒）：±5 分钟防重放。 */
     static final long TIMESTAMP_WINDOW_SECONDS = 300;
 
@@ -114,7 +116,7 @@ public class WebhookInboundService {
             return recordFailure(tenantId, connectorType, body)
                     .then(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "webhook 时间戳超出允许窗口")));
         }
-        if (!WebhookSignatures.verify(secret, timestamp + "." + body, signature)) {
+        if (!WebhookSignatures.verify(secret, timestamp + SIGNATURE_SEPARATOR + body, signature)) {
             return recordFailure(tenantId, connectorType, body)
                     .then(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "webhook 签名校验失败")));
         }

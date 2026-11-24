@@ -143,7 +143,7 @@ public class DeviceRuleEngineService {
             log.warn("WEBHOOK 动作缺少 connectorKey 配置: rule={}", rule.getRuleName());
             return Mono.empty();
         }
-        Map<String, Object> payload = new HashMap<>();
+        Map<String, Object> payload = new HashMap<>(3);
         payload.put("rule", rule.getRuleName());
         payload.put("deviceKey", deviceKey);
         payload.put("metric", parseMetric(metricJson));

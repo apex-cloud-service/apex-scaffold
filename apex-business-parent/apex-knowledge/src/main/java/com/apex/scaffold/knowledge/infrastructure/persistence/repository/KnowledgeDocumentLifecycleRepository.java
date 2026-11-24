@@ -37,6 +37,21 @@ import reactor.core.publisher.Mono;
 @Repository
 public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLifecyclePort {
 
+    private static final String OBJECT_KEY = "object_key";
+    private static final String MODE_KEY = "mode";
+    private static final String KIND_KEY = "kind";
+    private static final String MODE_UPLOAD_STAGING = "UPLOAD_STAGING";
+    private static final String MODE_REGISTERED = "REGISTERED";
+    private static final String MODE_DELETE = "DELETE";
+    private static final String MODE_LEGACY_INDEX = "LEGACY_INDEX";
+    private static final String STATUS_COMPLETED = "COMPLETED";
+    private static final String KIND_CLEANUP = "CLEANUP";
+    private static final String KIND_INGEST = "INGEST";
+    private static final int FIRST_GENERATION = 1;
+    private static final int MAX_CLEANUP_PAGE_SIZE = 100;
+    private static final int MAX_TENANT_ID_LENGTH = 64;
+    private static final String COUNT_DOCUMENT_QUERY = "SELECT COUNT(*) FROM kb_document WHERE tenant_id=? AND id=?";
+
     private final JdbcTemplate jdbc;
     private final TransactionTemplate transaction;
     private final KnowledgeProperties.Cleanup config;
@@ -102,7 +117,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
                     owner,
                     until,
                     until));
-            return new KnowledgeDocumentLease(tenant, id, owner, 1, "UPLOAD", until);
+            return new KnowledgeDocumentLease(tenant, id, owner, FIRST_GENERATION, "UPLOAD", until);
         }));
     }
 
@@ -111,7 +126,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
         return scoped(tenant -> tx(() -> {
                     assertLease(tenant, lease, false);
                     var cleanup = cleanupRow(tenant, lease.documentId(), true);
-                    if (cleanup == null || !actualKey.equals(cleanup.get("object_key"))) {
+                    if (cleanup == null || !actualKey.equals(cleanup.get(OBJECT_KEY))) {
                         throw new IllegalStateException("供应商未保持独占对象键，禁止推断自动删除目标");
                     }
                     exactlyOne(jdbc.update(
@@ -133,7 +148,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
         return scoped(tenant -> tx(() -> {
             assertLease(tenant, lease, false);
             Map<String, Object> cleanup = cleanupRow(tenant, lease.documentId(), true);
-            if (cleanup == null || !"UPLOAD_STAGING".equals(cleanup.get("mode"))) {
+            if (cleanup == null || !MODE_UPLOAD_STAGING.equals(cleanup.get(MODE_KEY))) {
                 throw new IllegalStateException("上传凭证已失效");
             }
             exactlyOne(jdbc.update(
@@ -172,7 +187,9 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
             if (!tenant.equals(lease.tenantId())
                     || !matches(work, lease)
                     || cleanup == null
-                    || !"UPLOAD_STAGING".equals(cleanup.get("mode"))) return false;
+                    || !"UPLOAD_STAGING".equals(cleanup.get("mode"))) {
+                return false;
+            }
             exactlyOne(jdbc.update(
                     "UPDATE kb_document_work SET kind='UPLOAD_ABORT',lease_until=?,update_time=?"
                             + " WHERE tenant_id=? AND document_id=? AND owner=? AND generation=?",
@@ -222,18 +239,20 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
     public Mono<Boolean> acceptDelete(Long documentId, String endpoint, String indexName) {
         return scoped(tenant -> tx(() -> {
             Map<String, Object> existingWork = workRow(tenant, documentId);
-            if (existingWork == null) ensureWork(tenant, documentId);
+            if (existingWork == null) {
+                ensureWork(tenant, documentId);
+            }
             workRow(tenant, documentId);
             KnowledgeDocument document = loadDocument(tenant, documentId, true);
             Map<String, Object> cleanup = cleanupRow(tenant, documentId, true);
             if (document == null) {
-                if (cleanup != null && !"REGISTERED".equals(cleanup.get("mode"))) {
+                if (cleanup != null && !MODE_REGISTERED.equals(cleanup.get(MODE_KEY))) {
                     return true;
                 }
                 throw missing();
             }
             if (document.isDeleted()) {
-                if (cleanup != null && "DELETE".equals(cleanup.get("mode"))) {
+                if (cleanup != null && MODE_DELETE.equals(cleanup.get(MODE_KEY))) {
                     return true;
                 }
             }
@@ -327,10 +346,10 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
                 return null;
             }
             Map<String, Object> cleanup = cleanupRow(tenant, documentId, true);
-            if (cleanup != null && !"REGISTERED".equals(cleanup.get("mode"))) {
+            if (cleanup != null && !MODE_REGISTERED.equals(cleanup.get(MODE_KEY))) {
                 return null;
             }
-            return claim(tenant, documentId, work, "INGEST");
+            return claim(tenant, documentId, work, KIND_INGEST);
         }));
     }
 
@@ -415,7 +434,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
                     lease.generation(),
                     now());
             zeroOrOne(affected);
-            if (affected == 1 && "CLEANUP".equals(lease.kind())) {
+            if (affected == 1 && KIND_CLEANUP.equals(lease.kind())) {
                 exactlyOne(jdbc.update(
                         "UPDATE kb_document_cleanup SET lease_until=? WHERE tenant_id=? AND document_id=?"
                                 + " AND owner=? AND generation=?",
@@ -502,24 +521,36 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
                     }
                     KnowledgeDocument doc = loadDocument(tenantId, documentId, true);
                     Map<String, Object> cleanup = cleanupRow(tenantId, documentId, true);
-                    if (cleanup == null
-                            || "REGISTERED".equals(cleanup.get("mode"))
-                            || (doc != null && !doc.isDeleted())) {
+                    if (cleanup == null) {
+                        return null;
+                    }
+                    if (MODE_REGISTERED.equals(cleanup.get(MODE_KEY))) {
+                        return null;
+                    }
+                    if (doc != null && !doc.isDeleted()) {
                         return null;
                     }
                     LocalDateTime retry = timestamp(cleanup.get("next_retry_at"));
                     LocalDateTime review = timestamp(cleanup.get("next_review_at"));
                     boolean reviewDue = review != null
                             && !review.isAfter(now())
-                            && List.of("DELETE", "LEGACY_INDEX", "UPLOAD_STAGING")
-                                    .contains(cleanup.get("mode"));
-                    if (!reviewDue
-                            && ("COMPLETED".equals(cleanup.get("status"))
-                                    || number(cleanup.get("attempts")) >= config.getMaxAttempts()
-                                    || (retry != null && retry.isAfter(now())))) {
-                        return null;
+                            && List.of(MODE_DELETE, MODE_LEGACY_INDEX, MODE_UPLOAD_STAGING)
+                                    .contains(cleanup.get(MODE_KEY));
+                    boolean cleanupCompleted = STATUS_COMPLETED.equals(cleanup.get("status"));
+                    boolean maxAttemptsReached = number(cleanup.get("attempts")) >= config.getMaxAttempts();
+                    boolean retryNotDue = retry != null && retry.isAfter(now());
+                    if (!reviewDue) {
+                        if (cleanupCompleted) {
+                            return null;
+                        }
+                        if (maxAttemptsReached) {
+                            return null;
+                        }
+                        if (retryNotDue) {
+                            return null;
+                        }
                     }
-                    KnowledgeDocumentLease lease = claim(tenantId, documentId, work, "CLEANUP");
+                    KnowledgeDocumentLease lease = claim(tenantId, documentId, work, KIND_CLEANUP);
                     exactlyOne(jdbc.update(
                             "UPDATE kb_document_cleanup SET"
                                     + " status='PROCESSING',owner=?,generation=?,lease_until=?,attempts=attempts+1,update_time=?"
@@ -550,7 +581,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
     @Override
     public Mono<PageResponse<KnowledgeDocumentCleanup>> cleanupPage(int page, int size) {
         return scoped(tenant -> {
-            if (page < 1 || size < 1 || size > 100) {
+            if (page < FIRST_GENERATION || size < FIRST_GENERATION || size > MAX_CLEANUP_PAGE_SIZE) {
                 throw new BusinessException(ResultCode.PARAM_ERROR, "分页参数无效");
             }
             Long count = jdbc.queryForObject(
@@ -574,7 +605,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
         return scoped(tenant -> tx(() -> {
             Map<String, Object> work = workRow(tenant, documentId);
             Map<String, Object> cleanup = cleanupRow(tenant, documentId, true);
-            if (cleanup == null || "REGISTERED".equals(cleanup.get("mode"))) {
+            if (cleanup == null || MODE_REGISTERED.equals(cleanup.get(MODE_KEY))) {
                 throw missing();
             }
             if (active(work)) {
@@ -742,7 +773,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
             throw missing();
         }
         Map<String, Object> work = workRow(tenant, lease.documentId());
-        if (!matches(work, lease) || !active(work) || !lease.kind().equals(work.get("kind"))) {
+        if (!matches(work, lease) || !active(work) || !lease.kind().equals(work.get(KIND_KEY))) {
             throw new IllegalStateException("文档认领租约失效，拒绝旧持有者写入");
         }
         if (requireActiveDocument) {
@@ -777,8 +808,7 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
     }
 
     private void ensureWork(String tenant, Long id) {
-        if (jdbc.queryForObject("SELECT COUNT(*) FROM kb_document WHERE tenant_id=? AND id=?", Long.class, tenant, id)
-                == 0) {
+        if (jdbc.queryForObject(COUNT_DOCUMENT_QUERY, Long.class, tenant, id) == 0) {
             throw missing();
         }
         if (jdbc.queryForObject(
@@ -875,8 +905,12 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
     }
 
     private static LocalDateTime timestamp(Object value) {
-        if (value == null) return null;
-        if (value instanceof LocalDateTime time) return time;
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof LocalDateTime time) {
+            return time;
+        }
         return ((java.sql.Timestamp) value).toLocalDateTime();
     }
 
@@ -885,15 +919,21 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
     }
 
     private static void exactlyOne(int affected) {
-        if (affected != 1) throw new IllegalStateException("文档写入受影响行数不符: " + affected);
+        if (affected != 1) {
+            throw new IllegalStateException("文档写入受影响行数不符: " + affected);
+        }
     }
 
     private static void zeroOrOne(int affected) {
-        if (affected < 0 || affected > 1) throw new IllegalStateException("文档认领受影响行数不符: " + affected);
+        if (affected < 0 || affected > 1) {
+            throw new IllegalStateException("文档认领受影响行数不符: " + affected);
+        }
     }
 
     private static void nonNegative(int affected) {
-        if (affected < 0) throw new IllegalStateException("分块清理受影响行数无效");
+        if (affected < 0) {
+            throw new IllegalStateException("分块清理受影响行数无效");
+        }
     }
 
     private static int bounded(int limit) {
@@ -901,7 +941,9 @@ public class KnowledgeDocumentLifecycleRepository implements KnowledgeDocumentLi
     }
 
     private static String requireTenant(String tenant) {
-        if (tenant == null || tenant.isBlank() || tenant.length() > 64) throw new IllegalArgumentException("可信租户ID无效");
+        if (tenant == null || tenant.isBlank() || tenant.length() > MAX_TENANT_ID_LENGTH) {
+            throw new IllegalArgumentException("可信租户ID无效");
+        }
         return tenant;
     }
 

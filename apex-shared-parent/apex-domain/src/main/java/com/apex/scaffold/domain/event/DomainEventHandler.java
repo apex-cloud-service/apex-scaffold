@@ -45,6 +45,7 @@ public interface DomainEventHandler<T extends BaseDomainEvent> {
      * 处理领域事件。
      *
      * @param event 领域事件
+     * @return 事件处理完成信号
      */
     Mono<Void> handle(T event);
 

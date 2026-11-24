@@ -10,14 +10,13 @@ import org.springframework.context.annotation.Bean;
 
 /**
  * 注册真实 XXL Spring 执行器，自动发现业务服务的 @XxlJob 方法。
+ * JAR 级裁剪通过类名字符串守卫可选依赖，避免自动配置加载期缺类。
  *
  * @author Apex Team
  * @since 1.3.1
  */
 @AutoConfiguration
 @EnableConfigurationProperties(JobExecutorProperties.class)
-// JAR 级裁剪（方案 C1）：消费方排除 xxl-job-core 时以类名字符串守卫，
-// 避免自动配置类加载期 NoClassDefFoundError（不能用 XxlJobSpringExecutor.class 引用形式）
 @org.springframework.boot.autoconfigure.condition.ConditionalOnClass(
         name = "com.xxl.job.core.executor.impl.XxlJobSpringExecutor")
 @ConditionalOnProperty(prefix = "apex.job.executor", name = "enabled", havingValue = "true")

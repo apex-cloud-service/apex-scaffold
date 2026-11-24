@@ -14,6 +14,7 @@ public interface ApiCallLogSink {
      * 写入调用观测数据。
      *
      * @param observation 脱敏后的调用数据
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> save(ApiCallObservation observation);
 }

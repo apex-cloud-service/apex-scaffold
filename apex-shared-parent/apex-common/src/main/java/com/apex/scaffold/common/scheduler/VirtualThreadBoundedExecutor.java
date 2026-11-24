@@ -66,7 +66,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.3.1
  */
 @Slf4j
-public final class VirtualThreadBoundedExecutor extends AbstractExecutorService implements ScheduledExecutorService {
+public final class VirtualThreadBoundedExecutor extends AbstractExecutorService implements BoundedScheduledExecutor {
 
     /** 池名称，用于虚拟线程命名与指标标签。 */
     private final String poolName;
@@ -505,3 +505,5 @@ public final class VirtualThreadBoundedExecutor extends AbstractExecutorService 
         }
     }
 }
+
+interface BoundedScheduledExecutor extends ScheduledExecutorService {}

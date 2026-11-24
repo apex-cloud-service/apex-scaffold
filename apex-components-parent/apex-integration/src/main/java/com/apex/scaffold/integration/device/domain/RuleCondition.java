@@ -28,6 +28,8 @@ public record RuleCondition(String field, Operator op, JsonNode value) {
      * 结构化操作符白名单（禁止扩展为脚本语义）。
      *
      * <p>文本别名与符号等价（{@code EQ} 等同 {@code =}），解析大小写不敏感。
+     *
+     * @author Apex Team
      */
     public enum Operator {
         /** 等于。 */
@@ -74,6 +76,8 @@ public record RuleCondition(String field, Operator op, JsonNode value) {
     /** 字段路径合法性：字母数字/下划线/连字符/点，1~64 位（仅 Map 取值，无求值面）。 */
     private static final String FIELD_PATTERN = "[A-Za-z0-9_\\-.]{1,64}";
 
+    private static final String FIELD_PATH_SEPARATOR_REGEX = "\\.";
+
     /**
      * 按点分路径从遥测 Map 中解析字段值（逐级 Map 取值，缺失返回 null）。
      *
@@ -82,7 +86,7 @@ public record RuleCondition(String field, Operator op, JsonNode value) {
      */
     Object resolve(Map<String, Object> metric) {
         Object current = metric;
-        for (String segment : field.split("\\.")) {
+        for (String segment : field.split(FIELD_PATH_SEPARATOR_REGEX)) {
             if (current instanceof Map<?, ?> map) {
                 current = map.get(segment);
             } else {

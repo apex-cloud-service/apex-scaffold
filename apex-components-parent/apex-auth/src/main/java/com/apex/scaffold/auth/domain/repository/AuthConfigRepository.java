@@ -47,7 +47,7 @@ public interface AuthConfigRepository {
      * @param size 每页数量
      * @return OAuth2客户端配置流
      */
-    Flux<AuthConfigEntity> findOAuth2Clients(String tenantId, int page, int size);
+    Flux<AuthConfigEntity> findOauth2Clients(String tenantId, int page, int size);
 
     /**
      * 根据ID删除认证配置

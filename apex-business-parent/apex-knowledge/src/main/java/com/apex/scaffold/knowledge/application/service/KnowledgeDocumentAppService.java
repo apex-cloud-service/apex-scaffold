@@ -272,7 +272,9 @@ public class KnowledgeDocumentAppService {
     private Mono<Void> compensateUpload(
             KnowledgeDocumentLease lease, ObjectStorage storage, String bucket, String key) {
         return lifecycle.abortUpload(lease).flatMap(aborted -> {
-            if (!aborted) return Mono.empty();
+            if (!aborted) {
+                return Mono.empty();
+            }
             return Mono.defer(() -> storage.delete(bucket, key))
                     .switchIfEmpty(Mono.error(new IllegalStateException("对象补偿未确认")))
                     .flatMap(removed -> lifecycle.failUpload(lease, "上传或登记失败；独占对象补偿已执行，继续复核迟到写入", false))

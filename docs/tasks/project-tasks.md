@@ -9,7 +9,10 @@
 
 | ID | 优先级 | 任务 | 状态 | 负责 | 验收标准 | 关联 |
 | --- | --- | --- | --- | --- | --- | --- |
-| BE-049 | P1 | 【P1】代码-全模块设计模式/SPI/lambda 增量复审与兼容性优化（含测试报告生成链修复） | 执行中 | R0/执行：ZCode（用户 2026-11-22 授权，串行单写者；与 BE-043/BE-044 追加式协作，不覆盖其成果） | 全 45 个 reactor 项目按根 POM 递归覆盖评审（共享、组件/业务库、starter、运行模块、装配、工具）；只做有证据的兼容性优化：SSO 协议分派合并、Meilisearch 资源分派收敛、内部端点错误响应去重、SPI 真实描述符发现测试、网关撤销缓存保留期修正、数据权限 WHERE 括起、Outbox 领取行数校验；不改 HTTP 契约、模块坐标、Flyway、安全与事务语义；修复测试报告生成器旧路径/硬编码/仅 Surefire 缺陷并补测试；同步受影响文档/配置核对/台账并重生成报告；**结果**：SSO 协议注册表、Meilisearch 资源注册表、`InternalEndpointErrors` 抽取、网关撤销保留期 7200s、数据权限 OR 括起、Outbox 抢占校验、存储 SPI 真实描述符测试、报告生成链重写（45 模块递归+Surefire/Failsafe 分列+XXE 禁用）；全量 `clean verify` 45/45 SUCCESS（最终 `-T1` 23:37）、控制台 6740 测试 0 失败/33 跳过（[报告](../06-testing/2026-11-22-be049-full-verify-report.md)）；撤销游标回退尝试经既有测试证伪后已回退（风险登记 C10）；独立 R5 三轮复核后 **APPROVE_WITH_NITS**、MF-01~MF-06 与 N-10~N-15 全部清零；未提交 | [记录](../records/2026-11-22-code-review-pattern-spi-lambda.md)；[评审清单](../reviews/2026-11-22-full-module-code-review.md)；租约见下；基线 `b81acf18` |
+| BE-049 | P1 | 【P1】代码-全模块设计模式/SPI/lambda 增量复审与兼容性优化（含测试报告生成链修复） | 执行中 | R0/执行：Codex（用户 2026-11-23 授权接管；保留既有提交及 R5 结论，不覆盖、不关闭） | 全 45 个 reactor 项目按根 POM 递归覆盖评审（共享、组件/业务库、starter、运行模块、装配、工具）；只做有证据的兼容性优化：SSO 协议分派合并、Meilisearch 资源分派收敛、内部端点错误响应去重、SPI 真实描述符发现测试、网关撤销缓存保留期修正、数据权限 WHERE 括起、Outbox 领取行数校验；不改 HTTP 契约、模块坐标、Flyway、安全与事务语义；修复测试报告生成器旧路径/硬编码/仅 Surefire 缺陷并补测试；同步受影响文档/配置核对/台账并重生成报告；**既有结果**：SSO 协议注册表、Meilisearch 资源注册表、`InternalEndpointErrors` 抽取、网关撤销保留期 7200s、数据权限 OR 括起、Outbox 抢占校验、存储 SPI 真实描述符测试、报告生成链重写（45 模块递归+Surefire/Failsafe 分列+XXE 禁用）；历史全量 `clean verify` 45/45 SUCCESS、6740/0 失败/33 跳过；独立 R5 三轮复核 **APPROVE_WITH_NITS**、MF-01~MF-06 与 N-10~N-15 清零。**状态核对**：旧卡标记“未提交”，但提交历史已出现相关提交；需在旧任务中核清完整提交、集成与未完成交接证据后再决定是否转待复核；不得并入 BE-063 | [记录](../records/2026-11-22-code-review-pattern-spi-lambda.md)；[评审清单](../reviews/2026-11-22-full-module-code-review.md)；租约见下；原基线 `b81acf18`；接管基线 `90a2f783` |
+| BE-063 | P1 | 【P1】全仓中台韧性、DDD 与发布能力分波次评审优化 | 执行中 | R0/执行：Codex（用户 2026-11-23 授权，Wave A 只读审计）；独立 R5：Pauli（子代理 `01a2066c-e436-7b43-b7e3-a076beab7ce5`，不参与执行） | 以当前 `dev` 全量模块为范围，先建立证据化架构/容量基线，再按批评审 DDD 边界与依赖、缓存一致性/失效、熔断重试/超时/隔离、限流与背压、基础设施可观测性、灰度/蓝绿/负载均衡；每项先登记风险、SLO/基线、回滚与定向测试，再决定是否改动；任何接口/模块/迁移/路由/运行拓扑变更先过规格评审；按受影响模块测试并重新生成报告，真实集群/压测不可用时明确标未验证，不得虚构结果 | [方案](../specs/2026-11-23-platform-resilience-ddd-release.md)；[计划](../plans/2026-11-23-platform-resilience-ddd-release.md)；[Wave A 基线评审](../reviews/2026-11-23-be063-wave-a-baseline.md)；旧任务 BE-043/BE-049 独立保留 |
+| BE-064 | P1 | 【P1】构建门禁修复：PMD Java 21 字节码兼容与数据源超时测试稳定性 | 待复核 | R0/执行：当前 Codex 会话；独立 R5：Curie 已批准静态整改 | 插件专用 ASM 已兼容 Java 21，握手超时用例锁定 JDBC 配置和真实根因。定向验证、最终单次全仓验证和同轮报告均通过；未降低门禁，尚无集成提交，不关闭任务。 | [规格](../specs/2026-11-23-be064-build-gate-repair.md)；[执行记录](../records/2026-11-23-be064-build-gate-repair.md)；BE-063 Wave E |
+| BE-065 | P1 | 【P1】PMD Java 21 兼容后暴露的全仓规则违规逐项修复 | 执行中 | R0/执行：当前 Codex 会话单写；独立 R5：Curie 完成局部整改复核 | 未禁用规则、未扩大排除清单；最终单次全仓验证 45/45，37 份 PMD XML 零违规、零 XML error。最大迭代诊断、Java 构件兼容、整包终审和集成仍需单独处理。 | [规格](../specs/2026-11-23-be065-pmd-rule-repair.md)；[记录](../records/2026-11-23-be065-pmd-rule-repair.md)；[Wave E](../records/2026-11-23-be063-wave-e-full-verify.md)；BE-064 |
 | BE-050 | P2 | 【P2】安全-网关 JWKS 快照淘汰已下线 kid | 待规划 | R0 待指定 | 现状：`GatewayJwtVerifierService` 拉取 JWKS 仅 `putAll` 合并，从不清除已下线 `kid`，密钥轮换后旧公钥长期驻留内存；验收：确认真实轮换窗口后实现淘汰（保留启动兜底与拉取失败回退语义），补「旧 kid 被移除」与「拉取失败保留旧快照」正反向用例，`:apex-gateway -am test` 0 失败 | [评审 C1](../reviews/2026-11-22-full-module-code-review.md) | 静态发现，未复现 |
 | BE-051 | P2 | 【P2】缓存-多级缓存 L1/L2 TTL 与 stale 语义评估 | 待规划 | R0 待指定 | 现状：`apex-infrastructure-cache` 的 L1 TTL 长于 L2，`stale` 语义不可实现（评审 C2）；验收：先取真实部署配置确认是否成立，给出结论文档；如需改行为须先出规格并附一致性回归用例，`:apex-infrastructure-cache -am test` 0 失败 | [评审 C2](../reviews/2026-11-22-full-module-code-review.md) | 静态发现，未复现 |
 | BE-052 | P1 | 【P1】office-内部未读列表先过滤再分页 | 待规划 | R0 待指定 | 现状：`OfficeInternalHandler.unreadMessageSection` 用 `getInbox(userId, 1, limit)` 后过滤未读，未读集中在后面时返回条目少于 limit（评审 C3）；验收：为 `OffMessageService` 增加未读查询端口（属契约变更，须先出规格），改为服务端过滤分页；补「未读集中在尾页」「全未读/全已读」用例，`:apex-office` 与 `:apex-office-service -am test` 0 失败 | [评审 C3](../reviews/2026-11-22-full-module-code-review.md) | 需契约变更，须独立评估 |
@@ -28,7 +31,7 @@
 | BE-047 | P1 | 【P1】图表-新增 16 张补缺图（130–145） | 已完成 | R0/执行：ZCode（同 BE-045 租约，串行单写者） | 新增：当前运行拓扑系统架构图 130；integration 功能/ER/设备时序/连接器流程 131–134；knowledge 功能/ER/摄取流程/RAG 问答时序 135–138；masking 架构 139；boot-all 装配 140；job 141；seata 模式 142；storage SPI 143；office 站内信流程 144 与审批编排时序 145；全部 `.mmd`+`.svg` 成对（mermaid-cli v10 渲染）、theme:base 四色；登记 `docs/diagrams/README.md`、`docs/02-architecture/architecture-index.md`、时序入 `sequence/README.md`；shared 五能力 JAR 与非 license starter 无业务 ER 豁免登记；**结果**：16 张 .mmd+.svg 全部渲染成功（mermaid-cli 10，含 2 处语法修复）；三处索引登记完成；SVG 247→263、MMD 68→84 | [记录](../records/2026-11-22-alignment-campaign.md)；集成提交 `d64a2255`；R5 APPROVE_WITH_NITS、MF-01~03 清零，治理校验全绿，**已关闭** | 基线 `8d8dc31c` |
 | BE-048 | P1 | 【P1】注释与规则文档/扫描脚本修复 | 已完成 | R0/执行：ZCode（同 BE-045 租约，串行单写者） | `FileAuditFieldFillHandler.java` 类注释补 `@author`/`@since`（全仓 main Javadoc 扫描归零）；`AGENTS.md` 0.5-2 BE-004 措辞修正为例外实为 `@RestControllerAdvice`（附录 A 原文与哈希不动）；`docs/specs/project-governance.md` §6 B6（Logger 违规已清零）/B7（补验证口径）更新；`scripts/dev/check/scan-javadoc-issues.sh` 默认 `JAVADOC_SCAN_PATH` 改两级嵌套并同步 scripts/README 与 development-standards 用法说明；`github-branch-protection.md` 「无 CI 可挂」段落刷新；`check_javadoc.sh` 加废弃标注；`audit-backend-rules.sh --strict` 通过；**结果**：注释补齐后扫描四类 0 问题；AGENTS 0.5-2/B6/B7/脚本默认路径/CI 段/废弃标注全部落地；全量 clean verify BUILD SUCCESS 45/45、Tests 6716/0 失败/33 跳过 | [记录](../records/2026-11-22-alignment-campaign.md)；集成提交 `3964a8d3`+`23360fc3`；R5 APPROVE_WITH_NITS、MF-01~03 清零，治理校验全绿，**已关闭** | 基线 `8d8dc31c` |
 | BE-044 | P2 | 【P2】全仓设计模式 / SPI / 注释复审与整改 | 待复核 | R0/执行：Trae（用户 2026-11-22 授权，串行单写者；与 BE-043 共用 `docs/README.md`、任务盘与台账，采用追加式写入） | Wave A–F 已落地（F 仅结论）；变更记录 [2026-11-22-code-quality-pattern-spi.md](../records/2026-11-22-code-quality-pattern-spi.md)、台账 #73、计划 §5 已登记；存储/消息/集成/知识库及 system-service、auth-service `-am test` 全绿，`verify-docs.sh --strict` 0 项；**独立 R5 再审 APPROVE**（实例与结论见变更记录；关闭仍需集成提交及治理证据）；Wave G 已按用户追加授权修复：解析失败跳过当前规则，三条回归用例及 integration `-am test` 通过；首轮全量 `clean verify` 44/45 项目成功，boot-all 因 MQ 消费者缺少 Redisson 装配条件失败；已补回归及条件。首轮 R5 REJECT 的 index 严格校验与顺序注释两项 P2 已修正，knowledge/boot-all 及其依赖定向复验 BUILD SUCCESS，独立 R5 再审 APPROVE；修复后全量 `mvnd -T4 -B clean verify` BUILD SUCCESS（退出码 0，45/45 项目 SUCCESS，耗时 13:24；证据见变更记录及台账 #78）；尚无集成提交，保持待复核 | [计划](../plans/2026-11-22-code-quality-pattern-spi-comment-plan.md)；基线 `6346c7a4` |
-| BE-043 | P1 | 【P1】联调-全量 API 契约核验与 Podman Compose 真实链路 | 执行中 | R0/执行：Codex（用户 2026-11-18 授权，串行单写者） | R3 方案评审 `integration_plan_review`：最终结论 APPROVE（2026-11-18，确认移除不存在的 integration profile、唯一 Compose 入口及执行边界）；与 FE-029 对照后端执行路由/DTO/权限/分页与真实响应；只修真实证据确认的缺陷并补定向测试；Podman 栈服务名/健康/网络反代可用；测试、spotless、治理检查和 R5 独立复核通过后关闭 | [方案](../specs/2026-11-18-fullstack-integration.md)；BE 基线 `b177605d1d1482470945b8a48183103655bf3d18`；FE 基线 `f03bb6883a0f05be9cb4fda836062db55f6e4460`；FE-029 |
+| BE-043 | P1 | 【P1】联调-全量 API 契约核验与 Podman Compose 真实链路 | 执行中 | R0/执行：Codex（用户 2026-11-23 授权接管；保持旧任务开放） | R3 方案评审 `integration_plan_review`：最终结论 APPROVE（2026-11-18，确认移除不存在的 integration profile、唯一 Compose 入口及执行边界）；与 FE-029 对照后端执行路由/DTO/权限/分页与真实响应；只修真实证据确认的缺陷并补定向测试；Podman 栈服务名/健康/网络反代可用；测试、spotless、治理检查和 R5 独立复核通过后关闭；用户授权仅接管责任与租约，不豁免 reader、知识库模型或独立 R5 等未完成验收 | [方案](../specs/2026-11-18-fullstack-integration.md)；旧基线 BE `b177605d1d1482470945b8a48183103655bf3d18` / FE `f03bb6883a0f05be9cb4fda836062db55f6e4460`；接管基线 BE `90a2f783` / FE `aec9c444`；FE-029 |
 | BE-042 | P1 | 【P1】治理-落地多智能体并行协作与交接规则 | 已完成 | R0/执行：Codex（同一会话，串行单写者）；首轮 R5：Chandrasekhar；增量 R5：Erdos（独立子代理 `01a1ed8c-02cb-7300-a949-cca27d03f6fa`） | 主控/执行/复核分责、任务租约与认领、并行准入、单写者与写入范围、Worktree 隔离、标准交接包、合并冲突升级、异常接管与关闭条件均写入 `AGENTS.md`、治理正文、R0–R5 角色卡和任务入口；文档引用、后端红线、预检与记忆台账通过；`verify-docs.sh --strict` 0 项；附录 A 哈希不变；独立 R5 增量结论 `APPROVE_WITH_NITS`，MF-01–MF-05 清零；最终关闭提交及三支同步见本任务提交历史 | `docs/specs/project-governance.md` §2/§4；`docs/specs/ai-agents/`；`docs/records/2026-11-18-multi-agent-governance.md`；台账 #53/#54/#55；[R5 评审报告](../reviews/2026-11-18-be-042-r5-review.md) |
 | BE-041 | P2 | 【P2】全仓 Javadoc 评审与补齐战役（红线 B7 收口） | 待复核 | ZCode（用户于 2026-11-18 授权） | 双工具评审：扫描器四类清单全 0（类级历史战役已收口）+ JDK doclint 全反应堆 78 告警→0（53 失效引用/24 裸字符/1 @throws/1 注释错挂，53 文件纯注释修复）；`@param/@return/@throws` 全量 0 缺失；零逻辑改动；spotless 通过；三批 `-am test` 1028/4848/4205 用例 0 失败；全量 `clean verify` 43/45 模块 SUCCESS（2 个环境性失败均 -T1 单跑复核为绿：example 计时抖动、boot-all 8080 被既有网关占用）；记录 [2026-11-18-javadoc-review-campaign](../records/2026-11-18-javadoc-review-campaign.md)；台账 #52。已知工具限制：messaging javadoc 目标因 Lombok `onMethod_` 不兼容；顺带发现扫描器默认路径已被 11-14 嵌套破坏（另立任务） | 治理规范 B7；历史战役（2026-09 javadoc-work-summary） |
 | BE-040 | P1 | 【P1】根治 office/auth 的 FieldFill 失效（MetaObjectHandler 未装配） | 待复核 | ZCode（用户于 2026-11-17 授权） | 定位所有 FieldFill 失效的 PO（office 6 个、auth 2 个）并给出根治方案；修复后 create_time/update_time/version/deleted 能自动填充；不破坏模块依赖边界与既有测试；新增 AuditFieldFillHandler（office/auth 各一，属性名分别对齐模块 PO 口径）；新增填充语义回归用例；`:apex-office` 202、`:apex-auth` 1348 用例 0 失败、spotless 通过；真实环境验证移除显式赋值后时间被填充器写入；auth MFA/TOTP 写路径未实测（需外部凭据） | BE-039 遗留项 |
@@ -50,6 +53,119 @@
 - **验收命令**：`source scripts/build/init-build-env.sh`；`export PATH="/opt/podman/bin:$HOME/.orbstack/bin:$PATH"`；按模块 `mvnd -T4 -B -pl :<受影响> -am test` 与 `spotless:check`；收尾 `mvnd -T4 -B clean verify`；`bash -n` 触及脚本；`bash scripts/test/generate-test-report.sh`；`verify-docs.sh --strict`、`check-doc-refs.sh --strict`、`check-doc-layout.sh`、`audit-backend-rules.sh --strict`、`scripts/ci/check-doc-links.sh`、`apex-preflight.sh --fast --strict`、`git diff --check`、`scan-javadoc-issues.sh`。
 - **全局集成租约**：`WAITING`——未获提交授权；本轮交付工作区经复核改动，不执行 commit/push/合并。
 - **交接物**：全模块覆盖与问题清单（`docs/reviews/`）、变更记录（`docs/records/`）、台账条目、新测试报告（`docs/06-testing/`）、真实命令输出与未验证项、回滚方式（按批次 `git checkout -- <path>` 或 `git revert`）。
+
+### BE-049 租约接管追加（2026-11-23）
+
+- **授权与责任**：用户明确授权当前 Codex R0 接管 BE-049 责任与租约；原 ZCode 执行期及其提交、测试报告和 R5 结论均保留为历史，不覆盖、不关闭旧任务。
+- **接管基线 / 工作区**：`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；接管时工作区干净。原卡 `b81acf18` 基线与 Git 提交历史不一致，R0 先核对任务关联提交和未完成事项，不把历史“未提交”文字直接改成已完成。
+- **2026-11-24 提交核对**：`9a59ee2e` 为核心修复、`c41f4fa1` 为报告汇总链、`4118155c` 为评审及报告；三者都在当前 `dev` 历史中，本地 `dev`、`master`、`test` 均包含 `4118155c`，未核验远端。真多实例 Outbox 抢占、撤销流全链路及秒级批边界仍未验证，留在 BE-049；状态保持执行中，历史 R5 结论不覆盖后续改动。
+- **本轮范围**：只核实 BE-049 交接、证据与遗留；新一轮韧性/DDD/发布优化统一登记 BE-063，禁止混入 BE-049。
+- **独立复核 / 并行**：已有 BE-049 R5 结论只覆盖其评审 diff；如有新变更，须另由非执行者 R5 复核。与 BE-063 的共享构建、任务盘、文档索引、记录索引和台账串行写入。
+- **全局集成租约**：`WAITING`；此次仅更新任务责任记录，不提交、不推送、不合并。
+
+### BE-043 租约接管追加（2026-11-23）
+
+- **授权与责任**：用户明确授权当前 Codex R0 接管 BE-043；FE-029 同步由同一 R0 串行协调。旧任务仍为“执行中”，未完成验收项完整保留。
+- **接管基线**：后端 `dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；前端 `dev` `aec9c444dc113ce7b64f78c0956304b54d304727`。前端已有未提交工作区差异（API 审计脚本、契约矩阵及相关记录/索引），作为既有 FE-029 工作保护，不覆盖、不清理。
+- **写入与互斥**：先完成旧任务交接清单与未完成项核对；BE-043/FE-029 继续共享契约串行推进。BE-063/FE-030 是独立新任务，不承接 reader/知识库、全量真实链路或旧任务 R5 遗留，也不改变旧任务状态。
+- **独立复核**：既有 R3/R5 指派与历史结论保留；接管后的新增代码需独立 R5 绑定最终 diff/SHA。不得因责任接管将旧任务视为已复核或已关闭。
+- **全局集成租约**：`HOLDING`，当前 Codex R0 接替持有并串行协调 FE-029/BE-043；本次授权不包含 commit/push、分支同步或任务关闭。
+
+### BE-063 Wave A 执行租约（仅基线评审）
+
+- **R0 / 执行者 / 环境**：当前 Codex 会话，`/Users/work/apex-scaffold` 的 `dev` 共享 checkout，串行单写者。独立 R5：Pauli（`01a2066c-e436-7b43-b7e3-a076beab7ce5`），只复核，不实现。
+- **基线与时限**：`90a2f783e2c251a55f53b0fc1b845b11d537e951`；2026-11-23 11:22（Asia/Shanghai）起，一个工作日，或提前交接为止。
+- **写入范围**：仅本卡、本波次评审、实施计划、文档及评审索引和记忆台账；生产源码、测试、POM、路由、配置、脚本、迁移和部署只读。
+- **禁止触碰与互斥**：保留未提交日报、知识快照和前端联调差异；不修改旧任务的未完成项、图表、私有目录、运行环境或数据。BE-043/BE-049/FE-029/FE-030 与本波次不并行写入；完成本波复核后再登记下一波写入范围。
+- **验收**：根 POM 递归清单和代表性实现对照；运行 `bash scripts/dev/apex-preflight.sh --fast --strict`、`bash scripts/governance/verify-docs.sh --strict`、`bash scripts/governance/check-doc-refs.sh --strict`、`bash scripts/governance/audit-backend-rules.sh --strict`、`git diff --check`，均无阻断。
+- **交接物**：[Wave A 交接包](../records/2026-11-23-be063-wave-a-handoff.md) 包含基线矩阵、真实命令结果、待验证与回滚清单及独立复核。全局集成租约 `WAITING`；不暂存、提交、推送或合并；未提交的变更仅按本波新增内容逐项撤回。
+
+- **Wave A 结果**：独立 R5 复审 `APPROVE_WITH_NITS`，首审两项必改均已解除；本波执行租约释放。结论不覆盖后续实现，不持有集成租约。
+
+### BE-063 Wave B1 执行租约（L1 缓存生命周期）
+
+- **R0 / 执行 / 独立复核**：当前 Codex 会话串行执行；Pauli（`01a2066c-e436-7b43-b7e3-a076beab7ce5`）仅负责 R5，不参与实现。
+- **基线 / 环境 / 时间**：`90a2f783e2c251a55f53b0fc1b845b11d537e951`，`/Users/work/apex-scaffold` 的 `dev`；2026-11-23 当日，至本批交接为止。固定 JDK 21/mvnd。
+- **范围**：`apex-infrastructure-cache` 的 `LocalCacheService.java` 及同包定向回归测试、BE-063 计划/交接/任务盘/索引和台账。让 TTL 元数据随 L1 条目淘汰，消除批写继承旧 TTL；保留 L1 缓存名称、容量、默认 TTL 和统计。禁止改 Redis 策略、生产配置、POM、外部契约、迁移或旧任务。与其他任务串行；全局集成租约 `WAITING`。
+- **验收和交接**：固定环境执行 `mvnd -B -pl :apex-infrastructure-cache -am test spotless:check`，核验读写过期、批写替换、容量淘汰与删除/清空；本次 apex-common 593、apex-domain 9、apex-infrastructure-cache 138 项均 0 failure/error/skip，Spotless 全绿。R5 Pauli `APPROVE_WITH_NITS`、无必改项；建议补正 TTL 边界测试并统一异步缓存模式，记录为后续验证项。本波租约释放；不暂存、不提交、不部署。
+
+### BE-063 Wave B2 执行租约（网关生产档熔断接线）
+
+- **R0 / 执行 / 独立复核**：当前 Codex 会话串行执行；Pauli（`01a2066c-e436-7b43-b7e3-a076beab7ce5`）独立 R5，不参与实现。
+- **基线 / 环境 / 时间**：`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；保留所有既有未提交差异；固定 JDK 21/mvnd；2026-11-23。
+- **范围**：只核对并修复 gateway `application-prod.yml` 的 auth/workflow 路由熔断过滤器缺失；测试覆盖 base/prod/Nacos 三份路由接线；更新本专项规格、任务记录、实施计划、索引及台账。不改变 route id、URI、Path、熔断阈值、TimeLimiter、fallback 响应契约或 Nacos 配置。
+- **禁止触碰**：不得修改灰度/负载均衡、超时和重试阈值、其他业务路由、接口契约、部署清单、POM、Flyway、BE-051 Redis 语义及旧任务未完成项；不暂存、提交、推送、部署。
+- **独立复核与并行**：仅 Pauli R5 复核本波网关配置、测试和文档 diff；与其他任务串行，`WAITING` 全局集成租约。
+- **验收命令**：固定环境 `mvnd -B -pl :apex-gateway -am test spotless:check`；`bash scripts/governance/verify-docs.sh --strict`、`bash scripts/governance/check-doc-refs.sh --strict`、`bash scripts/governance/audit-backend-rules.sh --strict`、`git diff --check`。
+- **回滚 / 交接**：按本波精确撤回 production 两条过滤器与测试断言；记录 profile 静态契约结果，不将其描述为真实产线熔断演练。R5 `APPROVE_WITH_NITS`、无必改项；建议断言每条路由恰有一个 CircuitBreaker，作为非阻断测试加固项。本波执行租约释放。
+
+### BE-063 Wave C1 执行租约（网关熔断配置唯一性测试）
+
+- **R0 / 执行 / 独立复核**：当前 Codex 会话串行执行；Pauli（`01a2066c-e436-7b43-b7e3-a076beab7ce5`）独立 R5，不参与实现。
+- **基线 / 环境 / 时间**：`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；固定 JDK `21.0.13.0+9-tem` / mvnd `2.0.0-rc-3`；2026-11-23，至 R5 交接。
+- **写入范围**：仅 `GatewayRouteProfileConfigTest.java` 的测试断言，以及本卡、BE-063 计划、测试/记录/评审索引与 `07-change-memory.md`；不修改生产配置和业务代码。
+- **禁止触碰**：不改路由配置、熔断阈值、TimeLimiter、fallback、服务发现、POM、接口、Kubernetes、旧任务/既有未提交改动；不暂存、提交、推送、部署。
+- **验收**：固定环境 `mvnd -B -pl :apex-gateway -am test spotless:check`；三种配置源中 auth/workflow 路由分别且仅有一个 `CircuitBreaker`，实例名/fallback 参数保持契约；common 593、gateway 171 tests 均 0 failure/error/skip；严格治理检查及 `git diff --check` 通过。
+- **交接 / 回滚**：交接记录 [Wave C1](../records/2026-11-23-be063-wave-c1-gateway-circuit-breaker-test.md)；R5 Pauli `APPROVE_WITH_NITS`、无必改项，建议未来补充双候选 auth route 同时出现时的数量约束。本波租约释放，全局集成租约 `WAITING`。
+
+### BE-063 Wave D1 规格评审租约（Kubernetes 网关灰度隔离）
+
+- **R0 / 执行 / 独立复核**：当前 Codex 会话；Pauli（`01a2066c-e436-7b43-b7e3-a076beab7ce5`）独立 R5，仅复核规格。
+- **基线 / 环境 / 时间**：`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；2026-11-23，交规格 R5 后释放。
+- **写入范围**：仅新增 Kubernetes 灰度隔离规格，以及本租约、计划、`docs/specs/README.md`、`docs/README.md` 和记忆台账。
+- **禁止触碰**：本租约不修改任何 YAML、脚本、测试、Service/Deployment、Ingress、PDB 或集群状态；不暂存/提交/部署。
+- **验收 / 交接**：核实稳定 Deployment selector 不变式、Service/PDB selector、Ingress 初始权重、apex.sh rollout 目标；规格定义迁移顺序、失败关闭、EndpointSlice 和回滚门槛。独立 R5 通过后，再另开实现租约；真实集群不可用时禁止宣称灰度实测。
+- **复核 / 释放**：Pauli 增量 `APPROVE_WITH_NITS`，无必改项；将容量、排空与入口探测判据交实现阶段。规格租约释放；全局集成租约 `WAITING`。
+
+### BE-063 Wave D1 实现租约（Kubernetes 网关灰度隔离）
+
+- **R0 / 执行 / 独立复核**：当前 Codex 会话为单一写者，Pauli（`01a2066c-e436-7b43-b7e3-a076beab7ce5`）独立 R5。全局集成租约 `WAITING`，不并行写、不暂存/提交/推送。
+- **基线 / 环境 / 时间**：`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；2026-11-23 12:56（上海）至当日 18:00 或提交独立复核时释放执行租约；固定 JDK/mvnd、隔离的模拟 kubectl，不执行集群命令。
+- **写入范围**：`k8s/` 网关基础与灰度清单、使用说明；`apex-tools-build` 的 K8s CLI、端点校验、说明与契约测试；运维部署/构建工具/架构现行入口指引，本任务卡、规格/计划同步、交接记录/索引/记忆台账。
+- **禁止触碰**：不改稳定 Deployment selector、稳定镜像、稳定 PDB 门槛、其他服务拓扑、业务/API/数据库、旧任务、无关既有差异；不访问或切换实际集群。不声明为蓝绿或自动化放量。
+- **验收与交接**：分离灰度入口清单；旧 selector 由 CLI 非零拒绝直升，分阶段人工迁移写入手册；验证 rollout、EndpointSlice 中真实 Pod 归属/身份互斥、启用 PDB 与否均可、0% 入场门槛及中断重跑。固定环境 `mvnd -B -pl :apex-tools-build -am test spotless:check`、shell 语法检查和严格治理校验；记录真实结果、待集群验证和回滚方式，经独立 R5 后进入后续波次。
+- **执行结果 / 租约释放**：实现复核首轮 `REJECT` 的 class/controller 与行为测试必改已完成；Pauli 增量 `APPROVE_WITH_NITS`。已再补 CLI 缺失/错误 IngressClass controller 的模拟集成路径并通过脚本回归。执行租约释放；建议性其余限制（容量/入口探测及真实集群）留待隔离环境波次，不属于本地可验证范围。
+
+### BE-063 Wave D2 规格租约（网关蓝绿切换）
+
+- **负责人 / 基线 / 时间**：当前 Codex R0 单写，独立 R5 Curie 只读；`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951` 加 D1 工作区改动，2026-11-24（Asia/Shanghai），至规格交接；全局集成租约 `WAITING`。
+- **范围 / 互斥**：仅新增蓝绿规格并维护索引、计划和台账；现有 Kubernetes 资源、脚本、配置、认证和业务实现不改。不操作现有集群，不与灰度迁移或旧任务共用执行租约。
+- **验收 / 回滚**：以独立复核和严格文档/引用检查验收，设计须覆盖固定入口、并发防护、端点身份、负载均衡和回切。仅撤回 D2 规格增量可回滚；实现与隔离集群演练分别授权和登记。
+- **复核 / 释放**：首轮 `REJECT` 的预检后竞争入口缺口已补齐，Curie 对最终规格增量 `APPROVE`，无必改项，规格租约释放。实现前另选能提供专属控制器、入口地址及拒绝式准入的隔离拓扑，登记实施范围；不把规格放行当成集群验收。
+
+### BE-063 Wave E 执行租约（全仓门禁与报告快照）
+
+- **R0 / 执行 / 复核**：当前 Codex 会话单写；全仓门禁按验证工作执行，Pauli 已独立复核 D1 实现，不代表其复核 Wave E。
+- **写入范围 / 禁止触碰**：仅运行构建/报告工具及登记本波命令结果；不运行 `clean`，不修改源码、质量门禁、超时断言、依赖或旧任务，不暂存/提交/部署。
+- **执行结果 / 交接**：`mvnd -T4 -B verify` 退出码 1：auth-service PMD 6.55/ASM 不支持 Java 21 class major 65；同时 `ExampleDataSourceTimeoutTest` 12.667s 超 12s 断言。报告工具汇总 45 模块现存 XML 6683 tests、1 failure、0 errors、33 skipped、4 duplicate warnings。交接 [Wave E 记录](../records/2026-11-23-be063-wave-e-full-verify.md)。Wave E 保持未通过；需要独立工具兼容/测试稳定性任务，不放宽门禁。本次执行租约释放。
+- **2026-11-24 隔离续验**：从当前 `dev` 工作树导出受 Git 管理的文件及未忽略的新增文件至 `/private/tmp`，不带 `.git`、忽略产物或已有 `target/`。同一 R0 在副本执行固定环境 `mvnd -T4 -B clean verify`；仅在通过后从该副本汇总 XML。原仓只写治理与结果记录，保留其他任务产物；独立 R5 待安排，集成 `WAITING`。
+- **2026-11-24 续验结果**：首轮仅 auth-service 格式失败，修正后续验 `BUILD SUCCESS`。两段覆盖 45 个模块，XML 汇总 6682 项、33 跳过、0 失败或错误；非单次全量通过。报告与跳过边界见 [Wave E 记录](../records/2026-11-23-be063-wave-e-full-verify.md#2026-11-24-隔离全仓验证)。
+- **最终单次验证 / 交接**：含 BE-064 最终断言和 BE-065 整改的隔离 `clean verify` 45/45 单次通过；从同次产物再生成报告，6685 项、33 跳过、0 失败或错误。Curie 接受[最终证据](../records/2026-11-23-be063-wave-e-full-verify.md#2026-11-24-最终单次全仓验证)作为本地门禁。隔离运行结束，集成 `WAITING`；不替代整包终审与真实环境演练。
+
+### BE-064 执行租约（构建门禁修复）
+
+- **R0 / 执行者**：当前 Codex 会话单写；独立 R5 待安排，不自审关闭。
+- **基线 / 环境 / 时间**：`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；JDK 21.0.13.0+9-tem / mvnd 2.0.0-rc-3；2026-11-23。
+- **写入范围**：根 `pom.xml` 的 Maven PMD 插件依赖，`ExampleDataSourceTimeoutTest.java`，本任务规格/记录/任务盘、必要索引及台账；不运行 clean，不覆盖其他任务未提交内容。
+- **禁止触碰**：PMD/P3C 规则与失败门禁、生产代码/配置、旧任务状态、报告历史；不得提交、推送或部署。
+- **验收命令**：定向执行 auth-service PMD verify 与 example 超时用例；后执行全仓 `mvnd -T4 -B verify`、`scripts/test/generate-test-report.sh`、严格文档与红线检查及 `git diff --check`。
+- **全局集成租约 / 交接**：`WAITING`；提交动作未获授权。结果写入 [BE-064 记录](../records/2026-11-23-be064-build-gate-repair.md)，成功后请求独立 R5 绑定最终 diff。
+- **2026-11-24 复核整改续租**：当前 Codex 串行单写，Curie 独立只读复核；同一基线上仅补 `ExampleDataSourceTimeoutTest.java` 的 JDBC 连接属性断言，不改 YAML、驱动或门禁。先在隔离副本验收定向用例、Spotless 和 PMD，再由 Wave E 对最终源码执行单次 `clean verify` 与同轮报告汇总。交接释放执行租约；回滚仅撤回本次断言增量和对应治理记录。
+- **复核 / 交接**：定向 17 模块通过、目标测试 1/1；Curie 静态增量 `APPROVE`，无必改项。本次整改租约释放，全仓报告由 Wave E 填写；尚无集成提交。
+
+### BE-065 执行租约（PMD 全仓规则修复）
+
+- **R0 / 执行者 / 复核者**：当前 Codex 会话为 R0 与执行者；独立 R5 待安排，不自审关闭。
+- **续作范围**：2026-11-23（Asia/Shanghai）串行单写；本轮处理 `apex-api-contract`、同仓消费者、`apex-tools-deployment` 和 `apex-infrastructure-remote`。定向门禁均通过；最新全仓刷新为 37 个 XML、174 条违规、0 个 XML `<error>`，其余业务模块仍需逐项修复。独立复核时交付定向构建日志、全仓扫描快照及未验证项；不与旧任务并行写入同一路径。
+- **基线 / 环境 / 时间**：`dev` `90a2f783e2c251a55f53b0fc1b845b11d537e951`；固定 JDK 21.0.13.0+9-tem / mvnd 2.0.0-rc-3；2026-11-23。
+- **写入范围**：经全仓 PMD 定位的违规源码、必要回归测试及本任务规格/记录/任务盘/索引/台账；保留现有业务行为与对外契约。
+- **2026-11-24 续作**：仍由当前 Codex 串行单写，独立 R5 待安排。本批范围为 file-service、integration-service、knowledge-service、boot-all 的 PMD 定位项；验收先定向检查，再按 Wave E 全仓 `clean verify`，报告仅在取得完整构建结果后生成。全局集成租约继续 `WAITING`。
+- **续作证据与环境隔离**：integration 定向测试、Spotless、PMD 已通过；剩余模块批次修复后见两处 Spotless 空行要求，已按差异修正。全仓 `clean verify` 只在独立临时副本执行，保留原工作区与其他任务的 `target/`。执行证据与待核项见 [BE-065 记录](../records/2026-11-23-be065-pmd-rule-repair.md)。
+- **2026-11-24 R5 整改续租**：当前 Codex R0 串行写入，仅限 `MysqlClient.java`、`MysqlClientTest.java`、`OauthConsentRepository.java` 的类 Javadoc、BE-065 兼容性规格及 BE-064/065、Wave E 治理记录。独立 R5 Curie（`01a20bc5-e5c8-7ab0-8b55-c1dabcbb020e`）只读复核；上一轮 Hilbert 的结论保留。显式限定 CLI 管道执行器资源，定向验证子进程回归、Spotless、PMD，随后仅在隔离目录全量验证并生成报告。不改 SQL、发布脚本、门禁或历史报告；全局集成租约 `WAITING`，工作范围交接后释放；仅撤回本次明确的源码与测试增量可回滚。
+- **禁止触碰**：禁用 PMD、放宽失败门槛、扩大 exclude 清单、改变无关模块/接口/迁移/生产拓扑；不清理其他任务产物，不暂存/提交/推送/部署。
+- **验收与回滚**：受影响模块 `verify` + Spotless，继而全仓 `mvnd -T4 -B verify`；报告写到独立快照并说明同一代码基线。按任务范围逐批撤回，不恢复整个工作区。
+- **全局集成租约**：`WAITING`；本轮尚未验证任务租约持有者外的共享写入活动，提交/集成待用户授权。
+- **2026-11-24 未关闭项分诊**：最终隔离日志有 518 行旧 PMD `SequenceChecker` 最大迭代诊断；未映射到源文件/规则，零违规 XML 不等于 DFA 完整覆盖。Java ABI 变更未证明旧二进制兼容，发布前须落实可区分版本成套发布或兼容入口及旧调用方回归；不覆盖 `1.3.1`。不静音诊断、不提高迭代上限、不擅自改版本。详见[分诊记录](../records/2026-11-23-be065-pmd-rule-repair.md#2026-11-24-未关闭风险分诊)。
 
 ### BE-045~BE-048 执行租约（2026-11-22）
 

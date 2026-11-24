@@ -41,6 +41,10 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CapabilityUsageService {
 
+    private static final String FIELD_STORAGE_USAGE = "storageUsageBytes";
+    private static final String FIELD_DEVICE_COUNT = "deviceCount";
+    private static final String FIELD_MESSAGE_COUNT = "messageCount";
+
     /** 缺省统计天数（近 7 天，含当天）。 */
     private static final int DEFAULT_RANGE_DAYS = 7;
 
@@ -153,13 +157,12 @@ public class CapabilityUsageService {
      * @param value  指标数值
      */
     private void applyMetric(CapabilityUsageDTO row, String field, long value) {
-        switch (field) {
-            case "storageUsageBytes" -> row.setStorageUsageBytes(value);
-            case "deviceCount" -> row.setDeviceCount(value);
-            case "messageCount" -> row.setMessageCount(value);
-            default -> {
-                // 未知指标字段：忽略（配置错误由配置评审拦截，不影响用量查询）
-            }
+        if (FIELD_STORAGE_USAGE.equals(field)) {
+            row.setStorageUsageBytes(value);
+        } else if (FIELD_DEVICE_COUNT.equals(field)) {
+            row.setDeviceCount(value);
+        } else if (FIELD_MESSAGE_COUNT.equals(field)) {
+            row.setMessageCount(value);
         }
     }
 

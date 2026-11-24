@@ -53,6 +53,8 @@ public final class WorkflowDefinitionGraph {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private static final String POSITIVE_INTEGER_PATTERN = "[1-9][0-9]*";
+
     private static final String INVALID_PREFIX = "流程定义不合法：";
 
     private final Map<String, Node> nodes;
@@ -198,7 +200,7 @@ public final class WorkflowDefinitionGraph {
             throw invalid("审批节点 " + node.nodeId() + " 的 approverType 不受支持：" + node.approverType());
         }
         String value = node.approverValue();
-        if (value == null || !value.trim().matches("[1-9][0-9]*")) {
+        if (value == null || !value.trim().matches(POSITIVE_INTEGER_PATTERN)) {
             throw invalid("审批节点 " + node.nodeId() + " 的 approverValue 必须是单个正整数用户 ID");
         }
         validateTimeout(node);

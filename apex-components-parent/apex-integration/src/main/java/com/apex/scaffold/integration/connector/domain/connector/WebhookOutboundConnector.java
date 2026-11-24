@@ -32,6 +32,10 @@ public class WebhookOutboundConnector implements IntegrationConnector {
     /** 连接器类型标识。 */
     public static final String TYPE = "WEBHOOK";
 
+    private static final String URL_KEY = "url";
+    private static final String SECRET_KEY = "secret";
+    private static final String HEADERS_KEY = "headers";
+
     /** 签名头。 */
     public static final String SIGNATURE_HEADER = "X-Signature";
 
@@ -61,7 +65,7 @@ public class WebhookOutboundConnector implements IntegrationConnector {
 
     @Override
     public Mono<Void> healthCheck(Map<String, Object> config) {
-        if (string(config, "url") == null || string(config, "secret") == null) {
+        if (string(config, URL_KEY) == null || string(config, SECRET_KEY) == null) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "WEBHOOK 连接器缺少 url 或 secret"));
         }
         return Mono.empty();
@@ -70,8 +74,8 @@ public class WebhookOutboundConnector implements IntegrationConnector {
     @Override
     public Mono<Map<String, Object>> execute(
             Map<String, Object> config, String operation, Map<String, Object> payload, String idempotencyKey) {
-        String url = string(config, "url");
-        String secret = string(config, "secret");
+        String url = string(config, URL_KEY);
+        String secret = string(config, SECRET_KEY);
         if (url == null || url.isBlank() || secret == null || secret.isBlank()) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "WEBHOOK 连接器缺少 url 或 secret"));
         }
@@ -85,14 +89,14 @@ public class WebhookOutboundConnector implements IntegrationConnector {
                 .header(TIMESTAMP_HEADER, timestamp)
                 .header(SIGNATURE_HEADER, signature)
                 .headers(h -> {
-                    if (config.get("headers") instanceof Map<?, ?> extra) {
+                    if (config.get(HEADERS_KEY) instanceof Map<?, ?> extra) {
                         extra.forEach((name, value) -> h.add(String.valueOf(name), String.valueOf(value)));
                     }
                 })
                 .exchangeToMono(response -> response.bodyToMono(String.class)
                         .defaultIfEmpty("")
                         .map(responseBody -> {
-                            Map<String, Object> envelope = new HashMap<>();
+                            Map<String, Object> envelope = new HashMap<>(2);
                             envelope.put("status", response.statusCode().value());
                             envelope.put("response", responseBody);
                             return envelope;

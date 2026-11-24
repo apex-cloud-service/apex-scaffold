@@ -73,6 +73,7 @@ public interface MessageOutboxService {
      * 标记消息为已投递
      *
      * @param messageId 消息ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> markAsDelivered(String messageId);
 
@@ -81,11 +82,13 @@ public interface MessageOutboxService {
      *
      * @param messageId 消息ID
      * @param error 去除敏感信息后的错误摘要
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> markAsFailed(String messageId, String error);
 
     /**
      * 释放过期的消息锁，默认实现仅清除锁字段，不恢复待投递状态。
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> releaseExpiredLocks();
 }

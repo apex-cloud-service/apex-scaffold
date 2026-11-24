@@ -46,6 +46,16 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class OperationsHealthService {
 
+    private static final char CSV_FORMULA_EQUALS = '=';
+    private static final char CSV_FORMULA_PLUS = '+';
+    private static final char CSV_FORMULA_MINUS = '-';
+    private static final char CSV_FORMULA_AT = '@';
+    private static final char CSV_TAB = '\t';
+    private static final char CSV_CARRIAGE_RETURN = '\r';
+    private static final char CSV_DELIMITER = ',';
+    private static final char CSV_QUOTE = '"';
+    private static final char CSV_LINE_FEED = '\n';
+
     /** 导出单人单次上限。 */
     static final int EXPORT_MAX_ROWS = 5000;
 
@@ -381,11 +391,19 @@ public class OperationsHealthService {
         }
         String value = raw;
         char first = value.charAt(0);
-        if (first == '=' || first == '+' || first == '-' || first == '@' || first == '\t' || first == '\r') {
+        if (first == CSV_FORMULA_EQUALS
+                || first == CSV_FORMULA_PLUS
+                || first == CSV_FORMULA_MINUS
+                || first == CSV_FORMULA_AT
+                || first == CSV_TAB
+                || first == CSV_CARRIAGE_RETURN) {
             value = "'" + value;
         }
-        if (value.indexOf(',') >= 0 || value.indexOf('"') >= 0 || value.indexOf('\n') >= 0) {
-            value = '"' + value.replace("\"", "\"\"") + '"';
+        boolean containsDelimiter = value.indexOf(CSV_DELIMITER) >= 0;
+        boolean containsQuote = value.indexOf(CSV_QUOTE) >= 0;
+        boolean containsLineFeed = value.indexOf(CSV_LINE_FEED) >= 0;
+        if (containsDelimiter || containsQuote || containsLineFeed) {
+            value = CSV_QUOTE + value.replace("\"", "\"\"") + CSV_QUOTE;
         }
         return value;
     }

@@ -84,6 +84,7 @@ public interface DocumentService {
      *
      *
      * @param id 文档ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> delete(Long id);
 
@@ -126,6 +127,7 @@ public interface DocumentService {
      *
      *
      * @param status 新状态
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> updateStatus(Long id, Integer status);
 
@@ -139,6 +141,7 @@ public interface DocumentService {
      *
      *
      * @param id 文档ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> incrementViewCount(Long id);
 
@@ -146,6 +149,7 @@ public interface DocumentService {
      * 增加文档下载次数。
      *
      * @param id 文档ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> incrementDownloadCount(Long id);
 }

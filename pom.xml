@@ -125,10 +125,11 @@
     <sonar.projectName>Apex Scaffold</sonar.projectName>
     <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <maven-pmd-plugin.version>3.21.2</maven-pmd-plugin.version>
+    <pmd.asm.version>9.6</pmd.asm.version>
     <!--
       p3c-pmd 2.1.1 的规则实现基于 PMD 6 API（如 AbstractCommentRule），无法在 PMD 7 下加载，
-      因此 PMD 插件固定在 3.21.2（PMD 6.55.0，PMD 6 线最后一个版本）。PMD 6 最高只识别到
-      targetJdk 20，故 PMD 分析级别单独固定在 20；编译与运行仍是 Java 21。
+      因此 PMD 插件固定在 3.21.2（PMD 6.55.0，PMD 6 线最后一个版本）；ASM 使用兼容 PMD 6 API 且可解析
+      Java 21 字节码的 9.6。PMD 6 最高只识别到 targetJdk 20，故分析级别单独固定在 20；编译与运行仍是 Java 21。
     -->
     <pmd.targetJdk>20</pmd.targetJdk>
     <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
@@ -1042,6 +1043,11 @@
             <groupId>com.alibaba.p3c</groupId>
             <artifactId>p3c-pmd</artifactId>
             <version>${p3c-pmd.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>${pmd.asm.version}</version>
           </dependency>
         </dependencies>
       </plugin>

@@ -87,21 +87,21 @@ public class OrgUserResolveAdapter {
      */
     private List<OrgUserResolveResponse.ResolvedUser> match(
             List<OrgUserResolveRequest.OrgUserRef> refs, List<UserEntity> byId, List<UserEntity> users) {
-        Map<Long, UserEntity> byUserId = new HashMap<>();
+        Map<Long, UserEntity> byUserId = new HashMap<>(byId.size());
         for (UserEntity user : byId) {
             if (user.getId() != null) {
                 byUserId.putIfAbsent(user.getId(), user);
             }
         }
-        Map<String, UserEntity> byPhone = new HashMap<>();
-        Map<String, UserEntity> byEmail = new HashMap<>();
-        Map<String, UserEntity> byUsername = new HashMap<>();
+        Map<String, UserEntity> byPhone = new HashMap<>(users.size());
+        Map<String, UserEntity> byEmail = new HashMap<>(users.size());
+        Map<String, UserEntity> byUsername = new HashMap<>(users.size());
         for (UserEntity user : users) {
             putIfAbsent(byPhone, user.getPhone(), user);
             putIfAbsent(byEmail, user.getEmail(), user);
             putIfAbsent(byUsername, user.getUsername(), user);
         }
-        Map<Long, OrgUserResolveResponse.ResolvedUser> resolved = new LinkedHashMap<>();
+        Map<Long, OrgUserResolveResponse.ResolvedUser> resolved = new LinkedHashMap<>(refs.size());
         for (OrgUserResolveRequest.OrgUserRef ref : refs) {
             UserEntity user = ref.userId() == null ? null : byUserId.get(ref.userId());
             String matchedBy = "USER_ID";

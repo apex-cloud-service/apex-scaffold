@@ -50,6 +50,9 @@ import reactor.core.publisher.Mono;
         matchIfMissing = true)
 public class IotRuleHandler {
 
+    private static final String BOOLEAN_TRUE = "true";
+    private static final String BOOLEAN_FALSE = "false";
+
     private final DeviceRuleManageService manageService;
 
     private final Validator validator;
@@ -239,10 +242,10 @@ public class IotRuleHandler {
     }
 
     private boolean parseEnabled(String enabled) {
-        if ("true".equalsIgnoreCase(enabled)) {
+        if (BOOLEAN_TRUE.equalsIgnoreCase(enabled)) {
             return true;
         }
-        if ("false".equalsIgnoreCase(enabled)) {
+        if (BOOLEAN_FALSE.equalsIgnoreCase(enabled)) {
             return false;
         }
         throw new BusinessException(ResultCode.PARAM_ERROR, "enabled 仅支持 true/false");

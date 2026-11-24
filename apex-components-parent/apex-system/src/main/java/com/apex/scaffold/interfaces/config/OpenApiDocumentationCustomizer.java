@@ -241,6 +241,12 @@ final class OpenApiDocumentationCustomizer {
     /** 发起社交登录的操作标识。 */
     private static final String OP_ID_INITIATE_SOCIAL_LOGIN = "initiateSocialLogin";
 
+    private static final String OP_ID_INITIATE_OIDC_LOGIN = "initiateOidcLogin";
+    private static final String OP_ID_OAUTH2_AUTHORIZE = "oauth2Authorize";
+    private static final String OP_ID_OAUTH2_TOKEN = "oauth2Token";
+    private static final String OP_ID_OAUTH2_INTROSPECT = "oauth2Introspect";
+    private static final String OP_ID_OAUTH2_DISCOVERY = "oauth2Discovery";
+
     /** 统一搜索的操作标识。 */
     private static final String OP_ID_UNIFIED_SEARCH = "unifiedSearch";
 
@@ -530,51 +536,47 @@ final class OpenApiDocumentationCustomizer {
             return false;
         }
         ApiResponses responses = operation.getResponses();
-        switch (operationId) {
-            case "initiateOidcLogin", OP_ID_INITIATE_SOCIAL_LOGIN -> {
-                responses.remove("200");
-                responses.remove("302");
-                responses.addApiResponse(
-                        "307",
-                        new ApiResponse()
-                                .description("重定向到 OAuth2 提供商登录页面")
-                                .addHeaderObject(
-                                        "Location",
-                                        new io.swagger.v3.oas.models.headers.Header().schema(new StringSchema())));
-                if (OP_ID_INITIATE_SOCIAL_LOGIN.equals(operationId)) {
-                    addErrorResponse(responses, "400", "不支持的社交登录提供商");
-                }
-                return true;
+        if (OP_ID_INITIATE_OIDC_LOGIN.equals(operationId) || OP_ID_INITIATE_SOCIAL_LOGIN.equals(operationId)) {
+            responses.remove("200");
+            responses.remove("302");
+            responses.addApiResponse(
+                    "307",
+                    new ApiResponse()
+                            .description("重定向到 OAuth2 提供商登录页面")
+                            .addHeaderObject(
+                                    "Location",
+                                    new io.swagger.v3.oas.models.headers.Header().schema(new StringSchema())));
+            if (OP_ID_INITIATE_SOCIAL_LOGIN.equals(operationId)) {
+                addErrorResponse(responses, "400", "不支持的社交登录提供商");
             }
-            case "oauth2Authorize" -> {
-                responses.remove("200");
-                responses.remove("302");
-                responses.addApiResponse(
-                        "307",
-                        new ApiResponse()
-                                .description("重定向到客户端，携带 code/state 或 error/error_description/state")
-                                .addHeaderObject(
-                                        "Location",
-                                        new io.swagger.v3.oas.models.headers.Header().schema(new StringSchema())));
-                addErrorResponse(responses, "400", "缺少 client_id 或 redirect_uri 时返回 Result 错误");
-                return true;
-            }
-            case "oauth2Token" -> {
-                addOauthTokenResponses(responses);
-                return true;
-            }
-            case "oauth2Introspect" -> {
-                addOauthIntrospectionResponses(responses);
-                return true;
-            }
-            case "oauth2Discovery" -> {
-                addOauthDiscoveryResponse(responses);
-                return true;
-            }
-            default -> {
-                return false;
-            }
+            return true;
         }
+        if (OP_ID_OAUTH2_AUTHORIZE.equals(operationId)) {
+            responses.remove("200");
+            responses.remove("302");
+            responses.addApiResponse(
+                    "307",
+                    new ApiResponse()
+                            .description("重定向到客户端，携带 code/state 或 error/error_description/state")
+                            .addHeaderObject(
+                                    "Location",
+                                    new io.swagger.v3.oas.models.headers.Header().schema(new StringSchema())));
+            addErrorResponse(responses, "400", "缺少 client_id 或 redirect_uri 时返回 Result 错误");
+            return true;
+        }
+        if (OP_ID_OAUTH2_TOKEN.equals(operationId)) {
+            addOauthTokenResponses(responses);
+            return true;
+        }
+        if (OP_ID_OAUTH2_INTROSPECT.equals(operationId)) {
+            addOauthIntrospectionResponses(responses);
+            return true;
+        }
+        if (OP_ID_OAUTH2_DISCOVERY.equals(operationId)) {
+            addOauthDiscoveryResponse(responses);
+            return true;
+        }
+        return false;
     }
 
     /**

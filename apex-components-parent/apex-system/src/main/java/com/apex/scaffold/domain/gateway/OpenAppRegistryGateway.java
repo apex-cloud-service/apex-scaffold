@@ -62,6 +62,7 @@ public interface OpenAppRegistryGateway {
      * 删除开放应用。
      *
      * @param clientId 应用标识
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> delete(String clientId);
 

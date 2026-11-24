@@ -41,6 +41,9 @@ public class ChunkUploadService {
     private static final int MAX_TOTAL_CHUNKS = 100_000;
     private static final long MAX_CHUNK_SIZE = 64L * 1024 * 1024;
     private static final String MD5_PATTERN = "^[a-fA-F0-9]{32}$";
+    private static final String PARENT_PATH_SEGMENT = "..";
+    private static final String UNIX_PATH_SEPARATOR = "/";
+    private static final String WINDOWS_PATH_SEPARATOR = "\\";
     private final StorageServiceProvider provider;
     private final FileRepository files;
     private final FileChunkRepository chunks;
@@ -106,15 +109,17 @@ public class ChunkUploadService {
     /** @param request 初始化参数 @return 带可信归属的上传会话 */
     public Mono<ChunkInitResult> init(ChunkInitRequest request) {
         return FileAccessContext.current().flatMap(identity -> {
-            if (request.getFileSize() == null
-                    || request.getFileSize() <= 0
-                    || request.getTotalChunks() == null
+            boolean invalidFileSize = request.getFileSize() == null || request.getFileSize() <= 0;
+            boolean invalidChunkCount = request.getTotalChunks() == null
                     || request.getTotalChunks() <= 0
-                    || request.getTotalChunks() > maxTotalChunks) {
+                    || request.getTotalChunks() > maxTotalChunks;
+            if (invalidFileSize || invalidChunkCount) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "文件大小与分片数必须在允许范围内"));
             }
-            if (request.getChunkSize() != null
-                    && (request.getChunkSize() <= 0 || request.getChunkSize() > maxChunkBytes)) {
+            if (request.getChunkSize() != null && request.getChunkSize() <= 0) {
+                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分片大小超出允许范围"));
+            }
+            if (request.getChunkSize() != null && request.getChunkSize() > maxChunkBytes) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分片大小超出允许范围"));
             }
             if (request.getMd5() != null && !request.getMd5().matches(MD5_PATTERN)) {
@@ -204,12 +209,13 @@ public class ChunkUploadService {
     private ChunkUploadResult existingChunkResult(
             FileEntity file, ChunkUploadRequest request, FileChunkEntity existing) {
         validateChunk(file, existing);
-        if (!Objects.equals(existing.getTotalChunks(), request.getTotalChunks())
-                || !Objects.equals(existing.getChunkSize(), (long)
-                        (request.getChunkIndex() == file.getTotalChunks() - 1
-                                ? file.getFileSize() - (long) request.getChunkIndex() * file.getChunkSize()
-                                : file.getChunkSize()))
-                || (existing.getMd5() != null && !Objects.equals(existing.getMd5(), request.getMd5()))) {
+        long expectedChunkSize = request.getChunkIndex() == file.getTotalChunks() - 1
+                ? file.getFileSize() - (long) request.getChunkIndex() * file.getChunkSize()
+                : file.getChunkSize();
+        boolean metadataMismatch = !Objects.equals(existing.getTotalChunks(), request.getTotalChunks())
+                || !Objects.equals(existing.getChunkSize(), expectedChunkSize);
+        boolean checksumMismatch = existing.getMd5() != null && !Objects.equals(existing.getMd5(), request.getMd5());
+        if (metadataMismatch || checksumMismatch) {
             throw new BusinessException(ResultCode.PARAM_ERROR, "重复分片内容与已保存分片不一致");
         }
         return new ChunkUploadResult(
@@ -321,10 +327,19 @@ public class ChunkUploadService {
                 parts.stream().mapToLong(FileChunkEntity::getChunkSize).sum())) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "分片大小与初始化约定不一致"));
         }
+        return resolveMergeMetadata(file, parts, request);
+    }
+
+    private Mono<ChunkMergeResult> resolveMergeMetadata(
+            FileEntity file, List<FileChunkEntity> parts, ChunkMergeRequest request) {
         String name = request.getFileName() == null || request.getFileName().isBlank()
                 ? file.getOriginalName()
                 : request.getFileName();
-        if (name == null || name.isBlank() || name.contains("..") || name.contains("/") || name.contains("\\")) {
+        if (name == null
+                || name.isBlank()
+                || name.contains(PARENT_PATH_SEGMENT)
+                || name.contains(UNIX_PATH_SEPARATOR)
+                || name.contains(WINDOWS_PATH_SEPARATOR)) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "最终文件名不合法"));
         }
         String type =
@@ -338,36 +353,40 @@ public class ChunkUploadService {
         if (requestedMd5 != null && !requestedMd5.matches(MD5_PATTERN)) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "文件 MD5 格式不合法"));
         }
-        StorageService storage = provider.getStorageService(file.getStorageType());
-        String key = UUID.randomUUID() + "-" + name;
-        String finalContentType = type;
+        MergePlan plan = new MergePlan(
+                provider.getStorageService(file.getStorageType()), UUID.randomUUID() + "-" + name, type, requestedMd5);
+        return uploadAndPersist(file, parts, plan);
+    }
+
+    private Mono<ChunkMergeResult> uploadAndPersist(FileEntity file, List<FileChunkEntity> parts, MergePlan plan) {
         return files.claimMerge(file).flatMap(claimed -> {
             if (!claimed) {
                 return Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "会话正在合并或已结束"));
             }
             file.setStorageStatus("MERGING");
-            return uploadMergedObject(file, parts, storage, key, finalContentType)
+            return uploadMergedObject(file, parts, plan.storage(), plan.key(), plan.contentType())
                     .flatMap(upload -> {
-                        if (requestedMd5 != null && !requestedMd5.equalsIgnoreCase(upload.md5())) {
+                        if (plan.requestedMd5() != null && !plan.requestedMd5().equalsIgnoreCase(upload.md5())) {
                             BusinessException error = new BusinessException(ResultCode.PARAM_ERROR, "文件 MD5 校验失败");
-                            return storage.delete(file.getBucketName(), upload.objectName())
+                            return plan.storage()
+                                    .delete(file.getBucketName(), upload.objectName())
                                     .defaultIfEmpty(false)
                                     .flatMap(deleted -> deleted ? releaseFailedMerge(file, error) : Mono.error(error));
                         }
                         file.setFileName(upload.objectName());
                         file.setFilePath(upload.objectName());
-                        file.setContentType(finalContentType);
+                        file.setContentType(plan.contentType());
                         file.setMd5(upload.md5());
                         file.setStorageStatus("STORED");
                         file.setUpdateTime(LocalDateTime.now());
                         return Mono.defer(() -> files.save(file))
                                 .switchIfEmpty(Mono.error(new IllegalStateException("合并记录未保存")))
                                 .onErrorResume(error -> FileService.<FileEntity>compensate(
-                                                storage, files, file, upload.objectName(), error)
-                                        .onErrorResume(original ->
-                                                recoverFailedObject(file, storage, upload.objectName(), original)))
+                                                plan.storage(), files, file, upload.objectName(), error)
+                                        .onErrorResume(original -> recoverFailedObject(
+                                                file, plan.storage(), upload.objectName(), original)))
                                 .flatMap(saved -> cleanup(parts)
-                                        .then(Mono.defer(() -> FileService.accessUrl(saved, storage, expiry)))
+                                        .then(Mono.defer(() -> FileService.accessUrl(saved, plan.storage(), expiry)))
                                         .map(url -> new ChunkMergeResult(
                                                 saved.getId(),
                                                 saved.getBucketName(),
@@ -383,6 +402,8 @@ public class ChunkUploadService {
     }
 
     private record MergedObject(String objectName, String md5) {}
+
+    private record MergePlan(StorageService storage, String key, String contentType, String requestedMd5) {}
 
     /** 在上传流消费过程中计算最终文件 MD5。 */
     private Mono<MergedObject> uploadMergedObject(

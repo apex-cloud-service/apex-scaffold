@@ -41,6 +41,8 @@ import reactor.core.publisher.Mono;
 @Component
 @Tag(name = "开放平台-文件", description = "开放应用级文件上传与读取；只走网关 scope 断言与能力门禁，不叠加管理端权限")
 public class OpenFileHandler {
+    /** 上传文件的 multipart 字段名。 */
+    private static final String UPLOAD_FILE_PART = "file";
 
     /** 开放上传的统一响应结构，仅用于接口文档。 */
     @Schema(name = "OpenFileUploadResult")
@@ -100,7 +102,7 @@ public class OpenFileHandler {
     })
     public Mono<ServerResponse> upload(ServerRequest request) {
         return request.multipartData().flatMap(parts -> {
-            if (!(parts.getFirst("file") instanceof FilePart file)) {
+            if (!(parts.getFirst(UPLOAD_FILE_PART) instanceof FilePart file)) {
                 return responses.buildErrorResponse(ResultCode.PARAM_ERROR, "上传文件不能为空");
             }
             return DataBufferUtils.join(file.content())

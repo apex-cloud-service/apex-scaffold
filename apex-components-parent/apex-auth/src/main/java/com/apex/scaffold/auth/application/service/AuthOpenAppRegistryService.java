@@ -44,6 +44,11 @@ import reactor.core.publisher.Mono;
 public class AuthOpenAppRegistryService {
     private static final String TYPE = "OAUTH2_CLIENT";
     private static final String BCRYPT = "\\$2[aby]\\$[0-9]{2}\\$[./A-Za-z0-9]{53}";
+    private static final String BCRYPT_PREFIX = "{bcrypt}";
+    private static final String HASH_ALGORITHM_BCRYPT = "BCRYPT";
+    private static final String CLIENT_ID_PATTERN = "[A-Za-z0-9._-]{1,100}";
+    private static final int MAX_BCRYPT_INPUT_BYTES = 72;
+    private static final int MAX_PAGE_SIZE = 100;
     private final AuthConfigRepository repository;
     private final ObjectMapper objectMapper;
     private final Validator validator;
@@ -64,9 +69,9 @@ public class AuthOpenAppRegistryService {
                             || request.getClientSecret().isBlank()
                     ? randomSecret()
                     : request.getClientSecret();
-            if (secret.getBytes(StandardCharsets.UTF_8).length > 72
+            if (secret.getBytes(StandardCharsets.UTF_8).length > MAX_BCRYPT_INPUT_BYTES
                     || secret.matches(BCRYPT)
-                    || secret.startsWith("{bcrypt}")) {
+                    || secret.startsWith(BCRYPT_PREFIX)) {
                 throw invalid();
             }
             return repository
@@ -91,8 +96,7 @@ public class AuthOpenAppRegistryService {
     public Mono<OpenAppRegistrationResponse> update(String clientId, OpenAppRegistrationRequest request) {
         return tenant(tenant -> Mono.defer(() -> {
             validate(request, false);
-            if (request.getClientId() != null && !clientId.equals(request.getClientId())
-                    || request.getClientSecret() != null) {
+            if (isClientIdChangeRequested(clientId, request) || request.getClientSecret() != null) {
                 throw invalid();
             }
             return required(clientId, tenant).flatMap(entity -> {
@@ -128,11 +132,11 @@ public class AuthOpenAppRegistryService {
      */
     public Flux<OpenAppRegistrationResponse> list(int page, int size) {
         return tenant(tenant -> {
-                    if (page < 0 || size < 1 || size > 100) {
+                    if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
                         return Mono.error(invalid());
                     }
                     return repository
-                            .findOAuth2Clients(tenant, page, size)
+                            .findOauth2Clients(tenant, page, size)
                             .map(entity -> response(entity, null))
                             .collectList();
                 })
@@ -198,12 +202,12 @@ public class AuthOpenAppRegistryService {
             }
             OpenAppRegistrationRequest registration = request.getRegistration();
             validate(registration, true);
-            if (registration.getClientSecret() != null || !"BCRYPT".equals(request.getHashAlgorithm())) {
+            if (registration.getClientSecret() != null || !HASH_ALGORITHM_BCRYPT.equals(request.getHashAlgorithm())) {
                 throw invalid();
             }
             String hash = request.getSecretHash();
-            if (hash.startsWith("{bcrypt}")) {
-                hash = hash.substring(8);
+            if (hash.startsWith(BCRYPT_PREFIX)) {
+                hash = hash.substring(BCRYPT_PREFIX.length());
             }
             if (!hash.matches(BCRYPT)) {
                 throw invalid();
@@ -289,27 +293,23 @@ public class AuthOpenAppRegistryService {
     }
 
     private void validate(OpenAppRegistrationRequest request, boolean create) {
-        if (request == null
-                || !validator.validate(request).isEmpty()
-                || create
-                        && (request.getClientId() == null
-                                || request.getClientId().isBlank()
-                                || request.getAppName() == null
-                                || request.getAppName().isBlank())
-                || request.getClientId() != null && !request.getClientId().matches("[A-Za-z0-9._-]{1,100}")
-                || request.getAppName() != null && request.getAppName().isBlank()
-                || !OpenAppScopes.invalidScopes(request.getScopes()).isEmpty()
-                || request.getSubjectUserId() != null && !Boolean.TRUE.equals(request.getSubjectValidated())) {
+        if (request == null || !validator.validate(request).isEmpty()) {
+            throw invalid();
+        }
+        if (create && missingRequiredRegistrationFields(request)) {
+            throw invalid();
+        }
+        if (hasInvalidClientId(request) || hasInvalidAppName(request)) {
+            throw invalid();
+        }
+        if (hasInvalidScopes(request) || hasUnvalidatedSubject(request)) {
             throw invalid();
         }
         if (request.getRedirectUris() != null) {
             for (String redirect : request.getRedirectUris()) {
                 try {
                     java.net.URI uri = java.net.URI.create(redirect);
-                    if (uri.getHost() == null
-                            || uri.getUserInfo() != null
-                            || uri.getFragment() != null
-                            || !("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))) {
+                    if (isInvalidRedirectUri(uri)) {
                         throw invalid();
                     }
                 } catch (IllegalArgumentException error) {
@@ -319,32 +319,72 @@ public class AuthOpenAppRegistryService {
         }
     }
 
+    private boolean missingRequiredRegistrationFields(OpenAppRegistrationRequest request) {
+        return request.getClientId() == null
+                || request.getClientId().isBlank()
+                || request.getAppName() == null
+                || request.getAppName().isBlank();
+    }
+
+    private boolean hasInvalidClientId(OpenAppRegistrationRequest request) {
+        return request.getClientId() != null && !request.getClientId().matches(CLIENT_ID_PATTERN);
+    }
+
+    private boolean hasInvalidAppName(OpenAppRegistrationRequest request) {
+        return request.getAppName() != null && request.getAppName().isBlank();
+    }
+
+    private boolean hasInvalidScopes(OpenAppRegistrationRequest request) {
+        return !OpenAppScopes.invalidScopes(request.getScopes()).isEmpty();
+    }
+
+    private boolean hasUnvalidatedSubject(OpenAppRegistrationRequest request) {
+        return request.getSubjectUserId() != null && !Boolean.TRUE.equals(request.getSubjectValidated());
+    }
+
+    private boolean isClientIdChangeRequested(String clientId, OpenAppRegistrationRequest request) {
+        return request.getClientId() != null && !clientId.equals(request.getClientId());
+    }
+
+    private boolean isInvalidRedirectUri(java.net.URI uri) {
+        return uri.getHost() == null
+                || uri.getUserInfo() != null
+                || uri.getFragment() != null
+                || !("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()));
+    }
+
     /** 写 scope 必须绑定主体账号，否则会产生无属主写操作。 */
     private void validateWriteScopes(Set<String> scopes, Long subjectUserId) {
-        if (scopes != null
-                && (scopes.contains(OpenAppScopes.FILE_WRITE) || scopes.contains(OpenAppScopes.WORKFLOW_WRITE))
-                && (subjectUserId == null || subjectUserId <= 0)) {
+        if (hasWriteScope(scopes) && isMissingSubject(subjectUserId)) {
             throw invalid();
         }
+    }
+
+    private boolean isMissingSubject(Long subjectUserId) {
+        return subjectUserId == null || subjectUserId <= 0;
     }
 
     private void validateBinding(ObjectNode value) {
         Set<String> scopes = strings(value.path("scopes"));
         long subject = value.path("subjectUserId")
                 .asLong(value.path("openPlatform").path("subjectUserId").asLong(0));
-        if ((scopes.contains(OpenAppScopes.FILE_WRITE) || scopes.contains(OpenAppScopes.WORKFLOW_WRITE))
-                && subject <= 0) {
+        if (hasWriteScope(scopes) && subject <= 0) {
             throw invalid();
         }
     }
 
     private Mono<AuthConfigEntity> required(String clientId, String tenant) {
-        if (clientId == null || !clientId.matches("[A-Za-z0-9._-]{1,100}")) {
+        if (clientId == null || !clientId.matches(CLIENT_ID_PATTERN)) {
             return Mono.error(invalid());
         }
         return repository
                 .findByTypeAndKey(TYPE, clientId, tenant)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND)));
+    }
+
+    private boolean hasWriteScope(Set<String> scopes) {
+        return scopes != null
+                && (scopes.contains(OpenAppScopes.FILE_WRITE) || scopes.contains(OpenAppScopes.WORKFLOW_WRITE));
     }
 
     private ObjectNode parse(AuthConfigEntity entity) {

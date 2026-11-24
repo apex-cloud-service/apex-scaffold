@@ -37,6 +37,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class DeviceCommandService {
 
+    private static final int MAX_COMMAND_ID_LENGTH = 64;
+
     /** 命令默认超时窗口。 */
     static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(60);
 
@@ -92,7 +94,7 @@ public class DeviceCommandService {
             String tenantId, String deviceKey, String commandId, String payloadJson, Integer timeoutSeconds) {
         return Mono.defer(() -> {
             DeviceKey key = DeviceKey.of(deviceKey);
-            if (commandId == null || commandId.isBlank() || commandId.length() > 64) {
+            if (commandId == null || commandId.isBlank() || commandId.length() > MAX_COMMAND_ID_LENGTH) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "命令 ID 须为 1~64 位非空白文本"));
             }
             validatePayload(payloadJson);

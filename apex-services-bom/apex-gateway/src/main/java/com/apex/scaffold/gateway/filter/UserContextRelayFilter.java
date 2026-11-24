@@ -36,6 +36,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 public class UserContextRelayFilter implements GlobalFilter, Ordered {
+    private static final String OPEN_API_PREFIX = "/open-api/";
+    private static final String SUBJECT_PATTERN = "[1-9][0-9]{0,18}";
 
     /** 过滤器顺序：验签（10）之后、限流（30）之前 */
     public static final int ORDER = 20;
@@ -64,7 +66,7 @@ public class UserContextRelayFilter implements GlobalFilter, Ordered {
         if (clientId != null) {
             return relayApplication(exchange, chain, claims, clientId);
         }
-        if (exchange.getRequest().getPath().value().startsWith("/open-api/")) {
+        if (isOpenApiRoute(exchange)) {
             return GatewayWebUtil.writeError(exchange, HttpStatus.UNAUTHORIZED, ResultCode.UNAUTHORIZED);
         }
         String userId = resolveFirstNonBlank(claims, "userId", "accountId", "sub");
@@ -92,13 +94,7 @@ public class UserContextRelayFilter implements GlobalFilter, Ordered {
         String tenant = resolveFirstNonBlank(claims, "tenant_id");
         String legacyTenant = resolveFirstNonBlank(claims, "tenantId");
         String grant = resolveFirstNonBlank(claims, "grant_type");
-        boolean openRoute = exchange.getRequest().getPath().value().startsWith("/open-api/");
-        if (!openRoute
-                || tenant == null
-                || (legacyTenant != null && !legacyTenant.equals(tenant))
-                || claims.get("userId") != null
-                || !"access".equals(claims.get("token_use"))
-                || !("client_credentials".equals(grant) || "authorization_code".equals(grant))) {
+        if (!isValidApplicationToken(exchange, claims, tenant, legacyTenant, grant)) {
             return GatewayWebUtil.writeError(exchange, HttpStatus.UNAUTHORIZED, ResultCode.UNAUTHORIZED);
         }
         // OAuth subject 可以是应用或授权用户，不能把它冒充成普通用户身份。
@@ -111,12 +107,26 @@ public class UserContextRelayFilter implements GlobalFilter, Ordered {
                     headers.set(HEADER_TENANT_ID, tenant);
                     headers.set(OpenApiScopeGatewayFilter.CLIENT_ID_HEADER, clientId);
                     String subject = resolveFirstNonBlank(claims, "sub_uid");
-                    if (subject != null && subject.matches("[1-9][0-9]{0,18}")) {
+                    if (subject != null && subject.matches(SUBJECT_PATTERN)) {
                         headers.set(HEADER_OPEN_API_SUBJECT, subject);
                     }
                 })
                 .build();
         return chain.filter(exchange.mutate().request(request).build());
+    }
+
+    private boolean isOpenApiRoute(ServerWebExchange exchange) {
+        return exchange.getRequest().getPath().value().startsWith(OPEN_API_PREFIX);
+    }
+
+    private boolean isValidApplicationToken(
+            ServerWebExchange exchange, Claims claims, String tenant, String legacyTenant, String grant) {
+        return isOpenApiRoute(exchange)
+                && tenant != null
+                && (legacyTenant == null || legacyTenant.equals(tenant))
+                && claims.get("userId") == null
+                && "access".equals(claims.get("token_use"))
+                && ("client_credentials".equals(grant) || "authorization_code".equals(grant));
     }
 
     /**

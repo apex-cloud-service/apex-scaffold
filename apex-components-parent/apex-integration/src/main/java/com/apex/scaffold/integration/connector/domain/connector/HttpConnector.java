@@ -51,6 +51,13 @@ public class HttpConnector implements IntegrationConnector {
     /** 连接器类型标识。 */
     public static final String TYPE = "HTTP";
 
+    private static final String AUTH_NONE = "none";
+    private static final String AUTH_BASIC = "basic";
+    private static final String AUTH_BEARER = "bearer";
+    private static final String AUTH_HEADER = "header";
+    private static final int HTTP_ERROR_STATUS = 400;
+    private static final String JSON_OBJECT_PREFIX = "{";
+
     private static final List<String> HTTP_METHODS = List.of("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD");
 
     private final WebClient webClient;
@@ -166,34 +173,38 @@ public class HttpConnector implements IntegrationConnector {
 
     private void applyAuth(org.springframework.http.HttpHeaders headers, Map<String, Object> auth) {
         String type = string(auth, "type");
-        if (type == null || "none".equalsIgnoreCase(type)) {
+        if (type == null || AUTH_NONE.equalsIgnoreCase(type)) {
             return;
         }
         String secret = string(auth, "secret");
-        switch (type.toLowerCase(java.util.Locale.ROOT)) {
-            case "basic" -> headers.setBasicAuth(
+        String normalizedType = type.toLowerCase(java.util.Locale.ROOT);
+        if (AUTH_BASIC.equals(normalizedType)) {
+            headers.setBasicAuth(
                     string(auth, "username") == null ? "" : string(auth, "username"), secret == null ? "" : secret);
-            case "bearer" -> headers.setBearerAuth(secret == null ? "" : secret);
-            case "header" -> headers.add(
+        } else if (AUTH_BEARER.equals(normalizedType)) {
+            headers.setBearerAuth(secret == null ? "" : secret);
+        } else if (AUTH_HEADER.equals(normalizedType)) {
+            headers.add(
                     string(auth, "headerName") == null ? "X-API-Key" : string(auth, "headerName"),
                     secret == null ? "" : secret);
-            default -> throw new BusinessException(ResultCode.PARAM_ERROR, "不支持的认证类型: " + type);
+        } else {
+            throw new BusinessException(ResultCode.PARAM_ERROR, "不支持的认证类型: " + type);
         }
     }
 
     private Mono<Map<String, Object>> toPayload(ClientBody body) {
-        if (body.status() >= 400) {
+        if (body.status() >= HTTP_ERROR_STATUS) {
             return Mono.error(new BusinessException(ResultCode.DEGRADE, "HTTP 端点返回错误状态: " + body.status()));
         }
         String raw = body.body();
-        if (raw != null && !raw.isBlank() && raw.trim().startsWith("{")) {
+        if (raw != null && !raw.isBlank() && raw.trim().startsWith(JSON_OBJECT_PREFIX)) {
             try {
                 return Mono.just(objectMapper.readValue(raw, new TypeReference<Map<String, Object>>() {}));
             } catch (Exception ignored) {
                 // 非 JSON 对象落兜底包络
             }
         }
-        Map<String, Object> envelope = new HashMap<>();
+        Map<String, Object> envelope = new HashMap<>(2);
         envelope.put("status", body.status());
         envelope.put("body", raw == null ? "" : raw);
         return Mono.just(envelope);

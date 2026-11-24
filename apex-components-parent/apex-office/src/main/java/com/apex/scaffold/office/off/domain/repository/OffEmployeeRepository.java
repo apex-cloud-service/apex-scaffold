@@ -115,6 +115,7 @@ public interface OffEmployeeRepository {
      * 根据ID删除员工（逻辑删除）
      *
      * @param id 员工ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> deleteById(Long id);
 

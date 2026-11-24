@@ -91,6 +91,7 @@ public interface UserRepository {
      *
      * @param userId 用户 ID
      * @since 2.2.0
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> updateLastHeartbeat(Long userId);
 
@@ -122,6 +123,7 @@ public interface UserRepository {
      * <p>执行逻辑删除操作
      *
      * @param id 用户ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> deleteById(Long id);
 

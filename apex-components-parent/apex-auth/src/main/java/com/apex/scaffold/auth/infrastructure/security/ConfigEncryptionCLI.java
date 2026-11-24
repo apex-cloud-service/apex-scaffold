@@ -28,6 +28,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfigEncryptionCLI {
 
     private static final int MIN_ARGS_FOR_OPERATION = 3;
+    private static final String COMMAND_GENERATE = "generate";
+    private static final String COMMAND_ENCRYPT = "encrypt";
+    private static final String COMMAND_DECRYPT = "decrypt";
+    private static final String COMMAND_INTERACTIVE = "interactive";
+    private static final String CHOICE_GENERATE = "1";
+    private static final String CHOICE_ENCRYPT = "2";
+    private static final String CHOICE_DECRYPT = "3";
 
     /**
      * 命令行工具入口。
@@ -41,34 +48,28 @@ public class ConfigEncryptionCLI {
         }
 
         String command = args[0];
-        switch (command) {
-            case "generate" -> generateKey();
+        if (COMMAND_GENERATE.equals(command)) {
+            generateKey();
+        } else if (COMMAND_ENCRYPT.equals(command)) {
+            requireOperationArguments(args, "encrypt <密钥Base64> <明文>");
+            encrypt(args[1], args[2]);
+        } else if (COMMAND_DECRYPT.equals(command)) {
+            requireOperationArguments(args, "decrypt <密钥Base64> <密文>");
+            decrypt(args[1], args[2]);
+        } else if (COMMAND_INTERACTIVE.equals(command)) {
+            interactiveMode();
+        } else {
+            System.err.println("错误: 未知命令 '" + command + "'");
+            printUsage();
+            System.exit(1);
+        }
+    }
 
-            case "encrypt" -> {
-                if (args.length < MIN_ARGS_FOR_OPERATION) {
-                    System.err.println("错误: 缺少参数");
-                    System.err.println("用法: encrypt <密钥Base64> <明文>");
-                    System.exit(1);
-                }
-                encrypt(args[1], args[2]);
-            }
-
-            case "decrypt" -> {
-                if (args.length < MIN_ARGS_FOR_OPERATION) {
-                    System.err.println("错误: 缺少参数");
-                    System.err.println("用法: decrypt <密钥Base64> <密文>");
-                    System.exit(1);
-                }
-                decrypt(args[1], args[2]);
-            }
-
-            case "interactive" -> interactiveMode();
-
-            default -> {
-                System.err.println("错误: 未知命令 '" + command + "'");
-                printUsage();
-                System.exit(1);
-            }
+    private static void requireOperationArguments(String[] args, String usage) {
+        if (args.length < MIN_ARGS_FOR_OPERATION) {
+            System.err.println("错误: 缺少参数");
+            System.err.println("用法: " + usage);
+            System.exit(1);
         }
     }
 
@@ -162,33 +163,23 @@ public class ConfigEncryptionCLI {
 
         String choice = scanner.nextLine().trim();
 
-        switch (choice) {
-            case "1" -> generateKey();
-
-            case "2" -> {
-                System.out.print("\n请输入密钥（Base64）: ");
-                String encryptKey = scanner.nextLine().trim();
-
-                System.out.print("请输入要加密的明文: ");
-                String plaintext = scanner.nextLine().trim();
-
-                encrypt(encryptKey, plaintext);
-            }
-
-            case "3" -> {
-                System.out.print("\n请输入密钥（Base64）: ");
-                String decryptKey = scanner.nextLine().trim();
-
-                System.out.print("请输入要解密的密文: ");
-                String ciphertext = scanner.nextLine().trim();
-
-                decrypt(decryptKey, ciphertext);
-            }
-
-            default -> {
-                System.err.println("无效的选项");
-                System.exit(1);
-            }
+        if (CHOICE_GENERATE.equals(choice)) {
+            generateKey();
+        } else if (CHOICE_ENCRYPT.equals(choice)) {
+            System.out.print("\n请输入密钥（Base64）: ");
+            String encryptKey = scanner.nextLine().trim();
+            System.out.print("请输入要加密的明文: ");
+            String plaintext = scanner.nextLine().trim();
+            encrypt(encryptKey, plaintext);
+        } else if (CHOICE_DECRYPT.equals(choice)) {
+            System.out.print("\n请输入密钥（Base64）: ");
+            String decryptKey = scanner.nextLine().trim();
+            System.out.print("请输入要解密的密文: ");
+            String ciphertext = scanner.nextLine().trim();
+            decrypt(decryptKey, ciphertext);
+        } else {
+            System.err.println("无效的选项");
+            System.exit(1);
         }
 
         scanner.close();

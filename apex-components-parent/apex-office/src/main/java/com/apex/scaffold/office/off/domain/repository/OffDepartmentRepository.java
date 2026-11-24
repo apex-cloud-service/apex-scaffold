@@ -120,6 +120,7 @@ public interface OffDepartmentRepository {
      * 根据ID删除部门（逻辑删除）
      *
      * @param id 部门ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> deleteById(Long id);
 

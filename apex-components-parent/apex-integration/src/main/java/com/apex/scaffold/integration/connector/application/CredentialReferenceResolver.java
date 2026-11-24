@@ -68,7 +68,7 @@ public class CredentialReferenceResolver {
                     .switchIfEmpty(Mono.error(new BusinessException(ResultCode.NOT_FOUND, "凭据引用不存在: " + credentialKey)))
                     .map(credential -> withSecret(node, decrypt(credential)));
         }
-        Map<String, Object> resolved = new HashMap<>();
+        Map<String, Object> resolved = new HashMap<>(node.size());
         Mono<Map<String, Object>> chain = Mono.just(resolved);
         for (Map.Entry<String, Object> entry : node.entrySet()) {
             if (entry.getValue() instanceof Map<?, ?> nested) {

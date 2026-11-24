@@ -84,7 +84,7 @@ public class JwtVerifierSupplier implements TokenVerifier {
         if (configured == null || configured.isEmpty()) {
             return Map.of();
         }
-        Map<String, PublicKey> decoded = new HashMap<>();
+        Map<String, PublicKey> decoded = new HashMap<>(configured.size());
         try {
             KeyFactory factory = KeyFactory.getInstance("RSA");
             for (Map.Entry<String, String> entry : configured.entrySet()) {

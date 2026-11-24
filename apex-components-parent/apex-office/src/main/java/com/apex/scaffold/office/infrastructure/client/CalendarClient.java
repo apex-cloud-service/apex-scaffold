@@ -56,6 +56,7 @@ public interface CalendarClient extends CalendarPort {
      * 查询日历事件详情
      *
      * @param platformEventId 平台中的事件ID
+     * @param organizerId 组织者ID（平台侧用户标识，用作主日历）
      * @return 事件详情
      */
     Mono<Map<String, Object>> getEventDetail(String platformEventId, String organizerId);
@@ -64,6 +65,7 @@ public interface CalendarClient extends CalendarPort {
      * 更新日历事件
      *
      * @param platformEventId 平台中的事件ID
+     * @param organizerId 组织者ID（平台侧用户标识，用作主日历）
      * @param title 事件标题
      * @param description 事件描述
      * @param startTime 开始时间

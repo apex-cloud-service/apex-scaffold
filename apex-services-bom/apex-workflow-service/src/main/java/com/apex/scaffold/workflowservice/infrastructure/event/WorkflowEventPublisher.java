@@ -35,6 +35,7 @@ public interface WorkflowEventPublisher {
      * 发布工作流领域事件。
      *
      * @param event 待发布的领域事件（不应为 {@code null}）
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> publish(AbstractDomainEvent event);
 }

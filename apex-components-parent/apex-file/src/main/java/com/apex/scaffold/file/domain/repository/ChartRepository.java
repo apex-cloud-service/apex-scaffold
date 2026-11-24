@@ -63,6 +63,7 @@ public interface ChartRepository {
      *
      * @param id 图表ID
      * @param tenantId 租户ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> deleteById(Long id, String tenantId);
 

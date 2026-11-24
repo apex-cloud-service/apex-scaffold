@@ -67,13 +67,11 @@ public class InternalAuthWebFilter implements WebFilter, Ordered {
         var headers = exchange.getRequest().getHeaders();
         String caller = headers.getFirst(InternalServiceSigner.HEADER_SERVICE);
         String tenant = headers.getFirst(InternalServiceSigner.HEADER_TENANT);
-        if (caller == null
-                || properties.getCallers().getOrDefault(caller, java.util.List.of()).stream()
-                        .noneMatch(pattern -> paths.match(pattern, path))) {
+        if (!isCallerAllowed(caller, path)) {
             return reject(exchange, HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN);
         }
         boolean unscoped = properties.getUnscopedPaths().stream().anyMatch(pattern -> paths.match(pattern, path));
-        if (!unscoped && (tenant == null || tenant.isBlank())) {
+        if (isTenantRequiredButMissing(unscoped, tenant)) {
             return reject(exchange, HttpStatus.UNAUTHORIZED, ResultCode.UNAUTHORIZED);
         }
         String target = exchange.getRequest().getURI().getRawPath();
@@ -110,8 +108,7 @@ public class InternalAuthWebFilter implements WebFilter, Ordered {
                     }
                     String supplied = headers.getFirst("X-Tenant-Id");
                     String queried = exchange.getRequest().getQueryParams().getFirst("tenantId");
-                    if ((supplied != null && !supplied.equals(tenant))
-                            || (queried != null && !queried.equals(tenant))) {
+                    if (isTenantMismatch(supplied, queried, tenant)) {
                         return reject(exchange, HttpStatus.FORBIDDEN, ResultCode.FORBIDDEN);
                     }
                     var request = new ServerHttpRequestDecorator(exchange.getRequest()) {
@@ -137,6 +134,20 @@ public class InternalAuthWebFilter implements WebFilter, Ordered {
         return remote != null
                 && remote.getAddress() != null
                 && remote.getAddress().isLoopbackAddress();
+    }
+
+    private boolean isCallerAllowed(String caller, String path) {
+        return caller != null
+                && properties.getCallers().getOrDefault(caller, java.util.List.of()).stream()
+                        .anyMatch(pattern -> paths.match(pattern, path));
+    }
+
+    private boolean isTenantMismatch(String supplied, String queried, String tenant) {
+        return (supplied != null && !supplied.equals(tenant)) || (queried != null && !queried.equals(tenant));
+    }
+
+    private boolean isTenantRequiredButMissing(boolean unscoped, String tenant) {
+        return !unscoped && (tenant == null || tenant.isBlank());
     }
 
     private Mono<Void> reject(ServerWebExchange exchange, HttpStatus status, ResultCode code) {

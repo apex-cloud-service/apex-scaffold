@@ -38,6 +38,7 @@ public interface AccountDeletionPort {
      * 执行账号数据清理。
      *
      * @param task 清理任务
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> cleanup(DeletionTask task);
 

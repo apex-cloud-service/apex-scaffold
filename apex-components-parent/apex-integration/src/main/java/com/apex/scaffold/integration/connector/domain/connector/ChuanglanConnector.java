@@ -42,6 +42,14 @@ public class ChuanglanConnector implements IntegrationConnector {
     /** 连接器类型标识。 */
     public static final String TYPE = "CHUANGLAN";
 
+    private static final String OPERATION_QUERY_BALANCE = "queryBalance";
+    private static final String OPERATION_SEND_SMS = "sendSms";
+    private static final String ACCOUNT_KEY = "account";
+    private static final String PASSWORD_KEY = "password";
+    private static final String PHONE_KEY = "phone";
+    private static final String TEMPLATE_ID_KEY = "templateId";
+    private static final String PARAMS_KEY = "params";
+
     private static final String DEFAULT_BASE_URL = "https://smssh1.253.com";
     private static final String DEFAULT_SEND_PATH = "/msg/v2/send/json";
     private static final String DEFAULT_BALANCE_PATH = "/msg/balance/json";
@@ -82,29 +90,29 @@ public class ChuanglanConnector implements IntegrationConnector {
     @Override
     public Mono<Map<String, Object>> execute(
             Map<String, Object> config, String operation, Map<String, Object> payload, String idempotencyKey) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("account", string(config, "account"));
-        body.put("password", string(config, "password"));
-        if ("queryBalance".equals(operation)) {
+        Map<String, Object> body = new HashMap<>(7);
+        body.put(ACCOUNT_KEY, string(config, ACCOUNT_KEY));
+        body.put(PASSWORD_KEY, string(config, PASSWORD_KEY));
+        if (OPERATION_QUERY_BALANCE.equals(operation)) {
             return post(
                     config,
                     string(config, "balancePath") == null ? DEFAULT_BALANCE_PATH : string(config, "balancePath"),
                     body);
         }
-        if ("sendSms".equals(operation)) {
-            if (payload == null || string(payload, "phone") == null) {
+        if (OPERATION_SEND_SMS.equals(operation)) {
+            if (payload == null || string(payload, PHONE_KEY) == null) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "sendSms 缺少 phone"));
             }
-            body.put("phone", string(payload, "phone"));
+            body.put(PHONE_KEY, string(payload, PHONE_KEY));
             String msg = string(payload, "msg");
             if (msg != null) {
                 body.put("msg", msg);
             }
-            if (payload.get("templateId") != null) {
-                body.put("templateId", payload.get("templateId"));
+            if (payload.get(TEMPLATE_ID_KEY) != null) {
+                body.put(TEMPLATE_ID_KEY, payload.get(TEMPLATE_ID_KEY));
             }
-            if (payload.get("params") != null) {
-                body.put("params", payload.get("params"));
+            if (payload.get(PARAMS_KEY) != null) {
+                body.put(PARAMS_KEY, payload.get(PARAMS_KEY));
             }
             body.put("report", "true");
             return post(
@@ -121,12 +129,12 @@ public class ChuanglanConnector implements IntegrationConnector {
     }
 
     private Mono<Map<String, Object>> queryBalance(Map<String, Object> config) {
-        if (string(config, "account") == null || string(config, "password") == null) {
+        if (string(config, ACCOUNT_KEY) == null || string(config, PASSWORD_KEY) == null) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "CHUANGLAN 连接器缺少 account/password"));
         }
-        Map<String, Object> body = new HashMap<>();
-        body.put("account", string(config, "account"));
-        body.put("password", string(config, "password"));
+        Map<String, Object> body = new HashMap<>(2);
+        body.put(ACCOUNT_KEY, string(config, ACCOUNT_KEY));
+        body.put(PASSWORD_KEY, string(config, PASSWORD_KEY));
         return post(
                 config,
                 string(config, "balancePath") == null ? DEFAULT_BALANCE_PATH : string(config, "balancePath"),
@@ -159,7 +167,7 @@ public class ChuanglanConnector implements IntegrationConnector {
             Map<String, Object> body = objectMapper.readValue(raw, new TypeReference<Map<String, Object>>() {});
             return Mono.just(body == null ? Map.of() : body);
         } catch (Exception e) {
-            Map<String, Object> envelope = new HashMap<>();
+            Map<String, Object> envelope = new HashMap<>(1);
             envelope.put("body", raw);
             return Mono.just(envelope);
         }

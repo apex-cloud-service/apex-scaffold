@@ -31,6 +31,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class CapabilityMetricClient {
 
+    private static final String DATA_FIELD = "data";
+
     private final CapabilityUsageProperties properties;
     private final OverviewProperties overviewProperties;
     private final WebClient webClient;
@@ -126,7 +128,7 @@ public class CapabilityMetricClient {
      */
     private long parseValue(String body, String field) {
         Map<?, ?> root = JsonUtil.fromJson(body, Map.class);
-        if (root == null || !(root.get("data") instanceof Map<?, ?> data)) {
+        if (root == null || !(root.get(DATA_FIELD) instanceof Map<?, ?> data)) {
             throw new IllegalStateException("统计响应缺少 data 节点");
         }
         Object value = data.get(field);

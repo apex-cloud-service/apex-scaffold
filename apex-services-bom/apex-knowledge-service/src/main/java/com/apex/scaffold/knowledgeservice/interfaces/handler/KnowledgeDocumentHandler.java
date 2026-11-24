@@ -215,7 +215,9 @@ public class KnowledgeDocumentHandler {
     private static Long positiveId(String value) {
         try {
             long id = Long.parseLong(value);
-            if (id > 0) return id;
+            if (id > 0) {
+                return id;
+            }
         } catch (NumberFormatException ignored) {
             // 非法路径参数统一映射业务参数错误。
         }
@@ -225,7 +227,9 @@ public class KnowledgeDocumentHandler {
     private static int positiveInt(String value, int min, int max) {
         try {
             int number = Integer.parseInt(value);
-            if (number >= min && number <= max) return number;
+            if (number >= min && number <= max) {
+                return number;
+            }
         } catch (NumberFormatException ignored) {
             // 非法分页参数统一映射业务参数错误。
         }

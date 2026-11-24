@@ -25,6 +25,18 @@ import java.util.regex.Pattern;
  */
 final class HtmlEntities {
 
+    private static final char AMPERSAND = '&';
+    private static final char HASH = '#';
+    private static final char LOWER_X = 'x';
+    private static final char UPPER_X = 'X';
+    private static final int MAX_SMALL_CODEPOINT_BITS = 31;
+    private static final int MAX_UNICODE_CODEPOINT = 0x10FFFF;
+    private static final int HIGH_SURROGATE_START = 0xD800;
+    private static final int LOW_SURROGATE_END = 0xDFFF;
+    private static final int HTML_ENTITY_CAPACITY = 4096;
+    private static final int MIN_ENTITY_PREFIX_LENGTH = 2;
+    private static final char BACKSLASH = '\\';
+
     private static final Pattern CHARREF =
             Pattern.compile("&(#[0-9]+;?|#[xX][0-9a-fA-F]+;?|[^\\t\\n\\f <&#;]{1,32};?)");
 
@@ -43,7 +55,7 @@ final class HtmlEntities {
      * @return 解码后的文本
      */
     static String unescape(String s) {
-        if (s.indexOf('&') < 0) {
+        if (s.indexOf(AMPERSAND) < 0) {
             return s;
         }
         Matcher m = CHARREF.matcher(s);
@@ -59,26 +71,26 @@ final class HtmlEntities {
     }
 
     private static String replaceCharref(String s) {
-        if (s.charAt(0) == '#') {
+        if (s.charAt(0) == HASH) {
             BigInteger num;
-            if (s.charAt(1) == 'x' || s.charAt(1) == 'X') {
+            if (s.charAt(1) == LOWER_X || s.charAt(1) == UPPER_X) {
                 num = new BigInteger(s.substring(2).replaceAll(";$", ""), 16);
             } else {
                 num = new BigInteger(s.substring(1).replaceAll(";$", ""));
             }
             // 非法替换表键最大 0x9F，超界数值不可能命中，先走范围分支
-            if (num.bitLength() <= 31) {
+            if (num.bitLength() <= MAX_SMALL_CODEPOINT_BITS) {
                 int v = num.intValue();
                 String mapped = INVALID_CHARREFS.get(v);
                 if (mapped != null) {
                     return mapped;
                 }
             }
-            if (num.compareTo(BigInteger.valueOf(0x10FFFF)) > 0) {
+            if (num.compareTo(BigInteger.valueOf(MAX_UNICODE_CODEPOINT)) > 0) {
                 return String.valueOf(REPLACEMENT);
             }
             int v = num.intValue();
-            if (v >= 0xD800 && v <= 0xDFFF) {
+            if (v >= HIGH_SURROGATE_START && v <= LOW_SURROGATE_END) {
                 return String.valueOf(REPLACEMENT);
             }
             if (isInvalidCodepoint(v)) {
@@ -90,7 +102,7 @@ final class HtmlEntities {
         if (direct != null) {
             return direct;
         }
-        for (int x = s.length() - 1; x >= 2; x--) {
+        for (int x = s.length() - 1; x >= MIN_ENTITY_PREFIX_LENGTH; x--) {
             String prefix = HTML5.get(s.substring(0, x));
             if (prefix != null) {
                 return prefix + s.substring(x);
@@ -110,7 +122,7 @@ final class HtmlEntities {
     }
 
     private static Map<Integer, String> buildInvalidCharrefs() {
-        Map<Integer, String> map = new HashMap<>();
+        Map<Integer, String> map = new HashMap<>(HTML_ENTITY_CAPACITY);
         map.put(0x00, "\uFFFD");
         map.put(0x0D, "\r");
         map.put(0x80, "\u20AC");
@@ -149,7 +161,7 @@ final class HtmlEntities {
     }
 
     private static Map<String, String> loadHtml5() {
-        Map<String, String> map = new HashMap<>(4096);
+        Map<String, String> map = new HashMap<>(HTML_ENTITY_CAPACITY);
         try (InputStream in = HtmlEntities.class.getResourceAsStream("/html5-entities.txt")) {
             if (in == null) {
                 throw new IllegalStateException("缺少资源 html5-entities.txt");
@@ -175,7 +187,7 @@ final class HtmlEntities {
 
     /** 还原导出时的反斜杠u四位十六进制转义（换行、制表、反斜杠等不可直接入表字符）。 */
     private static String decodeValue(String escaped) {
-        if (escaped.indexOf('\\') < 0) {
+        if (escaped.indexOf(BACKSLASH) < 0) {
             return escaped;
         }
         StringBuilder sb = new StringBuilder(escaped.length());

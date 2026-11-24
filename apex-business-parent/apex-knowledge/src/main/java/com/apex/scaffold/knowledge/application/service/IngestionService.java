@@ -184,13 +184,19 @@ public class IngestionService {
         for (int i = 0; i < chunks.size(); i++) {
             float[] vector = embeddingCache.get(chunks.get(i).getContentHash());
             cached.add(vector);
-            if (vector == null) misses.add(i);
+            if (vector == null) {
+                misses.add(i);
+            }
         }
-        if (misses.isEmpty()) return Mono.just(cached);
+        if (misses.isEmpty()) {
+            return Mono.just(cached);
+        }
         return embeddingPort
                 .embed(misses.stream().map(i -> chunks.get(i).getContent()).toList())
                 .map(vectors -> {
-                    if (vectors.size() != misses.size()) throw new IllegalStateException("向量响应数量不符");
+                    if (vectors.size() != misses.size()) {
+                        throw new IllegalStateException("向量响应数量不符");
+                    }
                     for (int i = 0; i < misses.size(); i++) {
                         float[] vector = vectors.get(i);
                         embeddingCache.put(chunks.get(misses.get(i)).getContentHash(), vector);
@@ -226,8 +232,11 @@ public class IngestionService {
                 .flatMap(document -> {
                     boolean parseFailure = document.getParseStatus() == KnowledgeDocument.ParseStatus.PENDING
                             || document.getParseStatus() == KnowledgeDocument.ParseStatus.PARSING;
-                    if (parseFailure) document.setParseStatus(KnowledgeDocument.ParseStatus.FAILED);
-                    else document.setIndexStatus(KnowledgeDocument.IndexStatus.FAILED);
+                    if (parseFailure) {
+                        document.setParseStatus(KnowledgeDocument.ParseStatus.FAILED);
+                    } else {
+                        document.setIndexStatus(KnowledgeDocument.IndexStatus.FAILED);
+                    }
                     document.setParseError(parseFailure ? "文档解析失败，请检查文件格式后重试" : "索引未完成，请检查供应商配置后重试");
                     return lifecycle.persistDocument(lease, document).then();
                 })

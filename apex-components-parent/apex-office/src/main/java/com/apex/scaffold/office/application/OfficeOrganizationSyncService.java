@@ -64,6 +64,8 @@ public class OfficeOrganizationSyncService {
     /** 成员同步类型 */
     public static final String SYNC_TYPE_MEMBER = "MEMBER";
 
+    private static final String SYNC_STATE_FAILED = "FAILED";
+
     private final OfficeRepository officeRepository;
     private final OfficeOrganizationService officeOrganizationService;
     private final OffDepartmentRepository offDepartmentRepository;
@@ -260,7 +262,7 @@ public class OfficeOrganizationSyncService {
                 .findSyncTaskById(tenantId, taskId)
                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.BUSINESS_ERROR, "同步任务不存在")))
                 .flatMap(task -> {
-                    if (!"FAILED".equals(task.getState())) {
+                    if (!SYNC_STATE_FAILED.equals(task.getState())) {
                         return Mono.error(new BusinessException(
                                 ResultCode.BUSINESS_ERROR, "仅失败状态的同步任务可重试，当前状态：" + task.getState()));
                     }
@@ -492,7 +494,7 @@ public class OfficeOrganizationSyncService {
 
     /** 把解析结果转换为外部用户标识到系统用户主键的映射，空值条目直接丢弃。 */
     private static Map<String, Long> toBindings(List<OfficeOrgUserSnapshot> snapshots) {
-        Map<String, Long> bindings = new HashMap<>();
+        Map<String, Long> bindings = new HashMap<>(snapshots.size());
         for (OfficeOrgUserSnapshot snapshot : snapshots) {
             if (snapshot != null && snapshot.externalUserId() != null && snapshot.userId() != null) {
                 bindings.putIfAbsent(snapshot.externalUserId(), snapshot.userId());
@@ -719,7 +721,7 @@ public class OfficeOrganizationSyncService {
      * @param externalDepartments 本次同步拉取到的全部外部部门，按外部部门 ID 去重保留首个
      */
     private Mono<Void> rebuildDepartmentHierarchy(OfficePlatform platform, List<OfficeDepartment> externalDepartments) {
-        Map<String, String> externalParentIds = new HashMap<>();
+        Map<String, String> externalParentIds = new HashMap<>(externalDepartments.size());
         for (OfficeDepartment dept : externalDepartments) {
             if (dept.getExternalDeptId() != null) {
                 externalParentIds.putIfAbsent(dept.getExternalDeptId(), dept.isRoot() ? null : dept.getParentId());
@@ -735,8 +737,8 @@ public class OfficeOrganizationSyncService {
                     if (mirrors.isEmpty()) {
                         return Mono.empty();
                     }
-                    Map<String, OffDepartmentEntity> byExternalId = new HashMap<>();
-                    Map<Long, OffDepartmentEntity> byId = new HashMap<>();
+                    Map<String, OffDepartmentEntity> byExternalId = new HashMap<>(mirrors.size());
+                    Map<Long, OffDepartmentEntity> byId = new HashMap<>(mirrors.size());
                     for (OffDepartmentEntity mirror : mirrors) {
                         if (mirror.getExternalId() != null) {
                             byExternalId.putIfAbsent(mirror.getExternalId(), mirror);

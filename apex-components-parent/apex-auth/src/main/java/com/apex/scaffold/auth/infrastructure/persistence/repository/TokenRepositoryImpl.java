@@ -145,13 +145,18 @@ public class TokenRepositoryImpl implements TokenRepository {
     }
 
     private TokenRotationResult handleRevokedRefresh(String tenant, TokenPO current) {
-        if (Integer.valueOf(1).equals(current.getRevoked())
-                && ("token_refresh".equals(current.getRevokeReason())
-                        || "token_rotated".equals(current.getRevokeReason()))) {
+        if (isRefreshTokenReplay(current)) {
             revokeUserTokens(tenant, current.getUserId(), "system", "token_reuse_detected");
             return TokenRotationResult.replay();
         }
         return TokenRotationResult.rejected();
+    }
+
+    private boolean isRefreshTokenReplay(TokenPO token) {
+        if (!Integer.valueOf(1).equals(token.getRevoked())) {
+            return false;
+        }
+        return "token_refresh".equals(token.getRevokeReason()) || "token_rotated".equals(token.getRevokeReason());
     }
 
     private void validatePair(String tenant, TokenEntityPair tokens) {

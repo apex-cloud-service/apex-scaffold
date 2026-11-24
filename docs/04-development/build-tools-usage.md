@@ -514,10 +514,11 @@ export APEX_IMAGE_REGISTRY=harbor.example.com/apex
 ```bash
 ./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply            # 基础清单
 ./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply --pdb      # 同时应用 PDB
-./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply --canary   # 同时应用金丝雀（先改 canary 镜像）
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply --canary   # 隔离部署预览；需要 stable selector 已迁移
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s check-canary     # 校验端点身份和入口后再手动放量
 ```
 
-`apply` 会依次应用清单，并执行 `kubectl rollout status deployment/apex-scaffold --timeout=300s` 等待滚动更新完成。
+`apply` 校验现有网关稳定 Service/Deployment 拓扑，等待 `deployment/apex-gateway` rollout 和 EndpointSlice 稳定端点。旧 `app` selector 拓扑会 fail closed；灰度入口权重默认为 0，不自动放量。旧集群迁移步骤见 [k8s/README.md](../../k8s/README.md)。
 
 **第 5 步：确认状态**
 
@@ -582,7 +583,7 @@ K8s 路线把 ⑥⑦⑧ 替换为 `deploy k8s precheck → apply → health`。
 | --- | --- |
 | java -jar | 用上一版本 JAR 重新 `deploy java-jar restart` |
 | Podman Compose | 回退上一版本 compose/镜像 tag 后用 `podman-compose up -d` |
-| K8s | `kubectl -n apex-scaffold rollout undo deployment/apex-scaffold` |
+| K8s | 先将金丝雀 Ingress 权重置 0 并验证稳定入口，再按变更阶段回滚 `apex-gateway`；旧 selector 回退前必须摘除金丝雀 Pod，详见 [k8s/README.md](../../k8s/README.md) |
 
 ---
 

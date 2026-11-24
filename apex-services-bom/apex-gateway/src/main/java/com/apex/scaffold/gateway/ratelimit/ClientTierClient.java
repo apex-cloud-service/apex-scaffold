@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 public class ClientTierClient {
+    private static final String DATA_FIELD = "data";
 
     /** 默认限流档编码（与 system 侧 {@code OpenAppAdminService} 兜底口径一致） */
     public static final String DEFAULT_TIER = "default";
@@ -117,7 +118,7 @@ public class ClientTierClient {
     private String parseTier(String body) {
         try {
             Map<?, ?> root = JsonUtil.fromJson(body, Map.class);
-            if (root != null && root.get("data") instanceof Map<?, ?> data) {
+            if (root != null && root.get(DATA_FIELD) instanceof Map<?, ?> data) {
                 Object tier = data.get("rateLimitTier");
                 if (tier != null && !tier.toString().isBlank()) {
                     return tier.toString();

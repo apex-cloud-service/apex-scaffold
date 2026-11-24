@@ -1,12 +1,12 @@
 package com.apex.scaffold.infrastructure.cache.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,14 +51,6 @@ public class LocalCacheService {
     /** 默认缓存名称 */
     private static final String DEFAULT_CACHE_NAME = "localCache";
 
-    /**
-     * 缓存条目过期时间跟踪表
-     *
-     * <p>由于 CaffeineCacheManager 不支持按 key 设置独立的 TTL，
-     * 此映射用于跟踪每个 key 的过期时间，在读取时进行过期校验。
-     */
-    private final ConcurrentHashMap<String, Long> ttlTracker = new ConcurrentHashMap<>();
-
     private final CaffeineCacheManager cacheManager;
 
     private final ObjectMapper objectMapper;
@@ -102,29 +94,11 @@ public class LocalCacheService {
             return Mono.empty();
         }
         try {
-            Long expireTime = ttlTracker.get(key);
-            if (expireTime != null && System.currentTimeMillis() > expireTime) {
-                // 惰性删除过期条目
-                ttlTracker.remove(key);
-                org.springframework.cache.Cache cache = cacheManager.getCache(DEFAULT_CACHE_NAME);
-                if (cache != null) {
-                    cache.evict(key);
-                }
-                return Mono.empty();
-            }
             org.springframework.cache.Cache cache = cacheManager.getCache(DEFAULT_CACHE_NAME);
             if (cache == null) {
                 return Mono.empty();
             }
-            org.springframework.cache.Cache.ValueWrapper wrapper = cache.get(key);
-            if (wrapper == null) {
-                return Mono.empty();
-            }
-            Object value = wrapper.get();
-            if (value == null) {
-                return Mono.empty();
-            }
-            return Mono.justOrEmpty(deserializeValue(value, clazz));
+            return Mono.justOrEmpty(readValue(cache, key, clazz));
         } catch (Exception e) {
             log.warn("获取本地缓存失败, key: {}", key, e);
             return Mono.empty();
@@ -136,9 +110,8 @@ public class LocalCacheService {
      *
      * <p>基本类型（String、Number、Boolean）直接存储，
      * 复杂类型自动 JSON 序列化后存储。
-     * 通过独立的 TTL 跟踪表（{@link #ttlTracker}）记录每个 key 的过期时间，
-     * 在读取时进行惰性过期校验，弥补 CaffeineCacheManager 不支持按 key 设置
-     * 独立 TTL 的限制。
+     * 自定义 TTL 随缓存值一起写入和淘汰；读取时检查该条目的有效期，
+     * 默认的 Caffeine 过期策略仍限制条目的物理保留时间。
      *
      * @param <T>   缓存值的类型
      * @param key   缓存键
@@ -155,20 +128,7 @@ public class LocalCacheService {
             if (cache == null) {
                 return Mono.just(false);
             }
-            Object cacheValue;
-            if (value instanceof String || value instanceof Number || value instanceof Boolean) {
-                cacheValue = value;
-            } else {
-                cacheValue = objectMapper.writeValueAsString(value);
-            }
-            // H1 修复：先写 ttlTracker 再写 cache，避免"读线程先拿到 cache 值但 ttlTracker 还没写 → 视为永不过期"的竞态；
-            // 读取侧顺序是"先读 cache → 再读 ttlTracker"，写入侧按镜像反序符合 2PL 安全。
-            if (ttl != null) {
-                ttlTracker.put(key, System.currentTimeMillis() + ttl.toMillis());
-            } else {
-                ttlTracker.remove(key);
-            }
-            cache.put(key, cacheValue);
+            putValue(cache, key, value, ttl);
             return Mono.just(true);
         } catch (Exception e) {
             log.warn("设置本地缓存失败, key: {}", key, e);
@@ -196,10 +156,7 @@ public class LocalCacheService {
             long deleted = 0;
             for (String key : keys) {
                 if (key != null) {
-                    // H1 修复：删除顺序与写入镜像——先 evict cache（读侧首步命中的字段），再删 ttlTracker；
-                    // 这样中间窗口里读线程要么拿到 cache(已不存在)，要么 cache 存在但 ttlTracker 还在，都不会读到假值。
                     cache.evictIfPresent(key);
-                    ttlTracker.remove(key);
                     deleted++;
                 }
             }
@@ -233,21 +190,7 @@ public class LocalCacheService {
                     .filter(Objects::nonNull)
                     .map(key -> {
                         try {
-                            Long expireTime = ttlTracker.get(key);
-                            if (expireTime != null && System.currentTimeMillis() > expireTime) {
-                                ttlTracker.remove(key);
-                                cache.evict(key);
-                                return null;
-                            }
-                            org.springframework.cache.Cache.ValueWrapper wrapper = cache.get(key);
-                            if (wrapper == null) {
-                                return null;
-                            }
-                            Object value = wrapper.get();
-                            if (value == null) {
-                                return null;
-                            }
-                            return deserializeValue(value, clazz);
+                            return readValue(cache, key, clazz);
                         } catch (Exception e) {
                             log.warn("批量获取本地缓存失败, key: {}", key, e);
                             return null;
@@ -282,13 +225,7 @@ public class LocalCacheService {
             }
             keyValueMap.forEach((key, value) -> {
                 try {
-                    Object cacheValue;
-                    if (value instanceof String || value instanceof Number || value instanceof Boolean) {
-                        cacheValue = value;
-                    } else {
-                        cacheValue = objectMapper.writeValueAsString(value);
-                    }
-                    cache.put(key, cacheValue);
+                    putValue(cache, key, value, null);
                 } catch (Exception e) {
                     log.warn("批量设置本地缓存失败, key: {}", key, e);
                 }
@@ -308,11 +245,33 @@ public class LocalCacheService {
     public Mono<Void> clear() {
         try {
             cacheManager.getCache(DEFAULT_CACHE_NAME).clear();
-            ttlTracker.clear();
             log.debug("本地缓存已清空");
         } catch (Exception e) {
             log.warn("清空本地缓存失败", e);
         }
         return Mono.empty();
     }
+
+    private <T> T readValue(org.springframework.cache.Cache cache, String key, Class<T> clazz) {
+        org.springframework.cache.Cache.ValueWrapper wrapper = cache.get(key);
+        Object value = wrapper == null ? null : wrapper.get();
+        if (value instanceof CacheEntry entry) {
+            if (System.currentTimeMillis() >= entry.expiresAtMillis()) {
+                return null;
+            }
+            value = entry.value();
+        }
+        return value == null ? null : deserializeValue(value, clazz);
+    }
+
+    private void putValue(org.springframework.cache.Cache cache, String key, Object value, Duration ttl)
+            throws JsonProcessingException {
+        Object encoded = value instanceof String || value instanceof Number || value instanceof Boolean
+                ? value
+                : objectMapper.writeValueAsString(value);
+        cache.put(key, ttl == null ? encoded : new CacheEntry(encoded, System.currentTimeMillis() + ttl.toMillis()));
+    }
+
+    /** 与缓存值一起发布的自定义过期时间；读取旧条目时不删除同键的新写入。 */
+    private record CacheEntry(Object value, long expiresAtMillis) {}
 }

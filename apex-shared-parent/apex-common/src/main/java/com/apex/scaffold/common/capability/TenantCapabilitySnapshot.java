@@ -20,6 +20,8 @@ import java.util.Set;
 public record TenantCapabilitySnapshot(
         boolean exists, boolean unbounded, Set<String> features, long expireAtEpochMillis) {
 
+    private static final String DATA_FIELD = "data";
+
     /** 规范化并保护能力集合。 */
     public TenantCapabilitySnapshot {
         features = features == null ? Set.of() : Set.copyOf(features);
@@ -39,7 +41,7 @@ public record TenantCapabilitySnapshot(
         } catch (RuntimeException e) {
             throw new IllegalStateException("租户能力响应解析失败: " + e.getMessage(), e);
         }
-        if (root == null || !(root.get("data") instanceof Map<?, ?> feed)) {
+        if (root == null || !(root.get(DATA_FIELD) instanceof Map<?, ?> feed)) {
             throw new IllegalStateException("租户能力响应缺少 data 节点");
         }
         boolean exists = booleanField(feed, "exists");

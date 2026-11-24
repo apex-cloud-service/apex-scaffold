@@ -46,6 +46,11 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
     private static final String BEARER_PREFIX = "Bearer ";
+    /** 多公钥配置中条目的分隔符。 */
+    private static final String KEY_ENTRY_SEPARATOR = ",";
+    /** JWS 紧凑序列化的段数。 */
+    private static final int JWT_SEGMENT_COUNT = 3;
+
     private final Map<String, PublicKey> publicKeys;
     private final boolean keyedPublicKeys;
     private final SecretKey secretKey;
@@ -111,6 +116,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
 
     /** 空 JWKS 提供者：测试与程序化装配不装配共享拉取客户端。 */
     private enum EmptyJwksFetcher implements org.springframework.beans.factory.ObjectProvider<JwksFetcher> {
+        /** 未配置共享 JWKS 拉取器时使用的空提供者。 */
         PROVIDER;
 
         @Override
@@ -148,8 +154,9 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private static KeyConfiguration parseKeyedKeys(String configuration) {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            Map<String, PublicKey> keys = new HashMap<>();
-            for (String entry : configuration.split(",", -1)) {
+            String[] entries = configuration.split(KEY_ENTRY_SEPARATOR, -1);
+            Map<String, PublicKey> keys = HashMap.newHashMap(entries.length);
+            for (String entry : entries) {
                 String[] parts = entry.split("=", 2);
                 String keyId = parts.length == 2 ? parts[0].trim() : "";
                 String encodedKey = parts.length == 2 ? parts[1].trim() : "";
@@ -277,7 +284,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private String headerValue(String token, String name) {
         try {
             String[] parts = token.split("\\.", -1);
-            if (parts.length != 3) {
+            if (parts.length != JWT_SEGMENT_COUNT) {
                 return null;
             }
             String header = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);

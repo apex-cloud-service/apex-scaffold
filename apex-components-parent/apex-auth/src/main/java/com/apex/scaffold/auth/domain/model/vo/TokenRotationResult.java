@@ -9,7 +9,11 @@ package com.apex.scaffold.auth.domain.model.vo;
  * @since 1.3.1
  */
 public record TokenRotationResult(Status status, TokenEntityPair tokens) {
-    /** 轮换结果分类：成功保存新令牌对、检测到消费重放、或普通拒绝。 */
+    /**
+     * 轮换结果分类：成功保存新令牌对、检测到消费重放、或普通拒绝。
+     *
+     * @author Apex Team
+     */
     public enum Status {
         /** 旧刷新令牌已消费且新令牌对已提交。 */
         ROTATED,

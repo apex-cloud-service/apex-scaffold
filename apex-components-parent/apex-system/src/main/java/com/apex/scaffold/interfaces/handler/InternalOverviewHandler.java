@@ -38,6 +38,8 @@ import reactor.core.publisher.Mono;
 @Tag(name = "内部契约-跨域概览", description = "管理端内部跨域聚合概览；集群内直连，不经网关")
 public class InternalOverviewHandler {
 
+    private static final int MAX_TENANT_ID_LENGTH = 64;
+
     private final OverviewFacadeService overviewFacadeService;
 
     /**
@@ -71,7 +73,7 @@ public class InternalOverviewHandler {
     })
     public Mono<ServerResponse> getOverview(ServerRequest request) {
         String tenantId = request.queryParam("tenantId").map(String::trim).orElse(null);
-        if (tenantId == null || tenantId.isBlank() || tenantId.length() > 64) {
+        if (tenantId == null || tenantId.isBlank() || tenantId.length() > MAX_TENANT_ID_LENGTH) {
             return ServerResponse.badRequest().bodyValue(Result.error(ResultCode.PARAM_ERROR.getMsg()));
         }
         String authorization = request.headers().firstHeader(HttpHeaders.AUTHORIZATION);

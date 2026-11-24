@@ -242,14 +242,7 @@ public class TokenServiceImpl implements TokenService {
                                 .findByJti(jti)
                                 .switchIfEmpty(Mono.error(new BusinessException(ResultCode.UNAUTHORIZED, "Token不存在")))
                                 .flatMap(entity -> {
-                                    if (!Objects.equals(entity.getTenantId(), tenantId)
-                                            || !Objects.equals(entity.getUserId(), userId)
-                                            || !Objects.equals(entity.getJti(), jti)
-                                            || !Objects.equals(entity.getTokenType(), tokenType)
-                                            || (entity.getTokenHash() != null
-                                                    && !Objects.equals(
-                                                            entity.getTokenHash(),
-                                                            encryptionService.hashToken(token)))) {
+                                    if (!matchesVerifiedToken(entity, tenantId, userId, jti, tokenType, token)) {
                                         return Mono.error(new BusinessException(ResultCode.UNAUTHORIZED));
                                     }
                                     if (entity.isRevoked() && !allowRevoked) {
@@ -265,6 +258,18 @@ public class TokenServiceImpl implements TokenService {
                                 .contextWrite(TenantContext.withTenant(tenantId));
                     });
                 });
+    }
+
+    private boolean matchesVerifiedToken(
+            TokenEntity entity, String tenantId, Long userId, String jti, String tokenType, String token) {
+        if (!Objects.equals(entity.getTenantId(), tenantId)
+                || !Objects.equals(entity.getUserId(), userId)
+                || !Objects.equals(entity.getJti(), jti)
+                || !Objects.equals(entity.getTokenType(), tokenType)) {
+            return false;
+        }
+        String storedTokenHash = entity.getTokenHash();
+        return storedTokenHash == null || Objects.equals(storedTokenHash, encryptionService.hashToken(token));
     }
 
     @Override

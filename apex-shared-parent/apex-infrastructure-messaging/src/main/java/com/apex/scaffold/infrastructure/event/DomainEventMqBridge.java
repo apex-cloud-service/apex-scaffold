@@ -52,13 +52,13 @@ public class DomainEventMqBridge {
     /**
      * 构造桥接器。
      *
-     * @param rocketMQTemplate RocketMQ 发送模板
+     * @param rocketMqTemplate RocketMQ 发送模板
      * @param domainEventTopic 分布式事件 Topic（{@code apex.mq.domain-event-topic}）
      */
     public DomainEventMqBridge(
-            RocketMQTemplate rocketMQTemplate,
+            RocketMQTemplate rocketMqTemplate,
             @Value("${apex.mq.domain-event-topic:apex-domain-event}") String domainEventTopic) {
-        this.rocketMQTemplate = rocketMQTemplate;
+        this.rocketMQTemplate = rocketMqTemplate;
         this.domainEventTopic = domainEventTopic;
     }
 

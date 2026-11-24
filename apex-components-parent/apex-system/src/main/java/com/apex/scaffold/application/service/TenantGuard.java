@@ -30,6 +30,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class TenantGuard {
 
+    private static final String PLATFORM_TENANT_CODE = "default";
+
     private final TenantApplicationService tenantApplicationService;
 
     private final UserRepository userRepository;
@@ -55,7 +57,7 @@ public class TenantGuard {
     public Mono<Void> assertPlatformTenant() {
         return Mono.defer(() -> {
             String tenantCode = requireTenantCode();
-            if (!"default".equals(tenantCode)) {
+            if (!PLATFORM_TENANT_CODE.equals(tenantCode)) {
                 throw new BusinessException(ResultCode.FORBIDDEN, "该操作仅限平台租户执行");
             }
             return Mono.empty();

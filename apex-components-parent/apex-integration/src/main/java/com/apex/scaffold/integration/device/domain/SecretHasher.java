@@ -22,6 +22,9 @@ public final class SecretHasher {
 
     private static final String ALGORITHM = "PBKDF2WithHmacSHA256";
 
+    private static final String HASH_FORMAT_ALGORITHM = "pbkdf2_sha256";
+    private static final int HASH_FORMAT_PARTS = 4;
+
     private static final int ITERATIONS = 120_000;
 
     private static final int SALT_BYTES = 16;
@@ -55,7 +58,7 @@ public final class SecretHasher {
         byte[] salt = new byte[SALT_BYTES];
         SECURE_RANDOM.nextBytes(salt);
         byte[] derived = pbkdf2(rawSecret, salt, ITERATIONS);
-        return "pbkdf2_sha256$" + ITERATIONS
+        return HASH_FORMAT_ALGORITHM + "$" + ITERATIONS
                 + "$" + Base64.getEncoder().encodeToString(salt)
                 + "$" + Base64.getEncoder().encodeToString(derived);
     }
@@ -72,7 +75,7 @@ public final class SecretHasher {
             return false;
         }
         String[] parts = storedHash.split("\\$");
-        if (parts.length != 4 || !"pbkdf2_sha256".equals(parts[0])) {
+        if (parts.length != HASH_FORMAT_PARTS || !HASH_FORMAT_ALGORITHM.equals(parts[0])) {
             return false;
         }
         try {

@@ -33,6 +33,13 @@ public final class DocSearchServer {
     /** 默认绑定地址：仅本机可访问，避免把项目文件暴露给局域网。 */
     private static final String LOOPBACK = "127.0.0.1";
 
+    private static final int MIN_ARGUMENT_COUNT = 2;
+    private static final int MAX_ARGUMENT_COUNT = 3;
+    private static final int EXIT_USAGE = 2;
+    private static final String PATH_SEPARATOR = "/";
+    private static final String HEAD_METHOD = "HEAD";
+    private static final String QUERY_SEPARATOR = "&";
+
     private static final Map<String, String> CONTENT_TYPES = Map.ofEntries(
             Map.entry("html", "text/html; charset=utf-8"),
             Map.entry("htm", "text/html; charset=utf-8"),
@@ -68,9 +75,9 @@ public final class DocSearchServer {
      * @throws IOException 端口绑定或 IO 失败
      */
     public static void main(String[] args) throws IOException {
-        if (args.length != 2 && args.length != 3) {
+        if (args.length != MIN_ARGUMENT_COUNT && args.length != MAX_ARGUMENT_COUNT) {
             System.err.println("usage: DocSearchServer <port> <doc-root> [bind-host]");
-            System.exit(2);
+            System.exit(EXIT_USAGE);
         }
         String host = args.length == 3 && !args[2].isBlank() ? args[2] : LOOPBACK;
         start(Integer.parseInt(args[0]), Path.of(args[1]).toAbsolutePath().normalize(), host);
@@ -141,8 +148,8 @@ public final class DocSearchServer {
     private static Path translate(Path root, String request) {
         String decoded = URLDecoder.decode(request, StandardCharsets.UTF_8);
         Path current = root;
-        for (String part : decoded.split("/")) {
-            if (part.isEmpty() || part.equals(".") || part.equals("..")) {
+        for (String part : decoded.split(PATH_SEPARATOR)) {
+            if (part.isEmpty() || ".".equals(part) || "..".equals(part)) {
                 continue;
             }
             current = current.resolve(part);
@@ -162,7 +169,7 @@ public final class DocSearchServer {
                 : "application/octet-stream";
         byte[] body = Files.readAllBytes(file);
         exchange.getResponseHeaders().set("Content-Type", contentType);
-        if ("HEAD".equals(exchange.getRequestMethod())) {
+        if (HEAD_METHOD.equals(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(200, -1);
             return;
         }
@@ -185,9 +192,9 @@ public final class DocSearchServer {
         if (query == null || query.isBlank()) {
             return false;
         }
-        for (String part : query.split("&")) {
+        for (String part : query.split(QUERY_SEPARATOR)) {
             String name = part.indexOf('=') >= 0 ? part.substring(0, part.indexOf('=')) : part;
-            if (name.equals("raw")) {
+            if ("raw".equals(name)) {
                 return true;
             }
         }
@@ -202,7 +209,7 @@ public final class DocSearchServer {
         String page = MarkdownPageRenderer.render(markdown, dot > 0 ? name.substring(0, dot) : name);
         byte[] body = page.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
-        if ("HEAD".equals(exchange.getRequestMethod())) {
+        if (HEAD_METHOD.equals(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(200, -1);
             return;
         }

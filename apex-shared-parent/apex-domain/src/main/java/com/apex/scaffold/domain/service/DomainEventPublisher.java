@@ -38,6 +38,7 @@ public interface DomainEventPublisher {
      * （Mono.empty()），遵循"发送即忘"的异步事件模式。</p>
      *
      * @param event 领域事件对象，不能为null
+     * @return 异步发布完成信号
      * @throws IllegalArgumentException 若event为null
      */
     Mono<Void> publish(AbstractDomainEvent event);

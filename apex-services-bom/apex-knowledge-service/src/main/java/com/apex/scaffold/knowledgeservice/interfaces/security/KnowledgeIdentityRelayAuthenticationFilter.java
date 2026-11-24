@@ -53,6 +53,12 @@ public class KnowledgeIdentityRelayAuthenticationFilter implements WebFilter {
     /** 访问令牌类型取值，刷新令牌不得用于业务访问。 */
     private static final String TOKEN_TYPE_ACCESS = "ACCESS";
 
+    /** 多公钥配置中条目的分隔符。 */
+    private static final String KEY_ENTRY_SEPARATOR = ",";
+
+    /** JWS 紧凑序列化的段数。 */
+    private static final int JWT_SEGMENT_COUNT = 3;
+
     /** kid → RSA 公钥静态配置。 */
     private final Map<String, PublicKey> publicKeys;
 
@@ -204,7 +210,7 @@ public class KnowledgeIdentityRelayAuthenticationFilter implements WebFilter {
     private String headerValue(String token, String name) {
         try {
             String[] parts = token.split("\\.", -1);
-            if (parts.length != 3) {
+            if (parts.length != JWT_SEGMENT_COUNT) {
                 return null;
             }
             String header = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
@@ -225,11 +231,12 @@ public class KnowledgeIdentityRelayAuthenticationFilter implements WebFilter {
      * @return 键控配置（映射 + 是否多键模式）
      */
     private static KeyConfiguration buildKeys(String publicKeysBase64, String publicKeyBase64) {
-        Map<String, PublicKey> keys = new HashMap<>();
         try {
             KeyFactory factory = KeyFactory.getInstance("RSA");
             if (publicKeysBase64 != null && !publicKeysBase64.isBlank()) {
-                for (String entry : publicKeysBase64.split(",", -1)) {
+                String[] entries = publicKeysBase64.split(KEY_ENTRY_SEPARATOR, -1);
+                Map<String, PublicKey> keys = HashMap.newHashMap(entries.length);
+                for (String entry : entries) {
                     String[] parts = entry.split("=", 2);
                     String kid = parts.length == 2 ? parts[0].trim() : "";
                     String encoded = parts.length == 2 ? parts[1].trim() : "";
@@ -244,15 +251,14 @@ public class KnowledgeIdentityRelayAuthenticationFilter implements WebFilter {
                 return new KeyConfiguration(Map.copyOf(keys), true);
             }
             if (publicKeyBase64 != null && !publicKeyBase64.isBlank()) {
-                keys.put(
-                        "",
-                        factory.generatePublic(
-                                new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64))));
+                PublicKey key = factory.generatePublic(
+                        new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64)));
+                return new KeyConfiguration(Map.of("", key), false);
             }
         } catch (java.security.GeneralSecurityException | IllegalArgumentException error) {
             throw new IllegalArgumentException("知识库服务 JWT 公钥无效", error);
         }
-        return new KeyConfiguration(Map.copyOf(keys), false);
+        return new KeyConfiguration(Map.of(), false);
     }
 
     /** 公钥配置解析结果。 */

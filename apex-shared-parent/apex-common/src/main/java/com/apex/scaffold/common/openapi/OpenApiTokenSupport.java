@@ -29,6 +29,11 @@ public final class OpenApiTokenSupport {
     /** 网关能力标记头。 */
     public static final String CAPABILITY_HEADER = "X-Open-Api-Capability";
 
+    private static final String USER_ID_CLAIM = "userId";
+    private static final String CLIENT_ID_CLAIM = "client_id";
+    private static final String TOKEN_USE_CLAIM = "token_use";
+    private static final String ACCESS_TOKEN_USE = "access";
+
     private OpenApiTokenSupport() {}
 
     /**
@@ -47,13 +52,13 @@ public final class OpenApiTokenSupport {
                 || claims == null) {
             return false;
         }
-        if (claims.get("userId") != null) {
+        if (claims.get(USER_ID_CLAIM) != null) {
             return false;
         }
-        if (claim(claims, "client_id") == null) {
+        if (claim(claims, CLIENT_ID_CLAIM) == null) {
             return false;
         }
-        if (!"access".equals(claim(claims, "token_use"))) {
+        if (!ACCESS_TOKEN_USE.equals(claim(claims, TOKEN_USE_CLAIM))) {
             return false;
         }
         String grant = claim(claims, "grant_type");

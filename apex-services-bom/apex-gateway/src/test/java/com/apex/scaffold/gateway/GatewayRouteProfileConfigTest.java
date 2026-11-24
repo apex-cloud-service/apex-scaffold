@@ -226,6 +226,7 @@ class GatewayRouteProfileConfigTest {
      * @param source 配置源名称，仅用于失败信息
      */
     private static void assertMessageRoutesPrecedeOfficeDomain(List<RouteDefinition> routes, String source) {
+        assertAuthAndWorkflowCircuitBreakers(routes, source);
         RouteDefinition websocket = findRoute(routes, WEBSOCKET_ROUTE_ID, source);
         RouteDefinition http = findRoute(routes, HTTP_ROUTE_ID, source);
         RouteDefinition office = findRoute(routes, OFFICE_ROUTE_ID, source);
@@ -349,6 +350,23 @@ class GatewayRouteProfileConfigTest {
                 });
 
         assertOpenApiRoutes(routes, source);
+    }
+
+    private static void assertAuthAndWorkflowCircuitBreakers(List<RouteDefinition> routes, String source) {
+        assertCircuitBreaker(findRouteAny(routes, AUTH_ROUTE_IDS, source), "authService", source);
+        assertCircuitBreaker(findRoute(routes, WORKFLOW_ROUTE_ID, source), "workflowService", source);
+    }
+
+    private static void assertCircuitBreaker(RouteDefinition route, String instanceName, String source) {
+        var circuitBreakers = route.getFilters().stream()
+                .filter(filter -> "CircuitBreaker".equals(filter.getName()))
+                .toList();
+        assertThat(circuitBreakers)
+                .as("%s：路由 %s 必须且只能声明一个 CircuitBreaker", source, route.getId())
+                .hasSize(1);
+        assertThat(circuitBreakers.get(0).getArgs())
+                .containsEntry("name", instanceName)
+                .containsEntry("fallbackUri", FALLBACK_URI);
     }
 
     /**

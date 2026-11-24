@@ -12,6 +12,16 @@
 - [2026-11-22 全仓对齐与图表补齐战役记录](./2026-11-22-alignment-campaign.md)
 - [2026-11-22 全模块增量评审与兼容性优化](./2026-11-22-code-review-pattern-spi-lambda.md)
 - [2026-11-22 全模块 Handler SpringDoc/Swagger 注解补齐](./2026-11-22-handler-annotation-completion.md)
+- [2026-11-23 BE-043、BE-049 责任与租约接管](./2026-11-23-task-ownership-handoff.md)
+- [2026-11-23 BE-063 Wave A 基线交接](./2026-11-23-be063-wave-a-handoff.md)
+- [2026-11-23 BE-063 Wave B1 本地缓存 TTL 生命周期](./2026-11-23-be063-wave-b1-cache-ttl.md)
+- [2026-11-23 BE-063 Wave B2 网关生产档熔断接线](./2026-11-23-be063-wave-b2-gateway-circuit-breaker.md)
+- [2026-11-23 BE-063 Wave C1 网关断路器唯一性测试](./2026-11-23-be063-wave-c1-gateway-circuit-breaker-test.md)
+- [2026-11-23 BE-063 Wave D1 Kubernetes 灰度隔离](./2026-11-23-be063-wave-d1-kubernetes-release-isolation.md)
+- [2026-11-23 BE-063 Wave E 全仓门禁与报告](./2026-11-23-be063-wave-e-full-verify.md)
+- [2026-11-23 BE-064 构建门禁修复](./2026-11-23-be064-build-gate-repair.md)
+- [2026-11-23 BE-065 PMD 全仓规则违规修复](./2026-11-23-be065-pmd-rule-repair.md)
+- BE-063 Wave B 测试汇总与命令结果登记于 [测试索引](../06-testing/README.md)；逐波交接保留在各自记录中。
 
 > 规则：记录只增不改；后续修正以追加段落写入，不覆盖历史结论。
 

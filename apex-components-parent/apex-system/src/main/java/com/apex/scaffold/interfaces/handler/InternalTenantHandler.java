@@ -38,6 +38,8 @@ import reactor.core.publisher.Mono;
 @Tag(name = "内部契约-租户状态", description = "供内部服务读取租户与套餐状态快照；集群内直连，不经网关")
 public class InternalTenantHandler {
 
+    private static final int MAX_TENANT_CODE_LENGTH = 64;
+
     private final TenantApplicationService tenantApplicationService;
 
     private final TenantPackageService tenantPackageService;
@@ -72,7 +74,7 @@ public class InternalTenantHandler {
     })
     public Mono<ServerResponse> getStatus(ServerRequest request) {
         String code = request.pathVariable("code");
-        if (code == null || code.isBlank() || code.length() > 64) {
+        if (code == null || code.isBlank() || code.length() > MAX_TENANT_CODE_LENGTH) {
             return ServerResponse.badRequest().bodyValue(Result.error(ResultCode.PARAM_ERROR.getMsg()));
         }
         return tenantApplicationService
@@ -116,7 +118,7 @@ public class InternalTenantHandler {
     })
     public Mono<ServerResponse> getCapabilities(ServerRequest request) {
         String code = request.pathVariable("code");
-        if (code == null || code.isBlank() || code.length() > 64) {
+        if (code == null || code.isBlank() || code.length() > MAX_TENANT_CODE_LENGTH) {
             return ServerResponse.badRequest().bodyValue(Result.error(ResultCode.PARAM_ERROR.getMsg()));
         }
         return tenantPackageService

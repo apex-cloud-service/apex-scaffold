@@ -14,6 +14,10 @@ import java.util.Locale;
  */
 final class GitHubHeadingSlug {
 
+    private static final char SPACE = ' ';
+    private static final char HYPHEN = '-';
+    private static final char UNDERSCORE = '_';
+
     private GitHubHeadingSlug() {}
 
     /**
@@ -31,7 +35,7 @@ final class GitHubHeadingSlug {
         value = value.replace("`", "").replace("*", "").replace("~", "").replace("\\", "");
         StringBuilder sb = new StringBuilder(value.length());
         value.codePoints().forEach(cp -> {
-            if (cp == ' ' || cp == '-' || cp == '_' || isLetterNumberMark(cp)) {
+            if (cp == SPACE || cp == HYPHEN || cp == UNDERSCORE || isLetterNumberMark(cp)) {
                 sb.appendCodePoint(cp);
             }
         });

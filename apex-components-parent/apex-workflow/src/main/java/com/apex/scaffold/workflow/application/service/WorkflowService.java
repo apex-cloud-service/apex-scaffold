@@ -825,10 +825,11 @@ public class WorkflowService {
         task.setAssigneeId(WorkflowDefinitionGraph.resolveAssignee(node, initiatorId));
         task.setCreatedTime(now);
         String strategy = node.timeoutAction();
-        if (node.timeoutHours() != null
-                && (TIMEOUT_STRATEGY_AUTO_COMPLETE.equals(strategy) || TIMEOUT_STRATEGY_ESCALATE.equals(strategy))) {
-            task.setTimeoutAt(now.plusHours(node.timeoutHours()));
-            task.setTimeoutStrategy(strategy);
+        if (node.timeoutHours() != null) {
+            if (TIMEOUT_STRATEGY_AUTO_COMPLETE.equals(strategy) || TIMEOUT_STRATEGY_ESCALATE.equals(strategy)) {
+                task.setTimeoutAt(now.plusHours(node.timeoutHours()));
+                task.setTimeoutStrategy(strategy);
+            }
         }
         return task;
     }

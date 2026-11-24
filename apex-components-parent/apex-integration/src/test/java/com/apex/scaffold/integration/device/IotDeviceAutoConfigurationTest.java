@@ -89,7 +89,7 @@ class IotDeviceAutoConfigurationTest {
             assertThat(context).hasSingleBean(DeviceRegistryService.class);
             assertThat(context).hasSingleBean(DeviceTelemetryService.class);
             assertThat(context).hasSingleBean(IotDeviceRouter.class);
-            assertThat(context).hasSingleBean(RouterFunction.class);
+            assertThat(context.getBeansOfType(RouterFunction.class)).hasSize(3);
         });
     }
 

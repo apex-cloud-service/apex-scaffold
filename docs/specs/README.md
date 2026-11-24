@@ -14,6 +14,12 @@
 - [2026-11-17 根治 office/auth 字段自动填充失效](2026-11-17-meta-field-fill.md) — BE-040，模块内装配审计字段填充器，待独立复核。
 - [2026-11-17 前后端联调后端修复方案](2026-11-17-integration-contract-repair.md) — BE-036，既有改动补记及后续回归边界，待独立复核；非事前审批。
 - [2026-11-18 前后端全量联调与 Podman 基线方案](2026-11-18-fullstack-integration.md) — FE-029 / BE-043，待独立方案评审。
+- [2026-11-23 全仓中台韧性、DDD 与发布能力优化规格](2026-11-23-platform-resilience-ddd-release.md) — BE-063，定义证据基线、兼容性边界与分波次验收。
+- [2026-11-23 BE-063 网关生产档韧性规格](2026-11-23-be063-gateway-prod-resilience.md) — Wave B2 补齐 auth/workflow 生产熔断接线，不改路由与阈值。
+- [2026-11-23 BE-063 Kubernetes 网关灰度隔离规格](2026-11-23-be063-kubernetes-release-isolation.md) — Wave D1 规格获独立 R5 `APPROVE_WITH_NITS`；稳定/金丝雀 Service 与 PDB 隔离、安全迁移和 fail-closed 放量门禁。
+- [2026-11-24 BE-063 网关蓝绿切换规格](2026-11-24-be063-gateway-blue-green.md) — Wave D2 独立于金丝雀，固定 Service 归属及有前置条件的切流和回切。
+- [2026-11-23 BE-064 构建门禁修复规格](2026-11-23-be064-build-gate-repair.md) — 保持 PMD 门禁强度，修复 Java 21 字节码兼容及握手超时测试稳定性。
+- [2026-11-23 BE-065 PMD 全仓规则修复规格](2026-11-23-be065-pmd-rule-repair.md) — 按模块修复兼容性恢复后显现的违规，不扩大排除规则。
 
 ## AI 智能体角色规范（跨工具通用）
 

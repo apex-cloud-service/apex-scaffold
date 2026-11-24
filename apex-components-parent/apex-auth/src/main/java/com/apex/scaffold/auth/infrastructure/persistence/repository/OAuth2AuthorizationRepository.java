@@ -1,7 +1,7 @@
 package com.apex.scaffold.auth.infrastructure.persistence.repository;
 
 import com.apex.scaffold.auth.domain.model.OAuth2Authorization;
-import com.apex.scaffold.auth.domain.repository.OAuth2AuthorizationPort;
+import com.apex.scaffold.auth.domain.repository.OauthAuthorizationPort;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 @Repository
 @RequiredArgsConstructor
 @SuppressWarnings({"PMD.ClassNamingShouldBeCamelRule", "PMD.ClassMustHaveAuthorRule"})
-public class OAuth2AuthorizationRepository implements OAuth2AuthorizationPort {
+public class OAuth2AuthorizationRepository implements OauthAuthorizationPort {
     private static final String ACCESS_TOKEN_HASH = "access_token_hash";
     private static final String AUTHORIZATION_CODE_HASH = "authorization_code_hash";
     private static final String REFRESH_TOKEN_HASH = "refresh_token_hash";

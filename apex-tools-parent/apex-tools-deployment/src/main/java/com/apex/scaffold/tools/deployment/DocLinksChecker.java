@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -40,6 +41,24 @@ import org.commonmark.node.SourceSpan;
  */
 public final class DocLinksChecker {
 
+    private static final int ARGUMENT_COUNT = 2;
+    private static final int EXIT_USAGE = 2;
+    private static final int INITIAL_CAPACITY = 16;
+    private static final String GIT_DIRECTORY = ".git";
+    private static final String HTML_TAG_START = "<";
+    private static final String HTML_TAG_END = ">";
+    private static final String HTML_TAG_NAME_CHARS = "\t\n\r\f />\0";
+    private static final String HTML_ATTRIBUTE_NAME_CHARS = "\t\n\r\f /=>";
+    private static final String FILE_SCHEME = "file";
+    private static final String DOUBLE_SLASH = "//";
+    private static final String PERCENT_SIGN = "%";
+    private static final char DIGIT_ZERO = '0';
+    private static final char DIGIT_NINE = '9';
+    private static final char HEX_LOWER_A = 'a';
+    private static final char HEX_LOWER_F = 'f';
+    private static final char HEX_UPPER_A = 'A';
+    private static final char HEX_UPPER_F = 'F';
+
     private static final Pattern BACKSLASH_DEST =
             Pattern.compile("\\\\([!\"#$%&'()*+,\\-./:;<=>?@\\[\\\\\\]^_`{|}~ ])");
 
@@ -53,9 +72,9 @@ public final class DocLinksChecker {
      * @throws InterruptedException git check-ignore 子进程等待被中断
      */
     public static void main(String[] args) throws IOException, InterruptedException {
-        if (args.length != 2) {
+        if (args.length != ARGUMENT_COUNT) {
             System.err.println("usage: DocLinksChecker <files-list> <project-root>");
-            System.exit(2);
+            System.exit(EXIT_USAGE);
         }
         PrintStream out = new PrintStream(new FileOutputStream(FileDescriptor.out), true, StandardCharsets.UTF_8);
         System.exit(check(Path.of(args[0]), Path.of(args[1]), out));
@@ -77,7 +96,7 @@ public final class DocLinksChecker {
         int broken = 0;
         int markdownFiles = 0;
         int htmlFiles = 0;
-        Map<Path, Set<String>> anchorCache = new HashMap<>();
+        Map<Path, Set<String>> anchorCache = new HashMap<>(INITIAL_CAPACITY);
         List<CheckedLink> checked = new ArrayList<>();
         for (byte[] name : readNulSeparated(filesList)) {
             if (name.length == 0) {
@@ -163,7 +182,7 @@ public final class DocLinksChecker {
                 return "目标被 .gitignore 排除";
             }
         }
-        if ((isMarkdownName(document) || isHtmlName(document)) && Files.isRegularFile(document)) {
+        if (isDocumentName(document) && Files.isRegularFile(document)) {
             Set<String> anchors = anchorCache.get(document);
             if (anchors == null) {
                 String text = Files.readString(document, StandardCharsets.UTF_8);
@@ -178,12 +197,16 @@ public final class DocLinksChecker {
     }
 
     private static boolean isMarkdownName(Path document) {
-        return extension(document).equals("md");
+        return "md".equals(extension(document));
     }
 
     private static boolean isHtmlName(Path document) {
         String extension = extension(document);
-        return extension.equals("html") || extension.equals("htm");
+        return "html".equals(extension) || "htm".equals(extension);
+    }
+
+    private static boolean isDocumentName(Path document) {
+        return isMarkdownName(document) || isHtmlName(document);
     }
 
     private static String extension(Path document) {
@@ -235,7 +258,7 @@ public final class DocLinksChecker {
     /** 返回被 .gitignore 排除的仓库内目标；这类目标只存在于本机，克隆后链接必然失效。 */
     private static Set<Path> ignoredTargets(Path projectRoot, Set<Path> candidates)
             throws IOException, InterruptedException {
-        if (candidates.isEmpty() || !Files.isDirectory(projectRoot.resolve(".git"))) {
+        if (candidates.isEmpty() || !Files.isDirectory(projectRoot.resolve(GIT_DIRECTORY))) {
             return Set.of();
         }
         List<Path> sorted = new ArrayList<>(candidates);
@@ -251,14 +274,13 @@ public final class DocLinksChecker {
         }
         Process process = new ProcessBuilder("git", "-C", projectRoot.toString(), "check-ignore", "--stdin").start();
         // 清单可能超出管道缓冲区，写 stdin 与读 stdout 必须并发，避免与 git 互相阻塞
-        Thread writer = new Thread(() -> {
+        CompletableFuture<Void> writer = CompletableFuture.runAsync(() -> {
             try (var out = process.getOutputStream()) {
                 out.write(payload.toString().getBytes(StandardCharsets.UTF_8));
             } catch (IOException ignored) {
                 // git 提前退出（如无匹配返回码 1）时写入端自然失败
             }
         });
-        writer.start();
         String stdout;
         try (BufferedReader reader =
                 new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -384,7 +406,7 @@ public final class DocLinksChecker {
         Set<String> anchors = new HashSet<>();
         List<Range> excluded = new ArrayList<>();
         int pos = 0;
-        while ((pos = text.indexOf('<', pos)) >= 0) {
+        while ((pos = text.indexOf(HTML_TAG_START, pos)) >= 0) {
             if (text.startsWith("<!--", pos)) {
                 int end = text.indexOf("-->", pos + 4);
                 int next = end < 0 ? text.length() : end + 3;
@@ -418,12 +440,12 @@ public final class DocLinksChecker {
     private static HtmlTag parseStartTag(String text, int lt, List<LinkRef> links, Set<String> anchors) {
         int length = text.length();
         int i = lt + 1;
-        while (i < length && "\t\n\r\f />\0".indexOf(text.charAt(i)) < 0) {
+        while (i < length && HTML_TAG_NAME_CHARS.indexOf(text.charAt(i)) < 0) {
             i++;
         }
         String tag = text.substring(lt + 1, i).toLowerCase(Locale.ROOT);
         int scan = i;
-        while (scan < length && text.charAt(scan) != '>') {
+        while (scan < length && text.charAt(scan) != HTML_TAG_END.charAt(0)) {
             if (text.charAt(scan) == '"' || text.charAt(scan) == '\'') {
                 int close = text.indexOf(text.charAt(scan), scan + 1);
                 if (close < 0) {
@@ -445,7 +467,7 @@ public final class DocLinksChecker {
                 continue;
             }
             int nameStart = i;
-            while (i < scan && "\t\n\r\f /=>".indexOf(text.charAt(i)) < 0) {
+            while (i < scan && HTML_ATTRIBUTE_NAME_CHARS.indexOf(text.charAt(i)) < 0) {
                 i++;
             }
             String name = text.substring(nameStart, i).toLowerCase(Locale.ROOT);
@@ -461,7 +483,7 @@ public final class DocLinksChecker {
             }
             int start = i;
             String value;
-            if (i < scan && (text.charAt(i) == '"' || text.charAt(i) == '\'')) {
+            if (i < scan && isQuote(text.charAt(i))) {
                 char quote = text.charAt(i++);
                 start = i;
                 int close = text.indexOf(quote, i);
@@ -476,9 +498,9 @@ public final class DocLinksChecker {
             if (!seen.add(name)) {
                 continue;
             }
-            if (name.equals("href") || name.equals("src")) {
+            if (isLinkAttribute(name)) {
                 links.add(new LinkRef(start, value, false));
-            } else if (name.equals("id") || (tag.equals("a") && name.equals("name"))) {
+            } else if (isAnchorAttribute(tag, name)) {
                 anchors.add(HtmlEntities.unescape(value));
             }
         }
@@ -491,6 +513,18 @@ public final class DocLinksChecker {
 
     private static boolean isAsciiLetter(char c) {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+
+    private static boolean isQuote(char value) {
+        return value == '"' || value == '\'';
+    }
+
+    private static boolean isLinkAttribute(String name) {
+        return "href".equals(name) || "src".equals(name);
+    }
+
+    private static boolean isAnchorAttribute(String tag, String name) {
+        return "id".equals(name) || ("a".equals(tag) && "name".equals(name));
     }
 
     private record LinkRef(int offset, String value, boolean decoded) {}
@@ -510,14 +544,14 @@ public final class DocLinksChecker {
     // ===== 目标路径解析（反斜杠/HTML 实体解码、scheme 过滤、百分号解码、绝对化） =====
 
     private static Path targetPath(Path source, String value) {
-        if (value.isEmpty() || value.startsWith("//")) {
+        if (value.isEmpty() || value.startsWith(DOUBLE_SLASH)) {
             return null;
         }
         UrlSplit uri = urlSplit(value);
-        if (!uri.scheme().isEmpty() && !uri.scheme().equals("file")) {
+        if (!uri.scheme().isEmpty() && !FILE_SCHEME.equals(uri.scheme())) {
             return null;
         }
-        if (uri.scheme().equals("file")
+        if (FILE_SCHEME.equals(uri.scheme())
                 && !uri.netloc().isEmpty()
                 && !uri.netloc().toLowerCase(Locale.ROOT).equals("localhost")) {
             return Path.of("//" + uri.netloc() + unquote(uri.path()));
@@ -543,7 +577,7 @@ public final class DocLinksChecker {
             boolean allSchemeChars = true;
             for (int i = 0; i < colon; i++) {
                 char c = url.charAt(i);
-                if (!isAsciiLetter(c) && !(c >= '0' && c <= '9') && c != '+' && c != '-' && c != '.') {
+                if (!isSchemeCharacter(c)) {
                     allSchemeChars = false;
                     break;
                 }
@@ -554,7 +588,7 @@ public final class DocLinksChecker {
             }
         }
         String netloc = "";
-        if (rest.startsWith("//")) {
+        if (rest.startsWith(DOUBLE_SLASH)) {
             int end = rest.length();
             for (int i = 2; i < rest.length(); i++) {
                 char c = rest.charAt(i);
@@ -581,14 +615,14 @@ public final class DocLinksChecker {
 
     /** Python urllib.parse.unquote：百分号解码为 UTF-8，非法序列替换为 U+FFFD。 */
     private static String unquote(String s) {
-        if (s.indexOf('%') < 0) {
+        if (s.indexOf(PERCENT_SIGN) < 0) {
             return s;
         }
         java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream(s.length());
         int i = 0;
         while (i < s.length()) {
             char c = s.charAt(i);
-            if (c == '%' && i + 2 < s.length()) {
+            if (c == PERCENT_SIGN.charAt(0) && i + 2 < s.length()) {
                 int high = hexValue(s.charAt(i + 1));
                 int low = hexValue(s.charAt(i + 2));
                 if (high >= 0 && low >= 0) {
@@ -611,16 +645,24 @@ public final class DocLinksChecker {
     }
 
     private static int hexValue(char c) {
-        if (c >= '0' && c <= '9') {
+        if (c >= DIGIT_ZERO && c <= DIGIT_NINE) {
             return c - '0';
         }
-        if (c >= 'a' && c <= 'f') {
+        if (c >= HEX_LOWER_A && c <= HEX_LOWER_F) {
             return c - 'a' + 10;
         }
-        if (c >= 'A' && c <= 'F') {
+        if (c >= HEX_UPPER_A && c <= HEX_UPPER_F) {
             return c - 'A' + 10;
         }
         return -1;
+    }
+
+    private static boolean isSchemeCharacter(char value) {
+        return isAsciiLetter(value)
+                || (value >= DIGIT_ZERO && value <= DIGIT_NINE)
+                || value == '+'
+                || value == '-'
+                || value == '.';
     }
 
     private record CheckedLink(Path source, int line, String value, Path target, String fragment) {}

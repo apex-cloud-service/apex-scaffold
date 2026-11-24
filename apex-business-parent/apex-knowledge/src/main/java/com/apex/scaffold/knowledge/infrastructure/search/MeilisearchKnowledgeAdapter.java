@@ -44,6 +44,13 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
 
     private static final String EMBEDDER_NAME = "default";
 
+    private static final String TASK_UID_FIELD = "uid";
+    private static final String TASK_STATUS_SUCCEEDED = "succeeded";
+    private static final String TASK_STATUS_FAILED = "failed";
+    private static final String TASK_STATUS_ENQUEUED = "enqueued";
+    private static final String TASK_STATUS_PROCESSING = "processing";
+    private static final int SETTINGS_INITIAL_CAPACITY = 3;
+
     private final KnowledgeProperties.Meilisearch config;
 
     private final ObjectMapper objectMapper;
@@ -232,7 +239,7 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
      * @return 完成信号
      */
     private Mono<Void> patchSettings(boolean embeddingEnabled, int dimensions) {
-        Map<String, Object> settings = new HashMap<>();
+        Map<String, Object> settings = new HashMap<>(SETTINGS_INITIAL_CAPACITY);
         settings.put("filterableAttributes", List.of("tenantId", "spaceId", "documentId"));
         settings.put("searchableAttributes", List.of("content", "documentTitle", "spaceName"));
         if (embeddingEnabled) {
@@ -348,20 +355,21 @@ public class MeilisearchKnowledgeAdapter implements KnowledgeVectorIndexPort {
                 })
                 .timeout(config.getRequestTimeout())
                 .flatMap(task -> {
-                    if (!task.path("uid").isIntegralNumber() || task.path("uid").asLong(-1) != uid) {
+                    if (!task.path(TASK_UID_FIELD).isIntegralNumber()
+                            || task.path(TASK_UID_FIELD).asLong(-1) != uid) {
                         return Mono.error(new IllegalStateException("Meilisearch taskUid不匹配"));
                     }
                     String status = task.path("status").asText();
-                    if ("succeeded".equals(status)) {
+                    if (TASK_STATUS_SUCCEEDED.equals(status)) {
                         return Mono.empty();
                     }
-                    if ("failed".equals(status)
+                    if (TASK_STATUS_FAILED.equals(status)
                             && allowedCode != null
                             && allowedCode.equals(
                                     task.path("error").path("code").asText())) {
                         return Mono.empty();
                     }
-                    if ("enqueued".equals(status) || "processing".equals(status)) {
+                    if (TASK_STATUS_ENQUEUED.equals(status) || TASK_STATUS_PROCESSING.equals(status)) {
                         if (poll + 1 >= config.getTaskMaxPolls()) {
                             return Mono.error(new IllegalStateException("Meilisearch task轮询上限: taskUid=" + uid));
                         }

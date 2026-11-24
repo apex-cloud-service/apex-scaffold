@@ -1,6 +1,6 @@
 package com.apex.scaffold.authservice.interfaces.router;
 
-import com.apex.scaffold.authservice.interfaces.handler.OAuthEndpointHandler;
+import com.apex.scaffold.authservice.interfaces.handler.OauthAuthorizationHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,7 +35,7 @@ public class OauthEndpointRouter {
     @RouterOperation(
             path = "/oauth2/authorize",
             method = RequestMethod.GET,
-            beanClass = OAuthEndpointHandler.class,
+            beanClass = OauthAuthorizationHandler.class,
             beanMethod = "authorize",
             operation =
                     @Operation(
@@ -68,7 +68,7 @@ public class OauthEndpointRouter {
                                                         mediaType = "application/json",
                                                         schema = @Schema(implementation = OAuthError.class)))
                             }))
-    public RouterFunction<ServerResponse> oauth2EndpointRoutes(OAuthEndpointHandler handler) {
+    public RouterFunction<ServerResponse> oauth2EndpointRoutes(OauthAuthorizationHandler handler) {
         return RouterFunctions.route()
                 .GET("/oauth2/authorize", handler::authorize)
                 // 统一认证收口（A5）：用户授权同意/拒绝端点（authorize 返回 consent_required 后引导）
@@ -86,7 +86,7 @@ public class OauthEndpointRouter {
     @RouterOperation(
             path = "/oauth2/revoke",
             method = RequestMethod.POST,
-            beanClass = OAuthEndpointHandler.class,
+            beanClass = OauthAuthorizationHandler.class,
             beanMethod = "revoke",
             operation =
                     @Operation(
@@ -126,7 +126,7 @@ public class OauthEndpointRouter {
                                                         mediaType = "application/json",
                                                         schema = @Schema(implementation = OAuthError.class)))
                             }))
-    public RouterFunction<ServerResponse> oauth2RevokeRoutes(OAuthEndpointHandler handler) {
+    public RouterFunction<ServerResponse> oauth2RevokeRoutes(OauthAuthorizationHandler handler) {
         return RouterFunctions.route().POST("/oauth2/revoke", handler::revoke).build();
     }
 
@@ -140,7 +140,7 @@ public class OauthEndpointRouter {
     @RouterOperation(
             path = "/oauth2/introspect",
             method = RequestMethod.POST,
-            beanClass = OAuthEndpointHandler.class,
+            beanClass = OauthAuthorizationHandler.class,
             beanMethod = "introspect",
             operation =
                     @Operation(
@@ -181,7 +181,7 @@ public class OauthEndpointRouter {
                                                         mediaType = "application/json",
                                                         schema = @Schema(implementation = OAuthError.class)))
                             }))
-    public RouterFunction<ServerResponse> oauth2IntrospectRoutes(OAuthEndpointHandler handler) {
+    public RouterFunction<ServerResponse> oauth2IntrospectRoutes(OauthAuthorizationHandler handler) {
         return RouterFunctions.route()
                 .POST("/oauth2/introspect", handler::introspect)
                 .build();

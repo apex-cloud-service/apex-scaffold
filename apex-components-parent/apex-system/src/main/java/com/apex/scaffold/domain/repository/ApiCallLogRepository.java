@@ -23,6 +23,7 @@ public interface ApiCallLogRepository {
      * 不阻塞调用线程。写入失败时仅记录 WARN 级别日志，不向上层传播异常。</p>
      *
      * @param entity API 调用日志实体
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> save(ApiCallLogEntity entity);
 }

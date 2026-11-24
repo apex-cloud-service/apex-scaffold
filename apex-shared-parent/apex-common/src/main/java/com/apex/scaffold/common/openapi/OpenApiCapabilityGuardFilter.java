@@ -64,7 +64,7 @@ public class OpenApiCapabilityGuardFilter implements WebFilter, Ordered {
         boolean openPath = path.startsWith(properties.getPathPrefix());
         String marker = exchange.getRequest().getHeaders().getFirst(properties.getMarkerHeader());
         String routeCapability = resolveRouteCapability(path);
-        if (!openPath && (marker == null || marker.isBlank())) {
+        if (isUnmarkedNonOpenPath(openPath, marker)) {
             // 非开放流量：不受本过滤器约束
             return chain.filter(exchange);
         }
@@ -117,13 +117,20 @@ public class OpenApiCapabilityGuardFilter implements WebFilter, Ordered {
         String matched = null;
         String capability = null;
         for (Map.Entry<String, String> entry : properties.getPathCapabilities().entrySet()) {
-            if (path.startsWith(entry.getKey())
-                    && (matched == null || entry.getKey().length() > matched.length())) {
+            if (isPreferredCapabilityPrefix(path, matched, entry.getKey())) {
                 matched = entry.getKey();
                 capability = entry.getValue();
             }
         }
         return capability;
+    }
+
+    private boolean isUnmarkedNonOpenPath(boolean openPath, String marker) {
+        return !openPath && (marker == null || marker.isBlank());
+    }
+
+    private boolean isPreferredCapabilityPrefix(String path, String matched, String candidate) {
+        return path.startsWith(candidate) && (matched == null || candidate.length() > matched.length());
     }
 
     /**

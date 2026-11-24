@@ -5,12 +5,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.apex.scaffold.auth.domain.model.OAuth2Authorization;
-import com.apex.scaffold.auth.domain.repository.OAuth2AuthorizationPort;
-import com.apex.scaffold.auth.domain.repository.OAuth2ConsentPort;
+import com.apex.scaffold.auth.domain.repository.OauthAuthorizationPort;
+import com.apex.scaffold.auth.domain.repository.OauthConsentPort;
 import com.apex.scaffold.auth.infrastructure.persistence.po.PermissionPO;
 import com.apex.scaffold.auth.infrastructure.persistence.po.RolePO;
 import com.apex.scaffold.auth.infrastructure.persistence.repository.OAuth2AuthorizationRepository;
-import com.apex.scaffold.auth.infrastructure.persistence.repository.OAuth2ConsentRepository;
+import com.apex.scaffold.auth.infrastructure.persistence.repository.OauthConsentRepository;
 import com.apex.scaffold.common.context.TenantContext;
 import com.apex.scaffold.common.exception.BusinessException;
 import com.baomidou.mybatisplus.annotation.InterceptorIgnore;
@@ -202,9 +202,9 @@ class PersistenceContractTest {
      */
     @Test
     void oauth2AdaptersImplementDomainPortsWithoutTenantBypass() {
-        assertThat(OAuth2AuthorizationPort.class).isAssignableFrom(OAuth2AuthorizationRepository.class);
-        assertThat(OAuth2ConsentPort.class).isAssignableFrom(OAuth2ConsentRepository.class);
-        for (Class<?> adapter : List.of(OAuth2AuthorizationRepository.class, OAuth2ConsentRepository.class)) {
+        assertThat(OauthAuthorizationPort.class).isAssignableFrom(OAuth2AuthorizationRepository.class);
+        assertThat(OauthConsentPort.class).isAssignableFrom(OauthConsentRepository.class);
+        for (Class<?> adapter : List.of(OAuth2AuthorizationRepository.class, OauthConsentRepository.class)) {
             assertThat(adapter.getAnnotation(InterceptorIgnore.class)).isNull();
             for (Method method : adapter.getMethods()) {
                 assertThat(method.getAnnotation(InterceptorIgnore.class))
@@ -223,7 +223,7 @@ class PersistenceContractTest {
         List<Publisher<?>> operations = List.of(
                 repository.saveAuthorizationCode(
                         null,
-                        new OAuth2AuthorizationPort.OAuth2AuthorizationCodeCommand(
+                        new OauthAuthorizationPort.OAuth2AuthorizationCodeCommand(
                                 "1",
                                 "client",
                                 "user",
@@ -235,7 +235,7 @@ class PersistenceContractTest {
                                 expiresAt)),
                 repository.saveTokenGrant(
                         null,
-                        new OAuth2AuthorizationPort.OAuth2TokenGrantCommand(
+                        new OauthAuthorizationPort.OAuth2TokenGrantCommand(
                                 "1",
                                 "client",
                                 "user",
@@ -250,7 +250,7 @@ class PersistenceContractTest {
                 repository.findByRefreshToken(null, "refresh-hash"),
                 repository.exchangeCode(
                         null,
-                        new OAuth2AuthorizationPort.OAuth2CodeExchangeCommand(
+                        new OauthAuthorizationPort.OAuth2CodeExchangeCommand(
                                 "code-hash",
                                 "client",
                                 "https://cb",
@@ -260,7 +260,7 @@ class PersistenceContractTest {
                                 expiresAt)),
                 repository.rotateRefresh(
                         null,
-                        new OAuth2AuthorizationPort.OAuth2RefreshRotationCommand(
+                        new OauthAuthorizationPort.OAuth2RefreshRotationCommand(
                                 "client",
                                 "old-refresh-hash",
                                 "new-refresh-hash",
@@ -286,7 +286,7 @@ class PersistenceContractTest {
     @Test
     void oauth2ConsentAdapterRejectsUntrustedTenantBeforeDatabaseAccess() {
         JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
-        OAuth2ConsentRepository repository = new OAuth2ConsentRepository(jdbcTemplate);
+        OauthConsentRepository repository = new OauthConsentRepository(jdbcTemplate);
         List<Publisher<?>> operations = List.of(
                 repository.findActiveScope(null, "user", "client"),
                 repository.save(null, "user", "client", "read"),

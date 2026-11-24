@@ -35,6 +35,7 @@ public interface IntegrationConnector {
      *
      * @param config 已解密的连接配置（含端点、认证等）
      * @throws RuntimeException 探测失败时以异常传播，由调用方决定降级策略
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> healthCheck(Map<String, Object> config);
 

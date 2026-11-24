@@ -32,14 +32,15 @@ class TenantStatusSnapshotDTOTest {
                 .maxStorageMb(10240)
                 .build();
 
-        assertThat(snapshot.isExists()).isTrue();
+        assertThat(snapshot.getExists()).isTrue();
         assertThat(snapshot.getStatus()).isEqualTo("ACTIVE");
-        assertThat(snapshot.isExpired()).isFalse();
+        assertThat(snapshot.getExpired()).isFalse();
         assertThat(snapshot.getMaxUsers()).isEqualTo(100);
         assertThat(snapshot.getMaxStorageMb()).isEqualTo(10240);
 
         TenantStatusSnapshotDTO unknown = TenantStatusSnapshotDTO.builder().build();
-        assertThat(unknown.isExists()).isFalse();
+        assertThat(unknown.getExists()).isFalse();
+        assertThat(unknown.getExpired()).isFalse();
         assertThat(unknown.getStatus()).isNull();
         assertThat(unknown.getMaxUsers()).isNull();
     }
@@ -55,16 +56,34 @@ class TenantStatusSnapshotDTOTest {
                 .maxStorageMb(null)
                 .build();
         String body = JsonUtil.toJson(Result.success(source));
+        assertThat(JsonUtil.getObjectMapper().valueToTree(source).path("exists").isBoolean())
+                .isTrue();
+        assertThat(JsonUtil.getObjectMapper()
+                        .valueToTree(source)
+                        .path("expired")
+                        .isBoolean())
+                .isTrue();
 
         Result<TenantStatusSnapshotDTO> parsed =
                 JsonUtil.fromJson(body, new TypeReference<Result<TenantStatusSnapshotDTO>>() {});
 
         assertThat(parsed).isNotNull();
         assertThat(parsed.getData()).isNotNull();
-        assertThat(parsed.getData().isExists()).isTrue();
+        assertThat(parsed.getData().getExists()).isTrue();
         assertThat(parsed.getData().getStatus()).isEqualTo("ACTIVE");
-        assertThat(parsed.getData().isExpired()).isTrue();
+        assertThat(parsed.getData().getExpired()).isTrue();
         assertThat(parsed.getData().getMaxUsers()).isEqualTo(50);
         assertThat(parsed.getData().getMaxStorageMb()).isNull();
+    }
+
+    @Test
+    @DisplayName("缺省及显式 null 均沿用 false")
+    void missingAndNullFlagsKeepFalseDefaults() {
+        for (String json : new String[] {"{}", "{\"exists\":null,\"expired\":null}"}) {
+            TenantStatusSnapshotDTO snapshot = JsonUtil.fromJson(json, TenantStatusSnapshotDTO.class);
+            assertThat(snapshot).isNotNull();
+            assertThat(snapshot.getExists()).isFalse();
+            assertThat(snapshot.getExpired()).isFalse();
+        }
     }
 }

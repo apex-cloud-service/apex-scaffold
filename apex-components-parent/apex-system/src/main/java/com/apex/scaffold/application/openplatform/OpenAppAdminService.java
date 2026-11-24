@@ -46,6 +46,9 @@ import reactor.core.publisher.Mono;
 @SuppressWarnings("PMD.ClassNamingShouldBeCamelRule")
 public class OpenAppAdminService {
 
+    private static final String REGISTRY_AUTH = "auth";
+    private static final String REGISTRY_LOCAL = "local";
+
     private static final String META_PREFIX = "openPlatform.";
     private static final String KEY_APP_NAME = META_PREFIX + "appName";
     private static final String KEY_DESCRIPTION = META_PREFIX + "description";
@@ -91,7 +94,7 @@ public class OpenAppAdminService {
             OpenAppRegistryGateway authRegistry,
             UserRepository userRepository,
             @org.springframework.beans.factory.annotation.Value("${apex.open-app.registry:auth}") String registry) {
-        if (!"auth".equals(registry) && !"local".equals(registry)) {
+        if (!REGISTRY_AUTH.equals(registry) && !REGISTRY_LOCAL.equals(registry)) {
             throw new IllegalArgumentException("apex.open-app.registry must be auth or local");
         }
         this.clientManagementService = clientManagementService;
@@ -100,7 +103,7 @@ public class OpenAppAdminService {
         this.objectMapper = objectMapper;
         this.authRegistry = authRegistry;
         this.userRepository = userRepository;
-        this.localRegistry = "local".equals(registry);
+        this.localRegistry = REGISTRY_LOCAL.equals(registry);
     }
 
     /**
@@ -338,12 +341,13 @@ public class OpenAppAdminService {
             if (request == null) {
                 return Mono.error(new BusinessException(ResultCode.PARAM_ERROR));
             }
-            if (create
-                    && (request.getClientId() == null || request.getClientId().isBlank())) {
-                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "clientId 不能为空"));
-            }
-            if (create && (request.getAppName() == null || request.getAppName().isBlank())) {
-                return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "appName 不能为空"));
+            if (create) {
+                if (request.getClientId() == null || request.getClientId().isBlank()) {
+                    return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "clientId 不能为空"));
+                }
+                if (request.getAppName() == null || request.getAppName().isBlank()) {
+                    return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "appName 不能为空"));
+                }
             }
             if (request.getStatus() != null && !request.getStatus().isBlank()) {
                 String status = request.getStatus().trim().toUpperCase(Locale.ROOT);

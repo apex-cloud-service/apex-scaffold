@@ -33,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Mono;
 
 /**
@@ -196,57 +197,57 @@ public class AuthCenterConfig {
                         .anyExchange()
                         .authenticated())
                 .addFilterAt(bearer, SecurityWebFiltersOrder.AUTHENTICATION)
-                .addFilterAfter(
-                        (exchange, chain) -> {
-                            String path = exchange.getRequest().getPath().value();
-                            if (path.startsWith(INTERNAL_API_PATH_PREFIX)) {
-                                String tenant =
-                                        exchange.getRequest().getHeaders().getFirst(TENANT_HEADER);
-                                if (tenant == null || tenant.isBlank()) {
-                                    tenant = environment.getProperty("auth-center.login-tenant", "default");
-                                }
-                                return TenantContext.withTenant(chain.filter(exchange))
-                                        .contextWrite(TenantContext.withTenant(tenant));
-                            }
-                            if (List.of(
-                                            LOGIN_PATH,
-                                            OAUTH2_TOKEN_PATH,
-                                            OAUTH2_REVOKE_PATH,
-                                            OAUTH2_INTROSPECT_PATH,
-                                            PASSWORD_RECOVERY_REQUESTS_PATH,
-                                            PASSWORD_RECOVERY_VERIFICATIONS_PATH,
-                                            PASSWORD_RECOVERY_CONFIRMATIONS_PATH)
-                                    .contains(path)) {
-                                String tenant = environment.getProperty("auth-center.login-tenant", "default");
-                                return TenantContext.withTenant(chain.filter(exchange))
-                                        .contextWrite(TenantContext.withTenant(tenant));
-                            }
-                            return ReactiveSecurityContextHolder.getContext()
-                                    .map(org.springframework.security.core.context.SecurityContext::getAuthentication)
-                                    .filter(org.springframework.security.core.Authentication::isAuthenticated)
-                                    .flatMap(authentication -> {
-                                        Object details = authentication.getDetails();
-                                        String tenant = details instanceof String value ? value : null;
-                                        // 可信身份属性：供 MfaManagementHandler / IpAccessControlHandler
-                                        // 读取当前用户与租户，禁止从请求体或查询参数推断操作主体。
-                                        exchange.getAttributes().put("userId", authentication.getName());
-                                        if (tenant != null && !tenant.isBlank()) {
-                                            exchange.getAttributes().put("tenantId", tenant);
-                                        }
-                                        Mono<Void> next = chain.filter(exchange);
-                                        if (tenant == null || tenant.isBlank()) {
-                                            return next.thenReturn(true);
-                                        }
-                                        return TenantContext.withTenant(next)
-                                                .contextWrite(TenantContext.withTenant(tenant))
-                                                .thenReturn(true);
-                                    })
-                                    .switchIfEmpty(Mono.defer(
-                                            () -> chain.filter(exchange).thenReturn(true)))
-                                    .then();
-                        },
-                        SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAfter(tenantContextFilter(environment), SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
+    }
+
+    private WebFilter tenantContextFilter(Environment environment) {
+        return (exchange, chain) -> {
+            String path = exchange.getRequest().getPath().value();
+            if (path.startsWith(INTERNAL_API_PATH_PREFIX)) {
+                String tenant = exchange.getRequest().getHeaders().getFirst(TENANT_HEADER);
+                if (tenant == null || tenant.isBlank()) {
+                    tenant = environment.getProperty("auth-center.login-tenant", "default");
+                }
+                return TenantContext.withTenant(chain.filter(exchange)).contextWrite(TenantContext.withTenant(tenant));
+            }
+            if (isLoginOrOauthPath(path)) {
+                String tenant = environment.getProperty("auth-center.login-tenant", "default");
+                return TenantContext.withTenant(chain.filter(exchange)).contextWrite(TenantContext.withTenant(tenant));
+            }
+            return ReactiveSecurityContextHolder.getContext()
+                    .map(org.springframework.security.core.context.SecurityContext::getAuthentication)
+                    .filter(org.springframework.security.core.Authentication::isAuthenticated)
+                    .flatMap(authentication -> {
+                        Object details = authentication.getDetails();
+                        String tenant = details instanceof String value ? value : null;
+                        exchange.getAttributes().put("userId", authentication.getName());
+                        if (tenant != null && !tenant.isBlank()) {
+                            exchange.getAttributes().put("tenantId", tenant);
+                        }
+                        Mono<Void> next = chain.filter(exchange);
+                        if (tenant == null || tenant.isBlank()) {
+                            return next.thenReturn(true);
+                        }
+                        return TenantContext.withTenant(next)
+                                .contextWrite(TenantContext.withTenant(tenant))
+                                .thenReturn(true);
+                    })
+                    .switchIfEmpty(Mono.defer(() -> chain.filter(exchange).thenReturn(true)))
+                    .then();
+        };
+    }
+
+    private boolean isLoginOrOauthPath(String path) {
+        return List.of(
+                        LOGIN_PATH,
+                        OAUTH2_TOKEN_PATH,
+                        OAUTH2_REVOKE_PATH,
+                        OAUTH2_INTROSPECT_PATH,
+                        PASSWORD_RECOVERY_REQUESTS_PATH,
+                        PASSWORD_RECOVERY_VERIFICATIONS_PATH,
+                        PASSWORD_RECOVERY_CONFIRMATIONS_PATH)
+                .contains(path);
     }
 
     private AuthenticationWebFilter bearerAuthenticationFilter(TokenService tokens, RoleService roles) {

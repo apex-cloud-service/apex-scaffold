@@ -61,14 +61,18 @@ public class KnowledgeDocumentRepositoryImpl implements KnowledgeDocumentReposit
                     .indexStatus(document.getIndexStatus().name())
                     .tenantId(TenantContext.currentTenantId().orElse(null))
                     .build();
-            if (mapper.insert(po) != 1) throw new IllegalStateException("文档登记失败");
+            if (mapper.insert(po) != 1) {
+                throw new IllegalStateException("文档登记失败");
+            }
             if (new JdbcTemplate(dataSource)
                             .update(
                                     "INSERT INTO kb_document_work (id,tenant_id,document_id) VALUES (?,?,?)",
                                     IdWorker.getId(),
                                     po.getTenantId(),
                                     po.getId())
-                    != 1) throw new IllegalStateException("文档工作登记失败");
+                    != 1) {
+                throw new IllegalStateException("文档工作登记失败");
+            }
             return toModel(po);
         }));
     }

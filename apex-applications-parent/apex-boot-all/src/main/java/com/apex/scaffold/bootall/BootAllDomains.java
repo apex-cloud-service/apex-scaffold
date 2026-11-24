@@ -17,6 +17,9 @@ import java.util.Map;
  */
 public final class BootAllDomains {
 
+    /** 启动域配置列表的分隔符。 */
+    private static final String DOMAIN_SEPARATOR = ",";
+
     /** 域定义：编码用于配置键与日志，默认端口与独立部署保持一致。 */
     public enum Domain {
         /** 系统管理域，默认端口 8082。 */
@@ -94,7 +97,7 @@ public final class BootAllDomains {
             return List.of(Domain.values());
         }
         Map<String, Domain> unique = new LinkedHashMap<>();
-        for (String item : configured.split(",")) {
+        for (String item : configured.split(DOMAIN_SEPARATOR)) {
             if (!item.isBlank()) {
                 Domain domain = Domain.of(item);
                 unique.put(domain.code(), domain);

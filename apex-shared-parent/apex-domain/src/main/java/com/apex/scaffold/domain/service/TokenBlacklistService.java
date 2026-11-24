@@ -43,6 +43,7 @@ public interface TokenBlacklistService {
      *
      * @param token      Token 字符串
      * @param expireTime 过期时间（毫秒），0表示使用Token自身剩余有效期
+     * @return 黑名单写入完成信号
      */
     Mono<Void> add(String token, long expireTime);
 
@@ -62,6 +63,7 @@ public interface TokenBlacklistService {
      *
      * @param subject JWT subject
      * @param expireTime 吊销标记保留时间（毫秒）
+     * @return 身份级吊销完成信号
      */
     default Mono<Void> revokeSubject(String subject, long expireTime) {
         return Mono.empty();

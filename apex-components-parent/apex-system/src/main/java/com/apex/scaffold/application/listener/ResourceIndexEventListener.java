@@ -46,61 +46,63 @@ public class ResourceIndexEventListener {
         log.debug("Received resource index event: {}", event);
 
         try {
-            switch (event.getAction()) {
-                case CREATE, UPDATE -> {
-                    indexSyncPort
-                            .indexResource(event.getResourceType(), event.getResourceId())
-                            .doOnSuccess(success -> {
-                                if (Boolean.TRUE.equals(success)) {
-                                    log.info(
-                                            "Indexed resource: type={}, id={}, action={}",
-                                            event.getResourceType(),
-                                            event.getResourceId(),
-                                            event.getAction());
-                                } else {
-                                    log.warn(
-                                            "Index resource failed: type={}, id={}, action={}",
-                                            event.getResourceType(),
-                                            event.getResourceId(),
-                                            event.getAction());
-                                }
-                            })
-                            .doOnError(e -> log.error(
-                                    "Index resource error: type={}, id={}, action={}",
-                                    event.getResourceType(),
-                                    event.getResourceId(),
-                                    event.getAction(),
-                                    e))
-                            .subscribe();
-                }
-                case DELETE -> {
-                    indexSyncPort
-                            .removeIndex(event.getResourceType(), event.getResourceId())
-                            .doOnSuccess(success -> {
-                                if (Boolean.TRUE.equals(success)) {
-                                    log.info(
-                                            "Removed index: type={}, id={}",
-                                            event.getResourceType(),
-                                            event.getResourceId());
-                                } else {
-                                    log.warn(
-                                            "Remove index failed: type={}, id={}",
-                                            event.getResourceType(),
-                                            event.getResourceId());
-                                }
-                            })
-                            .doOnError(e -> log.error(
-                                    "Remove index error: type={}, id={}",
-                                    event.getResourceType(),
-                                    event.getResourceId(),
-                                    e))
-                            .subscribe();
-                }
-                default -> log.warn("Unknown action: {}", event.getAction());
+            if (event.getAction() == ResourceIndexEvent.Action.CREATE
+                    || event.getAction() == ResourceIndexEvent.Action.UPDATE) {
+                indexResource(event);
+            } else if (event.getAction() == ResourceIndexEvent.Action.DELETE) {
+                removeResourceIndex(event);
+            } else {
+                log.warn("Unknown action: {}", event.getAction());
             }
         } catch (Exception e) {
             // 捕获所有异常，确保不影响业务流程
             log.error("Failed to handle resource index event: {}", event, e);
         }
+    }
+
+    private void indexResource(ResourceIndexEvent event) {
+        indexSyncPort
+                .indexResource(event.getResourceType(), event.getResourceId())
+                .doOnSuccess(success -> {
+                    if (Boolean.TRUE.equals(success)) {
+                        log.info(
+                                "Indexed resource: type={}, id={}, action={}",
+                                event.getResourceType(),
+                                event.getResourceId(),
+                                event.getAction());
+                    } else {
+                        log.warn(
+                                "Index resource failed: type={}, id={}, action={}",
+                                event.getResourceType(),
+                                event.getResourceId(),
+                                event.getAction());
+                    }
+                })
+                .doOnError(e -> log.error(
+                        "Index resource error: type={}, id={}, action={}",
+                        event.getResourceType(),
+                        event.getResourceId(),
+                        event.getAction(),
+                        e))
+                .subscribe();
+    }
+
+    private void removeResourceIndex(ResourceIndexEvent event) {
+        indexSyncPort
+                .removeIndex(event.getResourceType(), event.getResourceId())
+                .doOnSuccess(success -> {
+                    if (Boolean.TRUE.equals(success)) {
+                        log.info("Removed index: type={}, id={}", event.getResourceType(), event.getResourceId());
+                    } else {
+                        log.warn("Remove index failed: type={}, id={}", event.getResourceType(), event.getResourceId());
+                    }
+                })
+                .doOnError(e -> log.error(
+                        "Remove index error: type={}, id={}, action={}",
+                        event.getResourceType(),
+                        event.getResourceId(),
+                        event.getAction(),
+                        e))
+                .subscribe();
     }
 }

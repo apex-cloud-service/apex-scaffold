@@ -53,6 +53,9 @@ import reactor.core.publisher.Mono;
 @Service
 public class OverviewFacadeService {
 
+    private static final String RESULT_CODE_FIELD = "code";
+    private static final String RESULT_DATA_FIELD = "data";
+
     private final OverviewProperties properties;
 
     private final ObjectMapper objectMapper;
@@ -221,8 +224,8 @@ public class OverviewFacadeService {
     private SourceResult parseEnvelope(String body) {
         try {
             JsonNode root = objectMapper.readTree(body);
-            if (root.path("code").asInt(-1) == 0) {
-                return SourceResult.up(root.path("data"));
+            if (root.path(RESULT_CODE_FIELD).asInt(-1) == 0) {
+                return SourceResult.up(root.path(RESULT_DATA_FIELD));
             }
             return SourceResult.degraded(root.path("msg").asText("downstream business error"));
         } catch (Exception ex) {

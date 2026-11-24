@@ -21,6 +21,11 @@ public final class MqttTopicPolicy {
 
     private static final String DIRECTION_DOWN = "down";
 
+    private static final int MIN_TOPIC_SEGMENTS = 4;
+    private static final int TENANT_SEGMENT_INDEX = 1;
+    private static final int DEVICE_SEGMENT_INDEX = 2;
+    private static final int DIRECTION_SEGMENT_INDEX = 3;
+
     private MqttTopicPolicy() {
         throw new UnsupportedOperationException("工具类不能实例化");
     }
@@ -81,13 +86,14 @@ public final class MqttTopicPolicy {
             return false;
         }
         String[] segments = topic.split("/");
-        if (segments.length < 4 || !NAMESPACE_ROOT.equals(segments[0])) {
+        if (segments.length < MIN_TOPIC_SEGMENTS || !NAMESPACE_ROOT.equals(segments[0])) {
             return false;
         }
-        if (!tenantCode.equals(segments[1]) || !deviceKey.equals(segments[2])) {
+        if (!tenantCode.equals(segments[TENANT_SEGMENT_INDEX]) || !deviceKey.equals(segments[DEVICE_SEGMENT_INDEX])) {
             return false;
         }
-        if (!DIRECTION_UP.equals(segments[3]) && !DIRECTION_DOWN.equals(segments[3])) {
+        if (!DIRECTION_UP.equals(segments[DIRECTION_SEGMENT_INDEX])
+                && !DIRECTION_DOWN.equals(segments[DIRECTION_SEGMENT_INDEX])) {
             return false;
         }
         return Arrays.stream(segments)

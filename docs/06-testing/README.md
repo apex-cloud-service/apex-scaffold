@@ -4,6 +4,10 @@
 
 本目录收录项目的测试文档，按主题维护当前有效文档。
 
+- **历史快照（2026-11-23，后续已修复）**：BE-063 Wave D1 / Wave E 当时的 `mvnd -T4 -B verify` 未通过；汇总报告见 `target/reports/summary/test-report.md`（当时本地忽略产物）：45 模块现存 XML 共 6683 项、1 失败、33 跳过、4 条重复 testcase 告警；`ExampleDataSourceTimeoutTest` 曾实测 12.667 秒，超过当时的 12 秒断言；`apex-auth-service` PMD 曾因 ASM 不支持 Java 21 class file major 65 失败。该报告汇总的是不同模块已有 XML 快照，不等价于一次全量构建结果。后续修复及最终证据见[BE-064 交接](../records/2026-11-23-be064-build-gate-repair.md)和[Wave E 最终单次验证](../records/2026-11-23-be063-wave-e-full-verify.md#2026-11-24-最终单次全仓验证)；本条仍不代表真实集群迁移或流量演练。
+- Wave E 原始命令、门禁失败位置及快照口径见[全仓门禁交接](../records/2026-11-23-be063-wave-e-full-verify.md)。
+- **历史快照（2026-11-23，后续已修复）**：BE-064 初期修复 ASM 后，auth-service 定向 `pmd:pmd` 报告列出 3 条规则违规；后续 `-pl :apex-auth-service -am verify` 在 `apex-common` 的 `pmd:check` 因 32 条违规中止，未执行到 auth-service。超时用例当时已改为检查 10 秒配置与 `SocketTimeoutException` 根因，定向测试 1/1 通过。后续违规整改与最终全仓结果见[BE-065 记录](../records/2026-11-23-be065-pmd-rule-repair.md)和[Wave E 最终单次验证](../records/2026-11-23-be063-wave-e-full-verify.md#2026-11-24-最终单次全仓验证)。
+
 ## Java 21 与统一认证多租户升级
 
 - [P0 阶段执行报告](jdk21-unified-auth/20261016-p0/report.md)：构建检查修复、资产采集与实际验证；P0 尚未准出，不代表完整回归或 Java 21 验收通过。
@@ -34,9 +38,24 @@
 
 固定输出 `target/reports/summary/test-report.md` 和 `test-summary.json`（未实现 `TEST_REPORT_OUTPUT_DIR` 覆盖）；两文件不保留逐文件 XML 路径与修改时间，也不证明同一次构建、最新代码或完整 verify 门禁通过；损坏 XML 导致脚本失败。真实云桶测试、TC/双库等因环境缺失而跳过时必须单独披露，不得列作通过。存储配置与验证命令见[对象存储指南](../05-operations/object-storage-integration.md)。
 
-## 最近一次全量验证（2026-11-22，BE-049）
+## BE-063 Wave E 隔离全仓续验（2026-11-24）
+
+- 最新：[最终单次全仓验证与同轮报告](../records/2026-11-23-be063-wave-e-full-verify.md#2026-11-24-最终单次全仓验证) `clean verify` 45/45；6685 项，6652 通过、33 跳过、0 失败或错误，4 条重复 testcase 告警。PMD XML 零违规，旧数据流诊断仍在。
+- [隔离全仓验证与报告](../records/2026-11-23-be063-wave-e-full-verify.md#2026-11-24-隔离全仓验证)：首轮 `clean verify` 44/45，修正唯一格式阻断后 19/19 续验通过。两段合计覆盖 45 模块，XML 汇总 6682 项、6649 通过、33 跳过、0 失败或错误，非单次全量通过。
+
+## 单次全量验证历史（2026-11-22，BE-049）
 
 - [2026-11-22 BE-049 全量验证报告](./2026-11-22-be049-full-verify-report.md)：最终门禁 `mvnd -T1 -B clean verify` 45/45 SUCCESS、控制台 6740 测试 0 失败/33 跳过（23:37）、XML 汇总 6676（0 失败）；含七次执行的失败与处置记录。
+
+## BE-063 Wave B 定向模块验证（2026-11-23）
+
+- [Wave B1 缓存 TTL 验证](../records/2026-11-23-be063-wave-b1-cache-ttl.md)：`mvnd -B -pl :apex-infrastructure-cache -am test spotless:check`，common/domain/cache 共 740 项，0 失败、0 错误、0 跳过。
+- [Wave B2 网关生产档熔断配置验证](../records/2026-11-23-be063-wave-b2-gateway-circuit-breaker.md)：`mvnd -B -pl :apex-gateway -am test spotless:check`，common/gateway 共 764 项，0 失败、0 错误、0 跳过。
+- 两波均为定向模块测试与静态配置契约验证，不是全仓 `clean verify`、容量压测或真实生产故障/切流演练；独立 R5 均为 `APPROVE_WITH_NITS`，无必改项。
+
+## BE-063 Wave C1 网关配置测试加固（2026-11-23）
+
+- [Wave C1 交接记录](../records/2026-11-23-be063-wave-c1-gateway-circuit-breaker-test.md)：auth/workflow 在 base、prod、Nacos 三种配置中的每条目标路由恰有一个熔断 filter；定向测试与 Spotless 通过，R5 `APPROVE_WITH_NITS`、无必改项。
 
 ## 全仓对齐战役全量验证（2026-11-22，BE-045~BE-048）
 

@@ -33,6 +33,13 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class IotMqttSession implements SmartLifecycle {
 
+    private static final String MQTT_TCP_SCHEME = "tcp";
+    private static final String MQTT_SSL_SCHEME = "ssl";
+    private static final String NAMESPACE_ROOT = "apex";
+    private static final String DIRECTION_UP = "up";
+    private static final int MIN_TOPIC_SEGMENTS = 4;
+    private static final int DIRECTION_SEGMENT_INDEX = 3;
+
     private final IotMqttProperties properties;
 
     private final DeviceTelemetryService telemetryService;
@@ -143,7 +150,7 @@ public class IotMqttSession implements SmartLifecycle {
     private URI parseBrokerUrl(String brokerUrl) {
         URI uri = URI.create(brokerUrl);
         String scheme = uri.getScheme();
-        if (!"tcp".equalsIgnoreCase(scheme) && !"ssl".equalsIgnoreCase(scheme)) {
+        if (!MQTT_TCP_SCHEME.equalsIgnoreCase(scheme) && !MQTT_SSL_SCHEME.equalsIgnoreCase(scheme)) {
             throw new IllegalArgumentException("MQTT broker 地址仅支持 tcp:// 或 ssl://: " + brokerUrl);
         }
         return uri;
@@ -169,7 +176,9 @@ public class IotMqttSession implements SmartLifecycle {
     private void onUpstreamPublish(Mqtt3Publish publish) {
         String topic = publish.getTopic().toString();
         String[] segments = topic.split("/");
-        if (segments.length < 4 || !"apex".equals(segments[0]) || !"up".equals(segments[3])) {
+        if (segments.length < MIN_TOPIC_SEGMENTS
+                || !NAMESPACE_ROOT.equals(segments[0])
+                || !DIRECTION_UP.equals(segments[DIRECTION_SEGMENT_INDEX])) {
             log.warn("忽略命名空间外的上行 topic: {}", topic);
             return;
         }

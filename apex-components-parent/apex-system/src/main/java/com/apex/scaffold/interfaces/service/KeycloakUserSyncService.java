@@ -65,6 +65,9 @@ import reactor.core.publisher.Mono;
 @ConditionalOnProperty(name = "keycloak.enabled", havingValue = "true")
 public class KeycloakUserSyncService {
 
+    private static final String STATUS_SYNCED = "SYNCED";
+    private static final String STATUS_SKIPPED = "SKIPPED";
+
     private static final int HTTP_STATUS_CREATED = 201;
 
     /** Keycloak Admin Client（阻塞式 API） */
@@ -225,13 +228,13 @@ public class KeycloakUserSyncService {
             int failed = 0;
             java.util.List<String> errors = new java.util.ArrayList<>();
             for (SyncOutcome outcome : outcomes) {
-                switch (outcome.status()) {
-                    case "SYNCED" -> synced++;
-                    case "SKIPPED" -> skipped++;
-                    default -> {
-                        failed++;
-                        errors.add(outcome.keycloakSub() + ": " + outcome.error());
-                    }
+                if (STATUS_SYNCED.equals(outcome.status())) {
+                    synced++;
+                } else if (STATUS_SKIPPED.equals(outcome.status())) {
+                    skipped++;
+                } else {
+                    failed++;
+                    errors.add(outcome.keycloakSub() + ": " + outcome.error());
                 }
             }
             return new SyncResult(outcomes.size(), synced, skipped, failed, java.util.List.copyOf(errors));

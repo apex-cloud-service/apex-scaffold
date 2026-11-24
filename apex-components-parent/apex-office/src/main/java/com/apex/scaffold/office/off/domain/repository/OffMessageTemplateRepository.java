@@ -94,6 +94,7 @@ public interface OffMessageTemplateRepository {
      * 根据ID删除模板（逻辑删除）
      *
      * @param id 模板ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> deleteById(Long id);
 

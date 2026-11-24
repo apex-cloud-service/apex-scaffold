@@ -17,6 +17,9 @@
 | 2026-11-18 | BE-042 多智能体并行协作与交接治理（首轮复核 `90c13b74`；返工提交 `fdc09ec6`） | 首轮 REJECT；增量复审 APPROVE_WITH_NITS，MF-01–MF-05 清零 | 已集成并关闭 | [2026-11-18-be-042-r5-review.md](./2026-11-18-be-042-r5-review.md) |
 | 2026-11-22 | BE-045~BE-048 全仓对齐与图表补齐（基线 `8d8dc31c`，独立子代理实例复核） | APPROVE_WITH_NITS，MF-01–MF-03（文档记账级）已由 R0 追加清零 | 已复核，待集成提交后关闭 | [2026-11-22-alignment-campaign-r5-review.md](./2026-11-22-alignment-campaign-r5-review.md) |
 | 2026-11-22 | BE-049 全模块增量代码评审与兼容性优化（基线 `b81acf18`） | 三轮复核后 APPROVE_WITH_NITS，MF/N 项清零 | 已复核，待集成提交 | [2026-11-22-full-module-code-review.md](./2026-11-22-full-module-code-review.md) |
+| 2026-11-23 | BE-063 Wave A 静态基线（`90a2f783`） | R5 APPROVE_WITH_NITS | 仅静态基线通过，不放行部署 | [2026-11-23-be063-wave-a-baseline.md](./2026-11-23-be063-wave-a-baseline.md) |
+| 2026-11-23 | BE-063 Wave C1 网关断路器唯一性测试 | R5 APPROVE_WITH_NITS，无必改项 | 定向模块测试通过；建议 future-proof auth 候选路由数量 | [交接记录](../records/2026-11-23-be063-wave-c1-gateway-circuit-breaker-test.md) |
+| 2026-11-23 | BE-063 Wave D1 Kubernetes 网关灰度隔离规格 | 待独立 R5 复核 | 仅规格与迁移门禁，尚未改 manifests/脚本/集群 | [规格](../specs/2026-11-23-be063-kubernetes-release-isolation.md) |
 
 ## 存量评审（2026-11-16 由根目录迁入）
 

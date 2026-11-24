@@ -28,6 +28,7 @@ public interface SmsCodeService {
      * 同时输出到日志（实际生产环境应对接短信网关发送真实短信）。
      *
      * @param phone 目标手机号
+     * @return 验证码发送与存储完成信号
      */
     Mono<Void> sendAndStore(String phone);
 

@@ -292,10 +292,12 @@ public class MqAlertManager {
      * @param message 告警消息
      */
     private void publishAlert(AlertLevel level, String message) {
-        switch (level) {
-            case INFO, WARNING -> log.warn(message);
-            case ERROR, CRITICAL -> log.error(message);
-            default -> log.warn("未知告警级别: {}, message={}", level, message);
+        if (level == AlertLevel.INFO || level == AlertLevel.WARNING) {
+            log.warn(message);
+        } else if (level == AlertLevel.ERROR || level == AlertLevel.CRITICAL) {
+            log.error(message);
+        } else {
+            log.warn("未知告警级别: {}, message={}", level, message);
         }
 
         eventPublisher.publishEvent(AlertEvent.builder()

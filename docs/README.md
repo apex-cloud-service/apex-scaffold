@@ -9,6 +9,23 @@
 - [2026-11-17 后端联调修复方案](./specs/2026-11-17-integration-contract-repair.md) — BE-036，权限快照兼容、菜单范围、审批租户上下文及回归边界。
 - [2026-11-18 前后端全量联调方案](./specs/2026-11-18-fullstack-integration.md) — FE-029 / BE-043，Podman Compose 联调环境、全量 API 对照与缺陷闭环。
 - [2026-11-19 Podman-only 联调入口记录](./records/2026-11-19-podman-only-integration.md) — BE-043，Compose 配置与本轮前端镜像/模拟反代验证边界。
+- [2026-11-23 任务责任接管记录](./records/2026-11-23-task-ownership-handoff.md) — BE-043/BE-049 责任与租约接管；旧任务保持开放。
+- [2026-11-23 中台韧性、DDD 与发布能力优化规格](./specs/2026-11-23-platform-resilience-ddd-release.md) — BE-063 分波次目标与兼容性边界。
+- [2026-11-23 中台韧性优化计划](./plans/2026-11-23-platform-resilience-ddd-release.md) — BE-063 Wave A/B/C/D1 已获独立 R5；D1 本地模拟发布门禁完成，真实集群演练待后续。
+- [2026-11-23 BE-063 Wave A 静态基线](./reviews/2026-11-23-be063-wave-a-baseline.md) — 模块边界与韧性设施盘点、发布阻断项和运行验证缺口。
+- [2026-11-23 BE-063 Wave A 交接](./records/2026-11-23-be063-wave-a-handoff.md) — 执行范围、门禁证据和回滚边界。
+- [2026-11-23 BE-063 Wave B1 缓存 TTL 交接](./records/2026-11-23-be063-wave-b1-cache-ttl.md) — L1 TTL 生命周期改进、模块测试和待复核状态。
+- [2026-11-23 BE-063 Wave B2 网关韧性规格](./specs/2026-11-23-be063-gateway-prod-resilience.md) — 仅补齐生产 profile 既有 auth/workflow 熔断接线，不改路由和阈值。
+- [2026-11-23 BE-063 Wave B2 网关熔断交接](./records/2026-11-23-be063-wave-b2-gateway-circuit-breaker.md) — 生产 profile 静态接线修正与三档配置回归。
+- [2026-11-23 BE-063 Wave B 定向测试索引](./06-testing/README.md) — B1 缓存与 B2 网关模块验证结果及边界。
+- [2026-11-23 BE-063 Wave C1 网关断路器测试交接](./records/2026-11-23-be063-wave-c1-gateway-circuit-breaker-test.md) — 每条目标 auth/workflow 路由只允许一个断路器 filter，定向测试与独立复核通过。
+- [2026-11-23 BE-063 Kubernetes 灰度隔离规格](./specs/2026-11-23-be063-kubernetes-release-isolation.md) — D1 规格已通过 R5；实现增加旧拓扑 fail-closed、EndpointSlice/Pod 身份校验与 0% 预览入口，真实集群迁移仍待演练。
+- [2026-11-23 BE-063 Wave D1 Kubernetes 灰度隔离交接](./records/2026-11-23-be063-wave-d1-kubernetes-release-isolation.md) — 稳定/金丝雀端点隔离、部署 CLI 门禁和集群验证边界。
+- [2026-11-24 BE-063 网关蓝绿切换规格](./specs/2026-11-24-be063-gateway-blue-green.md) — D2 规格已通过独立复核；实现和真实集群切流/回切演练未完成，不代表已部署。
+- [2026-11-23 BE-063 Wave E 全仓门禁与报告](./records/2026-11-23-be063-wave-e-full-verify.md) — 历史阻断、11-24 隔离分段验收结果及新 XML 测试汇总。
+- [2026-11-23 BE-064 构建门禁修复规格](./specs/2026-11-23-be064-build-gate-repair.md) — 保持质量门禁启用并修复 PMD/Java 21 字节码及超时测试稳定性。
+- [2026-11-23 BE-064 构建门禁修复记录](./records/2026-11-23-be064-build-gate-repair.md) — BE-063 Wave E 阻断项的独立修复任务记录。
+- [2026-11-23 BE-065 PMD 修复规格与记录](./specs/2026-11-23-be065-pmd-rule-repair.md) — 逐模块修复 PMD 规则违规，保持现有门禁强度。
 
 ## 📖 文档导航
 
@@ -296,7 +313,7 @@ API 接口文档、规范和版本管理。
 ### 迁入的历史资料（自 AI 私有目录迁出，内容零删改）
 
 - [AI 会话设计文档归档](plans/archived-ai-sessions/README.md) — 原 `.trae/documents`：文档对齐计划、网关韧性方案、微服务迁移执行计划、Phase 5/6 抽取设计
-- [ZCode 会话计划归档](archived/ai-sessions/zcode-plans/README.md) — 原 `.zcode/plans` 的 16 份历史计划（逐字节一致，私有目录仅保留短指针）
+- [ZCode 会话计划归档](archived/ai-sessions/zcode-plans/README.md) — 原会话计划的 17 份历史归档（逐字节一致，私有目录仅保留短指针）
 
 ### 治理自检
 

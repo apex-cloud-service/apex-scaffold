@@ -21,6 +21,7 @@ public interface AuditLogService {
      * @param resource 资源
      * @param result 操作结果
      * @param details 详细信息
+     * @return 审计事件完成信号
      */
     Mono<Void> log(
             String userId, String tenantId, String action, String resource, String result, Map<String, Object> details);
@@ -34,6 +35,7 @@ public interface AuditLogService {
      * @param ip 客户端IP地址
      * @param success 认证是否成功
      * @param reason 事件原因说明（如失败原因）
+     * @return 审计事件完成信号
      */
     Mono<Void> logAuthEvent(String userId, String tenantId, String event, String ip, boolean success, String reason);
 
@@ -45,6 +47,7 @@ public interface AuditLogService {
      * @param resource 被访问的资源
      * @param permission 所需的权限编码
      * @param granted 是否授权通过
+     * @return 审计事件完成信号
      */
     Mono<Void> logPermissionCheck(String userId, String tenantId, String resource, String permission, boolean granted);
 }

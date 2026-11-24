@@ -1,7 +1,7 @@
 # 记忆卡 · apex-scaffold（后端基座）
 
 > **用法**：新会话 / 换机器先读本卡（约 3 分钟），需要细节再按文末指针进入知识库与文档。
-> **基线**：2026-11-19 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 根直接聚合 7 组、递归 44 个模块、含根 45 个 reactor 项目；第二阶段叶子物理嵌套于各分组父目录
+> **基线**：2026-11-23 实测（源码 + `git log` + `pom.xml`）· 版本 1.3.1 · 根直接聚合 7 组、递归 44 个模块、含根 45 个 reactor 项目；第二阶段叶子物理嵌套于各分组父目录
 > **仓库基线**：默认工作分支 **`dev`**（长期分支 `master`/`dev`/`test`，`main` 已删除）· 远端 `origin` = `git@github.com:apex-cloud-service/apex-scaffold.git`（固定 SSH 443）· 许可 **MIT** + `LICENSE-COMMERCIAL.md` 商业双轨
 > **权威优先级**：源码 > `AGENTS.md` > `docs/`（含 `docs/reference/ai-knowledge/`，原 `.workbuddy/knowledge/` 已于 11-16 迁入）> 本卡。本卡是**导航与结论**，不是规范原文；私有目录（`.workbuddy/`、`.zcode/`、`.trae/`）不入版本库，只留指针。
 
@@ -70,9 +70,10 @@ mvnd -T4 -B clean verify                  # 全量基线
 | 统一授权「默认开启」判断错误 | 组件库缺省 true，但 `apex-services-bom/apex-system-service/application.yml` 覆盖为 `${APEX_AUTH_CENTER_PERMISSION_ENABLED:false}` → 排查按「运行模块 yml → 环境变量 → 组件默认」 |
 | 集成服务启动即失败 | 连接器/设备子域依赖外部 EMQX；本地无 broker 时需显式关闭 MQTT 并核 `hivemq-mqtt-client` 为 optional |
 
-## 6. 当前状态（2026-11-19）
+## 6. 当前状态（2026-11-23）
 
-- **规模**：主源码 **2249** 个 Java 文件、测试类 **780** 个；启动入口 **13** 个（12 个部署单元含 `apex-knowledge-service` 8100 与 `apex-example` + `apex-boot-all` 组合档）。
+- **规模**：主源码 **2254** 个 Java 文件、测试类 **788** 个；启动入口 **13** 个（12 个部署单元含 `apex-knowledge-service` 8100 与 `apex-example` + `apex-boot-all` 组合档）。
+- **11-19～11-23 治理对齐与注解批次**（`a0be46bb`～`90a2f783`）：BE-044～BE-048 治理对齐（规则文档与 Javadoc 扫描器适配两级布局、messaging/spi 指南与测试文档对齐）、BE-049 全模块代码评审与 `c41f4fa1` 重建测试报告汇总工具链（扫描真实 reactor，新增 `TestReportSummary`）、BE-050～BE-059 任务登记、BE-060 springdoc 注解战役（`5f14b5a5` 门禁扩至全模块 + `334c0f04` 全模块 Handler 补 `@Operation`/`@Schema`）；同时 `9a59ee2e` 收敛派发表并修授权/缓存正确性、`43e33baf` 加固 SPI 发现与集成校验（新增 `InternalEndpointErrors`、`MqLocalTransactionAutoConfiguration`、`NotificationConsumerAutoConfiguration`、`FileAuditFieldFillHandler`），主源码 2249→**2254**、测试类 780→**788**；图表新增 16 对（130–145），`docs/` Markdown 736→**752**。未改变模块、端口与启动入口拓扑。
 - **11-18 办公日历与治理批次**（`1731b622`/`12d7fdd4`/`5080efac`/`61a7499f`～`b177605d`）：BE-037 补 feishu/dingtalk/wecom 三平台日历客户端、BE-038 扩展日历端口详情/更新（新增 5 个主源码类）；`5080efac` 在 auth/office 补装配审计字段填充器（`AuditFieldFillHandler` ×2）并新增对应测试，另有 `CalendarClientContractTest`，测试类 777→**780**；同批 BE-041 Javadoc 评审、BE-042 多智能体并行协作治理落地，`docs/` Markdown 727→**736**。未改变模块、端口与启动入口拓扑。
 - **11-17 办公/系统契约修复**（`3436123b`）：审批租户上下文、菜单空集合语义、授权快照兼容；新增 `ApprovalProcessRepositoryImplTest`，测试类 776→**777**；同日 `67a14107` 登记 BE-036 联调修复方案与索引（`docs/` Markdown 726→**727**）。
 - **11-15～11-16 加固批次**（`8d489f4e`/`acc7baad`/`0e0c480e`/`ef5c4337`/`db968c70`/`72773898`/`2807632e`）：JWKS kid 选钥分支补齐 file/integration/aggregation、阻塞调度器租户上下文、masking 令牌家族兼容、auth 刷新令牌事务内原子轮换与重放撤销（auth **V65**）、知识库文档删除改持久清理凭证并统一问答错误协议（knowledge **V2**）、Javadoc 与构造器注入收口；未改变模块与端口拓扑。

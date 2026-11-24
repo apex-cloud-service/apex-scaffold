@@ -40,7 +40,7 @@ business 第一阶段无子模块，只为项目业务 JAR 库预留管理入口
 | `image push --registry host[:port] [--module m\|--all] [--engine podman] [--tag 引用]` | 使用 Podman 打 registry 前缀并推送（k8s 远程集群交付需要；可走 `APEX_IMAGE_REGISTRY`） |
 | `deploy java-jar <动作> [模块] [dev\|it\|prod] [档位]` | `precheck/start/stop/restart/status/logs/console/health`，委托 `scripts/deploy/service/app.sh`；模块默认 apex-gateway |
 | `deploy podman-compose <precheck\|infra\|up\|down\|status\|health> [透传]` | 前置检查（podman/.env/工具 JAR 自动补建）；up/down 委托 `start.sh`/`stop.sh` |
-| `deploy k8s <precheck\|apply\|status\|health\|down> [--canary] [--pdb] [--yes] [--allow-placeholder]` | fail-closed 编排 `k8s/` 清单：Secret 占位值默认拒绝部署；`down` 删除含 Secret 需 `--yes`；`apply` 后等待 rollout status |
+| `deploy k8s <precheck\|apply\|check-canary\|status\|health\|down> [--canary] [--pdb] [--yes] [--allow-placeholder]` | fail-closed 编排 `k8s/` 清单：旧稳定 selector 拒绝直接迁移；灰度先校验 stable/canary EndpointSlice 和 Pod UID 再创建 0% Ingress；`down` 删除含 Secret 需 `--yes` |
 | `status` | 环境版本 + 注册表概览 + 各模块 target 产物存在性 |
 | `help` | 命令手册 |
 
@@ -60,7 +60,9 @@ apex.sh release standard    # 产出 dist/apex-scaffold-<v>-standard.zip(.sha256
 apex.sh deploy java-jar precheck apex-system-service   # java -jar 直部署
 apex.sh deploy java-jar start apex-system-service dev basic
 apex.sh deploy podman-compose precheck && apex.sh deploy podman-compose infra && apex.sh deploy podman-compose up
-apex.sh deploy k8s precheck && apex.sh deploy k8s apply --pdb    # 先脱占位 Secret
+apex.sh deploy k8s precheck && apex.sh deploy k8s apply --pdb    # 先脱占位 Secret；旧拓扑按 k8s/README 分阶段迁移
+apex.sh deploy k8s apply --canary                             # 发布隔离预览，完成后权重仍为 0
+apex.sh deploy k8s check-canary                               # 重验端点身份和 Ingress 后再人工放量
 apex.sh deploy health       # 全部发布服务 readiness（compose/java-jar 均适用）
 ```
 

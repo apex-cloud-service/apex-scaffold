@@ -28,6 +28,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class DeviceRuleManageService {
 
+    private static final int MAX_RULE_NAME_LENGTH = 64;
+
     private static final Set<String> ALLOWED_ACTIONS =
             Set.of(DeviceRule.ACTION_NOTIFY, DeviceRule.ACTION_WEBHOOK, DeviceRule.ACTION_EVENT);
 
@@ -53,7 +55,7 @@ public class DeviceRuleManageService {
             String actionType,
             String actionConfig,
             boolean enabled) {
-        if (ruleName == null || ruleName.isBlank() || ruleName.length() > 64) {
+        if (ruleName == null || ruleName.isBlank() || ruleName.length() > MAX_RULE_NAME_LENGTH) {
             return Mono.error(new BusinessException(ResultCode.PARAM_ERROR, "规则名须为 1~64 位非空白文本"));
         }
         if (actionType == null || !ALLOWED_ACTIONS.contains(actionType)) {

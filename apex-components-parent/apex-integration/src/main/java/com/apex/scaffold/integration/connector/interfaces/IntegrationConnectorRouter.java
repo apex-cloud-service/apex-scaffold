@@ -106,39 +106,49 @@ public class IntegrationConnectorRouter {
             ConnectorConfigHandler connectorHandler,
             CredentialHandler credentialHandler,
             WebhookInboundHandler webhookHandler) {
+        return connectorRoutes(connectorHandler)
+                .and(credentialRoutes(credentialHandler))
+                .and(webhookRoutes(webhookHandler));
+    }
+
+    private RouterFunction<ServerResponse> connectorRoutes(ConnectorConfigHandler handler) {
         return RouterFunctions.route()
-                .GET(
-                        "/integration/v1/connectors",
-                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        connectorHandler::page)
+                .GET("/integration/v1/connectors", RequestPredicates.accept(MediaType.APPLICATION_JSON), handler::page)
                 .POST(
                         "/integration/v1/connectors",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        connectorHandler::create)
-                .GET("/integration/v1/connectors/{id}", connectorHandler::get)
+                        handler::create)
+                .GET("/integration/v1/connectors/{id}", handler::get)
                 .PUT(
                         "/integration/v1/connectors/{id}",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        connectorHandler::update)
-                .DELETE("/integration/v1/connectors/{id}", connectorHandler::delete)
-                .GET(
-                        "/integration/v1/credentials",
-                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        credentialHandler::list)
+                        handler::update)
+                .DELETE("/integration/v1/connectors/{id}", handler::delete)
+                .build();
+    }
+
+    private RouterFunction<ServerResponse> credentialRoutes(CredentialHandler handler) {
+        return RouterFunctions.route()
+                .GET("/integration/v1/credentials", RequestPredicates.accept(MediaType.APPLICATION_JSON), handler::list)
                 .POST(
                         "/integration/v1/credentials",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        credentialHandler::register)
-                .GET("/integration/v1/credentials/{id}", credentialHandler::get)
+                        handler::register)
+                .GET("/integration/v1/credentials/{id}", handler::get)
                 .PUT(
                         "/integration/v1/credentials/{id}/rotate",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        credentialHandler::rotate)
-                .DELETE("/integration/v1/credentials/{id}", credentialHandler::delete)
+                        handler::rotate)
+                .DELETE("/integration/v1/credentials/{id}", handler::delete)
+                .build();
+    }
+
+    private RouterFunction<ServerResponse> webhookRoutes(WebhookInboundHandler handler) {
+        return RouterFunctions.route()
                 .POST(
                         "/integration/v1/webhook/{connector}",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        webhookHandler::accept)
+                        handler::accept)
                 .build();
     }
 }

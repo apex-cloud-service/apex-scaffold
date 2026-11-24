@@ -4,8 +4,8 @@ import com.apex.scaffold.auth.config.OAuth2Properties;
 import com.apex.scaffold.auth.domain.model.OAuth2Authorization;
 import com.apex.scaffold.auth.domain.model.entity.AuthConfigEntity;
 import com.apex.scaffold.auth.domain.repository.AuthConfigRepository;
-import com.apex.scaffold.auth.domain.repository.OAuth2AuthorizationPort;
-import com.apex.scaffold.auth.domain.repository.OAuth2ConsentPort;
+import com.apex.scaffold.auth.domain.repository.OauthAuthorizationPort;
+import com.apex.scaffold.auth.domain.repository.OauthConsentPort;
 import com.apex.scaffold.auth.domain.repository.UserRepository;
 import com.apex.scaffold.auth.domain.service.JwtKeyMaterialService;
 import com.apex.scaffold.auth.domain.service.TenantStatusPort;
@@ -61,13 +61,13 @@ public class OAuth2Service {
     private static final long REFRESH_SECONDS = 2592000;
     private final AuthConfigRepository configRepository;
     private final UserRepository userRepository;
-    private final OAuth2AuthorizationPort authorizationRepository;
+    private final OauthAuthorizationPort authorizationRepository;
     private final OAuth2MetadataService metadataService;
     private final OAuth2Properties properties;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
     private final JwtKeyMaterialService keyMaterialService;
-    private final OAuth2ConsentPort consentRepository;
+    private final OauthConsentPort consentRepository;
 
     /** TOTP 服务：password 授权与主登录保持同一 MFA 策略。 */
     private final TotpService totpService;
@@ -207,7 +207,7 @@ public class OAuth2Service {
         return authorizationRepository
                 .saveAuthorizationCode(
                         tenant,
-                        new OAuth2AuthorizationPort.OAuth2AuthorizationCodeCommand(
+                        new OauthAuthorizationPort.OAuth2AuthorizationCodeCommand(
                                 UUID.randomUUID().toString(),
                                 clientId,
                                 principal,
@@ -329,7 +329,7 @@ public class OAuth2Service {
                         .flatMap(response -> authorizationRepository
                                 .exchangeCode(
                                         tenant,
-                                        new OAuth2AuthorizationPort.OAuth2CodeExchangeCommand(
+                                        new OauthAuthorizationPort.OAuth2CodeExchangeCommand(
                                                 hash(form.get(CODE)),
                                                 clientId,
                                                 form.get(REDIRECT_URI),
@@ -378,7 +378,7 @@ public class OAuth2Service {
                                 return authorizationRepository
                                         .rotateRefresh(
                                                 tenant,
-                                                new OAuth2AuthorizationPort.OAuth2RefreshRotationCommand(
+                                                new OauthAuthorizationPort.OAuth2RefreshRotationCommand(
                                                         clientId,
                                                         hash(form.get(REFRESH_TOKEN)),
                                                         hash(refresh),
@@ -407,7 +407,7 @@ public class OAuth2Service {
                     return authorizationRepository
                             .saveTokenGrant(
                                     tenant,
-                                    new OAuth2AuthorizationPort.OAuth2TokenGrantCommand(
+                                    new OauthAuthorizationPort.OAuth2TokenGrantCommand(
                                             UUID.randomUUID().toString(),
                                             clientId,
                                             subject,

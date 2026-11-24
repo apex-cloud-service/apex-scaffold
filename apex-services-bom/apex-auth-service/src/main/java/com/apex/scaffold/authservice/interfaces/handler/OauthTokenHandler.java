@@ -49,7 +49,7 @@ import reactor.core.publisher.Mono;
  * @version 1.0.0
  * @since 1.0.0
  * @see OAuth2Service
- * @see OAuthEndpointHandler
+ * @see OauthAuthorizationHandler
  */
 @Component
 @Tag(

@@ -82,19 +82,19 @@ public class EnhancedDomainEventPublisherImpl implements DomainEventPublisher {
      *
      * @param domainEventBus 领域事件总线
      * @param applicationEventPublisher Spring 应用事件发布器
-     * @param rocketMQTemplate RocketMQ 模板，用于分布式事件发布
+     * @param rocketMqTemplate RocketMQ 模板，用于分布式事件发布
      * @param domainEventTopic 领域事件主题名称，默认 {@code apex-domain-event}
      * @param domainEventEnabled 是否启用分布式事件发布，默认 true
      */
     public EnhancedDomainEventPublisherImpl(
             DomainEventBus domainEventBus,
             ApplicationEventPublisher applicationEventPublisher,
-            RocketMQTemplate rocketMQTemplate,
+            RocketMQTemplate rocketMqTemplate,
             @Value("${apex.mq.domain-event-topic:apex-domain-event}") String domainEventTopic,
             @Value("${apex.mq.domain-event-enabled:true}") boolean domainEventEnabled) {
         this.domainEventBus = domainEventBus;
         this.applicationEventPublisher = applicationEventPublisher;
-        this.rocketMQTemplate = rocketMQTemplate;
+        this.rocketMQTemplate = rocketMqTemplate;
         this.domainEventTopic = domainEventTopic;
         this.domainEventEnabled = domainEventEnabled;
     }

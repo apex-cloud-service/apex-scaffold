@@ -36,6 +36,10 @@ public class WeChatConnector implements IntegrationConnector {
     /** 连接器类型标识。 */
     public static final String TYPE = "WECHAT";
 
+    private static final String ERROR_CODE_KEY = "errcode";
+    private static final String ERROR_MESSAGE_KEY = "errmsg";
+    private static final String SUCCESS_CODE = "0";
+
     private static final String DEFAULT_BASE_URL = "https://api.weixin.qq.com";
     private static final String SEND_URI = "/cgi-bin/message/custom/send";
     private static final String TEMPLATE_SEND_URI = "/cgi-bin/message/template/send";
@@ -92,9 +96,9 @@ public class WeChatConnector implements IntegrationConnector {
                 };
         return call(config, "POST", uri, token, payload == null ? Map.of() : payload)
                 .flatMap(body -> {
-                    if (body.containsKey("errcode") && !"0".equals(trimCode(body.get("errcode")))) {
-                        return Mono.error(
-                                new BusinessException(ResultCode.WX_API_ERROR, "微信接口调用失败: " + body.get("errmsg")));
+                    if (body.containsKey(ERROR_CODE_KEY) && !SUCCESS_CODE.equals(trimCode(body.get(ERROR_CODE_KEY)))) {
+                        return Mono.error(new BusinessException(
+                                ResultCode.WX_API_ERROR, "微信接口调用失败: " + body.get(ERROR_MESSAGE_KEY)));
                     }
                     return Mono.just(body);
                 });
@@ -131,7 +135,7 @@ public class WeChatConnector implements IntegrationConnector {
             Map<String, Object> body = objectMapper.readValue(raw, new TypeReference<Map<String, Object>>() {});
             return Mono.just(body == null ? Map.of() : body);
         } catch (Exception e) {
-            Map<String, Object> envelope = new HashMap<>();
+            Map<String, Object> envelope = new HashMap<>(1);
             envelope.put("body", raw);
             return Mono.just(envelope);
         }

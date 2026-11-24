@@ -37,10 +37,20 @@ spring:
           uri: ${ROUTE_AUTH_URI:lb://apex-auth-service}
           predicates:
             - Path=/auth/v1/**,/auth/v2/**,/oauth2/**,/.well-known/**,/api/v1/mfa/**,/api/mfa/**,/api/ip-access-control/**,/api/v1/auth/configs/**,/api/v1/auth/audit-logs/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: authService
+                fallbackUri: forward:/__gateway/fallback
         - id: workflow-domain
           uri: ${ROUTE_WORKFLOW_URI:lb://apex-workflow-service}
           predicates:
             - Path=/api/v1/workflows/**,/api/v2/workflow-definitions/**,/api/workflow/**,/admin-api/v1/workflows/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: workflowService
+                fallbackUri: forward:/__gateway/fallback
         # ---- 办公域（Phase 5 已切换为 apex-office-service） ----
         # ⚠️ 本文件重新定义了 routes 列表：YAML 列表不逐元素合并，未在此声明的路由在生产环境将丢失。
         # 因此站内信 WebSocket/HTTP 路由必须与 application.yml 保持同步，且必须排在 office-domain 之前，

@@ -54,6 +54,14 @@ public final class TokenV42Recover {
     /** JSON 转义时低于该码点的字符使用 \\uXXXX 形式。 */
     private static final int CONTROL_LIMIT = 0x20;
 
+    private static final String NEWLINE = "\n";
+    private static final String COMMA = ",";
+    private static final String TRUE_LITERAL = "TRUE";
+    private static final String FALSE_LITERAL = "FALSE";
+    private static final String AUTO_INCREMENT = "AUTO_INCREMENT";
+    private static final int QUOTED_VALUE_LENGTH = 2;
+    private static final String SINGLE_QUOTE = "'";
+
     private static final String OAUTH2_AUTHORIZATION = "oauth2_authorization";
 
     private static final String TOKEN = "token";
@@ -714,7 +722,7 @@ public final class TokenV42Recover {
     private static SourceTable parseTable(String name, String body) throws RejectedException {
         SourceTable table =
                 new SourceTable("CREATE TABLE " + name + " (" + body + ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-        for (String raw : body.split("\n")) {
+        for (String raw : body.split(NEWLINE)) {
             String line = stripTrailingCommas(raw.strip());
             if (line.isEmpty()) {
                 continue;
@@ -754,7 +762,7 @@ public final class TokenV42Recover {
      */
     private static String stripTrailingCommas(String line) {
         String stripped = line;
-        while (stripped.endsWith(",")) {
+        while (stripped.endsWith(COMMA)) {
             stripped = stripped.substring(0, stripped.length() - 1);
         }
         return stripped;
@@ -783,13 +791,13 @@ public final class TokenV42Recover {
             return null;
         }
         String value = defaults.group(1);
-        if (value.length() >= 2 && value.startsWith("'") && value.endsWith("'")) {
+        if (value.length() >= QUOTED_VALUE_LENGTH && value.startsWith(SINGLE_QUOTE) && value.endsWith(SINGLE_QUOTE)) {
             value = value.substring(1, value.length() - 1);
         }
-        if ("TRUE".equals(value)) {
+        if (TRUE_LITERAL.equals(value)) {
             return "1";
         }
-        if ("FALSE".equals(value)) {
+        if (FALSE_LITERAL.equals(value)) {
             return "0";
         }
         return value;
@@ -803,7 +811,7 @@ public final class TokenV42Recover {
      * @return extra 取值
      */
     private static String extra(String rest, String value) {
-        if (rest.contains("AUTO_INCREMENT")) {
+        if (rest.contains(AUTO_INCREMENT)) {
             return "auto_increment";
         }
         return "CURRENT_TIMESTAMP".equals(value) ? "DEFAULT_GENERATED" : "";
@@ -951,21 +959,24 @@ public final class TokenV42Recover {
         StringBuilder json = new StringBuilder("\"");
         for (int index = 0; index < text.length(); index++) {
             char value = text.charAt(index);
-            switch (value) {
-                case '"' -> json.append("\\\"");
-                case '\\' -> json.append("\\\\");
-                case '\n' -> json.append("\\n");
-                case '\t' -> json.append("\\t");
-                case '\r' -> json.append("\\r");
-                case '\b' -> json.append("\\b");
-                case '\f' -> json.append("\\f");
-                default -> {
-                    if (value < CONTROL_LIMIT) {
-                        json.append(String.format("\\u%04x", (int) value));
-                    } else {
-                        json.append(value);
-                    }
-                }
+            if (value == '"') {
+                json.append("\\\"");
+            } else if (value == '\\') {
+                json.append("\\\\");
+            } else if (value == '\n') {
+                json.append("\\n");
+            } else if (value == '\t') {
+                json.append("\\t");
+            } else if (value == '\r') {
+                json.append("\\r");
+            } else if (value == '\b') {
+                json.append("\\b");
+            } else if (value == '\f') {
+                json.append("\\f");
+            } else if (value < CONTROL_LIMIT) {
+                json.append(String.format("\\u%04x", (int) value));
+            } else {
+                json.append(value);
             }
         }
         return json.append("\"").toString();

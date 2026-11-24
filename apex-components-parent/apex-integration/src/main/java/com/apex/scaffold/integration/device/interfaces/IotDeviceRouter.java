@@ -47,12 +47,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class IotDeviceRouter {
 
     /**
-     * 注册设备域路由。
+     * 注册 MQTT 与设备内部端点路由。
      *
-     * @param internalHandler 内部端点 Handler
-     * @param adminHandler    设备管理 Handler
-     * @param ruleHandler     规则管理 Handler
-     * @return 路由函数
+     * @param internalHandler 内部设备与 MQTT 请求处理器
+     * @return 内部端点的路由函数
      */
     @Bean
     @RouterOperations({
@@ -76,6 +74,19 @@ public class IotDeviceRouter {
                 method = RequestMethod.GET,
                 beanClass = IotInternalHandler.class,
                 beanMethod = "stats"),
+    })
+    public RouterFunction<ServerResponse> iotInternalRoutes(IotInternalHandler internalHandler) {
+        return internalRoutes(internalHandler);
+    }
+
+    /**
+     * 注册设备管理路由。
+     *
+     * @param adminHandler 设备管理请求处理器
+     * @return 设备管理端点的路由函数
+     */
+    @Bean
+    @RouterOperations({
         @RouterOperation(
                 path = "/integration/v1/iot/devices",
                 method = RequestMethod.GET,
@@ -115,7 +126,20 @@ public class IotDeviceRouter {
                 path = "/integration/v1/iot/devices/{id}/commands",
                 method = RequestMethod.POST,
                 beanClass = DeviceAdminHandler.class,
-                beanMethod = "dispatchCommand"),
+                beanMethod = "dispatchCommand")
+    })
+    public RouterFunction<ServerResponse> iotDeviceAdminRoutes(DeviceAdminHandler adminHandler) {
+        return deviceAdminRoutes(adminHandler);
+    }
+
+    /**
+     * 注册 IoT 规则管理路由。
+     *
+     * @param ruleHandler 规则管理请求处理器
+     * @return 规则管理端点的路由函数
+     */
+    @Bean
+    @RouterOperations({
         @RouterOperation(
                 path = "/integration/v1/iot/rules",
                 method = RequestMethod.GET,
@@ -137,69 +161,71 @@ public class IotDeviceRouter {
                 beanClass = IotRuleHandler.class,
                 beanMethod = "toggle")
     })
-    public RouterFunction<ServerResponse> iotDeviceRoutes(
-            IotInternalHandler internalHandler, DeviceAdminHandler adminHandler, IotRuleHandler ruleHandler) {
+    public RouterFunction<ServerResponse> iotRuleRoutes(IotRuleHandler ruleHandler) {
+        return ruleRoutes(ruleHandler);
+    }
+
+    private RouterFunction<ServerResponse> internalRoutes(IotInternalHandler handler) {
         return RouterFunctions.route()
-                // 内部端点：MQTT 认证钩子（无租户上下文）、命令下行与聚合统计（可信租户上下文）
                 .POST(
                         "/internal/v1/iot/mqtt/auth",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        internalHandler::mqttAuth)
-                // EMQX HTTP Authorize 钩子：pub/sub 时按租户命名空间返回 allow/deny
+                        handler::mqttAuth)
                 .POST(
                         "/internal/v1/iot/mqtt/acl",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        internalHandler::mqttAcl)
+                        handler::mqttAcl)
                 .POST(
                         "/internal/v1/iot/devices/{key}/commands",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        internalHandler::dispatchCommand)
+                        handler::dispatchCommand)
                 .GET(
                         "/internal/v1/iot/devices/stats",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        internalHandler::stats)
-                // 设备管理端点
-                .GET(
-                        "/integration/v1/iot/devices",
-                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        adminHandler::page)
+                        handler::stats)
+                .build();
+    }
+
+    private RouterFunction<ServerResponse> deviceAdminRoutes(DeviceAdminHandler handler) {
+        return RouterFunctions.route()
+                .GET("/integration/v1/iot/devices", RequestPredicates.accept(MediaType.APPLICATION_JSON), handler::page)
                 .POST(
                         "/integration/v1/iot/devices",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        adminHandler::register)
-                .GET("/integration/v1/iot/devices/{id}", adminHandler::get)
-                .DELETE("/integration/v1/iot/devices/{id}", adminHandler::deregister)
+                        handler::register)
+                .GET("/integration/v1/iot/devices/{id}", handler::get)
+                .DELETE("/integration/v1/iot/devices/{id}", handler::deregister)
                 .GET(
                         "/integration/v1/iot/devices/{id}/telemetry",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        adminHandler::telemetry)
-                // 设备影子查询与命令下发/历史（E3 管理面补强）
+                        handler::telemetry)
                 .GET(
                         "/integration/v1/iot/devices/{id}/shadow",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        adminHandler::shadow)
+                        handler::shadow)
                 .GET(
                         "/integration/v1/iot/devices/{id}/commands",
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        adminHandler::commands)
+                        handler::commands)
                 .POST(
                         "/integration/v1/iot/devices/{id}/commands",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        adminHandler::dispatchCommand)
-                // 规则管理端点
-                .GET(
-                        "/integration/v1/iot/rules",
-                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
-                        ruleHandler::page)
+                        handler::dispatchCommand)
+                .build();
+    }
+
+    private RouterFunction<ServerResponse> ruleRoutes(IotRuleHandler handler) {
+        return RouterFunctions.route()
+                .GET("/integration/v1/iot/rules", RequestPredicates.accept(MediaType.APPLICATION_JSON), handler::page)
                 .POST(
                         "/integration/v1/iot/rules",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        ruleHandler::create)
-                .GET("/integration/v1/iot/rules/{id}", ruleHandler::get)
+                        handler::create)
+                .GET("/integration/v1/iot/rules/{id}", handler::get)
                 .PUT(
                         "/integration/v1/iot/rules/{id}/toggle",
                         RequestPredicates.contentType(MediaType.APPLICATION_JSON),
-                        ruleHandler::toggle)
+                        handler::toggle)
                 .build();
     }
 }

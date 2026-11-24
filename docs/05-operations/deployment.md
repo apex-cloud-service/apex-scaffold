@@ -815,7 +815,8 @@ K8s 场景支持按权重/请求头灰度：稳定版与金丝雀版并存，Ngi
 10% 流量导入新版本，验证通过后逐步放量至全量切换，失败即时回滚。K8s 资产面向**网关 + 各微服务**。
 
 ```bash
-kubectl apply -f k8s/canary-deployment.yaml   # 金丝雀（默认 10% 流量）
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s apply --canary   # 先隔离部署，初始权重 0%
+./apex-tools-parent/apex-tools-build/bin/apex.sh deploy k8s check-canary     # 复核端点后再人工调整权重
 # 验证 → 调整权重（canary-by-weight: 50/100）→ 全量切换 → 删除金丝雀
 # 失败 → 删除金丝雀 Ingress 即回滚（流量 100% 回稳定版）
 ```

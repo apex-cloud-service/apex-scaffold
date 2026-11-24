@@ -59,6 +59,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PasswordRecoveryApplicationService {
 
+    private static final String SESSION_REVOCATION_COMPLETED = "COMPLETED";
+
     /** 验证码有效期。 */
     private static final Duration CODE_TTL = Duration.ofMinutes(10);
 
@@ -301,7 +303,7 @@ public class PasswordRecoveryApplicationService {
      */
     private Mono<Void> publishRevokedEventSafely(
             PasswordRecoveryEntity entity, PasswordRecoveryConfirmResponse response) {
-        if (!"COMPLETED".equals(response.getSessionRevocation())) {
+        if (!SESSION_REVOCATION_COMPLETED.equals(response.getSessionRevocation())) {
             return Mono.empty();
         }
         return Mono.defer(() -> domainEventPublisher.publish(new com.apex.scaffold.domain.event.TokenRevokedEvent(

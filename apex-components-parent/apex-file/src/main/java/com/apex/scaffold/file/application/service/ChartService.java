@@ -87,6 +87,7 @@ public interface ChartService {
      *
      *
      * @param id 图表ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> delete(Long id);
 
@@ -129,6 +130,7 @@ public interface ChartService {
      *
      *
      * @param status 新状态
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> updateStatus(Long id, Integer status);
 
@@ -160,6 +162,7 @@ public interface ChartService {
      *
      *
      * @param id 图表ID
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> incrementViewCount(Long id);
 }

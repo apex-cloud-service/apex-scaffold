@@ -55,9 +55,9 @@ public class MqWorkflowEventPublisher implements WorkflowEventPublisher {
      * @param workflowEventTopic 工作流事件主题名称
      */
     public MqWorkflowEventPublisher(
-            RocketMQTemplate rocketMQTemplate,
+            RocketMQTemplate rocketMqTemplate,
             @Value("${apex.mq.workflow-event-topic:apex-workflow-events}") String workflowEventTopic) {
-        this.rocketMQTemplate = rocketMQTemplate;
+        this.rocketMQTemplate = rocketMqTemplate;
         this.workflowEventTopic = workflowEventTopic;
     }
 

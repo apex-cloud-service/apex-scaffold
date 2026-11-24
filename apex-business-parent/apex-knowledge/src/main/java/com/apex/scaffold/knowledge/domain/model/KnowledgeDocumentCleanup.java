@@ -51,7 +51,11 @@ public record KnowledgeDocumentCleanup(
         LocalDateTime nextRetryAt,
         LocalDateTime nextReviewAt) {
 
-    /** 上传预留、成功登记、明确删除、历史仅索引清理四种互斥生命周期。 */
+    /** 上传预留、成功登记、明确删除、历史仅索引清理四种互斥生命周期。
+     *
+     * @author Apex Team
+     * @since 1.3.2
+     */
     public enum Mode {
         /** 上传已预留但尚未确认登记，仅异常补偿后可清理。 */
         UPLOAD_STAGING,
@@ -63,7 +67,11 @@ public record KnowledgeDocumentCleanup(
         LEGACY_INDEX
     }
 
-    /** 前端只消费这四种状态；COMPLETED 不代表迟到任务无法产生短暂残留。 */
+    /** 前端只消费这四种状态；COMPLETED 不代表迟到任务无法产生短暂残留。
+     *
+     * @author Apex Team
+     * @since 1.3.2
+     */
     public enum Status {
         /** 已持久化意图，等待后台认领。 */
         PENDING,

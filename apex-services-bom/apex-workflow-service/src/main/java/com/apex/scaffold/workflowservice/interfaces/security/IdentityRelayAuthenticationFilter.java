@@ -42,6 +42,9 @@ import reactor.core.publisher.Mono;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 public class IdentityRelayAuthenticationFilter implements WebFilter {
+
+    private static final String PUBLIC_KEY_ENTRY_SEPARATOR = ",";
+    private static final int JWT_SEGMENT_COUNT = 3;
     public static final String HEADER_USER_ID = "X-User-Id";
     public static final String HEADER_TENANT_ID = "X-Tenant-Id";
     public static final String HEADER_CLIENT_TYPE = "X-Client-Type";
@@ -94,11 +97,13 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
      * @return 键控配置（映射 + 是否多键模式）
      */
     private static KeyConfiguration buildKeys(String publicKeysBase64, String publicKeyBase64) {
-        Map<String, PublicKey> keys = new HashMap<>();
+        String[] keyEntries =
+                publicKeysBase64 == null ? new String[0] : publicKeysBase64.split(PUBLIC_KEY_ENTRY_SEPARATOR, -1);
+        Map<String, PublicKey> keys = new HashMap<>(keyEntries.length);
         try {
             KeyFactory factory = KeyFactory.getInstance("RSA");
             if (publicKeysBase64 != null && !publicKeysBase64.isBlank()) {
-                for (String entry : publicKeysBase64.split(",", -1)) {
+                for (String entry : keyEntries) {
                     String[] parts = entry.split("=", 2);
                     String kid = parts.length == 2 ? parts[0].trim() : "";
                     String encoded = parts.length == 2 ? parts[1].trim() : "";
@@ -259,7 +264,7 @@ public class IdentityRelayAuthenticationFilter implements WebFilter {
     private String headerValue(String token, String name) {
         try {
             String[] parts = token.split("\\.", -1);
-            if (parts.length != 3) {
+            if (parts.length != JWT_SEGMENT_COUNT) {
                 return null;
             }
             String header = new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);

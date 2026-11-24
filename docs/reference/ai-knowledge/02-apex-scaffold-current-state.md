@@ -1,12 +1,12 @@
-# 02 · apex 后端现状（2026-11-19）
+# 02 · apex 后端现状（2026-11-23）
 
-> 采集：2026-11-19，来源为源码实测 + 方案 §1 评审结论 + 各批测试报告。数字会漂移，**结论比数字寿命长**。
+> 采集：2026-11-23，来源为源码实测 + 方案 §1 评审结论 + 各批测试报告。数字会漂移，**结论比数字寿命长**。
 
 ## 1. 形态
 
 - **API 网关 + 六业务服务 + 只读查询聚合 + 任务代理 + 可选脱敏 + 可选知识库**，另有组合部署档 `apex-boot-all`：**13 个启动入口（12 个部署单元 + 组合档）**；Maven 根直接聚合 7 组、递归 44 个模块、含根 45 个 reactor 项目（2026-11-14 两级布局：37 个叶子已物理移入分组父目录）。
 - 业务代码以**库**形式复用（`apex-system` / `apex-auth` / `apex-workflow` / `apex-file` / `apex-office` / `apex-integration` / `apex-knowledge`），运行模块只做启动与装配；C7 起业务库自带 `AutoConfiguration.imports` 组件入口。
-- 规模：主源码 **2249** 个 Java 文件，测试类 **780** 个，迁移 **282** 个（MySQL 141 + PG 141；office 最高 V10、system V91、auth V65、knowledge V2）。
+- 规模：主源码 **2254** 个 Java 文件，测试类 **788** 个，迁移 **282** 个（MySQL 141 + PG 141；office 最高 V10、system V91、auth V65、knowledge V2）。
 - `apex-system` 仍是**四层合一巨库**（interfaces/application/domain/infrastructure 同包，870 个主源码文件），是当前最大结构债（C4/D07 已裁决维持现状）。
 
 ## 2. 分层约束（ArchUnit 有门禁）

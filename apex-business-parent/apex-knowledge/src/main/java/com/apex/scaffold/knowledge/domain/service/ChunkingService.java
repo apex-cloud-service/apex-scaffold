@@ -23,6 +23,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ChunkingService {
 
+    private static final String PARAGRAPH_SEPARATOR_PATTERN = "\\n{2,}";
+
     private final int chunkSize;
 
     private final int chunkOverlap;
@@ -89,7 +91,7 @@ public class ChunkingService {
     private List<String> packParagraphs(String text) {
         List<String> blocks = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        for (String paragraph : text.split("\n{2,}")) {
+        for (String paragraph : text.split(PARAGRAPH_SEPARATOR_PATTERN)) {
             String p = paragraph.strip();
             if (p.isEmpty()) {
                 continue;

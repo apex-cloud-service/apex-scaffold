@@ -31,6 +31,8 @@
 | 2026-11-16 | all-projects | 治理规范落地与仓库规范化 | [2026-11-16-all-projects-daily-report.md](./2026-11-16-all-projects-daily-report.md) |
 | 2026-11-17 | all-projects | 办公域联调契约修复 | [2026-11-17-all-projects-daily-report.md](./2026-11-17-all-projects-daily-report.md) |
 | 2026-11-21 | all-projects | 全栈联调隔离栈复验 | [2026-11-21-all-projects-daily-report.md](./2026-11-21-all-projects-daily-report.md) |
+| 2026-11-23 | all-projects | 接口文档注解全覆盖 | [2026-11-23-all-projects-daily-report.md](./2026-11-23-all-projects-daily-report.md) |
+| 2026-11-24 | all-projects | 集成域静态门禁整改 | [2026-11-24-all-projects-daily-report.md](./2026-11-24-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 

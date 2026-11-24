@@ -41,6 +41,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class JwksFetcher implements InitializingBean, DisposableBean {
 
+    private static final String ROOT_PATH = "/";
+
     private final JwksFetchProperties properties;
     private final WebClient webClient;
     private final AtomicReference<Map<String, PublicKey>> snapshot = new AtomicReference<>(Map.of());
@@ -185,7 +187,7 @@ public class JwksFetcher implements InitializingBean, DisposableBean {
     private String resolveUrl() {
         String remoteUrl = properties.getRemoteUrl();
         String path = java.net.URI.create(remoteUrl).getPath();
-        if (path == null || path.isBlank() || "/".equals(path)) {
+        if (path == null || path.isBlank() || ROOT_PATH.equals(path)) {
             String endpoint = properties.getEndpoint();
             String suffix = endpoint == null ? "" : endpoint;
             return remoteUrl.endsWith("/") && suffix.startsWith("/")

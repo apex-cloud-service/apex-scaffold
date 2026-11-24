@@ -32,7 +32,7 @@ public class HealthTrendDTO {
     private LocalDateTime to;
 
     @Schema(description = "取样点数量")
-    private int sampleCount;
+    private Integer sampleCount;
 
     @Schema(description = "参与统计的判定规则版本集合，多于一个时趋势口径可能不一致")
     private List<String> ruleVersions;

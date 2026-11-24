@@ -151,7 +151,8 @@ public class RemoteTenantStatusAdapter implements TenantStatusPort {
             throw new IllegalStateException("租户状态响应缺少 data 节点");
         }
         TenantStatusSnapshotDTO feed = root.getData();
-        return new Snapshot(feed.isExists(), feed.getStatus(), feed.isExpired());
+        return new Snapshot(
+                Boolean.TRUE.equals(feed.getExists()), feed.getStatus(), Boolean.TRUE.equals(feed.getExpired()));
     }
 
     /**

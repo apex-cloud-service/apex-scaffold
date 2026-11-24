@@ -37,6 +37,7 @@ import org.springframework.web.server.WebFilter;
  * <p>通过 {@code apex.seata.mode} 选择 AT/TCC/SAGA/XA：AT 与 XA 包装单 JDBC 数据源；
  * TCC 由 Seata 扫描器代理 {@code @LocalTCC} 动作并承担 TM/RM 生命周期；SAGA 装配状态机引擎。
  * 四种模式共享 XID 传播过滤与 Outbox 防护。
+ * JAR 级裁剪通过类名字符串守卫可选依赖，避免自动配置加载期缺类。
  *
  * @author Apex Team
  * @since 1.3.1
@@ -47,8 +48,6 @@ import org.springframework.web.server.WebFilter;
             "com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration"
         })
 @EnableConfigurationProperties(SeataProperties.class)
-// JAR 级裁剪（方案 C1）：消费方排除 seata-all 时以类名字符串守卫，
-// 避免自动配置类加载期 NoClassDefFoundError
 @org.springframework.boot.autoconfigure.condition.ConditionalOnClass(
         name = "org.apache.seata.spring.annotation.GlobalTransactionScanner")
 @ConditionalOnProperty(prefix = "apex.seata", name = "enabled", havingValue = "true")

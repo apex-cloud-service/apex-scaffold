@@ -15,6 +15,7 @@ public interface AdminReviewAuditPort {
      * 追加一条审计记录。
      *
      * @param record 待追加的审计记录
+     * @return 操作完成信号，失败时传播错误
      */
     Mono<Void> append(AuditRecord record);
 
