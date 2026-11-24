@@ -2,6 +2,7 @@ package com.apex.scaffold.office.infrastructure.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.apex.scaffold.office.infrastructure.po.ApprovalProcessPO;
 import com.apex.scaffold.office.infrastructure.po.CalendarEventPO;
 import java.time.LocalDateTime;
 import org.apache.ibatis.reflection.MetaObject;
@@ -64,5 +65,36 @@ class AuditFieldFillHandlerTest {
 
         assertThat(po.getUpdateTime()).isEqualTo(explicit);
         assertThat(first).isNotNull();
+    }
+
+    /**
+     * 回归 MF-1：审批流程 PO 使用 {@code createdAt}/{@code updatedAt} 命名，
+     * 与日历的 {@code createTime}/{@code updateTime} 不同，填充器必须同时覆盖。
+     */
+    @Test
+    @DisplayName("insertFill 覆盖 createdAt/updatedAt 命名的 PO（审批流程）")
+    void insertFillsAuditNamedProperties() {
+        ApprovalProcessPO po = new ApprovalProcessPO();
+        MetaObject meta = SystemMetaObject.forObject(po);
+
+        handler.insertFill(meta);
+
+        assertThat(po.getCreatedAt()).isNotNull();
+        assertThat(po.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("updateFill 覆盖 updatedAt 命名的 PO，且不覆盖已有值")
+    void updateFillsAuditNamedPropertyNullOnly() {
+        ApprovalProcessPO po = new ApprovalProcessPO();
+        handler.updateFill(SystemMetaObject.forObject(po));
+
+        assertThat(po.getUpdatedAt()).isNotNull();
+
+        LocalDateTime explicit = LocalDateTime.of(2026, 11, 24, 9, 30);
+        po.setUpdatedAt(explicit);
+        handler.updateFill(SystemMetaObject.forObject(po));
+
+        assertThat(po.getUpdatedAt()).isEqualTo(explicit);
     }
 }

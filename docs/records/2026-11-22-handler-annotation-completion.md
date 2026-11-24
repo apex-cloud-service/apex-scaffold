@@ -126,3 +126,31 @@ mvnd -B -pl :apex-file-service test -Dtest=FileHandlerIntegrationTest
 ## 8. 回滚
 
 按模块 `git revert` 即可；纯注解改动，无数据迁移、无配置开关、无运行期状态，回滚后在线文档回到改动前水平，服务行为不变。
+---
+
+## 2026-11-24 独立 R5 复核（REJECT）与门禁修复
+
+独立 R5 对 `5f14b5a5` / `334c0f04` 的结论为 **REJECT**，一处必改（其余为 nit）：
+
+- **必改 MF-1（已修复）**：新增的第 4 项“写操作 `@RequestBody`”检查只统计与打印，未纳入通过判定（原 `:658` 的条件只比较 router/handler/dto 三项）。复核者在隔离副本删除 `KnowledgeChatHandler.ask` 的唯一 `@RequestBody` 后，输出 98% 但脚本仍 `exit 0`，即该维度可退化至 0% 而 CI 保持绿色。
+- **必改 MF-2（已修复）**：`:546-551` 的 `write_routes` 计算后未被使用，且相邻注释自述排序“并不准确”，属会误导读者的死代码。
+- **复核确认无问题**：`swagger-annotations-jakarta` 2.2.27 为 compile 作用域的纯注解构件（构件内仅 `io/swagger/v3/oas/annotations/**`，POM 无依赖，不引入 springdoc 运行期框架），版本与 springdoc 2.8.1 的 `swagger-api 2.2.27` 对齐；67 个文件零新增/删除 `.java`，无 `public Mono/Flux` 签名增减、无路径/方法/状态码改动；新增的 `Result<>` 嵌套子类只出现在 `@Schema(implementation=…)`，运行期从不实例化或返回；`334c0f04` 未触碰任何测试文件、断言行零变化。
+
+本轮实际修复：
+
+1. 通过条件补入 `write_body_missing == 0`，使写操作请求体缺失真正阻断（收紧门禁）。
+2. 删除未使用的 `write_routes` 及其失准注释。
+3. 修正两处 macOS bash 3.2 多字节变量名崩溃点（`$module_root`、`$router_name` 后紧跟中文全角括号会被并入变量名）；原实现一旦出现缺注解路由就以 `unbound variable` 崩溃，丢失诊断信息。
+4. 新增 `router_has_meta_router_operations`：识别“自定义组合注解上声明 `@RouterOperations`”的形式。BE-065 已将密码找回三个端点收敛为 `@PasswordRecoveryOperations` 元注解，SpringDoc 运行期可识别，而原脚本只匹配字面 `@RouterOperations(`，会把已合规的 `PasswordRecoveryRouter` 误判为缺失。
+
+修复后实测：`Router 77/77`、`Handler 516/516`、`DTO 212/212`、写操作 `60/60` 四档均 100%，脚本 `exit 0`。
+
+复核未覆盖（原结论声明）：未运行 `mvnd clean verify`，未核验实际渲染的 Swagger UI / OpenAPI JSON 内容。
+
+## 2026-11-24 复核遗留（未关闭）
+
+- DTO 自动发现范围收窄：`MODULE_ROOTS` 未覆盖 `apex-auth`（23）、`apex-workflow`（6）、`apex-file`（20）、`apex-office`（1 + off 8）共 58 个 DTO；这些当前全部 100% 有 `@Schema`，故不产生红灯，但未来回归不会被该脚本发现（原基线曾显式覆盖）。
+- 6 个 auth 路由（`AuthenticationRouter` / `MfaRouter` / `RoleRouter` / `PermissionRouter` / `AuthConfigRouter` / `AuditLogRouter`）使用 `handler::method` 形式且无 `beanMethod` 绑定，第 4 项检查会整体跳过；其请求体由路由侧 `requestBody = @RequestBody(...)` 声明，覆盖真实存在但未被该脚本验证。
+- `dto_missing < 5` 的容忍阈值沿用原实现，文档口径的“100%”实际允许 4 个 DTO 缺口。
+
+任务卡保持 **待复核**：上述遗留与任务专属集成提交尚未收敛，不以本轮门禁修复替代关闭。

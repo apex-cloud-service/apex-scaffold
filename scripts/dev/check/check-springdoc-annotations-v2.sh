@@ -180,6 +180,39 @@ is_exempt() {
 }
 
 ###############################################################################
+# 检查 Router 类是否通过组合注解（元注解）声明了 @RouterOperations
+#
+# 背景：BE-065 将密码找回三个端点的 OpenAPI 定义收敛为自定义组合注解
+# `@PasswordRecoveryOperations`，其类型上声明 `@RouterOperations`。SpringDoc 在
+# 运行期能识别该元注解，故这里也必须识别，否则会把已合规的 Router 误判为缺失。
+#
+#   $1 Router 源文件路径；命中返回 0
+###############################################################################
+router_has_meta_router_operations() {
+    local router_file="$1"
+    local meta_annotation
+    # 提取该 Router 使用到的自定义注解（排除 SpringDoc/Swagger/Spring 官方注解，
+    # 它们是正常使用的注解而非本项目定义的组合注解）。
+    while IFS= read -r meta_annotation; do
+        [[ -n "$meta_annotation" ]] || continue
+        local meta_file
+        if ! meta_file=$(safe_find "${PROJECT_ROOT}" "${meta_annotation}.java" 2>/dev/null); then
+            continue
+        fi
+        local first_match
+        first_match=$(printf '%s\n' "$meta_file" | head -1)
+        [ -n "$first_match" ] || continue
+        if grep -q "@RouterOperations\|@RouterOperation" "$first_match" 2>/dev/null; then
+            return 0
+        fi
+    done < <(grep -oE '^[[:space:]]*@[A-Z][A-Za-z0-9_]*' "$router_file" 2>/dev/null |
+        sed -E 's/^[[:space:]]*@//' |
+        grep -vE '^(Configuration|Bean|RequiredArgsConstructor|SecurityScheme|RouterOperation|RouterOperations|Validated|Component|Slf4j)$' |
+        sort -u)
+    return 1
+}
+
+###############################################################################
 # 检查 Router 类的 @RouterOperations 注解
 ###############################################################################
 
@@ -223,8 +256,13 @@ check_router_annotations() {
                         return "$count_status"
                     fi
                 fi
+            elif router_has_meta_router_operations "$router_file"; then
+                # 组合注解（元注解）形式：路由方法标注自定义注解，该注解类型上声明 @RouterOperations。
+                ROUTER_WITH_ANNOTATION=$((ROUTER_WITH_ANNOTATION + 1))
+                log_success "${router_name}（组合注解）"
+                log_to_report "[✓] $router_name - 组合注解"
             else
-                log_failure "$router_name 缺少 @RouterOperations 注解（$module_root）"
+                log_failure "$router_name 缺少 @RouterOperations 注解（${module_root}）"
                 log_to_report "[✗] $router_name - 缺少注解"
             fi
         done <<< "$router_files"
@@ -654,8 +692,12 @@ generate_summary() {
     local router_missing=$((ROUTER_TOTAL - ROUTER_WITH_ANNOTATION))
     local handler_missing=$((HANDLER_METHOD_TOTAL - HANDLER_METHOD_WITH_OPERATION))
     local dto_missing=$((DTO_TOTAL - DTO_WITH_SCHEMA))
+    local write_body_missing=$((WRITE_ENDPOINT_TOTAL - WRITE_ENDPOINT_WITH_BODY))
 
-    if safe_eq "$router_missing" 0 && safe_eq "$handler_missing" 0 && safe_lt "$dto_missing" 5; then
+    if safe_eq "$router_missing" 0 \
+        && safe_eq "$handler_missing" 0 \
+        && safe_lt "$dto_missing" 5 \
+        && safe_eq "$write_body_missing" 0; then
         log_success "✓ SpringDoc 注解检查通过！"
         return 0
     else

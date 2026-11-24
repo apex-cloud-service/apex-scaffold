@@ -36,3 +36,29 @@
 - 固定工具链执行 `mvnd -T4 -B -pl :apex-example -am -Dtest=ExampleDataSourceTimeoutTest -Dsurefire.failIfNoSpecifiedTests=false test spotless:check pmd:check`，17 模块均成功，目标用例 1/1 通过、无跳过（13.08 秒）。原始日志 `/private/tmp/apex-be064-focused-20261124.I7gs6s/focused.log`；已交独立增量复核。
 - Curie 对最终测试改动的静态增量复核为 `APPROVE`，无必改项；确认两个隔离快照中的测试文件与被审版本一致。复核时未使用未完成的全仓结果作为放行证据；同轮构建结果独立见 Wave E。
 - [最终单次全仓验证](./2026-11-23-be063-wave-e-full-verify.md#2026-11-24-最终单次全仓验证) 45/45 模块通过，握手用例再次 1/1，通过同轮报告汇总；此前 32/3 条所致构建阻断已消除。未集成、未关闭。
+
+## 2026-11-24 集成状态核对
+
+- 当前 `dev` HEAD `4a0d6782` 的汇总发布提交包含 BE-064 的 PMD 插件兼容调整及握手测试改动；该提交同时包含其他任务内容，并非按治理 §4.10 逐任务执行的 BE-064 专属集成提交。
+- Curie 的 `APPROVE` 仅覆盖握手测试的最终整改增量；Wave E 的独立复核确认最终隔离全仓构建与同轮报告可作为本地门禁证据，不等同于对 BE-064 整个集成 diff 的最终 R5 终审。
+- 因此 BE-064 保持 **待复核**。关闭前仍需独立 R5 绑定最终任务范围、任务专属集成与治理/台账证据；不改变已记录的 45/45 构建及 6685 项报告结果。
+
+## 2026-11-24 独立 R5 复核（整包 BE-064 diff）
+
+复核范围仅为 BE-064 的两个文件：根 `pom.xml`（`pmd.asm.version` 9.6）与 `ExampleDataSourceTimeoutTest.java`。结论 **APPROVE_WITH_NITS**，无必改项：
+
+- POM 变更仅为 `maven-pmd-plugin` 自身 `<dependencies>` 内的 ASM 版本 pin（`pom.xml:128`、`pom.xml:1047-1051`），不进入项目 `dependencyManagement` 或生产 classpath；`failOnViolation=true`、10 个 p3c 规则集、`excludeFromFailureFile`、`targetJdk` 20、`pmd.skip=false` 在 `90a2f783..4a0d6782` 间零改动；13 个重复声明该插件的模块 POM 均无自有 `<dependencies>`，不会丢 pin。
+- 测试断言被**加强**而非削弱：`application-test.yml` 绑定校验 `socketTimeout=10000`（`:31`）、`DruidDataSource.getConnectProperties()` 校验物理连接属性（`:55`，已核对 Druid 1.2.25 MySQL 分支原样透传）、根因断言由 `Exception` 收紧为 `SocketTimeoutException`（`:61`）、`createDataSource` 移出异常断言块（`:54`），20 秒 watchdog 仅防死锁。
+- 证据可复核：聚焦运行 17 模块 SUCCESS、目标用例 1/1（13.08 秒）；最终快照 45/45 SUCCESS、6685 项/0 失败/33 跳过；37 份 PMD XML 零违规零 error；`Unsupported class file major version` 计数为 0；快照内两文件与当前 HEAD 逐字节一致。
+- 非阻断建议：N1 汇总提交不满足治理 §4.10 逐任务集成（故仍待复核）；N2 若未来引入 `asm-tree`/`asm-analysis` 需与该 pin 同步；N3 原 12 秒墙钟上限已移除，仅验证机制不验证时延量级；N4 证据位于 `/private/tmp` 非持久。
+
+本结论不覆盖：`4a0d6782` 中其余 203 个文件、PMD 数据流最大迭代诊断（BE-065 未关闭项）、Java ABI/构件兼容与生产发布放行。
+
+## 2026-11-24 BE-060 复核连带整改
+
+BE-060 的独立 R5 在复核 SpringDoc 门禁时发现该脚本本身有两类缺陷（与 BE-064 的 PMD 门禁修复同属"门禁可信度"范畴，故在此登记关联）：
+
+- 通过条件漏掉写操作 `@RequestBody` 维度，导致该维度可退化到 0% 而 CI 仍绿。
+- 缺注解分支存在 macOS bash 3.2 多字节变量名崩溃（`$module_root` 后接全角括号），失败时丢失诊断。
+
+修复与实测见 [BE-060 记录](./2026-11-22-handler-annotation-completion.md#2026-11-24-独立-r5-复核reject与门禁修复)。本次仅收紧门禁、未放宽任何阈值或豁免。

@@ -6,6 +6,7 @@ import com.apex.scaffold.office.domain.document.DocumentInfoRepository;
 import com.apex.scaffold.office.infrastructure.converter.DocumentInfoConverter;
 import com.apex.scaffold.office.infrastructure.mapper.DocumentInfoMapper;
 import com.apex.scaffold.office.infrastructure.po.DocumentInfoPO;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -131,6 +132,8 @@ public class DocumentInfoRepositoryImpl implements DocumentInfoRepository {
     public Mono<DocumentInfo> update(DocumentInfo documentInfo) {
         return Mono.fromCallable(() -> {
                     DocumentInfoPO po = converter.toPO(documentInfo);
+                    // 显式刷新 update_time：填充器仅填 null，PO 带回旧值时会写入旧时间。
+                    po.setUpdateTime(LocalDateTime.now());
                     mapper.updateById(po);
                     return converter.toEntity(po);
                 })

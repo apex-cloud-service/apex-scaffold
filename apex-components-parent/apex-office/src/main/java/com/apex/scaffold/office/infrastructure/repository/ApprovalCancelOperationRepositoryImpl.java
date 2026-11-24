@@ -73,6 +73,8 @@ public class ApprovalCancelOperationRepositoryImpl implements ApprovalCancelOper
     public Mono<ApprovalCancelOperation> update(ApprovalCancelOperation operation) {
         return Mono.fromCallable(() -> {
                     ApprovalCancelOperationPO po = converter.toPO(operation);
+                    // 显式刷新 update_time：填充器仅填 null，PO 带回旧值时会写入旧时间。
+                    po.setUpdateTime(LocalDateTime.now());
                     operationMapper.updateById(po);
                     return converter.toEntity(operationMapper.selectById(po.getId()));
                 })

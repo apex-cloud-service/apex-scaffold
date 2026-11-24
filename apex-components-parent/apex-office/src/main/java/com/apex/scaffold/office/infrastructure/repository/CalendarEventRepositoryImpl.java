@@ -125,6 +125,9 @@ public class CalendarEventRepositoryImpl implements CalendarEventRepository {
     public Mono<CalendarEvent> update(CalendarEvent event) {
         return Mono.fromCallable(() -> {
                     CalendarEventPO po = converter.toPO(event);
+                    // 显式刷新 update_time：填充器只填 null（strict 语义），若 PO 从实体带回了
+                    // 旧的 updateTime，更新语句会写入旧值，导致 update_time 冻结。
+                    po.setUpdateTime(LocalDateTime.now());
                     mapper.updateById(po);
                     return converter.toEntity(po);
                 })
@@ -136,11 +139,11 @@ public class CalendarEventRepositoryImpl implements CalendarEventRepository {
     @Override
     public Mono<Boolean> deleteById(Long id) {
         // 逻辑删除由 MyBatis-Plus 改写为 UPDATE ... SET update_time=?, deleted=1；
-        // 本模块未装配 MetaObjectHandler（无 apex-infrastructure-persistence 依赖），
-        // FieldFill 不会被填充，故显式带上 update_time，避免非空约束失败。
+        // @TableLogic 字段不会被 entity 更新路径带上，故此处用 UpdateWrapper 直接写列，
+        // 并显式带上 update_time，保证删除动作刷新审计时间。
         return Mono.fromCallable(() -> {
                     // 用 UpdateWrapper.set 直接写列：@TableLogic 字段不会被 entity 更新路径带上，
-                    // 且本模块无 MetaObjectHandler，update_time 也必须显式赋值。
+                    // update_time 也在此显式刷新。
                     com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<CalendarEventPO> wrapper =
                             new com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper<>();
                     wrapper.eq("id", id)

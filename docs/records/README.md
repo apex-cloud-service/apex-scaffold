@@ -33,7 +33,7 @@
 | 2026-11-18 | [2026-11-18-javadoc-review-campaign.md](./2026-11-18-javadoc-review-campaign.md) | BE-041 全仓 Javadoc 评审：doclint 78→0 告警、53 文件纯注释修复、三批测试全绿（BE-041） |
 | 2026-11-18 | [2026-11-18-multi-agent-governance.md](./2026-11-18-multi-agent-governance.md) | BE-042 多智能体并行协作治理：R0 租约、并行准入、worktree 隔离、标准交接、独立复核与逐个集成；R5 增量复审通过并关闭 |
 | 2026-11-19 | [2026-11-19-podman-only-integration.md](./2026-11-19-podman-only-integration.md) | BE-043 Podman-only 联调入口、前端容器健康检查及当前本机 Podman 服务阻塞 |
-| 2026-11-22 | [2026-11-22-code-quality-pattern-spi.md](./2026-11-22-code-quality-pattern-spi.md) | BE-044 全仓设计模式 / SPI / 注释复审：存储与连接器 SPI 发现加固、MQ 默认处理器让位、向量响应校验、9 处失真注释修正；受影响模块 `-am test` 全绿（Wave G 待业主确认） |
+| 2026-11-22 | [2026-11-22-code-quality-pattern-spi.md](./2026-11-22-code-quality-pattern-spi.md) | BE-044 全仓设计模式 / SPI / 注释复审：存储与连接器 SPI 发现加固、MQ 默认处理器让位、向量响应校验、9 处失真注释修正；Wave G、独立 R5 `APPROVE` 与 45/45 全量验证完成；代码提交 `43e33baf`、治理收尾 `8d8dc31c`，任务已关闭 |
 | 2026-11-22 | [2026-11-22-alignment-campaign.md](./2026-11-22-alignment-campaign.md) | BE-045~BE-048 全仓对齐与图表补齐：指南/测试文档对齐、既有图核对（无 _v2）、新增 130–145 共 16 张双源图、Javadoc 归零与规则文档/扫描脚本修复；门禁与全量 verify 见记录 §5 |
 | 2026-11-22 | [2026-11-22-code-review-pattern-spi-lambda.md](./2026-11-22-code-review-pattern-spi-lambda.md) | BE-049 全模块增量评审：SSO/搜索分派收敛、内部端点错误映射去重、撤销缓存保留期修正、数据权限 OR 括起、Outbox 抢占校验、SPI 真实描述符测试、测试报告生成链修复 |
 | 2026-11-23 | [2026-11-22-handler-annotation-completion.md](./2026-11-22-handler-annotation-completion.md) | BE-060 全模块 Handler SpringDoc/Swagger 注解补齐：10 模块 Router/Handler/DTO 四档覆盖率 100%、扫描脚本从单模块扩到全模块并新增写操作 requestBody 检查、4 个既有契约测试全绿、HTTP 契约零变化 |

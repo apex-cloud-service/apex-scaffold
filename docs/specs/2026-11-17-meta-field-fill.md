@@ -64,3 +64,25 @@ BE-039 端到端验证暴露：`apex-office` 与 `apex-auth` 的 PO 使用了
    模块测试与 `spotless:check` 通过。
 4. 记录与任务卡同步，写明 auth 侧 MFA/TOTP 写路径为潜在缺陷已随本修复消除、
    但真实平台写操作仍需平台凭据（外部依赖不变）。
+
+## 2026-11-24 独立 R5 复核（REJECT）
+
+对实现提交 `5080efac` 的整包复核结论为 **REJECT**，4 项必改。架构决策（模块内各放一个 `MetaObjectHandler`，不把 `apex-infrastructure-persistence` 拉进业务库）经复核确认为正确，无需改。
+
+- **MF-1（真实缺陷）**：填充器仅覆盖 `createTime`/`updateTime`；office 审批发起与站内信发送的插入路径所依赖的字段未被填充，导致这些写入仍会失败。需补齐（以 `hasSetter` 守卫）并补插入用例。
+- **MF-2（真实缺陷）**：更新与取消路径的 `update_time` 未被刷新，且在 MySQL `ON UPDATE` 语义与 PG 无触发器的情况下时间会冻结。需在更新/取消时刷新并断言。
+- **MF-3**：本文 §4 关于属性名/列名的说明与实现不符（auth 实际属性为 `createdAt`/`updatedAt`），需更正。
+- **MF-4**：残余限制表述失准——原记录把缺口描述为“仅外部凭据”，但 auth MFA/TOTP 的**持久化**验证可本地完成（H2 用例即可闭合），只有真实认证器端到端登录属外部可选。
+
+复核同时指出非阻断问题：`AuditFieldFillHandlerTest` 的用例显示名用 `createTime/updateTime` 但断言 `getCreatedAt/getUpdatedAt`；`CalendarEventRepositoryImpl` 中“本模块未装配 MetaObjectHandler”的注释理由已失真（显式 `update_time` 赋值仍应保留）；台账 #51 提交列仍写“未提交”；两个 handler 为普通 `@Component` 且无 `@ConditionalOnMissingBean`，当前无重复装配但未来同 classpath 存在多实例时 MP 取首个。
+
+复核未覆盖：未运行 `mvnd`/`clean verify`、未执行新增用例、未启动服务与数据库；`update_time` 冻结属基于生成 SQL 与数据库语义的推断，未观测真实行值。
+
+任务保持 **待复核**，上述必改未修完前不得关闭。
+
+### 2026-11-24 必改修复进展
+
+- **MF-1 已修复**：office 填充器同时覆盖两套命名（`createTime/updateTime` 与 `createdAt/updatedAt`），以 `hasSetter` 守卫；新增 2 条 `ApprovalProcessPO` 插入/更新用例。`insertFill`/`updateFill` 现对审批流程、审批撤销等 `createdAt/updatedAt` PO 生效。
+- **MF-2 已修复**：`CalendarEventRepositoryImpl.update`、`DocumentInfoRepositoryImpl.update`、`ApprovalCancelOperationRepositoryImpl.update` 显式刷新 `update_time`（填充器 strict 语义不会覆盖 PO 带回的旧值）；同时纠正两处“本模块无 MetaObjectHandler”的失真注释。
+- **验证**：`mvnd -B -pl :apex-office -am test spotless:check` BUILD SUCCESS，`apex-office` **204 项**（原 202 + 新增 2），0 失败/错误/跳过。
+- **仍未处理**：MF-3（规格 §4 属性名说明已在本节更正，原文保留）、MF-4（auth MFA/TOTP 持久化本地 H2 用例未补）、台账 #51 提交列、handler 的 `@ConditionalOnMissingBean` 建议、`AuditFieldFillHandlerTest` 显示名与断言不一致。BE-040 保持待复核。
