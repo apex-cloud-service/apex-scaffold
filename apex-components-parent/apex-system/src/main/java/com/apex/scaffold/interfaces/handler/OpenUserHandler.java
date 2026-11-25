@@ -43,7 +43,10 @@ public class OpenUserHandler {
     }
 
     /**
-     * 分页查询当前租户用户，仅返回 id/username/nickname/deptId/status。
+     * 分页查询当前租户用户
+     *
+     * <p>解析查询参数 pageNum/pageSize（缺省 1/20，大小收敛到 1..100），按 id 倒序分页，只映射
+     * id/username/nickname/deptId/status 最小字段集，直接以 {@code Result.success} 输出 {@code data.rows}。
      *
      * @param request 服务器请求（query 参数 pageNum/pageSize，越界自动收敛）
      * @return 统一响应，{@code data.rows} 为用户精简列表

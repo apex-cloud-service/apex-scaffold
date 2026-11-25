@@ -44,7 +44,9 @@ public class CapabilityHandler {
     private final TenantPackageService tenantPackageService;
 
     /**
-     * 能力目录（全部已登记能力）。
+     * 能力目录（全部已登记能力）
+     *
+     * <p>直接返回平台已登记的全部能力，展示顺序与登记顺序一致；该端点要求 {@code tenant:read} 权限。
      *
      * @param request 当前请求
      * @return 能力列表
@@ -69,7 +71,10 @@ public class CapabilityHandler {
     }
 
     /**
-     * 当前租户已订阅能力。
+     * 当前租户已订阅能力
+     *
+     * <p>从 Reactor Context 读取可信租户，缺失时返回 500；复用套餐 {@code resolveScope} 过滤能力目录，
+     * {@code unbounded=true} 表示全量订阅，查询失败时记录日志并返回统一错误信息。
      *
      * @param request 当前请求
      * @return 已订阅能力列表

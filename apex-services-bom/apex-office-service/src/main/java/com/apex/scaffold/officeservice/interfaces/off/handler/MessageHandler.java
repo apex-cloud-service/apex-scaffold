@@ -72,7 +72,7 @@ public class MessageHandler {
      * 调用应用服务向指定用户发送站内消息。
      *
      * @param request HTTP 请求对象，请求体为消息发送参数 JSON
-     * @return 包含已发送消息信息的统一成功响应，失败时返回错误响应
+     * @return 200 响应，{@code data} 为已发送消息信息；参数错误或未登录返回 400
      */
     @RequirePermission("office:message:send")
     @Operation(
@@ -272,10 +272,11 @@ public class MessageHandler {
     /**
      * 处理标记消息为已读请求。
      *
-     * <p>将当前登录用户的指定消息标记为已读状态，消息 ID 缺失或非法时返回参数错误。
+     * <p>将当前登录用户的指定消息标记为已读状态；消息 ID 经安全解析，缺失或非数字时直接返回
+     * 参数错误而不进入服务层，当前用户未登录时返回未授权。
      *
      * @param request HTTP 请求对象，路径参数包含消息 ID
-     * @return 标记成功的统一成功响应，失败时返回错误响应
+     * @return 200 响应，{@code data} 为空；消息 ID 无效或未登录返回 400
      */
     @RequirePermission("office:message:list")
     @Parameters({
@@ -317,10 +318,10 @@ public class MessageHandler {
     /**
      * 处理全部标记为已读请求。
      *
-     * <p>将当前登录用户的所有未读消息批量标记为已读状态。
+     * <p>将当前登录用户的所有未读消息批量标记为已读状态，不区分消息来源；当前用户未登录时返回未授权。
      *
-     * @param request HTTP 请求对象
-     * @return 标记成功的统一成功响应，失败时返回错误响应
+     * @param request HTTP 请求对象，无业务参数（仅承载认证上下文）
+     * @return 200 响应，{@code data} 为空；未登录返回 400
      */
     @RequirePermission("office:message:list")
     @Operation(operationId = "markAllAsRead", summary = "全部标记为已读", description = "将当前用户的所有未读消息标记为已读，data 为空")

@@ -28,7 +28,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class OperationsRouter {
 
     /**
-     * 运维体检路由（/api/v2/operations）。
+     * 运维体检路由（/api/v2/operations）
+     *
+     * <p>注册 {@code /api/v2/operations/health-report}、快照查询与导出、趋势与租户汇总等端点，
+     * 委托 {@code OperationsHealthHandler} 处理。
      *
      * @param handler 运维体检处理器
      * @return 运维路由函数
@@ -179,6 +182,15 @@ public class OperationsRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    /**
+     * 注册运维体检路由。
+     *
+     * <p>覆盖 {@code /api/v2/operations} 下的体检报告查询、快照采集、快照列表与导出任务；
+     * 租户作用域取自认证上下文，不接受请求参数覆盖。
+     *
+     * @param handler 运维体检处理器
+     * @return 运维体检路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> operationsHealthRoutes(OperationsHealthHandler handler) {
         return RouterFunctions.route()

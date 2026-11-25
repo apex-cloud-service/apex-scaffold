@@ -44,7 +44,7 @@ public class KnowledgeDocumentCleanupJob {
      * <p>租户来源为配置列表或持久任务投影；单文档失败仅记录日志并保留凭证，
      * 不中断其他租户或文档。索引能力关闭时必需索引项保留失败状态，不伪造成完成。
      *
-     * @return 本轮扫描结束的完成信号；单项错误已被隔离，不向调用方传播
+     * <p>本轮扫描结束的完成信号；单项错误已被隔离，不向调用方传播。
      */
     public Mono<Void> runOnce() {
         var config = properties.getCleanup();

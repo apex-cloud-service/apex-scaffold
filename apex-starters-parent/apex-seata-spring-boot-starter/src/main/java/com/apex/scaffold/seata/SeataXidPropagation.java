@@ -51,7 +51,14 @@ public final class SeataXidPropagation {
         };
     }
 
-    /** 显式挂载到受管 WebClient；清除调用者手工设置的传播头。 */
+    /**
+     * 构建出站 XID 传播过滤器，显式挂载到受管 WebClient。
+     *
+     * <p>先清除调用者手工设置的传播头，仅在目标来源命中白名单时注入 XID 与鉴权头，
+     * 避免向未授权域泄露事务上下文。
+     *
+     * @return 出站传播过滤器
+     */
     public ExchangeFilterFunction outbound() {
         return (request, next) -> Mono.deferContextual(context -> {
             ClientRequest.Builder builder = ClientRequest.from(request).headers(headers -> {

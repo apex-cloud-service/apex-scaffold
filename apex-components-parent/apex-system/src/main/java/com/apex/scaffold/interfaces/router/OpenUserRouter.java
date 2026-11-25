@@ -27,7 +27,9 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class OpenUserRouter {
 
     /**
-     * 注册开放用户只读路由。
+     * 注册开放用户只读路由
+     *
+     * <p>注册 {@code GET /open-api/users}，委托 {@code OpenUserHandler#list} 返回当前租户用户精简列表。
      *
      * @param handler 开放用户处理器
      * @return 路由函数

@@ -83,8 +83,11 @@ public class OfficeSyncWizardHandler {
     /**
      * 同步预检
      *
-     * @param request HTTP 请求
-     * @return 预检结果，包含是否就绪与缺失项
+     * <p>租户取自认证上下文，平台经 {@code parsePlatform} 解析（非法值转参数错误）；校验平台应用
+     * 配置与凭据环境变量是否就绪，返回是否可执行同步及缺失项。
+     *
+     * @param request HTTP 请求，请求体为预检参数
+     * @return 200 响应，{@code data} 为是否就绪与缺失项清单
      */
     @Operation(
             operationId = "syncPreflight",
@@ -131,8 +134,11 @@ public class OfficeSyncWizardHandler {
     /**
      * 同步预览
      *
-     * @param request HTTP 请求
-     * @return 预览结果，包含首页样本数与差异估算
+     * <p>租户取自认证上下文，同步类型仅支持部门或成员（其他值直接返回 400 错误响应）；
+     * 平台经 {@code parsePlatform} 解析，只读拉取首页数据并与已有映射对比估算差异。
+     *
+     * @param request HTTP 请求，请求体为预览参数
+     * @return 200 响应，{@code data} 为首页样本数与差异估算；不支持的同步类型或参数错误返回 400
      */
     @Operation(
             operationId = "syncPreview",
@@ -186,8 +192,11 @@ public class OfficeSyncWizardHandler {
     /**
      * 创建同步任务
      *
-     * @param request HTTP 请求
-     * @return 同步执行结果
+     * <p>租户取自认证上下文，平台经 {@code parsePlatform} 解析；同步类型为部门或成员时分别触发
+     * 对应同步并返回执行结果，其他同步类型直接返回 400 错误响应。
+     *
+     * @param request HTTP 请求，请求体为同步任务参数
+     * @return 200 响应，{@code data} 为任务 ID、同步数量与状态消息；不支持的同步类型或失败时返回 400
      */
     @Operation(
             operationId = "createSyncTask",
@@ -257,8 +266,11 @@ public class OfficeSyncWizardHandler {
     /**
      * 查询同步任务列表
      *
-     * @param request HTTP 请求
-     * @return 同步任务列表
+     * <p>租户取自认证上下文；平台可省略，页码缺省 1、每页缺省 20（非数字或负数回落到默认值），
+     * 返回历史同步任务记录列表，不携带总数。
+     *
+     * @param request HTTP 请求，查询参数含可选 {@code platform}、{@code page}（缺省 1）、{@code size}（缺省 20）
+     * @return 200 响应，{@code data} 为同步任务记录列表；无记录时为空列表
      */
     @Operation(
             operationId = "listSyncTasksV2",
@@ -375,8 +387,11 @@ public class OfficeSyncWizardHandler {
     /**
      * 重试同步任务
      *
-     * @param request HTTP 请求
-     * @return 同步执行结果
+     * <p>租户取自认证上下文，任务主键取自路径参数并做安全解析（非数字返回参数错误）；
+     * 仅失败任务可重试，有游标时从上次检查点续传、无游标时退化为全量重跑，不存在或状态不允许时返回 400。
+     *
+     * @param request HTTP 请求，路径参数 taskId
+     * @return 200 响应，{@code data} 为重试的任务 ID、同步数量与状态消息；任务不存在或状态不允许时返回 400
      */
     @Operation(
             operationId = "retrySyncTask",

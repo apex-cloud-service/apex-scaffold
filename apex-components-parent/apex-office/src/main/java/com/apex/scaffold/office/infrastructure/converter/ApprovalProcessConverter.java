@@ -71,7 +71,10 @@ public abstract class ApprovalProcessConverter {
     public abstract ApprovalProcess toEntity(ApprovalProcessPO po);
 
     /**
-     * 平台枚举转字符串
+     * 办公平台枚举转持久化字符串。
+     *
+     * @param platform 办公平台枚举值，允许为 {@code null}
+     * @return 枚举名称；入参为 {@code null} 时返回 {@code null}
      */
     @Named("platformToString")
     protected String platformToString(OfficePlatform platform) {
@@ -79,7 +82,11 @@ public abstract class ApprovalProcessConverter {
     }
 
     /**
-     * 字符串转平台枚举
+     * 持久化字符串转办公平台枚举。
+     *
+     * @param platform 数据库中存储的枚举名称，允许为 {@code null}
+     * @return 对应枚举值；入参为 {@code null} 时返回 {@code null}
+     * @throws IllegalArgumentException 名称不属于 {@link OfficePlatform} 时抛出
      */
     @Named("stringToPlatform")
     protected OfficePlatform stringToPlatform(String platform) {
@@ -87,7 +94,10 @@ public abstract class ApprovalProcessConverter {
     }
 
     /**
-     * 状态枚举转字符串
+     * 审批状态枚举转持久化字符串。
+     *
+     * @param status 审批状态枚举值，允许为 {@code null}
+     * @return 枚举名称；入参为 {@code null} 时返回 {@code null}
      */
     @Named("statusToString")
     protected String statusToString(ApprovalStatus status) {
@@ -95,7 +105,11 @@ public abstract class ApprovalProcessConverter {
     }
 
     /**
-     * 字符串转状态枚举
+     * 持久化字符串转审批状态枚举。
+     *
+     * @param status 数据库中存储的枚举名称，允许为 {@code null}
+     * @return 对应枚举值；入参为 {@code null} 时返回 {@code null}
+     * @throws IllegalArgumentException 名称不属于 {@link ApprovalStatus} 时抛出
      */
     @Named("stringToStatus")
     protected ApprovalStatus stringToStatus(String status) {
@@ -103,7 +117,10 @@ public abstract class ApprovalProcessConverter {
     }
 
     /**
-     * 列表转JSON字符串
+     * 字符串列表序列化为 JSON 数组字符串。
+     *
+     * @param list 待序列化列表，允许为 {@code null} 或空
+     * @return JSON 数组字符串；入参为空或序列化失败时返回 {@code null}
      */
     @Named("listToJson")
     protected String listToJson(List<String> list) {
@@ -118,7 +135,10 @@ public abstract class ApprovalProcessConverter {
     }
 
     /**
-     * JSON字符串转列表
+     * JSON 数组字符串反序列化为字符串列表。
+     *
+     * @param json 存储的 JSON 数组字符串，允许为 {@code null} 或空串
+     * @return 字符串列表；入参为空或解析失败时返回空列表而非 {@code null}
      */
     @Named("jsonToList")
     protected List<String> jsonToList(String json) {
@@ -133,7 +153,10 @@ public abstract class ApprovalProcessConverter {
     }
 
     /**
-     * 审批记录列表转JSON
+     * 审批记录列表序列化为 JSON 数组字符串。
+     *
+     * @param records 审批记录列表，允许为 {@code null} 或空
+     * @return JSON 数组字符串；入参为空或序列化失败时返回 {@code null}
      */
     @Named("recordsToJson")
     protected String recordsToJson(List<ApprovalRecord> records) {
@@ -148,7 +171,10 @@ public abstract class ApprovalProcessConverter {
     }
 
     /**
-     * JSON转审批记录列表
+     * JSON 数组字符串反序列化为审批记录列表。
+     *
+     * @param json 存储的 JSON 数组字符串，允许为 {@code null} 或空串
+     * @return 审批记录列表；入参为空或解析失败时返回空列表而非 {@code null}
      */
     @Named("jsonToRecords")
     protected List<ApprovalRecord> jsonToRecords(String json) {

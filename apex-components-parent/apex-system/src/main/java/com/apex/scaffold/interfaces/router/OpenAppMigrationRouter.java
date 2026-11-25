@@ -31,7 +31,10 @@ public class OpenAppMigrationRouter {
 
     @Bean
     /**
-     * 注册存量开放应用迁移路由。
+     * 注册存量开放应用迁移路由
+     *
+     * <p>注册 {@code GET /admin-api/v1/open-apps/migration/export} 与
+     * {@code POST /admin-api/v1/open-apps/migration/import}，委托 {@code OpenAppMigrationHandler} 处理。
      *
      * @param handler 迁移处理器
      * @return 路由函数

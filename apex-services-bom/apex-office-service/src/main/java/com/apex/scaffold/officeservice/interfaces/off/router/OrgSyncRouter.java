@@ -40,8 +40,11 @@ public class OrgSyncRouter {
     /**
      * 注册组织同步数据的八个管理端点。
      *
-     * @param handler 组织同步数据处理器
-     * @return 部门、员工和同步历史路由
+     * <p>全部端点挂载于管理端前缀 {@code /admin-api/v1/org}：部门提供分页查询、详情与增删改，
+     * 员工提供分页查询与详情，另含同步历史分页；读取与维护权限由处理器上的注解分别约束。
+     *
+     * @param handler 组织同步数据处理器，负责协议解析、校验与调用组织同步服务
+     * @return 部门、员工和同步历史路由函数，挂载于 {@code /admin-api/v1/org}
      */
     @RouterOperations({
         @RouterOperation(
@@ -377,6 +380,15 @@ public class OrgSyncRouter {
                                                             schema = @Schema(implementation = OrgErrorResult.class)))
                                 }))
     })
+    /**
+     * 注册组织架构同步路由。
+     *
+     * <p>覆盖 {@code /admin-api/v1/org/**} 的部门与人员查询、增删改、同步触发与同步历史；
+     * 写操作要求 JSON 请求体，响应区分成功结果与 {@code OrgErrorResult}。
+     *
+     * @param handler 组织同步处理器
+     * @return 组织同步路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> orgSyncRoutes(OrgSyncHandler handler) {
         return RouterFunctions.route()

@@ -58,12 +58,17 @@ public class OAuth2RouterConfig {
     private final OAuth2DiscoveryHandler discoveryHandler;
 
     /**
-     * 注册〈OAuth2 协议端点〉路由（统一认证收口 A5：弃用期）。
+     * 注册〈OAuth2 协议端点〉路由（统一认证收口 A5：弃用期）
      *
      * <p>OAuth2 授权服务器已收口到认证中心（RS256 + 聚合 JWKS），本组端点进入弃用周期：
      * {@code apex.features.system-oauth2-endpoints=false} 即下线；存量客户端迁移完成后
      * 默认值将翻转为 false 并移除。注意：system 侧 {@code /oauth2/jwks} 空壳端点
      * （无密钥材料、误导第三方）已随收口直接移除，不再保留过渡实现。
+     *
+     * <p>注册发现文档、授权、令牌、撤销、内省与授权同意等端点，分别委托 {@link OAuth2DiscoveryHandler}
+     * 与 {@link OAuth2AuthorizationHandler} 处理。
+     *
+     * @return 包含 OAuth2 协议端点的响应式路由函数
      */
     @Bean
     @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
@@ -120,7 +125,15 @@ public class OAuth2RouterConfig {
                 .build();
     }
 
-    /** 注册〈OAuth2 客户端管理〉管理路由，提供客户端的增删改查与密钥重置端点。 */
+    /**
+     * 注册〈OAuth2 客户端管理〉管理路由
+     *
+     * <p>在 {@code /admin-api/v1/oauth2/clients} 下提供客户端创建、更新、删除、详情、列表与密钥重置端点，
+     * 统一委托 {@link OAuth2ClientManagementHandler} 处理；由 {@code apex.features.system-oauth2-endpoints}
+     * 开关控制是否启用。
+     *
+     * @return 包含 OAuth2 客户端管理端点的响应式路由函数
+     */
     @Bean
     @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
             prefix = "apex.features",

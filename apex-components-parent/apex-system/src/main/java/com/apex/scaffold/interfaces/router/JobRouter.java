@@ -234,6 +234,15 @@ public class JobRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    /**
+     * 注册后台任务管理路由。
+     *
+     * <p>覆盖 {@code /admin-api/v1/jobs} 的列表、分页、详情、创建、更新、删除、状态切换、
+     * 手动执行与执行日志查询；写操作要求 JSON 请求体。
+     *
+     * @param handler 任务管理处理器
+     * @return 任务管理路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> adminJobRoutes(JobHandler handler) {
         return RouterFunctions.route()

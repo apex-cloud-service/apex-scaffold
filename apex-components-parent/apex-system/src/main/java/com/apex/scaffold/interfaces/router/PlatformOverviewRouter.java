@@ -27,7 +27,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class PlatformOverviewRouter {
 
     /**
-     * 注册业务端聚合概览路由。
+     * 注册业务端聚合概览路由
+     *
+     * <p>注册 {@code GET /api/v2/overview}，委托 {@code PlatformOverviewHandler#overview}
+     * 返回当前租户的跨域聚合概览。
      *
      * @param handler 业务端聚合 Handler
      * @return 路由函数

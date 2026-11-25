@@ -162,7 +162,10 @@ public class OperationsHealthHandler extends BaseHandler {
     }
 
     /**
-     * 分页查询体检快照历史。
+     * 分页查询体检快照历史
+     *
+     * <p>解析可选的 {@code from}/{@code to}（ISO 8601）、{@code status} 结论与分页参数
+     * （页码缺省 1、大小受限收敛），时间格式或结论取值非法时返回 400，其余交由服务层检索分页结果。
      *
      * @param request HTTP 请求，查询参数 {@code from}、{@code to}（ISO 8601）、
      *                {@code status}、{@code page}、{@code size}
@@ -215,7 +218,10 @@ public class OperationsHealthHandler extends BaseHandler {
     }
 
     /**
-     * 导出体检快照 CSV。
+     * 导出体检快照 CSV
+     *
+     * <p>解析可选的 {@code from}/{@code to} 与 {@code status}，调用服务层导出为 CSV；记录数超过上限时
+     * 返回 400 要求缩小范围，成功时以附件形式输出（文件名按 UTF-8 编码）。
      *
      * @param request HTTP 请求，查询参数 {@code from}、{@code to}、{@code status}
      * @return CSV 附件响应
@@ -348,7 +354,10 @@ public class OperationsHealthHandler extends BaseHandler {
     }
 
     /**
-     * 下载异步导出任务的结果文件。
+     * 下载异步导出任务的结果文件
+     *
+     * <p>解析路径任务 ID 后调用 {@code healthExportService.findDownload}，仅已完成任务可下载；
+     * 任务不存在、未完成或跨租户时返回对应错误，成功时以附件形式输出 CSV。
      *
      * @param request HTTP 请求，路径参数 {@code id}
      * @return CSV 附件响应
@@ -387,7 +396,10 @@ public class OperationsHealthHandler extends BaseHandler {
     }
 
     /**
-     * 查询体检趋势。
+     * 查询体检趋势
+     *
+     * <p>解析可选 {@code limit}（缺省 0 表示不限制）与 ISO 8601 时间范围后调用
+     * {@code operationsHealthService.trend}，给出结论分布、首尾状态与是否收敛；样本不足两个时不判定改善。
      *
      * @param request HTTP 请求，查询参数 {@code from}、{@code to}（ISO 8601）、{@code limit}
      * @return 统一成功响应，data 为趋势分析
@@ -427,7 +439,10 @@ public class OperationsHealthHandler extends BaseHandler {
     }
 
     /**
-     * 查询租户体检摘要（受限口径）。
+     * 查询租户体检摘要（受限口径）
+     *
+     * <p>调用 {@code operationsHealthService.tenantSummary()} 返回当前租户最近一次体检的结论级摘要，
+     * 不含实例标识与逐项证据。
      *
      * @param request HTTP 请求
      * @return 统一成功响应，data 为租户摘要

@@ -123,8 +123,9 @@ public class RoleService {
     /**
      * 删除角色
      *
+     * <p>删除完成信号（空完成）。
+     *
      * @param id 角色ID
-     * @return 删除完成信号（空完成）
      */
     public Mono<Void> deleteRole(Long id) {
         return roleRepository
@@ -141,9 +142,10 @@ public class RoleService {
     /**
      * 为角色分配权限（全量覆盖该角色的权限集合）
      *
+     * <p>分配完成信号（空完成）。
+     *
      * @param roleId 角色ID
      * @param permissionIds 权限ID集合
-     * @return 分配完成信号（空完成）
      */
     public Mono<Void> assignPermissionsToRole(Long roleId, Set<Long> permissionIds) {
         return roleRepository
@@ -162,10 +164,11 @@ public class RoleService {
     /**
      * 为用户分配角色
      *
+     * <p>分配完成信号（空完成）。
+     *
      * @param userId 用户ID
      * @param roleIds 角色ID集合
      * @param tenantId 租户ID
-     * @return 分配完成信号（空完成）
      */
     public Mono<Void> assignRolesToUser(Long userId, Set<Long> roleIds, String tenantId) {
         return roleRepository
@@ -182,10 +185,11 @@ public class RoleService {
     /**
      * 移除用户的指定角色
      *
+     * <p>移除完成信号（空完成）。
+     *
      * @param userId 用户ID
      * @param roleIds 角色ID集合
      * @param tenantId 租户ID
-     * @return 移除完成信号（空完成）
      */
     public Mono<Void> removeRolesFromUser(Long userId, Set<Long> roleIds, String tenantId) {
         return roleRepository
@@ -211,9 +215,10 @@ public class RoleService {
     /**
      * 分配权限给角色
      *
+     * <p>分配完成信号（空完成）。
+     *
      * @param roleId 角色ID
      * @param permissionIds 权限ID集合
-     * @return 分配完成信号（空完成）
      */
     public Mono<Void> assignPermissions(Long roleId, Set<Long> permissionIds) {
         return assignPermissionsToRole(roleId, permissionIds);

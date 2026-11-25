@@ -85,7 +85,13 @@ public class MqProducerMetrics {
     }
 
     /**
-     * 拦截 sendSync 方法
+     * 环绕拦截同步消息发送，统计成功/失败次数与耗时。
+     *
+     * <p>成功与异常路径都会记录一次耗时；异常原样抛给调用方，不改变业务语义。
+     *
+     * @param joinPoint 切点上下文，承载目标方法与实参
+     * @return 目标方法返回值
+     * @throws Throwable 目标方法抛出的任意异常原样透传
      */
     @Around("execution(* com.apex.scaffold.infrastructure.mq.service.MqProducerService.sendSync(..))")
     public Object aroundSendSync(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -108,7 +114,13 @@ public class MqProducerMetrics {
     }
 
     /**
-     * 拦截 sendAsync 方法
+     * 环绕拦截异步消息发送。
+     *
+     * <p>异步发送的成功与失败由回调线程统计，本切面只负责触发原始调用。
+     *
+     * @param joinPoint 切点上下文，承载目标方法与实参
+     * @return 目标方法返回值（通常为 CompletableFuture）
+     * @throws Throwable 目标方法抛出的任意异常原样透传
      */
     @Around("execution(* com.apex.scaffold.infrastructure.mq.service.MqProducerService.sendAsync(..))")
     public Object aroundSendAsync(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -117,7 +129,11 @@ public class MqProducerMetrics {
     }
 
     /**
-     * 拦截降级处理方法
+     * 环绕拦截发送失败降级处理，累计降级次数。
+     *
+     * @param joinPoint 切点上下文，承载目标方法与实参
+     * @return 目标方法返回值
+     * @throws Throwable 目标方法抛出的任意异常原样透传
      */
     @Around("execution(* com.apex.scaffold.infrastructure.mq.service.MqProducerService.handleSendFailureFallback(..))")
     public Object aroundFallback(ProceedingJoinPoint joinPoint) throws Throwable {

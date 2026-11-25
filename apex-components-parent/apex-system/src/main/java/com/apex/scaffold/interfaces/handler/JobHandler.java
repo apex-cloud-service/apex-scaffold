@@ -72,7 +72,10 @@ public class JobHandler extends BaseHandler {
     }
 
     /**
-     * 查询任务列表。
+     * 查询任务列表
+     *
+     * <p>直接调用 {@code jobService.listJobs()} 返回全部任务，结果由 {@code buildSuccess} 统一包装为
+     * 带 traceId 的响应，需 {@code system:job:list} 权限。
      *
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为任务 DTO 列表
@@ -210,7 +213,10 @@ public class JobHandler extends BaseHandler {
     }
 
     /**
-     * 查询任务详情。
+     * 查询任务详情
+     *
+     * <p>从路径参数解析正整数任务 ID，调用 {@code jobService.getJob(id)} 返回任务完整调度配置，
+     * 任务不存在时由服务层返回 404 语义。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为任务实体
@@ -283,7 +289,10 @@ public class JobHandler extends BaseHandler {
     }
 
     /**
-     * 更新任务。
+     * 更新任务
+     *
+     * <p>先解析路径正整数任务 ID，再校验请求体后调用 {@code jobService.updateJob(id, body)}；
+     * 若任务正在运行，服务层会重新注册调度，成功结果统一包装为响应。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为已更新的任务实体
@@ -444,7 +453,10 @@ public class JobHandler extends BaseHandler {
     }
 
     /**
-     * 查询任务执行日志。
+     * 查询任务执行日志
+     *
+     * <p>解析路径正整数任务 ID 与可选查询参数 {@code limit}（缺省 20），调用
+     * {@code jobService.listLogs(id, limit)} 返回按执行时间倒序的最近执行日志。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数，
      *                查询参数 {@code limit} 缺省 20

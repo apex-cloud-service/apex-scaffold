@@ -28,7 +28,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class CapabilityRouter {
 
     /**
-     * 注册能力目录路由。
+     * 注册能力目录路由
+     *
+     * <p>注册 {@code GET /api/v2/capabilities} 与 {@code GET /api/v2/capabilities/subscribed}，
+     * 分别委托 {@code CapabilityHandler#listCapabilities} 与 {@code #listSubscribed}。
      *
      * @param handler 能力目录 Handler
      * @return 路由函数

@@ -56,8 +56,9 @@ public class IngestionService {
      * 认领后执行摄取；缺少可信租户直接拒绝，不使用公共租户或 0 回退。
      * 认领冲突返回完成信号；管线错误只尝试写仍有效且未删除的主档，不恢复已删除文档。
      *
+     * <p>摄取结束或认领冲突时的完成信号；租户缺失与不可恢复错误发出错误。
+     *
      * @param documentId 待摄取文档 ID
-     * @return 摄取结束或认领冲突时的完成信号；租户缺失与不可恢复错误发出错误
      */
     public Mono<Void> ingest(Long documentId) {
         return TenantContext.currentTenantIdReactive()

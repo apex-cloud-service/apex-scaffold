@@ -190,7 +190,11 @@ public final class InternalServiceSigner {
         }
     }
 
-    /** 是否已配置密钥。 */
+    /**
+     * 是否已配置内部调用签名密钥。
+     *
+     * @return 已注入非空密钥时返回 {@code true}
+     */
     public boolean configured() {
         return secret != null;
     }

@@ -140,7 +140,9 @@ public class AdminUserManagementService {
     }
 
     /**
-     * 查询用户后台详情（超级管理员权限）。
+     * 查询用户后台详情（超级管理员权限）
+     *
+     * <p>先校验操作者为超级管理员，再组装包含角色、画像与合规摘要的用户详情。
      *
      * @param operatorOpenId 操作管理员 openId
      * @param userId 目标用户 ID
@@ -186,7 +188,18 @@ public class AdminUserManagementService {
                         toRoles(data.getT1()))));
     }
 
-    /** 创建可通过既有手机号验证码流程登录的普通用户，并初始化画像与合规记录。 */
+    /**
+     * 创建可通过既有手机号验证码流程登录的普通用户，并初始化画像与合规记录
+     *
+     * <p>先断言操作者为超级管理员并通过租户用户配额校验，再按手机号查重（已存在则抛
+     * {@link ResultCode#USER_ALREADY_EXISTS}）；手机号与昵称做去空白处理，其余可空字段空串归一为 {@code null}。
+     * 新用户使用随机 {@code PHONE_} 前缀 OpenID、语言固定 {@code zh_CN}、入驻状态置为 {@code ONBOARDING_PENDING}，
+     * 并写入携带入参的默认画像及默认合规记录，最后返回后台详情。
+     *
+     * @param operatorOpenId 操作管理员 openId，用于超级管理员校验
+     * @param request 创建请求，包含手机号、昵称及可选画像字段
+     * @return 创建后的用户后台详情
+     */
     public Mono<AdminUserDetailResponse> create(String operatorOpenId, AdminUserCreateRequest request) {
         String phone = request.phone().trim();
         return assertSuperAdmin(operatorOpenId)
@@ -226,7 +239,18 @@ public class AdminUserManagementService {
                 .flatMap(user -> detailUnchecked(user.getId()));
     }
 
-    /** 编辑用户可展示资料；认证令牌、OpenID 与安全审计字段不允许由后台表单修改。 */
+    /**
+     * 编辑用户可展示资料；认证令牌、OpenID 与安全审计字段不允许由后台表单修改
+     *
+     * <p>先断言操作者为超级管理员并确认目标用户存在；手机号查重时排除用户自身，命中他人则抛
+     * {@link ResultCode#USER_ALREADY_EXISTS}。保存基础资料后按需更新画像（不存在时创建默认画像），
+     * 随后对 {@code user:id} 与 {@code user:openId} 缓存执行延迟双删以保持一致，最终返回最新详情。
+     *
+     * @param operatorOpenId 操作管理员 openId，用于超级管理员校验
+     * @param userId 目标用户 ID
+     * @param request 更新请求，包含手机号、昵称及可选画像字段
+     * @return 更新后的用户后台详情
+     */
     public Mono<AdminUserDetailResponse> update(String operatorOpenId, Long userId, AdminUserUpdateRequest request) {
         String phone = request.phone().trim();
         Mono<UserEntity> saved = assertSuperAdmin(operatorOpenId)
@@ -268,7 +292,9 @@ public class AdminUserManagementService {
     }
 
     /**
-     * 查询超级管理员可配置的角色列表。
+     * 查询超级管理员可配置的角色列表
+     *
+     * <p>先校验操作者为超级管理员，再返回启用且属于受管角色编码集合的角色，并按角色 ID 升序排列。
      *
      * @param operatorOpenId 操作管理员 openId
      * @return 可配置角色列表
@@ -335,7 +361,10 @@ public class AdminUserManagementService {
     }
 
     /**
-     * 强制下线目标用户，吊销其身份令牌与 refresh token。
+     * 强制下线目标用户，吊销其身份令牌与 refresh token
+     *
+     * <p>先校验操作者为超级管理员且目标用户存在，禁止操作当前账号；目标无 openId 时直接返回 0，
+     * 否则吊销该 openId 下全部令牌并返回实际吊销数量。
      *
      * @param operatorOpenId 操作管理员 openId
      * @param targetUserId 目标用户 ID
@@ -360,7 +389,10 @@ public class AdminUserManagementService {
     }
 
     /**
-     * 启用或禁用目标用户账号，禁用时同步吊销其令牌。
+     * 启用或禁用目标用户账号，禁用时同步吊销其令牌
+     *
+     * <p>先校验操作者为超级管理员且目标存在，禁止修改当前账号；启用时调用 {@code enable()}，
+     * 禁用时调用 {@code disable()} 并在目标存在 openId 时吊销其全部令牌，最后返回最新详情。
      *
      * @param operatorOpenId 操作管理员 openId
      * @param targetUserId 目标用户 ID

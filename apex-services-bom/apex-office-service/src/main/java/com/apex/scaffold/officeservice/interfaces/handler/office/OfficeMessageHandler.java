@@ -78,8 +78,12 @@ public class OfficeMessageHandler {
      *   <li>返回消息ID和发送状态</li>
      * </ol>
      *
-     * @param request HTTP 请求
-     * @return 发送结果响应
+     * <p>平台名称按枚举名解析，非法取值触发参数错误；写操作受 {@code @IdempotentApi} 幂等
+     * 与 {@code @OperationLog} 审计保护。
+     *
+     * @param request HTTP 请求，请求体为消息发送参数（平台、目标、消息类型与内容）
+     * @return 200 响应，{@code data} 为消息 ID、发送状态、平台消息 ID 与失败原因；参数错误或发送失败返回 400
+     * @throws IllegalArgumentException 平台名称不是合法 {@code OfficePlatform} 时抛出
      */
     @Operation(
             operationId = "sendOfficeMessage",
@@ -211,8 +215,12 @@ public class OfficeMessageHandler {
      * <p>重新发送失败的消息。只能重新发送状态为 FAILED 的消息，
      * 成功后更新消息状态和平台消息ID。
      *
-     * @param request HTTP 请求
-     * @return 重新发送结果
+     * <p>消息主键取自路径参数；服务异常不向上抛出，统一以 HTTP 200 + 失败 {@code code}/{@code msg} 返回，
+     * 写操作受 {@code @IdempotentApi} 幂等与 {@code @OperationLog} 审计保护。
+     *
+     * @param request HTTP 请求，路径参数含 messageId
+     * @return 200 响应，{@code data} 为是否重发成功；失败时 {@code data} 为空、{@code code}/{@code msg} 表示原因
+     * @throws NumberFormatException 路径中的 messageId 不是合法长整型时抛出
      */
     @Operation(
             operationId = "resendOfficeMessage",
@@ -262,8 +270,12 @@ public class OfficeMessageHandler {
      *
      * <p>撤回发送成功的消息。只能撤回状态为 SUCCESS 且已获得平台消息ID的消息。
      *
-     * @param request HTTP 请求
-     * @return 撤回结果
+     * <p>消息主键取自路径参数；服务异常不向上抛出，统一以 HTTP 200 + 失败 {@code code}/{@code msg} 返回，
+     * 写操作受 {@code @IdempotentApi} 幂等与 {@code @OperationLog} 审计保护。
+     *
+     * @param request HTTP 请求，路径参数含 messageId
+     * @return 200 响应，{@code data} 为是否撤回成功；失败时 {@code data} 为空、{@code code}/{@code msg} 表示原因
+     * @throws NumberFormatException 路径中的 messageId 不是合法长整型时抛出
      */
     @Operation(
             operationId = "recallOfficeMessage",

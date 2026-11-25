@@ -66,6 +66,9 @@ public class RuntimeLogHandler {
     /**
      * 查询运行时日志
      *
+     * <p>解析可选的 startTime/endTime（格式 {@code yyyy-MM-dd HH:mm:ss}，缺省近 1 小时）、level、logger、
+     * message 与 limit（缺省 100、上限 1000），时间格式非法返回 400；委托日志服务查询后直接输出 DTO 列表。
+     *
      * @param request HTTP请求
      * @return 日志列表
      */
@@ -180,6 +183,9 @@ public class RuntimeLogHandler {
 
     /**
      * 统计日志数量
+     *
+     * <p>解析可选 startTime/endTime（缺省近 1 小时）与 level，时间格式非法返回 400；
+     * 调用日志服务统计满足条件的日志总数并直接输出。
      *
      * @param request HTTP请求
      * @return 日志数量

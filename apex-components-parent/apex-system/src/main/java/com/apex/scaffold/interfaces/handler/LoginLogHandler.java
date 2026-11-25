@@ -64,7 +64,10 @@ public class LoginLogHandler extends BaseHandler {
     }
 
     /**
-     * 分页查询登录日志。
+     * 分页查询登录日志
+     *
+     * <p>解析分页参数（缺省 1/20）、可选 {@code username} 模糊条件与 {@code status}（0 成功/1 失败），
+     * 委托日志服务查询并按登录时间倒序返回，结果统一包装为带 traceId 的响应。
      *
      * @param request HTTP 请求；{@code page} 缺省 1，{@code size} 缺省 20，
      *                {@code username} 与 {@code status} 可缺省

@@ -31,7 +31,15 @@ public class WorkflowDefinitionRepositoryImpl implements WorkflowDefinitionRepos
         return WorkflowTenantAccess.execute(tenant -> findByIdSync(tenant, id));
     }
 
-    /** 同步查询，供事务回调复用。 */
+    /**
+     * 同步按主键查询流程定义，供事务回调复用。
+     *
+     * <p>查询条件同时限定主键与租户，避免跨租户读取。
+     *
+     * @param tenant 租户标识，由受信任上下文传入
+     * @param id 流程定义主键
+     * @return 流程定义实体；不存在时返回 {@code null}
+     */
     public WorkflowDefinition findByIdSync(String tenant, Long id) {
         return workflowDefinitionPoConverter.toEntity(
                 workflowDefinitionMapper.selectOne(ConditionUtil.lambda(WorkflowDefinitionPO.class)

@@ -39,6 +39,9 @@ public class OfficeDocumentRouter {
      * <p>文档列表静态路径在文档标识路径之前注册，写操作的请求体媒体类型由路由谓词约束，
      * 具体的文件存储、权限和目录规则由处理器及应用服务负责。
      *
+     * <p>处理器通过构造器注入而非 Bean 方法参数获取；文档与文件夹标识统一由路径或查询参数携带，
+     * 上传内容以 JSON 中的 Base64 字段传输，路由层不做鉴权。
+     *
      * @return 文档接口路由函数，挂载于 {@code /api/office/documents}
      */
     @RouterOperations({

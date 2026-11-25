@@ -30,7 +30,13 @@ public class ProcessInstanceRepositoryImpl implements ProcessInstanceRepository 
         return WorkflowTenantAccess.execute(tenant -> findByIdSync(tenant, id));
     }
 
-    /** 同步查询，供事务回调复用。 */
+    /**
+     * 同步按主键查询流程实例，供事务回调复用。
+     *
+     * @param tenant 租户标识，由受信任上下文传入，不接受客户端覆盖
+     * @param id 流程实例主键
+     * @return 流程实例；不存在时返回 {@code null}
+     */
     public ProcessInstance findByIdSync(String tenant, Long id) {
         return processInstancePoConverter.toEntity(
                 processInstanceMapper.selectOne(ConditionUtil.lambda(ProcessInstancePO.class)
@@ -63,7 +69,15 @@ public class ProcessInstanceRepositoryImpl implements ProcessInstanceRepository 
         return WorkflowTenantAccess.execute(tenant -> insertSync(tenant, entity));
     }
 
-    /** 同步新增，供事务回调复用。 */
+    /**
+     * 同步新增流程实例，供事务回调复用。
+     *
+     * <p>写入时补齐租户、创建/更新时间与初始版本号，并把数据库生成的主键回填到实体。
+     *
+     * @param tenant 租户标识，写入 {@code tenant_id} 列
+     * @param entity 待新增的流程实例；调用后其 {@code id} 被回填
+     * @return 受影响行数
+     */
     public int insertSync(String tenant, ProcessInstance entity) {
         ProcessInstancePO po = processInstancePoConverter.toPo(entity);
         po.setTenantId(tenant);
@@ -81,7 +95,15 @@ public class ProcessInstanceRepositoryImpl implements ProcessInstanceRepository 
         return WorkflowTenantAccess.execute(tenant -> updateByIdSync(tenant, entity));
     }
 
-    /** 同步更新，供事务回调复用。 */
+    /**
+     * 同步按主键更新流程实例，供事务回调复用。
+     *
+     * <p>更新条件同时限定主键与租户；转换出的持久化对象会清空租户字段，避免误改归属。
+     *
+     * @param tenant 租户标识，作为更新条件的一部分
+     * @param entity 待更新的流程实例，需携带主键
+     * @return 受影响行数
+     */
     public int updateByIdSync(String tenant, ProcessInstance entity) {
         ProcessInstancePO po = processInstancePoConverter.toPo(entity);
         po.setTenantId(null);

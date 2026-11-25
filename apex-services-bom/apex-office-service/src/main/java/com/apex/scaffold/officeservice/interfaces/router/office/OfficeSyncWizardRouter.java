@@ -47,6 +47,8 @@ public class OfficeSyncWizardRouter {
      * <p>处理器通过构造器注入而非 Bean 方法参数获取，故无 {@code handler} 参数；
      * 重试以任务标识定位，是否允许重复提交由 Handler 按任务状态判定，路由层不做幂等控制。
      *
+     * <p>预检与预览为 JSON 请求体，任务查询与详情为 GET，任务标识由路径参数携带。
+     *
      * @return 组织同步向导路由函数，挂载于 {@value #BASE_PATH}
      */
     @RouterOperations({

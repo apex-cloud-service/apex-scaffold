@@ -180,8 +180,9 @@ public class AuthOpenAppRegistryService {
     /**
      * 删除开放应用。
      *
+     * <p>删除完成信号（空完成）。
+     *
      * @param clientId 应用标识
-     * @return 删除完成信号（空完成）
      * @throws BusinessException 应用不存在时抛出
      */
     public Mono<Void> delete(String clientId) {

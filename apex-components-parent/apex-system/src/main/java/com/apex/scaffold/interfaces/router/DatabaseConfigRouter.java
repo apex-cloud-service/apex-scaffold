@@ -205,6 +205,14 @@ public class DatabaseConfigRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    /**
+     * 注册数据库配置管理路由。
+     *
+     * <p>覆盖连接测试、配置生成、当前数据源信息以及多数据源增删改查；写操作要求 JSON 请求体。
+     *
+     * @param handler 数据库配置处理器
+     * @return 数据库配置管理路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> adminDatabaseConfigRoutes(DatabaseConfigHandler handler) {
         return RouterFunctions.route()

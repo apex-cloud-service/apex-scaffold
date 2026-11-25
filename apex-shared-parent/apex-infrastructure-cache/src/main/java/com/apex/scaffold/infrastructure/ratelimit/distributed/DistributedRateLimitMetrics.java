@@ -83,7 +83,14 @@ public class DistributedRateLimitMetrics {
     }
 
     /**
-     * 拦截 tryAcquire 方法，采集监控指标
+     * 拦截 {@code tryAcquire} 方法，采集限流执行指标。
+     *
+     * <p>同步与响应式两种返回值都会记录耗时；成功路径额外累计允许/拒绝计数，
+     * 异常路径原样抛出并计入失败计数。
+     *
+     * @param joinPoint 切点上下文，承载目标方法与实参
+     * @return 目标方法返回值（含被包装的响应式结果）
+     * @throws Throwable 目标方法抛出的任意异常原样透传
      */
     @Around(
             "execution(* com.apex.scaffold.infrastructure.ratelimit.distributed.DistributedTokenBucketRateLimiter.tryAcquire(..))")

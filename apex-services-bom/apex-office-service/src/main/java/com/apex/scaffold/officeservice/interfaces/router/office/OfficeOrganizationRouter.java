@@ -36,6 +36,8 @@ public class OfficeOrganizationRouter {
      *
      * <p>同步写接口限定为 JSON 请求，查询接口直接交由处理器完成参数解析和响应映射。
      *
+     * <p>处理器通过构造器注入而非 Bean 方法参数获取；租户取自请求头，路由层不做过滤。
+     *
      * @return 组织同步路由，挂载于 {@code /api/v1/office/organization}
      */
     @RouterOperations({

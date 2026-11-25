@@ -44,7 +44,10 @@ public class TenantPackageHandler {
     private final TenantPackageService tenantPackageService;
 
     /**
-     * 查询套餐列表。
+     * 查询套餐列表
+     *
+     * <p>调用 {@code tenantPackageService.listPackages()} 并收集为列表，以 {@code Result.success} 直接返回；
+     * 异常经 {@code asError} 统一转换为错误响应。
      *
      * @param request 当前请求
      * @return {@link Result} 封装的全部套餐（含菜单/权限/能力裁剪集合）
@@ -105,7 +108,10 @@ public class TenantPackageHandler {
     }
 
     /**
-     * 创建套餐。
+     * 创建套餐
+     *
+     * <p>反序列化 {@link TenantPackageRequest} 并映射为实体后调用 {@code createPackage}，
+     * 以 {@code Result.success} 返回；编码冲突或参数非法经 {@code asError} 映射为 400。
      *
      * @param request 当前请求，请求体为 {@link TenantPackageRequest}
      * @return {@link Result} 封装的已创建套餐；编码冲突或参数非法返回 400
@@ -142,7 +148,10 @@ public class TenantPackageHandler {
     }
 
     /**
-     * 更新套餐。
+     * 更新套餐
+     *
+     * <p>反序列化 {@link TenantPackageRequest} 映射为实体后按编码调用 {@code updatePackage}，
+     * 菜单/权限/能力裁剪集合变更即时生效；编码不存在或参数非法经 {@code asError} 返回 400。
      *
      * @param request 当前请求，请求体为 {@link TenantPackageRequest}
      * @return {@link Result} 封装的已更新套餐；编码不存在或参数非法返回 400

@@ -64,7 +64,10 @@ public class GenDatasourceHandler extends BaseHandler {
     }
 
     /**
-     * 查询数据源列表（分页）。
+     * 查询数据源列表（分页）
+     *
+     * <p>读取可选查询参数 page/size（缺省 1/20）与名称模糊条件，委托数据源服务分页查询，
+     * 结果统一由 {@code buildSuccess} 包装为带 traceId 的响应。
      *
      * @param request HTTP 请求，支持分页参数 page、size 和查询条件
      * @return 带 traceId 的统一成功响应，data 为数据源分页列表
@@ -110,7 +113,10 @@ public class GenDatasourceHandler extends BaseHandler {
     }
 
     /**
-     * 新增数据源。
+     * 新增数据源
+     *
+     * <p>解析并校验 {@link GenDatasourceRequest} 后委托数据源服务创建，支持 MySQL、PostgreSQL、
+     * Oracle、SQL Server 等数据库类型，成功结果由 {@code buildSuccess} 包装。
      *
      * @param request HTTP 请求，请求体包含数据源配置信息
      * @return 带 traceId 的统一成功响应，data 为已创建的数据源实体
@@ -151,7 +157,10 @@ public class GenDatasourceHandler extends BaseHandler {
     }
 
     /**
-     * 更新数据源。
+     * 更新数据源
+     *
+     * <p>解析路径正整数 {@code id} 与 {@link GenDatasourceRequest}，委托数据源服务更新连接参数、
+     * 用户名与密码等；数据源不存在或参数非法时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数，请求体包含更新信息
      * @return 带 traceId 的统一成功响应，data 为已更新的数据源实体
@@ -200,7 +209,10 @@ public class GenDatasourceHandler extends BaseHandler {
     }
 
     /**
-     * 删除数据源。
+     * 删除数据源
+     *
+     * <p>解析路径正整数 {@code id}，委托数据源服务删除并返回 {@code {"deleted": 是否删除成功}}；
+     * 数据源被生成配置引用时以冲突错误失败，数据源不存在时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为 {@code {"deleted": 是否删除成功}}
@@ -245,7 +257,10 @@ public class GenDatasourceHandler extends BaseHandler {
     }
 
     /**
-     * 测试数据源连接。
+     * 测试数据源连接
+     *
+     * <p>解析路径正整数 {@code id}，委托数据源服务建立一次性连接做连通性测试；连接失败以布尔结果返回，
+     * 不向调用方抛出底层连接异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为连接测试结果（成功/失败及错误信息）

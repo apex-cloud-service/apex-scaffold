@@ -167,8 +167,9 @@ public class SessionService {
     /**
      * 更新会话活跃时间
      *
+     * <p>更新完成信号（空完成）。
+     *
      * @param sessionId 会话唯一标识
-     * @return 更新完成信号（空完成）
      */
     public Mono<Void> updateSessionActivity(String sessionId) {
         return sessionRepository
@@ -187,8 +188,9 @@ public class SessionService {
      *
      * <p>终止前联动撤销会话关联的访问令牌，旧令牌不再有效至自然过期。
      *
+     * <p>终止完成信号（空完成）。
+     *
      * @param sessionId 会话唯一标识
-     * @return 终止完成信号（空完成）
      */
     public Mono<Void> terminateSession(String sessionId) {
         return sessionRepository
@@ -211,9 +213,10 @@ public class SessionService {
      *
      * <p>终止前联动撤销该用户在租户下的全部令牌（幂等，重复调用安全）。
      *
+     * <p>终止完成信号（空完成）。
+     *
      * @param userId 用户ID
      * @param tenantId 租户ID
-     * @return 终止完成信号（空完成）
      */
     public Mono<Void> terminateUserSessions(Long userId, String tenantId) {
         return tokenRepository
@@ -233,8 +236,9 @@ public class SessionService {
      *
      * <p>踢出前联动撤销会话关联的访问令牌，被踢端的既有令牌立即失效。
      *
+     * <p>踢出完成信号（空完成）。
+     *
      * @param sessionId 会话唯一标识
-     * @return 踢出完成信号（空完成）
      */
     public Mono<Void> kickOutSession(String sessionId) {
         return sessionRepository

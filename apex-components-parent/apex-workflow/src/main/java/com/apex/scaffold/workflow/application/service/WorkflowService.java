@@ -743,7 +743,15 @@ public class WorkflowService {
         });
     }
 
-    /** 后台扫描按持久租户和原快照条件办理；失效快照与CAS落败正常跳过，数据库异常仍传播。 */
+    /**
+     * 处理后台扫描到的超时任务。
+     *
+     * <p>按持久租户和原快照条件办理；失效快照与 CAS 落败正常跳过，数据库异常仍然传播。
+     *
+     * <p>以空完成信号结束；任务已失效时同样为空完成，异常经响应式链路原样传播。
+     *
+     * @param expected 扫描时读取到的任务快照，用于校验状态、版本、处理人与超时配置未被并发修改
+     */
     public Mono<Void> handleTimeoutTask(Task expected) {
         return inTaskTransaction(operations -> {
             Task current = operations.findTask(expected.getId());

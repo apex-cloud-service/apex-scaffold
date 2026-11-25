@@ -79,8 +79,12 @@ public class OfficeOrganizationHandler {
      * <p>根据请求参数从外部办公平台同步部门或成员信息到 Apex 系统。
      * 支持全量同步和增量同步。
      *
-     * @param request HTTP 请求
-     * @return 同步结果，包含任务ID、同步数量和状态消息
+     * <p>租户取自请求头 {@code X-Tenant-Id}，平台按枚举名解析；同步类型为部门或成员时分别触发
+     * 对应同步，全量/增量由 {@code fullSync} 控制，其他同步类型直接返回 400 错误响应。
+     *
+     * @param request HTTP 请求，请求体为组织同步参数
+     * @return 200 响应，{@code data} 为任务 ID、同步数量与状态消息；不支持的同步类型或失败时返回 400
+     * @throws IllegalArgumentException 平台名称不是合法 {@code OfficePlatform} 时抛出
      */
     @RequirePermission("office:organization:sync")
     @Operation(
@@ -268,8 +272,12 @@ public class OfficeOrganizationHandler {
      *
      * <p>查询指定平台的所有组织映射关系，可用于核对和调试。
      *
-     * @param request HTTP 请求
-     * @return 组织映射列表
+     * <p>租户取自请求头 {@code X-Tenant-Id}；平台查询参数可省略，省略时返回全部平台的映射关系，
+     * 逐条转换为视图后以列表返回，不分页。
+     *
+     * @param request HTTP 请求，查询参数可选 {@code platform}
+     * @return 200 响应，{@code data} 为组织映射列表；无映射时为空列表
+     * @throws IllegalArgumentException 平台参数不是合法 {@code OfficePlatform} 时抛出
      */
     @RequirePermission("office:organization:list")
     @Operation(
@@ -319,8 +327,13 @@ public class OfficeOrganizationHandler {
      * <p>查询历史同步任务记录，包含任务状态、同步时间、游标等信息。
      * 支持分页查询。
      *
-     * @param request HTTP 请求
-     * @return 同步任务列表
+     * <p>租户取自请求头 {@code X-Tenant-Id}；平台可省略，页码缺省 1、每页缺省 20，
+     * 分页参数按原始字符串解析，返回记录列表但不携带总数。
+     *
+     * @param request HTTP 请求，查询参数含可选 {@code platform}、{@code page}（缺省 1）、{@code size}（缺省 20）
+     * @return 200 响应，{@code data} 为同步任务记录列表；无记录时为空列表
+     * @throws NumberFormatException 页码或每页数量不是合法整数时抛出
+     * @throws IllegalArgumentException 平台参数不是合法 {@code OfficePlatform} 时抛出
      */
     @RequirePermission("office:sync:read")
     @Operation(

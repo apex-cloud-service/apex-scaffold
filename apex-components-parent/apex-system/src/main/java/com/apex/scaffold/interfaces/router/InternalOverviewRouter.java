@@ -30,7 +30,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class InternalOverviewRouter {
 
     /**
-     * 注册聚合门面路由.
+     * 注册聚合门面路由
+     *
+     * <p>注册 {@code GET /internal/v1/overview}，委托 {@code InternalOverviewHandler#getOverview}
+     * 返回指定租户的跨域聚合概览。
      *
      * @param handler 聚合门面 Handler
      * @return 路由函数

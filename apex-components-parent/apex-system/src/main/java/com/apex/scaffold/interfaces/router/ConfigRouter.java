@@ -298,6 +298,15 @@ public class ConfigRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    /**
+     * 注册字典类型与字典数据管理路由。
+     *
+     * <p>覆盖 {@code /admin-api/v1/dict/types} 与 {@code /admin-api/v1/dict/data} 两组
+     * 增删改查及状态切换；写操作要求 JSON 请求体。
+     *
+     * @param handler 字典管理处理器
+     * @return 字典管理路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> adminDictRoutes(DictHandler handler) {
         return RouterFunctions.route()
@@ -455,6 +464,15 @@ public class ConfigRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    /**
+     * 注册系统配置管理路由。
+     *
+     * <p>覆盖 {@code /admin-api/v1/configs} 的列表、详情、创建、更新、删除与状态切换；
+     * 写操作要求 JSON 请求体。
+     *
+     * @param handler 系统配置处理器
+     * @return 系统配置管理路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> adminConfigRoutes(ConfigHandler handler) {
         return RouterFunctions.route()

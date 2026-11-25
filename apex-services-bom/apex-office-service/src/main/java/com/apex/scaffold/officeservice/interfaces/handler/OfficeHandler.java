@@ -58,10 +58,11 @@ public class OfficeHandler {
     /**
      * 查询已注册办公平台状态
      *
-     * <p>返回当前服务已注册的办公平台列表，用于前端判断可用的登录方式。
+     * <p>直接从已装配的 {@code OfficeOAuthClient} 列表取平台编码，不访问数据库或外部平台；
+     * 用于前端判断当前实例可用的登录方式。
      *
-     * @param request HTTP 请求
-     * @return 平台列表响应
+     * @param request HTTP 请求，无业务参数（仅承载审计上下文）
+     * @return 200 响应，{@code data} 为已注册平台编码列表
      */
     @Operation(
             operationId = "listOfficePlatformStatus",
@@ -92,10 +93,12 @@ public class OfficeHandler {
     /**
      * 生成办公平台授权地址
      *
-     * <p>生成绑定租户的 state 并返回平台授权地址，用户点击后跳转到平台授权页。
+     * <p>生成绑定租户的 state 并返回平台授权地址，用户点击后跳转到平台授权页；
+     * 平台类型缺失或非法返回参数错误，登录租户未配置或办公平台功能未启用时返回登录失败。
      *
-     * @param request HTTP 请求，查询参数包含 platform
-     * @return 授权 URL 响应
+     * @param request HTTP 请求，查询参数 {@code platform} 指定平台类型
+     * @return 200 响应，{@code data} 为平台授权地址
+     * @throws com.apex.scaffold.common.exception.BusinessException 平台参数非法或未配置登录租户时抛出
      */
     @Operation(
             operationId = "startOfficeLogin",
@@ -154,8 +157,8 @@ public class OfficeHandler {
      *   <li>任一环节失败均返回登录失败，不泄露具体原因</li>
      * </ul>
      *
-     * @param request HTTP 请求，查询参数包含 platform、code、state
-     * @return 登录响应，包含 Apex JWT
+     * @param request HTTP 请求，查询参数含 {@code platform}、{@code code}、{@code state}
+     * @return 200 响应，{@code data} 为 Apex 登录响应（access/refresh token 等）；参数为空时返回 400
      */
     @Operation(
             operationId = "officeLoginCallback",

@@ -138,6 +138,9 @@ public class SpringDocConfig {
     /**
      * API 分组 - 默认分组
      *
+     * <p>匹配 <code>/api/**</code> 全部对外接口并挂载统一的 OpenAPI 定制器；Actuator 端点由
+     * {@code springdoc.show-actuator=false} 全局禁用，不会出现在文档中。
+     *
      * @param openApiCustomizer OpenAPI 文档增强定制器，补齐函数式端点的入参和响应结构
      * @return 默认API分组配置，匹配 /api/** 路径（Actuator 端点已由 springdoc.show-actuator=false 全局禁用）
      */
@@ -152,6 +155,8 @@ public class SpringDocConfig {
 
     /**
      * API 分组 - 认证模块
+     *
+     * <p>匹配 <code>/api/v1/auth/**</code> 路径并挂载统一的 OpenAPI 定制器。
      *
      * @param openApiCustomizer OpenAPI 文档增强定制器，补齐函数式端点的入参和响应结构
      * @return 认证模块API分组配置，匹配 /api/v1/auth/** 路径
@@ -168,6 +173,8 @@ public class SpringDocConfig {
     /**
      * API 分组 - 用户模块
      *
+     * <p>匹配 <code>/api/v1/user/**</code> 与 <code>/api/v1/profile/**</code> 路径并挂载统一的 OpenAPI 定制器。
+     *
      * @param openApiCustomizer OpenAPI 文档增强定制器，补齐函数式端点的入参和响应结构
      * @return 用户模块API分组配置，匹配 /api/v1/user/** 和 /api/v1/profile/** 路径
      */
@@ -180,7 +187,15 @@ public class SpringDocConfig {
                 .build();
     }
 
-    /** API 分组 - 系统管理（菜单/字典/参数/定时任务/日志/部门/导出/在线用户/监控大盘）。 */
+    /**
+     * API 分组 - 系统管理（菜单/字典/参数/定时任务/日志/部门/导出/在线用户/监控大盘）
+     *
+     * <p>将菜单、字典、参数、定时任务、登录/审计/调用日志、部门、导出、在线用户、监控大盘
+     * 及验证码等管理端点聚入 {@code admin-system} 分组，并挂载统一的 OpenAPI 定制器。
+     *
+     * @param openApiCustomizer OpenAPI 文档增强定制器，补齐函数式端点的入参和响应结构
+     * @return 系统管理模块 API 分组配置
+     */
     @Bean
     public GroupedOpenApi adminSystemApi(OpenApiCustomizer openApiCustomizer) {
         return GroupedOpenApi.builder()
@@ -202,7 +217,15 @@ public class SpringDocConfig {
                 .build();
     }
 
-    /** API 分组 - 后台用户管理。 */
+    /**
+     * API 分组 - 后台用户管理
+     *
+     * <p>将后台用户与员工角色端点（{@code /admin-api/v1/users/**}、{@code /admin-api/v1/staff-roles/**}）
+     * 聚入 {@code admin-user} 分组，并挂载统一的 OpenAPI 定制器。
+     *
+     * @param openApiCustomizer OpenAPI 文档增强定制器，补齐函数式端点的入参和响应结构
+     * @return 后台用户管理模块 API 分组配置
+     */
     @Bean
     public GroupedOpenApi adminUserApi(OpenApiCustomizer openApiCustomizer) {
         return GroupedOpenApi.builder()

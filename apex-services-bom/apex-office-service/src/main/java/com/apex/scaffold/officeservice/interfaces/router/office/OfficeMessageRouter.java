@@ -36,6 +36,9 @@ public class OfficeMessageRouter {
      * <p>发送路由限定 JSON 请求体；消息状态查询、重发和撤回均通过消息标识定位目标消息，
      * 具体的权限和状态校验由处理器及应用服务负责。
      *
+     * <p>处理器通过构造器注入而非 Bean 方法参数获取；撤回以 {@code DELETE} 表达但语义为逻辑撤回，
+     * 路由层不做幂等控制。
+     *
      * @return 消息路由函数，挂载于 {@code /api/office/messages}
      */
     @RouterOperations({

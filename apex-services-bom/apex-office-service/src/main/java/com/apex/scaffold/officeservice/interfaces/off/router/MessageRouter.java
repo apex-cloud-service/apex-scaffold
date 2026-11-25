@@ -45,10 +45,11 @@ public class MessageRouter {
      * 游标版本供前端增量拉取以避免深翻页。
      *
      * <p>Bean 名显式指定为 {@code internalMessageRoutes}，用于和同模块其它消息相关路由
-     * 以及模板路由 Bean 区分，避免按类型注入时产生歧义。
+     * 以及模板路由 Bean 区分，避免按类型注入时产生歧义。POST 仅接受 {@code application/json}，
+     * 管理端模板维护接口由 {@link #messageTemplateRoutes} 单独注册。
      *
      * @param handler 消息处理器，负责协议解析、校验与调用应用服务
-     * @return 站内消息路由函数，挂载于 {@code /api/v1/messages}
+     * @return 站内消息路由函数，挂载于 {@code /api/v1/messages}，含发送、收件箱、发件箱、详情与已读标记
      */
     @RouterOperations({
         @RouterOperation(
@@ -120,8 +121,11 @@ public class MessageRouter {
      * 同一路径段在读取与写入时承载不同标识：{@code GET /{templateCode}} 按业务模板编码查询，
      * {@code PUT}、{@code DELETE /{templateId}} 按主键变更，调用方不可混用两种标识。
      *
-     * @param handler 消息模板处理器
-     * @return 消息模板路由函数，挂载于 {@code /admin-api/v1/message-templates}
+     * <p>全部端点位于管理端前缀 {@code /admin-api}，与站内信业务接口 {@link #messageRoutes} 分离；
+     * 路径为精确匹配，新增子路径需同步网关配置。
+     *
+     * @param handler 消息模板处理器，负责协议解析、校验与调用模板服务
+     * @return 消息模板路由函数，挂载于 {@code /admin-api/v1/message-templates}，含查询、创建、更新与删除
      */
     @RouterOperations({
         @RouterOperation(

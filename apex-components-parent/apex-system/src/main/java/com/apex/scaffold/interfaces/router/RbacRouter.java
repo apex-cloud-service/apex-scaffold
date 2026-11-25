@@ -170,6 +170,14 @@ public class RbacRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    /**
+     * 注册菜单管理路由。
+     *
+     * <p>覆盖 {@code /admin-api/v1/menus} 的树查询、详情、创建、更新与删除；写操作要求 JSON 请求体。
+     *
+     * @param handler 菜单管理处理器
+     * @return 菜单管理路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> adminMenuRoutes(MenuHandler handler) {
         return RouterFunctions.route()

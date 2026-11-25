@@ -33,14 +33,30 @@ public class JobExecutorAutoConfiguration {
         return new SystemJobBridge(port, tenant, jobId);
     }
 
-    /** 工作流仅在显式选择 XXL 调度时注册固定超时入口。 */
+    /**
+     * 注册工作流固定超时任务桥接器。
+     *
+     * <p>工作流仅在显式选择 XXL 调度（{@code apex.job.workflow.enabled=true}）时注册固定超时入口。
+     *
+     * @param port 工作流超时任务端口
+     * @return 工作流任务桥接器
+     */
     @Bean
     @ConditionalOnProperty(prefix = "apex.job.workflow", name = "enabled", havingValue = "true")
     public WorkflowJobBridge workflowJobBridge(WorkflowJobPort port) {
         return new WorkflowJobBridge(port);
     }
 
-    /** 仅显式启用后启动通信端口；拒绝缺失令牌及非法中心地址。 */
+    /**
+     * 创建 XXL 执行器并校验启动配置。
+     *
+     * <p>仅显式启用后启动通信端口；缺失应用名、中心地址或至少 32 字符通信令牌时拒绝启动，
+     * 中心地址必须为不含凭据的 HTTPS 地址，端口需在合法范围内。
+     *
+     * @param properties XXL 执行器配置
+     * @return 完成配置的 XXL 执行器
+     * @throws IllegalArgumentException 配置缺失或非法时抛出
+     */
     @Bean
     @ConditionalOnMissingBean
     public XxlJobSpringExecutor xxlJobExecutor(JobExecutorProperties properties) {

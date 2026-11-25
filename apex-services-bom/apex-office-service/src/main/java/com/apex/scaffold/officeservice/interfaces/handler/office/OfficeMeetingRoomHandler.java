@@ -81,8 +81,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 创建会议室
      *
+     * <p>租户取自认证上下文后校验并映射 {@link CreateMeetingRoomRequest}，经装配器转换为实体
+     * 交应用服务创建；编码与名称在租户内唯一，重复或容纳人数非正数均返回参数/业务错误。
+     *
      * @param request HTTP 请求，请求体为会议室创建参数
-     * @return 创建成功的会议室
+     * @return 200 响应，{@code data} 为创建成功的会议室；未认证、参数错误或编码/名称重复时返回对应错误
      */
     @Operation(operationId = "createMeetingRoom", summary = "创建会议室", description = "创建会议室资源，编码与名称在租户内唯一")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -125,8 +128,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 更新会议室
      *
+     * <p>租户取自认证上下文，会议室主键取自路径参数（安全解析，非数字按 {@code null} 交应用服务拒绝），
+     * 请求体中的非空字段作为局部变更提交，编码或名称与其他会议室冲突时拒绝。
+     *
      * @param request HTTP 请求，路径参数 roomId，请求体为变更项
-     * @return 更新后的会议室
+     * @return 200 响应，{@code data} 为更新后的会议室；未认证、参数错误或会议室不存在时返回对应错误
      */
     @Operation(operationId = "updateMeetingRoom", summary = "更新会议室", description = "局部更新会议室资源，仅提交的字段生效")
     @Parameters({
@@ -183,8 +189,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 删除会议室
      *
+     * <p>租户取自认证上下文，会议室主键取自路径参数并做安全解析；执行逻辑删除，
+     * 成功返回布尔结果，会议室不存在时经错误映射以 400 携带业务错误码返回。
+     *
      * @param request HTTP 请求，路径参数 roomId
-     * @return 删除结果
+     * @return 200 响应，{@code data} 为是否删除成功；未认证或会议室不存在时返回对应错误
      */
     @Operation(operationId = "deleteMeetingRoom", summary = "删除会议室", description = "逻辑删除会议室资源，data 为布尔结果")
     @Parameters({
@@ -270,8 +279,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 分页查询会议室
      *
+     * <p>租户取自认证上下文；页码缺省 1、每页缺省 20（非数字或负数回落到默认值），
+     * 状态与关键字为空时不参与过滤，直接返回应用层分页结果。
+     *
      * @param request HTTP 请求，查询参数 pageNum、pageSize、status、keyword
-     * @return 会议室分页结果
+     * @return 200 响应，{@code data} 为会议室分页结果；未认证时返回对应错误
      */
     @Operation(operationId = "listMeetingRooms", summary = "分页查询会议室", description = "按状态与关键字分页查询会议室")
     @Parameters({
@@ -328,8 +340,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 查询启用会议室
      *
-     * @param request HTTP 请求
-     * @return 启用状态的会议室列表
+     * <p>租户取自认证上下文，返回该租户内全部状态为启用（{@code ENABLED}）的会议室，
+     * 不分页；无可用会议室时返回空列表而非错误。
+     *
+     * @param request HTTP 请求，无业务参数（仅承载认证与租户上下文）
+     * @return 200 响应，{@code data} 为启用状态的会议室列表；无数据时为空列表
      */
     @Operation(operationId = "listEnabledMeetingRooms", summary = "查询启用会议室", description = "返回租户内全部启用状态的会议室")
     @ApiResponses({
@@ -359,8 +374,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 查询时间区间内可用会议室
      *
+     * <p>时间参数在订阅时解析，缺失或非 ISO 本地时间格式统一收敛为参数错误（400）；
+     * 仅返回启用且在该区间内无未取消预订的会议室，租户取自认证上下文。
+     *
      * @param request HTTP 请求，查询参数 startTime、endTime（ISO 本地时间）
-     * @return 可用会议室列表
+     * @return 200 响应，{@code data} 为可用会议室列表；无可用会议室时为空列表
      */
     @Operation(operationId = "findAvailableMeetingRooms", summary = "查询可用会议室", description = "按时间区间返回未被占用的启用会议室")
     @Parameters({
@@ -416,8 +434,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 预订会议室
      *
+     * <p>租户与操作人均取自认证上下文，会议室主键取自路径参数；预订成功后创建对应日历事件
+     * 并回查会议室组装预订视图，会议室停用或时段冲突时拒绝。
+     *
      * @param request HTTP 请求，路径参数 roomId，请求体为预订参数
-     * @return 预订生成的日历事件视图
+     * @return 200 响应，{@code data} 为预订对应的日历事件与会议室视图；时段冲突、会议室不存在或已停用均返回 400
      */
     @Operation(operationId = "bookMeetingRoom", summary = "预订会议室", description = "为当前用户预订指定会议室，冲突时拒绝")
     @Parameters({
@@ -483,8 +504,11 @@ public class OfficeMeetingRoomHandler {
     /**
      * 取消会议室预订
      *
+     * <p>租户与操作人均取自认证上下文，会议室与日历事件主键取自路径参数；仅预订人本人可取消，
+     * 重复取消保持幂等，取消后回查会议室组装最新预订视图。
+     *
      * @param request HTTP 请求，路径参数 roomId、eventId
-     * @return 取消后的预订视图
+     * @return 200 响应，{@code data} 为取消后的预订视图；非预订人或记录不存在均返回 400
      */
     @Operation(operationId = "cancelMeetingRoomBooking", summary = "取消会议室预订", description = "仅预订人本人可取消，重复取消幂等")
     @Parameters({

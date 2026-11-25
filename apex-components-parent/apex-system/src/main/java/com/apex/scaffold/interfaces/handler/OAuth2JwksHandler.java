@@ -90,6 +90,16 @@ public class OAuth2JwksHandler {
             description = "jwks",
             saveRequest = false,
             saveResponse = false)
+    /**
+     * JWKS 密钥集端点（HS256 占位实现）
+     *
+     * <p>返回仅含单个对称密钥描述的 {@code keys} 数组（{@code kty=oct}、{@code alg=HS256}、
+     * {@code use=sig}），该结构仅为兼容旧客户端而保留，不包含可供验签的公钥材料；
+     * 生产环境的签名密钥由认证中心统一发布。
+     *
+     * @param request HTTP 请求（内容未被使用，仅保持端点签名一致）
+     * @return 以 JSON 返回的 JWKS 密钥集
+     */
     public Mono<ServerResponse> jwks(ServerRequest request) {
         Map<String, Object> jwksResponse = new HashMap<>(2);
 

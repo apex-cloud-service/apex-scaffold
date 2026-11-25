@@ -32,7 +32,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class InternalOrganizationRouter {
 
     /**
-     * 组织目录内部接口路由。
+     * 组织目录内部接口路由
+     *
+     * <p>注册 {@code POST /internal/v1/org/users/resolve}，通过请求头 {@code X-Tenant-Id} 指定目标租户，
+     * 委托 {@code InternalOrganizationHandler#resolveUsers} 批量解析真实系统用户。
      *
      * @param handler 组织目录内部接口处理器
      * @return 组织目录内部接口路由函数

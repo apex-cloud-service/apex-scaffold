@@ -36,6 +36,9 @@ public class OfficeCalendarRouter {
      * <p>{@code /range}、{@code /my} 和 {@code /upcoming} 等静态查询路径在事件 ID 路径之前
      * 注册，避免被 {@code /{eventId}} 错误匹配。
      *
+     * <p>处理器通过构造器注入而非 Bean 方法参数获取，故无 {@code handler} 参数；创建与更新使用
+     * JSON 请求体，查询条件由查询参数或路径参数提供，权限与租户隔离在处理器内完成。
+     *
      * @return 日历事件路由，挂载于 {@code /api/office/calendar/events}
      */
     @RouterOperations({

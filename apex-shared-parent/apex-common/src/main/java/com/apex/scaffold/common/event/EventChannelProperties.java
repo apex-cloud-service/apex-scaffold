@@ -22,7 +22,14 @@ public class EventChannelProperties {
     /** 通道模式：auto（默认）/ local / remote */
     private String channel = "auto";
 
-    /** 解析通道模式。 */
+    /**
+     * 解析通道模式。
+     *
+     * <p>将配置值按 {@link EventChannelMode} 的取值规则解析；{@code auto} 表示依据
+     * 运行环境自动选择本地或远程通道。
+     *
+     * @return 解析后的通道模式
+     */
     public EventChannelMode channelMode() {
         return EventChannelMode.parse(channel);
     }

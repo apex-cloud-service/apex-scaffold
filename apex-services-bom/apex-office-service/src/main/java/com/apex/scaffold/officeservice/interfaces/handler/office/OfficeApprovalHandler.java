@@ -42,6 +42,11 @@ public class OfficeApprovalHandler {
 
     /**
      * 校验请求并发起审批流程。
+     *
+     * <p>先按 {@link InitiateApprovalRequest} 校验并映射请求体，再以平台、应用、流程定义、
+     * 发起人与表单数据调用审批应用服务；成功结果经组装器转为响应，校验或业务失败统一经
+     * {@code RequestHandlerUtil#handleError} 收敛为 HTTP 400。
+     *
      * @param request 包含审批平台、流程定义、发起人与表单数据的请求
      * @return Result 包装的审批详情，失败时 HTTP 400
      */
@@ -147,6 +152,10 @@ public class OfficeApprovalHandler {
 
     /**
      * 使用请求体中的审批人与操作类型执行审批。
+     *
+     * <p>流程实例 ID 取自路径参数，审批人、操作类型与意见取自 {@link ApproveRequest}；
+     * 校验通过后调用审批应用服务推进流程，成功返回更新后的审批详情，失败统一映射为 HTTP 400。
+     *
      * @param request 包含流程实例 ID 和审批操作请求体的请求
      * @return Result 包装的更新后审批详情，失败时 HTTP 400
      */
@@ -203,6 +212,10 @@ public class OfficeApprovalHandler {
 
     /**
      * 按流程实例 ID 请求撤销审批。
+     *
+     * <p>流程实例 ID 取自路径参数，可选 {@code Idempotency-Key} 请求头用于重放控制：
+     * 同一流程的重复撤销请求会重放首次结果，避免重复撤销；业务失败统一映射为 HTTP 400。
+     *
      * @param request 包含 processInstanceId 路径参数与可选 Idempotency-Key 请求头的请求
      * @return Result 包装的布尔操作结果，业务失败时 HTTP 400
      */

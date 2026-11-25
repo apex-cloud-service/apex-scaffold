@@ -36,8 +36,12 @@ public class OfficeInternalRouter {
     /**
      * 注册 office 内部统计与待办路由。
      *
-     * @param handler office 内部 Handler
-     * @return 路由函数
+     * <p>注册 {@code /internal/v1/office/messages/stats} 与 {@code /internal/v1/office/todo} 两个
+     * 只读端点，路径取自 {@link #MESSAGE_STATS_PATH} 与 {@link #TODO_PATH} 常量（契约固定勿改）；
+     * 集群内直连、不经网关，待办端点的身份校验在处理器内完成。
+     *
+     * @param handler office 内部 Handler，负责统计查询与待办聚合
+     * @return 内部统计与待办路由函数，挂载于 {@code /internal/v1/office}
      */
     @Bean
     @RouterOperations({

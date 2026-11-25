@@ -79,9 +79,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 后台创建用户。
+     * 后台创建用户
      *
-     * <p>请求体必填并经 Jakarta Bean Validation 校验；创建操作人身份取自当前登录上下文。</p>
+     * <p>解析并校验请求体后，从当前登录上下文取操作人 openId，委托应用服务完成创建；
+     * 请求体为空或校验失败时抛出参数错误，成功结果由 {@code buildSuccess} 统一包装为带 traceId 的响应。
      *
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为创建结果
@@ -117,7 +118,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 分页检索用户。
+     * 分页检索用户
+     *
+     * <p>从查询参数解析页码与每页大小（缺省 1 / 30），{@code status} 为空时不做状态过滤；
+     * 取当前操作人 openId 后委托应用服务按关键词与状态检索，结果统一包装为带 traceId 的响应。
      *
      * @param request HTTP 请求；{@code page} 缺省 1，{@code size} 缺省 30，
      *                {@code keyword} 与 {@code status} 可缺省
@@ -179,7 +183,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 查看用户资料。
+     * 查看用户资料
+     *
+     * <p>校验路径参数 {@code userId} 为正整数后，结合当前操作人 openId 委托应用服务查询详情，
+     * 成功结果统一包装为带 traceId 的响应。
      *
      * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为用户资料详情
@@ -212,9 +219,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 编辑用户资料。
+     * 编辑用户资料
      *
-     * <p>请求体必填并经 Jakarta Bean Validation 校验后透传给应用服务。</p>
+     * <p>先解析路径参数 {@code userId}，再校验请求体并透传给应用服务；操作人 openId 取自当前登录上下文，
+     * 成功结果统一包装为带 traceId 的响应。
      *
      * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为更新结果
@@ -258,7 +266,9 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 查询当前操作人可配置的后台角色。
+     * 查询当前操作人可配置的后台角色
+     *
+     * <p>从当前登录上下文取操作人 openId，委托应用服务返回其可配置的角色列表并统一包装为响应。
      *
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为可配置角色列表
@@ -280,10 +290,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 替换用户的全部后台角色。
+     * 替换用户的全部后台角色
      *
-     * <p>请求体必填并携带角色 ID 列表，经校验后整体替换（而非增量追加），
-     * 目标用户 ID 取自路径参数。</p>
+     * <p>路径参数 {@code userId} 定位目标用户，请求体携带角色 ID 列表，经校验后整体替换（而非增量追加）；
+     * 操作人 openId 取自当前登录上下文，成功结果统一包装为响应。
      *
      * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为替换结果
@@ -328,7 +338,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 强制撤销目标用户的全部会话。
+     * 强制撤销目标用户的全部会话
+     *
+     * <p>校验路径参数 {@code userId} 后，结合当前操作人 openId 委托应用服务撤销该用户全部令牌，
+     * 返回包装为 {@code {"revokedTokens": 撤销数}} 的统一响应。
      *
      * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为 {@code {"revokedTokens": 撤销数}}
@@ -361,9 +374,10 @@ public class AdminUserManagementHandler extends BaseHandler {
     }
 
     /**
-     * 启用或停用目标用户。
+     * 启用或停用目标用户
      *
-     * <p>请求体必填并经校验；目标用户 ID 取自路径参数。</p>
+     * <p>先解析路径参数 {@code userId}，再校验请求体中的 {@code enabled} 标志并透传给应用服务；
+     * 操作人 openId 取自当前登录上下文，成功结果统一包装为响应。
      *
      * @param request HTTP 请求，路径参数 {@code userId} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为状态更新结果

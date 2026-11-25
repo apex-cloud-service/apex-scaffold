@@ -78,7 +78,9 @@ public class DictHandler extends BaseHandler {
     // ==================== 字典类型 ====================
 
     /**
-     * 查询字典类型列表。
+     * 查询字典类型列表
+     *
+     * <p>返回全部字典类型（编码、名称、状态等），结果统一由 {@code buildSuccess} 包装为带 traceId 的响应。
      *
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为字典类型 DTO 列表
@@ -145,7 +147,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 创建字典类型。
+     * 创建字典类型
+     *
+     * <p>解析并校验 {@link DictTypeRequest} 后委托字典服务创建；编码重复由服务层抛出业务异常，
+     * 成功结果由 {@code buildSuccess} 包装为带 traceId 的响应。
      *
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为已创建的字典类型实体
@@ -180,7 +185,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 更新字典类型。
+     * 更新字典类型
+     *
+     * <p>解析路径正整数 {@code id} 与 {@link DictTypeRequest}，委托字典服务按 ID 更新名称、编码与备注；
+     * 编码冲突返回 400，类型不存在返回 404。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为已更新的字典类型实体
@@ -223,7 +231,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 删除字典类型。
+     * 删除字典类型
+     *
+     * <p>解析路径正整数 {@code id} 调用 {@code dictService.deleteType(id)}；该类型下仍存在字典数据时无法删除，
+     * 类型不存在时返回 404。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为 {@code {"deleted": 是否删除成功}}
@@ -257,7 +268,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 启用或停用字典类型。
+     * 启用或停用字典类型
+     *
+     * <p>解析路径正整数 {@code id} 与 {@link StatusRequest}，调用 {@code updateTypeStatus} 切换启用状态；
+     * 类型不存在或参数非法时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为更新后的字典类型实体
@@ -304,7 +318,10 @@ public class DictHandler extends BaseHandler {
     // ==================== 字典数据 ====================
 
     /**
-     * 按字典类型编码查询数据项。
+     * 按字典类型编码查询数据项
+     *
+     * <p>读取必填查询参数 {@code dictType}，缺失或空白时以 {@code PARAM_ERROR} 失败；
+     * 命中后按类型编码查询该类型下的全部数据项并包装为响应。
      *
      * @param request HTTP 请求，查询参数 {@code dictType} 必填
      * @return 带 traceId 的统一成功响应，data 为字典数据 DTO 列表
@@ -377,7 +394,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 创建字典数据。
+     * 创建字典数据
+     *
+     * <p>解析并校验 {@link DictDataRequest} 后委托字典服务创建；键值重复由服务层抛出业务异常，
+     * 成功结果由 {@code buildSuccess} 包装为带 traceId 的响应。
      *
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为已创建的字典数据实体
@@ -412,7 +432,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 更新字典数据。
+     * 更新字典数据
+     *
+     * <p>解析路径正整数 {@code id} 与 {@link DictDataRequest}，委托字典服务按 ID 更新标签、键值、排序等字段；
+     * 数据不存在或键值重复时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为已更新的字典数据实体
@@ -455,7 +478,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 删除字典数据。
+     * 删除字典数据
+     *
+     * <p>解析路径正整数 {@code id} 调用 {@code dictService.deleteData(id)} 删除单个数据项；
+     * 数据不存在时返回 404。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为 {@code {"deleted": 是否删除成功}}
@@ -488,7 +514,10 @@ public class DictHandler extends BaseHandler {
     }
 
     /**
-     * 启用或停用字典数据。
+     * 启用或停用字典数据
+     *
+     * <p>解析路径正整数 {@code id} 与 {@link StatusRequest}，调用 {@code updateDataStatus} 切换启用状态；
+     * 停用后该数据项不可用，数据不存在或参数非法时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为更新后的字典数据实体

@@ -28,7 +28,9 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class SystemMessageRouter {
 
     /**
-     * 站内信读写路由。
+     * 站内信读写路由
+     *
+     * <p>注册收件箱分页查询、未读数查询、单条已读与全部已读四个端点，委托 {@code SystemMessageHandler} 处理。
      *
      * <ul>
      *   <li>GET  /api/v1/notifications/inbox - 分页查询收件箱</li>

@@ -37,7 +37,10 @@ public class OfficeNotifyRouter {
     /**
      * 注册通知管理接口；模板集合路径先于模板 ID 路径注册，避免路径吞并。
      *
-     * @return 通知管理路由
+     * <p>处理器通过构造器注入而非 Bean 方法参数获取；模板创建与更新使用 JSON 请求体，
+     * 查询参数用于过滤，租户隔离在处理器内完成。
+     *
+     * @return 通知管理路由，挂载于 {@code /api/v2/office/notify}
      */
     @RouterOperations({
         @RouterOperation(

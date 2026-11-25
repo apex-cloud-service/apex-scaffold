@@ -65,7 +65,10 @@ public class MenuHandler extends BaseHandler {
     }
 
     /**
-     * 查询完整菜单树。
+     * 查询完整菜单树
+     *
+     * <p>调用 {@code menuService.getMenuTree()} 返回包含全部菜单与按钮权限的树形结构，
+     * 结果由 {@code buildSuccess} 包装为带 traceId 的响应。
      *
      * @param request HTTP 请求
      * @return 带 traceId 的统一成功响应，data 为菜单树根节点列表
@@ -87,7 +90,10 @@ public class MenuHandler extends BaseHandler {
     }
 
     /**
-     * 查询菜单详情。
+     * 查询菜单详情
+     *
+     * <p>从路径参数解析正整数菜单 ID，调用 {@code menuService.getMenu(id)} 返回单个菜单，
+     * 菜单不存在时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code menuId} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为菜单实体
@@ -150,7 +156,10 @@ public class MenuHandler extends BaseHandler {
     }
 
     /**
-     * 更新菜单。
+     * 更新菜单
+     *
+     * <p>先解析路径正整数菜单 ID，再校验请求体后调用 {@code menuService.updateMenu(menuId, body)}，
+     * 成功结果由 {@code buildSuccess} 包装；菜单不存在时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code menuId} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为已更新的菜单实体

@@ -108,9 +108,10 @@ public class BruteForcePrevention {
     /**
      * 记录登录成功，清除失败记录
      *
+     * <p>清除失败记录完成信号（空完成）。
+     *
      * @param username 用户名
      * @param clientIp 客户端IP
-     * @return 清除失败记录完成信号（空完成）
      */
     public Mono<Void> recordLoginSuccess(String username, String clientIp) {
         return Mono.when(clearAttempts(username, true), clearAttempts(clientIp, false))
@@ -120,8 +121,9 @@ public class BruteForcePrevention {
     /**
      * 手动解锁用户
      *
+     * <p>解锁完成信号（空完成）。
+     *
      * @param username 用户名
-     * @return 解锁完成信号（空完成）
      */
     public Mono<Void> unlockUsername(String username) {
         return Mono.when(redisTemplate.delete(LOCKOUT_BY_USERNAME_PREFIX + username), clearAttempts(username, true))
@@ -131,8 +133,9 @@ public class BruteForcePrevention {
     /**
      * 手动解锁IP
      *
+     * <p>解锁完成信号（空完成）。
+     *
      * @param clientIp 客户端IP
-     * @return 解锁完成信号（空完成）
      */
     public Mono<Void> unlockIp(String clientIp) {
         return Mono.when(redisTemplate.delete(LOCKOUT_BY_IP_PREFIX + clientIp), clearAttempts(clientIp, false))

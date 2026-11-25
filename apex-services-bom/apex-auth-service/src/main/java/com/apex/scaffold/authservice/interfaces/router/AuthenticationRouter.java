@@ -222,6 +222,14 @@ public class AuthenticationRouter {
                                     @ApiResponse(responseCode = "403", description = "账户禁用或锁定")
                                 }))
     })
+    /**
+     * 注册统一认证路由。
+     *
+     * <p>聚合 {@code /auth/v1/**} 下的登录、登出、令牌刷新、挑战凭据交换等端点；
+     * 协议响应保持 OAuth2 契约，不包装为业务 {@code Result}。
+     *
+     * @return 统一认证路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> authenticationRoutes() {
         return route().POST(

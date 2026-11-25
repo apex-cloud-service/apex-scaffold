@@ -28,7 +28,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class TenantPackageRouter {
 
     /**
-     * 注册套餐管理路由.
+     * 注册套餐管理路由
+     *
+     * <p>注册 {@code /api/v2/tenant-packages} 下的列表、创建、更新与详情端点，
+     * 委托 {@code TenantPackageHandler} 处理。
      *
      * @param handler 套餐管理 Handler
      * @return 路由函数

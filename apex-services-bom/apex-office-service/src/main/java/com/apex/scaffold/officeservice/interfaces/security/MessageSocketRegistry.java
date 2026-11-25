@@ -121,7 +121,12 @@ public class MessageSocketRegistry {
         return connections.size();
     }
 
-    /** 停机时清理所有凭据与队列。 */
+    /**
+     * 停机时清理所有凭据与队列。
+     *
+     * <p>在容器销毁前调用：清空未消费票据，将全部连接标记为缓冲溢出后移除连接与队列，
+     * 使等待中的订阅方感知关闭；方法同步执行，重复调用无副作用。
+     */
     @PreDestroy
     public synchronized void close() {
         tickets.clear();

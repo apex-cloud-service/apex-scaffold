@@ -35,8 +35,11 @@ public class InternalNotifyRouter {
     /**
      * 注册内部通知投递路由.
      *
-     * @param handler 内部通知处理器
-     * @return 路由函数
+     * <p>仅注册 {@code POST /internal/v1/notify}，请求体为模板编码与模板参数；该路径不经网关，
+     * 仅集群内服务可直连，响应统一为 {@code Result} 包装。
+     *
+     * @param handler 内部通知处理器，负责请求校验、模板解析与投递
+     * @return 内部通知路由函数，挂载于 {@code /internal/v1/notify}
      */
     @Bean
     @RouterOperation(

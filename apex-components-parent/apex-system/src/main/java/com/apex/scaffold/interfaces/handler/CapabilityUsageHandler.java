@@ -43,7 +43,11 @@ public class CapabilityUsageHandler {
     private final CapabilityUsageService capabilityUsageService;
 
     /**
-     * 分页查询能力调用用量。
+     * 分页查询能力调用用量
+     *
+     * <p>校验必填的 {@code capability}，并解析可选的 {@code tenantId}、日期区间与分页参数
+     * （区间缺省近 7 天、最大跨度 92 天）；{@code capability} 缺失或日期/数字格式非法时返回 400，
+     * 其余交由用量服务分页查询后包装为 {@code Result}。
      *
      * @param request 当前请求（查询参数：capability 必填；tenantId/from/to/pageNum/pageSize 可选）
      * @return 用量分页结果（{@code Result<PageResponse<CapabilityUsageDTO>>}）

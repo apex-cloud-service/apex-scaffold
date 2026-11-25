@@ -182,12 +182,13 @@ public class OAuth2Service {
     /**
      * 记录或撤销用户对客户端的授权同意。
      *
+     * <p>同意记录写入或撤销完成信号（空完成）。
+     *
      * @param tenant    租户
      * @param principal 已认证主体
      * @param clientId  客户端 ID
      * @param scope     授权范围
      * @param approved  true=同意入库；false=撤销既有同意
-     * @return 同意记录写入或撤销完成信号（空完成）
      */
     public Mono<Void> recordConsent(String tenant, String principal, String clientId, String scope, boolean approved) {
         return approved
@@ -223,10 +224,11 @@ public class OAuth2Service {
     /**
      * 撤销指定令牌
      *
+     * <p>撤销完成信号（空完成）。
+     *
      * @param token 待撤销的令牌
      * @param clientId 客户端ID
      * @param tenant 租户ID
-     * @return 撤销完成信号（空完成）
      */
     public Mono<Void> revoke(String token, String clientId, String tenant) {
         if (token == null || token.isBlank()) {

@@ -61,7 +61,12 @@ public class MessageWebSocketConfig {
 
     /**
      * 注册受认证保护的一次性票据签发端点。
-     * @param registry 票据与连接表
+     *
+     * <p>从安全上下文取当前 {@link AuthenticatedUser}，向其签发 30 秒有效的一次性握手票据，
+     * 响应禁止缓存（{@code Cache-Control: no-store}）并返回票据与有效期秒数；
+     * 票据与连接表为单实例内存状态，不跨实例共享。
+     *
+     * @param registry 票据与连接表，非 {@code null}
      * @return 函数式路由
      */
     @Bean

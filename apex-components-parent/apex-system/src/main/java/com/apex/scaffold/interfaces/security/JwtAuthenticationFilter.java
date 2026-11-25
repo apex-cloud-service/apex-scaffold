@@ -99,14 +99,12 @@ public class JwtAuthenticationFilter implements WebFilter {
      * <p>认证中心 {@code /auth/v1/login} 签发的令牌使用 {@code tokenType} 声明
      * （主应用令牌使用 {@code type}），并携带 {@code accountId} 统一账户声明；
      * 两者以 claims 结构天然区分，签名验证共用 {@code JWT_SECRET}。
-     */
-    private static final String ACCESS_TOKEN_TYPE_CENTER = "ACCESS";
-
-    /*
-     * 认证中心令牌为 RS256 非对称签名（header 携带轮换 kid），经 {@link TokenVerifier}
+     *
+     * <p>认证中心令牌为 RS256 非对称签名（header 携带轮换 {@code kid}），经 {@link TokenVerifier}
      * 按算法选钥验签；主应用自有令牌仍为 HS256 对称签名（{@code jwt.secret}），
      * 两者在同一验签器内双算法并存（统一认证收口 A1）。
      */
+    private static final String ACCESS_TOKEN_TYPE_CENTER = "ACCESS";
 
     /** Token 前缀标识 */
     private static final String TOKEN_PREFIX = "Bearer ";

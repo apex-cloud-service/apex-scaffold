@@ -128,7 +128,10 @@ public class SystemMessageHandler extends BaseHandler {
     }
 
     /**
-     * 查询当前登录用户的未读站内信数量。
+     * 查询当前登录用户的未读站内信数量
+     *
+     * <p>从请求认证信息解析当前用户 ID，调用仓储 {@code countUnread} 统计未读数量，
+     * 结果由 {@code buildSuccess} 包装为统一 JSON 响应。
      *
      * @param request HTTP 请求（携带认证 Principal）
      * @return 统一 JSON 响应，data 为未读消息数
@@ -192,7 +195,10 @@ public class SystemMessageHandler extends BaseHandler {
     }
 
     /**
-     * 将当前登录用户的全部未读站内信标记为已读。
+     * 将当前登录用户的全部未读站内信标记为已读
+     *
+     * <p>解析当前用户 ID 后调用仓储 {@code markAllRead} 一次性置读，返回本次实际标记的数量；
+     * 无未读消息时返回 0。
      *
      * @param request HTTP 请求（携带认证 Principal）
      * @return 统一 JSON 响应，data 为本次实际标记已读的消息数量

@@ -64,7 +64,10 @@ public class InternalOrganizationHandler extends BaseHandler {
     }
 
     /**
-     * 批量解析真实系统用户。
+     * 批量解析真实系统用户
+     *
+     * <p>先读取请求头 {@code X-Tenant-Id}，缺失或空白时抛参数错误；解析请求体后交由解析适配器按手机号、
+     * 邮箱或登录名匹配本租户真实用户，并在租户上下文中执行，最后统一包装为成功响应。
      *
      * @param request HTTP 请求，请求头必须包含 {@code X-Tenant-Id}，请求体为待解析列表
      * @return 命中用户的统一成功响应

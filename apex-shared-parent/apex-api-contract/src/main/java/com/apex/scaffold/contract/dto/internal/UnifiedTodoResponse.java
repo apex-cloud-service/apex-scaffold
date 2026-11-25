@@ -35,12 +35,23 @@ public record UnifiedTodoResponse(
      */
     public record SourceSection(String status, String error, Long total, List<TodoItem> items) {
 
-        /** 单源成功结果。 */
+        /**
+         * 构造单源成功结果。
+         *
+         * @param total 条目总数（截断前的真实数量）
+         * @param items 待办条目列表
+         * @return 状态为 {@code UP} 的来源分区
+         */
         public static SourceSection up(Long total, List<TodoItem> items) {
             return new SourceSection("UP", null, total, items);
         }
 
-        /** 单源降级结果。 */
+        /**
+         * 构造单源降级结果。
+         *
+         * @param error 降级原因摘要
+         * @return 状态为 {@code DEGRADED} 的来源分区，总数与条目为 {@code null}
+         */
         public static SourceSection degraded(String error) {
             return new SourceSection("DEGRADED", error, null, null);
         }

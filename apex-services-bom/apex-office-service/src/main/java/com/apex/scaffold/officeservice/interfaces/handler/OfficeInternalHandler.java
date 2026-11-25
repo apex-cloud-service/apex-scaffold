@@ -70,8 +70,12 @@ public class OfficeInternalHandler {
     /**
      * 租户消息量统计（D4 计量消费；契约固定勿改字段名）。
      *
-     * @param request 当前请求（可选查询参数 {@code tenantId}）
-     * @return {@code Result<{ "messageCount": N }>}
+     * <p>租户以可信租户上下文为准：上下文缺失返回 401；查询参数 {@code tenantId} 仅做一致性
+     * 校验，与上下文不一致返回 403。统计包含全部消息状态、排除逻辑删除行，异常统一由
+     * 内部端点错误映射转换为对应 HTTP 状态。
+     *
+     * @param request 当前请求（可选查询参数 {@code tenantId}，可为空；非空时必须与可信上下文一致）
+     * @return 200 响应，{@code data} 为 {@code {"messageCount": N}}；错误场景返回对应错误响应
      */
     @Operation(
             operationId = "internalOfficeMessageStats",
@@ -136,8 +140,11 @@ public class OfficeInternalHandler {
      * 条目按 {@code approvalLimit}/{@code messageLimit} 截断，总数为截断前真实数量。
      * 用户取自身份中继建立的认证上下文，未认证返回 401。
      *
+     * <p>两个分区并行查询后合并为一个响应，任一分区失败即整体失败并映射为错误响应；
+     * 上限参数缺失或非数字时回落到默认值，越界收敛到 {@code [1, 50]}。
+     *
      * @param request 当前请求（可选查询参数 {@code approvalLimit}、{@code messageLimit}，缺省 10，上限 50）
-     * @return {@code Result<OfficeTodoInternalResponse>}
+     * @return 200 响应，{@code data} 为待审批与未读消息两组条目及各自总数；未认证返回 401
      */
     @Operation(
             operationId = "internalOfficeTodo",

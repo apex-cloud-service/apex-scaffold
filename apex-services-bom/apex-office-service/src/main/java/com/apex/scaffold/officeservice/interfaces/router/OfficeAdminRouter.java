@@ -44,9 +44,10 @@ public class OfficeAdminRouter {
      *
      * <p>端点数量较多且 OpenAPI 元数据内联声明，导致方法长度超过 PMD 阈值；
      * 抑制 {@code MethodTooLongRule} 而不拆分，以保持路由注册顺序与实际路径一致、便于审阅。
+     * 仅承载路由表注册，鉴权、租户与数据范围校验全部下沉至处理器与安全配置。
      *
      * @param handler 办公平台管理端处理器
-     * @return 管理端路由函数，挂载于 {@code /admin-api/v1/office}
+     * @return 管理端路由函数，挂载于 {@code /admin-api/v1/office}，含应用配置与绑定审批端点
      */
     @RouterOperations({
         @RouterOperation(

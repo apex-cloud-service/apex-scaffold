@@ -38,17 +38,30 @@ public class BusinessMetricsRecorder {
         this.meterRegistry = meterRegistry;
     }
 
-    /** 记录一次登录成功。 */
+    /**
+     * 记录一次登录成功
+     *
+     * <p>在登录业务成功后调用，使 {@code apex.business.login.success} 计数器加一，
+     * 供监控大盘与 Prometheus 统计核心业务成功量。
+     */
     public void recordLoginSuccess() {
         counter(METRIC_LOGIN_SUCCESS).increment();
     }
 
-    /** 记录一次注册成功。 */
+    /**
+     * 记录一次注册成功
+     *
+     * <p>在注册业务成功后调用，使 {@code apex.business.register} 计数器加一。
+     */
     public void recordRegister() {
         counter(METRIC_REGISTER).increment();
     }
 
-    /** 记录一次文件上传成功。 */
+    /**
+     * 记录一次文件上传成功
+     *
+     * <p>在文件上传业务成功后调用，使 {@code apex.business.upload} 计数器加一。
+     */
     public void recordUpload() {
         counter(METRIC_UPLOAD).increment();
     }

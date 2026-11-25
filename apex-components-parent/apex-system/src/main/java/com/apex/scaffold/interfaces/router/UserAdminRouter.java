@@ -30,7 +30,15 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class UserAdminRouter {
 
-    /** 超级管理员用户查询与角色配置路由。 */
+    /**
+     * 超级管理员用户查询与角色配置路由
+     *
+     * <p>注册 {@code /admin-api/v1/staff-roles} 与 {@code /admin-api/v1/users/**} 下的用户列表、详情、
+     * 创建、编辑、角色替换、会话撤销与启停端点，委托 {@code AdminUserManagementHandler} 处理。
+     *
+     * @param handler 后台用户管理 Handler
+     * @return 路由函数
+     */
     @RouterOperations({
         @RouterOperation(
                 path = "/admin-api/v1/staff-roles",
@@ -201,6 +209,15 @@ public class UserAdminRouter {
                                             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
                                 }))
     })
+    /**
+     * 注册用户管理路由。
+     *
+     * <p>覆盖员工角色查询与 {@code /admin-api/v1/users} 的列表、创建、详情、更新、删除、
+     * 状态与密码等管理动作；写操作要求 JSON 请求体。
+     *
+     * @param handler 用户管理处理器
+     * @return 用户管理路由函数
+     */
     @Bean
     public RouterFunction<ServerResponse> adminUserManagementRoutes(AdminUserManagementHandler handler) {
         return RouterFunctions.route()

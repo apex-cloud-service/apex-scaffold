@@ -66,6 +66,9 @@ public class UnifiedBusinessLogHandler {
     /**
      * 统一查询业务日志
      *
+     * <p>解析可选的 logType（login/operation/api，不传查全部）、时间范围（缺省近 7 天）、username 与 module，
+     * 以及分页参数 page/size（size 最大 100）；时间格式非法返回 400，其余委托服务聚合三类日志后分页返回。
+     *
      * @param request HTTP请求
      * @return 日志分页数据
      */

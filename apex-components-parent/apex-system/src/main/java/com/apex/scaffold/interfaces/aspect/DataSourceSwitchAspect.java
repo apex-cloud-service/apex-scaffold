@@ -70,20 +70,34 @@ public class DataSourceSwitchAspect {
         this.meterRegistryProvider = meterRegistryProvider;
     }
 
-    /** 类级注解切入点 */
+    /**
+     * 类级注解切入点
+     *
+     * <p>匹配被 {@code @DataSource} 标注的类型内的全部方法，与 {@link #methodLevelDataSource()} 共同
+     * 作为 {@link #switchDataSource} 环绕通知的触发入口。
+     */
     @Pointcut("@within(com.apex.scaffold.common.annotation.DataSource)")
     public void classLevelDataSource() {
         // 命名切入点
     }
 
-    /** 方法级注解切入点 */
+    /**
+     * 方法级注解切入点
+     *
+     * <p>匹配直接标注 {@code @DataSource} 的单个方法，与 {@link #classLevelDataSource()} 共同
+     * 作为 {@link #switchDataSource} 环绕通知的触发入口。
+     */
     @Pointcut("@annotation(com.apex.scaffold.common.annotation.DataSource)")
     public void methodLevelDataSource() {
         // 命名切入点
     }
 
     /**
-     * 环绕通知：切换/释放数据源上下文。
+     * 环绕通知：切换/释放数据源上下文
+     *
+     * <p>先解析生效的 {@code @DataSource}（方法级优先、其次类级）；未指定数据源名时直接放行、不切换。
+     * 响应式方法（Mono/Flux）在订阅时通过 {@code doFirst} 切换数据源、{@code doFinally} 释放，
+     * 同步方法则在调用前后成对执行切换与释放，确保异常路径也能还原上下文。
      *
      * @param joinPoint 连接点（{@code @DataSource} 标注方法或类中的方法）
      * @return 方法执行结果（响应式方法原样返回 Mono/Flux）

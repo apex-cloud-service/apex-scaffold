@@ -92,8 +92,11 @@ public class OrgSyncHandler {
     /**
      * 解析并校验部门 DTO，调用本地部门创建用例。
      *
+     * <p>请求体映射为 {@link DepartmentDTO} 后交组织同步服务创建；校验失败或处理失败
+     * 统一经错误映射返回 400。
+     *
      * @param request JSON 请求体为 DepartmentDTO
-     * @return 包含部门 DTO 的 Result；校验或处理失败返回 HTTP 400
+     * @return 200 响应，{@code data} 为创建的部门；校验或处理失败返回 400
      */
     @RequirePermission("office:organization:dept")
     @Operation(operationId = "createDepartment", summary = "创建部门", description = "创建本地部门")
@@ -114,8 +117,11 @@ public class OrgSyncHandler {
     /**
      * 按路径 ID 更新本地部门。
      *
+     * <p>部门主键经安全解析，非数字时直接返回参数错误；请求体映射后交组织同步服务更新，
+     * 部门不存在时返回业务码 {@code NOT_FOUND}。
+     *
      * @param request 路径参数 id 为 Long ID，JSON 请求体为 DepartmentDTO
-     * @return 包含更新后 DTO 的 Result；ID 非法、部门不存在或处理失败返回 HTTP 400
+     * @return 200 响应，{@code data} 为更新后的部门；ID 非法、部门不存在或处理失败返回 400
      */
     @RequirePermission("office:organization:dept")
     @Operation(operationId = "updateDepartment", summary = "更新部门", description = "更新本地部门信息")
@@ -142,8 +148,11 @@ public class OrgSyncHandler {
     /**
      * 按 ID 删除部门，不额外检查记录是否存在。
      *
+     * <p>部门主键经安全解析，非数字时直接返回参数错误；删除成功返回空 {@code data}，
+     * 对不存在的 ID 同样按成功处理，处理失败经错误映射返回 400。
+     *
      * @param request 路径参数 id 为部门 Long ID
-     * @return data 为空的 Result；ID 非法或处理失败返回 HTTP 400
+     * @return 200 响应，{@code data} 为空；ID 非法或处理失败返回 400
      */
     @RequirePermission("office:organization:dept")
     @Operation(operationId = "deleteDepartment", summary = "删除部门", description = "删除指定部门")

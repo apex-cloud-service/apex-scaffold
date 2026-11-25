@@ -68,14 +68,25 @@ public abstract class OfficeMessageConverter {
     public abstract OfficeMessage toEntity(OfficeMessagePO po);
 
     /**
-     * 从 MessageTarget 提取目标类型
+     * 从领域消息目标中提取目标类型（用户或群组）。
+     *
+     * <p>供 MapStruct 表达式调用；目标为空时返回 {@code null}，对应持久化字段允许为空。
+     *
+     * @param target 领域层消息目标对象，允许为 {@code null}
+     * @return 目标类型标识（{@code user} 或 {@code group}）；{@code target} 为空时返回 {@code null}
      */
     protected String targetTypeFromEntity(com.apex.scaffold.office.domain.message.MessageTarget target) {
         return target != null ? target.getTargetType() : null;
     }
 
     /**
-     * 从 MessageTarget 提取接收者ID列表
+     * 从领域消息目标中提取接收者标识列表并序列化为 JSON。
+     *
+     * <p>按目标类型选择 {@code userIds} 或 {@code groupIds}；目标或对应列表缺失时返回
+     * {@code null}，避免写入无效的 {@code "null"} 字面量。
+     *
+     * @param target 领域层消息目标对象，允许为 {@code null}
+     * @return 接收者标识列表的 JSON 字符串；无法提取时返回 {@code null}
      */
     protected String recipientIdsFromEntity(com.apex.scaffold.office.domain.message.MessageTarget target) {
         if (target == null) {
@@ -92,7 +103,13 @@ public abstract class OfficeMessageConverter {
     }
 
     /**
-     * 从 PO 构建 MessageTarget
+     * 从持久化对象还原领域消息目标。
+     *
+     * <p>接收者类型为空时返回 {@code null}；接收者标识列按 JSON 数组反序列化，
+     * 并按用户/群组类型分别装配到 {@link com.apex.scaffold.office.domain.message.MessageTarget}。
+     *
+     * @param po 办公消息持久化对象
+     * @return 领域消息目标；接收者类型未知或为空时返回 {@code null}
      */
     protected com.apex.scaffold.office.domain.message.MessageTarget targetFromPo(OfficeMessagePO po) {
         if (po.getRecipientType() == null) {
@@ -117,7 +134,14 @@ public abstract class OfficeMessageConverter {
     }
 
     /**
-     * 从持久化对象恢复消息内容
+     * 从持久化对象恢复领域消息内容。
+     *
+     * <p>按消息类型把 JSON 负载还原为文本、Markdown 或卡片内容对象；兼容
+     * {@code {"data": {...}}} 包装与裸负载两种历史格式。负载缺失时返回 {@code null}。
+     *
+     * @param po 办公消息持久化对象，其 {@code content} 列为 JSON 字符串
+     * @return 对应的领域消息内容；内容为空时返回 {@code null}
+     * @throws IllegalArgumentException 内容 JSON 无法解析时抛出
      */
     protected com.apex.scaffold.office.domain.message.MessageContent contentFromJson(OfficeMessagePO po) {
         if (po.getContent() == null || po.getContent().isBlank()) {
@@ -147,7 +171,11 @@ public abstract class OfficeMessageConverter {
     }
 
     /**
-     * 将 MessageContent 序列化为 JSON
+     * 将领域消息内容序列化为 JSON 存储值。
+     *
+     * @param content 领域消息内容对象，允许为 {@code null}
+     * @return JSON 字符串；{@code content} 为空时返回 {@code null}
+     * @throws IllegalArgumentException 序列化失败时抛出
      */
     protected String contentToJson(com.apex.scaffold.office.domain.message.MessageContent content) {
         if (content == null) {
@@ -161,14 +189,23 @@ public abstract class OfficeMessageConverter {
     }
 
     /**
-     * MessageType 转字符串
+     * 消息类型枚举转字符串。
+     *
+     * @param messageType 消息类型枚举值，允许为 {@code null}
+     * @return 枚举名称；入参为 {@code null} 时返回 {@code null}
      */
     protected String messageTypeToString(MessageType messageType) {
         return messageType != null ? messageType.name() : null;
     }
 
     /**
-     * 字符串转 MessageType
+     * 字符串转消息类型枚举。
+     *
+     * <p>按枚举名称精确匹配；无法识别的历史取值返回 {@code null} 而非抛异常，
+     * 以便兼容存量脏数据。
+     *
+     * @param messageType 数据库中存储的枚举名称，允许为 {@code null}
+     * @return 对应枚举值；入参为空或无法识别时返回 {@code null}
      */
     protected MessageType stringToMessageType(String messageType) {
         try {
@@ -179,7 +216,10 @@ public abstract class OfficeMessageConverter {
     }
 
     /**
-     * List 转 JSON 字符串
+     * 字符串列表序列化为 JSON 数组字符串。
+     *
+     * @param list 待序列化列表，允许为 {@code null} 或空
+     * @return JSON 数组字符串；入参为空或序列化失败时返回 {@code null}
      */
     protected String listToJson(List<String> list) {
         if (list == null || list.isEmpty()) {
@@ -193,7 +233,10 @@ public abstract class OfficeMessageConverter {
     }
 
     /**
-     * JSON 字符串转 List
+     * JSON 数组字符串反序列化为字符串列表。
+     *
+     * @param json 存储的 JSON 数组字符串，允许为 {@code null} 或空串
+     * @return 字符串列表；入参为空或解析失败时返回 {@code null}
      */
     protected List<String> jsonToList(String json) {
         if (json == null || json.isEmpty()) {

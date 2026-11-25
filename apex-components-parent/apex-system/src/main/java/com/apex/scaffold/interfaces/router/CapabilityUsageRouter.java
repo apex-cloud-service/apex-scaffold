@@ -32,7 +32,10 @@ public class CapabilityUsageRouter {
     public static final String USAGE_PATH = "/api/v2/capability-usage";
 
     /**
-     * 注册能力用量查询路由。
+     * 注册能力用量查询路由
+     *
+     * <p>注册 {@code GET}（{@code USAGE_PATH}）查询能力调用用量，委托
+     * {@code CapabilityUsageHandler#queryUsage} 处理。
      *
      * @param handler 能力用量 Handler
      * @return 路由函数

@@ -26,7 +26,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class InternalTenantRouter {
 
     /**
-     * 注册租户状态内部查询路由.
+     * 注册租户状态内部查询路由
+     *
+     * <p>注册 {@code GET /internal/v1/tenants/{code}/status}，返回租户存在性与能力订阅快照（未知租户
+     * 以 {@code exists=false} 数据化返回），委托 {@code InternalTenantHandler#getStatus} 处理。
      *
      * @param handler 租户状态内部 Handler
      * @return 路由函数

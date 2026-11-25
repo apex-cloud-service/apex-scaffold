@@ -34,7 +34,13 @@ public class JobProxy {
         this.client = client;
     }
 
-    /** 仅公开任务 CRUD、状态、触发与日志路径，不提供任意目标代理。 */
+    /**
+     * 构建任务代理路由。
+     *
+     * <p>仅公开任务 CRUD、状态、触发与日志路径，不提供任意目标代理。
+     *
+     * @return 转发到 system 管理端口任务接口的路由函数
+     */
     public RouterFunction<ServerResponse> routes() {
         return RouterFunctions.route()
                 .GET(ROOT, this::forward)
@@ -49,7 +55,15 @@ public class JobProxy {
                 .build();
     }
 
-    /** 校验协议输入并转发凭据；不转发客户端租户及内部认证头。 */
+    /**
+     * 校验协议输入并转发凭据。
+     *
+     * <p>缺失或非法 {@code Authorization} 直接返回 401；不转发客户端租户及内部认证头，
+     * 由 system 管理端口按自身安全策略处理。
+     *
+     * @param request 原始请求，需携带 Bearer 令牌
+     * @return 转发结果；令牌缺失或格式非法时为 401 空响应
+     */
     public Mono<ServerResponse> forward(ServerRequest request) {
         String authorization = request.headers().firstHeader(HttpHeaders.AUTHORIZATION);
         if (authorization == null

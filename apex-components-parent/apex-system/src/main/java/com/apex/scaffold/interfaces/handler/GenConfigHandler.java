@@ -76,7 +76,10 @@ public class GenConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询生成配置列表。
+     * 查询生成配置列表
+     *
+     * <p>读取可选查询参数 page/size（缺省 1/20）、datasourceId 与 configName，委托配置服务分页查询，
+     * 结果统一由 {@code buildSuccess} 包装为带 traceId 的响应。
      *
      * @param request HTTP 请求，支持分页参数 page、size 和查询条件
      * @return 带 traceId 的统一成功响应，data 为生成配置分页列表
@@ -134,7 +137,10 @@ public class GenConfigHandler extends BaseHandler {
     }
 
     /**
-     * 新增生成配置。
+     * 新增生成配置
+     *
+     * <p>解析并校验 {@link GenConfigRequest} 后委托配置服务创建，数据源、表名、包名、输出路径与模板
+     * 等参数由服务层校验；成功结果由 {@code buildSuccess} 包装。
      *
      * @param request HTTP 请求，请求体包含生成配置信息
      * @return 带 traceId 的统一成功响应，data 为已创建的生成配置实体
@@ -173,7 +179,10 @@ public class GenConfigHandler extends BaseHandler {
     }
 
     /**
-     * 更新生成配置。
+     * 更新生成配置
+     *
+     * <p>解析路径正整数 {@code id} 与 {@link GenConfigRequest}，委托配置服务按 ID 更新表名、包名、
+     * 输出路径与模板等参数；配置不存在或参数非法时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数，请求体包含更新信息
      * @return 带 traceId 的统一成功响应，data 为已更新的生成配置实体
@@ -220,7 +229,10 @@ public class GenConfigHandler extends BaseHandler {
     }
 
     /**
-     * 删除生成配置。
+     * 删除生成配置
+     *
+     * <p>解析路径正整数 {@code id}，委托配置服务删除后返回 {@code {"deleted": 是否删除成功}}；
+     * 配置不存在时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为 {@code {"deleted": 是否删除成功}}
@@ -261,7 +273,9 @@ public class GenConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询数据库表结构。
+     * 查询数据库表结构
+     *
+     * <p>解析路径中的数据源 {@code id}，查询该数据源下全部表结构（表名、表注释等）并聚合为列表返回。
      *
      * @param request HTTP 请求，路径参数 {@code id} 为数据源ID
      * @return 带 traceId 的统一成功响应，data 为表结构列表（表名、注释等）
@@ -298,7 +312,10 @@ public class GenConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询表字段信息。
+     * 查询表字段信息
+     *
+     * <p>解析路径中的数据源 {@code id} 与表名，表名为空时以 {@code PARAM_ERROR} 失败；否则查询该表全部
+     * 字段（名称、类型、长度、是否主键、是否可空、注释等）。
      *
      * @param request HTTP 请求，路径参数 {@code id} 为数据源ID，{@code tableName} 为表名
      * @return 带 traceId 的统一成功响应，data 为字段列表（字段名、类型、长度、注释等）
@@ -349,7 +366,10 @@ public class GenConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询生成历史。
+     * 查询生成历史
+     *
+     * <p>解析路径正整数配置 {@code id} 与分页参数（缺省 1/20），委托配置服务查询该配置的生成历史
+     * （生成时间、文件列表、状态等）。
      *
      * @param request HTTP 请求，路径参数 {@code id} 为生成配置ID，支持分页参数
      * @return 带 traceId 的统一成功响应，data 为生成历史分页列表

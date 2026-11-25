@@ -72,9 +72,10 @@ public class PasswordPolicyService {
     /**
      * 验证密码是否符合策略
      *
+     * <p>校验通过时为空完成。
+     *
      * @param password 密码
      * @param username 用户名（用于检查密码是否包含用户名）
-     * @return 校验通过时为空完成
      * @throws BusinessException 密码不符合策略时抛出，消息携带全部不满足项
      */
     public Mono<Void> validatePassword(String password, String username) {

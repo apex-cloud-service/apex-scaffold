@@ -57,7 +57,10 @@ public class OpenAppAdminHandler {
     private final OpenAppAdminService openAppAdminService;
 
     /**
-     * 创建开放应用.
+     * 创建开放应用
+     *
+     * <p>读取请求体并交由 {@code openAppAdminService.createApp} 注册应用，生成的明文密钥仅在本次响应返回；
+     * 请求体非法或 scope 未在注册表内时由反序列化或服务层校验拒绝。
      *
      * @param request 服务器请求，请求体为 {@link OpenAppRequest} JSON
      * @return 创建后的应用（含一次性明文密钥）
@@ -95,7 +98,10 @@ public class OpenAppAdminHandler {
     }
 
     /**
-     * 分页查询应用列表.
+     * 分页查询应用列表
+     *
+     * <p>解析分页参数 {@code page}/{@code size}（缺省 0/20，页码从 0 开始），调用 {@code listApps}
+     * 分页查询后收集为列表，以 {@code Result.success} 直接返回。
      *
      * @param request 服务器请求（query 参数 page/size）
      * @return 应用列表
@@ -136,7 +142,10 @@ public class OpenAppAdminHandler {
     }
 
     /**
-     * 查询应用详情.
+     * 查询应用详情
+     *
+     * <p>取路径变量 {@code clientId} 调用 {@code getApp}，客户端不存在时返回 404 语义；
+     * 响应不含密钥材料。
      *
      * @param request 服务器请求（路径变量 clientId）
      * @return 应用详情（不含密钥）
@@ -167,7 +176,10 @@ public class OpenAppAdminHandler {
     }
 
     /**
-     * 更新应用配置.
+     * 更新应用配置
+     *
+     * <p>取路径变量 {@code clientId} 与请求体调用 {@code updateApp}，缺省字段保持原值；
+     * 客户端不存在返回 404，scope 未注册或参数非法返回 400。
      *
      * @param request 服务器请求（路径变量 clientId，请求体为 {@link OpenAppRequest} JSON）
      * @return 更新后的应用
@@ -210,7 +222,10 @@ public class OpenAppAdminHandler {
     }
 
     /**
-     * 重置应用密钥.
+     * 重置应用密钥
+     *
+     * <p>取路径变量 {@code clientId} 调用 {@code resetSecret}，生成新的随机密钥并加密落库，
+     * 明文仅本次返回；客户端不存在时返回 404。
      *
      * @param request 服务器请求（路径变量 clientId）
      * @return 应用信息（{@code clientSecret} 为一次性明文）

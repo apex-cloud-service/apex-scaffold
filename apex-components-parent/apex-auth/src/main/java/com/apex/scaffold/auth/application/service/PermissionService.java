@@ -145,8 +145,9 @@ public class PermissionService {
     /**
      * 删除权限
      *
+     * <p>删除完成信号（空完成）。
+     *
      * @param id 权限ID
-     * @return 删除完成信号（空完成）
      */
     public Mono<Void> deletePermission(Long id) {
         return permissionRepository

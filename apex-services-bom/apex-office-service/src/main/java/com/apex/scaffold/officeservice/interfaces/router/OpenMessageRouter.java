@@ -28,8 +28,11 @@ public class OpenMessageRouter {
     /**
      * 注册开放消息路由。
      *
-     * @param handler 开放消息处理器
-     * @return 路由函数
+     * <p>仅注册 {@code POST /open-api/messages}，请求体为单条文本消息；该路由独立于管理端
+     * 消息路由，操作说明与请求/响应模型由处理器上的 SpringDoc 注解提供。
+     *
+     * @param handler 开放消息处理器，负责请求校验与消息投递
+     * @return 开放消息路由函数，挂载于 {@code /open-api/messages}
      */
     @Bean
     @RouterOperations({

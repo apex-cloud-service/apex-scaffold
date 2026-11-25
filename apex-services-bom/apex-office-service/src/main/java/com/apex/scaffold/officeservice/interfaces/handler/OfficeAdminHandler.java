@@ -89,8 +89,11 @@ public class OfficeAdminHandler {
     /**
      * 查询当前租户的所有办公平台应用配置列表。
      *
-     * @param request HTTP 请求
-     * @return 应用配置列表响应
+     * <p>不分页，直接返回当前租户下的全部应用配置，经 {@link OfficeAssembler#toAppResponse}
+     * 转换为视图后包装为 {@code Result}；无配置时返回空列表而非错误。
+     *
+     * @param request HTTP 请求，无业务参数（仅承载认证与租户上下文）
+     * @return 200 响应，{@code data} 为应用配置列表；无数据时为空列表
      */
     @Operation(
             operationId = "listOfficeApps",
@@ -155,8 +158,13 @@ public class OfficeAdminHandler {
     /**
      * 创建新的办公平台应用配置。
      *
-     * @param request HTTP 请求，包含应用配置信息
-     * @return 创建成功的应用配置响应
+     * <p>先按路径参数解析平台类型（非法取值返回参数错误），再将请求体映射为应用配置命令并创建；
+     * 写操作受 {@code @IdempotentApi} 幂等与 {@code @OperationLog} 审计保护，
+     * 成功后返回新建配置视图。
+     *
+     * @param request HTTP 请求，路径参数含平台类型，请求体为应用配置
+     * @return 200 响应，{@code data} 为创建成功的应用配置
+     * @throws com.apex.scaffold.common.exception.BusinessException 平台类型非法或请求体校验失败时抛出
      */
     @Operation(
             operationId = "createOfficeApp",
@@ -199,8 +207,12 @@ public class OfficeAdminHandler {
     /**
      * 更新指定平台的应用配置。
      *
-     * @param request HTTP 请求，包含更新信息
-     * @return 更新后的应用配置响应
+     * <p>平台类型取自路径参数，请求体须携带乐观锁版本号，版本不匹配时由应用服务拒绝；
+     * 成功后返回更新后的配置视图，写操作受幂等与审计保护。
+     *
+     * @param request HTTP 请求，路径参数含平台类型，请求体为更新内容与乐观锁版本号
+     * @return 200 响应，{@code data} 为更新后的应用配置
+     * @throws com.apex.scaffold.common.exception.BusinessException 平台类型非法、版本冲突或配置不存在时抛出
      */
     @Operation(
             operationId = "updateOfficeApp",
@@ -243,8 +255,12 @@ public class OfficeAdminHandler {
     /**
      * 删除指定平台的应用配置。
      *
-     * @param request HTTP 请求，查询参数包含版本号
-     * @return 删除结果
+     * <p>平台类型取自路径参数，乐观锁版本号取自查询参数；版本号缺省时传 {@code null}
+     * 交由应用服务处理，删除成功返回布尔结果，写操作受幂等与审计保护。
+     *
+     * @param request HTTP 请求，路径参数含平台类型，查询参数可选 {@code version}
+     * @return 200 响应，{@code data} 为是否删除成功
+     * @throws com.apex.scaffold.common.exception.BusinessException 平台类型非法、版本冲突或配置不存在时抛出
      */
     @Operation(
             operationId = "deleteOfficeApp",
@@ -284,8 +300,12 @@ public class OfficeAdminHandler {
     /**
      * 查询指定平台的身份绑定列表，支持分页。
      *
-     * @param request HTTP 请求，查询参数包含分页信息
-     * @return 绑定列表响应
+     * <p>平台类型取自查询参数（缺失或非法返回参数错误）；页码缺省 1、每页缺省 20，
+     * 以列表形式返回该页绑定记录，不携带总数。
+     *
+     * @param request HTTP 请求，查询参数含平台类型与可选分页信息
+     * @return 200 响应，{@code data} 为当前页绑定记录列表
+     * @throws com.apex.scaffold.common.exception.BusinessException 平台参数缺失或非法时抛出
      */
     @Operation(
             operationId = "listOfficeBindings",
@@ -337,8 +357,12 @@ public class OfficeAdminHandler {
     /**
      * 分页查询指定平台的身份绑定列表，支持状态过滤并返回真实总数。
      *
-     * @param request HTTP 请求，查询参数包含平台、状态和分页信息
-     * @return 绑定分页响应
+     * <p>按状态过滤后把应用层分页结果重建为携带真实总数的 {@code PageResponse}；
+     * 平台缺失或非法返回参数错误，页码缺省 1、每页缺省 20，状态缺省不过滤。
+     *
+     * @param request HTTP 请求，查询参数含平台类型、可选状态与分页信息
+     * @return 200 响应，{@code data} 为带总数的绑定分页结果
+     * @throws com.apex.scaffold.common.exception.BusinessException 平台参数缺失或非法时抛出
      */
     @Operation(
             operationId = "listOfficeBindingsPage",
@@ -401,8 +425,13 @@ public class OfficeAdminHandler {
     /**
      * 审批身份绑定申请。
      *
-     * @param request HTTP 请求，路径参数包含绑定 ID，请求体包含审批决定
-     * @return 审批结果
+     * <p>绑定主键取自路径参数，版本号与审批结论取自请求体；仅具备审批权限的管理员可调用，
+     * 版本不匹配或状态不允许时由应用服务拒绝，成功返回布尔结果，写操作受幂等与审计保护。
+     *
+     * @param request HTTP 请求，路径参数含绑定主键，请求体为审批决定与乐观锁版本号
+     * @return 200 响应，{@code data} 为是否审批成功
+     * @throws com.apex.scaffold.common.exception.BusinessException 绑定不存在、版本冲突或状态非法时抛出
+     * @throws NumberFormatException 路径中的绑定主键不是合法长整型时抛出
      */
     @Operation(
             operationId = "reviewOfficeBinding",
@@ -444,8 +473,13 @@ public class OfficeAdminHandler {
     /**
      * 解绑办公平台身份。
      *
-     * @param request HTTP 请求，路径参数包含绑定 ID，查询参数包含版本号
-     * @return 解绑结果
+     * <p>绑定主键取自路径参数，乐观锁版本号取自查询参数；解绑后该身份不再满足办公平台登录
+     * 所需的已审批绑定条件，成功返回布尔结果，写操作受幂等与审计保护。
+     *
+     * @param request HTTP 请求，路径参数含绑定主键，查询参数可选 {@code version}
+     * @return 200 响应，{@code data} 为是否解绑成功
+     * @throws com.apex.scaffold.common.exception.BusinessException 绑定不存在或版本冲突时抛出
+     * @throws NumberFormatException 路径中的绑定主键不是合法长整型时抛出
      */
     @Operation(
             operationId = "unbindOfficeIdentity",

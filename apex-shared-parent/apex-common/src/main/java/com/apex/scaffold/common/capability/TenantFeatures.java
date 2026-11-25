@@ -27,12 +27,23 @@ public record TenantFeatures(boolean unbounded, Set<String> features) {
         features = features == null ? Set.of() : Set.copyOf(features);
     }
 
-    /** 不限量租户工厂。 */
+    /**
+     * 不限量租户工厂。
+     *
+     * <p>用于未开启能力配额的租户；{@code unbounded} 为 {@code true}，特性集合为空。
+     *
+     * @return 不限量租户的能力视图
+     */
     public static TenantFeatures unlimited() {
         return new TenantFeatures(true, Set.of());
     }
 
-    /** 受限租户工厂。 */
+    /**
+     * 受限租户工厂。
+     *
+     * @param features 租户已开通的特性编码集合，允许为 {@code null}（按空集合处理）
+     * @return 受限租户的能力视图
+     */
     public static TenantFeatures of(Set<String> features) {
         return new TenantFeatures(false, features);
     }

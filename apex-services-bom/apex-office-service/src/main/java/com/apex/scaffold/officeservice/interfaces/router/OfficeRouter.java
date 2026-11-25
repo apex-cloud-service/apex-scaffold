@@ -39,8 +39,11 @@ public class OfficeRouter {
     /**
      * 注册办公平台统一认证与状态路由。
      *
+     * <p>按 {@code /status}、{@code /login}、{@code /callback} 顺序注册三个 GET 端点，
+     * 路由层不做鉴权；回调端点不得要求本系统 JWT，身份绑定由处理器依据授权码与票据完成。
+     *
      * @param handler 办公平台处理器，负责授权地址生成、回调处理与状态查询
-     * @return 办公平台路由函数，挂载于 {@code /api/v1/office}
+     * @return 办公平台路由函数，挂载于 {@code /api/v1/office}，含状态、登录跳转与授权回调
      */
     @RouterOperations({
         @RouterOperation(

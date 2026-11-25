@@ -40,7 +40,10 @@ public abstract class ApprovalCancelOperationConverter {
     public abstract ApprovalCancelOperation toEntity(ApprovalCancelOperationPO po);
 
     /**
-     * 撤销编排状态枚举转字符串。
+     * 撤销编排状态枚举转持久化字符串。
+     *
+     * @param status 撤销编排状态枚举值，允许为 {@code null}
+     * @return 枚举名称；入参为 {@code null} 时返回 {@code null}
      */
     @Named("cancelStatusToString")
     protected String cancelStatusToString(ApprovalCancelStatus status) {
@@ -48,7 +51,11 @@ public abstract class ApprovalCancelOperationConverter {
     }
 
     /**
-     * 字符串转撤销编排状态枚举。
+     * 持久化字符串转撤销编排状态枚举。
+     *
+     * @param status 数据库中存储的枚举名称，允许为 {@code null}
+     * @return 对应枚举值；入参为 {@code null} 时返回 {@code null}
+     * @throws IllegalArgumentException 名称不属于 {@link ApprovalCancelStatus} 时抛出
      */
     @Named("stringToCancelStatus")
     protected ApprovalCancelStatus stringToCancelStatus(String status) {

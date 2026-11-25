@@ -74,8 +74,11 @@ public class OfficeNotifyHandler {
     /**
      * 创建通知模板
      *
+     * <p>租户取自认证上下文后校验并映射 {@link CreateNotifyTemplateRequest}，经装配器转换为实体
+     * 交通知应用服务创建；模板编码在租户内唯一，重复时返回参数/业务错误。
+     *
      * @param request HTTP 请求，请求体为模板创建参数
-     * @return 创建成功的模板
+     * @return 200 响应，{@code data} 为创建成功的模板；未认证、参数错误或编码重复时返回对应错误
      */
     @Operation(operationId = "createNotifyTemplate", summary = "创建通知模板", description = "创建统一通知模板，编码在租户内唯一")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -118,8 +121,11 @@ public class OfficeNotifyHandler {
     /**
      * 更新通知模板
      *
+     * <p>租户取自认证上下文，模板主键取自路径参数（安全解析，非数字按 {@code null} 交应用服务拒绝），
+     * 请求体中的非空字段作为局部变更提交，模板不存在时以 400 携带业务错误码返回。
+     *
      * @param request HTTP 请求，路径参数 templateId，请求体为变更项
-     * @return 更新后的模板
+     * @return 200 响应，{@code data} 为更新后的模板；未认证、参数错误或模板不存在时返回对应错误
      */
     @Operation(operationId = "updateNotifyTemplate", summary = "更新通知模板", description = "局部更新通知模板，仅提交的字段生效")
     @Parameters({
@@ -176,8 +182,11 @@ public class OfficeNotifyHandler {
     /**
      * 删除通知模板
      *
+     * <p>租户取自认证上下文，模板主键取自路径参数并做安全解析；执行逻辑删除并保留历史投递留痕，
+     * 成功返回布尔结果，模板不存在时经错误映射以 400 携带业务错误码返回。
+     *
      * @param request HTTP 请求，路径参数 templateId
-     * @return 删除结果
+     * @return 200 响应，{@code data} 为是否删除成功；未认证或模板不存在时返回对应错误
      */
     @Operation(operationId = "deleteNotifyTemplate", summary = "删除通知模板", description = "逻辑删除通知模板，历史投递留痕保留，data 为布尔结果")
     @Parameters({
@@ -263,8 +272,11 @@ public class OfficeNotifyHandler {
     /**
      * 分页查询通知模板
      *
+     * <p>租户取自认证上下文；页码缺省 1、每页缺省 20（非数字或负数回落到默认值），
+     * 通道与关键字为空时不参与过滤，应用层分页结果重建为携带真实总数的 {@code PageResponse}。
+     *
      * @param request HTTP 请求，查询参数 pageNum、pageSize、channel、keyword
-     * @return 模板分页结果
+     * @return 200 响应，{@code data} 为带总数的模板分页结果；未认证时返回对应错误
      */
     @Operation(operationId = "listNotifyTemplates", summary = "分页查询通知模板", description = "按通道与关键字分页查询通知模板")
     @Parameters({
@@ -327,8 +339,11 @@ public class OfficeNotifyHandler {
     /**
      * 分页查询投递留痕
      *
+     * <p>租户取自认证上下文；页码缺省 1、每页缺省 20，通道、模板编码与投递状态为空时不参与过滤，
+     * 查询结果按装配器逐条转视图后重建为携带真实总数的 {@code PageResponse}。
+     *
      * @param request HTTP 请求，查询参数 pageNum、pageSize、channel、templateCode、status
-     * @return 投递留痕分页结果
+     * @return 200 响应，{@code data} 为带总数的投递留痕分页结果；未认证时返回对应错误
      */
     @Operation(operationId = "listNotifyRecords", summary = "分页查询投递留痕", description = "按通道、模板编码与投递状态分页查询留痕")
     @Parameters({

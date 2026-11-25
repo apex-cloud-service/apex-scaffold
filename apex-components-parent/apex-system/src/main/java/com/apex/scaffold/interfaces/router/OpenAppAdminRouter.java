@@ -27,7 +27,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class OpenAppAdminRouter {
 
     /**
-     * 注册开放应用管理查询路由。
+     * 注册开放应用管理查询路由
+     *
+     * <p>注册 {@code GET /api/v1/open-apps}、{@code GET /api/v1/open-apps/{clientId}} 与
+     * {@code GET /api/v1/open-apps/scopes}，委托 {@code OpenAppAdminHandler} 处理。
      *
      * @param handler 开放应用管理 Handler
      * @return 查询路由函数
@@ -99,7 +102,10 @@ public class OpenAppAdminRouter {
     }
 
     /**
-     * 注册开放应用管理写入路由。
+     * 注册开放应用管理写入路由
+     *
+     * <p>注册 {@code POST /api/v1/open-apps}、{@code PUT /api/v1/open-apps/{clientId}}、
+     * {@code POST /api/v1/open-apps/{clientId}/reset-secret} 与删除端点，委托 {@code OpenAppAdminHandler} 处理。
      *
      * @param handler 开放应用管理 Handler
      * @return 写入路由函数

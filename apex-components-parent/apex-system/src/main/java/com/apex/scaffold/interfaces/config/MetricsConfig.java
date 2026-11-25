@@ -379,11 +379,14 @@ public class MetricsConfig {
     }
 
     /**
-     * 异步刷新 Redis 安全派生指标。
+     * 异步刷新 Redis 安全派生指标
      *
      * <p>使用 Redis SCAN 统计键数量，不使用 KEYS；刷新运行在独立调度线程上，Prometheus 抓取只读取
-     * 原子快照。刷新周期由 {@code apex.security.metrics-refresh-interval-ms} 控制，默认 5 秒；
-     * Redis 不可用、超时或本次刷新仍在执行时，分别保持明确的失败状态或跳过重叠刷新，不把异常伪装成零值。</p>
+     * 原子快照。刷新周期由 {@code apex.security.metrics-refresh-interval-ms} 控制，默认 5 秒。
+     *
+     * <p>通过 CAS 标志跳过重叠刷新；成功时更新黑名单/会话三项 Gauge 并记录成功时间戳，
+     * Redis 不可用、超时或异常时把各项置为 {@link Double#NaN}、可达性置 0 并记录告警，
+     * 不把故障伪装成零值。
      */
     @Scheduled(
             fixedDelayString = "${apex.security.metrics-refresh-interval-ms:5000}",
@@ -554,11 +557,13 @@ public class MetricsConfig {
     }
 
     /**
-     * 异步刷新阻塞 IO 线程池运行态快照。
+     * 异步刷新阻塞 IO 线程池运行态快照
      *
      * <p>调用 {@code BlockingIoSchedulers#snapshotAll()} 通过反射读取各 BoundedElasticScheduler
-     * 内部统计。刷新周期由 {@code apex.blocking-io.snapshot-refresh-ms} 控制，默认 3 秒；
-     * 超时或重叠刷新时分别保持明确失败状态或跳过。本方法本身为轻量反射读取，不阻塞 Reactor。
+     * 内部统计，刷新周期由 {@code apex.blocking-io.snapshot-refresh-ms} 控制，默认 3 秒。
+     *
+     * <p>通过 CAS 标志跳过重叠刷新；成功时替换快照原子引用并记录成功时间戳，异常时把可达性置 0
+     * 并记录告警。本方法本身为轻量反射读取，不阻塞 Reactor。
      */
     @Scheduled(
             fixedDelayString = "${apex.blocking-io.snapshot-refresh-ms:3000}",

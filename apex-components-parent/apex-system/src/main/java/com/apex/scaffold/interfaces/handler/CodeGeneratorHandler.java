@@ -96,7 +96,10 @@ public class CodeGeneratorHandler extends BaseHandler {
     }
 
     /**
-     * 查询可用模板目录。
+     * 查询可用模板目录
+     *
+     * <p>委托 {@code generatorWizardService} 返回当前可见的在线模板及其引擎能力，供代码生成向导
+     * 第一步选择模板，结果统一由 {@code buildSuccess} 包装为带 traceId 的响应。
      *
      * @param request 服务器请求对象
      * @return 模板目录列表
@@ -121,7 +124,10 @@ public class CodeGeneratorHandler extends BaseHandler {
     }
 
     /**
-     * 结构化预检。
+     * 结构化预检
+     *
+     * <p>解析并校验 {@link GenPreflightRequest}，委托向导服务检查配置、数据源、模板与目标表，
+     * 返回阻塞项与提示清单；该过程只读，不写任何文件。
      *
      * @param request 服务器请求对象，请求体为 {@link GenPreflightRequest}
      * @return 预检结果
@@ -156,7 +162,10 @@ public class CodeGeneratorHandler extends BaseHandler {
     }
 
     /**
-     * 纯渲染预览。
+     * 纯渲染预览
+     *
+     * <p>解析 {@link GenPreviewRequest} 后在内存中渲染目标文件并返回摘要令牌，不写服务器文件；
+     * 后续执行须携带同一令牌，配置或模板版本变化会导致令牌失配。
      *
      * @param request 服务器请求对象，请求体为 {@link GenPreviewRequest}
      * @return 预览结果，含输入摘要令牌
@@ -249,7 +258,10 @@ public class CodeGeneratorHandler extends BaseHandler {
     }
 
     /**
-     * 按产物 ID 下载文件。
+     * 按产物 ID 下载文件
+     *
+     * <p>解析路径正整数产物 ID 后调用 {@code generatorWizardService.download} 获取文件流，以
+     * {@code Content-Disposition: attachment} 输出原始文件；仅接受产物 ID，不接受任意路径。
      *
      * @param request 服务器请求对象，包含产物 ID 路径参数
      * @return 文件流响应
@@ -334,7 +346,10 @@ public class CodeGeneratorHandler extends BaseHandler {
     }
 
     /**
-     * 查询异步生成任务进度。
+     * 查询异步生成任务进度
+     *
+     * <p>解析路径中的正整数任务 ID，委托任务服务读取当前状态、总项数、已处理数与失败数；
+     * 任务不存在或属于其他租户时统一返回 404。
      *
      * @param request 服务器请求对象，包含任务 ID 路径参数
      * @return 任务进度详情

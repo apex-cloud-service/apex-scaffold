@@ -176,7 +176,10 @@ public class PlatformTenantHandler extends BaseHandler {
     }
 
     /**
-     * 查询租户详情。
+     * 查询租户详情
+     *
+     * <p>解析并校验路径正整数租户 ID 后调用 {@code tenantService.getById}，成功结果由 {@code buildSuccess}
+     * 包装；ID 非法或租户不存在时抛出业务异常。
      *
      * @param request HTTP 请求，路径参数 {@code id} 必须为正整数
      * @return 带 traceId 的统一成功响应，data 为租户 DTO

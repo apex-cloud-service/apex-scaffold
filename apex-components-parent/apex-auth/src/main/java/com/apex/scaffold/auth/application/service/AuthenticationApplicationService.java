@@ -328,9 +328,10 @@ public class AuthenticationApplicationService {
      * <p>撤销用户在指定租户下的所有Token，并发布 {@link TokenRevokedEvent}，
      * 通知各业务服务清理本地权限缓存与在线态副本（迁移方案 Phase 2.6 登出传播）。
      *
+     * <p>登出完成信号（令牌撤销、会话终止与撤销事件发布均完成后为空完成）。
+     *
      * @param userId   用户ID
      * @param tenantId 租户ID
-     * @return 登出完成信号（令牌撤销、会话终止与撤销事件发布均完成后为空完成）
      */
     public Mono<Void> logout(Long userId, String tenantId) {
         log.debug("开始登出: userId={}", userId);

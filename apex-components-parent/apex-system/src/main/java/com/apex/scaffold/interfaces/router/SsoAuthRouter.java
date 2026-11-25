@@ -42,6 +42,9 @@ public class SsoAuthRouter {
     /**
      * 配置 SSO 认证端路由
      *
+     * <p>注册 {@code /auth/sso/initiate}、{@code /auth/sso/callback} 与 {@code /auth/sso/logout} 三个端点，
+     * 分别委托 {@code SsoAuthHandler} 的发起、回调与退出方法。
+     *
      * @param authHandler SSO 认证处理器
      * @return 路由函数
      */

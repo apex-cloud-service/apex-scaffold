@@ -56,6 +56,10 @@ public class OfficeSecurityAspect {
      * 审计失败会传播为调用失败，不视为业务回滚。身份无效时尚未获得可信审计主体，不写操作日志。
      * 取消订阅或目标空完成不会产生响应就绪日志。
      *
+     * <p>两个注解任一存在即生效：声明 {@code @RequirePermission} 时按安全上下文身份与权限码授权，
+     * 仅声明 {@code @OperationLog} 时仍解析身份以确定审计主体；免权限的 {@code OfficeHandler}
+     * 方法直接调用目标并只记录匿名审计。
+     *
      * @param point 被注解标记的目标方法连接点
      * @return 延迟执行的 {@link Mono}，传播授权、目标调用或审计错误
      * @throws AccessDeniedException 目标返回类型不是 Mono，无法使用响应式授权边界

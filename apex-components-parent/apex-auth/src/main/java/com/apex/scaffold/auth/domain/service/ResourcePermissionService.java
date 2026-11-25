@@ -268,10 +268,11 @@ public class ResourcePermissionService {
     /**
      * 撤销资源权限
      *
+     * <p>撤销完成信号（空完成）。
+     *
      * @param resourceType 资源类型
      * @param resourceId 资源ID
      * @param targetUserId 目标用户ID
-     * @return 撤销完成信号（空完成）
      */
     public Mono<Void> revokePermission(String resourceType, String resourceId, String targetUserId) {
         return revokePermission(resourceType, resourceId, targetUserId, null);
@@ -280,11 +281,12 @@ public class ResourcePermissionService {
     /**
      * 撤销资源权限（指定租户）
      *
+     * <p>撤销完成信号（空完成）。
+     *
      * @param resourceType 资源类型
      * @param resourceId 资源ID
      * @param targetUserId 目标用户ID
      * @param tenantId 租户ID，null表示默认作用域
-     * @return 撤销完成信号（空完成）
      */
     public Mono<Void> revokePermission(String resourceType, String resourceId, String targetUserId, String tenantId) {
         log.info("撤销资源权限: type={}, resourceId={}, targetUserId={}", resourceType, resourceId, targetUserId);

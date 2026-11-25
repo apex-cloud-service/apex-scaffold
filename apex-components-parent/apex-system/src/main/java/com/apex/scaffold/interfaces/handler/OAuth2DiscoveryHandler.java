@@ -132,6 +132,18 @@ public class OAuth2DiscoveryHandler {
             description = "discovery",
             saveRequest = false,
             saveResponse = false)
+    /**
+     * OAuth2 授权服务器元数据发现端点
+     *
+     * <p>按 RFC 8414 以当前服务端口拼装 issuer，并据此构造授权、令牌、撤销、内省、JWKS 等端点地址，
+     * 以及支持的授权类型、响应类型、PKCE 挑战方法与作用域清单，供客户端自动发现服务器配置。
+     *
+     * <p>该端点不查询数据库，仅依据配置返回静态元数据；响应直接以 {@code application/json} 输出，
+     * 不包装为 {@code Result}。
+     *
+     * @param request HTTP 请求（内容未被使用，仅保持端点签名一致）
+     * @return 以 JSON 返回的 OAuth2 服务器元数据
+     */
     public Mono<ServerResponse> discovery(ServerRequest request) {
         String issuer = String.format("http://localhost:%d", serverPort);
 

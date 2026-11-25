@@ -59,7 +59,10 @@ public class MonitorDashboardHandler extends BaseHandler {
     }
 
     /**
-     * 监控概览（大盘指标卡）。
+     * 监控概览（大盘指标卡）
+     *
+     * <p>通过 {@code Mono.fromSupplier} 调用指标采集器汇总应用状态、运行时长、堆内存、CPU、线程、
+     * 会话与请求/治理/业务计数，结果交由 {@code buildSuccess} 包装。
      *
      * @param request HTTP 请求
      * @return 统一成功响应，data 为概览数据
@@ -85,7 +88,10 @@ public class MonitorDashboardHandler extends BaseHandler {
     }
 
     /**
-     * 系统资源监控（内存/CPU/磁盘/网络/JVM/线程/GC）。
+     * 系统资源监控（内存/CPU/磁盘/网络/JVM/线程/GC）
+     *
+     * <p>在阻塞 IO 的 {@code general()} 调度器上采集 JVM 内存与 GC、CPU、进程、线程、磁盘、网络及
+     * 阻塞 IO 线程池指标，避免同步采集占用事件循环线程。
      *
      * @param request HTTP 请求
      * @return 统一成功响应，data 为系统资源数据
@@ -113,7 +119,10 @@ public class MonitorDashboardHandler extends BaseHandler {
     }
 
     /**
-     * 中间件监控（MySQL/Redis/消息中间件/Zipkin）。
+     * 中间件监控（MySQL/Redis/消息中间件/Zipkin）
+     *
+     * <p>通过 {@code Mono.fromSupplier} 同步采集 MySQL 连接池、Redis 健康与派生指标、消息中间件及
+     * 链路追踪状态，结果交由 {@code buildSuccess} 包装。
      *
      * @param request HTTP 请求
      * @return 统一成功响应，data 为中间件数据
@@ -142,7 +151,10 @@ public class MonitorDashboardHandler extends BaseHandler {
     }
 
     /**
-     * 治理监控（Sentinel 熔断/限流 + 网关流量 + 熔断器）。
+     * 治理监控（Sentinel 熔断/限流 + 网关流量 + 熔断器）
+     *
+     * <p>通过 {@code Mono.fromSupplier} 同步采集 Sentinel 规则与熔断/限流状态、安全计数、
+     * Resilience4j 熔断器状态及网关/API 流量，结果交由 {@code buildSuccess} 包装。
      *
      * @param request HTTP 请求
      * @return 统一成功响应，data 为治理数据
@@ -171,7 +183,10 @@ public class MonitorDashboardHandler extends BaseHandler {
     }
 
     /**
-     * 核心业务监控指标与趋势。
+     * 核心业务监控指标与趋势
+     *
+     * <p>通过 {@code Mono.fromSupplier} 同步采集登录、注册、上传、信用变动等核心业务指标及近 10 分钟
+     * 趋势，结果交由 {@code buildSuccess} 包装。
      *
      * @param request HTTP 请求
      * @return 统一成功响应，data 为业务指标数据

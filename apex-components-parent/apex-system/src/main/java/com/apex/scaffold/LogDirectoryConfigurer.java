@@ -43,7 +43,15 @@ public final class LogDirectoryConfigurer {
     /** 工具类禁止实例化。 */
     private LogDirectoryConfigurer() {}
 
-    /** 在系统属性尚未提供时解析并写入绝对日志目录。 */
+    /**
+     * 在系统属性尚未提供时解析并写入绝对日志目录
+     *
+     * <p>优先读取系统属性 {@code apex.log.dir}，命中时按进程工作目录将相对路径解析为绝对路径并回写；
+     * 否则依次回退到环境变量 {@code APEX_LOG_DIR}，最终锚定到最近的 Maven 反应堆根目录（找不到则退回工作目录）。
+     * 解析完成后统一回写系统属性、创建组件日志子目录并设置 Sentinel 原生日志目录。
+     *
+     * <p>该方法为静态初始化入口，目录创建失败不抛出异常，避免阻断应用启动；重复调用结果一致。
+     */
     public static void configure() {
         String systemValue = System.getProperty(LOG_DIRECTORY_PROPERTY);
         if (systemValue != null && !systemValue.isBlank()) {

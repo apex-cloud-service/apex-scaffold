@@ -48,8 +48,11 @@ public class InternalNotifyHandler {
     /**
      * 按模板投递单条通知。
      *
+     * <p>请求体映射为 {@link SendNotifyByTemplateRequest} 后交通知门面按模板编码与渠道投递；
+     * 投递失败被收敛为失败结果并留痕，HTTP 仍为 200，业务成败看 {@code data.delivered}。
+     *
      * @param request HTTP 请求，请求体为投递参数（租户、模板编码、目标等）
-     * @return 投递结果（成功与失败均以 data.delivered 区分）
+     * @return 200 响应，{@code data.delivered} 区分投递成败；模板不存在/已停用/参数缺失或校验失败返回 400
      */
     @Operation(
             operationId = "internalNotifySendByTemplate",

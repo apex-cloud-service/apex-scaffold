@@ -79,9 +79,10 @@ public class KnowledgeDocumentCleanupService {
     /**
      * worker 专属投影租户桥接；未认领直接结束，不以缺租户或索引关闭伪造完成。
      *
+     * <p>认领并执行清理的完成信号；单项失败已持久化为待重试。
+     *
      * @param tenantId 从专属任务投影取得的可信租户
      * @param documentId 待清理文档 ID
-     * @return 认领并执行清理的完成信号；单项失败已持久化为待重试
      */
     public Mono<Void> process(String tenantId, Long documentId) {
         return lifecycle

@@ -117,6 +117,14 @@ public class KeycloakRouterConfig {
                 beanClass = KeycloakAdminHandler.class,
                 beanMethod = "getKeycloakStatus")
     })
+    /**
+     * 注册 Keycloak 同步与 OIDC / 社交登录路由
+     *
+     * <p>在 {@code /api/v1/auth} 下挂载 OIDC 登录、社交登录与回调端点（委托 {@link SocialLoginHandler}），
+     * 在 {@code /admin-api/v1/keycloak} 下挂载全量同步、单用户同步与状态查询端点（委托 {@link KeycloakAdminHandler}）。
+     *
+     * @return 包含上述端点的响应式路由函数
+     */
     public RouterFunction<ServerResponse> keycloakRoutes() {
         log.info("Registering Keycloak routes");
 

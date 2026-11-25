@@ -138,13 +138,14 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 更新当前租户的 JWT 配置。
+     * 更新当前租户的 JWT 配置
      *
-     * <p>更新 JWT 签发者、签名算法、令牌有效期等配置。
-     * 更新后会发布 {@code JwtConfigUpdatedEvent} 事件,通知相关组件刷新配置。
+     * <p>校验请求体后委托 JWT 配置服务更新签发者、签名算法、令牌有效期等参数；更新成功后发布
+     * {@code JwtConfigUpdatedEvent} 事件通知相关组件刷新配置，成功结果统一包装为带 traceId 的响应。
      *
-     * @param request HTTP 请求,请求体包含 JWT 配置信息
-     * @return 带 traceId 的统一成功响应,data 为更新后的 JWT 配置 DTO
+     * @param request HTTP 请求，请求体包含 JWT 配置信息
+     * @return 带 traceId 的统一成功响应，data 为更新后的 JWT 配置 DTO
+     * @throws BusinessException 请求体缺失或校验失败时抛出，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("system:auth:config:jwt:edit")
     @Operation(operationId = "updateJwtConfig", summary = "更新 JWT 配置", description = "更新当前租户的 JWT 令牌配置,更新后立即生效")
@@ -195,13 +196,14 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 更新当前租户的会话配置。
+     * 更新当前租户的会话配置
      *
-     * <p>更新会话超时时间、最大并发会话数、并发控制策略、记住我功能等配置。
-     * 更新后立即生效,影响新建的会话。
+     * <p>校验请求体后委托会话配置服务更新会话超时、最大并发会话数、并发控制策略与记住我等功能，
+     * 更新后对新建立的会话立即生效，成功结果统一包装为带 traceId 的响应。
      *
-     * @param request HTTP 请求,请求体包含会话配置信息
-     * @return 带 traceId 的统一成功响应,data 为更新后的会话配置 DTO
+     * @param request HTTP 请求，请求体包含会话配置信息
+     * @return 带 traceId 的统一成功响应，data 为更新后的会话配置 DTO
+     * @throws BusinessException 请求体缺失或校验失败时抛出，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("system:auth:config:session:edit")
     @Operation(operationId = "updateSessionConfig", summary = "更新会话配置", description = "更新当前租户的会话管理配置,更新后对新会话立即生效")
@@ -256,13 +258,14 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 更新当前租户的安全策略配置。
+     * 更新当前租户的安全策略配置
      *
-     * <p>更新密码策略、登录锁定策略、验证码策略等配置。
-     * 更新后立即生效,影响新的登录和密码验证。
+     * <p>校验请求体后委托安全策略服务更新密码策略、登录锁定策略与验证码策略等配置，
+     * 更新后对新的登录与密码校验立即生效，成功结果统一包装为带 traceId 的响应。
      *
-     * @param request HTTP 请求,请求体包含安全策略配置信息
-     * @return 带 traceId 的统一成功响应,data 为更新后的安全策略配置 DTO
+     * @param request HTTP 请求，请求体包含安全策略配置信息
+     * @return 带 traceId 的统一成功响应，data 为更新后的安全策略配置 DTO
+     * @throws BusinessException 请求体缺失或校验失败时抛出，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("system:auth:config:security:edit")
     @Operation(operationId = "updateSecurityPolicy", summary = "更新安全策略", description = "更新当前租户的安全策略配置,更新后立即生效")
@@ -287,14 +290,13 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 同步权限码。
+     * 同步权限码
      *
-     * <p>扫描 Spring 容器中所有 Bean 的方法,提取 {@code @RequirePermission} 注解标注的权限码,
-     * 与数据库中的 {@code sys_permission} 表对比,返回新增和废弃的权限码清单。
-     * 管理员可以根据清单手动决定是否批量写入或删除权限。
+     * <p>扫描 Spring 容器中 Bean 方法上的 {@code @RequirePermission} 注解提取权限码，与数据库
+     * {@code sys_permission} 表比对，返回新增与废弃两份清单；仅返回差异，是否落库由管理员决定。
      *
      * @param request HTTP 请求
-     * @return 带 traceId 的统一成功响应,data 为权限同步结果(包含新增列表和废弃列表)
+     * @return 带 traceId 的统一成功响应，data 为权限同步结果（含新增与废弃列表）
      */
     @RequirePermission("system:auth:config:permission:sync")
     @Operation(
@@ -320,12 +322,13 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询 OAuth2 客户端列表(别名路由)。
+     * 查询 OAuth2 客户端列表（别名路由）
      *
-     * <p>委托给 {@link OAuth2ClientManagementService},复用现有的 OAuth2 客户端查询逻辑。
+     * <p>解析可选分页参数 page / size（缺省 1 / 20），委托 {@link OAuth2ClientManagementService}
+     * 复用既有客户端查询逻辑，将结果收敛为列表后统一包装为带 traceId 的响应。
      *
-     * @param request HTTP 请求,支持分页参数 page、size
-     * @return 带 traceId 的统一成功响应,data 为 OAuth2 客户端分页列表
+     * @param request HTTP 请求，支持分页参数 page、size
+     * @return 带 traceId 的统一成功响应，data 为 OAuth2 客户端分页列表
      */
     @RequirePermission("system:oauth2:client:list")
     @Operation(
@@ -354,12 +357,13 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询在线会话列表(别名路由)。
+     * 查询在线会话列表（别名路由）
      *
-     * <p>委托给 {@link OnlineUserQueryService},复用现有的在线用户查询逻辑。
+     * <p>解析可选分页参数 page / size（缺省 1 / 20），委托 {@link OnlineUserQueryService}
+     * 复用在线用户查询逻辑，结果统一包装为带 traceId 的响应。
      *
-     * @param request HTTP 请求,支持分页参数 page、size
-     * @return 带 traceId 的统一成功响应,data 为在线用户分页列表
+     * @param request HTTP 请求，支持分页参数 page、size
+     * @return 带 traceId 的统一成功响应，data 为在线用户分页列表
      */
     @RequirePermission("system:online-user:list")
     @Operation(operationId = "listOnlineSessionsAlias", summary = "查询在线会话列表", description = "分页查询最近5分钟内有心跳的在线用户列表")
@@ -382,13 +386,14 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 踢出会话(别名路由)。
+     * 踢出会话（别名路由）
      *
-     * <p>注意:实际的踢出会话功能由 {@link com.apex.scaffold.interfaces.handler.AdminUserManagementHandler#revokeSessions}
-     * 实现,本方法仅作为别名路由占位。前端应直接调用 {@code POST /admin-api/v1/users/{userId}/sessions/revoke} 接口。
+     * <p>本方法仅为兼容旧前端路由的占位实现，不执行真实撤销；实际踢出能力由
+     * {@code AdminUserManagementHandler#revokeSessions} 提供，调用方应改用
+     * {@code POST /admin-api/v1/users/{userId}/sessions/revoke}。
      *
-     * @param request HTTP 请求,路径参数 userId 或请求体包含用户 ID
-     * @return 带 traceId 的统一成功响应,data 为 {"revokedTokens": 撤销数}
+     * @param request HTTP 请求（内容未被使用，仅保持别名端点签名一致）
+     * @return 带 traceId 的统一成功响应，data 为引导调用正确接口的提示信息
      */
     @RequirePermission("staff:session:revoke")
     @Operation(
@@ -413,12 +418,13 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询登录日志列表(别名路由)。
+     * 查询登录日志列表（别名路由）
      *
-     * <p>委托给 {@link LoginLogService},复用现有的登录日志查询逻辑。
+     * <p>读取可选查询参数 username、status 与分页参数 page / size（缺省 1 / 20），
+     * 委托 {@link LoginLogService} 复用登录日志查询逻辑，结果统一包装为带 traceId 的响应。
      *
-     * @param request HTTP 请求,支持分页参数 page、size 和查询参数 username、status
-     * @return 带 traceId 的统一成功响应,data 为登录日志分页列表
+     * @param request HTTP 请求，支持分页参数 page、size 和查询参数 username、status
+     * @return 带 traceId 的统一成功响应，data 为登录日志分页列表
      */
     @RequirePermission("system:log:login:list")
     @Operation(operationId = "listLoginLogsAlias", summary = "查询登录日志列表", description = "分页查询登录日志,支持按账号和状态筛选")
@@ -443,12 +449,13 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * 查询权限列表(别名路由)。
+     * 查询权限列表（别名路由）
      *
-     * <p>委托给 {@link PermissionService},复用现有的权限查询逻辑。
+     * <p>委托 {@link PermissionService} 复用既有权限查询逻辑，返回系统全部权限定义，
+     * 结果统一包装为带 traceId 的响应。
      *
      * @param request HTTP 请求
-     * @return 带 traceId 的统一成功响应,data 为权限列表
+     * @return 带 traceId 的统一成功响应，data 为权限列表
      */
     @RequirePermission("system:permission:list")
     @Operation(operationId = "listPermissionsAlias", summary = "查询权限列表", description = "查询系统中所有已定义的权限列表")
@@ -468,35 +475,16 @@ public class AuthConfigHandler extends BaseHandler {
     }
 
     /**
-     * JWT 配置测试。
+     * JWT 配置测试
      *
-     * <p>使用当前租户的 JWT 配置生成测试 Token，并解码验证，用于测试配置是否正确。
-     * 该功能主要用于管理员在配置 JWT 参数后，快速验证配置是否生效。
+     * <p>管理员提交测试载荷与可选过期时间后，使用当前租户 JWT 配置生成测试 Token 再解码验证，
+     * 返回 Token 字符串、解码结果与验证状态，用于在修改签名算法或密钥后快速确认配置生效。
      *
-     * <h2>设计说明</h2>
-     * <ol>
-     *   <li>管理员提供测试载荷（Payload）和可选的过期时间</li>
-     *   <li>系统使用当前租户的 JWT 配置生成测试 Token</li>
-     *   <li>系统使用相同的配置解码并验证 Token</li>
-     *   <li>返回 Token 字符串、解码结果和验证状态</li>
-     * </ol>
-     *
-     * <h2>职责范围</h2>
-     * <ul>
-     *   <li>新租户初始化 JWT 配置后的验证</li>
-     *   <li>修改 JWT 签名算法或密钥后的测试</li>
-     *   <li>排查 JWT 相关问题时的诊断工具</li>
-     * </ul>
-     *
-     * <h2>设计说明</h2>
-     * <ul>
-     *   <li>生成的测试 Token 仅用于配置验证，不应用于生产环境的身份认证</li>
-     *   <li>测试 Token 的有效期建议设置较短（如 5-10 分钟），避免安全风险</li>
-     *   <li>测试操作会记录操作日志，便于审计追踪</li>
-     * </ul>
+     * <p>测试 Token 仅供配置诊断，不应用于生产身份认证；操作会记录操作日志便于审计。
      *
      * @param request HTTP 请求，请求体包含测试载荷
      * @return 带 traceId 的统一成功响应，data 为测试结果（Token 和解码信息）
+     * @throws BusinessException 请求体缺失或校验失败时抛出，错误码为 {@code PARAM_ERROR}
      */
     @RequirePermission("system:auth:config:jwt:test")
     @Operation(

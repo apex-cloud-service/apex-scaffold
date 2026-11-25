@@ -760,7 +760,11 @@ public class SecurityAuditServiceImpl implements SecurityAuditService {
                 return this;
             }
 
-            /** 构建审计事件，未显式设置的字段保持缺省值。 */
+            /**
+             * 构建审计事件，未显式设置的字段保持缺省值。
+             *
+             * @return 按当前构建器状态组装的不可变审计事件
+             */
             public AuditEvent build() {
                 AuditEvent event = new AuditEvent();
                 event.eventType = this.eventType;

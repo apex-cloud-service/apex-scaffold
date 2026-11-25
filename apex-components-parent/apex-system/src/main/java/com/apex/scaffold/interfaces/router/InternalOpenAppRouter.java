@@ -27,7 +27,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class InternalOpenAppRouter {
 
     /**
-     * 注册开放应用限流档内部查询路由。
+     * 注册开放应用限流档内部查询路由
+     *
+     * <p>注册 {@code GET /internal/v1/open-apps/{clientId}/rate-limit-tier}，返回开放应用声明的限流档编码，
+     * 委托 {@code InternalOpenAppHandler#getRateLimitTier} 处理。
      *
      * @param handler 开放应用内部 Handler
      * @return 路由函数

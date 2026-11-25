@@ -79,8 +79,12 @@ public class OfficeDocumentHandler {
      *
      * <p>在指定的办公平台创建一个新文档。
      *
-     * @param request ServerRequest对象，包含请求体和参数
-     * @return Mono&lt;ServerResponse&gt; 包含创建成功的文档信息
+     * <p>先校验并映射 {@link CreateDocumentRequest}，按枚举名解析文档类型（非法取值触发参数错误），
+     * 再调用文档应用服务创建文档并持久化本地记录；不支持的平台或下游失败经错误映射收敛为对应状态。
+     *
+     * @param request ServerRequest对象，请求体为文档创建参数
+     * @return 200 响应，{@code data} 为创建成功的文档信息；参数错误或创建失败统一返回 400
+     * @throws IllegalArgumentException 文档类型不是合法 {@code DocumentType} 时抛出
      */
     @RequirePermission("office:document:create")
     @Operation(operationId = "createDocument", summary = "创建文档", description = "在指定办公平台创建新文档，支持多种文档类型")
@@ -140,8 +144,11 @@ public class OfficeDocumentHandler {
      *
      * <p>上传文件到指定的办公平台。
      *
-     * @param request ServerRequest对象，包含文件内容和参数
-     * @return Mono&lt;ServerResponse&gt; 包含上传成功的文档信息
+     * <p>先校验并映射 {@link UploadFileRequest}，文件内容按 Base64 编码透传给平台客户端，
+     * 文档类型固定为 {@code FILE}，成功后保存带所有者信息的本地文档记录。
+     *
+     * @param request ServerRequest对象，请求体为文件上传参数（含 Base64 文件内容）
+     * @return 200 响应，{@code data} 为上传成功的文档信息；参数错误或上传失败统一返回 400
      */
     @RequirePermission("office:document:create")
     @Operation(operationId = "uploadFile", summary = "上传文件", description = "上传文件到指定办公平台，文件内容需Base64编码")
@@ -353,8 +360,12 @@ public class OfficeDocumentHandler {
      *
      * <p>下载指定的文档。
      *
-     * @param request ServerRequest对象，路径参数包含documentId
-     * @return 包含文档下载 URL 的统一响应
+     * <p>文档主键取自路径参数，导出格式取自查询参数（缺省 {@code pdf}），
+     * 返回平台生成的下载地址而非文件流；文档不存在时经错误映射以 400 携带业务错误码返回。
+     *
+     * @param request ServerRequest对象，路径参数含 documentId，查询参数可选 {@code format}
+     * @return 200 响应，{@code data} 为文档下载 URL 字符串；文档不存在时以 400 返回错误码
+     * @throws NumberFormatException 路径中的 documentId 不是合法长整型时抛出
      */
     @RequirePermission("office:document:query")
     @Operation(operationId = "downloadDocument", summary = "获取文档下载地址", description = "按导出格式获取下载URL，data为地址字符串")
@@ -408,8 +419,12 @@ public class OfficeDocumentHandler {
      *
      * <p>删除指定的文档。
      *
-     * @param request ServerRequest对象，路径参数包含documentId
-     * @return Mono&lt;ServerResponse&gt; 包含删除结果
+     * <p>文档主键取自路径参数，先调用平台客户端删除远端文档，平台返回成功后再逻辑删除本地记录；
+     * 平台返回失败时以布尔 {@code false} 响应，文档不存在或仓储失败经错误映射以 400 返回业务错误码。
+     *
+     * @param request ServerRequest对象，路径参数含 documentId
+     * @return 200 响应，{@code data} 为是否删除成功；文档不存在时以 400 返回错误码
+     * @throws NumberFormatException 路径中的 documentId 不是合法长整型时抛出
      */
     @RequirePermission("office:document:delete")
     @Operation(operationId = "deleteDocument", summary = "删除文档", description = "删除指定的文档")
@@ -456,8 +471,12 @@ public class OfficeDocumentHandler {
      *
      * <p>移动文档到指定的文件夹。
      *
-     * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
-     * @return 包含移动操作布尔结果的统一响应
+     * <p>文档主键取自路径参数，目标文件夹取自查询参数（缺失时按空串处理）；平台移动成功后才
+     * 同步更新本地记录的父文件夹，文档或文件夹不存在时经错误映射以 400 携带业务错误码返回。
+     *
+     * @param request ServerRequest对象，路径参数含 documentId，查询参数含 {@code targetFolderId}
+     * @return 200 响应，{@code data} 为是否移动成功；文档或文件夹不存在时以 400 返回错误码
+     * @throws NumberFormatException 路径中的 documentId 不是合法长整型时抛出
      */
     @RequirePermission("office:document:move")
     @Operation(operationId = "moveDocument", summary = "移动文档", description = "移动文档到指定的文件夹")
@@ -512,8 +531,12 @@ public class OfficeDocumentHandler {
      *
      * <p>复制指定的文档。
      *
-     * @param request ServerRequest对象，路径参数包含documentId，查询参数包含targetFolderId
-     * @return Mono&lt;ServerResponse&gt; 包含复制后的文档信息
+     * <p>文档主键取自路径参数，目标文件夹与新标题取自查询参数（缺省为空串）；复制完成后按新文档
+     * 的平台详情重建本地记录并持久化，文档或文件夹不存在时经错误映射以 400 携带业务错误码返回。
+     *
+     * @param request ServerRequest对象，路径参数含 documentId，查询参数含 {@code targetFolderId} 与可选 {@code newTitle}
+     * @return 200 响应，{@code data} 为复制生成的新文档信息；文档或文件夹不存在时以 400 返回错误码
+     * @throws NumberFormatException 路径中的 documentId 不是合法长整型时抛出
      */
     @RequirePermission("office:document:copy")
     @Operation(operationId = "copyDocument", summary = "复制文档", description = "复制指定的文档到目标文件夹")

@@ -30,7 +30,15 @@ public class TaskRepositoryImpl implements TaskRepository {
         return WorkflowTenantAccess.execute(tenant -> findByIdSync(tenant, id));
     }
 
-    /** 同步查询，供响应式边界与事务回调复用。 */
+    /**
+     * 同步按主键查询任务，供响应式边界与事务回调复用。
+     *
+     * <p>查询条件同时限定主键与租户，避免跨租户读取。
+     *
+     * @param tenant 租户标识，由受信任上下文传入
+     * @param id 任务主键
+     * @return 任务实体；不存在时返回 {@code null}
+     */
     public Task findByIdSync(String tenant, Long id) {
         return taskPoConverter.toEntity(taskMapper.selectOne(
                 ConditionUtil.lambda(TaskPO.class).eq(TaskPO::getId, id).eq(TaskPO::getTenantId, tenant)));
@@ -75,7 +83,15 @@ public class TaskRepositoryImpl implements TaskRepository {
         return WorkflowTenantAccess.execute(tenant -> insertSync(tenant, entity));
     }
 
-    /** 同步新增，复用相同租户与默认字段规则。 */
+    /**
+     * 同步新增任务，复用相同租户与默认字段规则。
+     *
+     * <p>写入时补齐租户、创建/更新时间与初始版本号，并把数据库生成的主键回填到实体。
+     *
+     * @param tenant 租户标识，写入 {@code tenant_id} 列
+     * @param entity 待新增的任务；调用后其 {@code id} 被回填
+     * @return 受影响行数
+     */
     public int insertSync(String tenant, Task entity) {
         TaskPO po = taskPoConverter.toPo(entity);
         po.setTenantId(tenant);
@@ -94,12 +110,28 @@ public class TaskRepositoryImpl implements TaskRepository {
         return WorkflowTenantAccess.execute(tenant -> updateByIdSync(tenant, entity));
     }
 
-    /** 同步条件更新，事务内仍保留完整 CAS 保护。 */
+    /**
+     * 同步按主键条件更新任务，事务内仍保留完整 CAS 保护。
+     *
+     * @param tenant 租户标识，作为更新条件的一部分
+     * @param entity 待更新的任务，需携带主键与当前版本号
+     * @return 受影响行数；版本号缺失或 CAS 失败时返回 {@code 0}
+     */
     public int updateByIdSync(String tenant, Task entity) {
         return updateTaskSync(tenant, entity, null);
     }
 
-    /** 超时办理追加扫描时条件，避免重读后到写入前发生配置或办理人变化。 */
+    /**
+     * 同步超时办理更新，追加扫描时快照条件。
+     *
+     * <p>除主键与版本外，还比较快照中的状态、处理人与超时配置，避免重读后到写入前
+     * 发生配置或办理人变化。
+     *
+     * @param tenant 租户标识，作为更新条件的一部分
+     * @param entity 更新后的任务
+     * @param expected 扫描时读取的任务快照，用于附加 CAS 条件
+     * @return 受影响行数；快照不匹配时返回 {@code 0}
+     */
     public int updateTimeoutByIdSync(String tenant, Task entity, Task expected) {
         return updateTaskSync(tenant, entity, expected);
     }

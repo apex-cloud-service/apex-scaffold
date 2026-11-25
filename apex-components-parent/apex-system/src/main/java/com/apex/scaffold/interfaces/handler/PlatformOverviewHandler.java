@@ -44,7 +44,10 @@ public class PlatformOverviewHandler {
     private final OverviewFacadeService overviewFacadeService;
 
     /**
-     * 查询当前租户的跨域概览聚合。
+     * 查询当前租户的跨域概览聚合
+     *
+     * <p>从 Reactor Context 读取可信租户，缺失时返回错误；透传 Authorization 头调用聚合门面并行聚合
+     * 文件、工作流与集成统计，任一数据源不可达时该源以 DEGRADED 降级，整体仍返回 200。
      *
      * @param request 当前请求（无参数；租户来自可信上下文）
      * @return 聚合响应（{@code Result<OverviewResponse>}）

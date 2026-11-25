@@ -78,8 +78,13 @@ public class OfficeCalendarHandler {
      *
      * <p>在指定的办公平台创建一个新的日历事件，支持设置标题、时间、参与者等信息。
      *
-     * @param request ServerRequest对象，包含请求体和参数
-     * @return Mono&lt;ServerResponse&gt; 包含创建成功的事件信息
+     * <p>校验并映射 {@link CreateCalendarEventRequest}，发起人缺省取当前认证用户；组织者、
+     * 参与人列表为空时传空数组，会议室 ID 暂不接线固定传 {@code null}。事件类型按枚举名解析，
+     * 校验失败、类型非法与业务失败统一经错误映射收敛为对应 HTTP 状态。
+     *
+     * @param request ServerRequest对象，请求体为日历事件创建参数
+     * @return 200 响应，{@code data} 为创建的日历事件；参数错误或创建失败统一返回 400
+     * @throws IllegalArgumentException 事件类型不是合法 {@code CalendarEventType} 时抛出
      */
     @RequirePermission("office:calendar:create")
     @Operation(operationId = "createCalendarEvent", summary = "创建日历事件", description = "在指定办公平台创建日历事件，支持设置标题、时间、参与者和提醒")
@@ -196,10 +201,12 @@ public class OfficeCalendarHandler {
     /**
      * 更新日历事件
      *
-     * <p>更新指定日历事件的信息，包括标题、时间、参与者等。
+     * <p>事件 ID 取自路径参数，请求体校验后调用日历服务更新标题、描述、时间、参与人与全天标志；
+     * 参与人列表为空时传空数组，成功返回布尔结果，事件不存在或参数错误经错误映射返回对应状态。
      *
-     * @param request ServerRequest对象，包含eventId和更新内容
-     * @return 包含更新操作布尔结果的统一响应
+     * @param request ServerRequest对象，路径参数含 eventId，请求体为更新内容
+     * @return 200 响应，{@code data} 为是否更新成功
+     * @throws NumberFormatException 路径中的 eventId 不是合法长整型时抛出
      */
     @RequirePermission("office:calendar:update")
     @Operation(
@@ -267,10 +274,12 @@ public class OfficeCalendarHandler {
     /**
      * 删除日历事件
      *
-     * <p>删除指定的日历事件。
+     * <p>事件 ID 取自路径参数，删除前取当前认证用户作为操作者传入日历服务；成功返回布尔结果，
+     * 事件不存在或当前用户缺失经错误映射返回对应状态。
      *
      * @param request ServerRequest对象，路径参数包含eventId
-     * @return Mono&lt;ServerResponse&gt; 包含删除结果
+     * @return 200 响应，{@code data} 为是否删除成功
+     * @throws NumberFormatException 路径中的 eventId 不是合法长整型时抛出
      */
     @RequirePermission("office:calendar:delete")
     @Operation(operationId = "deleteCalendarEvent", summary = "删除日历事件", description = "删除指定的日历事件，data为布尔结果")

@@ -233,7 +233,12 @@ public class ExceptionMonitor {
         return exceptionCounter;
     }
 
-    /** 重置异常统计信息 */
+    /**
+     * 重置异常统计信息
+     *
+     * <p>清空按异常类型累计的计数与时间戳映射，并将总异常计数归零；不影响告警发送器等
+     * 其他状态，用于运维手动复位或测试清理。
+     */
     public void resetExceptionStats() {
         exceptionCounter.clear();
         exceptionTimestamp.clear();

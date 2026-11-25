@@ -32,7 +32,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class PlatformTenantRouter {
 
     /**
-     * 平台租户管理路由。
+     * 平台租户管理路由
+     *
+     * <p>注册 {@code /api/v2/platform/tenants} 下的列表、详情与开通等端点，委托
+     * {@code PlatformTenantHandler} 处理。
      *
      * @param handler 平台租户处理器
      * @return 平台租户管理路由函数

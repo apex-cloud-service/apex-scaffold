@@ -127,8 +127,12 @@ public class MessageTemplateHandler {
 
     /**
      * 校验并创建消息模板。
+     *
+     * <p>请求体映射为 {@link MessageTemplateDTO} 后交模板服务创建，校验失败或业务失败
+     * 统一经错误映射返回 400。
+     *
      * @param request JSON 请求体为 MessageTemplateDTO
-     * @return data 为已创建模板的统一响应
+     * @return 200 响应，{@code data} 为已创建的模板；校验或处理失败返回 400
      */
     @RequirePermission("office:notify:template:manage")
     @Operation(
@@ -173,8 +177,12 @@ public class MessageTemplateHandler {
 
     /**
      * 更新模板；无效 ID 或模板不存在时返回 HTTP 400。
+     *
+     * <p>模板主键经安全解析，非数字时直接返回参数错误；请求体映射后交模板服务局部更新，
+     * 模板不存在时返回业务码 {@code NOT_FOUND}。
+     *
      * @param request 包含 templateId 路径参数与 MessageTemplateDTO 请求体
-     * @return data 为更新后模板的统一响应
+     * @return 200 响应，{@code data} 为更新后的模板；ID 无效、模板不存在或处理失败返回 400
      */
     @RequirePermission("office:notify:template:manage")
     @Operation(
@@ -231,8 +239,12 @@ public class MessageTemplateHandler {
 
     /**
      * 删除指定模板。
+     *
+     * <p>模板主键经安全解析，非数字时直接返回参数错误；删除成功返回空 {@code data}，
+     * 处理失败经错误映射返回 400。
+     *
      * @param request 包含 templateId 路径参数的请求
-     * @return data 为空的统一响应
+     * @return 200 响应，{@code data} 为空；ID 无效或处理失败返回 400
      */
     @RequirePermission("office:notify:template:manage")
     @Operation(

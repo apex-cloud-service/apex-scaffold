@@ -34,7 +34,10 @@ public class OfficeMeetingRoomRouter {
     /**
      * 注册会议室接口，静态 GET 路径（enabled/available）优先于会议室 ID 路径匹配。
      *
-     * @return 会议室路由
+     * <p>处理器通过构造器注入而非 Bean 方法参数获取；会议室与预订事件标识由路径参数携带，
+     * 创建、更新与预订使用 JSON 请求体，时间区间查询由查询参数提供。
+     *
+     * @return 会议室路由，挂载于 {@code /api/v2/office/meeting-rooms}
      */
     @RouterOperations({
         @RouterOperation(

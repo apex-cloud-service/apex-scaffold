@@ -41,7 +41,7 @@ public class KnowledgeIndexReconciliationJob {
      * <p>仅处理超过 15 分钟且处于指定解析/索引状态的记录；单文档失败记录日志后继续，
      * 不以无租户上下文扫描业务表。
      *
-     * @return 本轮校准结束的完成信号；单项错误已被隔离
+     * <p>本轮校准结束的完成信号；单项错误已被隔离。
      */
     public Mono<Void> runOnce() {
         Mono<List<String>> tenants = properties.getCleanup().getTenantIds().isEmpty()

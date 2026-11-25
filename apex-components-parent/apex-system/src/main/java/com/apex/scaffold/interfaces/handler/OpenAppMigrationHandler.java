@@ -51,7 +51,10 @@ public class OpenAppMigrationHandler {
     }
 
     /**
-     * 导出待迁移的存量开放应用清单（含哈希，不含明文密钥）。
+     * 导出待迁移的存量开放应用清单（含哈希，不含明文密钥）
+     *
+     * <p>调用 {@code migration.export()} 读取旧表生成待导入清单（含密码哈希、不含明文密钥），
+     * 以 {@code Result.success} 直接返回；需平台管理员权限。
      *
      * @param request 服务器请求
      * @return 统一响应，{@code data} 为待导入清单

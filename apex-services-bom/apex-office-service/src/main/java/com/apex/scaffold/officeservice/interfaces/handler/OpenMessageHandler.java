@@ -54,9 +54,13 @@ public class OpenMessageHandler {
     /**
      * 以开放应用身份投递单条文本消息。
      *
+     * <p>依次校验请求体存在、{@code platform} 与 {@code text} 非空、目标提供用户或群组之一，
+     * 再把文本封装为 {@code TextMessageContent} 委托 {@code OfficeMessageService#sendMessage} 投递；
+     * 仅支持文本消息，不开放模板管理、重发与撤回。
+     *
      * @param request 服务器请求，请求体为 {@link SendRequest}
-     * @return 统一响应，{@code data.messageId} 为平台返回的消息标识
-     * @throws BusinessException 请求体缺失、platform/text 为空或目标不合法时抛出
+     * @return 200 响应，{@code data.messageId} 为平台返回的消息标识
+     * @throws BusinessException 请求体缺失、platform/text 为空、目标不合法或平台不支持时抛出
      */
     @Operation(
             operationId = "openSendMessage",

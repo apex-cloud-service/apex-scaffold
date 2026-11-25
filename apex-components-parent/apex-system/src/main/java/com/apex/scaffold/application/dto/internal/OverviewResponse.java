@@ -40,12 +40,28 @@ public record OverviewResponse(
             @Schema(description = "下游 Result.data 原始负载；降级时为 null") JsonNode data,
             @Schema(description = "降级原因摘要；成功时为 null") String error) {
 
-        /** 单源成功结果。 */
+        /**
+         * 构造单数据源成功结果
+         *
+         * <p>状态固定为 {@code UP}，{@code error} 置为 {@code null}；传入的下游负载原样保留，
+         * 由调用方按需解析。
+         *
+         * @param data 下游 {@code Result.data} 原始负载，允许为 {@code null}
+         * @return 状态为 {@code UP} 的单源结果
+         */
         public static SourceResult up(JsonNode data) {
             return new SourceResult("UP", data, null);
         }
 
-        /** 单源降级结果。 */
+        /**
+         * 构造单数据源降级结果
+         *
+         * <p>状态固定为 {@code DEGRADED}，负载置为 {@code null}，仅保留降级原因摘要，
+         * 使整体 {@code degraded=true} 时仍可区分具体失败来源。
+         *
+         * @param error 降级原因摘要，允许为 {@code null}
+         * @return 状态为 {@code DEGRADED} 的单源结果
+         */
         public static SourceResult degraded(String error) {
             return new SourceResult("DEGRADED", null, error);
         }

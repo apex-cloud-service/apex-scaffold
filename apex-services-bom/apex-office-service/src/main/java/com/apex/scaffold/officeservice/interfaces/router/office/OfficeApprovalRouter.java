@@ -35,8 +35,11 @@ public class OfficeApprovalRouter {
      * <p>待办和发起列表等静态路径在流程实例标识路径之前注册，避免被通用详情路径误匹配；
      * 审批处理器负责请求校验、当前用户权限判断和业务状态流转。
      *
+     * <p>端点均位于 {@code /api/office/approvals}，发起与审批使用 JSON 请求体，
+     * 实例标识统一由路径参数携带，路由层不做鉴权与幂等控制。
+     *
      * @param handler 审批处理器
-     * @return 路由函数，挂载于 {@code /api/office/approvals}
+     * @return 路由函数，挂载于 {@code /api/office/approvals}，含发起、待办、审批与取消
      */
     @RouterOperations({
         @RouterOperation(
