@@ -4,11 +4,14 @@
 #
 # 双库迁移演练（方案 §13 脚本交付物）。
 #
-# 在真实 MySQL / PostgreSQL 容器上执行两个域的全链 Flyway 迁移回归：
-#   - system：V1–V90（含 V76 租户编码统一、V77 RBAC 租户化、V78 套餐、
-#             V79 租户配置、V80 自助菜单、V81–V84 权限种子、V87–V90 能力门禁）
+# 在真实 MySQL / PostgreSQL 容器上执行三个域的全链 Flyway 迁移回归：
+#   - system：V1 至当前最大版本（以 db/migration/mysql/ 实际 V 号为准；含 V76 租户编码统一、
+#             V77 RBAC 租户化、V78 套餐、V79 租户配置、V80 自助菜单、V81–V84 权限种子、V87–V90 能力门禁）
 #   - integration：V1–V3（连接器/凭据/审计、IoT 设备、Seata undo_log）
 #   - office：V1–V10（办公平台/消息/组织/会议室/通知 + V9/V10 审批撤销编排与主键自增）
+#
+# 注：knowledge 域（V1–V2）不入本演练编排，由 Failsafe 全量 verify 的
+#     KnowledgeDualDatabaseMigrationIntegrationTest 覆盖。
 #
 # 用法：
 #   bash scripts/test/run-dual-database-migration.sh            # 全部

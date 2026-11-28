@@ -22,6 +22,7 @@ scripts/
 ├── datasource/       # 数据源初始化
 ├── codegen/          # DDD 代码生成器
 ├── ci/               # CI/CD
+├── governance/       # 文档/仓库治理自检（verify-docs、check-doc-links、audit-backend-rules、check-memory-sync 等）
 ├── utils/            # 通用工具
 ├── lib/              # 脚本公共函数库
 ├── diagnostics/      # JVM 与应用诊断
@@ -34,7 +35,35 @@ scripts/
 └── archive/          # 历史一次性脚本归档
 ```
 
-> **兼容入口说明**：`scripts/` 根目录与 `scripts/deploy/` 下保留的部分同名脚本（如 `batch-add-javadoc.sh`、`deploy-monitoring.sh`）是历史路径兼容转发壳，实际实现集中在对应分类目录；待调用方全部迁移后可移除（见《工作区管理规范》与 jdk21-unified-auth 计划文档的兼容入口约定）。
+> **兼容入口说明**：以下同名脚本为历史路径兼容转发壳（exec 到分类目录实现，目标均已登记），待调用方全部迁移后可移除——
+> 根级 11 个：`batch-add-javadoc.sh`、`batch-add-lombok.sh`、`batch-verify-svg.sh`、`check-port-conflicts.sh`、`extract-env-vars.sh`、`fix-typescript-errors.sh`、`frontend-add-comments.sh`、`scan-javadoc-issues.sh`、`scan-lombok-issues.sh`、`update-frontend-version.sh`、`vue-components-add-comments.sh`；
+> deploy 根级 3 个：`app.sh`、`deploy-monitoring.sh`、`pull-infra-images.sh`；office 1 个：`generate-message-infrastructure.sh`；dev/check 1 个：`check-springdoc-annotations.sh`（转发至 v2）。
+> 注意：`deploy/start.sh`、`deploy/stop.sh`、`deploy/assemble-topology.sh` 是**真实实现**而非转发壳，勿按转发壳清理。
+
+> **索引覆盖说明**：本索引登记各分类的主要入口脚本；分类目录中另有辅助件（如 `dev/check/check-springdoc-annotations-v2.sh`、`test/test-k8s-gateway-release.sh`、`ops/maintenance/quarterly-archive.sh`、`utils/render-mermaid-svg.sh`、`ci/check-springdoc-coverage.sh`、`deploy/assemble-topology.sh` 等）以目录实际内容为准，详见各分类小节与分类 README。
+
+> **高频入口**：`build/init-build-env.sh`（构建环境固定，用法见 [build/README.md](build/README.md)）、`build/build.sh` 与 `release/release.sh`（用法见 [build-tools-usage](../docs/04-development/build-tools-usage.md)）、`lib/common.sh`（新脚本须复用的公共函数库，见根 [AGENTS.md](../AGENTS.md) 脚本约定）。
+
+---
+
+## 🏛️ governance/ - 文档与仓库治理自检
+
+文档治理、后端红线与台账同步的本地门禁（用法与判据见 [governance/README.md](governance/README.md)；默认警告模式，`--strict` 才产生非零退出码）。
+
+| 脚本 | 功能 | 使用场景 |
+|-----|------|---------|
+| `verify-docs.sh` | 目录/索引/任务大盘/私有目录/图表配对自检 | 文档类改动提交前必跑（AGENTS.md §0.7） |
+| `check-doc-layout.sh` | 一级目录 README/总览覆盖/根级散落检查 | 结构性调整后复核 |
+| `check-doc-refs.sh`（`check-doc-refs.py`） | 活文档引用断链检查 | 配合 `doc-refs-allowlist.txt` 豁免清单 |
+| `report-doc-orphans.sh` | 孤儿文档报告 | 定期清理评估 |
+| `audit-backend-rules.sh` | 后端编码红线静态扫描 | 代码改动自查（默认警告模式） |
+| `check-memory-sync.sh` | 变更记忆台账同步校验 | 已接入 `.githooks/pre-commit` 与 `commit-msg` |
+
+**示例**:
+```bash
+bash scripts/governance/verify-docs.sh          # 全量治理自检
+bash scripts/governance/verify-docs.sh --strict # 严格模式（阻断）
+```
 
 ---
 
@@ -379,6 +408,7 @@ mysql -u root -p apex_scaffold < scripts/data/init_workflow_test_data_v2.sql
 |-----|------|---------|
 | `check-doc-consistency.sh` | 文档一致性检查 | CI 中检查文档与代码是否一致 |
 | `check-doc-links.sh` | 文档链接检查 | CI 中检查文档中的链接是否有效 |
+| `check-springdoc-coverage.sh` | SpringDoc 注解覆盖检查 | 写操作路由的 OpenAPI 注解覆盖门禁 |
 
 **示例**:
 ```bash
