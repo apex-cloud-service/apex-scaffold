@@ -38,8 +38,10 @@
 | 87 | [87_api_gateway_architecture.mmd](87_api_gateway_architecture.mmd) | api_gateway_architecture |
 | 88 | [88_webflux_reactive_architecture.mmd](88_webflux_reactive_architecture.mmd) | webflux_reactive_architecture |
 | 89 | [89_multi_tenant_data_isolation_sequence.mmd](89_multi_tenant_data_isolation_sequence.mmd) | multi_tenant_data_isolation_sequence |
-| 90 | [90_login_biometric_mfa.mmd](90_login_biometric_mfa.mmd) | login_biometric_mfa |
-| 91 | [91_sso_keycloak_flow.mmd](91_sso_keycloak_flow.mmd) | sso_keycloak_flow |
+| 90 | [90_login_biometric_mfa.mmd](90_login_biometric_mfa.mmd) | login_biometric_mfa（v1 历史，参与者/端点已退役，保留不改） |
+| 90 | [90_login_biometric_mfa_v2.mmd](90_login_biometric_mfa_v2.mmd) | login_biometric_mfa_v2（2026-11-28 BE-066 修订：对齐 apex-auth-service 主链与 MFA 现行端点） |
+| 91 | [91_sso_keycloak_flow.mmd](91_sso_keycloak_flow.mmd) | sso_keycloak_flow（v1 历史，保留不改） |
+| 91 | [91_sso_keycloak_flow_v2.mmd](91_sso_keycloak_flow_v2.mmd) | sso_keycloak_flow_v2（2026-11-28 BE-066 修订：OIDC 客户端归属 apex-system，令牌端点兜底 auth-service） |
 | 92 | [92_workflow_submit_approve.mmd](92_workflow_submit_approve.mmd) | workflow_submit_approve |
 | 93 | [93_rate_limit_sentinel.mmd](93_rate_limit_sentinel.mmd) | rate_limit_sentinel |
 | 94 | [94_cache_consistency.mmd](94_cache_consistency.mmd) | cache_consistency |

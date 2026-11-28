@@ -1,0 +1,49 @@
+%% v2（2026-11-28，BE-066）：对齐当前实现——登录主链为 apex-auth-service 的 AuthenticationRouter
+%% （/auth/v1/login、/auth/v1/mfa/verify）+ apex-auth 的 AuthenticationApplicationService / MfaService / TotpService；
+%% 原 v1 的 apex-auth-center 参与者、/auth/v1/register/fido/* 端点与 login_history 表在当前代码中均不存在。
+%% 生物识别与设备信任（BiometricAuthService / DeviceTrustService）存在于 apex-auth 领域层，当前无 HTTP 端点接入主链。
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+sequenceDiagram
+    autonumber
+    participant Client as 客户端
+    participant GW as 业务网关<br/>(apex-gateway)
+    participant Router as AuthenticationRouter /<br/>MfaHandler（apex-auth-service）
+    participant AppSvc as AuthenticationApplication<br/>Service（apex-auth）
+    participant MfaSvc as MfaService / TotpService<br/>(apex-auth 领域服务)
+    participant TokenSvc as TokenService<br/>(共享 domain 端口 · apex-auth 实现)
+    participant Cache as Redis（令牌/挑战）
+    participant DB as MySQL（auth 库）
+
+    Note over Client,DB: 登录安全加固链路（v2）：MFA(TOTP) 已接入主登录链；MFA 因子管理经 /api/mfa/**（MfaManagementHandler）
+
+    Note over Client,Router: MFA 因子管理面（AuthCenterRouterConfig，经网关路由 auth-service）
+    Client->>GW: POST /api/mfa/totp/enable → totp/activate<br/>POST /api/mfa/sms/enable · /api/mfa/email/enable
+    GW->>Router: MfaManagementHandler
+    Router->>MfaSvc: 绑定/激活 MFA 因子（密钥与验证码校验）
+    MfaSvc-->>Router: 绑定结果（auth 库持久化）
+    Router-->>Client: 绑定完成
+
+    Note over Client,Router: 主登录链（AuthenticationRouter：/auth/v1/**）
+    Client->>GW: POST /auth/v1/login（账号 + 密码）
+    GW->>Router: AuthenticationHandler → AuthenticationApplicationService
+    AppSvc->>AppSvc: UserRepository 校验凭据（PasswordEncoder）<br/>TenantStatusPort 核验租户状态
+
+    opt MFA 已开启（MFA_CONFIG）
+        Client->>GW: POST /auth/v1/mfa/verify（或 /api/mfa/verify）
+        GW->>Router: MfaHandler.verify
+        Router->>MfaSvc: RFC 6238 TOTP 校验（MfaService/TotpService）
+        MfaSvc-->>Router: 校验结果
+        alt TOTP 校验失败
+            Router-->>Client: 401 MFA_INVALID
+        end
+    end
+
+    AppSvc->>TokenSvc: 签发令牌对（旧刷新令牌 CAS 消费，<br/>租户内用户行锁串行，JwtKeyMaterialService 提供签名素材）
+    TokenSvc->>Cache: SET token:access:{jjti}（2h）
+    TokenSvc->>Cache: SET token:refresh:{jjti}（7d）
+    TokenSvc-->>AppSvc: access + refresh 令牌对
+    AppSvc->>AppSvc: DomainEventPublisher 发布登录领域事件<br/>SessionService 会话登记
+    AppSvc-->>Router: LoginResponse
+    Router-->>Client: 200 {accessToken, refreshToken}
+
+    Note over Client,DB: 关键点：MFA 为可选加固层，按租户/安全策略启用；<br/>BiometricAuthService / DeviceTrustService 已在 apex-auth 领域层实现但当前无 HTTP 端点接入主链（后续接入需新增路由与回归）；<br/>审计为提交后的有界日志观察，无独立 login_history 表

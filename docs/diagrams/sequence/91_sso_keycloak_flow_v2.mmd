@@ -1,0 +1,71 @@
+%% v2（2026-11-28，BE-066）：对齐当前实现——OIDC 登录客户端（SecurityConfig · oauth2Login ·
+%% OidcAuthenticationSuccessHandler · KeycloakConfig · KeycloakUserSyncService）位于 apex-system
+%% 的 interfaces 包（apex-system-service 装配，keycloak.enabled 条件启用，默认关闭）；
+%% 原 v1 的"业务网关(apex-interfaces)/认证中心(apex-auth-center)"参与者已退役；
+%% OAuth2 令牌端点兜底为 auth-service 的 OauthTokenHandler / OauthEndpointRouter（网关 /oauth2/** 路由 auth-service）。
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+sequenceDiagram
+    autonumber
+    participant Browser as 浏览器(SPA)
+    participant Sys as 系统服务 apex-system-service<br/>(SecurityConfig · OAuth2 Client)
+    participant SSO as Spring Security<br/>OAuth2 Client（oauth2Login）
+    participant KC as Keycloak<br/>(OIDC IdP)
+    participant Handler as OidcAuthentication<br/>SuccessHandler
+    participant Sync as KeycloakUserSyncService<br/>(Admin Client · KeycloakAdminHandler)
+    participant Repo as UserRepository<br/>(apex-system domain 端口)
+    participant TokenSvc as TokenService（共享 domain 端口）
+    participant Cache as Redis
+
+    Note over Browser,Cache: SSO 集成（v2）：OIDC Authorization Code + PKCE。system-service 的 keycloak.enabled=true 时启用（默认关闭）
+
+    Note over Sys: Init: KeycloakConfig 条件装配（@ConditionalOnProperty("keycloak.enabled")）<br/>加载 server-url / realm / client-id；初始化 Keycloak Admin Client（阻塞调用隔离到 remote 调度器）
+
+    Browser->>+SSO: GET /oauth2/authorization/keycloak
+    SSO->>SSO: 生成 state + nonce，构造授权 URL<br/>（code_challenge=S256 启用 PKCE）
+    SSO-->>-Browser: 302 → Keycloak /realms/{realm}/protocol/openid-connect/auth
+    Browser->>+KC: 携带 client_id + scope(openid profile) + code_challenge
+
+    alt 用户未登录 Keycloak
+        KC-->>Browser: 302 → 登录页，用户输入凭证
+        Browser->>+KC: 提交用户名/密码
+        KC-->>-Browser: 认证成功 → 302 回调
+    end
+
+    Browser->>+KC: 302 → {redirect_uri}?code=xxx&state=xxx
+    Note over KC,SSO: 回跳 system-service（redirect-uri: {baseUrl}/login/oauth2/code/{registrationId}）
+    SSO->>+KC: POST /protocol/openid-connect/token<br/>exchange code（PKCE verifier）
+    KC-->>-SSO: 200 {id_token, access_token, refresh_token}
+
+    alt ID Token 签名校验通过（JWT keys/rotation）
+        SSO->>SSO: 解析 OidcUser（sub/email/preferred_username）
+        SSO->>+Handler: onAuthenticationSuccess(OidcUser)
+        Handler->>+Repo: findByKeycloakSub(sub)
+        alt 本地用户存在
+            Repo-->>-Handler: UserEntity（按 sub 命中）
+        else 用户不存在 且 user-sync-enabled=true
+            Repo-->>Handler: empty
+            Handler->>+Sync: syncUserFromKeycloak(sub)
+            Sync->>+KC: GET /admin/realms/{realm}/users/{sub}
+            KC-->>-Sync: UserRepresentation
+            Sync->>+Repo: save 新用户（password="", status=1, keycloakSub=sub）
+            Repo-->>-Sync: 用户落库
+            Sync-->>-Handler: 返回用户
+        else 用户不存在 且 user-sync-enabled=false
+            Repo-->>Handler: empty
+            Handler-->>Browser: 403 Forbidden（拒绝未同步用户）
+        end
+        Handler->>+Repo: save（刷新 last login）
+        Repo-->>-Handler: 更新成功
+        Handler->>+TokenSvc: generateAccessToken(userId, "keycloak-oidc")
+        Handler->>+TokenSvc: generateRefreshToken(userId, "keycloak-oidc")
+        TokenSvc->>Cache: SET token:access:{jjti}（2h）
+        TokenSvc->>Cache: SET token:refresh:{jjti}（7d）
+        TokenSvc-->>-Handler: access + refresh
+        Handler-->>-Browser: 302 → frontend-callback-url?accessToken&refreshToken&userId
+
+        Note over Sys,Cache: OAuth2 令牌端点兜底由 auth-service 提供：<br/>OauthTokenHandler / OauthEndpointRouter / OauthMetadataRouter（网关将 /oauth2/** 路由至 auth-service，PKCE S256 校验）
+    else 签名校验失败
+        SSO-->>Browser: 401 INVALID_ID_TOKEN
+    end
+
+    Note over Browser,Cache: 关键点：keycloak_sub 为关联键；本地只读用户（空密码）；Admin Client 阻塞调用隔离到 remote 调度器
