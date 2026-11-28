@@ -82,18 +82,18 @@
 grep -A 10 "<properties>" pom.xml
 grep "\"version\":" package.json
 
-# 代码统计（system 业务库承载 interfaces/application 协议与应用层）
-cd apex-system/src/main/java/com/apex/scaffold/interfaces/handler
+# 代码统计（system 业务库承载 interfaces/application 协议与应用层；共享 domain 在 apex-shared-parent/apex-domain）
+cd apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler
 ls -1 *Handler.java | wc -l  # Handler数量
 
-cd apex-system/src/main/java/com/apex/scaffold/application/service
+cd apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application/service
 ls -1 *Service.java | wc -l  # Service数量
 
-cd apex-system/src/main/java/com/apex/scaffold/domain/repository
-ls -1 *Repository.java | wc -l  # Repository数量
+cd apex-shared-parent/apex-domain/src/main/java/com/apex/scaffold/domain
+find . -name "*Repository.java" | wc -l  # 共享 Repository 端口数量
 
-# Flyway迁移版本（六个业务域独立版本链，各域当前版本见交付文档数据库基线）
-ls -1 apex-system/src/main/resources/db/migration/mysql/V*.sql | tail -1
+# Flyway迁移版本（六个业务域独立版本链，各域当前版本以 db/migration/mysql/ 实际最大 V 号为准）
+ls -1 apex-components-parent/apex-system/src/main/resources/db/migration/mysql/V*.sql | tail -1
 
 # 监控面板数量
 ls -1 config/monitoring/grafana/*.json | wc -l
@@ -288,9 +288,9 @@ grep '"vue":' package.json | sed 's/.*: "\(.*\)".*/\1/'
 
 **解决**:
 ```bash
-# 使用Grep精确统计
-find apex-system/src/main/java/com/apex/scaffold/interfaces -name "*Handler.java" | wc -l
-find apex-system/src/main/java/com/apex/scaffold/application -name "*Service.java" -not -name "*ServiceImpl.java" | wc -l
+# 使用Grep精确统计（第二阶段嵌套后路径）
+find apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces -name "*Handler.java" | wc -l
+find apex-components-parent/apex-system/src/main/java/com/apex/scaffold/application -name "*Service.java" -not -name "*ServiceImpl.java" | wc -l
 ```
 
 ### Q4: 图表与文档描述不一致?

@@ -4,123 +4,71 @@
 
 ## 功能说明
 
-API版本管理支持多版本共存,便于向后兼容和灰度发布。通过URL路径区分不同版本:
-- `/api/v1/users` - V1版本
-- `/api/v2/users` - V2版本
+本工程采用 **URL 路径版本控制**，版本由各业务库的 Router（函数式路由）直接注册实现，**没有 `@ApiVersion` 注解或拦截器机制**（见 `apex-system` 的 `ApiVersionConfig` 类注释：该类仅是基于 `PathMatchConfigurer` 的说明性配置载体，javadoc 明言「URL 路径版本由各 Router 直接注册」）。约定形式：
 
-## 快速开始
+- `/api/v1/...` — 第一代稳定契约（多数业务路由）
+- `/api/v2/...` — 第二代契约（如统一待办 `GET /api/v2/todo`、文件分享 `/api/v2/file-shares/**`、平台治理 `/api/v2/operations|platform|tenant-packages|capabilities/**`）
+- `/auth/v1/...`、`/auth/v2/...` — 认证中心独立前缀（`/auth/v2/**` 用于密码找回）
+- `/integration/v1/...`、`/admin-api/v1/...`、`/open-api/...`、`/internal/v1/...` — 按域/受众划分的前缀族
 
-### 1. 创建版本化Controller
+版本共存即「新旧 Router 同时注册、网关同时放行」，便于向后兼容和灰度发布。
+
+## 快速开始：新增一个 v2 端点
+
+本仓 Web 层一律 WebFlux 函数式 Router + Handler（禁用 `@Controller`/`@RestController`）。在所属业务库（或运行模块）新增/扩展 Router 注册即可：
 
 ```java
-@RestController
-@RequestMapping("/api/v1/users")
-@ApiVersion("v1")
-public class UserControllerV1 {
-    
-    @GetMapping
-    public Result<List<UserVO>> listUsers() {
-        // V1实现
-    }
-}
-
-@RestController
-@RequestMapping("/api/v2/users")
-@ApiVersion(value = "v2", deprecated = false)
-public class UserControllerV2 {
-    
-    @GetMapping
-    public Result<PageResult<UserVO>> listUsers(
-            @RequestParam int page,
-            @RequestParam int size) {
-        // V2实现: 支持分页
-    }
+// 在既有 RouterConfig / Router 中追加 v2 路由注册（示意，风格对齐 apex-example 的 ExampleRouterConfig）
+@Bean
+public RouterFunction<ServerResponse> productV2Routes(ProductV2Handler handler) {
+    return RouterFunctions.route()
+            .GET("/api/v2/products/{id}", handler::getProduct)
+            .build();
 }
 ```
 
-### 2. 注解参数说明
+要点：
 
-| 参数 | 类型 | 必填 | 说明 | 示例 |
-|------|------|------|------|------|
-| value | String | 是 | 版本号 | "v1", "v2" |
-| deprecated | boolean | 否 | 是否废弃 | true/false |
-| deprecationNote | String | 否 | 废弃说明 | "请使用V2版本" |
-| minVersion | String | 否 | 最低支持版本 | "v1" |
+1. 新版本端点必须与旧版本**路径不同**（v1 继续服务，不改动旧 Router）。
+2. 网关 `application.yml` 需显式放行新增前缀（参考 `/api/v2/**` 各路由组的写法）。
+3. Handler 方法上的 SpringDoc 注解（`@Operation`/`@Schema`）与路径、方法、响应保持一致（见 [springdoc-annotation-templates.md](springdoc-annotation-templates.md)）。
 
-### 3. 废弃版本标记
+### 版本演进策略
 
-对于需要逐步淘汰的旧版本:
-
-```java
-@RestController
-@RequestMapping("/api/v1/legacy")
-@ApiVersion(
-    value = "v1", 
-    deprecated = true,
-    deprecationNote = "此版本将于2024-12-31停止支持,请迁移到V2版本"
-)
-public class LegacyController {
-    // ...
-}
-```
-
-## 版本演进策略
-
-### 兼容性原则
+#### 兼容性原则
 
 1. **新增字段**: 可以在新版本中添加,不影响旧版本
-2. **删除字段**: 不应直接删除,先标记为deprecated,保留至少一个版本周期
+2. **删除字段**: 不应直接删除,先在文档与 `@Schema` 中标注 deprecated,保留至少一个版本周期
 3. **修改行为**: 创建新版本,保持旧版本行为不变
 4. **错误码变更**: 新版本可以使用新错误码,但需文档说明
 
-### 版本生命周期
+#### 版本生命周期
 
 ```
 V1 (活跃) → V2 (活跃) → V1 (废弃) → V1 (下线)
    ↓           ↓           ↓
-  新功能     增强功能    停止维护    移除代码
+  新功能     增强功能    停止维护    移除路由
 ```
 
-### 灰度发布
+#### 灰度发布
 
-可以通过网关或负载均衡器控制流量分配:
+版本流量分配属于部署层能力：可通过网关路由权重、负载均衡器或部署侧（Compose/K8s）控制。本仓默认网关按路径前缀转发，不按版本做请求级分流。
 
-```nginx
-# Nginx配置示例
-location /api/v1/ {
-    proxy_pass http://backend_v1;
-}
+## Swagger 文档分组
 
-location /api/v2/ {
-    proxy_pass http://backend_v2;
-}
-```
+system-service 的 SpringDoc 分组以 `SpringDocConfig` 实际装配为准，当前分组为：
 
-## Swagger文档集成
+| 分组 | 覆盖 |
+| --- | --- |
+| `default` | 默认业务路由组 |
+| `auth` | 认证域路由组 |
+| `user` | 用户域路由组 |
+| `admin-system` | 系统管理域 |
+| `admin-user` | 用户管理域 |
 
-在Swagger配置中区分不同版本:
+**没有** 按 URL 版本划分的 v1/v2 分组；新增版本族如需独立分组，应在 `SpringDocConfig` 增配 `GroupedOpenApi`（`pathsToMatch` 指向对应前缀），不得在文档中虚构分组。
 
-```java
-@Bean
-public GroupedOpenApi v1Api() {
-    return GroupedOpenApi.builder()
-        .group("v1")
-        .pathsToMatch("/api/v1/**")
-        .build();
-}
-
-@Bean
-public GroupedOpenApi v2Api() {
-    return GroupedOpenApi.builder()
-        .group("v2")
-        .pathsToMatch("/api/v2/**")
-        .build();
-}
-```
-
-访问地址:
-- V1文档: http://localhost:8080/swagger-ui.html?group=v1
-- V2文档: http://localhost:8080/swagger-ui.html?group=v2
+访问地址：http://localhost:8082/swagger-ui.html（分组切换在页面右上角下拉）。
 
 ## 最佳实践
 
@@ -132,7 +80,7 @@ public GroupedOpenApi v2Api() {
 
 ### 2. 文档同步
 
-- 每个版本必须有独立的API文档
+- 每个版本必须在 `API_ROUTES.md` 登记路由行
 - 废弃版本需在文档中明确标注
 - 提供版本迁移指南
 
@@ -150,7 +98,7 @@ public GroupedOpenApi v2Api() {
 
 ## 注意事项
 
-1. **数据库兼容**: 新版本可能需要数据库schema变更,使用Flyway管理
+1. **数据库兼容**: 新版本可能需要数据库schema变更,使用Flyway管理（各服务独立版本链）
 2. **缓存隔离**: 不同版本的缓存key应隔离,避免冲突
 3. **日志区分**: 日志中应包含版本信息,便于问题排查
 4. **测试覆盖**: 每个版本都需要完整的集成测试
@@ -177,25 +125,12 @@ V2返回(新增email字段):
 }
 ```
 
-### 场景2: 接口行为变更
+### 场景2: 接口行为变更（真实案例）
 
-V1: 不分页,返回全部数据
-```java
-@GetMapping
-public Result<List<UserVO>> listUsers() {
-    return Result.success(userService.list());
-}
-```
+统一待办从多域分散查询收敛为聚合服务只读统一入口：
 
-V2: 支持分页
-```java
-@GetMapping
-public Result<PageResult<UserVO>> listUsers(
-        @RequestParam int page,
-        @RequestParam int size) {
-    return Result.success(userService.page(page, size));
-}
-```
+- 旧口径：各域自行查询任务/站内信
+- 新口径：`GET /api/v2/todo`（`apex-aggregation-service` 的 `UnifiedTodoRouter`，经内部签名契约拉取 workflow 与 office 数据，无本地数据库）
 
 ### 场景3: 错误码变更
 
@@ -215,9 +150,9 @@ V2错误码(更精确):
 }
 ```
 
-## TODO
+## 规划项（未实现，登记于此避免与现状混淆）
 
-- [ ] 实现基于Header的版本控制(备选方案)
-- [ ] 添加版本兼容性检查拦截器
+- [ ] 基于Header的版本控制(备选方案，当前为纯 URL 路径约定)
+- [ ] 版本兼容性检查拦截器
 - [ ] 自动生成版本差异报告
-- [ ] 集成API网关进行版本路由
+- [ ] 按版本族的 Swagger 分组（当前按域分组）

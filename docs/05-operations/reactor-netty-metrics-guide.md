@@ -125,8 +125,9 @@ curl -fsS http://localhost:8080/actuator/prometheus \
 ### 步骤 4：验证 Prometheus 已采集
 
 ```bash
+# 指标标签以 management.metrics.tags.application=${spring.application.name} 为准（无 module 标签）
 curl -fsS -G \
-  --data-urlencode 'query=reactor_netty_eventloop_threads{application="apex-scaffold",module="gateway"}' \
+  --data-urlencode 'query=reactor_netty_eventloop_threads{application="apex-gateway"}' \
   http://localhost:9090/api/v1/query | jq .
 ```
 
@@ -141,8 +142,7 @@ curl -fsS -G \
       {
         "metric": {
           "__name__": "reactor_netty_eventloop_threads",
-          "application": "apex-scaffold",
-          "module": "gateway",
+          "application": "apex-gateway",
           "instance": "host.containers.internal:8080",
           "job": "apex-gateway",
           "name": "reactor-http"
@@ -268,8 +268,7 @@ management:
 
 1. Prometheus 尚未采集（等待 15–30 秒）；
 2. 网关没有请求流量，EventLoop/连接指标尚未更新；
-3. 查询标签与真实采集标签不一致（应为 `application="apex-scaffold"`、
-   `module="gateway"`）。
+3. 查询标签与真实采集标签不一致（应为 `application="apex-gateway"`，无 `module` 标签）。
 
 发送测试流量：
 
@@ -300,7 +299,7 @@ done
 
 - [ ] 网关健康检查返回 UP（`http://localhost:8080/actuator/health`）
 - [ ] `curl -fsS http://localhost:8080/actuator/prometheus | grep -c '^reactor_netty'` 大于 10
-- [ ] Prometheus 查询 `reactor_netty_eventloop_threads{application="apex-scaffold",module="gateway"}` 有结果
+- [ ] Prometheus 查询 `reactor_netty_eventloop_threads{application="apex-gateway"}` 有结果
 - [ ] Grafana 增强大盘 WebFlux 部分有数据
 - [ ] Grafana 增强大盘 JVM 部分有数据
 - [ ] 未安装 `jq` 时，Prometheus 步骤明确标记 SKIP，而非通过

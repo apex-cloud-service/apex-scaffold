@@ -1,5 +1,7 @@
 # Apex Scaffold 文档与脚本目录结构规范
 
+> **历史快照（已被取代）**：本文为 2026-09-17 时点的目录规范（v1.0）；当前权威目录规范为 [AGENTS.md 第 0.2 节](../../AGENTS.md)（既有编号目录与 `docs/tasks|specs|plans|records|reviews|notes` 标准目录并存）及 [docs/specs/project-governance.md](../specs/project-governance.md)。与权威规范冲突之处（如「禁止按时间组织」与现行 `periodic-reports/` 归档并存）以权威规范为准，本文不再更新。
+
 **版本**: v1.0  
 **发布日期**: 2026-09-17  
 **适用范围**: 所有项目文档和脚本

@@ -263,7 +263,7 @@ mvnd -T4 -B clean verify
 受影响模块的快速验证示例：
 
 ```bash
-mvnd -T4 -B -pl apex-system-service -am test
+mvnd -T4 -B -pl :apex-system-service -am test
 ```
 
 本次基础设施拆分与 office 站内信的固定环境验证入口为 [`scripts/test/verify-infrastructure-websocket.sh`](scripts/test/verify-infrastructure-websocket.sh)，支持 `--infrastructure`、`--websocket` 和 `--full`；中台主干（网关、六个业务库与运行模块）的验证入口为 [`scripts/test/verify-middle-platform.sh`](scripts/test/verify-middle-platform.sh)，默认执行定向 `test`，使用 `--full` 执行完整反应堆 `clean verify`。两个脚本都只调用 mvnd，不降低现有 verify 门禁。office 站内信的协议、Origin 白名单、HTTP/WS 成对路由和单实例内存状态见[站内信说明](docs/05-operations/in-app-messaging.md)。

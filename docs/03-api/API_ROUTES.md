@@ -14,7 +14,7 @@
 | `/admin-api/v1/**` | system / office / file / workflow 多服务 | 管理后台和运维接口 | 需要认证；启用 RBAC 时还需命中 `securityProperties.adminRoles` 中的任一角色，具体权限以 Handler 注解为准 |
 | `/api/office/**` | office（`apex-office-service`） | 办公平台能力接口 | 默认需要认证 |
 | `/auth/sso/**` | system 域 | SSO 登录、回调和登出 | 全部需要认证；当前公开白名单未放行这些路径 |
-| `/oauth2/**`、`/.well-known/**` | 认证中心 | OAuth2 授权服务器标准端点 | 网关把该前缀路由到 `apex-auth-service`；仅 `token`、`revoke`、`introspect` 与 `/.well-known/**` 在 Web 安全层公开，其余已注册端点需要认证。system 库仍保留一份历史 `OAuth2RouterConfig`，但网关不路由到它，不能按该实现推断线上契约 |
+| `/oauth2/**`、`/.well-known/**` | 认证中心 | OAuth2 授权服务器标准端点 | 网关把该前缀路由到 `apex-auth-service`；仅 `token`、`revoke`、`introspect` 与 `/.well-known/openid-configuration`、`/.well-known/jwks.json` 两个具体路径在 Web 安全层公开（`AuthCenterConfig` 放行集合），其余已注册端点需要认证。system 库仍保留一份历史 `OAuth2RouterConfig`，但网关不路由到它，不能按该实现推断线上契约 |
 | `/api/v1/auth/**` | system 域 | 认证、授权及 Keycloak/OIDC 登录接口 | 默认需要认证；Keycloak 的三个登录/回调端点公开且仅在 `keycloak.enabled=true` 时装配 |
 | `/api/mfa/**`、`/api/ip-access-control/**` | 认证中心 | MFA 管理和 IP 访问控制 | 需要 Bearer ACCESS 访问令牌 |
 | `/api/v1/mfa/**`、`/auth/v1/**` | 认证中心 | MFA、登录、令牌、角色、权限和会话 | 仅 `/auth/v1/login`、`/auth/v1/refresh`、`/auth/v1/mfa/verify`、`/auth/v2/password-recovery/**` 与 `/.well-known/**` 公开，其余需要 Bearer ACCESS 访问令牌 |
@@ -119,6 +119,8 @@
 | PUT | `/admin-api/v1/charts/{id}/status` | `ChartRouter` | `ChartHandler.updateStatus` | 更新图表状态 |
 
 ### 2.4 组织同步和办公平台管理
+
+> 运行边界：`OrgSyncRouter`（含本节 `/admin-api/v1/org/**`）位于 `apex-office-service` 的 `officeservice/interfaces/off/router/` 子包，网关 `/admin-api/v1/org/**` 路由 office 域，非 system 域路由（2026-11-28 BE-066 注记）。
 
 | 方法 | 路径 | Router | Handler 方法 | 说明 |
 | --- | --- | --- | --- | --- |
@@ -289,9 +291,21 @@
 ### 2.10 OAuth2
 
 > **运行边界**：`/oauth2/**` 与 `/.well-known/**` 在网关路由到 `apex-auth-service`（见 §1），
-> 当前线上契约以 `OauthTokenRouter`、`OauthEndpointRouter`、`OauthMetadataRouter` 为准。
+> 当前线上契约以 `OauthTokenRouter`、`OauthEndpointRouter`、`OauthMetadataRouter` 为准（现役 7 条见 §2.10.1）。
 > 下表是 system 库中历史 `OAuth2RouterConfig` 的注册清单，仅在直连 system-service 且该配置被装配时生效，
 > 不能作为网关后的实际接口清单。
+
+#### 2.10.1 现役 OAuth2 端点（`apex-auth-service`，2026-11-28 BE-066 补登）
+
+| 方法 | 路径 | Router | Handler 方法 | 说明 |
+| --- | --- | --- | --- | --- |
+| POST | `/oauth2/token` | `OauthTokenRouter` | `OauthTokenHandler.token` | 令牌端点（按 grant 类型校验客户端凭据） |
+| GET | `/oauth2/authorize` | `OauthEndpointRouter` | `OauthAuthorizationHandler.authorize` | 授权端点（需登录态） |
+| POST | `/oauth2/consent` | `OauthEndpointRouter` | `OauthAuthorizationHandler.consent` | 同意确认（需登录态） |
+| POST | `/oauth2/revoke` | `OauthEndpointRouter` | `OauthAuthorizationHandler.revoke` | 令牌撤销（要求 `token` + `client_id`） |
+| POST | `/oauth2/introspect` | `OauthEndpointRouter` | `OauthAuthorizationHandler.introspect` | 令牌内省（要求 `token`） |
+| GET | `/.well-known/openid-configuration` | `OauthMetadataRouter` | （内联元数据响应） | OIDC 发现文档 |
+| GET | `/.well-known/jwks.json` | `OauthMetadataRouter` | （内联 JWKS 响应） | JWKS 公钥集 |
 
 当前安全配置要求 discovery、JWKS、authorize、consent 和 consent/revoke 使用已认证登录态。Web 安全层公开的 token 端点仍按 grant 类型向应用服务传递客户端凭据并校验授权；revoke Handler 要求 `token` 和 `client_id`，introspect Handler 要求 `token`，二者没有在 Handler 中执行客户端密钥认证。不能将协议预期或 OpenAPI 标注替代为实际认证行为。
 
@@ -441,7 +455,21 @@
 | POST | `/api/v1/open-apps/{clientId}/reset-secret` | `OpenAppAdminRouter` | `OpenAppAdminHandler.resetSecret` | 重置应用密钥 |
 | GET | `/admin-api/v1/open-apps/migration/export` | `OpenAppMigrationRouter` | `OpenAppMigrationHandler.export` | 开放应用迁移导出 |
 | POST | `/admin-api/v1/open-apps/migration/import` | `OpenAppMigrationRouter` | `OpenAppMigrationHandler.import` | 开放应用迁移导入 |
-| GET | `/open-api/users` | `OpenUserRouter` | `OpenUserHandler` | 开放 API 用户信息端点 |
+
+#### 2.16.1 开放 API 端点（`/open-api`，开放应用凭据 + scope 门控）
+
+> 网关 `open-api-*` 四条路由（`application.yml` open-api 段）承载本节路径；scope 契约见 `open-platform-integration.md` §7。2026-11-28 BE-066 补登（原 §2.16 末行的 `/open-api/users` 移入本节）。
+
+| 方法 | 路径 | Router | Handler 方法 | 运行边界 | 说明 |
+| --- | --- | --- | --- | --- | --- |
+| GET | `/open-api/users` | `OpenUserRouter` | `OpenUserHandler.list` | `apex-system-service`（Router 在 apex-system） | 开放用户信息 |
+| POST | `/open-api/file/upload` | `OpenFileRouter` | `OpenFileHandler.upload` | `apex-file-service` | 开放文件上传（multipart） |
+| GET | `/open-api/file/content` | `OpenFileRouter` | `OpenFileHandler.content` | `apex-file-service` | 开放文件内容下载 |
+| GET | `/open-api/workflow/definitions` | `OpenWorkflowRouter` | `OpenWorkflowHandler.definitions` | `apex-workflow-service` | 开放流程定义列表 |
+| GET | `/open-api/workflow/definitions/{workflowCode}` | `OpenWorkflowRouter` | `OpenWorkflowHandler.definition` | `apex-workflow-service` | 开放流程定义详情 |
+| POST | `/open-api/workflow/{workflowCode}/instances` | `OpenWorkflowRouter` | `OpenWorkflowHandler.start` | `apex-workflow-service` | 开放流程发起 |
+| GET | `/open-api/workflow/tasks/my` | `OpenWorkflowRouter` | `OpenWorkflowHandler.myTasks` | `apex-workflow-service` | 开放我的任务查询 |
+| POST | `/open-api/messages` | `OpenMessageRouter` | `OpenMessageHandler.send` | `apex-office-service` | 开放站内信发送（JSON） |
 
 ### 2.17 办公与文件服务补充端点（office / file 运行模块）
 
@@ -468,7 +496,6 @@
 | POST | `/api/v1/file/chunk/cleanup/{fileId}/retry` | `ChunkRouter` | 清理分片重试 |
 | GET | `/api/v1/file/preview` | `FileRouter` | 文件预览 |
 | POST | `/api/v1/file/orphan/{fileId}/retry` | `FileRouter` | 孤儿文件重试 |
-| GET | `/api/v1/files`、`/api/v1/files/generic` | `FileRouter` | 文件列表与通用查询 |
 | POST/GET | `/api/v2/files/{fileId}/shares` | `FileShareRouter` | 创建与查询文件分享 |
 | DELETE | `/api/v2/file-shares/{shareId}` | `FileShareRouter` | 撤销文件分享 |
 | POST | `/api/v2/file-shares/exchange`、`/api/v2/file-shares/download` | `FileShareRouter` | 公开兑换码换票与下载（`SystemConstants.PUBLIC_PATHS` 放行） |
@@ -522,8 +549,10 @@
 | DELETE | `/integration/v1/connectors/{id}` | `IntegrationConnectorRouter` | `ConnectorConfigHandler.delete` | 删除连接器 |
 | GET | `/integration/v1/credentials` | `IntegrationConnectorRouter` | `CredentialHandler.list` | 查询凭据列表 |
 | POST | `/integration/v1/credentials` | `IntegrationConnectorRouter` | `CredentialHandler.register` | 注册凭据 |
+| GET | `/integration/v1/credentials/{id}` | `IntegrationConnectorRouter` | `CredentialHandler.get` | 查询凭据元数据（2026-11-28 BE-066 补登） |
 | PUT | `/integration/v1/credentials/{id}/rotate` | `IntegrationConnectorRouter` | `CredentialHandler.rotate` | 轮换凭据 |
 | DELETE | `/integration/v1/credentials/{id}` | `IntegrationConnectorRouter` | `CredentialHandler.delete` | 删除凭据 |
+| POST | `/integration/v1/webhook/{connector}` | `IntegrationConnectorRouter` | `WebhookInboundHandler.accept` | 入站 Webhook 接收（JSON，按连接器路由；2026-11-28 BE-066 补登） |
 | GET | `/integration/v1/iot/devices` | `IotDeviceRouter` | `DeviceAdminHandler.page` | 分页查询设备 |
 | GET | `/integration/v1/iot/devices/{id}` | `IotDeviceRouter` | `DeviceAdminHandler.get` | 查询设备详情 |
 | POST | `/integration/v1/iot/devices` | `IotDeviceRouter` | `DeviceAdminHandler.register` | 注册设备 |
@@ -573,6 +602,7 @@
 | GET | `/auth/v1/sessions/statistics` | `SessionRouter` | `SessionHandler.getOnlineStatistics` | 查询在线统计 |
 | DELETE | `/auth/v1/sessions/{sessionId}` | `SessionRouter` | `SessionHandler.terminateSession` | 终止指定会话 |
 | GET | `/auth/v1/sessions/{sessionId}` | `SessionRouter` | `SessionHandler.getSessionById` | 查询会话详情 |
+| GET | `/auth/v1/authorization/users/{userId}` | `UnifiedAuthorizationRouter` | `UnifiedAuthorizationHandler.query` | 统一授权查询（公开契约，system 侧 `AuthCenterPermissionClient` 经内部签名调用；2026-11-28 BE-066 补登） |
 
 ### 3.3 MFA 接口
 
@@ -693,7 +723,7 @@
 
 ### 4.4 核对范围
 
-当前清单登记 410 条方法与路径注册：§2（`/api`、`/admin-api`、`/open-api` 前缀族，含 office/file/workflow/aggregation 等运行模块注册）330 条，§3 独立认证中心（`apex-auth-service`）80 条，来自本文列出的各 Router 类。Keycloak 的 6 条条件装配路由包含在 §2 计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量。
+当前清单登记 469 条方法与路径注册行：§2（`/api`、`/admin-api`、`/open-api` 前缀族，含 office/file/workflow/aggregation 等运行模块注册与 §2.10.1/§2.16.1 两个子节）388 行，§3 独立认证中心（`apex-auth-service`）81 行，来自本文列出的各 Router 类。Keycloak 的 6 条条件装配路由包含在 §2 计数中；405 fallback、OpenAPI 占位、示例和框架端点不计入。统计按运行边界区分相同类名，并展开全部嵌套前缀和路径常量；合并多路径的行按 1 行计。2026-11-28 BE-066 复核：补登 integration 2 条、open-api 7 条、统一授权 1 条、现役 OAuth2 7 条，移除幻影行 `GET /api/v1/files`，计数由旧值 410 重算为 469；后续增删表格行请同步回写本段计数。
 
 > 计数口径：仅为本文表格行数（2026-11-11 按方法列重算，2026-11-13 增补 §2.18 聚合服务，合并单元格如 `POST/GET` 计 1 条），用于快速核对文档自身完整性；新增或删除端点时应同步更新本表，路由完整性以各 Router 源码为准。
 
@@ -721,5 +751,5 @@ system 域（`apex-system-service` 装配，业务实现在 `apex-system`）：
 
 - 工作流路由：`apex-workflow-service/src/main/java/com/apex/scaffold/workflowservice/interfaces/router/`（`WorkflowRouter.java`、`WorkflowDefinitionRouter.java`）
 - 文件路由：`apex-file-service/src/main/java/com/apex/scaffold/fileservice/interfaces/router/`
-- 办公路由：`apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/`（含 `office/` 子包）
+- 办公路由：`apex-office-service/src/main/java/com/apex/scaffold/officeservice/interfaces/router/`（含 `office/` 与 `off/router/` 两个子包，`OrgSyncRouter`/`MessageRouter` 在后者）
 - 集成路由：`apex-integration/src/main/java/com/apex/scaffold/integration/`

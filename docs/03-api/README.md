@@ -8,7 +8,27 @@
 
 ### [API 路由清单](./API_ROUTES.md)
 
-全部 HTTP 路由登记清单（主应用与认证中心），存在性由 `scripts/ci/check-doc-consistency.sh` 检查
+全部 HTTP 路由登记清单（主应用与认证中心），存在性由 `scripts/ci/check-doc-consistency.sh` 检查。**现行权威清单**。
+
+### [内部 API 契约](./internal-api-contracts.md)
+
+跨服务 `/internal/v1/**` 内部接口与事件契约清单（防漂移基线）：提供方、消费方、契约 DTO 与载体逐条登记
+
+### [开放平台集成](./open-platform-integration.md)
+
+开放应用（open-app）体系：注册/密钥/scope 目录、`/open-api/**` 开放端点、网关 scope 门禁与分档限流
+
+### [集成服务 IoT API](./integration-iot-api.md)
+
+设备接入域接口：设备注册/影子/遥测/命令、MQTT 接入（EMQX 外置）与凭据管理
+
+### [API 路径与参数修正](./api-path-corrections.md)
+
+历史路径修正记录（2026-09 快照，现行权威为 API_ROUTES.md）
+
+### [前期路由快照](./api-routes.md)
+
+早期接口快照（**非权威清单**，仅供考古对照；以 [API_ROUTES.md](./API_ROUTES.md) 为准）
 
 ### [路由映射](../_archive/api/route-mapping.md)
 
@@ -115,6 +135,8 @@ http://localhost:8080/v3/api-docs
 }
 ```
 
+> 注意：`code` 为业务码，`ResultCode.SUCCESS` 为 **0**（不是 HTTP 200）；OAuth2/JWKS/文件流/健康检查等既有协议响应保持原契约，不做业务包装。
+
 ### 错误码规范
 
 - 2xx: 成功
@@ -133,4 +155,4 @@ http://localhost:8080/v3/api-docs
 
 ---
 
-**最后更新**: 2026-09-12
+**最后更新**: 2026-11-28

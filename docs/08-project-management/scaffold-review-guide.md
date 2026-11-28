@@ -1,5 +1,7 @@
 # Apex Scaffold 通用后端脚手架评审与改进指南
 
+> **历史快照**：本文为 2026-08-26 单体时代的评审记录（彼时全仓仅 6 个 Maven 模块）；当前仓库已演进为「网关 + 六业务服务 + 聚合 + 可选知识库」的 45 项目 reactor，菜单/权限种子、多租户、XXL 调度、工作流、代码生成器等 P0/P1 建议多数已落地。模块数、端口、路径与类名以当前代码为准，本文不作为现状依据。
+
 > **评审日期**: 2026-08-26
 > **评审范围**: 当前仓库全部 6 个 Maven 模块（common/domain/application/infrastructure/interfaces/example）
 > **评审基准**: 对照 RuoYi-Vue-Plus、JeecgBoot、pig、eladmin、mall 等主流商用脚手架通用能力

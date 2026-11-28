@@ -215,7 +215,7 @@ mvnd -T4 -B -pl :apex-system-service -am clean package -Pstandard -DskipTests
 ./apex-tools-parent/apex-tools-build/bin/apex.sh test
 ```
 
-> `test` **不包含** Failsafe 集成测试（`*IntegrationTest`、`*E2ETest`、`FlywayMigrationStartupTest`）与 Spotless/PMD/JaCoCo 门禁。需要完整门禁时用 `verify`。
+> `test` **不包含** Failsafe 集成测试（`*IntegrationTest`、`*E2ETest`、`FlywayMigrationStartupTest`、`*RemoteIT`）与 Spotless/PMD/JaCoCo 门禁。需要完整门禁时用 `verify`。
 
 ### 4.4 完整回归门禁
 

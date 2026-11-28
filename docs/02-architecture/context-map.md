@@ -14,6 +14,7 @@
 | 对外集成与设备 | `apex-integration` | 连接器配置、设备注册/影子/命令模型（connector 与 device 两个子域） | 出站连接器调用、租户凭据、入站 Webhook、IoT 设备接入（MQTT 由外部 EMQX 承载） |
 | 网关（薄适配层） | `apex-gateway` | —（无业务聚合） | 路由、验签、限流、灰度、访问日志 |
 | 查询聚合（只读侧车） | `apex-aggregation-service` | —（无本地聚合，无数据库） | 跨域只读聚合：统一待办 `GET /api/v2/todo`（经内部签名契约拉取 workflow 任务与 office 待审批/未读站内信）；个人维度数据不缓存、不合并 |
+| 知识库（可选上下文） | `apex-knowledge` + `apex-knowledge-service`（8100，可选运行模块，独立 `apex_knowledge` 库） | 知识空间、文档摄取单元 | 文档摄取（Tika 解析/分块/向量化）、Meilisearch hybrid 检索、RAG 问答编排；能力级降级（索引/向量化/问答独立开关）；不进八服务标准发布 |
 
 ## 2. 上下文关系（合作模式）
 

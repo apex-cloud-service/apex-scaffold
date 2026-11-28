@@ -125,11 +125,11 @@ API 接口文档、规范和版本管理。
 
 - [P0 系统管理](./08-project-management/p0-system-management.md) - 核心系统
 - [交付文档集](./08-project-management/delivery/README.md) - 交付范围、交付物、需求追踪、质量、风险、变更、验收与交接
-- [脚手架审查](./08-project-management/scaffold-review-guide.md) - 代码审查
+- [脚手架审查](./08-project-management/scaffold-review-guide.md) - 代码审查（2026-08 历史快照，现状以代码为准）
 - [功能需求](./08-project-management/function-enhancement-requirements.md) - 需求管理
 - [实施计划](./08-project-management/plans/) - 各类实施计划
 - [微服务化迁移方案](./08-project-management/plans/microservice-migration-plan.md) - 单体到五服务架构迁移
-- [文档与脚本目录结构规范](./08-project-management/DOCS_STRUCTURE_STANDARD.md) - docs/ 与 scripts/ 组织规范
+- [文档与脚本目录结构规范](./08-project-management/DOCS_STRUCTURE_STANDARD.md) - docs/ 与 scripts/ 组织规范（2026-09 历史快照，已被 AGENTS.md §0.2 取代）
 - [设计模式 / Starter / SPI 优化方案](./08-project-management/plans/design-pattern-starter-spi-optimization-plan.md) - 评审结论与待实施调整方案
 - [中台架构评审报告](./08-project-management/reports/middle-platform-architecture-review.md) - 八维度评审与整改关闭说明
 - [中台架构整改方案](./08-project-management/plans/middle-platform-remediation-plan.md) - G1–G8 整改方案与实施结果
@@ -294,7 +294,7 @@ API 接口文档、规范和版本管理。
 | `docs/reviews/` | 方案评审、代码评审 | [reviews/README](reviews/README.md) |
 | `docs/notes/` | 调研、对接备忘、风险纪要 | [notes/README](notes/README.md) |
 
-### 图表资产（247 SVG / 68 MMD，禁止批量移动与删除）
+### 图表资产（265 SVG / 86 MMD，2026-11-28 基线，禁止批量移动与删除）
 
 - [图表主库](diagrams/) — 逻辑/物理/技术架构、登录鉴权、权限校验、工作流审批、文件上传、ER 图、多级缓存、限流熔断，以及 100+ 模块结构与 UML 领域模型
 - [架构设计文档](02-architecture/README.md) — DDD 四层架构、部署架构、架构演进

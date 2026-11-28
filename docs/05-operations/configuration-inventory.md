@@ -86,10 +86,10 @@
 | `REDIS_PORT` | `6379` | Redis 端口 | standard+ | ✅ |
 | `REDIS_PASSWORD` | - | Redis 密码（prod 强制要求） | standard+ | prod 必填 |
 | `REDIS_DATABASE` | `0` | Redis 数据库索引 | 全部 | ❌ |
-| `REDIS_POOL_MAX_ACTIVE` | `8` | 连接池最大连接数 | 全部 | ❌ |
+| `REDIS_POOL_MAX_ACTIVE` | `16`（yml 默认；compose 未注入 REDIS_POOL_* 时即生效） | 连接池最大连接数 | 全部 | ❌ |
 | `REDIS_POOL_MAX_IDLE` | `8` | 连接池最大空闲连接数 | 全部 | ❌ |
-| `REDIS_POOL_MIN_IDLE` | `0` | 连接池最小空闲连接数 | 全部 | ❌ |
-| `REDIS_POOL_MAX_WAIT` | `-1` | 连接池最大等待时间（毫秒） | 全部 | ❌ |
+| `REDIS_POOL_MIN_IDLE` | `8` | 连接池最小空闲连接数 | 全部 | ❌ |
+| `REDIS_POOL_MAX_WAIT` | `2s`（gateway 显式；system 未设走驱动默认） | 连接池最大等待时间 | 全部 | ❌ |
 | `APEX_REDIS_KEY_PREFIX` | `""` | Redis 键统一前缀 | 全部 | ❌ |
 | `APEX_REDIS_LOCK_WATCHDOG_TIMEOUT` | `30000` | Redisson 看门狗超时（毫秒） | 全部 | ❌ |
 | `APEX_REDIS_COMMAND_TIMEOUT` | `3000` | Redis 命令超时（毫秒） | 全部 | ❌ |
@@ -442,23 +442,20 @@ dataId 的权威来源，也是网关路由 `lb://{service}` 的解析目标。�
 
 ## 五、.env.example 扩展建议
 
-### 5.1 当前 .env.example 覆盖率
+### 5.1 当前 .env.example 覆盖率（2026-11-28 BE-066 复核）
 
-| 模块 | 覆盖率 | 说明 |
-|------|--------|------|
-| 构建与运行 | 100% | BUILD_PROFILE, TAG, SPRING_PROFILES_ACTIVE |
-| 端口映射 | 100% | APP_PORT, MANAGEMENT_PORT |
-| MySQL | 100% | MYSQL_DATABASE, MYSQL_ROOT_PASSWORD, MYSQL_PORT |
-| Redis | 50% | REDIS_PORT, REDIS_PASSWORD（缺 HOST, DATABASE 等） |
-| 数据库连接 | 100% | DB_MASTER_URL, DB_MASTER_USERNAME, DB_MASTER_PASSWORD |
-| JWT | 100% | JWT_SECRET |
-| Nacos | 100% | NACOS_CONFIG_ENABLED, NACOS_DISCOVERY_ENABLED 等 |
-| RocketMQ | 100% | ROCKETMQ_NAMESERVER 等 |
-| Keycloak | 100% | KEYCLOAK_PORT, KEYCLOAK_ADMIN_USERNAME 等 |
-| License | 100% | APEX_LICENSE_FILE |
-| 其他配置 | 未整体复核 | 存储变量已补齐；其他类别仍需逐项与模板核对 |
+> 本节历史结论（"BAIDU/DINGDING/MAIL 全部缺失""总体覆盖率 ~23%"）已过时：当前 `.env.example` 共 **335** 个赋值行（582 行；基线 331 + 本轮新增 4 个微信键，统计正则 `^[A-Z0-9_]+=` 含数字键名，2026-11-28 BE-066 复核、R5 复算一致），BAIDU（4 键）、DINGDING（2 键）、MAIL（4 键）、WECHAT/WEWORK/CL 短信、`REDIS_HOST`/`REDIS_DATABASE`、`TRACE_SLOW_THRESHOLD_MS`、`GRAFANA_URL`、License 三键、Sentinel 11 键、Meilisearch/Loki/Alloy 全组均已收录。
 
-**总体覆盖率**: ~23%
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| 构建与运行 / 端口 / MySQL / 数据库连接 / JWT / Nacos / RocketMQ / Keycloak / License | 已收录 | 与原表一致 |
+| Redis | 已收录 | `REDIS_HOST` / `REDIS_DATABASE` / `REDIS_PORT` / `REDIS_PASSWORD` 等均在模板中（原表"缺 HOST/DATABASE"已失效） |
+| Sentinel | 已收录 | 11 键（含 `SENTINEL_EXPORTER_PORT`） |
+| Meilisearch / Loki / Alloy / Zipkin | 已收录 | 全组键在模板 |
+| 第三方集成（BAIDU/DINGDING/MAIL/WECHAT/WEWORK/CL 短信） | 已收录 | 空值占位，按需注入 |
+| 已知缺口 | 待补 | `WECHAT_MINIAPP_APP_ID/SECRET`、`WECHAT_MP_APP_ID/SECRET` 未入模板（prod yml 存在该键，BE-066 本轮已补入 `.env.example`） |
+
+**总体覆盖率**: 按 §2 分类清单逐项比对已达到全文收录水平；后续新增配置键请同步维护 `.env.example` 与本清单。
 
 ### 5.2 建议新增的环境变量分组
 

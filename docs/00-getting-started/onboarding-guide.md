@@ -28,11 +28,11 @@
 1. **[01_logical_architecture.svg](../diagrams/01_logical_architecture.svg)** - DDD四层逻辑架构
    - 📌 **为什么要看**: 这是理解整个项目的基础,展示了接口层、应用层、领域层、基础设施层的职责划分
    - 🔍 **重点关注**: 
-     - 115 个 Handler 在接口层的职责
-     - 34个应用服务如何编排业务逻辑
-     - 112 个 Repository 接口如何定义数据访问规范
+     - 各 Handler 在接口层的职责（数量随版本演进，以当前源码统计为准）
+     - 应用服务如何编排业务逻辑
+     - Repository 端口如何定义数据访问规范
      - 依赖方向:只能从上往下/从外向内
-   - 💡 **实践建议**: 打开 `apex-system/src/main/java/com/apex/scaffold/interfaces/handler/` 目录,对照图表理解Handler职责
+   - 💡 **实践建议**: 打开 `apex-components-parent/apex-system/src/main/java/com/apex/scaffold/interfaces/handler/` 目录,对照图表理解Handler职责
 
 2. **[03_technical_architecture.svg](../diagrams/03_technical_architecture.svg)** - 全栈技术选型全景图
    - 📌 **为什么要看**: 了解项目使用的60+技术组件及版本号
@@ -46,7 +46,7 @@
 3. **[02_physical_architecture.svg](../diagrams/02_physical_architecture.svg)** - 网络物理部署架构
    - 📌 **为什么要看**: 理解生产环境的5层网络拓扑
    - 🔍 **重点关注**:
-     - 端口分配:gateway 8080、auth 8081、system 8082（管理 8083）、workflow 8093、office 8084、file 8085、integration 8094（管理 8097）、job 8095、masking 8096、aggregation 8098
+     - 端口分配:gateway 8080、auth 8081、system 8082（管理 8083）、workflow 8093、office 8084、file 8085、integration 8094（管理 8097）、job 8095、masking 8096、aggregation 8098、knowledge 8100（可选）、XXL 控制台宿主 8099
      - Podman Compose默认栈 vs Kubernetes生产扩展
      - Profile配置:basic/standard/enterprise
    - 💡 **实践建议**: 执行 `podman-compose -f podman-compose.yml up -d` 启动本地开发环境
@@ -71,7 +71,7 @@
      - Access Token(2小时) + Refresh Token(7天)
      - 自动续期机制:剩余时间<30分钟触发刷新
      - 安全防护:IP限流、登录保护、防重放
-   - 💡 **实践建议**: 用Postman测试 `POST /api/v1/auth/login` 接口,观察Token返回
+   - 💡 **实践建议**: 用Postman测试 `POST /auth/v1/login` 接口（经网关 8080 转发 auth-service）,观察Token返回
 
 5. **[05_permission_check_flow.svg](../diagrams/05_permission_check_flow.svg)** - RBAC权限校验流程
    - 📌 **为什么要看**: 理解三层权限模型(JWT认证→RBAC校验→数据权限)
@@ -115,7 +115,7 @@
    - 📌 **为什么要看**: 理解40+张表的设计及ER关系
    - 🔍 **重点关注**:
      - 核心RBAC表(7张)
-     - Flyway迁移历史(V1-V26)
+     - Flyway迁移历史(各服务独立版本链，system 已至 V91，以各服务 `db/migration` 现状为准)
      - 租户隔离字段 `tenant_id`
    - 💡 **实践建议**: 打开MySQL Workbench,对照图表理解表结构
 
@@ -189,7 +189,7 @@ open http://localhost:3200               # Grafana监控(admin/admin，宿主映
 open http://localhost:9411               # Zipkin链路追踪
 
 # 4. 测试登录接口
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST http://localhost:8080/auth/v1/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```

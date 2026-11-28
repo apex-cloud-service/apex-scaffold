@@ -89,6 +89,7 @@ Apex Scaffold 当前为**模块化单体**（Modular Monolith）：
 ## 四、结论
 
 - **微服务**：**已完成拆分**——当前为网关 + 六个业务服务 + 只读查询聚合服务拓扑（system/auth/workflow/file/office/integration + aggregation），
+  另有可选运行模块 `apex-job-service`（8095）、`apex-masking-service`（8096）、`apex-knowledge-service`（8100）按需启用，
   并保留 `apex-boot-all` 组合部署包支持单进程装配；组件化（自动装配入口、事件通道自适应、SPI）
   使"拆分服务"与"组合部署"可按部署规模选择，无需改代码。
 - **监控与链路追踪**：已具备（Micrometer + Prometheus + Zipkin/Brave + TraceId + Sentinel/Resilience4j），

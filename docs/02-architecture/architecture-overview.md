@@ -11,18 +11,18 @@
 | shared（`apex-shared-parent`） | 9 个共享基础/领域/契约/设施 JAR | 8 个继承 shared；api-contract 保留 services-bom |
 | components（`apex-components-parent`） | 6 个脚手架能力库 | 5 个继承 components；integration 保留 services-bom |
 | starters（`apex-starters-parent`） | 4 个存储/授权/任务/事务 starter | starters |
-| services（`apex-services-bom`） | 10 个运行模块，含八个标准发布服务及 job/masking | 保持 services-bom |
+| services（`apex-services-bom`） | 11 个运行模块，含八个标准发布服务及 job/masking/knowledge（可选） | 保持 services-bom |
 | applications（`apex-applications-parent`） | example、boot-all | example 继承 applications；boot-all 保留 services-bom |
 | tools（`apex-tools-parent`） | license-tools、generator、tools-deployment、tools-build | tools |
-| business（`apex-business-parent`） | 第一阶段为空，无项目业务子模块 | 后续项目业务 JAR 继承 business |
+| business（`apex-business-parent`） | 当前含知识库 `apex-knowledge`（2026-11-14 落地；第一阶段曾为空） | 后续项目业务 JAR 继承 business |
 
-22 个既有叶子变更直接 parent，原有 13 个 services-bom 子继承保留。七组均直接继承根 POM，统一版本、构建档位和质量门禁仍由根治理，services-bom 保留原有依赖管理；聚合边与继承边不同，不能把 api-contract / integration / boot-all 三个例外误画为已迁移。
+22 个既有叶子变更直接 parent，原有 13 个 services-bom 子继承保留（knowledge 落地后 services-bom 直接子继承为 14 项：11 个运行模块 + api-contract / integration / boot-all 三个例外）。七组均直接继承根 POM，统一版本、构建档位和质量门禁仍由根治理，services-bom 保留原有依赖管理；聚合边与继承边不同，不能把 api-contract / integration / boot-all 三个例外误画为已迁移。
 
 **物理与运行边界不变**：第二阶段（2026-11-14）叶子已物理嵌套于各分组父目录，分组以 `<module>apex-xxx</module>` 聚合同目录叶子。37 个 JAR 的坐标与打包形态、服务接口、数据库所有权、资源和端口不因分组与归位而变。parent 管理不是 compile 依赖，也不会产生新服务、日志目录或监控目标；本阶段不承诺构建性能提升，验证结果以实际执行记录为准。
 
 business 只承载未来项目专属模型、规则、用例、业务配置和领域适配；通用框架实现由其余支撑模块提供，不复制第二套安全、数据源、缓存、消息或日志框架。业务仓储、Mapper / PO 仍留在本域 infrastructure。独立运行模块应聚合并继承 services-bom，不在 business 重复登记、不自动进入八服务发布集合；后续数量据实际新增模块更新。
 
-根 POM 沿 `<modules>` 递归的后代集合（含空 parent、不含总根）与 `apex-tools-build` 扁平注册表一致；不沿 `<parent>` 回溯。创建步骤见[开发规范](../04-development/development-standards.md#23-maven-分组与模块创建)。构建继续从总根加载固定环境后 `mvnd -pl <叶子列表> -am`。
+根 POM 沿 `<modules>` 递归的后代集合（含空 parent、不含总根）与 `apex-tools-build` 扁平注册表一致；不沿 `<parent>` 回溯。创建步骤见[开发规范](../04-development/development-standards.md#23-maven-分组与模块创建)。构建继续从总根加载固定环境后 `mvnd -pl :<叶子artifactId 列表> -am`（冒号按坐标匹配，与两级物理目录解耦）。
 
 ## 当前物理边界（2026-10-12）
 
@@ -69,7 +69,7 @@ Apex Scaffold 采用**领域驱动设计(DDD)**的五层架构模式,确保代�
 
 | 模块 | 定位 | 依赖 |
 |---|---|---|
-| `apex-services-bom` | 运行模块聚合与父 POM，保留原有服务依赖管理，不是纯 import BOM，也不是全仓唯一版本源 | 继承根；聚合 10 个运行模块，保留它们及三个例外的 13 项直接子继承 |
+| `apex-services-bom` | 运行模块聚合与父 POM，保留原有服务依赖管理，不是纯 import BOM，也不是全仓唯一版本源 | 继承根；聚合 11 个运行模块，保留它们及三个例外的 14 项直接子继承 |
 | `apex-api-contract` | 跨服务内部 API 与 DTO，不放具体业务实体 | 生产依赖 `apex-common`；聚合在 shared，parent 仍为 services-bom |
 | `apex-gateway` | Spring Cloud Gateway（WebFlux）：路由 / JWT(JWKS) 验签 / 用户上下文注入 / 全局限流 / TraceId / CORS / 灰度路由 / 访问日志 | `apex-common` + gateway-webflux + nacos + Resilience4j + redis-reactive |
 

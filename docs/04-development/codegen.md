@@ -68,7 +68,7 @@
 2. 将 `interfaces/handler/` 下的 Handler 移入目标运行模块（如 `apex-system-service`）或业务库
    `interfaces/` 包，按 `ProductRouterFragment.txt` 在对应 Router 注册路由；
 3. 将 `V{n}__create_*.sql` 合并入目标域的 Flyway 迁移目录（如
-   `apex-system/src/main/resources/db/migration/mysql`，system 域当前至 V90）；
+   `apex-components-parent/apex-system/src/main/resources/db/migration/mysql`，版本号取目标域当前最大 V 号递增，勿假定固定值）；
 4. 将 `ProductServiceTest.java` 移入测试目录，并把表定义对应的建表语句追加到
    Flyway 迁移 `db/migration`（MySQL 与 PostgreSQL 两套目录需配对维护）。
 

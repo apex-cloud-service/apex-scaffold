@@ -45,7 +45,7 @@
 
 ### 1. UserPO.java（持久化对象）
 
-**文件路径**：`apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java`
+**文件路径**：`apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/po/UserPO.java`（原 `apex-interfaces/apex-infrastructure` 单体已拆分：`apex-infrastructure` 现仅为旧坐标兼容空聚合，持久化实现分布在各业务库的 `infrastructure/persistence` 包）
 
 **关键改进**：
 
@@ -160,7 +160,7 @@ private String tenantId;
 
 ### 2. UserMapper.java（Mapper 接口）
 
-**文件路径**：`apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/UserMapper.java`
+**文件路径**：`apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/mapper/UserMapper.java`
 
 **关键改进**：
 
@@ -260,7 +260,7 @@ int banForPhotoReports(@Param("userId") Long userId);
 
 ### 3. UserPoConverter.java（Converter 接口）
 
-**文件路径**：`apex-infrastructure/src/main/java/com/apex/scaffold/infrastructure/persistence/converter/UserPoConverter.java`
+**文件路径**：`apex-components-parent/apex-system/src/main/java/com/apex/scaffold/infrastructure/persistence/converter/UserPoConverter.java`
 
 **关键改进**：
 

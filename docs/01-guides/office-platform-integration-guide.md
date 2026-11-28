@@ -389,7 +389,7 @@ public Mono<ServerResponse> createApp(ServerRequest request) {
 
 1. **扩展枚举**：
    ```java
-   // apex-domain/src/main/java/com/apex/scaffold/domain/office/OfficePlatform.java
+   // apex-components-parent/apex-office/src/main/java/com/apex/scaffold/office/domain/OfficePlatform.java
    public enum OfficePlatform {
        FEISHU,
        DINGTALK,

@@ -69,7 +69,7 @@ export TESTCONTAINERS_RYUK_DISABLED=true
 ### 步骤 1: 克隆项目
 
 ```bash
-git clone https://github.com/your-org/apex-scaffold.git
+git clone git@github.com:apex-cloud-service/apex-scaffold.git
 cd apex-scaffold
 ```
 
@@ -239,10 +239,18 @@ curl http://localhost:8080/api/v1/health
 
 ### 测试示例接口
 
-在 Knife4j 页面找到 `示例模块` → `用户管理`,点击 "试用":
+示例模块 `apex-example` 独立端口 **8080**（`apex-applications-parent/apex-example`；该模块未装配 springdoc/knife4j，无 Swagger 页面，用 curl 验证；system-service 8082 上没有 `/api/example` 路由）：
 
-1. 点击 `/api/example/users` 的 `POST` 接口
-2. 填写请求体:
+1. `POST /api/example/users` 创建用户，请求体:
+```json
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "age": 25
+}
+```
+2. 用 curl 验证: `curl -X POST http://localhost:8080/api/example/users -H "Content-Type: application/json" -d '{"username":"testuser","email":"test@example.com","age":25}'`
+3. `GET http://localhost:8080/api/example/users` 查询列表确认创建结果
 ```json
 {
   "username": "testuser",
@@ -257,25 +265,28 @@ curl http://localhost:8080/api/v1/health
 
 ## 📖 阅读示例代码
 
-示例模块位于 `apex-example` 目录,展示了如何使用脚手架的核心功能:
+示例模块位于 `apex-applications-parent/apex-example` 目录,展示了如何使用脚手架的核心功能（WebFlux 函数式 Router + Handler，全仓禁用 `@Controller`）:
 
 ```
-apex-example/
+apex-applications-parent/apex-example/
 ├── src/main/java/com/apex/example/
-│   ├── controller/      # REST控制器示例
+│   ├── handler/         # Handler 处理器示例（WebFlux 函数式端点）
+│   ├── config/          # RouterFunction 路由注册（ExampleRouterConfig）
 │   ├── service/         # 业务逻辑层示例
-│   ├── repository/      # 数据访问层示例
+│   ├── repository/      # 数据访问层示例（MyBatis-Plus Mapper）
+│   ├── dto/             # 请求/响应 DTO 示例
 │   └── model/           # 实体类示例
 └── src/main/resources/
-    └── application.yml  # 配置文件
+    └── application.yml  # 配置文件（业务端口 8080）
 ```
 
 关键文件说明:
 
-- `ExampleUserController.java` - 展示如何编写REST接口
-- `ExampleUserService.java` - 展示Service层最佳实践
-- `ExampleUserRepository.java` - 展示MyBatis-Plus用法
-- `ExampleUser.java` - 展示实体类设计规范
+- `handler/ExampleUserHandler.java` - 展示如何编写 WebFlux Handler 端点
+- `config/ExampleRouterConfig.java` - 展示 RouterFunction 路由注册（`/api/example/users` 等）
+- `service/ExampleUserService.java` - 展示Service层最佳实践
+- `repository/ExampleUserMapper.java` - 展示MyBatis-Plus用法
+- `model/ExampleUser.java` - 展示实体类设计规范
 
 详见 [example-guide.md](./example-guide.md)
 
@@ -418,14 +429,15 @@ mvnd -T 4 clean package
 ### 生产环境优化
 
 ```bash
-# 1. JVM 参数优化
+# 1. JVM 参数优化（jar 位于 apex-services-bom/apex-system-service/target/，
+#    版本号以根 pom.xml 实际版本为准）
 java -Xms512m -Xmx1024m \
      -XX:+UseG1GC \
      -XX:MaxGCPauseMillis=200 \
-     -jar apex-system-service-1.3.1.jar
+     -jar apex-services-bom/apex-system-service/target/apex-system-service-*.jar
 
 # 2. 启用 Profile
-java -jar apex-system-service-1.3.1.jar \
+java -jar apex-services-bom/apex-system-service/target/apex-system-service-*.jar \
      --spring.profiles.active=prod,enterprise
 ```
 
@@ -436,12 +448,12 @@ java -jar apex-system-service-1.3.1.jar \
 ### 遇到问题？
 
 1. 📖 **查看文档**: [troubleshooting.md](../01-guides/troubleshooting.md)
-2. 🔍 **搜索 Issues**: [GitHub Issues](https://github.com/your-org/apex-scaffold/issues)
-3. 💬 **提问讨论**: [GitHub Discussions](https://github.com/your-org/apex-scaffold/discussions)
+2. 🔍 **搜索 Issues**: [GitHub Issues](https://github.com/apex-cloud-service/apex-scaffold/issues)
+3. 💬 **提问讨论**: [GitHub Discussions](https://github.com/apex-cloud-service/apex-scaffold/discussions)
 
 ### 报告 Bug
 
-如果您发现 Bug，请[创建 Issue](https://github.com/your-org/apex-scaffold/issues/new) 并提供：
+如果您发现 Bug，请[创建 Issue](https://github.com/apex-cloud-service/apex-scaffold/issues/new) 并提供：
 - 项目版本号
 - 档位配置（basic/standard/enterprise）
 - 错误日志

@@ -1,9 +1,9 @@
 # Apex Scaffold 架构文档索引
 
-> 文档版本: v2.7\
-> 最后更新: 2026-09-11\
+> 文档版本: v2.8\
+> 最后更新: 2026-11-28\
 > 适用版本: apex-scaffold v1.3.1+\
-> 技术栈版本: Spring Boot 3.5.15 | Java 21 | Reactor 3.6.13 | Vue 3.5.13
+> 技术栈版本: Spring Boot 3.5.15 | Java 21 | Reactor 由 Spring Boot BOM 管理（当前 3.7.x）| Vue 3.5.13（独立前端仓）
 
 **🔍 快速搜索**: [打开文档搜索工具](../04-development/doc-search.html) - 支持关键词搜索、分类过滤、实时预览
 

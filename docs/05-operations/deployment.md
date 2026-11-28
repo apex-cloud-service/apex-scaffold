@@ -117,7 +117,7 @@ bash scripts/utils/token-v42-recover.sh \
 | 组件 | 版本要求 | 说明 |
 |------|---------|------|
 | JDK | 21（`.sdkmanrc` 固定 `21.0.13.0+9-tem`） | java -jar 部署必需 |
-| MySQL | 8.0+ | 各服务库由 Flyway 自动迁移建表（**system 的 dev 档明确关闭自动迁移**，首次空库须先显式启用或手工执行迁移），只需保证账号可建库/建表/写数据 |
+| MySQL | **9.0**（compose 镜像 `mysql:9.0`；V42 恢复工具亦仅支持 MySQL 9.0） | 各服务库由 Flyway 自动迁移建表（**system 的 dev 档明确关闭自动迁移**，首次空库须先显式启用或手工执行迁移），只需保证账号可建库/建表/写数据 |
 | Redis | 6.x / 7.x | 缓存 / Token / 分布式锁；网关限流 |
 | Nacos | 2.x | 服务发现 + 配置中心（微服务拓扑默认依赖） |
 | Podman | 5.x | 容器部署必需；macOS 使用 Podman machine |
@@ -127,7 +127,7 @@ bash scripts/utils/token-v42-recover.sh \
 
 ```bash
 java -version                 # openjdk 21+
-mysql --version               # 8.0+
+mysql --version               # 9.0（compose 镜像口径）
 redis-cli --version
 podman --version
 podman-compose --version
@@ -437,6 +437,7 @@ curl http://localhost:8080/api/v1/health
 | apex-office-service | 本地构建 | `${OFFICE_PORT:-8084}` | apex_office | 组织/办公 |
 | apex-file-service | 本地构建 | `${FILE_PORT:-8085}` | apex_file | 文件/文档 |
 | apex-integration-service | 本地构建 | `${INTEGRATION_PORT:-8094}` / 管理 `${INTEGRATION_MANAGEMENT_PORT:-8097}` | apex_integration | 集成中心连接器/凭据 + 物联网设备/规则；MQTT 桥接默认关闭 |
+| apex-job-service | 本地构建 | `${APEX_JOB_PORT:-8095}`（127.0.0.1 绑定） | —（无库，代理 system 九个任务接口） | 默认栈即启动（无 `profiles:`）；403 探针仅证明 HTTP 安全链存活，不证明上游 system 就绪 |
 | apex-aggregation-service | 本地构建 | `${AGGREGATION_PORT:-8098}` | —（无库） | 只读跨源聚合（统一待办 /api/v2/todo），无数据库、无管理端口 |
 | nacos | nacos/nacos-server:v2.4.3 | `${NACOS_PORT:-8848}` / gRPC `${NACOS_GRPC_PORT:-9848}` | — | 服务发现 + 配置中心 |
 | mysql | mysql:9.0 | `${MYSQL_PORT:-3306}` | apex_system（引导库） | 各服务经 createDatabaseIfNotExist 自建独立库 |
@@ -446,7 +447,7 @@ curl http://localhost:8080/api/v1/health
 | alloy | grafana/alloy:v1.0.0 | `${ALLOY_PORT:-12345}` | — | 日志采集 |
 | apex-admin-web | apex-admin-web:`${TAG}`（预构建） | `${WEB_PORT:-80}` | — | 前端管理后台（可选） |
 
-可选（--profile）：`rocketmq-namesrv` / `rocketmq-broker`（`--profile rocketmq`）、`keycloak`（`--profile keycloak`）。
+可选（--profile）：`rocketmq-namesrv` / `rocketmq-broker`（`--profile rocketmq`）、`keycloak`（`--profile keycloak`）、`apex-masking-service`（`--profile masking`，8096）、`xxl-job-admin`（`--profile xxl-job`，宿主 8099）、`seata-tc`（`--profile seata`）、`apex-knowledge-service`（`--profile knowledge`，8100）。
 
 默认凭证（**仅限本地/测试，生产务必修改**）：
 
@@ -494,8 +495,7 @@ curl http://localhost:8083/actuator/health        # 系统服务管理端口
 podman-compose -f podman-compose.yml --profile rocketmq --env-file .env up -d --build
 ```
 
-> 公共配置始终提供 `rocketmq.name-server` 默认值。未部署 RocketMQ 时请保持
-> `APEX_MQ_CONSUMER_ENABLED=false` 与 `APEX_MQ_DOMAIN_EVENT_ENABLED=false`；生产启用消息能力时，必须显式注入可达的 `ROCKETMQ_NAMESERVER` 或 `ROCKETMQ_NAMESRV_ADDR`。
+> 口径分两层（2026-11-28 BE-066 校正）：yml 默认值为 `true`（`APEX_MQ_CONSUMER_ENABLED`/`APEX_MQ_DLQ_ENABLED`/`APEX_MQ_DOMAIN_EVENT_ENABLED` 未注入时），部署模板 `.env.example`/compose 公共锚点注入 `false` 作为部署层默认。未部署 RocketMQ 时请保持部署层注入的 `false`（或显式置 false）；生产启用消息能力时，必须显式注入可达的 `ROCKETMQ_NAMESERVER` 或 `ROCKETMQ_NAMESRV_ADDR`。
 
 RocketMQ 控制台访问（可选）：
 
@@ -612,7 +612,7 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 |------|------|------|
 | `JAVA_OPTS` | `-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=<logs>/gc.log:...` | JVM 调优参数 |
 | `SERVER_PORT` | 网关 8080 | 业务端口 |
-| `MANAGEMENT_SERVER_PORT` | 网关 8080；系统服务 8083；其余同业务端口 | 管理端口（Actuator） |
+| `MANAGEMENT_SERVER_PORT` | 网关 8080；system 8083；integration 8097；其余同业务端口（aggregation 8098、knowledge 8100 等） | 管理端口（Actuator）；见 §8 探针端口表 |
 | `MANAGEMENT_SERVER_ADDRESS` | 127.0.0.1 | 管理端口监听地址；容器/远程采集设 `0.0.0.0` |
 | `APEX_LOG_DIR` | `./logs` | 日志根目录（见 [§9](#9-日志与监控)） |
 | `TZ` | Asia/Shanghai | 时区 |
@@ -642,11 +642,12 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 | `GET /actuator/health/readiness` | 各服务管理端口 | 就绪探针，包含 `readinessState`、DB 和 Redis；Containerfile HEALTHCHECK 使用此端点 |
 | `GET /actuator/prometheus` | 各服务管理端口 | Prometheus 指标抓取端点 |
 
-各服务探针端口（网关复用业务 8080；系统服务管理 8083；其余同业务端口）：
+各服务探针端口（网关复用业务 8080；system/integration 走管理端口；其余同业务端口，2026-11-28 BE-066 补全）：
 
 ```
 apex-gateway:8080  apex-auth-service:8081  apex-system-service:8083(管理)
 apex-workflow-service:8093  apex-office-service:8084  apex-file-service:8085
+apex-integration-service:8097(管理)  apex-aggregation-service:8098
 ```
 
 验证：
@@ -832,12 +833,14 @@ K8s 场景支持按权重/请求头灰度：稳定版与金丝雀版并存，Ngi
 每个微服务独立库，按库逐个备份（示例以 `apex_system` 为例）：
 
 ```bash
-# 备份（容器场景）
-podman exec apex-mysql mysqldump -uroot -p'***' --single-transaction --routines \
+# 备份（容器场景；容器名以 podman ps 实际为准：
+#   主栈 podman-compose 未固定 container_name，默认按项目名生成（如 apex-scaffold-mysql-1），
+#   infra 栈固定为 apex-infra-mysql）
+podman exec apex-scaffold-mysql-1 mysqldump -uroot -p'***' --single-transaction --routines \
   apex_system > apex_system_$(date +%Y%m%d).sql
 
 # 恢复
-podman exec -i apex-mysql mysql -uroot -p'***' apex_system < apex_system_20260828.sql
+podman exec -i apex-scaffold-mysql-1 mysql -uroot -p'***' apex_system < apex_system_20260828.sql
 
 # java -jar 场景：直接使用 mysql 客户端 dump / restore，命令同上（无 podman exec）
 ```

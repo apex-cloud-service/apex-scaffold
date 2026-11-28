@@ -19,7 +19,7 @@
 | system | `POST /internal/v1/org/users/resolve` | office-service（`SystemOrgUserQueryAdapter` 组织/用户查询） | 消费端 ACL DTO（`OfficeOrgUserQueryPort` / `OfficeOrgUserSnapshot`） |
 | system | `GET /internal/v1/overview` | 平台总览聚合（`InternalOverviewHandler` 并行拉取各域 stats 后聚合；`PlatformOverviewHandler` 共用同一门面） | 提供方内部类型 `OverviewResponse`；各域 stats 响应字段名以本清单约束 |
 | system | `GET /internal/v1/open-apps/{clientId}/rate-limit-tier` | 网关开放接口按应用分档限流（D2） | 提供方内部类型 |
-| system | `/internal/v1/interests/**` | 仓内未见跨服务消费方（system 用户画像兴趣路径，安全链特判） | system 自有路径 |
+| system | `/internal/v1/interests/**` | **无契约**：全仓无 Router/Handler 注册该路径，仅安全链白名单特判残留（`SecurityConfig` / `JwtAuthenticationFilter`）与 `SentinelConfig` 的 `/api/v1/same-frequency/interests/feed` 死限流规则；2026-11-28 BE-066 复核标记为待清理 | —（待清理死白名单，清理工单见任务盘 BE-067） |
 | auth | `POST /internal/v1/tokens/validate` | 仓内未见调用方（预留内部契约；system 本地 JWT 验签，不经此端点） | `apex-api-contract` 的 `TokenValidationRequest` / `TokenValidationDTO` |
 | auth | `GET /internal/v1/tokens/revocations`（`since` 必填） | 网关（`TokenRevocationFilter` 拉取撤销记录刷新本地撤销缓存，见网关 `revocation.url`） | 提供方契约接口 |
 | auth | `GET /internal/v1/users/{accountId}/permissions` | 仓内未见调用方（预留内部契约；system 统一授权实走 `/auth/v1/authorization/users/{id}` 公开契约，见 `AuthCenterPermissionClient`） | 提供方契约接口 |

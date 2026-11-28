@@ -1,5 +1,7 @@
 # API 路径与参数修正说明
 
+> **历史快照**：本文为 2026-09-10（v1.2.0 基线）的路径修正记录；现行权威接口清单为 [API_ROUTES.md](API_ROUTES.md)（2026-11-28 复核：工作流管理端点 rollback/transfer/delegate/suspend/resume 已于 `WorkflowRouter` 注册，见其 §2.15，本文 §4.1 与 §4.2 括号表述已同步修正）。
+>
 > **文档版本**: v1.0  
 > **创建时间**: 2026-09-10  
 > **适用版本**: apex-scaffold v1.2.0+  
@@ -440,7 +442,7 @@ const beforeUpload = (file: File) => {
 
 ### 4.2 不存在的端点 (⚠️ 请勿调用)
 
-以下路径**在 `WorkflowRouter` 中不存在**（`/api/workflow/**` 前缀从未注册）:
+以下具体路径**在 `WorkflowRouter` 中从未注册**（注意：`/api/workflow/**` 前缀本身已随管理端点于 2026-09 后注册 rollback/transfer/delegate/suspend/resume 五条，本表所列四条具体路径至今不存在，现行权威清单见 `API_ROUTES.md` §2.8）:
 
 | 路径 | 方法 | 说明 | 状态 |
 |------|------|------|------|

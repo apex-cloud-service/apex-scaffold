@@ -86,11 +86,12 @@ jwt:
   # Access Token过期时间(毫秒),默认2小时
   access-token-expire: 7200000
 
+  # Access Token 自动续期阈值（剩余时间低于该值触发刷新）
+  access-token-renew-threshold: 1800000
+
   # Refresh Token过期时间(毫秒),默认7天
   refresh-token-expire: 604800000
-
-  # JWT密钥最小长度
-  min-secret-length: 32
+  # min-secret-length(32) 仅在测试资源与 JwtUtil 代码校验中出现，主配置无该键（2026-11-28 BE-066 注记）
 ```
 
 **安全建议**:
@@ -203,21 +204,17 @@ apex:
 
 ### RBAC权限配置
 
+> 命名空间以 `SecurityProperties`（`apex.security`）与 `FeatureProperties`（`apex.features`）为准；历史 `security.rbac-enabled` / `security.public-paths` 键不存在（2026-11-28 BE-066 校正）。公开路径白名单由代码常量 `SystemConstants.PUBLIC_PATHS` 承载，不走配置。
+
 ```yaml
-security:
-  # 是否启用RBAC权限控制
-  rbac-enabled: true
-  
-  # 超级管理员角色标识
-  admin-role: ADMIN
-  
-  # 公开路径(无需认证即可访问)
-  public-paths:
-    - /api/v1/health
-    - /api/v1/info
-    - /swagger-ui.html
-    - /doc.html
-    - /v3/api-docs/**
+apex:
+  security:
+    # 超级管理员角色标识（默认 ADMIN）
+    admin-role: ADMIN
+    # 管理路径与管理角色集合（admin-paths / admin-roles，见 SecurityProperties）
+  features:
+    # RBAC 能力开关（默认 false，随功能集装配）
+    rbac: false
 ```
 
 ## 💾 数据源配置
@@ -243,13 +240,11 @@ spring:
           # Druid连接池配置
           druid:
             # 初始连接数
-            druid:
-              # 初始连接数
-              initial-size: 5
-              # 最小空闲连接数
-              min-idle: 5
-              # 最大活跃连接数
-              max-active: 20
+            initial-size: 5
+            # 最小空闲连接数
+            min-idle: 5
+            # 最大活跃连接数
+            max-active: 20
               # 获取连接超时时间(毫秒)
               max-wait: 60000
               # 空闲连接检测间隔(毫秒)（须小于 keep-alive-between-time-millis）
@@ -298,39 +293,39 @@ spring:
             use-global-data-source-stat: true
 ```
 
-### MyBatis-Plus配置
+### MyBatis / MyBatis-Plus 配置
+
+> 各服务按持久化栈区分（2026-11-28 BE-066 注记）：system-service 使用 `mybatis.mapper-locations`（原生 MyBatis），其余 MyBatis-Plus 服务使用 `mybatis-plus.*`；下表键以各服务实际 yml 为准，`type-aliases-package` 与 `cache-enabled` 并非所有服务都有配置。
 
 ```yaml
-mybatis-plus:
-  # Mapper XML文件位置
+# system-service（原生 MyBatis）
+mybatis:
   mapper-locations: classpath*:mapper/**/*.xml
-  
-  # 实体类扫描包
-  type-aliases-package: com.apex.**.model.entity
-  
+```
+
+```yaml
+# MyBatis-Plus 服务（workflow 等）
+mybatis-plus:
   # 全局配置
   global-config:
     db-config:
       # 主键类型(AUTO自增/INPUT手动输入/ASSIGN_ID雪花算法)
       id-type: ASSIGN_ID
-      
+
       # 逻辑删除字段名
       logic-delete-field: deleted
-      
+
       # 逻辑删除值(已删除)
       logic-delete-value: 1
-      
+
       # 逻辑未删除值
       logic-not-delete-value: 0
-  
+
   # 配置
   configuration:
     # 驼峰命名转换
     map-underscore-to-camel-case: true
-    
-    # 缓存
-    cache-enabled: false
-    
+
     # 日志实现
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 ```
@@ -359,58 +354,45 @@ spring:
       
       # 连接超时时间(毫秒)
       timeout: 3000
-      
-      # Lettuce连接池配置
+
+      # Lettuce连接池配置（system-service / gateway 默认均为 16/8/2，
+      # 2026-11-28 BE-066 校正；compose 公共锚点未注入 REDIS_POOL_* 时即取该值）
       lettuce:
         pool:
           # 最大活跃连接数
-          max-active: 8
-          
+          max-active: 16
+
           # 最大空闲连接数
           max-idle: 8
-          
+
           # 最小空闲连接数
-          min-idle: 0
-          
-          # 获取连接最大等待时间(毫秒)
-          max-wait: -1
+          min-idle: 8
+
+          # 获取连接最大等待时间（gateway 显式 2s；system-service 未设则用驱动默认）
+          max-wait: 2s
 ```
 
-### Caffeine本地缓存配置
+### 多级缓存配置（`apex.cache.*`）
+
+> 命名空间以 `CacheProperties` 绑定前缀 `apex.cache` 为准（历史 `cache.caffeine.*` / `cache.multi-level.*` 键不存在，2026-11-28 BE-066 校正）。L1 为 Caffeine 进程内缓存，L2 为 Redis；TTL 语义见下。
 
 ```yaml
-cache:
-  caffeine:
-    # 最大缓存条目数
-    max-size: 1000
-    
-    # 写入后过期时间(秒)
-    expire-after-write: 300
-    
-    # 访问后过期时间(秒,0表示禁用)
-    expire-after-access: 0
-    
-    # 是否统计命中率
-    record-stats: true
+apex:
+  cache:
+    local:                     # L1（Caffeine 进程内）
+      max-size: 10000          # 最大缓存条目数（默认 10000）
+      expire-after-write: 300  # 写入后过期（秒）
+      initial-capacity: 500    # 初始容量
+    remote:                    # L2（Redis）
+      default-ttl: 3600        # 默认 TTL（秒）
+      batch-size: 100          # 批量操作分片大小
+    double-delete:             # 延迟双删（Cache-Aside 并发脏数据防护）
+      enabled: true            # 默认 true，可经 APEX_CACHE_DOUBLE_DELETE_ENABLED 覆盖
+      delay-millis: 500
+      retry-times: 3
 ```
 
-### 多级缓存策略
-
-```yaml
-cache:
-  multi-level:
-    # 是否启用多级缓存
-    enabled: true
-    
-    # L1缓存(Caffeine)TTL(秒)
-    l1-ttl: 60
-    
-    # L2缓存(Redis)TTL(秒)
-    l2-ttl: 300
-    
-    # 缓存更新策略(NONE/WRITE_THROUGH/WRITE_BEHIND)
-    update-strategy: WRITE_THROUGH
-```
+另有 `read-degradation`（读降级）、`bloom-filter`（穿透防护）、`prewarm`（启动预热）三个子配置组，字段与默认值以 `CacheProperties` 为准。
 
 ## ⚡ 限流熔断配置
 
@@ -549,38 +531,43 @@ apex:
 
 - 两源并发执行；单源超时、不可达、信封非 0 或解析失败时该源降级为 `DEGRADED` 并携带错误摘要，`degraded=true`，不影响其他源，也不向上抛错。
 - 舱壁沿用 JDK `Semaphore`（饱和即降级、不排队，许可随订阅终止释放），语义与概览门面一致，不引入 basic 档裁剪依赖。
-- `sources.*` 默认指向本机端口，部署时须与 workflow/office 实际地址一致；关闭 Nacos 的直连部署需显式覆盖。对外路由由网关 `/api/v2/**` 转发至 `lb://apex-aggregation-service`（`ROUTE_AGGREGATION_URI`，服务默认业务端口 8098）；关闭 Nacos 的直连部署须显式注入该地址并指向实际聚合实例。
+- `sources.*` 默认指向本机端口，部署时须与 workflow/office 实际地址一致；关闭 Nacos 的直连部署需显式覆盖。对外路由由网关 `/api/v2/todo` 单条转发至 `lb://apex-aggregation-service`（`ROUTE_AGGREGATION_URI`，服务默认业务端口 8098；`/api/v2/**` 其余前缀归 system-domain 路由组）；关闭 Nacos 的直连部署须显式注入该地址并指向实际聚合实例。
 - 调用方 `apex-aggregation-service` 已登记在 `InternalAuthProperties` 默认 `callers` 白名单（`/internal/v1/workflow/todo/**` 与 `/internal/v1/office/todo`）；租户取自本服务验签 JWT 并经 `InternalAuthExchangeFilter` 转换为 `X-Internal-Tenant` 参与下游签名。未登记调用方的出站签名会被下游 fail-closed 拒绝。
 - 本服务自验访问 JWT（`aggregation.security.jwt-public-keys-base64/jwt-public-key-base64/jwt-secret`，env 前缀 `AGGREGATION_JWT_*`），身份头不作为认证依据；`/api/v2/todo` 要求已认证，未配置验签密钥且未启用 JWKS 拉取时拒绝认证。
 
 ### 接口级限流
 
+> 历史顶层 `rate-limit.*` / `hot-spot.*` 键在全仓不存在（2026-11-28 BE-066 校正）。真实限流分三层：服务侧用户/IP 限流（`apex.security.*`）、网关分布式限流（`apex.gateway.rate-limit.*`）、Sentinel 系统规则（见下节）。
+
 ```yaml
-rate-limit:
-  # 是否启用限流
-  enabled: true
-  
-  # 默认QPS限制
-  default-qps: 100
-  
-  # 用户级别限流
-  user:
-    # 每用户每秒请求数
-    qps-per-user: 10
-    
-    # 限流维度(USER/IP/GLOBAL)
-    dimension: USER
-  
-  # 热点参数限流
-  hot-spot:
-    # 是否启用
-    enabled: true
-    
-    # 统计窗口时长(秒)
-    window-length: 60
-    
-    # 最大访问次数
-    max-count: 1000
+apex:
+  security:                        # system-service（system 域，IpRateLimitProperties/UserRateLimitProperties）
+    user-rate-limit:
+      enabled: true                # 默认 true（APEX_USER_RATE_LIMIT_ENABLED 可覆盖）
+    ip-rate-limit:
+      enabled: true
+      default-limit: 120           # 窗口内默认次数
+      default-window: 60           # 窗口（秒）
+      violation-window: 60
+      block-threshold: 30
+      block-duration: 300
+      trusted-proxy-cidrs: ""      # 可信代理网段，见下节「IP 限流与客户端 IP 解析」
+```
+
+```yaml
+apex:
+  gateway:                         # apex-gateway（Redis 分布式令牌桶）
+    rate-limit:
+      enabled: true                # RATE_LIMIT_ENABLED，false 时纯透传
+      algorithm: token-bucket      # token-bucket | fixed-window
+      default-capacity: 1000       # 未命中 rules 时生效
+      default-refill-rate: 100
+      key-prefix: "apex:gateway:rl:"
+      window-ms: 60000             # 仅 fixed-window 使用
+      rules:                       # 按资源 Ant 通配覆盖，可 Nacos 热更新
+        - resource: "/api/v1/workflows/**"
+          capacity: 2000
+          refill-rate: 200
 ```
 
 ### IP 限流与客户端 IP 解析
@@ -634,7 +621,10 @@ mq:
 apex:
   mq:
     # 是否通过 RocketMQ 广播领域事件
-    domain-event-enabled: ${APEX_MQ_DOMAIN_EVENT_ENABLED:false}
+    # 口径分两层：yml 默认 true（APEX_MQ_DOMAIN_EVENT_ENABLED 未注入时）；
+    # 部署模板（.env.example / compose）注入 false——即"代码默认开、部署模板默认关"，
+    # 与同块 rocketmq.consumer.enabled 默认 true 口径一致
+    domain-event-enabled: ${APEX_MQ_DOMAIN_EVENT_ENABLED:true}
     domain-event-topic: ${APEX_MQ_DOMAIN_EVENT_TOPIC:apex-domain-event}
   events:
     outbox:
@@ -681,7 +671,9 @@ storage:
   presigned-url-expire-seconds: 300
   local:
     enabled: true
-    base-path: /data/uploads
+    # yml 默认 /root/data/apex/uploads（STORAGE_LOCAL_BASE_PATH 可覆盖）；
+    # compose 部署注入 STORAGE_LOCAL_BASE_PATH=/app/data/storage 并挂载卷
+    base-path: ${STORAGE_LOCAL_BASE_PATH:/root/data/apex/uploads}
   minio:
     enabled: false
     endpoint: ${MINIO_ENDPOINT:}
@@ -743,8 +735,8 @@ spring:
         group: DEFAULT_GROUP
         file-extension: yml
         refresh-enabled: true
-        enabled: ${NACOS_CONFIG_ENABLED:true}
-      discovery:
+        enabled: ${NACOS_CONFIG_ENABLED:true}   # 网关 bootstrap 默认 true；
+      discovery:                                # 五个业务 service 的 bootstrap 默认 false，示例为网关口径
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:dev}
         group: DEFAULT_GROUP
@@ -889,31 +881,21 @@ management:
       endpoint: ${ZIPKIN_BASE_URL:http://localhost:9411}/api/v2/spans
 ```
 
-### Grafana告警配置
+> 变量名按服务区分（2026-11-28 BE-066 注记）：上例为业务服务口径；**网关**使用 `ZIPKIN_ENDPOINT`（默认 `http://127.0.0.1:9411/api/v2/spans`）与 `TRACING_SAMPLING_PROBABILITY`（默认 0.1），不要混用。
+
+### Grafana 与告警配置
+
+> 历史 `monitoring.grafana.*` 前缀不存在（2026-11-28 BE-066 校正）。应用内 Grafana 配置仅承载日志查询跳转；**告警阈值不在应用配置中**，由 Prometheus 告警规则承载（`config/monitoring/prometheus/alert-rules.yml`，当前 13 条规则）。
 
 ```yaml
-monitoring:
-  grafana:
-    # 是否启用告警
-    alert-enabled: false
-    
-    # Webhook地址
-    webhook-url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
-    
-    # 告警阈值
-    thresholds:
-      # CPU使用率(%)
-      cpu-usage: 80
-      
-      # 内存使用率(%)
-      memory-usage: 85
-      
-      # 响应时间P99(毫秒)
-      response-time-p99: 2000
-      
-      # 错误率(%)
-      error-rate: 5
+# 应用侧（system-service application.yml）：日志查询跳转链接
+grafana:
+  enabled: false            # GRAFANA_ENABLED
+  url: http://localhost:3200  # GRAFANA_URL
+  explore-path: /explore
 ```
+
+告警规则（阈值/持续时长/标签）统一维护在 `config/monitoring/prometheus/alert-rules.yml`，经由 Prometheus + Alertmanager 触达；新增阈值不要写入应用 yml。
 
 ## 🌍 国际化配置
 
@@ -933,50 +915,33 @@ spring:
     fallback-to-system-locale: true
 ```
 
-资源文件位置: `src/main/resources/i18n/`
-- `messages.properties` - 默认语言
+资源文件位置：`apex-components-parent/apex-system/src/main/resources/i18n/`（system 域资源；无默认 `messages.properties`，按语言文件直接区分）
 - `messages_zh_CN.properties` - 简体中文
 - `messages_en_US.properties` - 英文
+- `messages_zh_TW.properties` - 繁体中文
+- `messages_th_TH.properties` - 泰文
 
 ## 📝 API文档配置
 
 ```yaml
 springdoc:
-  # API文档标题
+  # 实际配置仅 path + swagger-ui 项（2026-11-28 BE-066 注记：
+  # springdoc.api-docs.title/description/version 与 knife4j.basic 在任何 yml 中不存在）
   api-docs:
-    title: Apex Scaffold API
-    description: 企业级后端脚手架API文档
-    version: 1.0.0
-    
-  # Swagger UI配置
+    path: /v3/api-docs
+
   swagger-ui:
-    # 是否启用
     enabled: true
-    
-    # 路径
     path: /swagger-ui.html
-    
-    # 默认展开
-    operations-sorter: method
-    
-    # 标签排序
-    tags-sorter: alpha
-  
-  # Knife4j配置
-  knife4j:
-    # 是否启用
-    enable: true
-    
-    # 基本认证
-    basic:
-      enable: false
-      username: admin
-      password: 123456
+
+knife4j:
+  enable: true
+  production: false
 ```
 
 ## 🔄 功能开关
 
-功能开关命名空间为 `apex.features.*`（`FeatureProperties`），当前共 6 个键：
+功能开关命名空间为 `apex.features.*`（`FeatureProperties`），当前共 7 个键（2026-11-28 BE-066 复核）：
 
 ```yaml
 apex:
@@ -998,6 +963,11 @@ apex:
 
     # 链路追踪（默认 false）
     tracing: false
+
+    # 统一授权（批次 A7）：认证中心权限快照 + 缓存 + 本地 RBAC 降级
+    # 两层默认不同：组件 yml（apex-system application.yml）true；
+    # system-service 模块 yml false；代码兜底 false（UnifiedAuthorizationService）
+    auth-center-permission: false
 ```
 
 ## 🎯 环境特定配置示例

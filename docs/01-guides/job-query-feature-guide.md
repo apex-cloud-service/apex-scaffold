@@ -76,7 +76,7 @@
   - 使用Builder模式构建
 
 #### 2. Domain层
-- **[apex-domain/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java)**
+- **[apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java](../../apex-components-parent/apex-system/src/main/java/com/apex/scaffold/domain/repository/JobRepository.java)**
   - 新增 `findByPage()` 方法：分页查询定时任务
   - 新增 `countByCondition()` 方法：统计符合条件的任务数量
 
