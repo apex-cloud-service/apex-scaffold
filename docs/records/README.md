@@ -37,3 +37,4 @@
 | 2026-11-22 | [2026-11-22-alignment-campaign.md](./2026-11-22-alignment-campaign.md) | BE-045~BE-048 全仓对齐与图表补齐：指南/测试文档对齐、既有图核对（无 _v2）、新增 130–145 共 16 张双源图、Javadoc 归零与规则文档/扫描脚本修复；门禁与全量 verify 见记录 §5 |
 | 2026-11-22 | [2026-11-22-code-review-pattern-spi-lambda.md](./2026-11-22-code-review-pattern-spi-lambda.md) | BE-049 全模块增量评审：SSO/搜索分派收敛、内部端点错误映射去重、撤销缓存保留期修正、数据权限 OR 括起、Outbox 抢占校验、SPI 真实描述符测试、测试报告生成链修复 |
 | 2026-11-23 | [2026-11-22-handler-annotation-completion.md](./2026-11-22-handler-annotation-completion.md) | BE-060 全模块 Handler SpringDoc/Swagger 注解补齐：10 模块 Router/Handler/DTO 四档覆盖率 100%、扫描脚本从单模块扩到全模块并新增写操作 requestBody 检查、4 个既有契约测试全绿、HTTP 契约零变化 |
+| 2026-11-28 | [2026-11-28-be066-alignment-campaign.md](./2026-11-28-be066-alignment-campaign.md) | BE-066 全仓文档/脚本/配置/图表对齐与增强：四切片评审修复（模块/API/配置/脚本索引）、时序图 90/91 `_v2` 成对修订、9 个历史件补横幅、脚本索引补 governance、新登记工单 BE-067~070 |
