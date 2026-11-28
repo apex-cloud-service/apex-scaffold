@@ -44,7 +44,7 @@ import org.springframework.web.server.ServerWebExchange;
  *   <caption>Sentinel 规则类型与用途</caption>
  *   <tr><th>规则类型</th><th>Sentinel 管理器</th><th>触发场景</th><th>触发后行为</th></tr>
  *   <tr><td>流控规则</td><td>{@link FlowRuleManager}</td><td>QPS 超过阈值</td><td>返回 429 Too Many Requests</td></tr>
- *   <tr><td>熔断降级规则</td><td>{@link DegradeRuleManager}</td><td>异常比例或慢调用比例超过阈值</td><td>返回 503 Service Unavailable</td></tr>
+ *   <tr><td>熔断降级规则</td><td>{@link DegradeRuleManager}</td><td>异常比例超过阈值</td><td>返回 503 Service Unavailable</td></tr>
  *   <tr><td>系统保护规则</td><td>{@link SystemRuleManager}</td><td>CPU/线程/QPS 过载</td><td>返回 503 Service Unavailable</td></tr>
  * </table>
  *
@@ -53,21 +53,19 @@ import org.springframework.web.server.ServerWebExchange;
  *   <caption>流控规则分组与 QPS 阈值</caption>
  *   <tr><th>分组</th><th>接口数量</th><th>典型 QPS</th><th>覆盖范围</th></tr>
  *   <tr><td>认证（auth）</td><td>5</td><td>20~200</td><td>登录/刷新/短信</td></tr>
- *   <tr><td>文件（file）</td><td>4</td><td>10~200</td><td>上传/面部照片</td></tr>
  *   <tr><td>用户（user）</td><td>3</td><td>50~300</td><td>信息/列表</td></tr>
- *   <tr><td>媒体（media）</td><td>6</td><td>30~60</td><td>样本/收藏/共鸣/对战/投票</td></tr>
- *   <tr><td>排名（ranking）</td><td>3</td><td>100</td><td>排行榜</td></tr>
- *   <tr><td>同频（same-frequency）</td><td>6</td><td>30~100</td><td>状态/外观/兴趣/匿名会话（interests/feed 已随 BE-067 移除）</td></tr>
- *   <tr><td>其他（other）</td><td>5</td><td>20~100</td><td>伴侣/黑名单/举报/资料</td></tr>
- *   <tr><td>V1 探索投票（explore-v1）</td><td>6</td><td>40~100</td><td>获取对局/提交/跳过/共鸣/金睛火眼</td></tr>
  * </table>
+ *
+ * <p>BE-071（2026-11-28）：按逐条路由证据清理无路由注册的退役业务域规则
+ * （文件/媒体/排名/同频/其他/V1 探索投票/V2 投票探索共 34 条，证据清单见
+ * docs/records/2026-11-28-be071-sentinel-baseline-audit.md），仅保留 system 模块
+ * 实际注册的认证与用户两组；Nacos 动态规则仍可整体替换扩展。</p>
  *
  * <h2>设计说明</h2>
  * <ul>
  *   <li>异常比例阈值（count）：窗口内异常数占比超过此值触发熔断，统计窗口使用 Sentinel 默认值</li>
- *   <li>慢调用规则显式使用 30 秒统计窗口，{@code count} 表示 RT 阈值，{@code slowRatioThreshold} 表示慢调用比例</li>
  *   <li>熔断时长（timeWindow）：熔断打开后持续多少秒再进入半开探测</li>
- *   <li>认证接口（login/refresh）为 10s，文件/媒体/外部为 15~30s</li>
+ *   <li>认证接口（login/refresh）为 10s</li>
  * </ul>
  *
  * <h2>设计说明</h2>
@@ -108,41 +106,27 @@ public class SentinelConfig {
     /** 系统保护入口 QPS 阈值，超过此值触发流控。 */
     private final double entryQpsThreshold;
 
-    /** AI 分析慢调用判定阈值（毫秒），默认 30 秒，与远程分析服务读超时同量级，避免正常上传流量被误熔断。 */
-    private final long aiAnalysisSlowCallThresholdMs;
-
-    /** 投票探索接口慢调用判定阈值（毫秒），默认 3 秒，避免 DB 波动或压测场景被误熔断。 */
-    private final long exploreSlowCallThresholdMs;
-
     /** 国际化消息解析工具，用于为限流/熔断响应生成多语言提示。 */
     private final MessageUtils messageUtils;
 
     /**
      * 构造方法，通过构造器注入全部配置项与依赖。
      *
-     * <p>配置项均通过 {@code @Value} 注入，支持环境变量覆盖；AI 分析与投票探索慢调用阈值独立配置，
-     * 便于按线上实际耗时校准，避免硬编码魔法数字。</p>
+     * <p>配置项均通过 {@code @Value} 注入，支持环境变量覆盖。</p>
      *
      * @param systemRulesEnabled 是否启用系统保护规则
      * @param cpuUsageThreshold 系统保护 CPU 使用率阈值
      * @param entryQpsThreshold 系统保护入口 QPS 阈值
-     * @param aiAnalysisSlowCallThresholdMs AI 分析慢调用判定阈值（毫秒）
-     * @param exploreSlowCallThresholdMs 投票探索接口慢调用判定阈值（毫秒）
      * @param messageUtils 国际化消息解析工具
      */
     public SentinelConfig(
             @Value("${apex.sentinel.system-rules.enabled:true}") boolean systemRulesEnabled,
             @Value("${apex.sentinel.system-rules.cpu-usage-threshold:0.8}") double cpuUsageThreshold,
             @Value("${apex.sentinel.system-rules.entry-qps-threshold:2000}") double entryQpsThreshold,
-            @Value("${apex.sentinel.degrade.slow-call.ai-analysis-threshold-ms:30000}")
-                    long aiAnalysisSlowCallThresholdMs,
-            @Value("${apex.sentinel.degrade.slow-call.explore-threshold-ms:3000}") long exploreSlowCallThresholdMs,
             MessageUtils messageUtils) {
         this.systemRulesEnabled = systemRulesEnabled;
         this.cpuUsageThreshold = cpuUsageThreshold;
         this.entryQpsThreshold = entryQpsThreshold;
-        this.aiAnalysisSlowCallThresholdMs = aiAnalysisSlowCallThresholdMs;
-        this.exploreSlowCallThresholdMs = exploreSlowCallThresholdMs;
         this.messageUtils = messageUtils;
     }
 
@@ -270,23 +254,15 @@ public class SentinelConfig {
     /**
      * 初始化全局限流规则。
      *
-     * <p>在应用启动时注册 42 条流控规则到 {@link FlowRuleManager}（BE-067 移除 interests/feed 死规则后）。
-     * 覆盖认证、文件、用户、媒体、排名、同频、通用、V1 探索投票和 V2 投票探索共 9 个业务模块。
-     * 规则基于 QPS 维度，对所有调用来源生效（{@code limitApp=default}）。</p>
+     * <p>在应用启动时注册 8 条流控规则到 {@link FlowRuleManager}（BE-071 清理退役业务域死规则后）。
+     * 覆盖认证与用户两个业务模块。规则基于 QPS 维度，对所有调用来源生效（{@code limitApp=default}）。</p>
      */
     @PostConstruct
     public void initFlowRules() {
-        List<FlowRule> rules = new ArrayList<>(42);
+        List<FlowRule> rules = new ArrayList<>(8);
 
         addAuthRules(rules);
-        addFileRules(rules);
         addUserRules(rules);
-        addMediaRules(rules);
-        addRankingRules(rules);
-        addSameFrequencyRules(rules);
-        addOtherRules(rules);
-        addExploreV1Rules(rules);
-        addExploreV2Rules(rules);
 
         FlowRuleManager.loadRules(rules);
     }
@@ -307,20 +283,6 @@ public class SentinelConfig {
     }
 
     /**
-     * 文件模块限流规则。
-     *
-     * <p>上传 50 QPS、面部照片 10 QPS（AI 分析密集型）、生活照 10 QPS、CDN URL 200 QPS。</p>
-     *
-     * @param rules 限流规则列表
-     */
-    private void addFileRules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v1/file/upload", 50));
-        rules.add(createFlowRule("/api/v1/onboarding/face-profile", 10));
-        rules.add(createFlowRule("/api/v1/photos/lifestyle", 10));
-        rules.add(createFlowRule("/api/v1/file/url", 200));
-    }
-
-    /**
      * 用户模块限流规则。
      *
      * <p>信息查询 300 QPS（高频读）、单用户查询 200 QPS、列表 50 QPS。</p>
@@ -331,105 +293,6 @@ public class SentinelConfig {
         rules.add(createFlowRule("/api/v1/user/info", 300));
         rules.add(createFlowRule("/api/v1/user/{userId}", 200));
         rules.add(createFlowRule("/api/v1/user/list", 50));
-    }
-
-    /**
-     * 媒体模块限流规则。
-     *
-     * <p>样本查询 50 QPS、发布 30 QPS、收藏/共鸣 60 QPS、对战/投票 40 QPS。
-     * 写操作（发布/对战/投票）阈值低于读操作（查询/收藏/共鸣）。</p>
-     *
-     * @param rules 限流规则列表
-     */
-    private void addMediaRules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v1/media/samples", 50));
-        rules.add(createFlowRule("/api/v1/media/samples/{sampleId}/publish", 30));
-        rules.add(createFlowRule("/api/v1/media/photos/{photoId}/favorite", 60));
-        rules.add(createFlowRule("/api/v1/media/photos/{photoId}/resonate", 60));
-        rules.add(createFlowRule("/api/v1/media/photos/{photoId}/battle", 40));
-        rules.add(createFlowRule("/api/v1/media/photos/{photoId}/vote", 40));
-    }
-
-    /**
-     * 排名模块限流规则。
-     *
-     * <p>所有排名查询接口统一 100 QPS。</p>
-     *
-     * @param rules 限流规则列表
-     */
-    private void addRankingRules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v1/ranking/list", 100));
-        rules.add(createFlowRule("/api/v1/ranking/photo", 100));
-        rules.add(createFlowRule("/api/v1/ranking/user", 100));
-    }
-
-    /**
-     * 同频模块限流规则。
-     *
-     * <p>状态/外观/兴趣三种信息流接口统一 100 QPS。</p>
-     *
-     * @param rules 限流规则列表
-     */
-    private void addSameFrequencyRules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v1/same-frequency/status", 100));
-        rules.add(createFlowRule("/api/v1/same-frequency/appearance/feed", 100));
-        rules.add(createFlowRule("/api/v1/interest-universe", 100));
-        rules.add(createFlowRule("/api/v1/interest-channels/home", 80));
-        rules.add(createFlowRule("/api/v1/interest-connections/instant", 30));
-        rules.add(createFlowRule("/api/v1/anonymous-interest-sessions/{sessionId}/messages", 80));
-    }
-
-    /**
-     * 其他模块限流规则。
-     *
-     * <p>伴侣偏好 30 QPS、黑名单/举报 20 QPS（管理操作低频）、个人资料 100 QPS、引导 50 QPS。</p>
-     *
-     * @param rules 限流规则列表
-     */
-    private void addOtherRules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v1/future-partner/preferences", 30));
-        rules.add(createFlowRule("/api/v1/moderation/blacklist", 20));
-        rules.add(createFlowRule("/api/v1/moderation/reports", 20));
-        rules.add(createFlowRule("/api/v1/profile/me", 100));
-        rules.add(createFlowRule("/api/v1/onboarding/guide/answers", 50));
-    }
-
-    /**
-     * V2 投票探索模块限流规则。
-     *
-     * <p>二选一/四选二的 current（获取对局）和 prefetch（预取下一局）是投票主链路的核心读接口。
-     * current 为高频读操作（100 QPS），prefetch 触发组局算法算力消耗较高（60 QPS）。
-     * 阈值低于纯读操作（如 ranking 100 QPS），因为这些接口会触发 DB 写入（RESERVED 槽位、展示统计）。</p>
-     *
-     * @param rules 限流规则列表
-     */
-    private void addExploreV2Rules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v2/explore/choice-2/current", 100));
-        rules.add(createFlowRule("/api/v2/explore/choice-2/prefetch", 60));
-        rules.add(createFlowRule("/api/v2/explore/four-pick-two/current", 100));
-        rules.add(createFlowRule("/api/v2/explore/four-pick-two/prefetch", 60));
-    }
-
-    /**
-     * V1 探索投票模块限流规则。
-     *
-     * <p>V1 探索投票端点是投票主链路的核心接口。按接口特性分配 QPS：
-     * <ul>
-     *   <li>获取对局（current、golden-eye/current）：高频读操作，100 / 80 QPS</li>
-     *   <li>投票提交（submit、resonance/submit、golden-eye/verify）：写操作涉及 ELO 结算与事务，
-     *       阈值低于读操作，60 / 40 QPS</li>
-     *   <li>跳过对局（skip）：轻量写操作，40 QPS</li>
-     * </ul>
-     *
-     * @param rules 限流规则列表
-     */
-    private void addExploreV1Rules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v1/explore/battles/current", 100));
-        rules.add(createFlowRule("/api/v1/explore/battles/{battleId}/submit", 60));
-        rules.add(createFlowRule("/api/v1/explore/battles/{battleId}/skip", 40));
-        rules.add(createFlowRule("/api/v1/explore/resonance/{battleId}/submit", 40));
-        rules.add(createFlowRule("/api/v1/explore/golden-eye/current", 80));
-        rules.add(createFlowRule("/api/v1/explore/golden-eye/{battleId}/verify", 40));
     }
 
     /**
@@ -454,51 +317,16 @@ public class SentinelConfig {
     }
 
     /**
-     * 创建慢调用比例熔断降级规则。
-     *
-     * <p>基于慢调用比例（slow request ratio）触发熔断。
-     * 当统计窗口内响应时间超过 {@code maxAllowedRt} 毫秒的请求占比超过 {@code count} 时，
-     * 该资源进入熔断 OPEN 状态。适用于 AI 分析等耗时波动的接口，
-     * 即使接口不报错但大面积变慢时也能自动降级保护。
-     *
-     * <p>Sentinel {@code DEGRADE_GRADE_RT} 模式下：
-     * {@code count} 字段承载 RT 阈值（毫秒），{@code slowRatioThreshold} 承载慢调用比例阈值。
-     * 本方法将参数名与 Sentinel 内部字段语义对齐，避免混淆。</p>
-     *
-     * @param resource     资源名称（接口路径）
-     * @param count        慢调用比例阈值（0.0 ~ 1.0），如 0.5 表示 50%
-     * @param timeWindow   熔断时长（秒）
-     * @param maxAllowedRt 慢调用判定阈值（毫秒），超过此 RT 的请求视为慢调用
-     * @return 配置完成的 {@link DegradeRule} 实例
-     */
-    private DegradeRule createSlowCallDegradeRule(String resource, double count, int timeWindow, int maxAllowedRt) {
-        DegradeRule rule = new DegradeRule();
-        rule.setResource(resource);
-        rule.setGrade(RuleConstant.DEGRADE_GRADE_RT);
-        rule.setCount(maxAllowedRt);
-        rule.setSlowRatioThreshold(count);
-        rule.setTimeWindow(timeWindow);
-        rule.setMinRequestAmount(5);
-        rule.setStatIntervalMs(30000);
-        return rule;
-    }
-
-    /**
      * 初始化全局熔断降级规则。
      *
-     * <p>在应用启动时注册异常比例 + 慢调用比例两类熔断规则到 {@link DegradeRuleManager}。
-     * 覆盖认证、文件、媒体、外部依赖、V1 探索投票共 5 个模块。</p>
+     * <p>在应用启动时注册异常比例熔断规则到 {@link DegradeRuleManager}
+     * （BE-071 清理退役业务域死规则后，仅保留认证模块两条）。</p>
      */
     @PostConstruct
     public void initDegradeRules() {
-        List<DegradeRule> rules = new ArrayList<>(30);
+        List<DegradeRule> rules = new ArrayList<>(2);
 
         addAuthDegradeRules(rules);
-        addFileDegradeRules(rules);
-        addMediaDegradeRules(rules);
-        addExternalDegradeRules(rules);
-        addExploreV1DegradeRules(rules);
-        addSlowCallDegradeRules(rules);
 
         DegradeRuleManager.loadRules(rules);
     }
@@ -513,115 +341,6 @@ public class SentinelConfig {
     private void addAuthDegradeRules(List<DegradeRule> rules) {
         rules.add(createDegradeRule("/api/v1/auth/login", 0.5, 10));
         rules.add(createDegradeRule("/api/v1/auth/refresh", 0.3, 10));
-    }
-
-    /**
-     * 文件模块熔断降级规则。
-     *
-     * <p>上传 50% 异常率熔断 15s、面部照片/生活照 50% 异常率熔断 20s（AI 分析耗时较长）、
-     * CDN URL 30% 异常率熔断 10s。</p>
-     *
-     * @param rules 熔断降级规则列表
-     */
-    private void addFileDegradeRules(List<DegradeRule> rules) {
-        rules.add(createDegradeRule("/api/v1/file/upload", 0.5, 15));
-        rules.add(createDegradeRule("/api/v1/onboarding/face-profile", 0.5, 20));
-        rules.add(createDegradeRule("/api/v1/photos/lifestyle", 0.5, 20));
-        rules.add(createDegradeRule("/api/v1/file/url", 0.3, 10));
-    }
-
-    /**
-     * 媒体模块熔断降级规则。
-     *
-     * <p>样本查询 50% 异常率熔断 15s、发布 50% 异常率熔断 20s、
-     * 对战/投票 50% 异常率熔断 10s（对延迟敏感，快速熔断快恢复）。</p>
-     *
-     * @param rules 熔断降级规则列表
-     */
-    private void addMediaDegradeRules(List<DegradeRule> rules) {
-        rules.add(createDegradeRule("/api/v1/media/samples", 0.5, 15));
-        rules.add(createDegradeRule("/api/v1/media/samples/{sampleId}/publish", 0.5, 20));
-        rules.add(createDegradeRule("/api/v1/media/photos/{photoId}/battle", 0.5, 10));
-        rules.add(createDegradeRule("/api/v1/media/photos/{photoId}/vote", 0.5, 10));
-    }
-
-    /**
-     * 外部依赖熔断降级规则。
-     *
-     * <p>微信 OAuth 50% 异常率熔断 30s、微信支付 30% 异常率熔断 30s（第三方依赖恢复较慢）、
-     * 短信发送 30% 异常率熔断 20s、对象存储上传 50% 异常率熔断 15s。</p>
-     *
-     * @param rules 熔断降级规则列表
-     */
-    private void addExternalDegradeRules(List<DegradeRule> rules) {
-        rules.add(createDegradeRule("/api/v1/wechat/oauth", 0.5, 30));
-        rules.add(createDegradeRule("/api/v1/wechat/pay", 0.3, 30));
-        rules.add(createDegradeRule("/api/v1/sms/send", 0.3, 20));
-        rules.add(createDegradeRule("/api/v1/oss/upload", 0.5, 15));
-    }
-
-    /**
-     * V1 探索投票模块异常比例熔断降级规则。
-     *
-     * <p>对 V1 探索投票核心接口设置异常比例熔断保护：
-     * <ul>
-     *   <li>获取对局（current）— 50% 异常率熔断 15s，因涉及阻塞式 DB 查询与组局算法</li>
-     *   <li>投票提交（submit、resonance/submit）— 50% 异常率熔断 15s，因涉及 ELO 结算事务</li>
-     *   <li>跳过对局（skip）— 50% 异常率熔断 10s，轻量操作快速恢复</li>
-     * </ul>
-     *
-     * @param rules 熔断降级规则列表
-     */
-    private void addExploreV1DegradeRules(List<DegradeRule> rules) {
-        rules.add(createDegradeRule("/api/v1/explore/battles/current", 0.5, 15));
-        rules.add(createDegradeRule("/api/v1/explore/battles/{battleId}/submit", 0.5, 15));
-        rules.add(createDegradeRule("/api/v1/explore/battles/{battleId}/skip", 0.5, 10));
-        rules.add(createDegradeRule("/api/v1/explore/resonance/{battleId}/submit", 0.5, 15));
-    }
-
-    /**
-     * 慢调用比例熔断降级规则。
-     *
-     * <p>针对 AI 分析等耗时波动接口，即使不报错但大面积变慢时也能自动降级：
-     * <ul>
-     *   <li>面部分析（3000ms）— 50% 慢调用率触发熔断 30s</li>
-     *   <li>生活照分析（3000ms）— 50% 慢调用率触发熔断 30s</li>
-     *   <li>对战提交（2000ms）— 50% 慢调用率触发熔断 15s</li>
-     *   <li>投票提交（2000ms）— 50% 慢调用率触发熔断 15s</li>
-     *   <li>微信 OAuth（3000ms）— 50% 慢调用率触发熔断 30s</li>
-     *   <li>对象存储上传（5000ms）— 50% 慢调用率触发熔断 20s</li>
-     *   <li>V1 获取对局（3000ms）— 50% 慢调用率触发熔断 15s，涉及阻塞式 DB 查询与组局算法</li>
-     *   <li>V1 投票提交（2000ms）— 50% 慢调用率触发熔断 15s，涉及 ELO 结算事务</li>
-     * </ul>
-     *
-     * @param rules 熔断降级规则列表
-     */
-    private void addSlowCallDegradeRules(List<DegradeRule> rules) {
-        // AI 分析密集型接口：慢调用阈值由 apex.sentinel.degrade.slow-call.ai-analysis-threshold-ms 配置，
-        // 默认 30s，与远程分析服务读超时同量级，避免正常上传流量（图片上传+审核+Python 校验）被批量误熔断。
-        rules.add(createSlowCallDegradeRule(
-                "/api/v1/onboarding/face-profile", 0.5, 30, (int) aiAnalysisSlowCallThresholdMs));
-        rules.add(createSlowCallDegradeRule("/api/v1/photos/lifestyle", 0.5, 30, (int) aiAnalysisSlowCallThresholdMs));
-        // 对延迟敏感的业务接口
-        rules.add(createSlowCallDegradeRule("/api/v1/media/photos/{photoId}/battle", 0.5, 15, 2000));
-        rules.add(createSlowCallDegradeRule("/api/v1/media/photos/{photoId}/vote", 0.5, 15, 2000));
-        // 外部依赖接口：第三方恢复较慢，熔断窗口适当延长
-        rules.add(createSlowCallDegradeRule("/api/v1/wechat/oauth", 0.5, 30, 3000));
-        rules.add(createSlowCallDegradeRule("/api/v1/oss/upload", 0.5, 20, 5000));
-        // V2 投票探索接口：current 涉及阻塞式数据库查询与组局算法，
-        // 慢调用阈值由 apex.sentinel.degrade.slow-call.explore-threshold-ms 配置（默认 3s），
-        // 允许按真实环境耗时校准，避免压测或 DB 波动导致误熔断。
-        rules.add(createSlowCallDegradeRule(
-                "/api/v2/explore/choice-2/current", 0.5, 15, (int) exploreSlowCallThresholdMs));
-        rules.add(createSlowCallDegradeRule("/api/v2/explore/choice-2/prefetch", 0.5, 15, 2000));
-        rules.add(createSlowCallDegradeRule(
-                "/api/v2/explore/four-pick-two/current", 0.5, 15, (int) exploreSlowCallThresholdMs));
-        rules.add(createSlowCallDegradeRule("/api/v2/explore/four-pick-two/prefetch", 0.5, 15, 2000));
-        // V1 探索投票接口：current 涉及阻塞式数据库查询与组局算法，阈值与 V2 保持一致，可配置
-        rules.add(createSlowCallDegradeRule(
-                "/api/v1/explore/battles/current", 0.5, 15, (int) exploreSlowCallThresholdMs));
-        // V1 投票提交：涉及 ELO 结算事务，2000ms 阈值与 V2 submit 对齐
-        rules.add(createSlowCallDegradeRule("/api/v1/explore/battles/{battleId}/submit", 0.5, 15, 2000));
     }
 
     /**

@@ -60,13 +60,6 @@ apex:
       cpu-usage-threshold: 0.8
       # 系统入口总 QPS 阈值
       entry-qps-threshold: 2000
-    degrade:
-      slow-call:
-        # AI 分析类接口慢调用阈值（毫秒）
-        ai-analysis-threshold-ms: 30000
-        # 探索类接口慢调用阈值（毫秒）
-        explore-threshold-ms: 3000
-
   # ---------- 多租户（SaaS 行级隔离，仅 Enterprise 默认开启） ----------
   # 💡 开启后：MybatisPlusConfig 注册 TenantLineInnerInterceptor，通过
   #    DefaultTenantLineHandler 自动为业务表注入 tenant_id 过滤条件，

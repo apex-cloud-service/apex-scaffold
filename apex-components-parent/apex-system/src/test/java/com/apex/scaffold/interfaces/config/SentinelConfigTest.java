@@ -9,7 +9,6 @@ import static org.mockito.Mockito.mock;
 import com.alibaba.csp.sentinel.adapter.spring.webflux.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
-import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
@@ -78,7 +77,7 @@ class SentinelConfigTest {
                 default -> key;
             };
         });
-        sentinelConfig = new SentinelConfig(true, 0.8, 2000, 30000, 3000, messageUtils);
+        sentinelConfig = new SentinelConfig(true, 0.8, 2000, messageUtils);
     }
 
     @Test
@@ -114,17 +113,6 @@ class SentinelConfigTest {
                 FlowRuleManager.getRules().stream().anyMatch(rule -> "/api/v1/auth/login".equals(rule.getResource()));
 
         assertThat(hasLoginRule).isTrue();
-    }
-
-    @Test
-    @DisplayName("熔断降级规则中应包含文件上传接口的规则")
-    void shouldContainFileUploadDegradeRule() {
-        sentinelConfig.initDegradeRules();
-
-        boolean hasFileUploadRule = DegradeRuleManager.getRules().stream()
-                .anyMatch(rule -> "/api/v1/file/upload".equals(rule.getResource()));
-
-        assertThat(hasFileUploadRule).isTrue();
     }
 
     @Test
@@ -209,26 +197,6 @@ class SentinelConfigTest {
     void shouldNormalizeBusinessApiWithPathVariables() {
         assertThat(SentinelConfig.cleanSentinelResource("/api/v1/explore/battles/123/submit"))
                 .isEqualTo("/api/v1/explore/battles/{battleId}/submit");
-    }
-
-    /**
-     * 验证 {@code shouldApplyConfiguredAiSlowCallThreshold} 场景。
-     *
-     * <p>AI 分析慢调用阈值来自构造配置，避免硬编码 3s 导致正常上传流量被批量误熔断。</p>
-     */
-    @Test
-    @DisplayName("AI分析慢调用阈值应来自配置")
-    void shouldApplyConfiguredAiSlowCallThreshold() {
-        SentinelConfig custom = new SentinelConfig(true, 0.8, 2000, 15000, 3000, messageUtils);
-        custom.initDegradeRules();
-
-        DegradeRule faceRule = DegradeRuleManager.getRules().stream()
-                .filter(rule -> "/api/v1/onboarding/face-profile".equals(rule.getResource()))
-                .filter(rule -> rule.getGrade() == com.alibaba.csp.sentinel.slots.block.RuleConstant.DEGRADE_GRADE_RT)
-                .findFirst()
-                .orElseThrow();
-        assertThat(faceRule.getCount()).isEqualTo(15000.0);
-        assertThat(faceRule.getGrade()).isEqualTo(com.alibaba.csp.sentinel.slots.block.RuleConstant.DEGRADE_GRADE_RT);
     }
 
     /**
@@ -324,7 +292,7 @@ class SentinelConfigTest {
         sentinelConfig.initFlowRules();
         List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-flow-rules.json");
 
-        assertThat(template).hasSize(42);
+        assertThat(template).hasSize(8);
         assertThat(template)
                 .extracting(rule -> rule.get("resource"))
                 .containsExactlyInAnyOrderElementsOf(FlowRuleManager.getRules().stream()
@@ -342,7 +310,7 @@ class SentinelConfigTest {
         sentinelConfig.initDegradeRules();
         List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-degrade-rules.json");
 
-        assertThat(template).hasSize(30);
+        assertThat(template).hasSize(2);
         assertThat(template)
                 .extracting(rule -> rule.get("resource"))
                 .containsExactlyInAnyOrderElementsOf(DegradeRuleManager.getRules().stream()
