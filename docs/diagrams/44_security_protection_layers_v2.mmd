@@ -1,5 +1,5 @@
-%% v2（2026-11-28，BE-071）：v1 中「Sentinel 43条限流规则」已随 BE-071 逐条路由证据审计后
-%% 更正为 8 条流控 + 2 条熔断（仅保留 system 模块实际注册路径）；其余条目逐项核实后保留
+%% v2（2026-11-28，BE-071/BE-072）：v1 中「Sentinel 43条限流规则」经逐条路由证据审计后
+%% 更正为 6 条流控 + 2 条熔断（BE-071 清理退役域 + BE-072 移除被 {userId} 模板遮蔽的两条）；其余条目逐项核实后保留
 %% （过滤器/注解/配置键均实测存在）。v1 保留不改（§0.3）。
 %%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
 flowchart TB
@@ -18,7 +18,7 @@ flowchart TB
     end
 
     subgraph L3["L3 API 网关层"]
-        L3A["流控熔断<br/>Sentinel 8 条限流 + 2 条熔断规则（BE-071 核对）<br/>apex.gateway.rate-limit 分布式令牌桶 · Resilience4j 熔断"]
+        L3A["流控熔断<br/>Sentinel 6 条限流 + 2 条熔断规则（BE-071/BE-072 核对）<br/>apex.gateway.rate-limit 分布式令牌桶 · Resilience4j 熔断"]
         L3B["跨域 CORS + 安全响应头<br/>X-Frame-Options、X-Content-Type-Options、HSTS"]
     end
 
