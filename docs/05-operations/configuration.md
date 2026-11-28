@@ -443,7 +443,7 @@ apex:
 ```
 
 > ⚠️ 启用动态下发时，Nacos 的 DataId 需维护**完整规则集**（推送为整体替换语义）。
-> JSON 模板与字段说明见 `config/sentinel/README.md`；当前内置静态基线为 43 条限流规则和 30 条降级规则，定义于 `SentinelConfig`，两个 Nacos DataId 必须分别发布完整集合。动态规则推送采用整体替换语义，不会与静态规则自动合并。
+> JSON 模板与字段说明见 `config/sentinel/README.md`；当前内置静态基线为 42 条限流规则和 30 条降级规则（BE-067 移除 interests/feed 死规则后），定义于 `SentinelConfig`，两个 Nacos DataId 必须分别发布完整集合。动态规则推送采用整体替换语义，不会与静态规则自动合并。
 
 ### Resilience4j 与远程调用配置
 

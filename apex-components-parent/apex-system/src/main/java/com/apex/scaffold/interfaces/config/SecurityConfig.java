@@ -180,16 +180,12 @@ public class SecurityConfig {
                             .authenticated();
                     if (rbacEnabled) {
                         exchanges
-                                .pathMatchers("/internal/v1/interests/**")
-                                .hasAnyRole("ADMIN", "INTEREST_GRAPH_EDITOR", "INTEREST_PUBLISHER")
                                 .pathMatchers("/admin-api/v1/**")
                                 .hasAnyRole(securityProperties.getAdminRoles().toArray(new String[0]))
                                 .pathMatchers(securityProperties.getAdminPaths().toArray(new String[0]))
                                 .hasAnyRole(securityProperties.getAdminRole(), "SUPER_ADMIN");
                     } else {
                         exchanges
-                                .pathMatchers("/internal/v1/interests/**")
-                                .authenticated()
                                 .pathMatchers("/admin-api/v1/**")
                                 .authenticated()
                                 .pathMatchers(securityProperties.getAdminPaths().toArray(new String[0]))

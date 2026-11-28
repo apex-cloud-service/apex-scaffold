@@ -57,7 +57,7 @@ import org.springframework.web.server.ServerWebExchange;
  *   <tr><td>用户（user）</td><td>3</td><td>50~300</td><td>信息/列表</td></tr>
  *   <tr><td>媒体（media）</td><td>6</td><td>30~60</td><td>样本/收藏/共鸣/对战/投票</td></tr>
  *   <tr><td>排名（ranking）</td><td>3</td><td>100</td><td>排行榜</td></tr>
- *   <tr><td>同频（same-frequency）</td><td>7</td><td>30~100</td><td>状态/外观/兴趣/匿名会话</td></tr>
+ *   <tr><td>同频（same-frequency）</td><td>6</td><td>30~100</td><td>状态/外观/兴趣/匿名会话（interests/feed 已随 BE-067 移除）</td></tr>
  *   <tr><td>其他（other）</td><td>5</td><td>20~100</td><td>伴侣/黑名单/举报/资料</td></tr>
  *   <tr><td>V1 探索投票（explore-v1）</td><td>6</td><td>40~100</td><td>获取对局/提交/跳过/共鸣/金睛火眼</td></tr>
  * </table>
@@ -270,13 +270,13 @@ public class SentinelConfig {
     /**
      * 初始化全局限流规则。
      *
-     * <p>在应用启动时注册 43 条流控规则到 {@link FlowRuleManager}。
+     * <p>在应用启动时注册 42 条流控规则到 {@link FlowRuleManager}（BE-067 移除 interests/feed 死规则后）。
      * 覆盖认证、文件、用户、媒体、排名、同频、通用、V1 探索投票和 V2 投票探索共 9 个业务模块。
      * 规则基于 QPS 维度，对所有调用来源生效（{@code limitApp=default}）。</p>
      */
     @PostConstruct
     public void initFlowRules() {
-        List<FlowRule> rules = new ArrayList<>(43);
+        List<FlowRule> rules = new ArrayList<>(42);
 
         addAuthRules(rules);
         addFileRules(rules);
@@ -373,7 +373,6 @@ public class SentinelConfig {
     private void addSameFrequencyRules(List<FlowRule> rules) {
         rules.add(createFlowRule("/api/v1/same-frequency/status", 100));
         rules.add(createFlowRule("/api/v1/same-frequency/appearance/feed", 100));
-        rules.add(createFlowRule("/api/v1/same-frequency/interests/feed", 100));
         rules.add(createFlowRule("/api/v1/interest-universe", 100));
         rules.add(createFlowRule("/api/v1/interest-channels/home", 80));
         rules.add(createFlowRule("/api/v1/interest-connections/instant", 30));

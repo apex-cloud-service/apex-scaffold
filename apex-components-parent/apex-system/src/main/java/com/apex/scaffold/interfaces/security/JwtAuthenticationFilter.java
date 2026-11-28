@@ -61,7 +61,7 @@ import reactor.util.function.Tuples;
  * <ol>
  *   <li>{@link #filter(ServerWebExchange, WebFilterChain)}：入口方法，判断公开路径、提取Token、检查黑名单</li>
  *   <li>{@link #authenticateToken(ServerWebExchange, WebFilterChain, String)}：解析Token，处理异常</li>
- *   <li>{@link #getUserAuthorities(ServerWebExchange, String, boolean)}：根据OpenID获取用户和权限（含敏感路径强制刷新）</li>
+ *   <li>{@link #getUserAuthorities(ServerWebExchange, String)}：根据OpenID获取用户和权限（本地缓存优先）</li>
  *   <li>{@link #fetchAndCacheUserRoles(Long)}：缓存未命中时，从数据库查询角色并缓存</li>
  *   <li>{@link #buildAuthoritiesFromRoles(List)}：将角色列表转换为Spring Security权限对象</li>
  *   <li>{@link #setAuthenticationContext(ServerWebExchange, WebFilterChain, UserEntity, List)}：创建认证信息并存入SecurityContext</li>
@@ -294,9 +294,7 @@ public class JwtAuthenticationFilter implements WebFilter {
                  */
                 final Mono<Void> renewal = tryRenewToken(exchange, openId, claims);
 
-                boolean forceFreshRoles =
-                        exchange.getRequest().getPath().value().startsWith("/internal/v1/interests/");
-                return getUserAuthorities(exchange, openId, forceFreshRoles)
+                return getUserAuthorities(exchange, openId)
                         .map(Optional::of)
                         .defaultIfEmpty(Optional.empty())
                         // 认证成功后，将 userId（即 openId）写入 exchange attributes，
@@ -417,11 +415,10 @@ public class JwtAuthenticationFilter implements WebFilter {
      *
      * @param exchange 当前服务器交换对象，用于写入请求级用户上下文
      * @param openId 微信 OpenID
-     * @param forceFreshRoles 是否跳过缓存强制刷新角色（敏感路径为 {@code true}）
      * @return 用户与权限列表的 Mono 包装
      */
     private Mono<Tuple2<com.apex.scaffold.domain.model.entity.UserEntity, List<SimpleGrantedAuthority>>>
-            getUserAuthorities(ServerWebExchange exchange, String openId, boolean forceFreshRoles) {
+            getUserAuthorities(ServerWebExchange exchange, String openId) {
         return userRepository
                 .findByOpenId(openId)
                 .filter(user -> {
@@ -431,7 +428,7 @@ public class JwtAuthenticationFilter implements WebFilter {
                     }
                     return true;
                 })
-                .flatMap(user -> materializeUserContext(exchange, user, forceFreshRoles));
+                .flatMap(user -> materializeUserContext(exchange, user));
     }
 
     /**
@@ -507,7 +504,7 @@ public class JwtAuthenticationFilter implements WebFilter {
             }
             // 供下游 LoggingFilter 写入 MDC（与 C 端 userId 属性对齐）
             exchange.getAttributes().put("userId", String.valueOf(accountId));
-            return materializeUserContext(exchange, user, false);
+            return materializeUserContext(exchange, user);
         });
     }
 
@@ -519,14 +516,10 @@ public class JwtAuthenticationFilter implements WebFilter {
      *
      * @param exchange        当前请求交换上下文
      * @param user            已加载的主应用用户实体（统一账户）
-     * @param forceFreshRoles 是否跳过本地缓存强制刷新角色
      * @return 用户与权限列表的 Mono 包装
      */
     private Mono<Tuple2<com.apex.scaffold.domain.model.entity.UserEntity, List<SimpleGrantedAuthority>>>
-            materializeUserContext(
-                    ServerWebExchange exchange,
-                    com.apex.scaffold.domain.model.entity.UserEntity user,
-                    boolean forceFreshRoles) {
+            materializeUserContext(ServerWebExchange exchange, com.apex.scaffold.domain.model.entity.UserEntity user) {
         // 将用户身份与部门写入 exchange attributes，供数据权限装配端使用
         // （DataScopeAspect / 自定义 DataScopeProvider），键名与 MdcDataScopeProvider 对齐。
         // 注意 attributes 为 ConcurrentHashMap（禁止 null 值），deptId 为空时跳过。
@@ -552,7 +545,7 @@ public class JwtAuthenticationFilter implements WebFilter {
                     .transformDeferred(mono -> com.apex.scaffold.common.context.TenantContext.withTenant(mono))
                     .contextWrite(com.apex.scaffold.common.context.TenantContext.withTenant(user.getTenantId()));
         }
-        List<SimpleGrantedAuthority> cached = forceFreshRoles ? null : userRolesCache.getIfPresent(user.getId());
+        List<SimpleGrantedAuthority> cached = userRolesCache.getIfPresent(user.getId());
         if (cached != null) {
             return Mono.just(Tuples.of(user, cached));
         }

@@ -22,7 +22,6 @@
   {"resource":"/api/v1/ranking/user","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/same-frequency/status","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/same-frequency/appearance/feed","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
-  {"resource":"/api/v1/same-frequency/interests/feed","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/interest-universe","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/interest-channels/home","limitApp":"default","grade":1,"count":80,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/interest-connections/instant","limitApp":"default","grade":1,"count":30,"strategy":0,"controlBehavior":0,"clusterMode":false},

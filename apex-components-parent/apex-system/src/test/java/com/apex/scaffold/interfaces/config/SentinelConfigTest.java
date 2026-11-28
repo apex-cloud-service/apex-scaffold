@@ -324,7 +324,7 @@ class SentinelConfigTest {
         sentinelConfig.initFlowRules();
         List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-flow-rules.json");
 
-        assertThat(template).hasSize(43);
+        assertThat(template).hasSize(42);
         assertThat(template)
                 .extracting(rule -> rule.get("resource"))
                 .containsExactlyInAnyOrderElementsOf(FlowRuleManager.getRules().stream()

@@ -439,22 +439,25 @@ class JwtAuthenticationFilterTest {
     }
 
     /**
-     * 验证兴趣治理路径每次实时读取角色（绕过角色缓存），撤权可即时生效。
+     * 验证内部 interests 路径按普通路径走角色缓存（BE-067 死白名单移除回归）。
+     *
+     * <p>历史行为：该前缀曾在 {@code JwtAuthenticationFilter} 中强制绕过角色缓存
+     * （每次请求实时读取仓储）。路径无路由注册后特判随 BE-067 移除，本用例断言
+     * 同路径两次请求仅触发一次仓储读取，第二次命中本地 Caffeine 缓存。
      */
     @Test
-    @DisplayName("兴趣治理请求每次实时读取角色以便撤权立即生效")
-    void filter_withInterestGovernancePath_shouldBypassRoleCache() {
+    @DisplayName("内部 interests 路径已按普通路径走角色缓存")
+    void filter_withInternalInterestsPath_shouldUseCachedRoles() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/internal/v1/interests/graphs/2/readiness")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + VALID_TOKEN)
                 .build();
         Claims claims = mockClaims();
-        UserEntity user = UserEntity.create(TEST_OPEN_ID, "图谱编辑");
+        UserEntity user = UserEntity.create(TEST_OPEN_ID, "普通用户");
         user.setId(10L);
-        RoleEntity editor = RoleEntity.create("图谱编辑", "INTEREST_GRAPH_EDITOR", "test");
+        RoleEntity role = RoleEntity.create("普通用户", "USER", "test");
         when(tokenBlacklistService.isBlacklisted(VALID_TOKEN)).thenReturn(Mono.just(false));
         when(userRepository.findByOpenId(TEST_OPEN_ID)).thenReturn(Mono.just(user));
-        when(roleRepository.findByUserId(10L))
-                .thenReturn(Mono.just(java.util.List.of(editor)), Mono.just(java.util.List.of()));
+        when(roleRepository.findByUserId(10L)).thenReturn(Mono.just(java.util.List.of(role)));
         when(chain.filter(any(ServerWebExchange.class))).thenReturn(Mono.empty());
         when(tokenVerifier.parse(VALID_TOKEN)).thenReturn(claims);
 
@@ -463,7 +466,7 @@ class JwtAuthenticationFilterTest {
         StepVerifier.create(filter.filter(MockServerWebExchange.from(request), chain))
                 .verifyComplete();
 
-        verify(roleRepository, org.mockito.Mockito.times(2)).findByUserId(10L);
+        verify(roleRepository, org.mockito.Mockito.times(1)).findByUserId(10L);
     }
 
     @Test
