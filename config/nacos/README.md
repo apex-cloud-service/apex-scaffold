@@ -15,7 +15,7 @@ Data ID 内容基线，便于评审、版本管理与一键发布。
 
 | 环境 | namespace | 说明 |
 |------|-----------|------|
-| 本地开发 | `public` | 默认公共空间，对应 `.env.example` 的 `NACOS_NAMESPACE` 留空 |
+| 本地开发 | `public` | 默认公共空间，对应 `.env.example` 的 `NACOS_NAMESPACE=public`（2026-11-28 BE-066 校正：模板默认为 `public`，非留空） |
 | 开发联调 | `dev` | `NACOS_NAMESPACE=dev` |
 | 生产 | `prod` | `NACOS_NAMESPACE=prod` |
 
@@ -115,10 +115,10 @@ curl -X POST "http://127.0.0.1:18848/nacos/v1/cs/configs" \
 
 ## 五、本地联调（无 Nacos）
 
-1. 保持 `.env.example` 默认：`NACOS_CONFIG_ENABLED=false`、
-   `NACOS_DISCOVERY_ENABLED=false`、`NACOS_REGISTER_ENABLED=false`。
+1. `.env.example` 默认三开关均为 `true`（`NACOS_CONFIG_ENABLED` / `NACOS_DISCOVERY_ENABLED` / `NACOS_REGISTER_ENABLED`，`NACOS_SERVER_ADDR=nacos:8848`）——即 **compose 拓扑默认启用 Nacos**。无 Nacos 部署时须显式置 `false`：
+   `NACOS_CONFIG_ENABLED=false`、`NACOS_DISCOVERY_ENABLED=false`、`NACOS_REGISTER_ENABLED=false`。
 2. 各服务使用本地 `application.yml` 的默认值即可启动。
-3. 接入本地 infra Nacos 栈（`127.0.0.1:18848`）时，将上述开关置 `true`
+3. 接入本地 infra Nacos 栈（`127.0.0.1:18848`）时，保持开关 `true`
    并注入 `NACOS_SERVER_ADDR` / `NACOS_NAMESPACE`。
 
 ---
