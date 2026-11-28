@@ -87,7 +87,8 @@ class ProductionReadinessConfigurationTest {
     void managementPlaneAndReadinessAreExplicit() throws IOException {
         String yaml = read("application-prod.yml");
 
-        assertThat(yaml).contains("port: ${MANAGEMENT_SERVER_PORT:8081}");
+        // BE-069：prod 模板管理端口默认与 system 8083 惯例对齐（compose 健康检查/k8s 探针同口径）
+        assertThat(yaml).contains("port: ${MANAGEMENT_SERVER_PORT:8083}");
         assertThat(yaml).contains("include: readinessState,db,redis");
         assertThat(yaml).contains("include: livenessState");
         assertThat(SystemConstants.PUBLIC_PATHS)

@@ -612,7 +612,7 @@ podman-compose -f config/monitoring/podman-compose.yml up -d
 |------|------|------|
 | `JAVA_OPTS` | `-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:+ExitOnOutOfMemoryError -Xlog:gc*:file=<logs>/gc.log:...` | JVM 调优参数 |
 | `SERVER_PORT` | 网关 8080 | 业务端口 |
-| `MANAGEMENT_SERVER_PORT` | 网关 8080；system 8083；integration 8097；其余同业务端口（aggregation 8098、knowledge 8100 等） | 管理端口（Actuator）；见 §8 探针端口表 |
+| `MANAGEMENT_SERVER_PORT` | 网关 8080；system 8083；integration 8097；其余同业务端口（aggregation 8098、knowledge 8100 等） | 管理端口（Actuator）；见 §8 探针端口表。**两层取舍（BE-069）**：system 的 prod 模板（`apex-system` 共享 `application-prod.yml`，profile 专属、覆盖模块 `application.yml`）默认 8083——compose 未注入本变量、依赖该默认，k8s 显式注入 8083；java -jar 部署如需其他端口须显式注入。compose 服务的 `MANAGEMENT_PORT`/`HEALTHCHECK_PORT` 为镜像构建参数（前者仅 EXPOSE、后者仅镜像 HEALTHCHECK 指令），运行期无 Java 消费方 |
 | `MANAGEMENT_SERVER_ADDRESS` | 127.0.0.1 | 管理端口监听地址；容器/远程采集设 `0.0.0.0` |
 | `APEX_LOG_DIR` | `./logs` | 日志根目录（见 [§9](#9-日志与监控)） |
 | `TZ` | Asia/Shanghai | 时区 |

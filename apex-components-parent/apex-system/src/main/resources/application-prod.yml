@@ -438,9 +438,10 @@ knife4j:
 # ============================================================
 management:
   server:
-    # 管理端口与业务端口（8080）物理隔离，防止将监控信息暴露在业务流量中。
-    # 默认 8081，可通过 MANAGEMENT_SERVER_PORT 调整。
-    port: ${MANAGEMENT_SERVER_PORT:8081}
+    # 管理端口与业务端口（8082）物理隔离，防止将监控信息暴露在业务流量中。
+    # 默认 8083（与 compose 端口映射/健康检查、k8s 探针及文档口径一致；BE-069 由单体旧默认 8081 对齐），
+    # 可通过 MANAGEMENT_SERVER_PORT 调整。
+    port: ${MANAGEMENT_SERVER_PORT:8083}
     # 管理端仅监听回环地址（127.0.0.1），外部不可达。
     # 容器/K8s 环境可通过 MANAGEMENT_SERVER_ADDRESS 调整为 Pod IP 或 0.0.0.0。
     address: ${MANAGEMENT_SERVER_ADDRESS:127.0.0.1}
