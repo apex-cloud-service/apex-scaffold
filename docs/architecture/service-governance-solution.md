@@ -55,8 +55,8 @@
 
 `apex-system/src/main/java/com/apex/scaffold/interfaces/config/SentinelConfig.java` 已配置:
 
-- 约 42 条流控规则,覆盖认证、文件、用户、媒体、排行等资源（BE-067 清理 interests/feed 死规则后；退役业务域规则的全量审计见任务盘 BE-071）。
-- 约 30 条降级规则,包含异常比例和慢调用比例。
+- 8 条流控规则,覆盖认证（登录/刷新/短信/登出）与用户（信息/列表/详情）两组 system 实际注册路径（BE-071 逐条路由证据审计后；证据清单见 `docs/records/2026-11-28-be071-sentinel-baseline-audit.md`）。
+- 2 条降级规则（认证登录/刷新异常比例熔断；慢调用规则已随退役业务域路径清理）。
 - 系统保护规则,包含 CPU 和入口 QPS 等约束。
 - Nacos 动态规则数据源配置能力。
 
