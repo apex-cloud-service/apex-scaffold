@@ -215,3 +215,5 @@
 | `docs/05-operations/*`、`docs/specs/*` | 规范原文（口径唯一权威） | 口径变化时 |
 
 > 冲突时以源码与规范原文为准，本篇只作事实记录；发现本篇与源码冲突，**追加更正条目**并把正确结论回写到快照篇。
+| 128 | 2026-11-28 | 文档/知识库 | 入库知识库例行维护与两份每日报告（业主指示代为提交）：MEMORY-CARD 基线与「当前状态」日期 2026-11-23→2026-11-25；`01-project-map`/`02-apex-scaffold-current-state`/`06-delivery-status-and-next` 状态同步；新增 `2026-11-25`/`2026-11-26` 两份全项目日报并在 daily/README 登记 | 本条提交 | `verify-docs.sh --strict`、`check-doc-refs.sh --strict` 均 0 项；`git diff --check` 通过 | 纯文档与知识库，无代码/配置/契约变化；日报与知识库快照由日常维护智能体产出，本次仅代为入库，内容正确性由原维护方负责 |
+memory: 07-change-memory.md#128

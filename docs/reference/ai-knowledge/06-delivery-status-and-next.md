@@ -29,7 +29,7 @@
 | reactor 模块 | 31 → **36**（新增 `apex-boot-all`、`apex-integration`、`apex-integration-service`、`apex-aggregation-service`、`apex-tools-deployment`、`apex-tools-build`）；2026-11-14 两级布局后为根直接 7 组、递归 **44** 个模块、含根 **45** 个 reactor 项目（6 个新 POM + 复用 services-bom 不计业务 JAR） |
 | 运行入口 | 8 → **13**（六业务服务 + 网关 + 只读查询聚合 + 示例 + 任务代理 + 脱敏 + 知识库 + 组合档） |
 | 迁移 | system V75 → **V91**（在 `apex-components-parent/apex-system`）；auth V59 → **V65**；office **V10**、file V7、workflow V6、integration V3、knowledge **V2**；合计 **282** 个双方言文件 |
-| 主源码/测试 | 1842/610 → **2254/788**（git 跟踪口径，2026-11-23） |
+| 主源码/测试 | 1842/610 → **2255/791**（git 跟踪口径，2026-11-25） |
 | `apex-system` 四层合一 | **未变**，C4/D07 仍待执行 |
 | `apex.tenant.enabled` | 缺省仍 **false**（basic/standard），Enterprise 档开启；B5 起配额守卫与该开关解耦 |
 

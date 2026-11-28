@@ -33,6 +33,8 @@
 | 2026-11-21 | all-projects | 全栈联调隔离栈复验 | [2026-11-21-all-projects-daily-report.md](./2026-11-21-all-projects-daily-report.md) |
 | 2026-11-23 | all-projects | 接口文档注解全覆盖 | [2026-11-23-all-projects-daily-report.md](./2026-11-23-all-projects-daily-report.md) |
 | 2026-11-24 | all-projects | 集成域静态门禁整改 | [2026-11-24-all-projects-daily-report.md](./2026-11-24-all-projects-daily-report.md) |
+| 2026-11-25 | all-projects | 全仓注释规范整改 | [2026-11-25-all-projects-daily-report.md](./2026-11-25-all-projects-daily-report.md) |
+| 2026-11-26 | all-projects | 前端评审遗留缺陷补测 | [2026-11-26-all-projects-daily-report.md](./2026-11-26-all-projects-daily-report.md) |
 
 ## 生成与补写约定
 
