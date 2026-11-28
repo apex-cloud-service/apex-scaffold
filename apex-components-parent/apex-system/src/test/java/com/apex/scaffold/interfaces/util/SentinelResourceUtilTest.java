@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
  *
  * <p>验证 {@link SentinelResourceUtil} 对健康检查路径的排除、含路径变量 URL
  * 到规则模板名的归一化以及无路径变量路径的透传行为，确保运行时资源名与
- * Sentinel 规则资源名严格对齐。</p>
+ * Sentinel 规则资源名严格对齐。fixture 全部使用当前登记的模板
+ * （{@code /api/v1/user/{userId}}，BE-072 裁剪后），不再以退役域路径作样本。</p>
  *
  * @author Apex Team
  * @version 1.0.0
@@ -40,14 +41,15 @@ class SentinelResourceUtilTest {
     @Test
     @DisplayName("含路径变量URL应归一化为规则模板名")
     void shouldNormalizePathVariableUrlsToTemplates() {
-        assertThat(SentinelResourceUtil.cleanSentinelResource("/api/v1/explore/battles/123/submit"))
-                .isEqualTo("/api/v1/explore/battles/{battleId}/submit");
-        assertThat(SentinelResourceUtil.cleanSentinelResource("/api/v1/explore/battles/456/skip"))
-                .isEqualTo("/api/v1/explore/battles/{battleId}/skip");
         assertThat(SentinelResourceUtil.cleanSentinelResource("/api/v1/user/10086"))
                 .isEqualTo("/api/v1/user/{userId}");
-        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/media/photos/42/vote"))
-                .isEqualTo("/api/v1/media/photos/{photoId}/vote");
+        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/user/42"))
+                .isEqualTo("/api/v1/user/{userId}");
+        // 占位符通配语义：info/list 等静态段同样被 {userId} 模板命中（BE-072 据此收敛 user 域规则）
+        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/user/info"))
+                .isEqualTo("/api/v1/user/{userId}");
+        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/user/list"))
+                .isEqualTo("/api/v1/user/{userId}");
     }
 
     /**
@@ -58,8 +60,8 @@ class SentinelResourceUtilTest {
     void shouldReturnRawUrlWhenNoTemplateMatches() {
         assertThat(SentinelResourceUtil.cleanSentinelResource("/api/v1/auth/login"))
                 .isEqualTo("/api/v1/auth/login");
-        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/rankings/rules"))
-                .isEqualTo("/api/v1/rankings/rules");
+        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/auth/user/list"))
+                .isEqualTo("/api/v1/auth/user/list");
     }
 
     /**
@@ -77,14 +79,13 @@ class SentinelResourceUtilTest {
     @Test
     @DisplayName("路径段数量或字面值不同不应命中模板")
     void shouldNotMatchWhenSegmentsDiffer() {
-        // 段数不同：模板 5 段，实际 4 段
-        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/explore/battles"))
-                .isEqualTo("/api/v1/explore/battles");
+        // 段数不同：模板 4 段，实际 3 段
+        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/user")).isEqualTo("/api/v1/user");
         // 字面值不同：首段不匹配模板
         assertThat(SentinelResourceUtil.normalizePathVariables("/api/v2/user/1"))
                 .isEqualTo("/api/v2/user/1");
         // 空路径变量段不应命中
-        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/explore/battles//submit"))
-                .isEqualTo("/api/v1/explore/battles//submit");
+        assertThat(SentinelResourceUtil.normalizePathVariables("/api/v1/user//"))
+                .isEqualTo("/api/v1/user//");
     }
 }

@@ -13,8 +13,8 @@ import java.util.stream.IntStream;
  *
  * <h2>设计说明</h2>
  * <p>Sentinel WebFlux 适配器以请求的原始路径作为资源名，而注册的限流/熔断规则
- * 使用 {@code /api/v1/explore/battles/{battleId}/submit} 这类含占位符的模板名。
- * 若不做归一化，运行时资源名（如 {@code /api/v1/explore/battles/123/submit}）
+ * 使用 {@code /api/v1/user/{userId}} 这类含占位符的模板名。
+ * 若不做归一化，运行时资源名（如 {@code /api/v1/user/10086}）
  * 与规则名永不相等，导致对应规则失效；降级快照（以归一化资源名为 key）也将
  * 与熔断降级时读取的资源名不一致，造成快照永不命中。</p>
  *
@@ -46,17 +46,7 @@ public final class SentinelResourceUtil {
      * <p>规则注册与 URL 归一化均以此列表为基准：URL Cleaner 将运行时 URL
      * 与模板逐段匹配，命中后返回模板名，使运行时资源与规则资源对齐。</p>
      */
-    public static final List<String> PATH_VARIABLE_TEMPLATES = List.of(
-            "/api/v1/user/{userId}",
-            "/api/v1/media/samples/{sampleId}/publish",
-            "/api/v1/media/photos/{photoId}/favorite",
-            "/api/v1/media/photos/{photoId}/resonate",
-            "/api/v1/media/photos/{photoId}/battle",
-            "/api/v1/media/photos/{photoId}/vote",
-            "/api/v1/explore/battles/{battleId}/submit",
-            "/api/v1/explore/battles/{battleId}/skip",
-            "/api/v1/explore/resonance/{battleId}/submit",
-            "/api/v1/explore/golden-eye/{battleId}/verify");
+    public static final List<String> PATH_VARIABLE_TEMPLATES = List.of("/api/v1/user/{userId}");
 
     /**
      * 私有构造器，防止实例化工具类。

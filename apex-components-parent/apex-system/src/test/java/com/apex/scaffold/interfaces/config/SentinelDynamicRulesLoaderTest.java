@@ -28,6 +28,10 @@ class SentinelDynamicRulesLoaderTest {
     private SentinelDynamicRulesLoader loader;
     private ObjectMapper objectMapper;
 
+    /** 静态基线快照所需的国际化工具替身（本用例不触及消息解析路径）。 */
+    private final com.apex.scaffold.interfaces.util.MessageUtils messageUtils =
+            org.mockito.Mockito.mock(com.apex.scaffold.interfaces.util.MessageUtils.class);
+
     @TempDir
     Path tempDir;
 
@@ -139,6 +143,50 @@ class SentinelDynamicRulesLoaderTest {
         assertThat(rule.getResource()).isEqualTo("/auth/login");
         assertThat(rule.getGrade()).isEqualTo(1);
         assertThat(rule.getCount()).isEqualTo(200.0);
+    }
+
+    /**
+     * 验证真实默认种子文件与 {@code SentinelConfig} 静态基线一致（资源名 + 阈值）。
+     *
+     * <p>护栏来源（BE-072 N-3/N-5）：该种子经 {@code SentinelDynamicRulesLoader} 以整体替换
+     * 语义加载，若与 {@code SentinelConfig} 静态基线漂移（BE-072 前即为退役短路径命名），
+     * 显式注入 rules-file 的部署态会清掉静态规则。本用例不硬编码期望值，而是先由
+     * {@code SentinelConfig} 实际初始化快照静态规则（资源名 + count），再加载种子逐值比对，
+     * 从而能同时捕获「资源集漂移」与「阈值漂移」两类最可能发生的形态。</p>
+     *
+     * <p>注：种子文件位于仓库根 {@code config/sentinel/}（文件系统路径，非 classpath 资源），
+     * 且默认打包产物中不含该文件，故 Loader 默认态跳过加载；本用例以显式路径加载以校验对齐性。</p>
+     */
+    @Test
+    @DisplayName("默认种子文件应与 SentinelConfig 静态基线逐值一致")
+    void defaultSeedFileShouldMatchStaticBaseline() throws Exception {
+        // 1) 快照静态基线（资源名 → count）
+        new SentinelConfig(true, 0.8, 2000, messageUtils).initFlowRules();
+        var staticFlow = FlowRuleManager.getRules().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        rule -> rule.getResource(), rule -> rule.getCount(), (a, b) -> a));
+        new SentinelConfig(true, 0.8, 2000, messageUtils).initDegradeRules();
+        var staticDegrade = DegradeRuleManager.getRules().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        rule -> rule.getResource(), rule -> rule.getCount(), (a, b) -> a));
+
+        // 2) 加载种子（整体替换后即为种子产物）
+        String seedPath = java.nio.file.Path.of(
+                        System.getProperty("user.dir"), "..", "..", "config", "sentinel", "sentinel-rules.json")
+                .toAbsolutePath()
+                .toString();
+        newLoader(seedPath).loadRules();
+
+        var seedFlow = FlowRuleManager.getRules().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        rule -> rule.getResource(), rule -> rule.getCount(), (a, b) -> a));
+        var seedDegrade = DegradeRuleManager.getRules().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        rule -> rule.getResource(), rule -> rule.getCount(), (a, b) -> a));
+
+        // 3) 逐值比对：资源集与阈值均须一致
+        assertThat(seedFlow).isEqualTo(staticFlow);
+        assertThat(seedDegrade).isEqualTo(staticDegrade);
     }
 
     /**

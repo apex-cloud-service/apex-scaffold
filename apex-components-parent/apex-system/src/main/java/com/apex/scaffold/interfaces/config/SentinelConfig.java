@@ -53,13 +53,13 @@ import org.springframework.web.server.ServerWebExchange;
  *   <caption>流控规则分组与 QPS 阈值</caption>
  *   <tr><th>分组</th><th>接口数量</th><th>典型 QPS</th><th>覆盖范围</th></tr>
  *   <tr><td>认证（auth）</td><td>5</td><td>20~200</td><td>登录/刷新/短信</td></tr>
- *   <tr><td>用户（user）</td><td>3</td><td>50~300</td><td>信息/列表</td></tr>
+ *   <tr><td>用户（user）</td><td>1</td><td>200</td><td>/api/v1/user/**（info/list 请求经模板归一化并入 {userId} 规则）</td></tr>
  * </table>
  *
  * <p>BE-071（2026-11-28）：按逐条路由证据清理无路由注册的退役业务域规则
  * （文件/媒体/排名/同频/其他/V1 探索投票/V2 投票探索共 34 条，证据清单见
  * docs/records/2026-11-28-be071-sentinel-baseline-audit.md），仅保留 system 模块
- * 实际注册的认证与用户两组；Nacos 动态规则仍可整体替换扩展。</p>
+ * 实际注册的认证与用户路径；BE-072 进一步移除被 {userId} 模板遮蔽的 user/info、user/list 两条；Nacos 动态规则仍可整体替换扩展。</p>
  *
  * <h2>设计说明</h2>
  * <ul>
@@ -254,12 +254,13 @@ public class SentinelConfig {
     /**
      * 初始化全局限流规则。
      *
-     * <p>在应用启动时注册 8 条流控规则到 {@link FlowRuleManager}（BE-071 清理退役业务域死规则后）。
+     * <p>在应用启动时注册 6 条流控规则到 {@link FlowRuleManager}（BE-071 清理退役业务域死规则、
+     * BE-072 移除被 {userId} 模板遮蔽的 user/info、user/list 两条后）。
      * 覆盖认证与用户两个业务模块。规则基于 QPS 维度，对所有调用来源生效（{@code limitApp=default}）。</p>
      */
     @PostConstruct
     public void initFlowRules() {
-        List<FlowRule> rules = new ArrayList<>(8);
+        List<FlowRule> rules = new ArrayList<>(6);
 
         addAuthRules(rules);
         addUserRules(rules);
@@ -290,9 +291,10 @@ public class SentinelConfig {
      * @param rules 限流规则列表
      */
     private void addUserRules(List<FlowRule> rules) {
-        rules.add(createFlowRule("/api/v1/user/info", 300));
+        // user/info、user/list 的请求经 PATH_VARIABLE_TEMPLATES 归一化为 /api/v1/user/{userId}
+        // 资源（占位符通配语义），仅保留 {userId} 模板规则即可覆盖全部 /api/v1/user/** 请求
+        // （BE-072：移除被模板遮蔽的 info/list 两条规则）。
         rules.add(createFlowRule("/api/v1/user/{userId}", 200));
-        rules.add(createFlowRule("/api/v1/user/list", 50));
     }
 
     /**

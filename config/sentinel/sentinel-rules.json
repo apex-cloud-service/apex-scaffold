@@ -1,23 +1,7 @@
 {
   "flowRules": [
     {
-      "resource": "/auth/login",
-      "grade": 1,
-      "count": 200,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/auth/refresh",
-      "grade": 1,
-      "count": 100,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/auth/logout",
+      "resource": "/api/v1/auth/login",
       "grade": 1,
       "count": 50,
       "strategy": 0,
@@ -25,7 +9,15 @@
       "clusterMode": false
     },
     {
-      "resource": "/auth/sms-code",
+      "resource": "/api/v1/auth/refresh",
+      "grade": 1,
+      "count": 200,
+      "strategy": 0,
+      "controlBehavior": 0,
+      "clusterMode": false
+    },
+    {
+      "resource": "/api/v1/auth/sms/code",
       "grade": 1,
       "count": 20,
       "strategy": 0,
@@ -33,7 +25,15 @@
       "clusterMode": false
     },
     {
-      "resource": "/auth/wechat-login",
+      "resource": "/api/v1/auth/cl/sms/code",
+      "grade": 1,
+      "count": 20,
+      "strategy": 0,
+      "controlBehavior": 0,
+      "clusterMode": false
+    },
+    {
+      "resource": "/api/v1/auth/logout",
       "grade": 1,
       "count": 100,
       "strategy": 0,
@@ -41,57 +41,9 @@
       "clusterMode": false
     },
     {
-      "resource": "/file/upload",
+      "resource": "/api/v1/user/{userId}",
       "grade": 1,
       "count": 200,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/file/face-photo",
-      "grade": 1,
-      "count": 50,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/file/batch-upload",
-      "grade": 1,
-      "count": 10,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/file/download",
-      "grade": 1,
-      "count": 100,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/user/info",
-      "grade": 1,
-      "count": 300,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/user/update",
-      "grade": 1,
-      "count": 50,
-      "strategy": 0,
-      "controlBehavior": 0,
-      "clusterMode": false
-    },
-    {
-      "resource": "/user/list",
-      "grade": 1,
-      "count": 100,
       "strategy": 0,
       "controlBehavior": 0,
       "clusterMode": false
@@ -99,40 +51,18 @@
   ],
   "degradeRules": [
     {
-      "resource": "/auth/login",
-      "grade": 0,
-      "count": 1000,
+      "resource": "/api/v1/auth/login",
+      "grade": 1,
+      "count": 0.5,
       "timeWindow": 10,
-      "minRequestAmount": 5,
-      "statIntervalMs": 30000,
-      "slowRatioThreshold": 0.5
+      "minRequestAmount": 5
     },
     {
-      "resource": "/auth/refresh",
-      "grade": 0,
-      "count": 500,
+      "resource": "/api/v1/auth/refresh",
+      "grade": 1,
+      "count": 0.3,
       "timeWindow": 10,
-      "minRequestAmount": 5,
-      "statIntervalMs": 30000,
-      "slowRatioThreshold": 0.5
-    },
-    {
-      "resource": "/file/upload",
-      "grade": 0,
-      "count": 5000,
-      "timeWindow": 15,
-      "minRequestAmount": 5,
-      "statIntervalMs": 30000,
-      "slowRatioThreshold": 0.6
-    },
-    {
-      "resource": "/file/face-photo",
-      "grade": 0,
-      "count": 3000,
-      "timeWindow": 15,
-      "minRequestAmount": 5,
-      "statIntervalMs": 30000,
-      "slowRatioThreshold": 0.6
+      "minRequestAmount": 5
     }
   ],
   "systemRules": [

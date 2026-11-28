@@ -168,13 +168,13 @@ class SentinelConfigTest {
     @Test
     @DisplayName("含路径变量的URL应归一化为规则模板")
     void shouldNormalizePathVariablesToTemplate() {
-        assertThat(SentinelConfig.normalizePathVariables("/api/v1/explore/battles/123/submit"))
-                .isEqualTo("/api/v1/explore/battles/{battleId}/submit");
-        assertThat(SentinelConfig.normalizePathVariables("/api/v1/explore/battles/123/skip"))
-                .isEqualTo("/api/v1/explore/battles/{battleId}/skip");
-        assertThat(SentinelConfig.normalizePathVariables("/api/v1/media/photos/999/vote"))
-                .isEqualTo("/api/v1/media/photos/{photoId}/vote");
+        // fixture 全部使用当前实际注册的动态路由（BE-072：不再以退役域路径作样本）
         assertThat(SentinelConfig.normalizePathVariables("/api/v1/user/42")).isEqualTo("/api/v1/user/{userId}");
+        // info/list 等静态路径同样被 {userId} 模板通配（资源遮蔽，BE-072 据此移除其专属规则）
+        assertThat(SentinelConfig.normalizePathVariables("/api/v1/user/info")).isEqualTo("/api/v1/user/{userId}");
+        // 无模板命中的多段路径原样保留
+        assertThat(SentinelConfig.normalizePathVariables("/api/v1/user/7/orders/3/items/9"))
+                .isEqualTo("/api/v1/user/7/orders/3/items/9");
         assertThat(SentinelConfig.normalizePathVariables(null)).isNull();
     }
 
@@ -185,8 +185,8 @@ class SentinelConfigTest {
     @DisplayName("无路径变量的静态路径应原样保留")
     void shouldKeepStaticPathsUnchanged() {
         assertThat(SentinelConfig.normalizePathVariables("/api/v1/auth/login")).isEqualTo("/api/v1/auth/login");
-        assertThat(SentinelConfig.normalizePathVariables("/api/v2/explore/choice-2/current"))
-                .isEqualTo("/api/v2/explore/choice-2/current");
+        assertThat(SentinelConfig.normalizePathVariables("/api/v1/auth/user/list"))
+                .isEqualTo("/api/v1/auth/user/list");
     }
 
     /**
@@ -195,8 +195,7 @@ class SentinelConfigTest {
     @Test
     @DisplayName("cleanSentinelResource 对含路径变量的业务接口应归一化为模板")
     void shouldNormalizeBusinessApiWithPathVariables() {
-        assertThat(SentinelConfig.cleanSentinelResource("/api/v1/explore/battles/123/submit"))
-                .isEqualTo("/api/v1/explore/battles/{battleId}/submit");
+        assertThat(SentinelConfig.cleanSentinelResource("/api/v1/user/42")).isEqualTo("/api/v1/user/{userId}");
     }
 
     /**
@@ -292,7 +291,7 @@ class SentinelConfigTest {
         sentinelConfig.initFlowRules();
         List<Map<String, Object>> template = readRuleTemplate("/sentinel/apex-sentinel-flow-rules.json");
 
-        assertThat(template).hasSize(8);
+        assertThat(template).hasSize(6);
         assertThat(template)
                 .extracting(rule -> rule.get("resource"))
                 .containsExactlyInAnyOrderElementsOf(FlowRuleManager.getRules().stream()

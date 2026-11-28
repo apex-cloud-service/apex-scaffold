@@ -4,7 +4,5 @@
   {"resource":"/api/v1/auth/sms/code","limitApp":"default","grade":1,"count":20,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/auth/cl/sms/code","limitApp":"default","grade":1,"count":20,"strategy":0,"controlBehavior":0,"clusterMode":false},
   {"resource":"/api/v1/auth/logout","limitApp":"default","grade":1,"count":100,"strategy":0,"controlBehavior":0,"clusterMode":false},
-  {"resource":"/api/v1/user/info","limitApp":"default","grade":1,"count":300,"strategy":0,"controlBehavior":0,"clusterMode":false},
-  {"resource":"/api/v1/user/{userId}","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false},
-  {"resource":"/api/v1/user/list","limitApp":"default","grade":1,"count":50,"strategy":0,"controlBehavior":0,"clusterMode":false}
+  {"resource":"/api/v1/user/{userId}","limitApp":"default","grade":1,"count":200,"strategy":0,"controlBehavior":0,"clusterMode":false}
 ]
