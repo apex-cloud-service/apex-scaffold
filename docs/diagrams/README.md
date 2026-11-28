@@ -86,6 +86,7 @@
 | 编号 | 文件名                                      | 标题                   | 说明                            |
 | -- | ---------------------------------------- | -------------------- | ----------------------------- |
 | 13 | `13_docker_compose_local_dev.svg`        | Podman Compose本地开发环境 | 一键启动完整技术栈,健康检查+数据持久化          |
+| 13 | `13_docker_compose_local_dev_v2.mmd/.svg` | Podman Compose本地开发环境（v2） | 2026-11-28 BE-071 重绘：现行主栈/可选 Profile/infra 栈实测拓扑（v1 为单体时代旧口径，保留不改） |
 | 14 | `14_kubernetes_production_deployment.svg` | Kubernetes生产部署架构     | HPA自动伸缩,ConfigMap/Secret,滚动发布 |
 | 15 | `15_cicd_pipeline.svg`                   | CI/CD流水线架构           | GitHub Actions,安全扫描+多环境部署     |
 | 16 | `16_nacos_service_discovery.svg`         | Nacos服务注册与发现         | 服务注册+配置中心,3节点Raft集群          |

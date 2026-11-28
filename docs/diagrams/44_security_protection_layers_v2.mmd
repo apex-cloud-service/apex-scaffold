@@ -1,0 +1,55 @@
+%% v2（2026-11-28，BE-071）：v1 中「Sentinel 43条限流规则」已随 BE-071 逐条路由证据审计后
+%% 更正为 8 条流控 + 2 条熔断（仅保留 system 模块实际注册路径）；其余条目逐项核实后保留
+%% （过滤器/注解/配置键均实测存在）。v1 保留不改（§0.3）。
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+    TITLE["安全防护层次图（Security Protection Layers）<br/>7 层防御体系 · BE-071 计数核对版"]
+
+    subgraph L1["L1 网络层防护"]
+        L1A["IP 黑名单<br/>GlobalGuardWebFilter（@Order=-200）<br/>Redis blacklist:ip:{ip}"]
+        L1B["IP 限流<br/>apex.security.ip-rate-limit（窗口/封禁升级）"]
+        L1C["UA 检查 + 扫描流量阻断<br/>ScanTrafficGuardWebFilter：25 类路径阻断（/.git、/phpmyadmin…）"]
+    end
+
+    subgraph L2["L2 输入过滤层"]
+        L2A["XSS / SQL 注入防护<br/>InputValidationFilter（@Order=-180）<br/>HTML 转义、SQL 关键词检测"]
+        L2B["路径穿越 / 文件大小限制（10MB）"]
+        L2C["Content-Type 白名单<br/>拒绝 text/html、application/xml（防 XXE）"]
+    end
+
+    subgraph L3["L3 API 网关层"]
+        L3A["流控熔断<br/>Sentinel 8 条限流 + 2 条熔断规则（BE-071 核对）<br/>apex.gateway.rate-limit 分布式令牌桶 · Resilience4j 熔断"]
+        L3B["跨域 CORS + 安全响应头<br/>X-Frame-Options、X-Content-Type-Options、HSTS"]
+    end
+
+    subgraph L4["L4 认证鉴权层"]
+        L4A["JWT 认证<br/>Access + Refresh 双令牌 · 无感知续期 · HMAC SHA256 验签"]
+        L4B["RBAC 权限<br/>@RequirePermission / @RequireRole · @DataScope 数据权限"]
+        L4C["登录保护<br/>apex.security.login-protection：账号锁定（5 次/15 分钟）<br/>短信限流 · 验证码双因子"]
+    end
+
+    subgraph L5["L5 应用层防护"]
+        L5A["防重放攻击<br/>@AntiReplay：时间戳 + nonce（Redis TTL 360s）<br/>错误码 5001"]
+        L5B["接口幂等<br/>@IdempotentApi：Idempotency-Key + Redis SETNX<br/>错误码 5002/5003"]
+        L5C["参数校验<br/>Jakarta Validation · 统一异常处理 4xxx"]
+    end
+
+    subgraph L6["L6 业务层防护"]
+        L6A["内容审核<br/>百度文本/图片审核适配器（BaiduText/ImageModerationAdapter）"]
+        L6B["操作审计<br/>@OperationLog 异步落库 sys_operation_log"]
+        L6C["业务规则校验<br/>领域层状态机 · BusinessException"]
+    end
+
+    subgraph L7["L7 数据层防护"]
+        L7A["数据加密<br/>密码 BCrypt(10) · 敏感字段 AES-256"]
+        L7B["SQL 注入防护<br/>MyBatis-Plus 参数化查询 · 禁止拼接 SQL"]
+        L7C["数据权限隔离<br/>@DataScope 注入 WHERE · 多租户行级隔离（@TenantAware / TenantLineHandler）"]
+    end
+
+    subgraph METRICS["监控指标（Prometheus）"]
+        M1["安全事件：apex.security.repeat.submit.rejected · apex.gateway.scan.blocked"]
+        M2["认证：apex.auth.login.failed · apex.auth.captcha.required"]
+        M3["流控熔断：sentinel_* · resilience4j_*"]
+    end
+
+    TITLE ~~~ L1 ~~~ L2 ~~~ L3 ~~~ L4 ~~~ L5 ~~~ L6 ~~~ L7 ~~~ METRICS

@@ -180,6 +180,7 @@
 | 42 | **审计日志时序图** | [42\_audit\_log\_sequence.svg](../diagrams/42_audit_log_sequence.svg) | 展示@OperationLog注解+异步批量入库的审计日志记录完整时序,包含4个阶段6个参与者 |
 | 43 | **SPI插件架构图** | [43\_spi\_plugin\_architecture.svg](../diagrams/43_spi_plugin_architecture.svg) | 展示基于Java ServiceLoader的存储后端动态扩展架构,包含5层结构和加载机制 |
 | 44 | **安全防护层次图** | [44\_security\_protection\_layers.svg](../diagrams/44_security_protection_layers.svg) | 展示从网络层到数据层的7层防御体系,包含25+安全防护机制和监控指标 |
+| 44 | **安全防护层次图（v2）** | [44\_security\_protection\_layers\_v2.mmd](../diagrams/44_security_protection_layers_v2.mmd) / [.svg](../diagrams/44_security_protection_layers_v2.svg) | 2026-11-28 BE-071 修订：Sentinel 规则计数更正为 8 限流 + 2 熔断（逐条路由证据审计），其余条目逐项核实后保留；v1 保留不改 |
 
 ### 运维部署图 (5张) - 2026-09-11 ⭐
 

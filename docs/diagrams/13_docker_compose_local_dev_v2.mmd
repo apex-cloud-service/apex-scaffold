@@ -1,0 +1,60 @@
+%% v2（2026-11-28，BE-071）：v1 为单体时代拓扑（apex-scaffold 单应用 8080/8081、apex_data 库、
+%% ./monitoring/ 挂载路径已随 BE-070 删除根级目录失效），本图按现行 podman-compose.yml /
+%% podman-compose.infra.yml 实测重绘；v1 保留不改（§0.3）。
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#eef2ff','primaryTextColor':'#0f172a','primaryBorderColor':'#4f46e5','lineColor':'#64748b','fontFamily':'sans-serif'}}}%%
+flowchart TB
+    subgraph MAIN["主栈 podman-compose.yml（默认 Profile，SPRING_PROFILES_ACTIVE=prod,enterprise）"]
+        direction TB
+        INIT["security-key-check<br/>（离线工具校验五密钥，服务完成即退出）"]
+        subgraph EDGE["接入"]
+            GW["apex-gateway :8080"]
+            WEB["apex-admin-web :80（预构建镜像，可选）"]
+        end
+        subgraph SVC["业务服务（Containerfile 按 SERVICE_MODULE 构建）"]
+            AUTH["apex-auth-service :8081"]
+            SYS["apex-system-service :8082<br/>（管理 :8083，健康检查 readiness）"]
+            WF["apex-workflow-service :8093"]
+            OFFICE["apex-office-service :8084"]
+            FILE["apex-file-service :8085"]
+            INTG["apex-integration-service :8094<br/>（管理 :8097）"]
+            JOB["apex-job-service :8095<br/>（默认栈即启动，代理 system）"]
+            AGG["apex-aggregation-service :8098"]
+        end
+        subgraph DATA["数据与中间件"]
+            MYSQL["mysql:9.0 :3306<br/>各服务独立库（createDatabaseIfNotExist）"]
+            REDIS["redis:7-alpine :6379"]
+            NACOS["nacos-server:v2.4.3 :8848 + gRPC :9848"]
+            MEILI["meilisearch :7700"]
+            LOKI["grafana/loki :3100"]
+            ALLOY["grafana/alloy :12345"]
+        end
+    end
+
+    subgraph OPT["可选 Profile"]
+        MASK["masking：apex-masking-service :8096"]
+        KNW["knowledge：apex-knowledge-service :8100"]
+        MQ["rocketmq：namesrv :9876 + broker"]
+        KC["keycloak（OIDC IdP）"]
+        XXL["xxl-job-admin（宿主 :8099）"]
+        SEATA["seata-tc :8091 / 控制台 :7091"]
+    end
+
+    subgraph INFRA["infra 栈 podman-compose.infra.yml（-p apex-infra，观测与共享中间件）"]
+        PROM["prometheus :9090"]
+        GRAF["grafana :3200→3000"]
+        ALERT["alertmanager :9093"]
+        ZIP["zipkin :9411"]
+        SKY["skywalking-oap/ui"]
+        ES["elasticsearch :9200 / kibana :5601"]
+        FB["filebeat"]
+        SD["sentinel-dashboard"]
+    end
+
+    INIT -.->|"校验通过后启动"| SVC
+    GW --> SVC
+    SVC --> DATA
+    INFRA -.->|"外部网络 apex-observability 衔接"| MAIN
+    SYS -.->|"JWKS 拉取"| AUTH
+
+    NOTE["环境注入：.env（五密钥 :? 强制 + DB/JWT/路由）<br/>卷挂载：logs/ 各服务日志、storage /app/data/storage<br/>健康检查：wget readiness（system 打 :8083）<br/>数据持久化：mysql/redis 数据卷由 infra 栈承载"]
+    MAIN ~~~ NOTE
